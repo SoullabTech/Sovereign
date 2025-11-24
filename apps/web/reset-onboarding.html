@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reset MAIA Onboarding</title>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(6, 182, 212, 0.4);
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: rgba(34, 197, 94, 0.2); color: #4ade80; }
+        .info { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🌟 MAIA Sacred Onboarding Reset</h2>
+        <p>Clear your onboarding completion flag to experience the full sacred welcome ritual.</p>
+
+        <div id="status" class="status info">
+            Current status: <span id="currentStatus">Checking...</span>
+        </div>
+
+        <button onclick="clearOnboarding()">🔄 Reset Onboarding</button>
+        <button onclick="checkStatus()">📋 Check Status</button>
+        <button onclick="goToMaia()">✨ Go to MAIA</button>
+
+        <p style="margin-top: 30px; font-size: 14px; opacity: 0.7;">
+            After clearing, visit <strong>/maia</strong> to experience the complete sacred journey.
+        </p>
+    </div>
+
+    <script>
+        function checkStatus() {
+            const isComplete = localStorage.getItem('daimon_intro_complete');
+            const statusEl = document.getElementById('currentStatus');
+            const statusDiv = document.getElementById('status');
+
+            if (isComplete) {
+                statusEl.textContent = 'Onboarding completed (will skip to conversation)';
+                statusDiv.className = 'status info';
+            } else {
+                statusEl.textContent = 'Onboarding not completed (will show welcome ritual)';
+                statusDiv.className = 'status success';
+            }
+        }
+
+        function clearOnboarding() {
+            localStorage.removeItem('daimon_intro_complete');
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = '<strong>✅ Onboarding reset successfully!</strong><br>You will now see the complete sacred welcome experience.';
+            statusDiv.className = 'status success';
+
+            setTimeout(() => {
+                checkStatus();
+            }, 2000);
+        }
+
+        function goToMaia() {
+            window.location.href = '/maia';
+        }
+
+        // Check status on load
+        window.onload = checkStatus;
+    </script>
+</body>
+</html>

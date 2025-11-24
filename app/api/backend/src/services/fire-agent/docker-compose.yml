@@ -1,0 +1,41 @@
+# docker-compose.yml - Local Development Environment
+version: "3.8"
+services:
+  fire-agent:
+    build: .
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MAYA_VOICE_ENDPOINT=http://maya-voice:8000
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      - maya-voice
+      - redis
+    networks:
+      - spiralogic-network
+
+  maya-voice:
+    image: your-registry/maya-voice:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - VOICE_PROFILE=fire_archetype
+    networks:
+      - spiralogic-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - spiralogic-network
+
+networks:
+  spiralogic-network:
+    driver: bridge
+
+volumes:
+  logs:

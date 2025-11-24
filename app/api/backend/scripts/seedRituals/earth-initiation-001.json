@@ -1,0 +1,31 @@
+// Location: /oracle-backend/scripts/seedRituals/earth-initiation-001.json
+// Build: Backend
+
+{
+  "ritual_id": "earth-initiation-001",
+  "element": "Earth",
+  "phase": "Embodiment",
+  "archetype": "Steward",
+  "title": "How Will You Ground This?",
+  "prompt": "What concrete steps will anchor your vision into form?",
+  "practice": "Stand with bare feet. Feel gravity hold you. Speak aloud one practical action you will take today.",
+  "agent_support": {
+    "check_in": "What resources do you already have to support your vision?",
+    "follow_up": "What boundaries or structures are needed to protect what you are growing?"
+  },
+  "shadow_trigger": "overwhelm",
+  "bio_state_match": ["fatigue", "anxiety"],
+  "time_signature": "first quarter moon, midday",
+  "cycle_context": {
+    "season": "Summer",
+    "spiral_phase": "Earth 1",
+    "coherence_level": "ontological embodiment"
+  },
+  "completion_action": {
+    "log_journal": true,
+    "suggest_next_ritual": true,
+    "elemental_feedback": true
+  },
+  "tone_profile": "steady-guide",
+  "tags": ["earth", "grounding", "practicality", "steward", "how"]
+}

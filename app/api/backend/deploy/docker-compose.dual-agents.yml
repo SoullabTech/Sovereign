@@ -1,0 +1,130 @@
+# docker-compose.dual-agents.yml - Complete Fire + Water Agent Stack
+version: "3.8"
+services:
+  fire-agent:
+    build:
+      context: ../src/services/fire-agent
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - AGENT_TYPE=fire
+      - MAYA_INTEGRATION=true
+      - MAYA_VOICE_ENDPOINT=http://maya-voice:8000
+    volumes:
+      - ../src/services/fire-agent/logs:/app/logs
+    depends_on:
+      - redis
+      - maya-voice
+    networks:
+      - spiralogic-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  water-agent:
+    build:
+      context: ../src/services/water-agent
+      dockerfile: Dockerfile
+    ports:
+      - "3002:3002"
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - AGENT_TYPE=water
+      - EMOTIONAL_INTELLIGENCE_ENABLED=true
+      - TRAUMA_INFORMED_MODE=true
+      - MAYA_VOICE_ENDPOINT=http://maya-voice:8000
+    volumes:
+      - ../src/services/water-agent/logs:/app/logs
+    depends_on:
+      - redis
+      - maya-voice
+    networks:
+      - spiralogic-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3002/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  orchestrator:
+    build:
+      context: ../src/services
+      dockerfile: orchestrator.Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - FIRE_AGENT_URL=http://fire-agent:3001
+      - WATER_AGENT_URL=http://water-agent:3002
+      - COLLECTIVE_INTELLIGENCE=true
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - fire-agent
+      - water-agent
+      - redis
+    networks:
+      - spiralogic-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  maya-voice:
+    image: your-registry/maya-voice:latest
+    ports:
+      - "8000:8000"
+    environment:
+      - VOICE_PROFILES=fire_archetype,water_archetype
+      - ARCHETYPAL_SYNTHESIS=true
+    networks:
+      - spiralogic-network
+
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - spiralogic-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - spiralogic-network
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3005:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - spiralogic-network
+
+networks:
+  spiralogic-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  grafana_data:

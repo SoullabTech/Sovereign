@@ -1,0 +1,75 @@
+{
+  "greetingTemplates": {
+    "journal_reference": {
+      "templates": [
+        "Hi {userName}, yesterday you wrote about {journalTheme}. How's that {element} energy flowing today?",
+        "Welcome back, {userName}. I remember you journaled about {journalTheme} — how has that been sitting with you?",
+        "{userName}, your recent reflection on {journalTheme} felt profound. What's arising for you now?"
+      ],
+      "confidence_threshold": 0.7,
+      "recency_hours": 48,
+      "priority": 1
+    },
+    "session_pattern": {
+      "templates": [
+        "Welcome back, {userName}. I notice you've been in {phase} phase lately — want to explore where that's taking you?",
+        "Hey {userName}, you've been journeying through {phase} for {sessionCount} sessions. How does that rhythm feel?",
+        "{userName}, the {phase} energy has been strong in our recent conversations. Ready to go deeper?"
+      ],
+      "confidence_threshold": 0.65,
+      "min_sessions": 2,
+      "priority": 2
+    },
+    "element_reference": {
+      "templates": [
+        "Hey {userName}, I sense your {element} energy is strong — how are you working with it today?",
+        "Welcome, {userName}. The {element} element has been calling to you lately. What wants to emerge?",
+        "{userName}, your {element} energy feels particularly alive. What's it revealing to you?"
+      ],
+      "confidence_threshold": 0.6,
+      "min_occurrences": 3,
+      "priority": 3
+    },
+    "returning_user": {
+      "templates": [
+        "Welcome back, {userName}. How are you feeling today?",
+        "Good to see you again, {userName}. What's on your heart?",
+        "Hi {userName}, nice to connect with you again. How's your day unfolding?"
+      ],
+      "priority": 4
+    },
+    "first_time": {
+      "templates": [
+        "Hi {userName}, how's it going today?",
+        "Welcome, {userName}. What brings you here today?",
+        "Hello {userName}, I'm Maya. How are you feeling in this moment?"
+      ],
+      "priority": 5
+    }
+  },
+  "mobile": {
+    "max_length": 100,
+    "show_memory_snippet": true,
+    "expandable": true,
+    "position": "above_input"
+  },
+  "desktop": {
+    "max_length": 200,
+    "show_memory_snippet": true,
+    "show_memory_panel": true,
+    "position": "chat_header"
+  },
+  "symbols": {
+    "journal": "📓",
+    "phase": "🌀",
+    "element": {
+      "fire": "🔥",
+      "water": "🌊",
+      "earth": "🌍",
+      "air": "💨",
+      "spirit": "✨"
+    },
+    "memory": "🧠",
+    "welcome": "✨"
+  }
+}

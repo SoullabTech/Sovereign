@@ -1,0 +1,346 @@
+import { VoiceJournalSession } from '@/lib/journaling/VoiceJournalingService';
+import { JournalingMode } from '@/lib/journaling/JournalingPrompts';
+
+export interface ObsidianExportOptions {
+  includeReflection?: boolean;
+  includeMetadata?: boolean;
+  folderStructure?: 'flat' | 'by-date' | 'by-mode';
+  fileNaming?: 'timestamp' | 'date-title' | 'date-mode';
+}
+
+export interface ExportResult {
+  success: boolean;
+  filename: string;
+  content: string;
+  path: string;
+  error?: string;
+}
+
+export class ObsidianExporter {
+  private static defaultOptions: ObsidianExportOptions = {
+    includeReflection: true,
+    includeMetadata: true,
+    folderStructure: 'by-date',
+    fileNaming: 'date-mode'
+  };
+
+  /**
+   * Generate markdown content from a journal session
+   */
+  static generateMarkdown(
+    session: VoiceJournalSession,
+    options: ObsidianExportOptions = {}
+  ): string {
+    const opts = { ...this.defaultOptions, ...options };
+
+    const frontmatter = this.generateFrontmatter(session, opts);
+    const body = this.generateBody(session, opts);
+
+    return `---\n${frontmatter}---\n\n${body}`;
+  }
+
+  /**
+   * Generate YAML frontmatter
+   */
+  private static generateFrontmatter(
+    session: VoiceJournalSession,
+    options: ObsidianExportOptions
+  ): string {
+    const lines: string[] = [];
+
+    // Basic metadata
+    lines.push(`title: Journal Entry - ${session.startTime.toLocaleDateString()}`);
+    lines.push(`date: ${session.startTime.toISOString()}`);
+    lines.push(`mode: ${session.mode}`);
+    lines.push(`element: ${session.element}`);
+
+    if (options.includeMetadata) {
+      // Symbols
+      if (session.analysis?.symbols && session.analysis.symbols.length > 0) {
+        lines.push(`symbols:`);
+        session.analysis.symbols.forEach(symbol => {
+          lines.push(`  - ${symbol}`);
+        });
+      }
+
+      // Archetypes
+      if (session.analysis?.archetypes && session.analysis.archetypes.length > 0) {
+        lines.push(`archetypes:`);
+        session.analysis.archetypes.forEach(archetype => {
+          lines.push(`  - ${archetype}`);
+        });
+      }
+
+      // Emotional tone
+      if (session.analysis?.emotionalTone) {
+        lines.push(`emotion: ${session.analysis.emotionalTone}`);
+      }
+
+      // Transformation score
+      if (session.analysis?.transformationScore !== undefined) {
+        lines.push(`transformation_score: ${session.analysis.transformationScore.toFixed(2)}`);
+      }
+
+      // Word count and duration
+      lines.push(`word_count: ${session.wordCount}`);
+      if (session.duration) {
+        lines.push(`duration: ${session.duration}s`);
+      }
+    }
+
+    // Tags
+    const tags = this.generateTags(session);
+    if (tags.length > 0) {
+      lines.push(`tags:`);
+      tags.forEach(tag => {
+        lines.push(`  - ${tag}`);
+      });
+    }
+
+    return lines.join('\n') + '\n';
+  }
+
+  /**
+   * Generate markdown body
+   */
+  private static generateBody(
+    session: VoiceJournalSession,
+    options: ObsidianExportOptions
+  ): string {
+    const sections: string[] = [];
+
+    // Journal entry
+    sections.push('## Your Entry\n');
+    sections.push(session.transcript);
+    sections.push('');
+
+    // MAIA's reflection
+    if (options.includeReflection && session.analysis?.reflection) {
+      sections.push('## MAIA\'s Reflection\n');
+      sections.push(session.analysis.reflection);
+      sections.push('');
+
+      if (session.analysis.prompt) {
+        sections.push('**Prompt for Exploration:**');
+        sections.push(`> ${session.analysis.prompt}`);
+        sections.push('');
+      }
+
+      if (session.analysis.closing) {
+        sections.push('**Closing:**');
+        sections.push(`> ${session.analysis.closing}`);
+        sections.push('');
+      }
+    }
+
+    // Metadata section
+    if (options.includeMetadata && session.analysis) {
+      sections.push('---\n');
+      sections.push('## Symbolic Analysis\n');
+
+      if (session.analysis.symbols && session.analysis.symbols.length > 0) {
+        sections.push('**Symbols:** ' + session.analysis.symbols.map(s => `[[${s}]]`).join(', '));
+        sections.push('');
+      }
+
+      if (session.analysis.archetypes && session.analysis.archetypes.length > 0) {
+        sections.push('**Archetypes:** ' + session.analysis.archetypes.map(a => `[[${a}]]`).join(', '));
+        sections.push('');
+      }
+
+      if (session.analysis.emotionalTone) {
+        sections.push(`**Emotional Tone:** ${session.analysis.emotionalTone}`);
+        sections.push('');
+      }
+
+      if (session.analysis.transformationScore !== undefined) {
+        const scorePercent = Math.round(session.analysis.transformationScore * 100);
+        sections.push(`**Transformation Score:** ${scorePercent}%`);
+        sections.push('');
+      }
+    }
+
+    // Footer
+    sections.push('---\n');
+    sections.push(`*Generated by MAIA on ${new Date().toLocaleDateString()}*`);
+
+    return sections.join('\n');
+  }
+
+  /**
+   * Generate tags from session data
+   */
+  private static generateTags(session: VoiceJournalSession): string[] {
+    const tags: string[] = [];
+
+    // Mode tag
+    tags.push(`journal/${session.mode}`);
+
+    // Element tag
+    tags.push(`element/${session.element}`);
+
+    // Symbol tags
+    if (session.analysis?.symbols) {
+      session.analysis.symbols.forEach(symbol => {
+        tags.push(`symbol/${symbol.toLowerCase().replace(/\s+/g, '-')}`);
+      });
+    }
+
+    // Archetype tags
+    if (session.analysis?.archetypes) {
+      session.analysis.archetypes.forEach(archetype => {
+        tags.push(`archetype/${archetype.toLowerCase().replace(/\s+/g, '-')}`);
+      });
+    }
+
+    // Emotion tag
+    if (session.analysis?.emotionalTone) {
+      tags.push(`emotion/${session.analysis.emotionalTone.toLowerCase().replace(/\s+/g, '-')}`);
+    }
+
+    return tags;
+  }
+
+  /**
+   * Generate filename for export
+   */
+  static generateFilename(
+    session: VoiceJournalSession,
+    naming: 'timestamp' | 'date-title' | 'date-mode' = 'date-mode'
+  ): string {
+    const date = session.startTime;
+    const dateStr = date.toISOString().split('T')[0]; // YYYY-MM-DD
+
+    switch (naming) {
+      case 'timestamp':
+        return `journal-${session.id}.md`;
+
+      case 'date-title':
+        const title = session.transcript
+          .split(' ')
+          .slice(0, 5)
+          .join('-')
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, '');
+        return `${dateStr}-${title}.md`;
+
+      case 'date-mode':
+      default:
+        return `${dateStr}-${session.mode}-journal.md`;
+    }
+  }
+
+  /**
+   * Generate folder path based on structure preference
+   */
+  static generateFolderPath(
+    session: VoiceJournalSession,
+    structure: 'flat' | 'by-date' | 'by-mode' = 'by-date',
+    basePath: string = 'Journals'
+  ): string {
+    const date = session.startTime;
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+
+    switch (structure) {
+      case 'flat':
+        return basePath;
+
+      case 'by-date':
+        return `${basePath}/${year}/${month}`;
+
+      case 'by-mode':
+        return `${basePath}/${session.mode}`;
+
+      default:
+        return basePath;
+    }
+  }
+
+  /**
+   * Export single session to markdown
+   */
+  static exportSession(
+    session: VoiceJournalSession,
+    options: ObsidianExportOptions = {}
+  ): ExportResult {
+    try {
+      const opts = { ...this.defaultOptions, ...options };
+      const content = this.generateMarkdown(session, opts);
+      const filename = this.generateFilename(session, opts.fileNaming);
+      const folderPath = this.generateFolderPath(session, opts.folderStructure);
+      const fullPath = `${folderPath}/${filename}`;
+
+      return {
+        success: true,
+        filename,
+        content,
+        path: fullPath
+      };
+    } catch (error) {
+      return {
+        success: false,
+        filename: '',
+        content: '',
+        path: '',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      };
+    }
+  }
+
+  /**
+   * Export multiple sessions
+   */
+  static exportBatch(
+    sessions: VoiceJournalSession[],
+    options: ObsidianExportOptions = {}
+  ): ExportResult[] {
+    return sessions.map(session => this.exportSession(session, options));
+  }
+
+  /**
+   * Generate index file for all exports
+   */
+  static generateIndex(sessions: VoiceJournalSession[]): string {
+    const lines: string[] = [];
+
+    lines.push('# Journal Index\n');
+    lines.push(`Total Entries: ${sessions.length}\n`);
+    lines.push(`Last Updated: ${new Date().toLocaleDateString()}\n`);
+    lines.push('---\n');
+
+    // Group by month
+    const byMonth = new Map<string, VoiceJournalSession[]>();
+    sessions.forEach(session => {
+      const monthKey = session.startTime.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long'
+      });
+      if (!byMonth.has(monthKey)) {
+        byMonth.set(monthKey, []);
+      }
+      byMonth.get(monthKey)!.push(session);
+    });
+
+    // Sort months descending
+    const sortedMonths = Array.from(byMonth.entries())
+      .sort((a, b) => new Date(b[0]).getTime() - new Date(a[0]).getTime());
+
+    sortedMonths.forEach(([month, monthSessions]) => {
+      lines.push(`## ${month}\n`);
+      monthSessions
+        .sort((a, b) => b.startTime.getTime() - a.startTime.getTime())
+        .forEach(session => {
+          const filename = this.generateFilename(session);
+          const date = session.startTime.toLocaleDateString();
+          const symbols = session.analysis?.symbols?.join(', ') || '';
+          lines.push(`- [[${filename.replace('.md', '')}]] - ${date} (${session.mode}) ${symbols ? `- Symbols: ${symbols}` : ''}`);
+        });
+      lines.push('');
+    });
+
+    return lines.join('\n');
+  }
+}
+
+export const obsidianExporter = ObsidianExporter;

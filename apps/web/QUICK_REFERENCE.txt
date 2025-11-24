@@ -1,0 +1,201 @@
+================================================================================
+MAIA CONSCIOUSNESS GATEWAY - QUICK REFERENCE
+================================================================================
+
+BROKEN MODES: free, emotional, direction
+WORKING MODES: dream, shadow
+
+================================================================================
+COMPLETE FLOW
+================================================================================
+
+1. USER CLICKS GATEWAY
+   └─> ModeSelection.tsx (lines 104-109, 218-223)
+       onClick={ setMode() with 300ms delay }
+
+2. STATE UPDATE
+   └─> lib/maia/state.ts (lines 44-49)
+       setMode(mode) {
+         set({
+           selectedMode: mode,
+           currentView: 'journal-entry'
+         })
+       }
+
+3. VIEW ROUTING
+   └─> app/maia/page.tsx (lines 59-74)
+       if (currentView === 'journal-entry')
+         return <JournalEntry />
+
+4. COMPONENT RENDER
+   └─> components/maia/JournalEntry.tsx
+       if (!selectedMode) return null  [SAFETY CHECK]
+       display journal interface
+
+5. SUBMIT ENTRY
+   └─> POST /api/journal/analyze
+       validate mode in ['free','dream','emotional','shadow','direction']
+       analyze with Claude
+
+6. SHOW REFLECTION
+   └─> components/maia/MaiaReflection.tsx
+       display analysis results
+
+================================================================================
+KEY CODE LOCATIONS
+================================================================================
+
+STATE MANAGEMENT
+  File: lib/maia/state.ts
+  Lines: 44-49 (setMode function)
+  Lines: 34-64 (full store definition)
+  Issue: Only persists entries, not selectedMode or currentView
+
+MODE SELECTION UI
+  File: components/maia/ModeSelection.tsx
+  Lines: 48-56 (getModeVariant function - MISSING 'free' case!)
+  Lines: 104-109, 218-223 (click handlers with 300ms delay)
+
+JOURNAL ENTRY COMPONENT
+  File: components/maia/JournalEntry.tsx
+  Line: 145 (safety check: if (!selectedMode) return null)
+  Lines: 150-158 (getModeVariant function - MISSING 'free' case!)
+
+VIEW ROUTER
+  File: app/maia/page.tsx
+  Lines: 59-74 (renderView switch statement)
+
+API VALIDATION
+  File: app/api/journal/analyze/route.ts
+  Lines: 27-32 (mode validation - all 5 modes accepted)
+
+PROMPT DEFINITIONS
+  File: lib/journaling/JournalingPrompts.ts
+  Lines: 204-229 (JOURNALING_MODE_DESCRIPTIONS - all 5 modes defined)
+
+================================================================================
+MODE VARIANT MAPPING
+================================================================================
+
+Current (ModeSelection.tsx & JournalEntry.tsx):
+  'shadow'    -> 'neural'        (WORKING)
+  'dream'     -> 'mystical'      (WORKING)
+  'emotional' -> 'jade'          (BROKEN)
+  'direction' -> 'transcendent'  (BROKEN)
+  'free'      -> (MISSING!)      -> defaults to 'jade' (BROKEN)
+
+Working modes have explicit cases.
+Broken modes have issues with variants or rendering.
+
+================================================================================
+MOST LIKELY CAUSES (in order of probability)
+================================================================================
+
+1. VARIANT RENDERING ISSUE
+   The 'jade' and 'transcendent' variants might not be properly implemented
+   in ConsciousnessVessel component. Check:
+   - components/consciousness/ConsciousnessVessel.tsx
+   - How it handles variant prop
+   - If 'jade' and 'transcendent' are missing implementations
+
+2. STATE PERSISTENCE RACE CONDITION
+   300ms delay + Zustand rehydration might cause selectedMode to reset
+   Check:
+   - If state is getting cleared/reset during the delay
+   - Timing of store initialization
+   - localStorage interactions
+
+3. MISSING 'free' CASE
+   'free' mode has no explicit case in getModeVariant()
+   Falls through to default 'jade' variant
+   This code smell suggests incomplete implementation
+
+4. MISSING CONSOLE LOGS
+   The setMode() function logs but JournalEntry doesn't
+   Add logging to verify:
+   - When component mounts with selectedMode
+   - What value selectedMode has
+   - If safety check is being triggered
+
+================================================================================
+RECOMMENDED FIXES
+================================================================================
+
+IMMEDIATE (5 minutes):
+  1. Add explicit case for 'free' in getModeVariant()
+     case 'free': return 'jade';
+
+  2. Add debug logging to JournalEntry.tsx:
+     useEffect(() => {
+       console.log('JournalEntry mounted with selectedMode:', selectedMode);
+     }, [selectedMode]);
+
+SHORT TERM (15 minutes):
+  1. Extract getModeVariant() to shared utility (it's duplicated)
+  2. Extract getModeVariant() call in ModeSelection to ConsciousnessVessel
+  3. Add loading/error states to JournalEntry while state is being set
+
+MEDIUM TERM (1 hour):
+  1. Check ConsciousnessVessel variant handling
+  2. Review variant implementations ('jade', 'transcendent', etc.)
+  3. Consider persisting selectedMode/currentView if user expects continuity
+
+================================================================================
+TEST CHECKLIST
+================================================================================
+
+For each of the 5 modes:
+  [ ] Click mode gateway
+  [ ] Verify journal interface appears
+  [ ] Verify correct prompt displays
+  [ ] Verify consciousness vessel appears with correct variant
+  [ ] Write entry and submit
+  [ ] Verify API call succeeds (check network tab)
+  [ ] Verify reflection displays correctly
+  [ ] Verify can create another entry
+
+Special tests:
+  [ ] Reload page after selecting mode (state should reset)
+  [ ] Check browser console for errors/warnings
+  [ ] Test in incognito mode (clean localStorage)
+  [ ] Compare state between working vs broken modes using React DevTools
+
+================================================================================
+DOCUMENTATION
+================================================================================
+
+Three analysis documents have been created:
+
+1. INVESTIGATION_SUMMARY.md (THIS FILE BUT DETAILED)
+   - Complete flow breakdown
+   - 4 hypotheses for root cause
+   - Recommended next steps
+   - Test plan
+
+2. CONSCIOUSNESS_GATEWAY_ANALYSIS.md
+   - In-depth technical analysis
+   - State flow diagram
+   - Detailed comparisons
+   - Investigation points
+
+3. CODE_FLOW_REFERENCE.md
+   - Code snippets for each step
+   - Timing diagram
+   - Mode flow completeness table
+   - API endpoint details
+
+All files are in: /Users/soullab/MAIA-FRESH/apps/web/
+
+================================================================================
+SUMMARY
+================================================================================
+
+The issue is likely in one of these areas:
+1. ConsciousnessVessel component variant handling ('jade' or 'transcendent')
+2. Missing explicit 'free' case in getModeVariant()
+3. State persistence/hydration race condition
+4. Missing console logs make diagnosis difficult
+
+Start by adding debug logging, then check ConsciousnessVessel implementation.
+
+================================================================================

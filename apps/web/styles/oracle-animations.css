@@ -1,0 +1,107 @@
+/* Oracle Subtle Animation Styles */
+
+/* Gold pulse animation for breakthroughs */
+@keyframes goldPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4);
+  }
+  25% {
+    box-shadow: 0 0 0 10px rgba(251, 191, 36, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(251, 191, 36, 0.1);
+  }
+  75% {
+    box-shadow: 0 0 0 30px rgba(251, 191, 36, 0.05);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+  }
+}
+
+/* Subtle border transitions for emotional states */
+.emotion-border-shift {
+  transition: border-color 1.5s ease-in-out;
+}
+
+/* High energy state */
+.emotion-high {
+  border-color: rgba(251, 146, 60, 0.3);
+}
+
+/* Balanced state */
+.emotion-balanced {
+  border-color: rgba(147, 51, 234, 0.3);
+}
+
+/* Calm state */
+.emotion-calm {
+  border-color: rgba(96, 165, 250, 0.3);
+}
+
+/* Processing state */
+.emotion-processing {
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+/* Ultra-subtle confidence indicator */
+.confidence-high {
+  filter: brightness(1.02);
+  transition: filter 0.5s ease;
+}
+
+/* Breakthrough pulse class */
+.breakthrough-pulse {
+  animation: goldPulse 3s ease-out;
+}
+
+/* Streaming indicator */
+@keyframes streamingGlow {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.streaming-glow {
+  animation: streamingGlow 2s ease-in-out infinite;
+}
+
+/* Message appearance */
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-appear {
+  animation: messageAppear 0.3s ease-out;
+}
+
+/* Subtle element indicators */
+.element-air {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.05), rgba(96, 165, 250, 0.05));
+}
+
+.element-fire {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.05), rgba(251, 191, 36, 0.05));
+}
+
+.element-water {
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.05), rgba(147, 197, 253, 0.05));
+}
+
+.element-earth {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(74, 222, 128, 0.05));
+}
+
+.element-aether {
+  background: linear-gradient(135deg, rgba(147, 51, 234, 0.05), rgba(196, 181, 253, 0.05));
+}

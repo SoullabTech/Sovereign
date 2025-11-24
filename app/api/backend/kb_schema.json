@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OracleAgent Knowledge Base Schema",
+  "description": "Schema for storing Spiralogic elements, frameworks, archetypes, and prompt templates",
+  "type": "object",
+  "properties": {
+    "elements": {
+      "type": "array",
+      "description": "Spiralogic elements and phases",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "phase": {
+            "type": "string",
+            "enum": ["Cardinal", "Fixed", "Mutable"]
+          },
+          "description": { "type": "string" },
+          "keywords": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["id", "name", "phase"]
+      }
+    },
+    "frameworks": {
+      "type": "array",
+      "description": "Supported insight frameworks",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "promptTemplates": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/PromptTemplate" }
+          }
+        },
+        "required": ["id", "name"]
+      }
+    },
+    "archetypes": {
+      "type": "array",
+      "description": "Archetype definitions and evolution stages",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "shadowStages": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "integrationExercises": {
+            "type": "array",
+            "items": { "type": "string" }
+          }
+        },
+        "required": ["id", "name"]
+      }
+    },
+    "nlpPatterns": {
+      "type": "array",
+      "description": "NLP language patterns for detection and reframing",
+      "items": {
+        "type": "object",
+        "properties": {
+          "patternId": { "type": "string" },
+          "description": { "type": "string" },
+          "regex": { "type": "string" },
+          "reframingPrompt": { "type": "string" }
+        },
+        "required": ["patternId", "regex", "reframingPrompt"]
+      }
+    }
+  },
+  "definitions": {
+    "PromptTemplate": {
+      "type": "object",
+      "properties": {
+        "templateId": { "type": "string" },
+        "frameworkId": { "type": "string" },
+        "elementId": { "type": "string" },
+        "text": { "type": "string" },
+        "variables": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["templateId", "frameworkId", "text"]
+    }
+  },
+  "required": ["elements", "frameworks", "archetypes", "nlpPatterns"]
+}

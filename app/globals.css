@@ -1,0 +1,346 @@
+/* Import consciousness-aware fonts for archetypal communication */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Spectral:ital,wght@0,400;0,600;1,400;1,600&display=swap');
+
+/* Enhanced typography for different consciousness styles */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@200;300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global icon visibility fix - ensures all icons are visible */
+@import url('./icon-fix.css');
+
+/* Sacred holoflower animations */
+@import url('../styles/sacred-animations.css');
+
+/* Consciousness-aware recognition animations */
+@import url('../styles/consciousness-animations.css');
+
+/* Bene Gesserit ceremonial theme */
+/* @import url('../styles/benegesserit-theme.css'); */ /* TEMP: Disabled - @layer base error blocking Tailwind compilation */
+
+/* Custom animations for onboarding and voice interface */
+@layer utilities {
+  @keyframes spin-slow {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 8s linear infinite;
+  }
+
+  /* Tesla-style pulsing torus animations */
+  @keyframes pulse-ring-outer {
+    0%, 100% { 
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+      border-color: rgb(245 158 11 / 0.3);
+    }
+    50% { 
+      transform: scale(1.1) rotate(180deg);
+      opacity: 0.6;
+      border-color: rgb(245 158 11 / 0.6);
+    }
+  }
+
+  @keyframes pulse-ring-middle {
+    0%, 100% { 
+      transform: scale(1) rotate(0deg);
+      opacity: 0.8;
+      border-color: rgb(251 191 36 / 0.5);
+    }
+    50% { 
+      transform: scale(1.2) rotate(-90deg);
+      opacity: 0.4;
+      border-color: rgb(251 191 36 / 0.8);
+    }
+  }
+
+  @keyframes pulse-core {
+    0%, 100% { 
+      transform: scale(1);
+      box-shadow: 0 0 20px rgb(245 158 11 / 0.5);
+    }
+    50% { 
+      transform: scale(1.1);
+      box-shadow: 0 0 40px rgb(245 158 11 / 0.8), 0 0 60px rgb(245 158 11 / 0.4);
+    }
+  }
+
+  .animate-pulse-ring-outer {
+    animation: pulse-ring-outer 2s ease-in-out infinite;
+  }
+
+  .animate-pulse-ring-middle {
+    animation: pulse-ring-middle 2s ease-in-out infinite 0.3s;
+  }
+
+  .animate-pulse-core {
+    animation: pulse-core 2s ease-in-out infinite 0.1s;
+  }
+
+  .bg-gradient-radial {
+    background: radial-gradient(circle, var(--tw-gradient-from), var(--tw-gradient-to));
+  }
+
+  /* 🫀 Hearthlight Breathing - The Earth breathes with you */
+  @keyframes hearthlight {
+    0%, 100% {
+      opacity: 0.95;
+      filter: brightness(1.0);
+    }
+    50% {
+      opacity: 1.0;
+      filter: brightness(1.03);
+    }
+  }
+
+  /* Apply breathing to soul-background */
+  .bg-soul-background {
+    animation: hearthlight 14s ease-in-out infinite;
+  }
+
+  /* 🜃 Lumen - Precision instrument calibration breathing */
+  @keyframes lumen {
+    0%, 100% {
+      filter: brightness(0.95);
+      opacity: 0.95;
+    }
+    50% {
+      filter: brightness(1.0);
+      opacity: 1.0;
+    }
+  }
+
+  /* Apply lumen to ambient halos and glows */
+  .animate-lumen {
+    animation: lumen 14s cubic-bezier(0.25, 0.1, 0.25, 1) infinite;
+  }
+
+  /* Utility class for pages with bottom menu bar */
+  .pb-menu-bar {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Ensure inputs are always readable - prevents white text on white background */
+@layer base {
+  input, textarea, select {
+    @apply text-gray-900 bg-white;
+  }
+
+  :root.dark input, :root.dark textarea, :root.dark select,
+  html.dark input, html.dark textarea, html.dark select {
+    @apply text-gray-100 bg-gray-900;
+  }
+}
+
+/* PWA Mobile Optimizations */
+@layer base {
+  /* iOS Safe Area Support */
+  html {
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  /* Optimize for mobile without breaking desktop */
+  body {
+    width: 100%;
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Main app container with better mobile handling */
+  #__next, main {
+    min-height: 100vh;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Only apply strict viewport lock in standalone mode */
+  @media all and (display-mode: standalone) {
+    body {
+      position: fixed;
+      overflow: hidden;
+      height: 100vh;
+    }
+
+    #__next, main {
+      height: 100vh;
+      overflow-y: auto;
+    }
+  }
+
+  /* Disable user selection on UI elements */
+  button, a, nav {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Remove tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Smooth momentum scrolling on iOS */
+  .scroll-container {
+    -webkit-overflow-scrolling: touch;
+    overflow-y: scroll;
+  }
+
+  /* Fix for iOS keyboard pushing content up */
+  @supports (height: 100dvh) {
+    body, #__next {
+      height: 100dvh;
+    }
+  }
+
+  /* iOS Notch Support - iPhone X and later */
+  @supports (padding: max(0px)) {
+    .safe-top {
+      padding-top: max(1rem, env(safe-area-inset-top));
+    }
+
+    .safe-bottom {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .safe-left {
+      padding-left: max(1rem, env(safe-area-inset-left));
+    }
+
+    .safe-right {
+      padding-right: max(1rem, env(safe-area-inset-right));
+    }
+  }
+
+  /* Prevent zoom on input focus (iOS) */
+  input[type="text"],
+  input[type="email"],
+  input[type="number"],
+  input[type="tel"],
+  input[type="password"],
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* iOS Standalone Mode Adjustments */
+  @media all and (display-mode: standalone) {
+    body {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    /* Hide scrollbars in standalone */
+    ::-webkit-scrollbar {
+      display: none;
+    }
+
+    * {
+      scrollbar-width: none;
+    }
+  }
+
+  /* Landscape orientation fixes */
+  @media screen and (orientation: landscape) and (max-height: 500px) {
+    .fixed.bottom-8 {
+      bottom: 1rem;
+    }
+
+    .h-screen {
+      height: 100vh;
+      max-height: 100vh;
+    }
+  }
+
+  /* Consciousness-Aware Typography System */
+  .consciousness-header {
+    font-family: 'Crimson Pro', serif;
+    font-weight: 300;
+    font-size: clamp(1.8rem, 4vw, 3.2rem);
+    line-height: 1.4;
+    color: var(--aether);
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+  }
+
+  .consciousness-header::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--fire), var(--water));
+    border-radius: 1px;
+    opacity: 0.6;
+  }
+
+  .heart-text {
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 400;
+    font-size: 1.125rem;
+    line-height: 1.8;
+    color: var(--water);
+    margin: 1.5rem 0;
+  }
+
+  .clarity-text {
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 400;
+    font-size: 1rem;
+    line-height: 1.6;
+    color: var(--air-secondary);
+    letter-spacing: 0.02em;
+  }
+
+  .grounded-text {
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.4;
+    color: var(--earth);
+  }
+
+  .sacred-subtitle {
+    font-family: 'Spectral', serif;
+    font-weight: 400;
+    font-size: 1.25rem;
+    line-height: 1.6;
+    color: var(--aether-secondary);
+    font-style: italic;
+  }
+
+  /* Archetypal Typography Adaptations */
+  .fire-user .consciousness-header {
+    color: var(--fire);
+    font-weight: 400;
+  }
+
+  .water-user .consciousness-header {
+    color: var(--water);
+    line-height: 1.6;
+  }
+
+  .earth-user .consciousness-header {
+    color: var(--earth);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-weight: 500;
+  }
+
+  .air-user .consciousness-header {
+    color: var(--air-tertiary);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+}

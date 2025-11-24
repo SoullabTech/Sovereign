@@ -1,0 +1,168 @@
+import { NextRequest, NextResponse } from 'next/server';
+
+// Enhanced Oracle Chat API that proxies to deployed backend
+export async function POST(request: NextRequest) {
+  try {
+    const { message, oracle, sessionId, element, enableVoice, useCSM, emotionalState } = await request.json();
+    
+    if (!message) {
+      return NextResponse.json({ error: 'Missing message' }, { status: 400 });
+    }
+
+    // Get user session (in production, get from auth)
+    const userId = request.headers.get('x-user-id') || 'anonymous';
+    const currentSessionId = sessionId || `session-${Date.now()}`;
+    const threadId = request.headers.get('x-thread-id') || currentSessionId;
+
+    // Proxy to deployed backend Maya endpoint
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend-url.com';
+    
+    const response = await fetch(`${backendUrl}/api/v1/converse/message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-user-id': userId,
+        'x-session-id': currentSessionId,
+        'x-thread-id': threadId
+      },
+      body: JSON.stringify({
+        userText: message,
+        element: element || 'aether',
+        userId: userId,
+        enableVoice: enableVoice || false,
+        useCSM: useCSM || false,
+        emotionalState: emotionalState,
+        metadata: {
+          oracle: oracle || 'Maya',
+          sessionId: currentSessionId,
+          threadId: threadId,
+          personality: 'adaptive mystical guide',
+          voiceProfile: 'maya_oracle_v1'
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend request failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    // Handle voice generation if enabled
+    let audioUrl = null;
+    let voiceParams = null;
+    
+    if (enableVoice && result.response?.text) {
+      try {
+        // Generate voice with CSM if enabled
+        const voiceResponse = await fetch('/api/voice/sesame', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: result.response.text,
+            element: result.response.element || element || 'aether',
+            threadId: threadId,
+            useCSM: useCSM,
+            emotionalState: emotionalState,
+            contextSegments: result.contextSegments
+          })
+        });
+        
+        if (voiceResponse.ok) {
+          const audioBuffer = await voiceResponse.arrayBuffer();
+          // In production, upload to storage and return URL
+          audioUrl = `data:audio/wav;base64,${Buffer.from(audioBuffer).toString('base64')}`;
+          voiceParams = result.voiceParams;
+        }
+      } catch (voiceError) {
+        console.error('Voice generation failed:', voiceError);
+        // Continue without voice
+      }
+    }
+
+    return NextResponse.json({
+      message: result.response?.text || result.message,
+      element: result.response?.element || result.element || 'aether',
+      confidence: result.response?.confidence || 0.8,
+      sessionId: currentSessionId,
+      threadId: threadId,
+      audioUrl: audioUrl,
+      voiceParams: voiceParams,
+      contextUsed: result.contextSegments?.length || 0,
+      breakthroughDetected: result.breakthroughDetected,
+      breakthroughMarkers: result.breakthroughMarkers,
+      metadata: {
+        source: result.response?.source || 'maya',
+        processingTime: result.response?.processingTime || 0,
+        model: result.response?.metadata?.model || 'maya-oracle',
+        csmEnabled: useCSM || false,
+        voiceGenerated: !!audioUrl,
+        ...result.response?.metadata
+      }
+    });
+
+  } catch (error) {
+    console.error('Oracle chat error:', error);
+    
+    // Maya's warm fallback response (no mystical language)
+    return NextResponse.json({
+      message: "I'm having some technical difficulties connecting to my full system. I'm still here with you though - what's on your mind?",
+      element: 'aether',
+      confidence: 0.5,
+      metadata: {
+        fallback: true,
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+        maya_mode: 'warmth_fallback'
+      }
+    });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const userId = request.headers.get('x-user-id') || 'anonymous';
+    const sessionId = request.nextUrl.searchParams.get('sessionId') || `session-${Date.now()}`;
+
+    // Proxy to backend health/status endpoint
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://your-backend-url.com';
+    
+    const response = await fetch(`${backendUrl}/api/v1/converse/health`, {
+      method: 'GET',
+      headers: {
+        'x-user-id': userId,
+        'x-session-id': sessionId
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Backend health check failed: ${response.status}`);
+    }
+
+    const healthData = await response.json();
+
+    return NextResponse.json({
+      summary: 'Oracle systems are online and ready to provide guidance.',
+      sessionId,
+      status: 'active',
+      backend: healthData,
+      oracle: 'Maya',
+      capabilities: [
+        'Streaming conversations',
+        'Elemental guidance (Air, Fire, Water, Earth, Aether)',
+        'Voice synthesis',
+        'Memory integration',
+        'Sesame/Maya refinement'
+      ]
+    });
+
+  } catch (error) {
+    console.error('Oracle status error:', error);
+    return NextResponse.json({ 
+      error: 'Oracle systems temporarily offline',
+      status: 'maintenance',
+      message: 'Please try again in a few moments while we realign the cosmic frequencies.',
+      sessionId: request.nextUrl.searchParams.get('sessionId') || `session-${Date.now()}`
+    }, { status: 503 });
+  }
+}

@@ -1,0 +1,284 @@
+/* Oracle Spacing System - Uizard Dark + Modern Adaptations */
+/* Preserves our mystical identity while adding modern spacing patterns */
+
+:root {
+  /* ========================================
+     UIZARD-INSPIRED SPACING TOKENS
+     Extracted from Dark + Modern patterns
+     ======================================== */
+  
+  /* Base spacing scale (8px base for consistency) */
+  --oracle-space-xs: 0.25rem;    /* 4px  - Tight spacing */
+  --oracle-space-sm: 0.5rem;     /* 8px  - Small gaps */
+  --oracle-space-md: 1rem;       /* 16px - Standard spacing */
+  --oracle-space-lg: 1.5rem;     /* 24px - Comfortable spacing */
+  --oracle-space-xl: 2rem;       /* 32px - Large sections */
+  --oracle-space-2xl: 3rem;      /* 48px - Major sections */
+  --oracle-space-3xl: 4rem;      /* 64px - Hero sections */
+  
+  /* Component-specific spacing (enhanced from Uizard patterns) */
+  --oracle-card-padding: var(--oracle-space-lg);          /* 24px - was p-6 */
+  --oracle-card-padding-spacious: var(--oracle-space-xl); /* 32px - enhanced */
+  --oracle-button-padding-x: var(--oracle-space-md);      /* 16px - horizontal */
+  --oracle-button-padding-y: var(--oracle-space-sm);      /* 8px - vertical */
+  --oracle-section-gap: var(--oracle-space-2xl);          /* 48px - between sections */
+  --oracle-component-gap: var(--oracle-space-lg);         /* 24px - between components */
+  
+  /* Layout containers (wider than current for modern feel) */
+  --oracle-container-narrow: 64rem;   /* 1024px - between our current max-w-4xl and max-w-7xl */
+  --oracle-container-wide: 90rem;     /* 1440px - wider than current max-w-7xl */
+  --oracle-container-padding: var(--oracle-space-lg);
+  
+  /* Grid gaps (improved from Uizard insights) */
+  --oracle-grid-gap-tight: var(--oracle-space-md);    /* 16px */
+  --oracle-grid-gap-normal: var(--oracle-space-lg);   /* 24px - our current gap-6 */
+  --oracle-grid-gap-spacious: var(--oracle-space-xl); /* 32px */
+  
+  /* ========================================
+     PRESERVE EXISTING ORACLE IDENTITY
+     Keep our mystical brand colors intact
+     ======================================== */
+  
+  /* Oracle gradient themes (unchanged) */
+  --oracle-gradient-primary: linear-gradient(135deg, #8b5cf6, #f97316);
+  --oracle-gradient-card: linear-gradient(135deg, #6366f1, #8b5cf6);
+  --oracle-gradient-mystical: linear-gradient(135deg, #a855f7, #ec4899);
+  
+  /* Glassmorphic effects (enhanced) */
+  --oracle-glass-bg: rgba(15, 23, 42, 0.8);           /* bg-background/80 */
+  --oracle-glass-border: rgba(139, 92, 246, 0.2);     /* border-amber-500/20 */
+  --oracle-glass-blur: blur(24px);                    /* backdrop-blur-xl */
+  
+  /* Sacred shadow system (new from Uizard) */
+  --oracle-shadow-sm: 0 1px 2px 0 rgba(139, 92, 246, 0.05);
+  --oracle-shadow-md: 0 4px 6px -1px rgba(139, 92, 246, 0.1), 0 2px 4px -1px rgba(139, 92, 246, 0.06);
+  --oracle-shadow-lg: 0 10px 15px -3px rgba(139, 92, 246, 0.1), 0 4px 6px -2px rgba(139, 92, 246, 0.05);
+  --oracle-shadow-mystical: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+/* ========================================
+   ENHANCED UTILITY CLASSES
+   Modern spacing with Oracle mystique
+   ======================================== */
+
+/* Container classes with improved proportions */
+.oracle-container {
+  max-width: var(--oracle-container-wide);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--oracle-container-padding);
+  padding-right: var(--oracle-container-padding);
+}
+
+.oracle-container--narrow {
+  max-width: var(--oracle-container-narrow);
+}
+
+.oracle-container--full {
+  max-width: none;
+}
+
+/* Grid system enhancements */
+.oracle-grid {
+  display: grid;
+  gap: var(--oracle-grid-gap-normal);
+}
+
+.oracle-grid--tight {
+  gap: var(--oracle-grid-gap-tight);
+}
+
+.oracle-grid--spacious {
+  gap: var(--oracle-grid-gap-spacious);
+}
+
+/* Card spacing variations */
+.oracle-card {
+  padding: var(--oracle-card-padding);
+  background: var(--oracle-glass-bg);
+  backdrop-filter: var(--oracle-glass-blur);
+  border: 1px solid var(--oracle-glass-border);
+  border-radius: 0.75rem;
+  
+  /* Performance optimization for animations */
+  will-change: transform, box-shadow, backdrop-filter;
+  transform: translateZ(0); /* Force GPU acceleration */
+  backface-visibility: hidden; /* Prevent flicker */
+}
+
+.oracle-card--spacious {
+  padding: var(--oracle-card-padding-spacious);
+}
+
+.oracle-card--compact {
+  padding: var(--oracle-space-md);
+}
+
+/* Section spacing */
+.oracle-section {
+  margin-bottom: var(--oracle-section-gap);
+}
+
+.oracle-component-stack > * + * {
+  margin-top: var(--oracle-component-gap);
+}
+
+/* ========================================
+   RESPONSIVE ENHANCEMENTS
+   Better mobile spacing from Uizard
+   ======================================== */
+
+@media (max-width: 768px) {
+  :root {
+    /* Tighter spacing on mobile */
+    --oracle-container-padding: var(--oracle-space-md);
+    --oracle-card-padding: var(--oracle-space-md);
+    --oracle-section-gap: var(--oracle-space-xl);
+  }
+  
+  .oracle-container {
+    padding-left: var(--oracle-space-md);
+    padding-right: var(--oracle-space-md);
+  }
+  
+  .oracle-grid {
+    gap: var(--oracle-space-md);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    /* Even tighter on small mobile */
+    --oracle-container-padding: var(--oracle-space-sm);
+    --oracle-card-padding: var(--oracle-space-sm);
+  }
+}
+
+/* ========================================
+   COMPONENT-SPECIFIC ENHANCEMENTS
+   Apply Uizard spacing to our components
+   ======================================== */
+
+/* Enhanced button spacing */
+.oracle-button {
+  padding: var(--oracle-button-padding-y) var(--oracle-button-padding-x);
+  border-radius: 0.5rem;
+  transition: all 200ms ease-in-out;
+  
+  /* Performance optimization for interactions */
+  will-change: transform, box-shadow, background-color;
+  transform: translateZ(0); /* Force GPU acceleration */
+}
+
+.oracle-button--sm {
+  height: 2.25rem; /* h-9 */
+  padding-left: var(--oracle-space-md);
+  padding-right: var(--oracle-space-md);
+  font-size: 0.875rem;
+}
+
+.oracle-button--default {
+  height: 2.75rem; /* h-11 - increased from h-10 */
+  padding-left: var(--oracle-space-lg);
+  padding-right: var(--oracle-space-lg);
+  font-size: 0.875rem;
+}
+
+.oracle-button--lg {
+  height: 3.25rem; /* h-13 - increased from h-11 */
+  padding-left: var(--oracle-space-xl);
+  padding-right: var(--oracle-space-xl);
+  font-size: 1rem;
+}
+
+/* Enhanced form field spacing */
+.oracle-form-field {
+  margin-bottom: var(--oracle-space-lg);
+}
+
+.oracle-form-field label {
+  display: block;
+  margin-bottom: var(--oracle-space-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: white;
+}
+
+.oracle-form-field input,
+.oracle-form-field textarea {
+  width: 100%;
+  height: 2.75rem; /* h-11 - increased from h-10 */
+  padding: var(--oracle-space-sm) var(--oracle-space-md);
+  background: var(--oracle-glass-bg);
+  border: 1px solid var(--oracle-glass-border);
+  border-radius: 0.5rem;
+  color: white;
+  transition: all 200ms ease-in-out;
+}
+
+.oracle-form-field textarea {
+  height: auto;
+  min-height: 6rem;
+  padding-top: var(--oracle-space-sm);
+  padding-bottom: var(--oracle-space-sm);
+}
+
+/* Chat interface spacing improvements */
+.oracle-chat-container {
+  padding: var(--oracle-space-xl) var(--oracle-space-lg);
+}
+
+.oracle-chat-messages {
+  gap: var(--oracle-space-lg); /* Increased from space-y-4 to space-y-6 equivalent */
+}
+
+.oracle-chat-input-area {
+  padding: var(--oracle-space-lg);
+  gap: var(--oracle-space-md);
+}
+
+/* Dashboard enhancements */
+.oracle-dashboard-header {
+  margin-bottom: var(--oracle-space-2xl); /* Increased spacing */
+  gap: var(--oracle-space-sm);
+}
+
+.oracle-dashboard-stats {
+  gap: var(--oracle-space-lg);
+  margin-bottom: var(--oracle-space-2xl); /* More breathing room */
+}
+
+.oracle-dashboard-main {
+  gap: var(--oracle-space-xl); /* Wider gap between main sections */
+}
+
+/* ========================================
+   FEATURE FLAG INTEGRATION
+   Allow gradual rollout of spacing changes
+   ======================================== */
+
+/* Classes that can be toggled via feature flags */
+.oracle-enhanced-spacing .oracle-card {
+  padding: var(--oracle-card-padding-spacious);
+}
+
+.oracle-enhanced-spacing .oracle-section {
+  margin-bottom: calc(var(--oracle-section-gap) * 1.2);
+}
+
+.oracle-enhanced-spacing .oracle-grid {
+  gap: var(--oracle-grid-gap-spacious);
+}
+
+/* Preserve original spacing as fallback */
+.oracle-legacy-spacing .oracle-card {
+  padding: 1.5rem; /* Original p-6 */
+}
+
+.oracle-legacy-spacing .oracle-section {
+  margin-bottom: 2rem; /* Original spacing */
+}
+
+.oracle-legacy-spacing .oracle-grid {
+  gap: 1.5rem; /* Original gap-6 */
+}

@@ -1,0 +1,86 @@
+/* iOS Compatibility Fallbacks */
+
+/* Disable backdrop-blur on iOS where it's problematic */
+@supports not (backdrop-filter: blur(10px)) {
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-lg {
+    backdrop-filter: none !important;
+    background-color: rgba(0, 0, 0, 0.8) !important;
+  }
+}
+
+/* Fix iOS textarea resize issues */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  textarea {
+    resize: none !important;
+    -webkit-appearance: none;
+    border-radius: 16px;
+  }
+
+  /* Fix iOS input zoom */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* iOS-specific touch optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .active\:scale-95:active {
+    transform: scale(0.98) !important;
+  }
+
+  /* Ensure buttons are touchable on iOS */
+  button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Improve iOS scrolling */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* Fix iOS animation performance */
+@media (prefers-reduced-motion: no-preference) {
+  .animate-pulse {
+    animation: pulse-safe 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .animate-bounce {
+    animation: bounce-safe 1s infinite;
+  }
+}
+
+@keyframes pulse-safe {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
+}
+
+@keyframes bounce-safe {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(-8px);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+/* Fix iOS gradient rendering issues */
+@supports (-webkit-appearance: none) {
+  .bg-gradient-to-r,
+  .bg-gradient-to-t,
+  .bg-gradient-to-b {
+    background-attachment: scroll !important;
+  }
+}
+
+/* iOS safe area handling */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .ios-safe-bottom {
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+}

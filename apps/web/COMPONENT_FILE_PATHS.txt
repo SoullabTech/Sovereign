@@ -1,0 +1,43 @@
+AUTHENTIC MAIA INTERFACE - COMPONENT FILE PATHS
+From Commit: 53f872a178cf67e05bbbde172a75ded0d3ac6663
+
+ABSOLUTE FILE PATHS IN YOUR PROJECT:
+/Users/soullab/MAIA-PAI/apps/web/app/maia/page.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/ModeSelection.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/JournalEntry.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/VoiceJournaling.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/MaiaReflection.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/TimelineView.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/SemanticSearch.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/Analytics.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/Settings.tsx
+/Users/soullab/MAIA-PAI/apps/web/components/maia/SoulprintDashboard.tsx
+
+GITHUB URLS (RAW CONTENT):
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/app/maia/page.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/ModeSelection.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/JournalEntry.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/VoiceJournaling.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/MaiaReflection.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/TimelineView.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/SemanticSearch.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/Analytics.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/Settings.tsx
+https://raw.githubusercontent.com/SoullabTech/MAIA-PAI/53f872a178cf67e05bbbde172a75ded0d3ac6663/apps/web/components/maia/SoulprintDashboard.tsx
+
+COMPONENTS SUMMARY:
+1. Main Page - Navigation, routing, modals, progressive unlocking
+2. ModeSelection - 5 consciousness modes with voice support
+3. JournalEntry - Text journaling with consciousness effects
+4. VoiceJournaling - Web Speech API voice recording
+5. MaiaReflection - AI reflection display
+6. TimelineView - Entry timeline visualization
+7. SemanticSearch - Journal search and filtering
+8. Analytics - Statistics and metrics
+9. Settings - Export and privacy
+10. SoulprintDashboard - Elemental balance metrics
+
+STATUS: All files are 100% authentic from the specified commit
+NO MODIFICATION: Use directly without recreation
+VOICE FUNCTIONALITY: Integrated in VoiceJournaling component
+LABTOOL FEATURES: Integrated in main page modals and components

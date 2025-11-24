@@ -1,0 +1,61 @@
+version: "3.8"
+
+services:
+  # Nginx reverse proxy for Akash deployment
+  nginx:
+    image: nginx:alpine
+    container_name: oracle-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx-akash.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - oracle-system
+    restart: unless-stopped
+
+  # Main Oracle System
+  oracle-system:
+    image: spiralogic/archetypal-consciousness:latest
+    container_name: spiralogic-oracle
+    environment:
+      - NODE_ENV=production
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ELEVENLABS_API_KEY=${ELEVENLABS_API_KEY}
+      - MONGODB_URI=mongodb://mongo:27017/spiralogic
+      - REDIS_URL=redis://redis:6379
+      - SNET_ENABLED=true
+      - AKASH_DEPLOYMENT=true
+    ports:
+      - "3000:3000"
+      - "8080:8080"
+      - "7000:7000"
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+
+  # MongoDB
+  mongo:
+    image: mongo:7
+    container_name: oracle-mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=oracle
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_PASSWORD}
+      - MONGO_INITDB_DATABASE=spiralogic
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: oracle-redis
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
+  redis-data:

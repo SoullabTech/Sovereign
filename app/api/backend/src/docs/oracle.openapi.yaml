@@ -1,0 +1,236 @@
+openapi: 3.0.1
+info:
+  title: Spiralogic Oracle API
+  version: 1.0.0
+  description: >
+    API for interacting with the Spiralogic Oracle system, including elemental story generation, symbolic processing, and memory/insight management.
+
+paths:
+  /api/oracle/facet-lookup:
+    post:
+      summary: Detect the most likely elemental facet from user input.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                input:
+                  type: string
+                  example: "I feel like something in me is trying to emerge and be expressed."
+              required:
+                - input
+      responses:
+        "200":
+          description: Detected elemental facet and associated details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detected:
+                    type: string
+                    example: fire2
+                  name:
+                    type: string
+                    example: Expression
+                  description:
+                    type: string
+                    example: Purpose made visible through vision.
+
+  /api/oracle/insight-history:
+    get:
+      summary: Retrieve recent insight memory records for a given user.
+      parameters:
+        - in: query
+          name: userId
+          required: true
+          schema:
+            type: string
+            example: user-abc-123
+      responses:
+        "200":
+          description: Array of stored oracle insights
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  count:
+                    type: integer
+                    example: 3
+                  insights:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        timestamp:
+                          type: string
+                          format: date-time
+                          example: "2025-04-16T21:00:00Z"
+                        userId:
+                          type: string
+                          example: user-abc-123
+                        content:
+                          type: string
+                          example: "Your shadow is whispering about courage..."
+                        element:
+                          type: string
+                          example: Fire
+                        facet:
+                          type: string
+                          example: Fire 2
+                        emotion:
+                          type: number
+                          format: float
+                          example: 0.82
+
+  /api/oracle/story-generator:
+    post:
+      summary: Generate a symbolic narrative (story) from elemental theme and archetype.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  example: user-abc-123
+                elementalTheme:
+                  type: string
+                  enum: [fire, water, earth, air, aether]
+                archetype:
+                  type: string
+                  example: Seeker
+                focusArea:
+                  type: string
+                  example: personal growth
+                depthLevel:
+                  type: integer
+                  example: 3
+              required:
+                - userId
+                - elementalTheme
+                - archetype
+      responses:
+        "200":
+          description: The generated symbolic story
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: string
+                    example: "In a world of burning skies, the Seeker stood alone..."
+                  provider:
+                    type: string
+                    example: elemental-oracle
+                  model:
+                    type: string
+                    example: gpt-4
+                  confidence:
+                    type: number
+                    format: float
+                    example: 0.9
+                  metadata:
+                    type: object
+                    properties:
+                      reflections:
+                        type: array
+                        items:
+                          type: string
+                          example: "The fire within requires boundaries."
+                      symbols:
+                        type: array
+                        items:
+                          type: string
+                          example: "Phoenix"
+        "400":
+          description: Missing required fields
+        "500":
+          description: Failed to generate story
+
+  /api/notion/ingest/notion:
+    post:
+      summary: Trigger ingestion of content from Notion pages
+      tags:
+        - Ingestion
+      responses:
+        "200":
+          description: Notion ingestion successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  importedPages:
+                    type: integer
+                    example: 2
+                  successes:
+                    type: integer
+                    example: 2
+                  failures:
+                    type: integer
+                    example: 0
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      description: Detailed result for each ingested page
+        "500":
+          description: Server error during Notion ingestion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /api/notion/ingest/local:
+    post:
+      summary: Trigger ingestion of local knowledge base JSON files
+      tags:
+        - Ingestion
+      responses:
+        "200":
+          description: Local KB ingestion successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  loadedFiles:
+                    type: integer
+                    example: 3
+                  successes:
+                    type: integer
+                    example: 3
+                  failures:
+                    type: integer
+                    example: 0
+                  details:
+                    type: array
+                    items:
+                      type: object
+                      description: Detailed result for each file
+        "500":
+          description: Server error during local KB ingestion
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+tags:
+  - name: Ingestion
+    description: Routes that trigger content import from Notion or local files

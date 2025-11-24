@@ -1,0 +1,45 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies for audio and TTS
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    wget \
+    ffmpeg \
+    libsndfile1 \
+    libportaudio2 \
+    build-essential \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install Python dependencies with CPU-optimized PyTorch
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cpu && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Pre-download TTS models for faster startup
+RUN python -c "from TTS.api import TTS; TTS('tts_models/en/ljspeech/tacotron2-DDC'); TTS('tts_models/en/ljspeech/glow-tts')" || true
+
+# Copy application code
+COPY . .
+
+# Environment variables
+ENV NO_TORCH_COMPILE=1
+ENV PYTHONUNBUFFERED=1
+ENV SESAME_MODE=live
+ENV SESAME_PORT=8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+EXPOSE 8000
+
+# Run the real Sesame TTS service
+CMD ["python", "sesame_tts.py"]

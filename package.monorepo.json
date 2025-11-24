@@ -1,0 +1,23 @@
+{
+  "name": "spiralogic-oracle-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm run --parallel dev",
+    "dev:web": "pnpm --filter @spiralogic/web dev",
+    "dev:api": "pnpm --filter @spiralogic/api dev",
+    "build": "pnpm run --recursive build",
+    "build:web": "pnpm --filter @spiralogic/web build",
+    "build:api": "pnpm --filter @spiralogic/api build",
+    "clean": "pnpm run --parallel clean && rm -rf node_modules",
+    "type-check": "pnpm run --recursive type-check"
+  },
+  "devDependencies": {
+    "turbo": "^1.11.2"
+  },
+  "packageManager": "pnpm@8.14.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
