@@ -9,32 +9,47 @@ import { DaimonIntro } from "../../components/onboarding/DaimonIntro";
 import { SageTealWelcome } from "../../components/welcome/SageTealWelcome";
 import { PasscodeEntry } from "../../components/auth/PasscodeEntry";
 import { SoulfulOnboarding } from "../../components/beta/SoulfulOnboarding";
+import ConsciousnessCompanion from "./consciousness-companion";
 
 export default function SacredEntryPortal() {
   const router = useRouter();
   const [name, setName] = useState("");
   const [isReturning, setIsReturning] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
-  const [onboardingPhase, setOnboardingPhase] = useState<"passcode" | "wisdom" | "daimonic" | "demographics" | "simple" | "complete">("passcode");
+  const [onboardingPhase, setOnboardingPhase] = useState<"passcode" | "wisdom" | "daimonic" | "demographics" | "simple" | "complete" | "consciousness_companion">("passcode");
   const [showSimpleFlow, setShowSimpleFlow] = useState(false);
   const [phase, setPhase] = useState<"arrival" | "elements" | "entering">("arrival");
+  const [useConsciousnessCompanion, setUseConsciousnessCompanion] = useState(false);
 
   // Check for returning guest and determine flow
   useEffect(() => {
     const savedName = localStorage.getItem("maia_user");
     const validPasscode = localStorage.getItem("betaAccessCode");
     const completedOnboarding = localStorage.getItem("betaOnboardingComplete");
+    const consciousnessProfile = localStorage.getItem("maia_consciousness_profile");
 
-    if (savedName && completedOnboarding) {
+    // Check if user wants to use the new consciousness companion (default for new users)
+    const useNewFlow = !localStorage.getItem("use_legacy_onboarding");
+
+    if (useNewFlow && !consciousnessProfile) {
+      // New users with consciousness companion enabled start with streamlined flow
+      setUseConsciousnessCompanion(true);
+      setOnboardingPhase("consciousness_companion");
+    } else if (savedName && (completedOnboarding || consciousnessProfile)) {
       setName(savedName);
       setIsReturning(true);
-      // Returning users skip to simple flow
-      setOnboardingPhase("simple");
+      // Returning users skip to simple flow or consciousness companion based on preference
+      if (consciousnessProfile) {
+        setUseConsciousnessCompanion(true);
+        setOnboardingPhase("consciousness_companion");
+      } else {
+        setOnboardingPhase("simple");
+      }
     } else if (validPasscode) {
-      // Has passcode but not complete onboarding - resume from wisdom
+      // Has passcode but not complete onboarding - resume from wisdom (legacy flow)
       setOnboardingPhase("wisdom");
     } else {
-      // New users start with passcode entry
+      // New users start with passcode entry (legacy flow)
       setOnboardingPhase("passcode");
     }
   }, []);
@@ -60,6 +75,18 @@ export default function SacredEntryPortal() {
     setOnboardingPhase("complete");
     setTimeout(() => {
       window.location.href = "https://soullab.life/maia";
+    }, 1000);
+  };
+
+  // Handle consciousness companion completion
+  const handleConsciousnessCompanionComplete = (profile: any) => {
+    // Store the consciousness profile
+    localStorage.setItem("maia_consciousness_profile", JSON.stringify(profile));
+    localStorage.setItem("betaOnboardingComplete", "true");
+
+    setOnboardingPhase("complete");
+    setTimeout(() => {
+      router.push("/maia/consciousness");
     }, 1000);
   };
 
@@ -91,6 +118,14 @@ export default function SacredEntryPortal() {
   };
 
   // Render the appropriate onboarding phase
+  if (onboardingPhase === "consciousness_companion") {
+    return (
+      <ConsciousnessCompanion
+        onComplete={handleConsciousnessCompanionComplete}
+      />
+    );
+  }
+
   if (onboardingPhase === "passcode") {
     return (
       <PasscodeEntry

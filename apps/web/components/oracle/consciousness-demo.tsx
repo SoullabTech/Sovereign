@@ -1,11 +1,12 @@
 'use client';
 
 // Consciousness Oracle Demo Component
-// Shows the no-cringe, level-adaptive MAIA oracle in action
+// Shows the no-cringe, level-adaptive MAIA oracle in action with consciousness integration
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMAIAOracle, OracleResponse, OracleDiagnosis } from '@/hooks/use-maia-oracle';
 import { SimpleHoloflower } from './holoflower-simple';
+import { useUnifiedConsciousnessState } from '@/lib/consciousness/unified-consciousness-state';
 
 export function ConsciousnessOracleDemo() {
   const { askOracle, diagnoseUser, testCringeDetection, getSystemStatus, loading, error } = useMAIAOracle();
@@ -17,8 +18,17 @@ export function ConsciousnessOracleDemo() {
   const [systemStatus, setSystemStatus] = useState<any>(null);
   const [holoflowerStage, setHoloflowerStage] = useState<'dormant' | 'awakening' | 'processing' | 'blooming' | 'complete'>('dormant');
 
+  // Initialize consciousness state for oracle integration
+  const consciousnessState = useUnifiedConsciousnessState();
+
   const handleAskOracle = async () => {
     if (!message.trim()) return;
+
+    // Update MAIA interaction count and track oracle usage
+    consciousnessState.maia.updateInteractionCount();
+
+    // Update consciousness metrics based on oracle seeking
+    consciousnessState.updateConsciousnessMetric('wisdom_integration', 0.1);
 
     // Animate holoflower through oracle stages
     setHoloflowerStage('awakening');
@@ -28,13 +38,21 @@ export function ConsciousnessOracleDemo() {
       userId,
       message,
       context: {
-        userName: 'Demo User',
-        previousInteractions: 0,
-        userNeed: 'wisdom_seeking'
+        userName: 'Consciousness Seeker',
+        previousInteractions: consciousnessState.maia.interaction_count,
+        userNeed: 'wisdom_seeking',
+        consciousnessLevel: consciousnessState.user.consciousness_trajectory,
+        awakeningPhase: consciousnessState.user.awakening_phase,
+        personalityMode: consciousnessState.maia.getCurrentPersonalityMode()
       }
     });
 
     if (result) {
+      // Track significant oracle insights for consciousness evolution
+      if (result.metadata?.validationPassed && result.metadata?.cringeScore < 3) {
+        consciousnessState.updateConsciousnessMetric('wisdom_integration', 0.05);
+      }
+
       setHoloflowerStage('blooming');
       setTimeout(() => setHoloflowerStage('complete'), 1000);
       setTimeout(() => setHoloflowerStage('dormant'), 3000);
@@ -83,6 +101,25 @@ export function ConsciousnessOracleDemo() {
         <p className="text-gray-600">
           No-cringe, level-adaptive wisdom that meets you where you are
         </p>
+
+        {/* Consciousness State Display */}
+        <div className="mt-4 flex justify-center gap-4">
+          <div className="bg-purple-100 px-3 py-1 rounded-full">
+            <span className="text-sm text-purple-700">
+              MAIA: {consciousnessState.maia.getCurrentPersonalityMode()} Mode
+            </span>
+          </div>
+          <div className="bg-cyan-100 px-3 py-1 rounded-full">
+            <span className="text-sm text-cyan-700">
+              Phase: {consciousnessState.user.awakening_phase}
+            </span>
+          </div>
+          <div className="bg-green-100 px-3 py-1 rounded-full">
+            <span className="text-sm text-green-700">
+              Consciousness: {Math.round(consciousnessState.user.consciousness_trajectory * 100)}%
+            </span>
+          </div>
+        </div>
       </div>
 
       {error && (

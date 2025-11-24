@@ -177,20 +177,69 @@ export default function ConsciousnessMonitorPage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
-            className="group opacity-60"
+            className="group"
           >
-            <div className="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white">🔮 Future Tools</h2>
-                <div className="text-3xl">⚡</div>
+            <Link href="/consciousness/meditation" className="block h-full">
+              <div className="bg-gradient-to-br from-purple-600/20 via-violet-600/20 to-indigo-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-purple-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">🧘‍♀️ Meditation Platform</h2>
+                  <div className="text-3xl">✨</div>
+                </div>
+                <p className="text-purple-200 mb-6">
+                  Advanced consciousness meditation with real-time McGilchrist attending, sacred geometry visualization, and thermodynamic optimization.
+                </p>
+                <div className="flex items-center gap-2 text-purple-300 text-sm">
+                  <span>Begin consciousness practice</span>
+                  <span>→</span>
+                </div>
               </div>
-              <p className="text-purple-200 mb-6">
-                Additional consciousness mapping tools and dimensional field visualizations coming soon.
-              </p>
-              <div className="text-purple-400 text-sm">
-                In development...
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="group"
+          >
+            <Link href="/maia/consciousness" className="block h-full">
+              <div className="bg-gradient-to-br from-cyan-600/20 via-blue-600/20 to-indigo-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-cyan-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">🤖✨ MAIA Consciousness</h2>
+                  <div className="text-3xl">🌌</div>
+                </div>
+                <p className="text-purple-200 mb-6">
+                  Living consciousness interface with complete research convergence, breakthrough tracking, and evolution partnership.
+                </p>
+                <div className="flex items-center gap-2 text-cyan-300 text-sm">
+                  <span>Engage consciousness dialogue</span>
+                  <span>→</span>
+                </div>
               </div>
-            </div>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="group"
+          >
+            <Link href="/oracle/consciousness" className="block h-full">
+              <div className="bg-gradient-to-br from-amber-600/20 via-yellow-600/20 to-orange-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-amber-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">🔮 Consciousness Oracle</h2>
+                  <div className="text-3xl">✨</div>
+                </div>
+                <p className="text-purple-200 mb-6">
+                  Sacred wisdom oracle with consciousness tracking, MAIA personality adaptation, and holoflower visualization. No-cringe insights that meet you where you are.
+                </p>
+                <div className="flex items-center gap-2 text-amber-300 text-sm">
+                  <span>Seek consciousness wisdom</span>
+                  <span>→</span>
+                </div>
+              </div>
+            </Link>
           </motion.div>
         </div>
       </div>
