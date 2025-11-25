@@ -189,9 +189,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, [listeningMode]);
 
   // Map old mode names to new realtime mode names
-  const realtimeMode: 'dialogue' | 'patient' | 'scribe' =
+  const realtimeMode: 'dialogue' | 'counsel' | 'scribe' =
     listeningMode === 'normal' ? 'dialogue' :
-    listeningMode === 'patient' ? 'patient' : 'scribe';
+    listeningMode === 'patient' ? 'counsel' : 'scribe';
 
   // ==================== STATE DECLARATIONS (BEFORE HOOKS) ====================
   // These must be declared BEFORE useMaiaRealtime because they're used in its callbacks
@@ -1618,6 +1618,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           userId: userId || 'anonymous',
           userName: userName || 'Explorer',
           sessionId,
+          mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
           isVoiceMode: !showChatInterface, // Voice mode = faster Essential tier
           fieldState: {
             active: true,

@@ -357,54 +357,56 @@ export default function MAIAPage() {
                 </h1>
               </div>
 
-              {/* Center: Combined Voice/Text toggle + Mode selector */}
-              <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5">
-                {/* Voice/Text Toggle */}
-                <button
-                  onClick={() => setShowChatInterface(!showChatInterface)}
-                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                    showChatInterface
-                      ? 'bg-green-500/30 text-green-200'
-                      : 'bg-blue-500/30 text-blue-200'
-                  }`}
-                >
-                  {showChatInterface ? 'Text' : 'Voice'}
-                </button>
+              {/* Center: Combined Voice/Text toggle + Mode selector - Mobile Scrollable */}
+              <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5 overflow-x-auto scroll-smooth max-w-[60vw] md:max-w-none">
+                <div className="flex items-center gap-1 flex-nowrap min-w-max">
+                  {/* Voice/Text Toggle */}
+                  <button
+                    onClick={() => setShowChatInterface(!showChatInterface)}
+                    className={`px-2 py-1 rounded text-xs font-light transition-all flex-shrink-0 ${
+                      showChatInterface
+                        ? 'bg-green-500/30 text-green-200'
+                        : 'bg-blue-500/30 text-blue-200'
+                    }`}
+                  >
+                    {showChatInterface ? 'Text' : 'Voice'}
+                  </button>
 
-                {/* Separator */}
-                <div className="w-px h-4 bg-amber-400/20"></div>
+                  {/* Separator */}
+                  <div className="w-px h-4 bg-amber-400/20 flex-shrink-0"></div>
 
-                {/* Mode Selector: Dialogue / Patient / Scribe */}
-                <button
-                  onClick={() => setMaiaMode('normal')}
-                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                    maiaMode === 'normal'
-                      ? 'bg-amber-500/30 text-amber-200'
-                      : 'text-amber-400/60 hover:text-amber-300/80'
-                  }`}
-                >
-                  Dialogue
-                </button>
-                <button
-                  onClick={() => setMaiaMode('patient')}
-                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                    maiaMode === 'patient'
-                      ? 'bg-purple-500/30 text-purple-200'
-                      : 'text-amber-400/60 hover:text-amber-300/80'
-                  }`}
-                >
-                  Patient
-                </button>
-                <button
-                  onClick={() => setMaiaMode('session')}
-                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                    maiaMode === 'session'
-                      ? 'bg-blue-500/30 text-blue-200'
-                      : 'text-amber-400/60 hover:text-amber-300/80'
-                  }`}
-                >
-                  Scribe
-                </button>
+                  {/* Mode Selector: Dialogue / Patient / Scribe */}
+                  <button
+                    onClick={() => setMaiaMode('normal')}
+                    className={`px-2 py-1 rounded text-xs font-light transition-all flex-shrink-0 ${
+                      maiaMode === 'normal'
+                        ? 'bg-amber-500/30 text-amber-200'
+                        : 'text-amber-400/60 hover:text-amber-300/80'
+                    }`}
+                  >
+                    Dialogue
+                  </button>
+                  <button
+                    onClick={() => setMaiaMode('patient')}
+                    className={`px-2 py-1 rounded text-xs font-light transition-all flex-shrink-0 ${
+                      maiaMode === 'patient'
+                        ? 'bg-purple-500/30 text-purple-200'
+                        : 'text-amber-400/60 hover:text-amber-300/80'
+                    }`}
+                  >
+                    Patient
+                  </button>
+                  <button
+                    onClick={() => setMaiaMode('session')}
+                    className={`px-2 py-1 rounded text-xs font-light transition-all flex-shrink-0 ${
+                      maiaMode === 'session'
+                        ? 'bg-blue-500/30 text-blue-200'
+                        : 'text-amber-400/60 hover:text-amber-300/80'
+                    }`}
+                  >
+                    Scribe
+                  </button>
+                </div>
               </div>
 
               {/* Right: Sign Out + Session Container buttons */}
