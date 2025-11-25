@@ -2915,8 +2915,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                overflow: 'visible',
                pointerEvents: 'none'  // Allow clicks to pass through to parent
              }}>
-          {/* 🌊 LIQUID AI - Rhythm-aware Holoflower as SUBTLE background element */}
-          <div style={{ opacity: 0.15, zIndex: 1 }}>
+          {/* 🌊 LIQUID AI - Rhythm-aware Holoflower as DYNAMIC background element */}
+          <div style={{
+            opacity: isListening ? 0.9 : (isResponding || isAudioPlaying ? 0.8 : 0.6),
+            zIndex: 1,
+            transition: 'opacity 0.3s ease-in-out'
+          }}>
             <RhythmHoloflower
               rhythmMetrics={rhythmMetrics}
               size={holoflowerSize}
@@ -2930,7 +2934,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               showBreakthrough={showBreakthrough}
               voiceAmplitude={voiceAmplitude}
               isMaiaSpeaking={isResponding || isAudioPlaying}
-              dimmed={true}
+              dimmed={false}
             />
           </div>
 
