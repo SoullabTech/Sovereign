@@ -47,7 +47,7 @@ import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { ModeSwitcher } from './ui/ModeSwitcher';
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
-// import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
+import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
 import { useScribeMode } from '@/hooks/useScribeMode';
@@ -109,7 +109,6 @@ interface OracleConversationProps {
   onSessionActiveChange?: (active: boolean) => void; // Notify parent of session active state
   onMessageAdded?: (message: ConversationMessage) => void;
   onSessionEnd?: (reason?: string) => void;
-  onSessionStartTrigger?: (callback: () => void) => void; // Callback to provide session start function to parent
 }
 
 interface ConversationMessage {
@@ -124,32 +123,20 @@ interface ConversationMessage {
 }
 
 // Component to clean messages by removing stage directions
-const FormattedMessage: React.FC<{ text?: string | null }> = ({ text = '' }) => {
-  // Ensure text is a string and never undefined/null
-  const safeText = text ?? '';
+const FormattedMessage: React.FC<{ text: string }> = ({ text }) => {
+  // Remove ALL stage directions and tone markers
+  const cleanedText = text
+    .replace(/\*[^*]*\*/g, '') // Remove single asterisk content
+    .replace(/\*\*[^*]*\*\*/g, '') // Remove double asterisk content
+    .replace(/\*{1,}[^*]+\*{1,}/g, '') // Remove any asterisk-wrapped content
+    .replace(/\([^)]*\)/gi, '') // Remove ALL parenthetical content
+    .replace(/\[[^\]]*\]/g, '') // Remove bracketed content
+    .replace(/\{[^}]*\}/g, '') // Remove content in curly braces
+    .replace(/\s+/g, ' ') // Clean up extra spaces
+    .replace(/^\s*[,;.]\s*/, '') // Remove leading punctuation
+    .trim();
 
-  if (!safeText || typeof safeText !== 'string') {
-    return <span></span>;
-  }
-
-  try {
-    // Remove ALL stage directions and tone markers
-    const cleanedText = safeText
-      .replace(/\*[^*]*\*/g, '') // Remove single asterisk content
-      .replace(/\*\*[^*]*\*\*/g, '') // Remove double asterisk content
-      .replace(/\*{1,}[^*]+\*{1,}/g, '') // Remove any asterisk-wrapped content
-      .replace(/\([^)]*\)/gi, '') // Remove ALL parenthetical content
-      .replace(/\[[^\]]*\]/g, '') // Remove bracketed content
-      .replace(/\{[^}]*\}/g, '') // Remove content in curly braces
-      .replace(/\s+/g, ' ') // Clean up extra spaces
-      .replace(/^\s*[,;.]\s*/, '') // Remove leading punctuation
-      .trim();
-
-    return <span>{cleanedText}</span>;
-  } catch (error) {
-    console.error('FormattedMessage error:', error, 'text:', safeText);
-    return <span>{safeText}</span>;
-  }
+  return <span>{cleanedText}</span>;
 };
 
 export const OracleConversation: React.FC<OracleConversationProps> = ({
@@ -171,8 +158,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onCloseSessionSelector,
   onSessionActiveChange,
   onMessageAdded,
-  onSessionEnd,
-  onSessionStartTrigger
+  onSessionEnd
 }) => {
   // Listening mode for different conversation styles - MUST be defined early
   type ListeningMode = 'normal' | 'patient' | 'session';
@@ -226,7 +212,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
-  // Removed Safari audio unlock complexity
+  const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
+  const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
+
+  // Reference to current audio queue for enhanced Safari unlock functionality
+  const currentAudioQueueRef = useRef<InstanceType<typeof import('@/lib/voice/StreamingAudioQueue').StreamingAudioQueue> | null>(null);
 
   // UI state
   const [showLabDrawer, setShowLabDrawer] = useState(false);
@@ -455,64 +445,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     } catch (err) {
       console.error('❌ OpenAI TTS error:', err);
-      console.log('🔄 Falling back to browser speech synthesis for Safari compatibility...');
-
-      // Fallback to browser speech synthesis (works on Safari)
-      try {
-        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(text);
-          utterance.rate = 0.95;
-          utterance.pitch = 1.0;
-          utterance.volume = 1.0;
-
-          // Select best voice for MAIA
-          const voices = speechSynthesis.getVoices();
-          const preferredVoice = voices.find(v =>
-            v.name.includes('Alloy') ||
-            v.name.includes('Samantha') ||
-            v.name.includes('Karen') ||
-            v.name.includes('Fiona') ||
-            (v.lang === 'en-US' && v.gender === 'female')
-          ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
-
-          if (preferredVoice) {
-            utterance.voice = preferredVoice;
-            console.log('🎤 Using browser voice:', preferredVoice.name);
-          }
-
-          utterance.onstart = () => {
-            console.log('▶️ Browser speech started');
-            setIsResponding(true);
-            setIsAudioPlaying(true);
-          };
-
-          utterance.onend = () => {
-            console.log('🔇 Browser speech finished');
-            setIsResponding(false);
-            setIsAudioPlaying(false);
-            setVoiceAmplitude(0);
-          };
-
-          utterance.onerror = () => {
-            console.error('❌ Browser speech failed');
-            setIsResponding(false);
-            setIsAudioPlaying(false);
-            setVoiceAmplitude(0);
-          };
-
-          speechSynthesis.speak(utterance);
-        } else {
-          console.error('❌ Speech synthesis not supported');
-          setIsResponding(false);
-          setIsAudioPlaying(false);
-          setVoiceAmplitude(0);
-        }
-      } catch (fallbackErr) {
-        console.error('❌ Fallback speech synthesis error:', fallbackErr);
-        setIsResponding(false);
-        setIsAudioPlaying(false);
-        setVoiceAmplitude(0);
-      }
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setVoiceAmplitude(0);
     }
   }, []);
 
@@ -695,16 +630,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   }, [messages, sessionId, userId]);
 
-  // Provide session start callback to parent via prop - DISABLED: Causing temporal dead zone errors
-  // useEffect(() => {
-  //   if (onSessionStartTrigger) {
-  //     onSessionStartTrigger(() => {
-  //       console.log('🔥 Session start triggered from parent');
-  //       handleStartSession(50); // Default 50-minute session
-  //     });
-  //   }
-  // }, [onSessionStartTrigger]);
-
   // All state declarations moved earlier (lines 138-189) to avoid hook ordering issues
 
   // Sync refs with state to avoid stale closures in callbacks
@@ -741,6 +666,46 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // Detect iOS for audio requirements
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
     const isIOSSafari = isIOS && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+
+    // Enhanced Safari detection for audio unlock
+    const userAgent = navigator.userAgent;
+    const isSafari = /Safari/.test(userAgent) && !/Chrome/.test(userAgent);
+    const needsAudioUnlock = isSafari || isIOS;
+
+    console.log('🔓 [OracleConversation] Enhanced Safari detection:', {
+      isIOS, isIOSSafari, isSafari, needsAudioUnlock,
+      userAgent: userAgent.substring(0, 50) + '...'
+    });
+
+    // Audio unlock event listener for enhanced Safari compatibility
+    if (needsAudioUnlock && !audioUnlocked) {
+      const handleFirstInteraction = async () => {
+        console.log('🔓 [OracleConversation] First user interaction detected for Safari audio unlock');
+
+        if (currentAudioQueueRef.current) {
+          try {
+            await currentAudioQueueRef.current.unlockSafariAudio();
+            console.log('✅ [OracleConversation] Safari audio unlocked via StreamingAudioQueue');
+            setAudioUnlocked(true);
+            setShowAudioUnlockUI(false);
+          } catch (error) {
+            console.error('❌ [OracleConversation] Safari audio unlock failed:', error);
+          }
+        }
+
+        // Remove listeners after first successful interaction
+        document.removeEventListener('click', handleFirstInteraction, { capture: true });
+        document.removeEventListener('touchstart', handleFirstInteraction, { capture: true });
+        document.removeEventListener('keydown', handleFirstInteraction, { capture: true });
+      };
+
+      // Add interaction listeners for Safari audio unlock
+      document.addEventListener('click', handleFirstInteraction, { capture: true });
+      document.addEventListener('touchstart', handleFirstInteraction, { capture: true });
+      document.addEventListener('keydown', handleFirstInteraction, { capture: true });
+
+      console.log('🔓 [OracleConversation] Safari audio unlock listeners added');
+    }
 
     // TEMPORARILY DISABLED - causing black screen overlay on desktop
     // if (isIOS && !isIOSAudioEnabled) {
@@ -840,12 +805,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       content: msg.text
     }));
 
-    // Convert conversation to string for breakthrough analysis
-    const conversationText = conversationMessages
-      .map(msg => msg.content)
-      .join(' ');
-
-    const score = detectBreakthroughPotential(conversationText || '');
+    const score = detectBreakthroughPotential(conversationMessages);
     setBreakthroughScore(score);
 
     // Breakthrough detection PERMANENTLY DISABLED per user request
@@ -963,8 +923,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('⏸️ Voice auto-start blocked - checking all conditions...');
     }
   }, [isMounted, showChatInterface, voiceEnabled, isMuted, isProcessing, isResponding, audioEnabled]);
-
-  // Removed Safari audio unlock detection - just use direct TTS
 
   // Conversation context
   const contextRef = useRef<ConversationContext>({
@@ -1214,8 +1172,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
 
       // Voice mic will be initialized automatically when needed
-
-      // Direct audio enable without Safari unlock complexity
 
       setAudioEnabled(true);
       setIsIOSAudioEnabled(true);
@@ -1600,7 +1556,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     // Track user activity
     const trackingUserId = userId || `anon_${sessionId}`;
-    userTracker.trackUserActivity('text', { userId: trackingUserId });
+    userTracker.trackActivity(trackingUserId, 'text');
 
     try {
       const controller = new AbortController();
@@ -1612,8 +1568,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('📤 Sending text message to API:', { cleanedText, userId, sessionId });
 
       // Get user's conversation style preference
-      // const conversationStyle = ConversationStylePreference.get();
-      const conversationStyle = 'voice'; // Default fallback while ConversationStylePreference is disabled
+      const conversationStyle = ConversationStylePreference.get();
 
       // 🧠 BARDIC MEMORY: Detect crystallization (Fire-Air alignment)
       // Wait for pattern recognition to complete if it's running
@@ -1656,7 +1611,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         body: JSON.stringify({
           message: cleanedText,
           userId: userId || 'anonymous',
-          userName: userName || userId || 'guest',
+          userName: userName || 'Explorer',
           sessionId,
           isVoiceMode: !showChatInterface, // Voice mode = faster Essential tier
           fieldState: {
@@ -1744,8 +1699,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             },
           });
 
-          // Start responding state immediately
-          setIsResponding(true);
+          // Connect to ref for Safari audio unlock integration
+          currentAudioQueueRef.current = audioQueue;
+          console.log('🔓 [OracleConversation] Connected StreamingAudioQueue to ref for Safari audio unlock');
+
+          // Apply audio unlock status if already unlocked
+          if (audioUnlocked) {
+            audioQueue.setAudioUnlocked(true);
+            console.log('✅ [OracleConversation] Applied existing audio unlock status to new AudioQueue');
+          }
+
+          setIsResponding(true); // Start responding state immediately
         }
 
         try {
@@ -1875,7 +1839,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       const apiTime = Date.now() - startTime;
       console.log(`⏱️ Response FROM THE BETWEEN received in ${apiTime}ms`);
-      trackEvent('api_call', { endpoint: '/api/between/chat', duration: apiTime, success: true });
+      trackEvent.apiCall('/api/between/chat', apiTime, true);
 
       // 🩺 Monitor MAIA personality health (dev mode only)
       // Detects degradation and auto-recovers if needed
@@ -2025,7 +1989,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       if (shouldSpeak && maiaSpeak) {
         console.log('🔊 Maia speaking response in', showChatInterface ? 'Chat' : 'Voice', 'mode (non-streaming)');
         const ttsStartTime = Date.now();
-        trackEvent('tts_spoken', { userId: userId || 'anonymous', textLength: responseText.length, duration: 0 });
+        trackEvent.ttsSpoken(userId || 'anonymous', responseText.length, 0);
         // Set speaking state for visual feedback
         setIsResponding(true);
         setIsAudioPlaying(true);
@@ -2105,12 +2069,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           // CRITICAL: Resume listening after cooldown to prevent echo
           if (isInVoiceMode && !isMuted && voiceMicRef.current?.startListening) {
             setTimeout(() => {
-              // CRITICAL FIX: Double-check isMuted state to prevent restarting when user turned OFF mic
-              if (voiceMicRef.current?.startListening && !isProcessing && !isResponding && !isMuted) {
+              if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
                 voiceMicRef.current.startListening();
                 console.log('🎤 Microphone resumed after Maia finished speaking');
-              } else {
-                console.log('🚫 Skipping microphone resume - user turned mic off or conditions changed');
               }
             }, cooldownMs); // Wait for echo suppression cooldown
           }
@@ -2135,7 +2096,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     } catch (error: any) {
       console.error('Text chat API error:', error);
-      trackEvent('api_error', { userId: userId || 'anonymous', error: String(error) });
+      trackEvent.error(userId || 'anonymous', 'api_error', String(error));
 
       // Provide specific error messages based on error type
       let errorText = 'I apologize, I\'m having trouble connecting right now. Could you say that again?';
@@ -2165,8 +2126,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setCurrentMotionState('idle');
     }
   }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady]);
-
-  // Removed Safari audio unlock function - using direct TTS approach
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
@@ -2243,7 +2202,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
 
     // FILTER: Ignore empty or punctuation-only transcripts
-    const meaningfulText = (transcript || '').replace(/[.,!?;:\s]+/g, '');
+    const meaningfulText = transcript.replace(/[.,!?;:\s]+/g, '');
     if (meaningfulText.length === 0) {
       console.log('⚠️ Ignoring empty/punctuation-only transcript:', transcript);
       return;
@@ -2274,12 +2233,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       'smash that',
       'hit that like button'
     ];
-
-    // Add null check to prevent toLowerCase error
-    if (!transcript || typeof transcript !== 'string') {
-      console.warn('⚠️ Invalid transcript received:', transcript);
-      return;
-    }
 
     const lowerTranscript = transcript.toLowerCase();
     const isGhostPhrase = ghostPhrases.some(phrase => lowerTranscript.includes(phrase));
@@ -2342,14 +2295,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     });
 
     const voiceStartTime = Date.now();
-    trackEvent('voice_result', { userId: userId || 'anonymous', transcript, duration: 0 });
+    trackEvent.voiceResult(userId || 'anonymous', transcript, 0);
 
     // Clean the text
     const cleanedText = cleanMessage(transcript);
 
     // Track user activity (message will be added by handleTextMessage)
     const trackingUserId = userId || `anon_${sessionId}`;
-    userTracker.trackUserActivity('voice', { userId: trackingUserId });
+    userTracker.trackActivity(trackingUserId, 'voice');
 
     // Save user message to long-term memory (dual-save to memories + Akashic Records)
     if (oracleAgentId) {
@@ -2378,11 +2331,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       await handleTextMessage(cleanedText);
 
       const duration = Date.now() - voiceStartTime;
-      trackEvent('voice_result', { userId: userId || 'anonymous', transcript, duration });
+      trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
       console.log('✅ Voice flow through THE BETWEEN completed');
     } catch (error) {
       console.error('❌ Error in voice flow:', error);
-      trackEvent('voice_error', { userId: userId || 'anonymous', error: String(error) });
+      trackEvent.error(userId || 'anonymous', 'voice_error', String(error));
 
       // Show error message
       const errorMessage: ConversationMessage = {
@@ -2960,13 +2913,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                height: holoflowerSize,
                background: 'transparent',
                overflow: 'visible',
-               pointerEvents: 'auto'  // Enable clicks for holoflower interaction
+               pointerEvents: 'none'  // Allow clicks to pass through to parent
              }}>
           {/* 🌊 LIQUID AI - Rhythm-aware Holoflower pulses with conversational rhythm */}
           <RhythmHoloflower
             rhythmMetrics={rhythmMetrics}
             size={holoflowerSize}
-            interactive={true}
+            interactive={false}
             showLabels={false}
             motionState={currentMotionState}
             coherenceShift={coherenceShift}
@@ -2981,34 +2934,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           {/* Central Holoflower Logo with Glow and Sparkles */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            {/* AMBER GLOW DISABLED - USER REQUESTED PIE CHART REMOVAL */}
-            {false && (
-              <motion.div
-                className={`absolute flex items-center justify-center pointer-events-none ${
-                  showChatInterface || messages.filter(m => !m.id.startsWith('greeting-')).length > 0
-                    ? 'opacity-0'  // Invisible when text present
-                    : 'opacity-10'  // Barely visible when listening
-                }`}
-                animate={{
-                  scale: [1, 1.1, 1],
-                  opacity: showChatInterface || messages.length > 0 ? 0 : [0.05, 0.1, 0.05]
+            {/* Minimal glow - almost imperceptible */}
+            <motion.div
+              className={`absolute flex items-center justify-center pointer-events-none ${
+                showChatInterface || messages.filter(m => !m.id.startsWith('greeting-')).length > 0
+                  ? 'opacity-0'  // Invisible when text present
+                  : 'opacity-10'  // Barely visible when listening
+              }`}
+              animate={{
+                scale: [1, 1.1, 1],
+                opacity: showChatInterface || messages.length > 0 ? 0 : [0.05, 0.1, 0.05]
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <div
+                className="w-32 h-32 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(212, 184, 150, 0.15) 0%, transparent 60%)',
+                  filter: 'blur(40px)',
+                  transform: 'translate(0, 0)'
                 }}
-                transition={{
-                  duration: 6,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              >
-                <div
-                  className="w-32 h-32 rounded-full"
-                  style={{
-                    background: 'radial-gradient(circle, rgba(212, 184, 150, 0.15) 0%, transparent 60%)',
-                    filter: 'blur(40px)',
-                    transform: 'translate(0, 0)'
-                  }}
-                />
-              </motion.div>
-            )}
+              />
+            </motion.div>
 
             {/* Holoflower Image - Amber radiance */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
@@ -3415,7 +3366,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 {messages
                   .map((message, index) => {
                     const handleCopyMessage = () => {
-                      const textToCopy = (message.text || '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
+                      const textToCopy = message.text.replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
                       navigator.clipboard.writeText(textToCopy);
                       toast.success('Message copied!', {
                         duration: 2000,
@@ -3472,8 +3423,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           </div>
         </div>
       )}
-
-      {/* Removed Safari Audio Unlock UI - direct TTS approach */}
 
       {/* Chat Interface or Voice Mic */}
       {voiceEnabled && (
@@ -3750,9 +3699,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       )}
 
 
-      {/* Voice state visualization (development) - DISABLED to prevent click blocking */}
-      {false && process.env.NODE_ENV === 'development' && userVoiceState && (
-        <div className="fixed top-[calc(env(safe-area-inset-top,0px)+2rem)] left-8 bg-black/80 text-white text-xs p-3 rounded-lg pointer-events-none">
+      {/* Voice state visualization (development) */}
+      {process.env.NODE_ENV === 'development' && userVoiceState && (
+        <div className="fixed top-[calc(env(safe-area-inset-top,0px)+2rem)] left-8 bg-black/80 text-white text-xs p-3 rounded-lg">
           <div className="font-bold mb-2">Voice State</div>
           <div>Amplitude: {(userVoiceState.amplitude * 100).toFixed(0)}%</div>
           <div>Emotion: {userVoiceState.emotion}</div>
@@ -3933,18 +3882,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 console.log('🔇 Microphone OFF');
               }
             } else {
-              // Turn mic ON - simple direct approach
+              // Turn mic ON
               setShowChatInterface(false);
               setIsMuted(false);
-
               enableAudio().then(() => {
                 setTimeout(async () => {
-                  // CRITICAL FIX: Double-check isMuted state to prevent race conditions
-                  if (voiceMicRef.current?.startListening && !isProcessing && !isResponding && !isMuted) {
+                  if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
                     await voiceMicRef.current.startListening();
                     console.log('🎤 Microphone ON');
-                  } else {
-                    console.log('🚫 Skipping microphone start - conditions changed');
                   }
                 }, 100);
               });
@@ -4045,13 +3990,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         />
       )}
 
-      {/* ⏰ Session Duration Selector Modal - DISABLED - Causing overlay issues */}
-      {/* <SessionDurationSelector
+      {/* ⏰ Session Duration Selector Modal - Controlled by header button */}
+      <SessionDurationSelector
         isOpen={showSessionSelector}
         onClose={() => onCloseSessionSelector?.()}
         onSelect={handleDurationSelected}
         defaultDuration={50}
-      /> */}
+      />
 
       {/* 💾 Resume Session Prompt Modal */}
       {savedSessionData && (
@@ -4065,22 +4010,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         />
       )}
 
-      {/* 🕯️ Opening Ritual - DISABLED - Blocking interface */}
-      {/* <SessionRitualOpening
+      {/* 🕯️ Opening Ritual */}
+      <SessionRitualOpening
         isOpen={showOpeningRitual}
         sessionDuration={pendingSessionDuration || 50}
         isReturningUser={isReturningUser}
         onComplete={handleOpeningRitualComplete}
         onSkip={handleOpeningRitualSkip}
-      /> */}
+      />
 
-      {/* 🕯️ Closing Ritual - DISABLED - Blocking interface */}
-      {/* <SessionRitualClosing
+      {/* 🕯️ Closing Ritual */}
+      <SessionRitualClosing
         isOpen={showClosingRitual}
         isReturningUser={isReturningUser}
         onComplete={handleClosingRitualComplete}
         onSkip={handleClosingRitualSkip}
-      /> */}
+      />
 
       {/* Toggle button for rhythm debug - always visible */}
       <button

@@ -11,13 +11,26 @@ export async function GET(request: NextRequest) {
     const userId = searchParams.get('userId');
     const domain = searchParams.get('domain');
 
-    // For now, return a simple guest profile for all users
-    // This prevents 404 errors while keeping the profile system minimal
+    // Try to get a more personalized name based on userId or use a fallback
+    let userName = 'Explorer'; // Default fallback
+
+    // Check for Kelly special case
+    if (userId === 'kelly-nezat' || userId === 'kelly') {
+      userName = 'Kelly';
+    }
+    // Check for other custom user IDs
+    else if (userId && userId !== 'guest') {
+      // Extract a friendly name from user ID if possible
+      userName = userId.replace(/[-_]/g, ' ')
+                     .replace(/\b\w/g, l => l.toUpperCase())
+                     .replace(/^Guest\d*$/, 'Explorer'); // Clean up guest IDs
+    }
+
     const profile = {
       id: userId || 'guest',
-      name: 'Guest User',
+      name: userName,
       domain: domain || 'localhost',
-      isGuest: true,
+      isGuest: userId === 'guest' || !userId,
       preferences: {
         theme: 'dark',
         voiceEnabled: true,
@@ -25,9 +38,10 @@ export async function GET(request: NextRequest) {
       created: new Date().toISOString(),
     };
 
+    // Return in the format expected by MAIA page (data.user.name)
     return NextResponse.json({
       success: true,
-      profile
+      user: profile  // Changed from 'profile' to 'user' to match MAIA expectation
     });
 
   } catch (error) {

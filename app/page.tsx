@@ -1,163 +1,128 @@
 'use client';
 
-import { useEffect } from 'react';
-import { SessionManager } from '../lib/sessionManager';
+/**
+ * ROOT PAGE - SACRED PATHWAY DETECTION
+ *
+ * Auto-detects user state and routes to appropriate sacred experience
+ * Three Sacred Pathways: First Initiation / Returning Practitioner / Continuous Session
+ */
 
-// Root Page - Sacred Pathway Detection and Routing
-// Automatically detects user state and routes to appropriate experience
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 
 export default function RootPage() {
+  const router = useRouter();
+
   useEffect(() => {
-    const detectAndRoute = async () => {
-      try {
-        // Get user's current pathway
-        const sessionState = SessionManager.getUserPathway();
-
-        console.log('🧘 Sacred pathway detection:', sessionState.pathway);
-
-        // Route based on pathway
-        switch (sessionState.pathway) {
-          case 'PATHWAY_3_CONTINUOUS':
-            // Active session - direct to MAIA
-            SessionManager.trackInteraction('root_direct_to_maia');
-            SessionManager.redirectToMaia();
-            break;
-
-          case 'PATHWAY_2_RETURNING':
-          case 'PATHWAY_1_INITIATION':
-          default:
-            // Need onboarding or returning user flow
-            SessionManager.trackInteraction('root_to_welcome', {
-              pathway: sessionState.pathway,
-              isFirstVisit: sessionState.isFirstVisit
-            });
-            window.location.href = '/welcome';
-            break;
-        }
-
-      } catch (error) {
-        console.error('Sacred pathway detection error:', error);
-
-        // Fallback to welcome page
-        window.location.href = '/welcome';
-      }
-    };
-
-    // Small delay to ensure clean page transition
-    const timer = setTimeout(detectAndRoute, 300);
+    // Sacred pause then redirect to welcome orchestrator
+    const timer = setTimeout(() => {
+      router.push('/welcome');
+    }, 1000);
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [router]);
 
-  // Pathway detection loading screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-teal-50 to-sage-100 flex items-center justify-center">
-
-      {/* Sacred loading animation */}
+    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100 to-sage-200 flex items-center justify-center">
+      {/* Sacred loading with breathing holoflower */}
       <div className="text-center space-y-8">
 
-        {/* Sacred holoflower loading */}
-        <div className="relative w-32 h-32 mx-auto">
-          <svg
-            className="w-full h-full"
-            viewBox="0 0 128 128"
-            style={{
-              animation: 'var(--sacred-rotation)'
-            }}
-          >
+        {/* Breathing consciousness symbol */}
+        <motion.div
+          className="w-16 h-16 mx-auto relative"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.7, 1, 0.7]
+          }}
+          transition={{
+            duration: 3,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+        >
+          <svg width="64" height="64" viewBox="0 0 64 64">
             <defs>
-              <radialGradient id="loadingGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="var(--aether-400)" stopOpacity="0.8" />
-                <stop offset="50%" stopColor="var(--sage-400)" stopOpacity="0.6" />
-                <stop offset="100%" stopColor="var(--teal-400)" stopOpacity="0.3" />
+              <radialGradient id="breathingGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
+                <stop offset="70%" stopColor="#14b8a6" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
               </radialGradient>
             </defs>
 
-            {/* Sacred holoflower petals */}
-            <g transform="translate(64,64)">
+            {/* Sacred geometry holoflower */}
+            <g transform="translate(32,32)">
               {[0, 1, 2, 3, 4, 5].map((i) => (
-                <path
+                <motion.path
                   key={i}
-                  d="M0,-30 Q-15,-20 -20,0 Q-15,20 0,30 Q15,20 20,0 Q15,-20 0,-30"
-                  fill="url(#loadingGlow)"
+                  d="M0,-16 Q-8,-10 -11,0 Q-8,10 0,16 Q8,10 11,0 Q8,-10 0,-16"
+                  fill="url(#breathingGlow)"
                   transform={`rotate(${i * 60})`}
-                  style={{
-                    animation: `var(--sacred-pulse)`,
-                    animationDelay: `${i * 0.2}s`
+                  animate={{
+                    opacity: [0.4, 0.8, 0.4],
+                    scale: [0.9, 1.1, 0.9]
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    delay: i * 0.1,
+                    ease: "easeInOut"
                   }}
                 />
               ))}
 
-              {/* Center consciousness point */}
+              {/* Center point of consciousness */}
               <circle
                 cx="0"
                 cy="0"
-                r="3"
-                fill="var(--aether-500)"
-                style={{
-                  animation: `var(--sacred-pulse)`
-                }}
+                r="2"
+                fill="#16a34a"
+                opacity="0.9"
               />
             </g>
           </svg>
-        </div>
+        </motion.div>
 
-        {/* Loading text */}
-        <div className="space-y-3">
-          <h1 className="text-2xl font-light text-sage-800 font-ceremony tracking-wide">
-            Detecting consciousness pathway...
+        {/* Elegant sacred text */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 1.5 }}
+          className="space-y-3"
+        >
+          <h1 className="text-lg font-light text-sage-800 tracking-[0.15em] font-serif">
+            SOULLAB
           </h1>
-
-          <p className="text-sage-600 font-light text-sm">
-            Preparing your sacred space
+          <p className="text-sm text-sage-600 font-light italic">
+            Consciousness technology for transformation
           </p>
-        </div>
+        </motion.div>
 
-        {/* Loading dots animation */}
-        <div className="flex justify-center space-x-2">
+        {/* Subtle loading indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="flex items-center justify-center space-x-1"
+        >
           {[0, 1, 2].map((i) => (
-            <div
+            <motion.div
               key={i}
-              className="w-2 h-2 bg-sage-400 rounded-full"
-              style={{
-                animation: `var(--sacred-pulse)`,
-                animationDelay: `${i * 0.5}s`
+              className="w-1.5 h-1.5 bg-sage-400 rounded-full"
+              animate={{
+                opacity: [0.3, 1, 0.3],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{
+                duration: 1.2,
+                repeat: Infinity,
+                delay: i * 0.2
               }}
             />
           ))}
-        </div>
+        </motion.div>
 
       </div>
-
-      {/* Background subtle sacred geometry */}
-      <div className="absolute inset-0 overflow-hidden opacity-20">
-        <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96"
-          style={{
-            background: 'radial-gradient(circle, var(--sage-200) 0%, transparent 70%)',
-            animation: `var(--sacred-breathe)`
-          }}
-        />
-
-        <div
-          className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-64 h-64"
-          style={{
-            background: 'radial-gradient(circle, var(--teal-200) 0%, transparent 70%)',
-            animation: `var(--sacred-breathe)`,
-            animationDelay: '2s'
-          }}
-        />
-
-        <div
-          className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-48 h-48"
-          style={{
-            background: 'radial-gradient(circle, var(--aether-200) 0%, transparent 70%)',
-            animation: `var(--sacred-breathe)`,
-            animationDelay: '4s'
-          }}
-        />
-      </div>
-
     </div>
   );
 }

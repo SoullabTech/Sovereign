@@ -78,7 +78,7 @@ interface MAIARealtimeStatus {
 async function getConsciousnessMetrics(): Promise<any> {
   try {
     // Try to get consciousness metrics from the consciousness integration
-    const response = await fetch('http://localhost:3008/api/consciousness/integration?type=metrics', {
+    const response = await fetch('http://localhost:3009/api/consciousness/integration?type=metrics', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

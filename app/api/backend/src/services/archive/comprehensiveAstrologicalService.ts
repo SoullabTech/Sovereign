@@ -194,7 +194,7 @@ export class ComprehensiveAstrologicalService {
   }
 
   private initializeWebSocketServer() {
-    this.wsServer = new WebSocketServer({ port: 5004 });
+    this.wsServer = new WebSocketServer({ port: 5006 });
 
     this.wsServer.on("connection", (ws, req) => {
       const userId = req.url?.split("/").pop();

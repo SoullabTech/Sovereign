@@ -1,0 +1,398 @@
+/* Spiralogic Oracle Design System */
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+@layer base {
+  :root {
+    /* Enhanced Consciousness-Aware Elemental Colors */
+    --fire: #FF6B35;        /* Creative inspiration - sophisticated orange-red */
+    --fire-secondary: #F7931E;      /* Manifestation energy */
+    --fire-tertiary: #FFE66D;       /* Breakthrough illumination */
+
+    --water: #4ECDC4;       /* Empathic flow - keep existing balance */
+    --water-secondary: #45B7B8;     /* Emotional intelligence */
+    --water-tertiary: #6C5CE7;      /* Intuitive depth */
+
+    --earth: #A8E6CF;       /* Grounding safety - softer, more sophisticated */
+    --earth-secondary: #88D8A3;     /* Growth embodiment */
+    --earth-tertiary: #68BBE3;      /* Stable flow */
+
+    --air: #E8F4FD;         /* Mental clarity - very light, spacious */
+    --air-secondary: #C7ECEE;       /* Spacious awareness */
+    --air-tertiary: #95E1D3;        /* Communication flow */
+
+    --aether: #9B59B6;      /* Sacred integration - keep existing depth */
+    --aether-secondary: #BB8FCE;    /* Synthesis wisdom */
+    --aether-tertiary: #D7BDE2;     /* Transcendent unity */
+
+    /* Consciousness State Colors - Professional & Elegant */
+    --recognition: #FFD93D;         /* Being seen moments - warm gold */
+    --breakthrough: #FF6B9D;        /* Aha experiences - sophisticated pink */
+    --integration: #C44569;         /* Wisdom embodiment - deep rose */
+    --emergence: #6A4C93;          /* New aspects arising - deep purple */
+    --sacred-pause: #F8F9FA;       /* Contemplative space - almost white */
+
+    /* Core Colors - Refined */
+    --dark: #0A0E27;
+    --dark-secondary: #1a1f3a;
+    --light: #F7F9FB;
+    --gold: #FFD93D;        /* Updated to match recognition color */
+
+    /* Glass Morphism - Enhanced */
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-heavy: rgba(255, 255, 255, 0.08);
+    --glass-border-heavy: rgba(255, 255, 255, 0.15);
+  }
+
+  * {
+    @apply box-border;
+  }
+
+  body {
+    @apply bg-dark text-light;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  /* Gradient Backgrounds */
+  .bg-gradient-spiralogic {
+    @apply bg-gradient-to-br from-dark to-dark-secondary;
+  }
+
+  /* Glass Morphism */
+  .glass {
+    background: var(--glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--glass-border);
+  }
+
+  .glass-heavy {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  /* Elemental Gradients */
+  .gradient-fire {
+    @apply bg-gradient-to-r from-fire to-orange-500;
+  }
+
+  .gradient-water {
+    @apply bg-gradient-to-r from-water to-blue-500;
+  }
+
+  .gradient-earth {
+    @apply bg-gradient-to-r from-earth to-green-500;
+  }
+
+  .gradient-air {
+    @apply bg-gradient-to-r from-air to-gray-300;
+  }
+
+  .gradient-aether {
+    @apply bg-gradient-to-r from-aether to-amber-500;
+  }
+
+  .gradient-sacred {
+    background: linear-gradient(90deg, var(--fire), var(--water), var(--earth), var(--air), var(--aether));
+  }
+
+  /* Text Gradients */
+  .text-gradient-sacred {
+    background: linear-gradient(90deg, var(--fire), var(--water), var(--earth), var(--air), var(--aether));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Buttons */
+  .btn-sacred {
+    @apply px-6 py-3 font-semibold rounded-2xl transition-all duration-300;
+    @apply bg-gradient-to-r from-fire to-water text-white;
+    @apply hover:shadow-2xl hover:scale-105 active:scale-100;
+  }
+
+  .btn-glass {
+    @apply px-6 py-3 font-semibold rounded-2xl transition-all duration-300;
+    @apply glass text-white hover:bg-white/10;
+  }
+
+  /* Cards */
+  .card-sacred {
+    @apply glass rounded-3xl p-6 transition-all duration-300;
+    @apply hover:bg-white/[0.07] hover:shadow-2xl;
+  }
+
+  /* Orbs */
+  .orb {
+    @apply absolute rounded-full opacity-30 blur-3xl pointer-events-none;
+    animation: float 20s infinite ease-in-out;
+  }
+
+  @keyframes float {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(50px, -50px) scale(1.1);
+    }
+    50% {
+      transform: translate(-30px, 30px) scale(0.9);
+    }
+    75% {
+      transform: translate(30px, 50px) scale(1.05);
+    }
+  }
+
+  /* Live Indicator Pulse */
+  @keyframes pulse-sacred {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  .pulse-sacred {
+    animation: pulse-sacred 2s infinite;
+  }
+
+  /* Bloom Animation */
+  @keyframes bloom {
+    0% {
+      transform: scale(0) rotate(-180deg);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.2) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1) rotate(0deg);
+      opacity: 1;
+    }
+  }
+
+  .bloom-enter {
+    animation: bloom 0.5s ease-out forwards;
+  }
+
+  /* Loading Spinner */
+  .spinner-sacred {
+    @apply w-12 h-12 rounded-full;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--aether);
+    animation: spin-sacred 1s linear infinite;
+  }
+
+  @keyframes spin-sacred {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* Form Elements */
+  .input-sacred {
+    @apply w-full px-4 py-3 glass rounded-xl text-white transition-all duration-300;
+    @apply focus:outline-none focus:border-aether focus:bg-white/10;
+    @apply placeholder-white/40;
+  }
+
+  .select-sacred {
+    @apply input-sacred appearance-none cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
+    background-repeat: no-repeat;
+    background-size: 1.5em 1.5em;
+    padding-right: 2.5rem;
+  }
+
+  /* Scrollbar Styling */
+  .scrollbar-sacred {
+    scrollbar-width: thin;
+    scrollbar-color: var(--aether) transparent;
+  }
+
+  .scrollbar-sacred::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-sacred::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-sacred::-webkit-scrollbar-thumb {
+    background: var(--aether);
+    border-radius: 10px;
+    opacity: 0.5;
+  }
+
+  .scrollbar-sacred::-webkit-scrollbar-thumb:hover {
+    opacity: 0.8;
+  }
+}
+
+@layer utilities {
+  /* Text sizes for mobile */
+  .text-sacred-hero {
+    @apply text-3xl sm:text-4xl md:text-5xl lg:text-6xl;
+  }
+
+  .text-sacred-title {
+    @apply text-2xl sm:text-3xl md:text-4xl;
+  }
+
+  .text-sacred-subtitle {
+    @apply text-lg sm:text-xl md:text-2xl;
+  }
+
+  /* Spacing utilities */
+  .sacred-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .sacred-section {
+    @apply py-16 sm:py-20 lg:py-24;
+  }
+
+  /* Animation utilities */
+  .animate-float {
+    animation: float 20s infinite ease-in-out;
+  }
+
+  .animate-pulse-sacred {
+    animation: pulse-sacred 2s infinite;
+  }
+
+  .animate-spin-sacred {
+    animation: spin-sacred 1s linear infinite;
+  }
+
+  /* Shadow utilities */
+  .shadow-sacred {
+    box-shadow:
+      0 10px 40px rgba(155, 93, 229, 0.2),
+      0 2px 10px rgba(0, 0, 0, 0.5);
+  }
+
+  .shadow-sacred-hover {
+    box-shadow:
+      0 20px 60px rgba(155, 93, 229, 0.3),
+      0 4px 20px rgba(0, 0, 0, 0.6);
+  }
+
+  /* Enhanced Glow effects with new colors */
+  .glow-fire {
+    filter: drop-shadow(0 0 20px rgba(255, 107, 53, 0.5));
+  }
+
+  .glow-water {
+    filter: drop-shadow(0 0 20px rgba(78, 205, 196, 0.5));
+  }
+
+  .glow-earth {
+    filter: drop-shadow(0 0 20px rgba(168, 230, 207, 0.5));
+  }
+
+  .glow-air {
+    filter: drop-shadow(0 0 20px rgba(199, 236, 238, 0.5));
+  }
+
+  .glow-aether {
+    filter: drop-shadow(0 0 20px rgba(155, 89, 182, 0.5));
+  }
+
+  /* Consciousness State Glows */
+  .glow-recognition {
+    filter: drop-shadow(0 0 25px rgba(255, 217, 61, 0.6));
+  }
+
+  .glow-breakthrough {
+    filter: drop-shadow(0 0 30px rgba(255, 107, 157, 0.5));
+  }
+
+  .glow-integration {
+    filter: drop-shadow(0 0 20px rgba(196, 69, 105, 0.4));
+  }
+
+  /* Consciousness-Aware Adaptive Classes */
+  .consciousness-adaptive {
+    transition: all 0.4s ease-in-out;
+  }
+
+  .fire-user {
+    --primary-archetype: var(--fire);
+    --secondary-archetype: var(--fire-secondary);
+    --tertiary-archetype: var(--fire-tertiary);
+  }
+
+  .water-user {
+    --primary-archetype: var(--water);
+    --secondary-archetype: var(--water-secondary);
+    --tertiary-archetype: var(--water-tertiary);
+  }
+
+  .earth-user {
+    --primary-archetype: var(--earth);
+    --secondary-archetype: var(--earth-secondary);
+    --tertiary-archetype: var(--earth-tertiary);
+  }
+
+  .air-user {
+    --primary-archetype: var(--air);
+    --secondary-archetype: var(--air-secondary);
+    --tertiary-archetype: var(--air-tertiary);
+  }
+
+  .aether-user {
+    --primary-archetype: var(--aether);
+    --secondary-archetype: var(--aether-secondary);
+    --tertiary-archetype: var(--aether-tertiary);
+  }
+
+  /* Recognition and "Being Seen" Effects */
+  .being-seen-moment {
+    background: var(--recognition);
+    color: var(--dark);
+    padding: 0.5rem 1rem;
+    border-radius: 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    animation: being-seen-glow 3s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .recognition-sparkle {
+    display: inline-block;
+    animation: sacred-recognition 0.8s ease-out;
+  }
+
+  .personality-recognition {
+    padding: 1rem;
+    border-radius: 1rem;
+    border: 2px solid var(--recognition);
+    background: rgba(255, 217, 61, 0.1);
+    backdrop-filter: blur(20px);
+    margin: 1rem 0;
+  }
+
+  .breakthrough-support {
+    background: var(--breakthrough);
+    color: white;
+    padding: 1rem;
+    border-radius: 1rem;
+    margin: 0.5rem 0;
+    animation: breakthrough-emergence 0.6s ease-out;
+  }
+}

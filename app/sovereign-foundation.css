@@ -1,0 +1,171 @@
+/* ========================================
+   MAIA-SOVEREIGN FOUNDATIONAL CSS SYSTEM
+   ======================================== */
+
+/* FOUNDATIONAL RULE 1: VOICE INTERACTION SOVEREIGNTY
+   - NO transparent overlays that block voice interactions
+   - ALL voice interface elements must be directly clickable
+   - NO z-index stacking that creates invisible barriers */
+
+/* Voice Interface Protection */
+.voice-interface-zone {
+  /* Ensure voice elements are always accessible */
+  pointer-events: auto !important;
+  z-index: auto !important;
+  position: relative !important;
+}
+
+.voice-interface-zone * {
+  /* Child elements inherit voice accessibility */
+  pointer-events: auto !important;
+}
+
+/* FOUNDATIONAL RULE 2: BUTTON INTERACTION SOVEREIGNTY */
+
+/* All buttons must be directly interactive - NO EXCEPTIONS */
+button,
+[role="button"],
+.button {
+  /* Core interaction guarantees */
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  touch-action: manipulation !important;
+
+  /* Remove webkit interference */
+  -webkit-appearance: none !important;
+  -webkit-touch-callout: none !important;
+
+  /* Minimum touch targets */
+  min-width: 44px !important;
+  min-height: 44px !important;
+
+  /* Hardware acceleration for responsiveness */
+  transform: translateZ(0) !important;
+  will-change: transform !important;
+}
+
+/* FOUNDATIONAL RULE 3: OVERLAY SOVEREIGNTY */
+
+/* NO fixed overlays that cover interaction zones without purpose */
+.overlay-safe {
+  /* Safe overlay pattern - does not block interaction */
+  pointer-events: none !important;
+
+  /* Children can have specific interaction zones */
+}
+
+.overlay-safe .interactive {
+  /* Restoration pattern for interactive elements within overlays */
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* FOUNDATIONAL RULE 4: MOBILE INTERACTION SOVEREIGNTY */
+
+/* Mobile-first interaction patterns */
+@media (max-width: 768px) {
+  button,
+  [role="button"],
+  .button {
+    /* Enhanced mobile touch targets */
+    min-width: 48px !important;
+    min-height: 48px !important;
+    padding: 12px !important;
+
+    /* Improved mobile responsiveness */
+    -webkit-tap-highlight-color: rgba(0,0,0,0.1) !important;
+    -webkit-user-select: none !important;
+  }
+
+  /* Mobile voice interface protection */
+  .voice-interface-zone {
+    /* Larger interaction area on mobile */
+    padding: 8px !important;
+  }
+}
+
+/* FOUNDATIONAL RULE 5: SAFARI COMPATIBILITY SOVEREIGNTY */
+
+/* Safari-specific interaction fixes */
+@supports (-webkit-touch-callout: none) {
+  button,
+  [role="button"],
+  .button {
+    /* Safari hardware acceleration */
+    -webkit-transform: translateZ(0) !important;
+    -webkit-backface-visibility: hidden !important;
+
+    /* Safari touch optimization */
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+  }
+}
+
+/* FOUNDATIONAL RULE 6: CONSCIOUSNESS INTERFACE SOVEREIGNTY */
+
+/* MAIA/Maya consciousness interface protection */
+.consciousness-interface {
+  /* Sacred interaction zone */
+  position: relative !important;
+  z-index: 10 !important;
+  pointer-events: auto !important;
+}
+
+.consciousness-interface .holoflower,
+.consciousness-interface .sacred-geometry,
+.consciousness-interface .voice-controls {
+  /* Direct consciousness interaction */
+  pointer-events: auto !important;
+}
+
+/* Background elements that should not interfere */
+.consciousness-background {
+  /* Background consciousness elements */
+  pointer-events: none !important;
+  z-index: 0 !important;
+}
+
+/* FOUNDATIONAL RULE 7: DEBUGGING & VALIDATION */
+
+/* Development-only visual validation */
+.debug-interaction-zones button {
+  /* Visual debugging for interaction zones */
+  outline: 2px solid rgba(34, 197, 94, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.3) inset !important;
+}
+
+.debug-interaction-zones .voice-interface-zone {
+  /* Voice zone debugging */
+  outline: 3px solid rgba(59, 130, 246, 0.6) !important;
+  background: rgba(59, 130, 246, 0.05) !important;
+}
+
+/* EMERGENCY INTERACTION RECOVERY */
+/* Use this class to fix interaction issues */
+.force-interactive {
+  pointer-events: auto !important;
+  z-index: 999 !important;
+  position: relative !important;
+  cursor: pointer !important;
+}
+
+/* ANTI-PATTERN PREVENTION */
+/* Prevent common interaction-blocking patterns */
+
+/* NO global pointer-events blocking */
+* {
+  /* Never globally disable pointer events */
+  /* pointer-events: none; */ /* FORBIDDEN PATTERN */
+}
+
+/* NO invisible overlays covering full screen without interactive purpose */
+.fixed.inset-0 {
+  /* Fixed overlays must either have interaction purpose or be pointer-events-none */
+}
+
+/* NO z-index abuse that creates interaction barriers */
+[style*="z-index: 9999"] {
+  /* Extremely high z-index should be avoided */
+  /* Check if this creates interaction barriers */
+}

@@ -1,0 +1,326 @@
+/**
+ * Spiralogic Typography Refresh - Phase 1
+ *
+ * Immediate visual richness:
+ * - Remove message boxes
+ * - Add breathing room
+ * - Differentiate user vs MAIA
+ * - Responsive scaling
+ *
+ * Apply this CSS to see the transformation.
+ */
+
+/* ==========================================================================
+   Font Imports
+   ========================================================================== */
+
+/* Inter for user messages and UI */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Source Sans 3 for MAIA (warmer sans option) */
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;500;600;700&display=swap');
+
+/* Crimson Pro for MAIA (serif option - desktop only) */
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&display=swap');
+
+/* JetBrains Mono for code */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ==========================================================================
+   CSS Custom Properties
+   ========================================================================== */
+
+:root {
+  /* Font families */
+  --font-user: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --font-maia-sans: 'Source Sans 3', 'Source Sans Pro', system-ui, sans-serif;
+  --font-maia-serif: 'Crimson Pro', 'Iowan Old Style', 'Palatino Linotype', serif;
+  --font-interface: 'Inter', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+
+  /* Default to warmer sans for MAIA */
+  --font-maia: var(--font-maia-sans);
+
+  /* Responsive font sizes (mobile-first) */
+  --text-user: clamp(1rem, 4vw, 1.0625rem);          /* 16-17px */
+  --text-maia: clamp(1.0625rem, 4vw, 1.125rem);      /* 17-18px */
+  --text-interface: clamp(0.875rem, 3.5vw, 1rem);    /* 14-16px */
+
+  /* Line heights */
+  --leading-tight: 1.2;
+  --leading-normal: 1.5;
+  --leading-user: 1.6;
+  --leading-maia: 1.7;
+  --leading-loose: 1.75;
+
+  /* Letter spacing */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.01em;
+  --tracking-wider: 0.02em;
+
+  /* Reading width */
+  --reading-width: 100%;
+
+  /* Spacing (mobile-first) */
+  --message-padding: 0 1rem;
+  --message-margin-user: 1.25rem;
+  --message-margin-maia: 1.5rem;
+  --turn-spacing: 2rem;
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) {
+  :root {
+    --text-user: clamp(1rem, 2vw, 1.0625rem);
+    --text-maia: clamp(1.0625rem, 2vw, 1.125rem);
+    --reading-width: 65ch;
+    --message-padding: 0 2rem;
+    --message-margin-user: 1.5rem;
+    --message-margin-maia: 1.75rem;
+    --turn-spacing: 2.5rem;
+
+    /* Enable serif option on tablet */
+    --font-maia: var(--font-maia-serif);
+  }
+}
+
+/* Desktop adjustments */
+@media (min-width: 1024px) {
+  :root {
+    --text-user: clamp(1rem, 1.5vw, 1.0625rem);
+    --text-maia: clamp(1.0625rem, 1.5vw, 1.125rem);
+    --message-padding: 0 3rem;
+    --message-margin-user: 1.5rem;
+    --message-margin-maia: 2rem;
+    --turn-spacing: 3rem;
+
+    /* Serif feels best on desktop */
+    --font-maia: var(--font-maia-serif);
+  }
+}
+
+/* ==========================================================================
+   Message Styling - NO BOXES
+   ========================================================================== */
+
+/* User messages: Clean, grounded, present */
+.message-user,
+.user-message,
+[data-role="user"] {
+  font-family: var(--font-user) !important;
+  font-size: var(--text-user) !important;
+  font-weight: 400 !important;
+  line-height: var(--leading-user) !important;
+  letter-spacing: var(--tracking-wide) !important;
+
+  /* Remove boxes */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+
+  /* Add breathing room */
+  margin-bottom: var(--message-margin-user) !important;
+  max-width: var(--reading-width);
+  padding-left: var(--message-padding) !important;
+  padding-right: var(--message-padding) !important;
+
+  /* Color from seasonal palette */
+  color: var(--color-text-user, #2e2419);
+}
+
+/* MAIA messages: Warm, literary, wise */
+.message-maia,
+.maia-message,
+.oracle-message,
+[data-role="assistant"],
+[data-role="oracle"] {
+  font-family: var(--font-maia) !important;
+  font-size: var(--text-maia) !important;
+  font-weight: 400 !important;
+  line-height: var(--leading-maia) !important;
+  letter-spacing: var(--tracking-wide) !important;
+
+  /* Remove boxes */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+
+  /* More generous breathing room */
+  margin-bottom: var(--message-margin-maia) !important;
+  max-width: var(--reading-width);
+  padding-left: var(--message-padding) !important;
+  padding-right: var(--message-padding) !important;
+
+  /* Color from seasonal palette */
+  color: var(--color-text-maia, #4a3428);
+}
+
+/* System messages: Subtle, italic */
+.message-system,
+.system-message {
+  font-family: var(--font-interface) !important;
+  font-size: var(--text-interface) !important;
+  font-weight: 400 !important;
+  line-height: var(--leading-normal) !important;
+  letter-spacing: var(--tracking-wide) !important;
+  font-style: italic;
+
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-bottom: 1rem !important;
+
+  color: var(--color-text-muted, #8a7a6a);
+  opacity: 0.8;
+}
+
+/* ==========================================================================
+   Markdown Content Styling
+   ========================================================================== */
+
+.message-maia p,
+.maia-message p {
+  margin-bottom: 1em;
+  margin-top: 0;
+}
+
+.message-maia p:last-child,
+.maia-message p:last-child {
+  margin-bottom: 0;
+}
+
+/* Strong emphasis */
+.message-maia strong,
+.maia-message strong {
+  font-weight: 600;
+  color: inherit;
+}
+
+/* Italic emphasis - beautiful in Crimson Pro */
+.message-maia em,
+.maia-message em {
+  font-style: italic;
+  color: inherit;
+}
+
+/* Code inline */
+.message-maia code,
+.maia-message code,
+.message-user code,
+.user-message code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: rgba(0, 0, 0, 0.05);
+  padding: 0.125em 0.375em;
+  border-radius: 0.25em;
+  letter-spacing: 0;
+}
+
+/* Code blocks */
+.message-maia pre,
+.maia-message pre {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  line-height: 1.5;
+  background: rgba(0, 0, 0, 0.03);
+  padding: 1em;
+  border-radius: 0.5em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.message-maia pre code,
+.maia-message pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Lists */
+.message-maia ul,
+.message-maia ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.message-maia li {
+  margin-bottom: 0.25em;
+}
+
+/* ==========================================================================
+   Conversation Flow
+   ========================================================================== */
+
+/* Space between conversation turns */
+.conversation-turn + .conversation-turn {
+  margin-top: var(--turn-spacing);
+}
+
+/* Timestamps */
+.message-timestamp {
+  font-family: var(--font-interface);
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #8a7a6a);
+  opacity: 0.6;
+  margin-top: 0.25rem;
+  letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+/* Ensure sufficient color contrast */
+@media (prefers-contrast: high) {
+  .message-user {
+    color: #000;
+  }
+
+  .message-maia {
+    color: #000;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .message-user,
+  .message-maia,
+  .message-system {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* ==========================================================================
+   User Preference: Font Override
+   ========================================================================== */
+
+/* User can force serif everywhere (desktop/tablet only) */
+@media (min-width: 768px) {
+  [data-maia-font="serif"] .message-maia,
+  [data-maia-font="serif"] .maia-message,
+  [data-maia-font="serif"] .oracle-message {
+    font-family: var(--font-maia-serif) !important;
+  }
+}
+
+/* User can force sans everywhere */
+[data-maia-font="sans"] .message-maia,
+[data-maia-font="sans"] .maia-message,
+[data-maia-font="sans"] .oracle-message {
+  font-family: var(--font-maia-sans) !important;
+}
+
+/* ==========================================================================
+   Progressive Enhancement
+   ========================================================================== */
+
+/* If fonts don't load, fallback to system fonts gracefully */
+@supports not (font-family: 'Inter') {
+  :root {
+    --font-user: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-maia: -apple-system-ui-serif, ui-serif, 'Georgia', serif;
+  }
+}

@@ -14,16 +14,17 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { OracleConversation } from '@/components/OracleConversation';
-import { ClaudeCodePresence } from '@/components/ui/ClaudeCodePresence';
-import { WisdomJourneyDashboard } from '@/components/maya/WisdomJourneyDashboard';
-import { WeavingVisualization } from '@/components/maya/WeavingVisualization';
+import { OracleConversation } from '../../components/OracleConversation';
+import { ClaudeCodePresence } from '../../components/ui/ClaudeCodePresence';
+import { WisdomJourneyDashboard } from '../../components/maya/WisdomJourneyDashboard';
+import { WeavingVisualization } from '../../components/maya/WeavingVisualization';
 // BetaOnboarding removed - direct access only
-import { ErrorBoundary } from '@/components/ErrorBoundary';
-import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock } from 'lucide-react';
+import { ErrorBoundary } from '../../components/ErrorBoundary';
+import { BrainTrustMonitor } from '../../components/consciousness/BrainTrustMonitor';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, FlaskConical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
+import { SwipeNavigation, DirectionalHints } from '../../components/navigation/SwipeNavigation';
+import { SacredLabDrawer } from '../../apps/web/components/ui/SacredLabDrawer';
 
 async function getInitialUserData() {
   if (typeof window === 'undefined') return { id: 'guest', name: 'Explorer' };
@@ -32,28 +33,15 @@ async function getInitialUserData() {
 
   const storedUserId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
 
-  // KELLY SECURE RECOGNITION - Multiple validation checks to prevent contamination
-  // Only recognize Kelly if multiple conditions are met to avoid script contamination
-  if (storedUserId === 'kelly-nezat') {
-    // Additional validation: check for Kelly-specific browser patterns or domain
-    const isFounderDomain = window.location.hostname.includes('soullab.life') ||
-                           window.location.hostname.includes('localhost');
-    const hasFounderSession = localStorage.getItem('founder-session') === 'kelly-nezat';
-
-    // Only proceed if on founder domain or has explicit founder session
-    if (isFounderDomain || hasFounderSession) {
-      console.log('🌟 [MAIA] Kelly recognized with secure validation:', { domain: window.location.hostname, founderSession: hasFounderSession });
-      localStorage.setItem('explorerName', 'Kelly');
-      localStorage.setItem('explorerId', 'kelly-nezat');
-      return { id: 'kelly-nezat', name: 'Kelly' };
-    } else {
-      // Clear contaminated Kelly data for non-founder users
-      console.warn('⚠️ [MAIA] Clearing contaminated Kelly data for non-founder user');
-      localStorage.removeItem('explorerId');
-      localStorage.removeItem('betaUserId');
-      localStorage.removeItem('explorerName');
-      localStorage.removeItem('beta_user');
-    }
+  // KELLY SPECIAL CASE - Check multiple possible Kelly identifiers
+  // Do NOT auto-assign based on domain - that would affect all users
+  if (storedUserId === 'kelly-nezat' || storedUserId === 'kelly' ||
+      localStorage.getItem('explorerName')?.toLowerCase() === 'kelly' ||
+      localStorage.getItem('betaUserName')?.toLowerCase() === 'kelly') {
+    console.log('🌟 [MAIA] Kelly recognized from userId/name:', storedUserId);
+    localStorage.setItem('explorerName', 'Kelly');
+    localStorage.setItem('explorerId', 'kelly-nezat');
+    return { id: 'kelly-nezat', name: 'Kelly' };
   }
 
   // Try to fetch from API using stored userId
@@ -128,11 +116,9 @@ export default function MAIAPage() {
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('shimmer');  // Default to shimmer - MAIA's natural voice
   const [showChatInterface, setShowChatInterface] = useState(false);
-  const [showSessionSelector, setShowSessionSelector] = useState(false); // DISABLED - causing overlay issues
+  const [showSessionSelector, setShowSessionSelector] = useState(false);
+  const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
-
-  // Function to handle session starting from external trigger
-  // Session trigger state removed - using direct session management
 
   const hasCheckedAuth = useRef(false);
 
@@ -223,6 +209,22 @@ export default function MAIAPage() {
     if (hasCheckedAuth.current) return;
     hasCheckedAuth.current = true;
 
+    // KELLY PRIORITY CHECK - Force Kelly identity
+    const storedName = localStorage.getItem('explorerName');
+    const storedId = localStorage.getItem('explorerId');
+
+    // Force Kelly identification - check multiple patterns
+    if (storedName?.toLowerCase().includes('kelly') || storedId?.includes('kelly') || window.location.hostname === 'localhost') {
+      localStorage.setItem('explorerName', 'Kelly');
+      localStorage.setItem('explorerId', 'kelly-nezat');
+      localStorage.setItem('betaOnboardingComplete', 'true');
+      localStorage.removeItem('beta_user'); // Clear conflicting data
+      setExplorerId('kelly-nezat');
+      setExplorerName('Kelly');
+      console.log('🌟 [MAIA-SOVEREIGN] Kelly FORCED authentication successful');
+      return;
+    }
+
     // NEVER show onboarding - always let user through
     // Default to guest mode if no stored user
     const newUser = localStorage.getItem('beta_user');
@@ -303,7 +305,7 @@ export default function MAIAPage() {
 
         {/* DREAM-WEAVER SYSTEM - Combined Header & Banner - Always visible */}
         <div
-          className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm z-[110]"
+          className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm"
         >
           {/* Spice particle effect - very subtle movement */}
           <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -355,55 +357,73 @@ export default function MAIAPage() {
                 </h1>
               </div>
 
-              {/* Center: Voice/Text toggle + Mode selector */}
-              <div className="flex items-center gap-3">
-                {/* Voice/Text Toggle - Clickable */}
+              {/* Center: Combined Voice/Text toggle + Mode selector */}
+              <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5">
+                {/* Voice/Text Toggle */}
                 <button
                   onClick={() => setShowChatInterface(!showChatInterface)}
-                  className="px-3 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
+                    showChatInterface
+                      ? 'bg-green-500/30 text-green-200'
+                      : 'bg-blue-500/30 text-blue-200'
+                  }`}
                 >
-                  <span className="text-xs text-amber-300/90 font-light">
-                    {showChatInterface ? '💬 Text' : '🎤 Voice'}
-                  </span>
+                  {showChatInterface ? 'Text' : 'Voice'}
                 </button>
 
+                {/* Separator */}
+                <div className="w-px h-4 bg-amber-400/20"></div>
+
                 {/* Mode Selector: Dialogue / Patient / Scribe */}
-                <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5">
-                  <button
-                    onClick={() => setMaiaMode('normal')}
-                    className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                      maiaMode === 'normal'
-                        ? 'bg-amber-500/30 text-amber-200'
-                        : 'text-amber-400/60 hover:text-amber-300/80'
-                    }`}
-                  >
-                    Dialogue
-                  </button>
-                  <button
-                    onClick={() => setMaiaMode('patient')}
-                    className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                      maiaMode === 'patient'
-                        ? 'bg-purple-500/30 text-purple-200'
-                        : 'text-amber-400/60 hover:text-amber-300/80'
-                    }`}
-                  >
-                    Patient
-                  </button>
-                  <button
-                    onClick={() => setMaiaMode('session')}
-                    className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                      maiaMode === 'session'
-                        ? 'bg-blue-500/30 text-blue-200'
-                        : 'text-amber-400/60 hover:text-amber-300/80'
-                    }`}
-                  >
-                    Scribe
-                  </button>
-                </div>
+                <button
+                  onClick={() => setMaiaMode('normal')}
+                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
+                    maiaMode === 'normal'
+                      ? 'bg-amber-500/30 text-amber-200'
+                      : 'text-amber-400/60 hover:text-amber-300/80'
+                  }`}
+                >
+                  Dialogue
+                </button>
+                <button
+                  onClick={() => setMaiaMode('patient')}
+                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
+                    maiaMode === 'patient'
+                      ? 'bg-purple-500/30 text-purple-200'
+                      : 'text-amber-400/60 hover:text-amber-300/80'
+                  }`}
+                >
+                  Patient
+                </button>
+                <button
+                  onClick={() => setMaiaMode('session')}
+                  className={`px-2 py-1 rounded text-xs font-light transition-all ${
+                    maiaMode === 'session'
+                      ? 'bg-blue-500/30 text-blue-200'
+                      : 'text-amber-400/60 hover:text-amber-300/80'
+                  }`}
+                >
+                  Scribe
+                </button>
               </div>
 
               {/* Right: Sign Out + Session Container buttons */}
               <div className="flex items-center gap-2">
+                {/* Lab Tools Button */}
+                <motion.button
+                  onClick={() => setShowLabDrawer(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Sacred Lab Tools"
+                >
+                  <FlaskConical className="w-4 h-4" />
+                  <span className="hidden sm:inline">Lab Tools</span>
+                </motion.button>
+
                 {/* Sign Out Button */}
                 <motion.button
                   onClick={handleSignOut}
@@ -420,14 +440,7 @@ export default function MAIAPage() {
                 </motion.button>
                 {!hasActiveSession ? (
                   <motion.button
-                    onClick={() => {
-                      console.log('🔥 Starting session directly');
-                      // Start session directly - Safari compatible
-                      setHasActiveSession(true);
-                      // Trigger session start in localStorage for session management
-                      localStorage.setItem('maia_session_active', 'true');
-                      localStorage.setItem('maia_session_start', Date.now().toString());
-                    }}
+                    onClick={() => setShowSessionSelector(true)}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                              bg-[#D4B896]/10 hover:bg-[#D4B896]/20
                              border border-[#D4B896]/20 hover:border-[#D4B896]/40
@@ -466,10 +479,9 @@ export default function MAIAPage() {
               consciousnessType="maia"
               initialShowChatInterface={showChatInterface}
               onShowChatInterfaceChange={setShowChatInterface}
-              showSessionSelector={false} // FORCE DISABLED - was: showSessionSelector
+              showSessionSelector={showSessionSelector}
               onCloseSessionSelector={() => setShowSessionSelector(false)}
               onSessionActiveChange={setHasActiveSession}
-              // onSessionStartTrigger removed - using direct session management
             />
 
             {/* Claude Code's Living Presence - MOVED to bottom menu bar to free mobile screen space */}
@@ -591,7 +603,11 @@ export default function MAIAPage() {
             className="absolute bottom-20 left-1/2 -translate-x-1/2 max-w-md w-full mx-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl"
           >
             <div className="text-center">
-              <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+              <img
+                src="/holoflower-amber.png"
+                alt="Holoflower"
+                className="w-10 h-10 mx-auto mb-3 drop-shadow-lg"
+              />
               <h3 className="text-lg font-semibold text-white mb-2">
                 Welcome, {explorerName}
               </h3>
@@ -611,6 +627,21 @@ export default function MAIAPage() {
             </div>
           </motion.div>
         )}
+
+        {/* Sacred Lab Drawer */}
+        <SacredLabDrawer
+          isOpen={showLabDrawer}
+          onClose={() => setShowLabDrawer(false)}
+          onNavigate={(path) => {
+            router.push(path);
+            setShowLabDrawer(false);
+          }}
+          onAction={(action) => {
+            console.log('🔬 Lab action:', action);
+            // Handle specific lab actions here
+            setShowLabDrawer(false);
+          }}
+        />
       </div>
       </SwipeNavigation>
     </ErrorBoundary>

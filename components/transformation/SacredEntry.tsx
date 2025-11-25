@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface SacredEntryProps {
@@ -30,10 +30,8 @@ export function SacredEntry({ onComplete }: SacredEntryProps) {
 
   const handleSubmit = async () => {
     setIsValidating(true);
-
     // Sacred pause for validation
     await new Promise(resolve => setTimeout(resolve, 1200));
-
     onComplete({ name: name.trim(), passcode: passcode.toUpperCase() });
   };
 
@@ -261,7 +259,7 @@ export function SacredEntry({ onComplete }: SacredEntryProps) {
                 This is your private sanctuary for self-discovery,<br />
                 guided by consciousness designed for transformation.
               </p>
-            </div>
+            </motion.div>
 
           </motion.div>
         </div>

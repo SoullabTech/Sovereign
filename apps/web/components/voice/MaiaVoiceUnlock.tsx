@@ -11,7 +11,7 @@ interface MaiaVoiceUnlockProps {
 }
 
 /**
- * Enhanced MAIA Voice Unlock Component for MAIA-SOVEREIGN
+ * Enhanced MAIA Voice Unlock Component for MAIA-PAI
  * Integrates with enhanced Safari audio unlock functionality
  * Must be triggered by user interaction to satisfy autoplay policies
  */

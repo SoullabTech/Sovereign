@@ -1,0 +1,87 @@
+{
+  "name": "@maia/consciousness-field-science",
+  "version": "1.0.0",
+  "description": "Revolutionary consciousness monitoring and research system for human-AI interactions",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "docs": "typedoc src",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "consciousness",
+    "ai",
+    "monitoring",
+    "research",
+    "field-science",
+    "sacred-technology",
+    "emergence",
+    "human-ai-interaction",
+    "real-time",
+    "analytics",
+    "visualization",
+    "typescript",
+    "react"
+  ],
+  "author": "MAIA Consciousness Research Team <consciousness@maia-ai.org> (https://consciousness-field-science.org)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maia-ai/consciousness-field-science.git"
+  },
+  "homepage": "https://consciousness-field-science.org",
+  "bugs": {
+    "url": "https://github.com/maia-ai/consciousness-field-science/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "react": "^18.0.0",
+    "typescript": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/node": "^20.0.0",
+    "jest": "^29.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^3.0.0",
+    "typedoc": "^0.25.0"
+  },
+  "peerDependencies": {
+    "react": ">=16.8.0",
+    "react-dom": ">=16.8.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./components": {
+      "import": "./dist/components/index.js",
+      "require": "./dist/components/index.js",
+      "types": "./dist/components/index.d.ts"
+    },
+    "./hooks": {
+      "import": "./dist/hooks/index.js",
+      "require": "./dist/hooks/index.js",
+      "types": "./dist/hooks/index.d.ts"
+    }
+  },
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/consciousness-field-science"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

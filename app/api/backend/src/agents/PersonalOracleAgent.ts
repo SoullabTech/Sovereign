@@ -9,7 +9,7 @@ import {
   generateRequestId,
 } from "../utils/sharedUtilities";
 import { AgentRegistry } from "../core/factories/AgentRegistry";
-import { astrologyService } from "../services/astrologyService";
+import { astrologyService } from "../services/archive/astrologyService";
 import { journalingService } from "../services/journalingService";
 import { assessmentService } from "../services/assessmentService";
 import {

@@ -1,0 +1,621 @@
+/**
+ * 🏜️ THE DUNE AESTHETIC SYSTEM
+ *
+ * "Deep in the human unconscious is a pervasive need for a logical universe that makes sense.
+ * But the real universe is always one step beyond logic." - Frank Herbert
+ *
+ * Core Philosophy:
+ * - Observation as survival (Bene Gesserit training)
+ * - Ecology as consciousness (Fremen relationship with Arrakis)
+ * - Prescience through discipline (Mentat computation)
+ * - The sacred in the functional (stillsuits, water rituals)
+ */
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* ========================================
+   FONT IMPORTS - The Voice
+   ======================================== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+@layer base {
+  :root {
+    /* ========================================
+       DUNE COLOR PALETTE - The Desert Spectrum
+       ======================================== */
+
+    /* Desert Sand Tones */
+    --spice-sand: #D4A574;
+    --deep-sand: #8B6F47;
+    --dune-amber: #E6B887;
+    --sienna-rock: #A0522D;
+
+    /* Spice Orange (The Melange) */
+    --spice-orange: #FF8C42;
+    --spice-glow: #FFA85C;
+    --spice-deep: #CC6F35;
+
+    /* Fremen Blue (Eyes of Ibad) */
+    --ibad-blue: #1E3A5F;
+    --fremen-azure: #2E5A8A;
+    --spice-blue: #4A7BA7;
+
+    /* Caladan Water (Memory of Home) */
+    --caladan-teal: #2C7873;
+    --water-deep: #1A4D4A;
+    --ocean-mist: #5FA8A3;
+
+    /* Semantic Colors - States & Feedback */
+    --bene-gesserit-gold: #B8860B;
+    --navigator-purple: #6A4C93;
+    --atreides-green: #4A7C59;
+    --harkonnen-crimson: #8B0000;
+    --guild-silver: #C0C0C0;
+
+    /* Base Colors */
+    --desert-light: #F5E6D3;
+    --desert-dark: #2A1F1A;
+    --sand-white: #FFF8F0;
+
+    /* Typography Scale */
+    --text-xs: 0.75rem;    /* Guild fine print */
+    --text-sm: 0.875rem;   /* Mentat notation */
+    --text-base: 1rem;     /* Standard observation */
+    --text-lg: 1.125rem;   /* Emphasis */
+    --text-xl: 1.25rem;    /* Section headers */
+    --text-2xl: 1.5rem;    /* Chapter titles */
+    --text-3xl: 1.875rem;  /* Major proclamations */
+    --text-4xl: 2.25rem;   /* Imperial decrees */
+
+    /* Spacing */
+    --sacred-space-xs: 0.5rem;
+    --sacred-space-sm: 1rem;
+    --sacred-space-md: 1.5rem;
+    --sacred-space-lg: 2rem;
+    --sacred-space-xl: 3rem;
+  }
+
+  /* Font Family Definitions */
+  .font-cinzel {
+    font-family: 'Cinzel', 'Palatino', 'Georgia', serif;
+  }
+
+  .font-cormorant {
+    font-family: 'Cormorant Garamond', 'Didot', 'Bodoni', serif;
+  }
+
+  .font-raleway {
+    font-family: 'Raleway', 'Futura', 'Avenir', sans-serif;
+  }
+
+  .font-ibm-mono {
+    font-family: 'IBM Plex Mono', 'Courier Prime', monospace;
+  }
+
+  /* Body defaults */
+  body {
+    @apply font-cinzel bg-desert-light text-deep-sand;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-cormorant;
+  }
+
+  button, input, select, textarea {
+    @apply font-raleway;
+  }
+
+  code, pre {
+    @apply font-ibm-mono;
+  }
+}
+
+@layer components {
+  /* ========================================
+     BUTTONS - Spice Actions
+     ======================================== */
+
+  .btn-spice {
+    @apply px-6 py-3 font-semibold rounded-lg font-raleway uppercase tracking-wider;
+    @apply transition-all duration-300;
+    background: linear-gradient(135deg, var(--spice-orange), var(--spice-deep));
+    border: 1px solid var(--deep-sand);
+    box-shadow: 0 2px 8px rgba(212, 165, 116, 0.3);
+    color: white;
+    letter-spacing: 0.05em;
+  }
+
+  .btn-spice:hover {
+    background: linear-gradient(135deg, var(--spice-glow), var(--spice-orange));
+    box-shadow: 0 4px 12px rgba(255, 140, 66, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .btn-spice:active {
+    transform: translateY(0);
+  }
+
+  .btn-fremen {
+    @apply px-6 py-3 font-semibold rounded-lg font-raleway uppercase tracking-wider;
+    @apply transition-all duration-300;
+    background: transparent;
+    border: 2px solid var(--fremen-azure);
+    color: var(--fremen-azure);
+  }
+
+  .btn-fremen:hover {
+    background: rgba(46, 90, 138, 0.1);
+    border-color: var(--spice-blue);
+    color: var(--spice-blue);
+  }
+
+  .btn-mentat {
+    @apply px-4 py-2 text-sm font-medium rounded font-raleway;
+    @apply transition-all duration-200;
+    background: rgba(139, 111, 71, 0.1);
+    border: 1px solid var(--deep-sand);
+    color: var(--deep-sand);
+  }
+
+  .btn-mentat:hover {
+    background: rgba(139, 111, 71, 0.2);
+  }
+
+  /* ========================================
+     CARDS - Sietch Containers
+     ======================================== */
+
+  .card-sietch {
+    @apply rounded-lg p-6 transition-all duration-300;
+    background: var(--desert-light);
+    border: 1px solid var(--spice-sand);
+    box-shadow:
+      0 1px 3px rgba(139, 111, 71, 0.2),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    /* Subtle sandworm pattern overlay */
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 2px,
+        rgba(212, 165, 116, 0.05) 2px,
+        rgba(212, 165, 116, 0.05) 4px
+      );
+  }
+
+  .card-sietch:hover {
+    box-shadow:
+      0 4px 12px rgba(139, 111, 71, 0.3),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+  }
+
+  .card-stillsuit {
+    @apply rounded-lg p-6;
+    background: rgba(255, 248, 240, 0.95);
+    border: 1px solid var(--sienna-rock);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+  }
+
+  /* ========================================
+     INPUT FIELDS - Water Catching
+     ======================================== */
+
+  .input-water {
+    @apply w-full px-4 py-3 rounded font-cinzel transition-all duration-300;
+    background: var(--sand-white);
+    border: 2px solid var(--spice-sand);
+    color: var(--deep-sand);
+  }
+
+  .input-water:focus {
+    outline: none;
+    border-color: var(--fremen-azure);
+    box-shadow: 0 0 0 3px rgba(46, 90, 138, 0.1);
+  }
+
+  .input-water::placeholder {
+    color: rgba(139, 111, 71, 0.5);
+    font-style: italic;
+  }
+
+  /* ========================================
+     PROGRESS INDICATORS - Spice Flow
+     ======================================== */
+
+  .progress-spice {
+    @apply h-1 rounded-full relative overflow-hidden;
+    background: rgba(212, 165, 116, 0.3);
+  }
+
+  .progress-spice-bar {
+    @apply h-full rounded-full;
+    background: linear-gradient(
+      90deg,
+      var(--spice-sand) 0%,
+      var(--spice-orange) 50%,
+      var(--spice-deep) 100%
+    );
+    animation: spice-pulse 2s ease-in-out infinite;
+  }
+
+  /* ========================================
+     GRADIENT BACKGROUNDS
+     ======================================== */
+
+  .bg-desert-dawn {
+    background: linear-gradient(135deg, var(--dune-amber) 0%, var(--spice-sand) 100%);
+  }
+
+  .bg-arrakis-sunset {
+    background: linear-gradient(135deg, var(--spice-orange) 0%, var(--spice-deep) 50%, var(--desert-dark) 100%);
+  }
+
+  .bg-caladan-waters {
+    background: linear-gradient(135deg, var(--caladan-teal) 0%, var(--water-deep) 100%);
+  }
+
+  .bg-fremen-night {
+    background: linear-gradient(135deg, var(--ibad-blue) 0%, var(--desert-dark) 100%);
+  }
+
+  /* ========================================
+     TEXT GRADIENTS
+     ======================================== */
+
+  .text-spice-gradient {
+    background: linear-gradient(90deg, var(--spice-orange), var(--spice-glow));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-prescient {
+    background: linear-gradient(90deg, var(--navigator-purple), var(--bene-gesserit-gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}
+
+@layer utilities {
+  /* ========================================
+     ANIMATIONS - The Litany
+     ======================================== */
+
+  /* Spice pulse (for progress/loading) */
+  @keyframes spice-pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+  }
+
+  /* Water ripple (click feedback) */
+  @keyframes water-ripple {
+    0% {
+      transform: scale(0);
+      opacity: 0.6;
+    }
+    100% {
+      transform: scale(2);
+      opacity: 0;
+    }
+  }
+
+  /* Sandworm approach (hover states) */
+  @keyframes thumper {
+    0%, 100% { transform: translateY(0); }
+    25% { transform: translateY(-1px); }
+    75% { transform: translateY(1px); }
+  }
+
+  /* Spice vision (page transitions) */
+  @keyframes spice-vision {
+    0% {
+      filter: blur(4px);
+      opacity: 0.7;
+      transform: scale(0.98);
+    }
+    100% {
+      filter: blur(0px);
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Sandworm spiral (loading) */
+  @keyframes sandworm-spiral {
+    0% {
+      transform: rotate(0deg) scale(0.8);
+      opacity: 0.3;
+    }
+    50% {
+      transform: rotate(180deg) scale(1);
+      opacity: 0.6;
+    }
+    100% {
+      transform: rotate(360deg) scale(0.8);
+      opacity: 0.3;
+    }
+  }
+
+  /* Fremen breathing (subtle pulse) */
+  @keyframes fremen-breath {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.02);
+      opacity: 0.9;
+    }
+  }
+
+  /* Animation utility classes */
+  .animate-spice-pulse {
+    animation: spice-pulse 2s ease-in-out infinite;
+  }
+
+  .animate-water-ripple {
+    animation: water-ripple 0.6s ease-out;
+  }
+
+  .animate-thumper {
+    animation: thumper 0.3s ease-in-out;
+  }
+
+  .animate-spice-vision {
+    animation: spice-vision 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-sandworm-spiral {
+    animation: sandworm-spiral 3s ease-in-out infinite;
+  }
+
+  .animate-fremen-breath {
+    animation: fremen-breath 4s ease-in-out infinite;
+  }
+
+  /* ========================================
+     SHADOW UTILITIES - Desert Depth
+     ======================================== */
+
+  .shadow-spice {
+    box-shadow:
+      0 4px 12px rgba(255, 140, 66, 0.2),
+      0 2px 4px rgba(139, 111, 71, 0.3);
+  }
+
+  .shadow-spice-lg {
+    box-shadow:
+      0 10px 30px rgba(255, 140, 66, 0.3),
+      0 4px 10px rgba(139, 111, 71, 0.4);
+  }
+
+  .shadow-fremen {
+    box-shadow:
+      0 4px 12px rgba(46, 90, 138, 0.2),
+      0 2px 4px rgba(30, 58, 95, 0.3);
+  }
+
+  .shadow-prescient {
+    box-shadow:
+      0 0 20px rgba(106, 76, 147, 0.3),
+      0 0 40px rgba(184, 134, 11, 0.2);
+  }
+
+  /* ========================================
+     GLOW EFFECTS
+     ======================================== */
+
+  .glow-spice {
+    filter: drop-shadow(0 0 20px rgba(255, 140, 66, 0.5));
+  }
+
+  .glow-fremen {
+    filter: drop-shadow(0 0 20px rgba(46, 90, 138, 0.5));
+  }
+
+  .glow-prescient {
+    filter: drop-shadow(0 0 20px rgba(106, 76, 147, 0.5));
+  }
+
+  .glow-water {
+    filter: drop-shadow(0 0 20px rgba(44, 120, 115, 0.5));
+  }
+
+  /* ========================================
+     BORDER UTILITIES
+     ======================================== */
+
+  .border-spice {
+    border-color: var(--spice-sand);
+  }
+
+  .border-fremen {
+    border-color: var(--fremen-azure);
+  }
+
+  .border-sand {
+    border-color: var(--deep-sand);
+  }
+
+  /* ========================================
+     SCROLLBAR STYLING - Desert Elegance
+     ======================================== */
+
+  .scrollbar-dune {
+    scrollbar-width: thin;
+    scrollbar-color: var(--spice-sand) transparent;
+  }
+
+  .scrollbar-dune::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-dune::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-dune::-webkit-scrollbar-thumb {
+    background: var(--spice-sand);
+    border-radius: 3px;
+  }
+
+  .scrollbar-dune::-webkit-scrollbar-thumb:hover {
+    background: var(--spice-orange);
+  }
+
+  /* ========================================
+     TEXTURES - Desert Patterns
+     ======================================== */
+
+  .texture-sand {
+    background-image:
+      repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 2px,
+        rgba(212, 165, 116, 0.03) 2px,
+        rgba(212, 165, 116, 0.03) 4px
+      );
+  }
+
+  .texture-stillsuit {
+    background-image:
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 1px,
+        rgba(139, 111, 71, 0.05) 1px,
+        rgba(139, 111, 71, 0.05) 2px
+      ),
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 1px,
+        rgba(139, 111, 71, 0.05) 1px,
+        rgba(139, 111, 71, 0.05) 2px
+      );
+  }
+
+  .texture-rock {
+    background-image:
+      linear-gradient(
+        180deg,
+        rgba(160, 82, 45, 0.1) 0%,
+        transparent 50%,
+        rgba(139, 111, 71, 0.1) 100%
+      );
+  }
+
+  /* ========================================
+     RESPONSIVE TEXT SIZES
+     ======================================== */
+
+  .text-dune-hero {
+    @apply text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-cormorant;
+  }
+
+  .text-dune-title {
+    @apply text-2xl sm:text-3xl md:text-4xl font-cormorant;
+  }
+
+  .text-dune-subtitle {
+    @apply text-lg sm:text-xl md:text-2xl font-cinzel;
+  }
+
+  .text-dune-body {
+    @apply text-base sm:text-lg font-cinzel;
+  }
+
+  .text-dune-caption {
+    @apply text-sm sm:text-base font-raleway;
+  }
+
+  /* ========================================
+     SPACING UTILITIES
+     ======================================== */
+
+  .sietch-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .sietch-section {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  /* ========================================
+     INTERACTION STATES
+     ======================================== */
+
+  .hover-thumper:hover {
+    animation: thumper 0.3s ease-in-out;
+  }
+
+  .click-ripple:active::after {
+    content: '';
+    @apply absolute inset-0 rounded-full;
+    background: radial-gradient(circle, rgba(44, 120, 115, 0.3) 0%, transparent 70%);
+    animation: water-ripple 0.6s ease-out;
+  }
+}
+
+/* ========================================
+   DARK MODE OVERRIDES - Fremen Night
+   ======================================== */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --desert-light: #2A1F1A;
+    --deep-sand: #D4A574;
+    --sand-white: #1A1411;
+  }
+
+  body {
+    @apply bg-desert-light text-dune-amber;
+  }
+
+  .card-sietch {
+    background: rgba(42, 31, 26, 0.95);
+    border-color: var(--sienna-rock);
+  }
+
+  .input-water {
+    background: rgba(26, 20, 17, 0.95);
+    border-color: var(--sienna-rock);
+    color: var(--dune-amber);
+  }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .btn-spice,
+  .btn-fremen,
+  .card-sietch,
+  .input-water {
+    border-width: 2px;
+  }
+}

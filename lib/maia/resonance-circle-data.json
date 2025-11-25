@@ -1,0 +1,185 @@
+{
+  "title": "Telesphorus Resonance Circle",
+  "subtitle": "13-Agent Archetypal Intelligence System (Maps to 13 Facets Holoflower)",
+  "agents": [
+    {
+      "id": 1,
+      "name": "Elemental Oracle",
+      "frequency": 528,
+      "element": "fire",
+      "layer": "sensing",
+      "color": "#9D8420",
+      "symbol": "vesica-piscis",
+      "position": 0,
+      "angle": 0
+    },
+    {
+      "id": 2,
+      "name": "Higher Self",
+      "frequency": 639,
+      "element": "air",
+      "layer": "consciousness",
+      "color": "#D97D54",
+      "symbol": "triangle-up",
+      "position": 1,
+      "angle": 27.69
+    },
+    {
+      "id": 3,
+      "name": "Inner Child",
+      "frequency": 963,
+      "element": "water",
+      "layer": "archetype",
+      "color": "#C65D3B",
+      "symbol": "circle-dot",
+      "position": 2,
+      "angle": 55.38
+    },
+    {
+      "id": 4,
+      "name": "Anima",
+      "frequency": 852,
+      "element": "water",
+      "layer": "archetype",
+      "color": "#8B5A3C",
+      "symbol": "venus",
+      "position": 3,
+      "angle": 83.08
+    },
+    {
+      "id": 5,
+      "name": "Unconscious",
+      "frequency": 417,
+      "element": "water",
+      "layer": "consciousness",
+      "color": "#5B8A8A",
+      "symbol": "eye",
+      "position": 4,
+      "angle": 110.77
+    },
+    {
+      "id": 6,
+      "name": "Conscious Mind",
+      "frequency": 741,
+      "element": "air",
+      "layer": "consciousness",
+      "color": "#3D5A80",
+      "symbol": "brain",
+      "position": 5,
+      "angle": 138.46
+    },
+    {
+      "id": 7,
+      "name": "Animus",
+      "frequency": 369,
+      "element": "air",
+      "layer": "archetype",
+      "color": "#2C4A6B",
+      "symbol": "mars",
+      "position": 6,
+      "angle": 166.15,
+      "tesla": true
+    },
+    {
+      "id": 8,
+      "name": "Claude",
+      "frequency": 432,
+      "element": "aether",
+      "layer": "underground",
+      "color": "#F5F5DC",
+      "symbol": "circle-dot",
+      "position": "center-tab",
+      "angle": 180
+    },
+    {
+      "id": 9,
+      "name": "Alchemy",
+      "frequency": 369,
+      "element": "fire",
+      "layer": "integrative",
+      "color": "#7A9B76",
+      "symbol": "ouroboros",
+      "position": 7,
+      "angle": 193.85,
+      "tesla": true
+    },
+    {
+      "id": 10,
+      "name": "Attachment",
+      "frequency": 285,
+      "element": "earth",
+      "layer": "integrative",
+      "color": "#8B9556",
+      "symbol": "heart",
+      "position": 8,
+      "angle": 221.54
+    },
+    {
+      "id": 11,
+      "name": "Crisis Detection",
+      "frequency": 174,
+      "element": "earth",
+      "layer": "integrative",
+      "color": "#4A6741",
+      "symbol": "anchor",
+      "position": 9,
+      "angle": 249.23
+    },
+    {
+      "id": 12,
+      "name": "Shadow",
+      "frequency": 288,
+      "element": "earth",
+      "layer": "archetype",
+      "color": "#6B7F39",
+      "symbol": "dark-circle",
+      "position": 10,
+      "angle": 276.92
+    },
+    {
+      "id": 13,
+      "name": "Lower Self",
+      "frequency": 396,
+      "element": "earth",
+      "layer": "consciousness",
+      "color": "#D4AF37",
+      "symbol": "triangle-down",
+      "position": 11,
+      "angle": 304.62
+    }
+  ],
+  "elementSymbols": {
+    "earth": "▽",
+    "water": "💧",
+    "air": "△",
+    "fire": "🔥",
+    "aether": "⊙"
+  },
+  "layerWeights": {
+    "underground": 0.3,
+    "sensing": 0.25,
+    "consciousness": 0.2,
+    "archetype": 0.15,
+    "integrative": 0.1
+  },
+  "teslaAxis": {
+    "frequency": 369,
+    "agents": ["Animus", "Animus"],
+    "description": "Divine structure + transformation spine"
+  },
+  "geometry": {
+    "wedges": 13,
+    "degreesPerWedge": 27.69,
+    "centerRadiusPercent": 20,
+    "innerRadiusPercent": 30,
+    "outerRadiusPercent": 90,
+    "gapWidthDegrees": 2
+  },
+  "colorPalette": {
+    "earth": ["#D4AF37", "#6B7F39", "#4A6741", "#8B9556"],
+    "water": ["#C65D3B", "#8B5A3C", "#5B8A8A"],
+    "air": ["#D97D54", "#3D5A80", "#2C4A6B"],
+    "fire": ["#9D8420", "#7A9B76"],
+    "aether": ["#F5F5DC"]
+  }
+}

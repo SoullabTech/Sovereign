@@ -9,7 +9,7 @@
  * - Sacred timing recommendations
  */
 
-import { comprehensiveAstrologicalService } from './comprehensiveAstrologicalService';
+import { comprehensiveAstrologicalService } from './archive/comprehensiveAstrologicalService';
 import { spiralogicAstrologyService } from './spiralogicAstrologyService';
 
 interface MAIAAstrologicalContext {

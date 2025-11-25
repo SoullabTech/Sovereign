@@ -1,96 +1,23 @@
 "use client";
 
+/**
+ * SACRED ENTRY PORTAL - SAGE/TEAL WELCOME ONLY
+ *
+ * Beautiful sage/teal welcome experience for Soullab
+ */
+
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ScrollingWisdomIntro } from "../../components/onboarding/ScrollingWisdomIntro";
-import { DaimonIntro } from "../../components/onboarding/DaimonIntro";
-import { SageTealWelcome } from "../../components/welcome/SageTealWelcome";
-import { PasscodeEntry } from "../../components/auth/PasscodeEntry";
-import { SoulfulOnboarding } from "../../components/beta/SoulfulOnboarding";
-import ConsciousnessCompanion from "./consciousness-companion";
 
 export default function SacredEntryPortal() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [isReturning, setIsReturning] = useState(false);
   const [isEntering, setIsEntering] = useState(false);
-  const [onboardingPhase, setOnboardingPhase] = useState<"passcode" | "wisdom" | "daimonic" | "demographics" | "simple" | "complete" | "consciousness_companion">("passcode");
-  const [showSimpleFlow, setShowSimpleFlow] = useState(false);
   const [phase, setPhase] = useState<"arrival" | "elements" | "entering">("arrival");
-  const [useConsciousnessCompanion, setUseConsciousnessCompanion] = useState(false);
 
-  // Check for returning guest and determine flow
-  useEffect(() => {
-    const savedName = localStorage.getItem("maia_user");
-    const validPasscode = localStorage.getItem("betaAccessCode");
-    const completedOnboarding = localStorage.getItem("betaOnboardingComplete");
-    const consciousnessProfile = localStorage.getItem("maia_consciousness_profile");
-
-    // Check if user wants to use the new consciousness companion (default for new users)
-    const useNewFlow = !localStorage.getItem("use_legacy_onboarding");
-
-    if (useNewFlow && !consciousnessProfile) {
-      // New users with consciousness companion enabled start with streamlined flow
-      setUseConsciousnessCompanion(true);
-      setOnboardingPhase("consciousness_companion");
-    } else if (savedName && (completedOnboarding || consciousnessProfile)) {
-      setName(savedName);
-      setIsReturning(true);
-      // Returning users skip to simple flow or consciousness companion based on preference
-      if (consciousnessProfile) {
-        setUseConsciousnessCompanion(true);
-        setOnboardingPhase("consciousness_companion");
-      } else {
-        setOnboardingPhase("simple");
-      }
-    } else if (validPasscode) {
-      // Has passcode but not complete onboarding - resume from wisdom (legacy flow)
-      setOnboardingPhase("wisdom");
-    } else {
-      // New users start with passcode entry (legacy flow)
-      setOnboardingPhase("passcode");
-    }
-  }, []);
-
-  // Handle completion of wisdom intro
-  const handleWisdomComplete = () => {
-    setOnboardingPhase("daimonic");
-  };
-
-  // Handle passcode success
-  const handlePasscodeSuccess = (passcode: string) => {
-    setOnboardingPhase("wisdom");
-  };
-
-  // Handle completion of daimonic ritual
-  const handleDaimonicComplete = () => {
-    localStorage.setItem("maia_daimonic_complete", "true");
-    setOnboardingPhase("demographics");
-  };
-
-  // Handle completion of demographics onboarding
-  const handleDemographicsComplete = () => {
-    setOnboardingPhase("complete");
-    setTimeout(() => {
-      window.location.href = "https://soullab.life/maia";
-    }, 1000);
-  };
-
-  // Handle consciousness companion completion
-  const handleConsciousnessCompanionComplete = (profile: any) => {
-    // Store the consciousness profile
-    localStorage.setItem("maia_consciousness_profile", JSON.stringify(profile));
-    localStorage.setItem("betaOnboardingComplete", "true");
-
-    setOnboardingPhase("complete");
-    setTimeout(() => {
-      router.push("/maia/consciousness");
-    }, 1000);
-  };
-
-  // Handle simple entry for returning users
+  // Handle entry
   const handleEnter = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -107,82 +34,10 @@ export default function SacredEntryPortal() {
     setPhase("entering");
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    window.location.href = "https://soullab.life/maia";
+    router.push("/maia");
   };
 
-  const getTimeGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return "Good morning";
-    if (hour < 17) return "Good afternoon";
-    return "Good evening";
-  };
-
-  // Render the appropriate onboarding phase
-  if (onboardingPhase === "consciousness_companion") {
-    return (
-      <ConsciousnessCompanion
-        onComplete={handleConsciousnessCompanionComplete}
-      />
-    );
-  }
-
-  if (onboardingPhase === "passcode") {
-    return (
-      <PasscodeEntry
-        onSuccess={handlePasscodeSuccess}
-      />
-    );
-  }
-
-  if (onboardingPhase === "wisdom") {
-    return (
-      <ScrollingWisdomIntro
-        onComplete={handleWisdomComplete}
-        autoAdvance={true}
-        displayDuration={4000}
-      />
-    );
-  }
-
-  if (onboardingPhase === "daimonic") {
-    return (
-      <DaimonIntro
-        onComplete={handleDaimonicComplete}
-      />
-    );
-  }
-
-  if (onboardingPhase === "demographics") {
-    return (
-      <SoulfulOnboarding
-        initialName={name || "Kelly"}
-        onComplete={handleDemographicsComplete}
-      />
-    );
-  }
-
-  if (onboardingPhase === "complete") {
-    return (
-      <motion.div
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 0 }}
-        transition={{ duration: 1 }}
-        className="min-h-screen bg-gradient-to-br from-[#A7D8D1] via-[#80CBC4] to-[#4DB6AC] flex items-center justify-center"
-      >
-        <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [1, 0.5, 0] }}
-          transition={{ duration: 1, ease: "easeOut" }}
-          className="text-center"
-        >
-          <p className="text-white/80 text-lg font-light tracking-wide">
-            Welcome to MAIA...
-          </p>
-        </motion.div>
-      </motion.div>
-    );
-  }
-
-  // Simple flow for returning users (onboardingPhase === "simple")
+  // SAGE/TEAL WELCOME INTERFACE ONLY
   return (
     <div className="relative min-h-screen overflow-hidden">
       {/* Deeper Sage-Teal Background - Rich luxury spa atmosphere */}

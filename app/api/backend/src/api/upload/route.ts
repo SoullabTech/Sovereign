@@ -2,17 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import formidable from "formidable";
 import fs from "fs/promises";
 import path from "path";
-import pdf from "pdf-parse";
+import * as pdfParse from "pdf-parse";
 import { memoryStore } from "../../services/memory/MemoryStore";
 import { llamaService } from "../../services/memory/LlamaService";
 import { logger } from "../../utils/logger";
 
-// Disable Next.js body parsing for file uploads
-export const config = { 
-  api: { 
-    bodyParser: false 
-  } 
-};
+// Disable Next.js body parsing for file uploads (now uses route segment config)
+// See: https://nextjs.org/docs/app/api-reference/file-conventions/route-segment-config
+// Note: bodyParser config is no longer needed in App Router - Next.js handles this automatically
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_EXTENSIONS = ['.pdf', '.txt', '.md', '.json'];
@@ -86,7 +83,7 @@ export async function POST(req: NextRequest) {
     try {
       if (ext === ".pdf") {
         const buffer = await fs.readFile(file.filepath);
-        const data = await pdf(buffer);
+        const data = await (pdfParse as any)(buffer);
         extractedContent = data.text;
         metadata.pages = data.numpages;
         metadata.info = data.info;

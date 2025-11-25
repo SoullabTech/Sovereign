@@ -3,8 +3,8 @@ import {
   StandardAPIResponse,
   successResponse,
   errorResponse,
-} from "../utils/sharedUtilities";
-import { logger } from "../utils/logger";
+} from "../../utils/sharedUtilities";
+import { logger } from "../../utils/logger";
 
 export interface BirthData {
   date: string; // YYYY-MM-DD

@@ -1,0 +1,327 @@
+/* Consciousness-Aware Animations */
+/* Professional, elegant animations that support recognition moments and archetypal interactions */
+
+/* Recognition and "Being Seen" Animations */
+@keyframes sacred-recognition {
+  0% {
+    opacity: 0;
+    transform: scale(0.8) translateY(10px);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes being-seen-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 217, 61, 0.3);
+    opacity: 0.8;
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 217, 61, 0.6);
+    opacity: 1;
+  }
+}
+
+@keyframes consciousness-emergence {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes breakthrough-emergence {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) rotate(-1deg);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(1.05) rotate(0.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes integration-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.02);
+    opacity: 0.9;
+  }
+}
+
+@keyframes archetypal-transition {
+  0% {
+    opacity: 0.8;
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+/* Consciousness State Animations */
+@keyframes sacred-pause-breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+@keyframes wisdom-crystallization {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.5;
+    filter: blur(1px);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+/* Archetypal Energy Animations */
+@keyframes fire-inspiration {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    filter: hue-rotate(0deg);
+  }
+  25% {
+    transform: scale(1.05) rotate(1deg);
+    filter: hue-rotate(5deg);
+  }
+  75% {
+    transform: scale(1.02) rotate(-0.5deg);
+    filter: hue-rotate(-3deg);
+  }
+}
+
+@keyframes water-flow {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translateY(-3px) scale(1.01);
+    opacity: 0.95;
+  }
+}
+
+@keyframes earth-grounding {
+  0% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes air-clarity {
+  0%, 100% {
+    transform: scale(1);
+    filter: blur(0px);
+  }
+  50% {
+    transform: scale(1.01);
+    filter: blur(0.5px);
+  }
+}
+
+@keyframes aether-integration {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+    background-position: 0% 50%;
+  }
+  50% {
+    transform: scale(1.01) rotate(0.5deg);
+    background-position: 100% 50%;
+  }
+}
+
+/* Particle and Background Animations */
+@keyframes consciousness-particles {
+  0%, 100% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.3;
+  }
+  25% {
+    transform: translateY(-10px) translateX(5px) rotate(90deg);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-5px) translateX(-3px) rotate(180deg);
+    opacity: 0.5;
+  }
+  75% {
+    transform: translateY(3px) translateX(8px) rotate(270deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes cosmic-background-shift {
+  0%, 100% {
+    background-position: 0% 0%;
+    opacity: 0.4;
+  }
+  50% {
+    background-position: 100% 100%;
+    opacity: 0.6;
+  }
+}
+
+@keyframes energy-field-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.2;
+    filter: blur(20px);
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.4;
+    filter: blur(15px);
+  }
+}
+
+/* Animation Classes */
+.being-seen-moment {
+  animation: being-seen-glow 3s ease-in-out;
+}
+
+.recognition-sparkle {
+  animation: sacred-recognition 0.8s ease-out;
+}
+
+.consciousness-message {
+  animation: consciousness-emergence 0.6s ease-out;
+}
+
+.breakthrough-support {
+  animation: breakthrough-emergence 0.6s ease-out;
+}
+
+.integration-moment {
+  animation: integration-pulse 2s ease-in-out infinite;
+}
+
+.archetypal-transition {
+  animation: archetypal-transition 0.4s ease-in-out;
+}
+
+.sacred-pause {
+  animation: sacred-pause-breathe 4s ease-in-out infinite;
+}
+
+.wisdom-crystallization {
+  animation: wisdom-crystallization 0.8s ease-out;
+}
+
+/* Archetypal Energy Classes */
+.fire-energy {
+  animation: fire-inspiration 3s ease-in-out infinite;
+}
+
+.water-energy {
+  animation: water-flow 4s ease-in-out infinite;
+}
+
+.earth-energy {
+  animation: earth-grounding 0.6s ease-out;
+}
+
+.air-energy {
+  animation: air-clarity 2s ease-in-out infinite;
+}
+
+.aether-energy {
+  animation: aether-integration 5s ease-in-out infinite;
+  background: linear-gradient(-45deg, var(--aether), var(--aether-secondary), var(--aether-tertiary), var(--aether));
+  background-size: 400% 400%;
+}
+
+/* Background Effect Classes */
+.consciousness-particles {
+  animation: consciousness-particles 20s linear infinite;
+}
+
+.cosmic-background {
+  animation: cosmic-background-shift 30s ease-in-out infinite;
+}
+
+.energy-field-animation {
+  animation: energy-field-pulse 6s ease-in-out infinite;
+}
+
+/* Hover and Interaction Animations */
+.consciousness-button:hover {
+  animation: sacred-recognition 0.3s ease-out;
+}
+
+.portal-hover:hover {
+  animation: breakthrough-emergence 0.4s ease-out;
+}
+
+.recognition-trigger:hover {
+  animation: being-seen-glow 1s ease-in-out;
+}
+
+/* Mobile-Optimized Animations */
+@media (max-width: 768px) {
+  .consciousness-message {
+    animation-duration: 0.4s;
+  }
+
+  .being-seen-moment {
+    animation-duration: 2s;
+  }
+
+  .recognition-sparkle {
+    animation-duration: 0.6s;
+  }
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .being-seen-moment,
+  .recognition-sparkle,
+  .consciousness-message,
+  .breakthrough-support,
+  .archetypal-transition,
+  .fire-energy,
+  .water-energy,
+  .air-energy,
+  .aether-energy,
+  .consciousness-particles {
+    animation: none;
+  }
+
+  .integration-moment {
+    animation: none;
+    opacity: 1;
+  }
+
+  .sacred-pause {
+    animation: none;
+    transform: none;
+  }
+}

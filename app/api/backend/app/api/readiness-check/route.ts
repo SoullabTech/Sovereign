@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { runReadinessCheck } from '../../../backend/src/tools/readinessDashboard';
+import { runReadinessCheck } from '../../../src/tools/readinessDashboard';
 
 export async function POST(request: NextRequest) {
   try {
