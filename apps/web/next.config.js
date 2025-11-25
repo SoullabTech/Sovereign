@@ -62,11 +62,79 @@ const nextConfig = {
       process.env.AETHER_AGENT_ENDPOINT || "http://localhost:3005",
   },
 
+  // Security Headers for Cross-Browser Compatibility
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          // Security headers
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: isProd ? 'max-age=31536000; includeSubDomains; preload' : ''
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(self), geolocation=(), payment=()'
+          },
+          // CORS headers for cross-browser compatibility
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: isProd ? 'https://soullab.life' : '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, X-Requested-With'
+          },
+          // Cache control for better performance
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable'
+          }
+        ]
+      },
+      // Special headers for API routes
+      {
+        source: '/api/(.*)',
+        headers: [
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: isProd ? 'https://soullab.life' : '*'
+          },
+          {
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS'
+          },
+          {
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, X-Requested-With'
+          }
+        ]
+      }
+    ]
+  },
+
   // Optimize for deployment
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,
-  
+
   // Ignore ESLint errors during production builds
   eslint: {
     ignoreDuringBuilds: true,
