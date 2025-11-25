@@ -2,6 +2,9 @@
  * Unlocks audio context for mobile browsers
  * Mobile browsers require user interaction to play audio
  */
+
+let audioUnlocked = false;
+
 export async function unlockAudioContext() {
   try {
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
@@ -25,9 +28,18 @@ export async function unlockAudioContext() {
       await audioContext.resume();
     }
 
+    audioUnlocked = true;
     return audioContext;
   } catch (error) {
     console.error('Failed to unlock audio context:', error);
     return null;
   }
+}
+
+// Alias for compatibility
+export const unlockAudio = unlockAudioContext;
+
+// Check if audio is unlocked
+export function isAudioUnlocked(): boolean {
+  return audioUnlocked;
 }

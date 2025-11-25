@@ -227,6 +227,7 @@ export const SESSION_PRESETS = {
   standard: { minutes: 50, label: '50 min - Standard Session' },
   extended: { minutes: 75, label: '75 min - Extended Session' },
   deep: { minutes: 90, label: '90 min - Deep Work' },
+  intensive: { minutes: 120, label: '120 min - Intensive Session' },
 } as const;
 
 /**
