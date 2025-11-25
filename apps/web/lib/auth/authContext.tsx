@@ -9,6 +9,7 @@ interface User {
   agentId: string;
   agentName: string;
   createdAt: string;
+  onboarded: boolean;
 }
 
 interface AuthContextType {
@@ -77,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error('User not found. Please sign up first.');
       }
       
-      router.push('/oracle');
+      router.push('/maia');
     } catch (error) {
       console.error('Sign in error:', error);
       throw error;
@@ -104,7 +105,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         username,
         agentId: agent.id,
         agentName: agent.name,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        onboarded: false
       };
 
       // Store user (in beta, using localStorage)
