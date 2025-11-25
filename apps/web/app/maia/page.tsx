@@ -24,6 +24,7 @@ import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor'
 import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
+// Safari button fixes removed to prevent voice recognition system interference
 
 async function getInitialUserData() {
   if (typeof window === 'undefined') return { id: 'guest', name: 'Explorer' };
@@ -181,10 +182,14 @@ export default function MAIAPage() {
       if (savedVoice) {
         setSelectedVoice(savedVoice);
       }
+
+      // Safari fixes removed to prevent voice recognition interference
+      // Button accessibility will be handled via CSS and React event handlers
     };
 
     initializeUser();
   }, []);
+
 
   // Close session duration menu when clicking outside
   useEffect(() => {
@@ -217,11 +222,24 @@ export default function MAIAPage() {
     // TODO: Pass duration to OracleConversation component for timer
   };
 
-  // Debug handler for the session button
+  // Debug handler for the session button with Safari fallback
   const handleSessionButtonClick = () => {
     console.log('🔘 Session button clicked, showSessionDurationMenu:', showSessionDurationMenu);
     setShowSessionDurationMenu(!showSessionDurationMenu);
   };
+
+  // Safari touch event handler - prevents touch issues
+  const handleSafariTouch = (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleSessionButtonClick();
+  };
+
+  // Safari touch handler for dropdown items
+  const handleDropdownTouch = (minutes: number) => (e: React.TouchEvent) => {
+    e.preventDefault();
+    handleSessionDurationSelect(minutes);
+  };
+
 
   const handleSignOut = () => {
     localStorage.removeItem('beta_user');
@@ -443,19 +461,43 @@ export default function MAIAPage() {
                       isolation: 'isolate' as const,
                     }}
                   >
-                    <motion.button
+                    <button
                       onClick={handleSessionButtonClick}
+                      onTouchStart={(e) => {
+                        e.preventDefault();
+                        console.log('🔧 Safari Touch Start');
+                      }}
+                      onTouchEnd={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔧 Safari Touch End - Triggering click');
+                        handleSessionButtonClick();
+                      }}
+                      onMouseDown={(e) => {
+                        console.log('🔧 Mouse Down');
+                      }}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                                bg-[#D4B896]/20 hover:bg-[#D4B896]/30
                                border-2 border-[#D4B896]/40 hover:border-[#D4B896]/60
-                               text-[#D4B896] text-xs font-medium transition-all cursor-pointer"
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
+                               text-[#D4B896] text-xs font-medium transition-all cursor-pointer
+                               hover:scale-105 active:scale-95 safari-button-fix"
                       title="Start a timed session"
+                      data-safari-button="true"
+                      tabIndex={0}
+                      style={{
+                        WebkitTouchCallout: 'none',
+                        WebkitUserSelect: 'none',
+                        touchAction: 'manipulation',
+                        position: 'relative',
+                        zIndex: 1,
+                        pointerEvents: 'auto',
+                        WebkitAppearance: 'none',
+                        appearance: 'none'
+                      }}
                     >
-                      <Clock className="w-4 h-4" />
-                      <span className="sm:inline">Start Session</span>
-                    </motion.button>
+                      <Clock className="w-4 h-4" style={{ pointerEvents: 'none' }} />
+                      <span className="sm:inline" style={{ pointerEvents: 'none' }}>Start Session</span>
+                    </button>
 
                     {/* Session Duration Dropdown Menu */}
                     <AnimatePresence>
@@ -464,17 +506,7 @@ export default function MAIAPage() {
                           initial={{ opacity: 0, scale: 0.95, y: -10 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          className="absolute top-full right-0 mt-2 bg-stone-900 backdrop-blur-xl border-2 border-amber-500/30 rounded-lg shadow-2xl min-w-[180px]"
-                          data-safari-dropdown="true"
-                          style={{
-                            zIndex: 99999,
-                            position: 'fixed' as const,
-                            pointerEvents: 'auto' as const,
-                            WebkitTransform: 'translateZ(0)',
-                            transform: 'translateZ(0)',
-                            isolation: 'isolate' as const,
-                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
-                          }}
+                          className="absolute top-full right-0 mt-2 bg-stone-900 backdrop-blur-xl border-2 border-amber-500/30 rounded-lg shadow-2xl min-w-[180px] z-50"
                         >
                           <div className="p-2">
                             <div className="text-xs text-amber-300/70 px-2 py-1 mb-1 font-medium uppercase tracking-wide">
@@ -484,16 +516,12 @@ export default function MAIAPage() {
                               <button
                                 key={minutes}
                                 onClick={() => handleSessionDurationSelect(minutes)}
-                                className="w-full text-left px-3 py-2.5 text-sm text-amber-200/90 hover:bg-amber-500/20 hover:text-amber-100 rounded-md transition-all flex items-center justify-between border border-transparent hover:border-amber-500/20"
-                                data-safari-button="true"
+                                onTouchEnd={handleDropdownTouch(minutes)}
+                                className="w-full text-left px-3 py-2.5 text-sm text-amber-200/90 hover:bg-amber-500/20 hover:text-amber-100 rounded-md transition-all flex items-center justify-between border border-transparent hover:border-amber-500/20 safari-button-fix"
                                 style={{
-                                  position: 'relative' as const,
-                                  zIndex: 100000,
-                                  pointerEvents: 'auto' as const,
-                                  WebkitTouchCallout: 'none' as const,
-                                  WebkitUserSelect: 'none' as const,
-                                  WebkitTapHighlightColor: 'transparent',
-                                  cursor: 'pointer'
+                                  WebkitTouchCallout: 'none',
+                                  WebkitUserSelect: 'none',
+                                  touchAction: 'manipulation'
                                 }}
                               >
                                 <span className="font-medium" style={{ pointerEvents: 'none' }}>{minutes} minutes</span>

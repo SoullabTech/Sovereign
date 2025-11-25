@@ -64,6 +64,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isRestartingRef = useRef(false);
   const networkErrorCount = useRef<number>(0);
   const lastNetworkErrorTime = useRef<number>(0);
+  const consecutiveRestartCount = useRef<number>(0); // Prevent infinite restart loops
 
   // 🎯 ADAPTIVE SILENCE DETECTION - Monitor audio levels for natural speech pauses
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
@@ -128,6 +129,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       isRecordingRef.current = true; // Update ref immediately
       onRecordingStateChange?.(true);
       accumulatedTranscript.current = "";
+
+      // Reset consecutive restart count on successful start
+      consecutiveRestartCount.current = 0;
 
       // Clear conversation timeout when user starts speaking
       if (conversationTimeoutRef.current) {
@@ -300,6 +304,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Check if recognition still exists - if it was set to null, that means stopListening was called
       if (!recognitionRef.current) {
         console.log('🚫 [onend] Recognition object is null, this was a manual stop');
+        return;
+      }
+
+      // PREVENT RESTART LOOP: Stop if we've restarted too many times consecutively
+      consecutiveRestartCount.current += 1;
+      if (consecutiveRestartCount.current > 0) { // EMERGENCY FIX: Stop any restart loop immediately
+        console.log('🛑 [onend] Preventing restart loop, count:', consecutiveRestartCount.current);
+        setIsListening(false);
         return;
       }
 

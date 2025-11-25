@@ -2842,7 +2842,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
       {/* NO cognitive UI - the experience itself induces the transformation */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[25]">
+      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[25] pointer-events-none">
         <TransformationalPresence
           currentState={realtimeMode as PresenceState}
           onStateChange={(newState, transition) => {
@@ -2864,7 +2864,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           <motion.div
             className="cursor-pointer opacity-60 hover:opacity-80 transition-opacity relative"
             style={{
-              zIndex: 20,
+              zIndex: 10001,  // SAFARI FIX: Raise above ALL overlays including QuickSettings z-[10000]
               pointerEvents: 'auto'  // Ensure this div captures clicks
             }}
         onClick={async (e) => {
@@ -3332,7 +3332,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       {/* Text Scrim - Warm volcanic veil when messages appear (absorbs light, doesn't just dim) */}
       {(showChatInterface || (!showChatInterface && showVoiceText)) && messages.length > 0 && (
         <div
-          className="fixed inset-0 z-20 transition-opacity duration-700"
+          className="fixed inset-0 z-20 transition-opacity duration-700 pointer-events-none"
           style={{
             background: 'linear-gradient(135deg, rgba(26, 21, 19, 0.75) 0%, rgba(28, 22, 20, 0.65) 50%, rgba(26, 21, 19, 0.75) 100%)',
             backdropFilter: 'blur(1.5px) saturate(0.85) brightness(0.75)',

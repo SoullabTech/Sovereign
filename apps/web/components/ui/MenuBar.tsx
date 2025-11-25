@@ -91,7 +91,7 @@ export function MenuBar() {
     <>
       {/* Rotate Device Hint - Only on Mobile Portrait */}
       {showRotateHint && (
-        <div className="md:hidden fixed right-4 z-40 animate-fade-in" style={{ top: 'calc(max(1rem, env(safe-area-inset-top)) + 3.5rem)' }}>
+        <div className="md:hidden fixed right-4 z-[10004] animate-fade-in" style={{ top: 'calc(max(1rem, env(safe-area-inset-top)) + 3.5rem)' }}>
           <div className="bg-gradient-to-r from-cyan-500/90 to-indigo-500/90 backdrop-blur-md text-white text-xs px-3 py-2 rounded-lg shadow-lg flex items-center gap-2 border border-white/20">
             <span className="text-base">📱</span>
             <span>Rotate for full menu</span>
@@ -106,7 +106,7 @@ export function MenuBar() {
       )}
 
       {/* Drawer handle indicator - shows users the menu is interactive */}
-      <div className="fixed left-1/2 -translate-x-1/2 bottom-[82px] z-30 pointer-events-none">
+      <div className="fixed left-1/2 -translate-x-1/2 bottom-[82px] z-[10003] pointer-events-none">
         <motion.div
           className="flex flex-col items-center gap-1.5"
           initial={{ opacity: 0.6 }}
@@ -130,7 +130,7 @@ export function MenuBar() {
       </div>
 
       {/* INSTRUMENT PANEL: Ancient-future navigation - Bottom menu bar */}
-      <div className="flex fixed left-1/2 -translate-x-1/2 bottom-0 z-40 items-center gap-1.5 md:gap-3 bg-soul-surface/95 backdrop-blur-md border-t border-soul-border/50 px-4 md:px-6 py-3 md:py-4 rounded-t-2xl shadow-lg" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
+      <div className="flex fixed left-1/2 -translate-x-1/2 bottom-0 z-[10002] items-center gap-1.5 md:gap-3 bg-soul-surface/95 backdrop-blur-md border-t border-soul-border/50 px-4 md:px-6 py-3 md:py-4 rounded-t-2xl shadow-lg" style={{ paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))' }}>
 
       {/* Home Icon - Holoflower */}
       <Link

@@ -10,6 +10,7 @@ import { ThemeProvider } from "@/components/providers/ThemeProvider";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import Link from "next/link";
 import IOSFixInitializer from "@/components/system/IOSFixInitializer";
+import SafariButtonFix from "@/components/system/SafariButtonFix";
 import { HeaderWrapper } from "@/components/layout/HeaderWrapper";
 
 const inter = Inter({ subsets: ["latin"] });
