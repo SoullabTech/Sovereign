@@ -17,7 +17,7 @@ export function SessionDurationSelector({
   onSelect,
   defaultDuration = 50
 }: SessionDurationSelectorProps) {
-  const durations = [15, 30, 45, 60, 90];
+  const durations = [15, 30, 45, 60, 90, 120];
 
   const handleSelect = (duration: number) => {
     onSelect(duration);
@@ -84,11 +84,14 @@ export function SessionDurationSelector({
                       <div className="text-sm opacity-70">
                         {duration <= 30 ? 'Quick session' :
                          duration <= 60 ? 'Standard session' :
-                         'Extended session'}
+                         duration <= 90 ? 'Extended session' :
+                         'Deep session'}
                       </div>
                     </div>
                     <div className="text-2xl opacity-50">
-                      {duration <= 30 ? '🌱' : duration <= 60 ? '🌳' : '🌲'}
+                      {duration <= 30 ? '🌱' :
+                       duration <= 60 ? '🌳' :
+                       duration <= 90 ? '🌲' : '🧘'}
                     </div>
                   </div>
                 </motion.button>

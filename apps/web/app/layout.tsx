@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import "../styles/ios-fallbacks.css";
+import "../styles/safari-fixes.css";
 import { ErrorOverlay } from "@/components/system/ErrorOverlay";
 import { AudioUnlockBanner } from "@/components/system/AudioUnlockBanner";
 import { ToastProvider } from "@/components/system/ToastProvider";

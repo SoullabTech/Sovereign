@@ -2,7 +2,7 @@
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -3510,9 +3510,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
-              <div className="fixed inset-x-0 z-[60]" style={{ bottom: 'calc(5rem + env(safe-area-inset-bottom))' }}>
-                {/* Text input area - Ultra compact mobile design - Raised above bottom menu bar */}
-                <div className="bg-soul-surface/90 px-2 py-2 border-t border-soul-border/40">
+              <div className="fixed inset-x-0 z-[60]" style={{ bottom: '2rem' }}>
+                {/* Text input area - Optimized mobile design - Raised higher for better accessibility */}
+                <div className="bg-soul-surface/90 px-3 py-3 border-t border-soul-border/40">
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -3541,11 +3541,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                             }
                           }
                         }}
-                        className="flex-1 min-h-[42px] max-h-[100px] px-3 py-2
+                        className="flex-1 min-h-[48px] max-h-[120px] px-4 py-3
                                  bg-[#1a1f2e]/95 backdrop-blur-md
                                  border border-gold-divine/30 rounded-2xl
                                  placeholder:text-gold-divine/50
-                                 text-sm leading-relaxed
+                                 text-base leading-relaxed md:text-sm
                                  focus:outline-none focus:border-gold-divine/50 focus:ring-1 focus:ring-gold-divine/20
                                  disabled:opacity-50 resize-none
                                  touch-manipulation"
@@ -3596,23 +3596,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                         <Paperclip className="w-5 h-5 text-amber-300" strokeWidth={2.5} />
                       </label>
 
-                      {/* Journal button - shows when conversation has substance */}
-                      {messages.length >= 2 && (
-                        <button
-                          type="button"
-                          onClick={handleSaveAsJournal}
-                          disabled={isSavingJournal}
-                          className={`flex-shrink-0 w-10 h-10 border rounded-full flex items-center justify-center
-                                   active:scale-95 transition-all shadow-lg ${
-                            breakthroughScore >= 70
-                              ? 'bg-amber-500/40 border-amber-400/60 text-amber-200 hover:bg-amber-500/50 hover:border-amber-400/80 animate-pulse shadow-amber-500/30'
-                              : 'bg-amber-500/30 border-amber-400/50 text-amber-300 hover:bg-amber-500/40 hover:border-amber-400/70 shadow-amber-500/20'
-                          } ${isSavingJournal ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          title={breakthroughScore >= 70 ? 'Breakthrough detected - Save to journal' : 'Save as journal entry'}
-                        >
-                          <BookOpen className="w-5 h-5" strokeWidth={2.5} />
-                        </button>
-                      )}
                     </div>
                   </form>
                 </div>
@@ -3716,7 +3699,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         </div>
       )}
 
-      {/* Bottom right floating menu button - Always visible - ENHANCED FOR DEBUGGING */}
+      {/* Bottom Right Lab Tools Button - Contains journal access */}
       <button
         onClick={() => {
           console.log('🔬 Lab button clicked!');
@@ -3728,9 +3711,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           minWidth: '70px',
           minHeight: '70px',
         }}
-        title="Open Lab Tools - Sacred Lab Drawer"
+        title="Open Lab Tools - Includes Journal Access"
       >
-        <BookOpen className="w-8 h-8 text-black drop-shadow-lg" />
+        <FlaskConical className="w-8 h-8 text-black drop-shadow-lg" />
       </button>
 
       {/* Voice Selection Menu - Popup from bottom */}

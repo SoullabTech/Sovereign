@@ -102,8 +102,8 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         },
         {
           icon: BookOpen,
-          label: 'Sacred Journal',
-          action: () => onNavigate('/journal'),
+          label: 'Soul Journals',
+          action: () => onNavigate('/apps/web/app/journal'),
           description: 'Capture your transformative moments'
         },
         {

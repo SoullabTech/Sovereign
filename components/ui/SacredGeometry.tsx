@@ -36,9 +36,9 @@ export const VectorEquilibrium: React.FC<GeometryProps> = ({
     const draw = () => {
       ctx.clearRect(0, 0, size, size);
       
-      // Add glow effect
+      // Enhanced glow effect for brightness
       if (glow) {
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 35;
         ctx.shadowColor = color;
       }
 
@@ -46,12 +46,12 @@ export const VectorEquilibrium: React.FC<GeometryProps> = ({
       ctx.translate(centerX, centerY);
       ctx.rotate(rotation);
 
-      // Draw Vector Equilibrium (Cuboctahedron)
+      // Draw Vector Equilibrium (Cuboctahedron) with enhanced brightness
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.8;
+      ctx.lineWidth = 2.5;
+      ctx.globalAlpha = 0.95;
 
-      // Draw 12 vertices
+      // Draw 12 vertices with enhanced density
       const vertices = [];
       for (let i = 0; i < 12; i++) {
         const angle = (i * Math.PI * 2) / 12;
@@ -60,7 +60,21 @@ export const VectorEquilibrium: React.FC<GeometryProps> = ({
         vertices.push({ x, y });
       }
 
-      // Connect vertices
+      // Draw inner layer for density
+      ctx.globalAlpha = 0.7;
+      ctx.beginPath();
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI * 2) / 12;
+        const x = Math.cos(angle) * radius * 0.6;
+        const y = Math.sin(angle) * radius * 0.6;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.stroke();
+
+      // Connect vertices (outer layer)
+      ctx.globalAlpha = 0.95;
       ctx.beginPath();
       vertices.forEach((v, i) => {
         vertices.forEach((v2, j) => {
@@ -117,7 +131,7 @@ export const MetatronsCube: React.FC<GeometryProps> = ({
       ctx.clearRect(0, 0, size, size);
       
       if (glow) {
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 30;
         ctx.shadowColor = color;
       }
 
@@ -126,8 +140,8 @@ export const MetatronsCube: React.FC<GeometryProps> = ({
       ctx.rotate(rotation);
 
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.85;
 
       // Draw outer circle
       ctx.beginPath();
@@ -160,8 +174,9 @@ export const MetatronsCube: React.FC<GeometryProps> = ({
         ctx.stroke();
       });
 
-      // Connect all circles
-      ctx.globalAlpha = 0.3;
+      // Connect all circles with enhanced density
+      ctx.globalAlpha = 0.6;
+      ctx.lineWidth = 1.5;
       circles.forEach((c1, i) => {
         circles.forEach((c2, j) => {
           if (i < j) {
@@ -215,26 +230,26 @@ export const SeedOfLife: React.FC<GeometryProps> = ({
       ctx.clearRect(0, 0, size, size);
       
       if (glow) {
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 40;
         ctx.shadowColor = color;
       }
 
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 2.5;
       
-      // Center circle
-      ctx.globalAlpha = 0.8 + Math.sin(phase) * 0.2;
+      // Center circle with enhanced brightness
+      ctx.globalAlpha = 0.95 + Math.sin(phase) * 0.05;
       ctx.beginPath();
       ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Six surrounding circles
+      // Six surrounding circles with enhanced brightness
       for (let i = 0; i < 6; i++) {
         const angle = (i * Math.PI * 2) / 6;
         const x = centerX + Math.cos(angle) * radius;
         const y = centerY + Math.sin(angle) * radius;
-        
-        ctx.globalAlpha = 0.8 + Math.sin(phase + i * 0.5) * 0.2;
+
+        ctx.globalAlpha = 0.95 + Math.sin(phase + i * 0.5) * 0.05;
         ctx.beginPath();
         ctx.arc(x, y, radius, 0, Math.PI * 2);
         ctx.stroke();
@@ -286,7 +301,7 @@ export const FlowerOfLife: React.FC<GeometryProps> = ({
       ctx.clearRect(0, 0, size, size);
       
       if (glow) {
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 30;
         ctx.shadowColor = color;
       }
 
@@ -295,8 +310,8 @@ export const FlowerOfLife: React.FC<GeometryProps> = ({
       ctx.rotate(rotation);
 
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
-      ctx.globalAlpha = 0.7;
+      ctx.lineWidth = 2;
+      ctx.globalAlpha = 0.9;
 
       // Draw flower pattern
       drawCircle(0, 0, radius); // Center
@@ -321,10 +336,34 @@ export const FlowerOfLife: React.FC<GeometryProps> = ({
       for (let i = 0; i < 6; i++) {
         const angle1 = (i * Math.PI * 2) / 6;
         const angle2 = ((i + 1) * Math.PI * 2) / 6;
-        
+
         const x = (Math.cos(angle1) + Math.cos(angle2)) * radius;
         const y = (Math.sin(angle1) + Math.sin(angle2)) * radius;
         drawCircle(x, y, radius);
+      }
+
+      // Third ring for enhanced density
+      ctx.globalAlpha = 0.7;
+      for (let i = 0; i < 12; i++) {
+        const angle = (i * Math.PI * 2) / 12;
+        const x = Math.cos(angle) * radius * 3;
+        const y = Math.sin(angle) * radius * 3;
+        drawCircle(x, y, radius);
+      }
+
+      // Additional connecting patterns for density
+      ctx.globalAlpha = 0.6;
+      for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI * 2) / 6;
+        const x1 = Math.cos(angle) * radius * 1.5;
+        const y1 = Math.sin(angle) * radius * 1.5;
+        const x2 = Math.cos(angle + Math.PI) * radius * 1.5;
+        const y2 = Math.sin(angle + Math.PI) * radius * 1.5;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
       }
 
       ctx.restore();
@@ -369,7 +408,7 @@ export const GoldenSpiral: React.FC<GeometryProps> = ({
       ctx.clearRect(0, 0, size, size);
       
       if (glow) {
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 35;
         ctx.shadowColor = color;
       }
 
@@ -377,8 +416,8 @@ export const GoldenSpiral: React.FC<GeometryProps> = ({
       ctx.translate(centerX, centerY);
 
       ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.globalAlpha = 0.8;
+      ctx.lineWidth = 3;
+      ctx.globalAlpha = 0.95;
 
       // Draw golden spiral
       ctx.beginPath();
@@ -397,10 +436,10 @@ export const GoldenSpiral: React.FC<GeometryProps> = ({
       
       ctx.stroke();
 
-      // Draw golden rectangles
-      ctx.globalAlpha = 0.3;
+      // Draw golden rectangles with enhanced visibility
+      ctx.globalAlpha = 0.65;
       ctx.strokeStyle = color;
-      ctx.lineWidth = 1;
+      ctx.lineWidth = 1.5;
 
       let rectSize = size * 0.3;
       let rectX = -rectSize / 2;

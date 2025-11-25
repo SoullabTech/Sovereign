@@ -435,7 +435,14 @@ export default function MAIAPage() {
 
                 {/* Session Button - Always visible for debugging */}
                 {!hasActiveSession ? (
-                  <div className="relative" ref={sessionMenuRef}>
+                  <div
+                    className="relative"
+                    ref={sessionMenuRef}
+                    style={{
+                      zIndex: 9999,
+                      isolation: 'isolate' as const,
+                    }}
+                  >
                     <motion.button
                       onClick={handleSessionButtonClick}
                       className="flex items-center gap-2 px-3 py-1.5 rounded-lg
@@ -457,8 +464,15 @@ export default function MAIAPage() {
                           initial={{ opacity: 0, scale: 0.95, y: -10 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          className="absolute top-full right-0 mt-2 bg-stone-900/98 backdrop-blur-xl border-2 border-amber-500/30 rounded-lg shadow-2xl z-[9999] min-w-[180px]"
+                          className="absolute top-full right-0 mt-2 bg-stone-900 backdrop-blur-xl border-2 border-amber-500/30 rounded-lg shadow-2xl min-w-[180px]"
+                          data-safari-dropdown="true"
                           style={{
+                            zIndex: 99999,
+                            position: 'fixed' as const,
+                            pointerEvents: 'auto' as const,
+                            WebkitTransform: 'translateZ(0)',
+                            transform: 'translateZ(0)',
+                            isolation: 'isolate' as const,
                             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
                           }}
                         >
@@ -471,9 +485,19 @@ export default function MAIAPage() {
                                 key={minutes}
                                 onClick={() => handleSessionDurationSelect(minutes)}
                                 className="w-full text-left px-3 py-2.5 text-sm text-amber-200/90 hover:bg-amber-500/20 hover:text-amber-100 rounded-md transition-all flex items-center justify-between border border-transparent hover:border-amber-500/20"
+                                data-safari-button="true"
+                                style={{
+                                  position: 'relative' as const,
+                                  zIndex: 100000,
+                                  pointerEvents: 'auto' as const,
+                                  WebkitTouchCallout: 'none' as const,
+                                  WebkitUserSelect: 'none' as const,
+                                  WebkitTapHighlightColor: 'transparent',
+                                  cursor: 'pointer'
+                                }}
                               >
-                                <span className="font-medium">{minutes} minutes</span>
-                                <span className="text-xs text-amber-400/60 font-mono">
+                                <span className="font-medium" style={{ pointerEvents: 'none' }}>{minutes} minutes</span>
+                                <span className="text-xs text-amber-400/60 font-mono" style={{ pointerEvents: 'none' }}>
                                   {minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h${minutes % 60 > 0 ? ` ${minutes % 60}m` : ''}`}
                                 </span>
                               </button>

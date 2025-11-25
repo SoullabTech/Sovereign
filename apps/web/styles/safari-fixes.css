@@ -1,0 +1,57 @@
+/**
+ * Safari-specific fixes for z-index and pointer events
+ * Addresses Safari's unique rendering and event handling behavior
+ */
+
+/* Safari z-index fix for dropdown menus */
+[data-safari-dropdown] {
+  position: fixed !important;
+  z-index: 999999 !important;
+  -webkit-transform: translateZ(0) !important;
+  transform: translateZ(0) !important;
+  isolation: isolate !important;
+  pointer-events: auto !important;
+}
+
+/* Safari button click fix */
+[data-safari-button] {
+  position: relative !important;
+  z-index: 1000000 !important;
+  pointer-events: auto !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  cursor: pointer !important;
+}
+
+/* Prevent pointer events on child elements of buttons */
+[data-safari-button] * {
+  pointer-events: none !important;
+}
+
+/* Safari stacking context fix */
+.safari-stacking-fix {
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+}
+
+/* Ensure Safari respects z-index hierarchy */
+.safari-z-high {
+  position: relative;
+  z-index: 999999;
+}
+
+.safari-z-critical {
+  position: fixed !important;
+  z-index: 999999 !important;
+  isolation: isolate !important;
+}
+
+/* Safari dropdown positioning fix */
+.safari-dropdown-positioning {
+  position: fixed !important;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
