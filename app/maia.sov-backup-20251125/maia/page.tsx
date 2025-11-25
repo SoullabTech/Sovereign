@@ -32,12 +32,10 @@ async function getInitialUserData() {
 
   const storedUserId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
 
-  // KELLY SPECIAL CASE - Check multiple possible Kelly identifiers
+  // KELLY SPECIAL CASE - Only check for specific Kelly userId
   // Do NOT auto-assign based on domain - that would affect all users
-  if (storedUserId === 'kelly-nezat' || storedUserId === 'kelly' ||
-      localStorage.getItem('explorerName')?.toLowerCase() === 'kelly' ||
-      localStorage.getItem('betaUserName')?.toLowerCase() === 'kelly') {
-    console.log('🌟 [MAIA] Kelly recognized from userId/name:', storedUserId);
+  if (storedUserId === 'kelly-nezat') {
+    console.log('🌟 [MAIA] Kelly recognized from userId:', storedUserId);
     localStorage.setItem('explorerName', 'Kelly');
     localStorage.setItem('explorerId', 'kelly-nezat');
     return { id: 'kelly-nezat', name: 'Kelly' };
@@ -206,18 +204,6 @@ export default function MAIAPage() {
   useEffect(() => {
     if (hasCheckedAuth.current) return;
     hasCheckedAuth.current = true;
-
-    // KELLY PRIORITY CHECK - Always check Kelly first
-    const storedName = localStorage.getItem('explorerName');
-    const storedId = localStorage.getItem('explorerId');
-    if (storedName?.toLowerCase() === 'kelly' || storedId === 'kelly-nezat') {
-      localStorage.setItem('explorerName', 'Kelly');
-      localStorage.setItem('explorerId', 'kelly-nezat');
-      setExplorerId('kelly-nezat');
-      setExplorerName('Kelly');
-      console.log('🌟 [MAIA] Kelly priority authentication successful');
-      return;
-    }
 
     // NEVER show onboarding - always let user through
     // Default to guest mode if no stored user
