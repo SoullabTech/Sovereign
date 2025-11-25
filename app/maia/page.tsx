@@ -254,7 +254,7 @@ export default function MAIAPage() {
     }
 
     // No stored user - create default guest session
-    const guestId = `guest_${Date.now()}`;
+    const guestId = 'guest'; // Fixed: consistent guest ID instead of timestamp
     localStorage.setItem('explorerId', guestId);
     localStorage.setItem('explorerName', 'Explorer');
     localStorage.setItem('betaOnboardingComplete', 'true');
