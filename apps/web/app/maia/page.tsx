@@ -115,8 +115,10 @@ export default function MAIAPage() {
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [showSessionDurationMenu, setShowSessionDurationMenu] = useState(false);
 
   const hasCheckedAuth = useRef(false);
+  const sessionMenuRef = useRef<HTMLDivElement>(null);
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -184,11 +186,41 @@ export default function MAIAPage() {
     initializeUser();
   }, []);
 
+  // Close session duration menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (sessionMenuRef.current && !sessionMenuRef.current.contains(event.target as Node)) {
+        setShowSessionDurationMenu(false);
+      }
+    };
+
+    if (showSessionDurationMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSessionDurationMenu]);
+
   const handleVoiceChange = (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => {
     setSelectedVoice(voice);
     localStorage.setItem('selected_voice', voice);
     // Dispatch event to notify other components
     window.dispatchEvent(new Event('conversationStyleChanged'));
+  };
+
+  const handleSessionDurationSelect = (minutes: number) => {
+    console.log(`🕐 Starting ${minutes} minute session`);
+    setHasActiveSession(true);
+    setShowSessionDurationMenu(false);
+    // TODO: Pass duration to OracleConversation component for timer
+  };
+
+  // Debug handler for the session button
+  const handleSessionButtonClick = () => {
+    console.log('🔘 Session button clicked, showSessionDurationMenu:', showSessionDurationMenu);
+    setShowSessionDurationMenu(!showSessionDurationMenu);
   };
 
   const handleSignOut = () => {
@@ -400,19 +432,57 @@ export default function MAIAPage() {
                   <LogOut className="w-4 h-4" />
                   <span className="hidden sm:inline">Sign Out</span>
                 </motion.button>
+
+                {/* Session Button - Always visible for debugging */}
                 {!hasActiveSession ? (
-                  <motion.button
-                    onClick={() => setShowSessionSelector(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-[#D4B896]/10 hover:bg-[#D4B896]/20
-                             border border-[#D4B896]/20 hover:border-[#D4B896]/40
-                             text-[#D4B896] text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Clock className="w-4 h-4" />
-                    <span className="hidden sm:inline">Start Session</span>
-                  </motion.button>
+                  <div className="relative" ref={sessionMenuRef}>
+                    <motion.button
+                      onClick={handleSessionButtonClick}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                               bg-[#D4B896]/20 hover:bg-[#D4B896]/30
+                               border-2 border-[#D4B896]/40 hover:border-[#D4B896]/60
+                               text-[#D4B896] text-xs font-medium transition-all cursor-pointer"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      title="Start a timed session"
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span className="sm:inline">Start Session</span>
+                    </motion.button>
+
+                    {/* Session Duration Dropdown Menu */}
+                    <AnimatePresence>
+                      {showSessionDurationMenu && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                          className="absolute top-full right-0 mt-2 bg-stone-900/98 backdrop-blur-xl border-2 border-amber-500/30 rounded-lg shadow-2xl z-[9999] min-w-[180px]"
+                          style={{
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2)'
+                          }}
+                        >
+                          <div className="p-2">
+                            <div className="text-xs text-amber-300/70 px-2 py-1 mb-1 font-medium uppercase tracking-wide">
+                              Session Duration
+                            </div>
+                            {[15, 30, 45, 60, 90, 120].map((minutes) => (
+                              <button
+                                key={minutes}
+                                onClick={() => handleSessionDurationSelect(minutes)}
+                                className="w-full text-left px-3 py-2.5 text-sm text-amber-200/90 hover:bg-amber-500/20 hover:text-amber-100 rounded-md transition-all flex items-center justify-between border border-transparent hover:border-amber-500/20"
+                              >
+                                <span className="font-medium">{minutes} minutes</span>
+                                <span className="text-xs text-amber-400/60 font-mono">
+                                  {minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h${minutes % 60 > 0 ? ` ${minutes % 60}m` : ''}`}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                 ) : (
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                                bg-green-500/10 border border-green-500/30 text-green-400 text-xs">

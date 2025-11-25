@@ -2915,22 +2915,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                overflow: 'visible',
                pointerEvents: 'none'  // Allow clicks to pass through to parent
              }}>
-          {/* 🌊 LIQUID AI - Rhythm-aware Holoflower pulses with conversational rhythm */}
-          <RhythmHoloflower
-            rhythmMetrics={rhythmMetrics}
-            size={holoflowerSize}
-            interactive={false}
-            showLabels={false}
-            motionState={currentMotionState}
-            coherenceShift={coherenceShift}
-            isListening={isListening}
-            isProcessing={isProcessing}
-            isResponding={isResponding}
-            showBreakthrough={showBreakthrough}
-            voiceAmplitude={voiceAmplitude}
-            isMaiaSpeaking={isResponding || isAudioPlaying}
-            dimmed={conversationMode === 'chat' || messages.filter(m => !m.id.startsWith('greeting-')).length > 0}
-          />
+          {/* 🌊 LIQUID AI - Rhythm-aware Holoflower as SUBTLE background element */}
+          <div style={{ opacity: 0.15, zIndex: 1 }}>
+            <RhythmHoloflower
+              rhythmMetrics={rhythmMetrics}
+              size={holoflowerSize}
+              interactive={false}
+              showLabels={false}
+              motionState={currentMotionState}
+              coherenceShift={coherenceShift}
+              isListening={isListening}
+              isProcessing={isProcessing}
+              isResponding={isResponding}
+              showBreakthrough={showBreakthrough}
+              voiceAmplitude={voiceAmplitude}
+              isMaiaSpeaking={isResponding || isAudioPlaying}
+              dimmed={true}
+            />
+          </div>
 
           {/* Central Holoflower Logo with Glow and Sparkles */}
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -3990,13 +3992,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         />
       )}
 
-      {/* ⏰ Session Duration Selector Modal - Controlled by header button */}
-      <SessionDurationSelector
+      {/* ⏰ Session Duration Selector Modal - REMOVED */}
+      {/* <SessionDurationSelector
         isOpen={showSessionSelector}
         onClose={() => onCloseSessionSelector?.()}
         onSelect={handleDurationSelected}
         defaultDuration={50}
-      />
+      /> */}
 
       {/* 💾 Resume Session Prompt Modal */}
       {savedSessionData && (
@@ -4010,22 +4012,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         />
       )}
 
-      {/* 🕯️ Opening Ritual */}
-      <SessionRitualOpening
+      {/* 🕯️ Opening Ritual - REMOVED */}
+      {/* <SessionRitualOpening
         isOpen={showOpeningRitual}
         sessionDuration={pendingSessionDuration || 50}
         isReturningUser={isReturningUser}
         onComplete={handleOpeningRitualComplete}
         onSkip={handleOpeningRitualSkip}
-      />
+      /> */}
 
-      {/* 🕯️ Closing Ritual */}
-      <SessionRitualClosing
+      {/* 🕯️ Closing Ritual - REMOVED */}
+      {/* <SessionRitualClosing
         isOpen={showClosingRitual}
         isReturningUser={isReturningUser}
         onComplete={handleClosingRitualComplete}
         onSkip={handleClosingRitualSkip}
-      />
+      /> */}
 
       {/* Toggle button for rhythm debug - always visible */}
       <button

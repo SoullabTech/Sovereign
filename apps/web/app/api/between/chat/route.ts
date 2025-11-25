@@ -36,6 +36,11 @@ import logger from '@/lib/utils/performance-logger';
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
 
+  // Declare variables at top level for error handling access
+  let effectiveUserId = 'unknown';
+  let effectiveUserName = 'Guest';
+  let isVoiceMode = false;
+
   // Check if streaming is requested (for Oracle compatibility)
   const url = new URL(request.url);
   const streamingMode = url.searchParams.get('stream') === 'true';
@@ -50,7 +55,7 @@ export async function POST(request: NextRequest) {
     const userId = body.userId;
     const userName = body.userName;
     const sessionId = body.sessionId;
-    const isVoiceMode = body.isVoiceMode || false; // Voice mode = faster Essential tier
+    isVoiceMode = body.isVoiceMode || false; // Voice mode = faster Essential tier
     const fieldState = body.fieldState || { depth: 0.7, active: true };
     const sessionTimeContext = body.sessionTimeContext; // { elapsedMinutes, remainingMinutes, totalMinutes, phase, systemPromptContext }
 
@@ -162,15 +167,14 @@ export async function POST(request: NextRequest) {
     // ═══════════════════════════════════════════════════════════════
     const anamnesisSystem = getRelationshipAnamnesis();
 
-    // SPECIAL: Recognize Kelly Nezat even when not properly authenticated
-    // Check message content for Kelly's signature patterns
-    const isKelly = userName?.toLowerCase().includes('kelly') ||
-                    userId?.toLowerCase().includes('kelly') ||
-                    (typeof message === 'string' && message.toLowerCase().includes('spiralogic')) ||
-                    (typeof message === 'string' && message.toLowerCase().includes('dreamweaver'));
+    // SPECIAL: Recognize Kelly Nezat with specific, precise identification
+    // Only identify as Kelly if userId is specifically 'kelly-nezat' or exact username match
+    const isKelly = userId === 'kelly-nezat' ||
+                    userName === 'Kelly' ||
+                    userName === 'Kelly Nezat';
 
-    const effectiveUserId = isKelly ? 'kelly-nezat' : userId;
-    const effectiveUserName = isKelly ? 'Kelly Nezat' : userName;
+    effectiveUserId = isKelly ? 'kelly-nezat' : userId;
+    effectiveUserName = isKelly ? 'Kelly Nezat' : userName;
 
     console.log(`🔍 [RECOGNITION] userId: ${userId} → ${effectiveUserId}, userName: ${userName} → ${effectiveUserName}`);
 
