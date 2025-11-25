@@ -416,7 +416,14 @@ export default function MAIAPage() {
                 </motion.button>
                 {!hasActiveSession ? (
                   <motion.button
-                    onClick={() => setShowSessionSelector(true)}
+                    onClick={() => {
+                      console.log('🔥 Starting session directly');
+                      // Start session directly - Safari compatible
+                      setHasActiveSession(true);
+                      // Trigger session start in localStorage for session management
+                      localStorage.setItem('maia_session_active', 'true');
+                      localStorage.setItem('maia_session_start', Date.now().toString());
+                    }}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                              bg-[#D4B896]/10 hover:bg-[#D4B896]/20
                              border border-[#D4B896]/20 hover:border-[#D4B896]/40
@@ -455,7 +462,7 @@ export default function MAIAPage() {
               consciousnessType="maia"
               initialShowChatInterface={showChatInterface}
               onShowChatInterfaceChange={setShowChatInterface}
-              showSessionSelector={showSessionSelector}
+              showSessionSelector={false} // FORCE DISABLED - was: showSessionSelector
               onCloseSessionSelector={() => setShowSessionSelector(false)}
               onSessionActiveChange={setHasActiveSession}
             />
