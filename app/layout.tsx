@@ -28,9 +28,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
-  minimumScale: 1,
-  userScalable: false,
+  maximumScale: 1.2, // Allow slight zoom for Safari accessibility
+  minimumScale: 0.9, // Allow slight zoom out
+  userScalable: true, // Safari-friendly: allow controlled scaling
   viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#D4B896" },

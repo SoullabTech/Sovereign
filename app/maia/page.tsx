@@ -21,7 +21,7 @@ import { WeavingVisualization } from '@/components/maya/WeavingVisualization';
 // BetaOnboarding removed - direct access only
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, FlaskConical, FileText, BarChart3, Users, Split, Maximize2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
@@ -32,18 +32,16 @@ async function getInitialUserData() {
 
   const storedUserId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
 
-  // KELLY SPECIAL CASE - Check multiple possible Kelly identifiers
-  // Do NOT auto-assign based on domain - that would affect all users
-  if (storedUserId === 'kelly-nezat' || storedUserId === 'kelly' ||
-      localStorage.getItem('explorerName')?.toLowerCase() === 'kelly' ||
-      localStorage.getItem('betaUserName')?.toLowerCase() === 'kelly') {
-    console.log('🌟 [MAIA] Kelly recognized from userId/name:', storedUserId);
+  // KELLY SPECIAL CASE - Only trigger on very specific Kelly identifiers to avoid affecting other users
+  // IMPORTANT: Only match exact userId patterns, not general name matches that could affect beta testers
+  if (storedUserId === 'kelly-nezat' || storedUserId === 'kelly.nezat' || storedUserId === 'soullab-kelly') {
+    console.log('🌟 [MAIA] Kelly recognized from specific userId:', storedUserId);
     localStorage.setItem('explorerName', 'Kelly');
     localStorage.setItem('explorerId', 'kelly-nezat');
     return { id: 'kelly-nezat', name: 'Kelly' };
   }
 
-  // Try to fetch from API using stored userId
+  // Try to fetch from API using stored userId - ENHANCED to ensure fresh user data
   if (storedUserId) {
     try {
       const params = new URLSearchParams();
@@ -53,32 +51,42 @@ async function getInitialUserData() {
       const response = await fetch(`/api/user/profile?${params.toString()}`);
       const data = await response.json();
 
-      if (data.success && data.user) {
-        console.log('✅ [MAIA] User profile fetched from API:', data.user.name);
+      if (data.success && data.user && data.user.name) {
+        // Only use API data if it provides a meaningful name
+        const apiName = data.user.name;
+        if (apiName !== 'Explorer' && apiName !== 'guest' && apiName.trim().length > 0) {
+          console.log('✅ [MAIA] Fresh user profile fetched from API:', apiName);
 
-        // Sync to localStorage
-        localStorage.setItem('explorerName', data.user.name);
-        localStorage.setItem('explorerId', data.user.id);
-        localStorage.setItem('betaOnboardingComplete', 'true');
+          // Sync fresh data to localStorage
+          localStorage.setItem('explorerName', apiName);
+          localStorage.setItem('explorerId', data.user.id);
+          localStorage.setItem('betaOnboardingComplete', 'true');
 
-        return { id: data.user.id, name: data.user.name };
+          return { id: data.user.id, name: apiName };
+        }
       }
     } catch (error) {
       console.error('❌ [MAIA] Error fetching user profile:', error);
     }
   }
 
-  // Check NEW system (beta_user from auth system)
+  // Check NEW system (beta_user from auth system) - ENHANCED for better name recognition
   const betaUser = localStorage.getItem('beta_user');
   if (betaUser) {
     try {
       const userData = JSON.parse(betaUser);
-      const userName = userData.username || userData.name || userData.displayName;
-      if (userData.onboarded === true && userData.id && userName) {
-        localStorage.setItem('explorerName', userName);
+      // More comprehensive name extraction from signup data
+      const userName = userData.name || userData.displayName || userData.username || userData.firstName || userData.fullName;
+      if (userData.id && userName) {
+        // Capitalize first letter for consistent formatting
+        const formattedName = userName.charAt(0).toUpperCase() + userName.slice(1).toLowerCase();
+        localStorage.setItem('explorerName', formattedName);
         localStorage.setItem('explorerId', userData.id);
-        console.log('✅ [MAIA] User authenticated from localStorage:', userName);
-        return { id: userData.id, name: userName };
+        localStorage.setItem('betaOnboardingComplete', 'true');
+        console.log('✅ [MAIA] User authenticated from signup data:', formattedName);
+        return { id: userData.id, name: formattedName };
+      } else {
+        console.log('🔍 [MAIA] beta_user found but missing name or id:', userData);
       }
     } catch (e) {
       console.error('❌ [MAIA] Error parsing beta_user:', e);
@@ -117,8 +125,28 @@ export default function MAIAPage() {
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  // Desktop Laboratory System Features
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+  const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false);
+  const [showCollaborationPanel, setShowCollaborationPanel] = useState(false);
+  const [labWorkspaceMode, setLabWorkspaceMode] = useState<'single' | 'split' | 'multi'>('single');
+  const [extendedSessionActive, setExtendedSessionActive] = useState(false);
 
   const hasCheckedAuth = useRef(false);
+
+  // Handle responsive desktop detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsDesktop(window.innerWidth >= 768);
+    };
+
+    handleResize(); // Set initial value
+    window.addEventListener('resize', handleResize);
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -157,6 +185,16 @@ export default function MAIAPage() {
       const initialData = await getInitialUserData();
       setExplorerId(initialData.id);
       setExplorerName(initialData.name);
+
+      // 🔧 ADDITIONAL CHECK: Ensure user name gets loaded from onboarding localStorage
+      // This fixes the recurring issue where MAIA greets users as "Explorer"
+      const storedName = localStorage.getItem('explorerName');
+      if (storedName && storedName !== 'Explorer' && storedName.trim().length > 0) {
+        console.log('✅ [MAIA] Reinforcing user name from localStorage:', storedName);
+        setExplorerName(storedName);
+      } else {
+        console.log('❓ [MAIA] explorerName not found in localStorage, using:', initialData.name);
+      }
 
       // Load birth date from localStorage for teen support
       const betaUser = localStorage.getItem('beta_user');
@@ -207,6 +245,9 @@ export default function MAIAPage() {
     if (hasCheckedAuth.current) return;
     hasCheckedAuth.current = true;
 
+    // ENHANCED USER NAME RESOLUTION - Fix for users seeing "Explorer" instead of their actual names
+    console.log('🔍 [MAIA] Starting enhanced user name resolution...');
+
     // KELLY PRIORITY CHECK - Always check Kelly first
     const storedName = localStorage.getItem('explorerName');
     const storedId = localStorage.getItem('explorerId');
@@ -219,26 +260,33 @@ export default function MAIAPage() {
       return;
     }
 
-    // NEVER show onboarding - always let user through
-    // Default to guest mode if no stored user
+    // Enhanced user recognition for ALL members - reads signup data properly
     const newUser = localStorage.getItem('beta_user');
     if (newUser) {
       try {
         const userData = JSON.parse(newUser);
         const newId = userData.id || 'guest';
-        const newName = userData.username || userData.name || userData.displayName || 'Explorer';
+        // More comprehensive name extraction from signup data
+        const newName = userData.name || userData.displayName || userData.username || userData.firstName || userData.fullName;
 
-        localStorage.setItem('explorerName', newName);
-        localStorage.setItem('explorerId', newId);
-        localStorage.setItem('betaOnboardingComplete', 'true');
+        // Only use extracted name if it's meaningful (not default values)
+        if (newName && newName !== 'Explorer' && newName !== 'guest' && newName.trim().length > 0) {
+          // Extract first name only for conversational intimacy
+          const firstName = newName.split(' ')[0];
+          const formattedName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
 
-        if (explorerId !== newId) setExplorerId(newId);
-        if (explorerName !== newName) setExplorerName(newName);
+          localStorage.setItem('explorerName', formattedName);
+          localStorage.setItem('explorerId', newId);
+          localStorage.setItem('betaOnboardingComplete', 'true');
 
-        console.log('✅ [MAIA] User session restored:', { name: newName, id: newId });
-        return;
+          if (explorerId !== newId) setExplorerId(newId);
+          if (explorerName !== formattedName) setExplorerName(formattedName);
+
+          console.log('✅ [MAIA] User session restored from signup:', { name: formattedName, id: newId });
+          return;
+        }
       } catch (e) {
-        console.error('Error parsing user data:', e);
+        console.error('❌ [MAIA] Error parsing user data:', e);
       }
     }
 
@@ -246,21 +294,37 @@ export default function MAIAPage() {
     const oldId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
     const oldName = localStorage.getItem('explorerName');
 
-    if (oldId && oldName) {
+    // Only use legacy name if it's meaningful
+    if (oldId && oldName && oldName !== 'Explorer' && oldName !== 'guest' && oldName.trim().length > 0) {
       if (explorerId !== oldId) setExplorerId(oldId);
       if (explorerName !== oldName) setExplorerName(oldName);
       console.log('✅ [MAIA] User session restored from legacy:', { name: oldName, id: oldId });
       return;
     }
 
+    // ENHANCED: Try to extract name from userId if available
+    if (oldId && oldId !== 'guest' && oldId !== 'anonymous' && !oldId.startsWith('guest')) {
+      // Extract name from userId (e.g., "john-smith" -> "John Smith")
+      const extractedName = oldId.replace(/[-_]/g, ' ')
+                                .replace(/\b\w/g, l => l.toUpperCase())
+                                .replace(/^Guest\d*$/, 'Explorer');
+
+      if (extractedName && extractedName !== 'Explorer' && extractedName !== oldId) {
+        setExplorerName(extractedName);
+        localStorage.setItem('explorerName', extractedName);
+        console.log('✅ [MAIA] Extracted name from userId:', { userId: oldId, extractedName });
+        return;
+      }
+    }
+
     // No stored user - create default guest session
-    const guestId = 'guest'; // Fixed: consistent guest ID instead of timestamp
+    const guestId = 'guest';
     localStorage.setItem('explorerId', guestId);
     localStorage.setItem('explorerName', 'Explorer');
     localStorage.setItem('betaOnboardingComplete', 'true');
     setExplorerId(guestId);
     setExplorerName('Explorer');
-    console.log('✅ [MAIA] Created guest session');
+    console.log('⚠️ [MAIA] Created default guest session - no meaningful user data found');
   }, [explorerId, explorerName]);
 
   // Onboarding removed - direct access only
@@ -270,6 +334,8 @@ export default function MAIAPage() {
         {/* DirectionalHints removed - keyboard shortcuts now active (arrow keys + ESC) */}
 
         <div className="h-screen relative overflow-hidden bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 flex flex-col">
+        {/* Bottom brown background extension */}
+        <div className="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-stone-950 via-stone-900 to-transparent z-0"></div>
         {/* Atmospheric Particles - Floating dust/sand */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
           {[...Array(30)].map((_, i) => (
@@ -297,10 +363,8 @@ export default function MAIAPage() {
         {/* Atmospheric Glow - Warm light from below */}
         <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/30 via-transparent to-transparent pointer-events-none z-0" />
 
-        {/* DREAM-WEAVER SYSTEM - Combined Header & Banner - Always visible */}
-        <div
-          className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm z-[110]"
-        >
+        {/* MOBILE-FIRST HEADER - Compact design */}
+        <div className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm z-[110] pt-16">
           {/* Spice particle effect - very subtle movement */}
           <div className="absolute inset-0 opacity-5 pointer-events-none">
             <motion.div
@@ -336,145 +400,327 @@ export default function MAIAPage() {
             }}
           />
 
-          <div className="relative max-w-7xl mx-auto px-4 py-1.5">
-            <div className="flex items-center justify-between">
-              {/* Left: SOULLAB Logo with Holoflower */}
-              <div className="flex items-center gap-2 ml-0 sm:ml-12">
-                <img
-                  src="/holoflower-amber.png"
-                  alt="Holoflower"
-                  className="w-5 h-5 sm:w-6 sm:h-6 opacity-100 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
-                  style={{ filter: 'brightness(1.2)' }}
-                />
-                <h1 className="text-base sm:text-lg font-light text-amber-300/90 tracking-wider">
-                  SOULLAB
-                </h1>
-              </div>
-
-              {/* Center: Voice/Text toggle + Mode selector */}
-              <div className="flex items-center gap-3">
-                {/* Voice/Text Toggle - Clickable */}
+          {/* Single Horizontal Scrolling Header - Logo and Controls in one ribbon */}
+          <div className="relative pb-1">
+            <div className="overflow-x-auto scrollbar-hide px-2 md:overflow-visible md:flex md:justify-center" style={{
+              WebkitOverflowScrolling: 'touch',
+              scrollBehavior: 'smooth'
+            }}>
+              <div
+                className="flex items-center gap-1 md:w-auto md:min-w-0"
+                style={{
+                  width: 'max-content',
+                  minWidth: isDesktop ? 'auto' : '120vw'
+                }}
+              >
+                {/* Voice/Text Toggle */}
                 <button
-                  onClick={() => setShowChatInterface(!showChatInterface)}
-                  className="px-3 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+                  onClick={() => {
+                    setShowChatInterface(!showChatInterface);
+                  }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-md border transition-all flex items-center gap-1.5 touch-manipulation ${
+                    showChatInterface
+                      ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
+                      : 'bg-amber-500/10 border-amber-500/30 text-amber-300'
+                  }`}
+                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
                 >
-                  <span className="text-xs text-amber-300/90 font-light">
-                    {showChatInterface ? '💬 Text' : '🎤 Voice'}
+                  <span className="text-sm">
+                    {showChatInterface ? '💬' : '🎤'}
+                  </span>
+                  <span className="text-xs font-medium whitespace-nowrap">
+                    {showChatInterface ? 'Text' : 'Voice'}
                   </span>
                 </button>
 
-                {/* Mode Selector: Dialogue / Patient / Scribe */}
-                <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5">
-                  <button
-                    onClick={() => setMaiaMode('normal')}
-                    className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                      maiaMode === 'normal'
-                        ? 'bg-amber-500/30 text-amber-200'
-                        : 'text-amber-400/60 hover:text-amber-300/80'
-                    }`}
-                  >
-                    Dialogue
-                  </button>
-                  <button
-                    onClick={() => setMaiaMode('patient')}
-                    className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                      maiaMode === 'patient'
-                        ? 'bg-purple-500/30 text-purple-200'
-                        : 'text-amber-400/60 hover:text-amber-300/80'
-                    }`}
-                  >
-                    Patient
-                  </button>
-                  <button
-                    onClick={() => setMaiaMode('session')}
-                    className={`px-2 py-1 rounded text-xs font-light transition-all ${
-                      maiaMode === 'session'
-                        ? 'bg-blue-500/30 text-blue-200'
-                        : 'text-amber-400/60 hover:text-amber-300/80'
-                    }`}
-                  >
-                    Scribe
-                  </button>
-                </div>
-              </div>
-
-              {/* Right: Sign Out + Session Container buttons */}
-              <div className="flex items-center gap-2">
-                {/* Sign Out Button */}
-                <motion.button
-                  onClick={handleSignOut}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-red-500/10 hover:bg-red-500/20
-                           border border-red-500/20 hover:border-red-500/40
-                           text-red-400 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title="Sign Out"
+                {/* Mode Selector Buttons - All in horizontal row */}
+                <button
+                  onClick={() => {
+                    setMaiaMode('normal');
+                  }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
+                    maiaMode === 'normal'
+                      ? 'bg-amber-500/30 text-amber-200 border border-amber-500/50'
+                      : 'bg-black/20 text-amber-400/70 hover:text-amber-300 border border-amber-500/20'
+                  }`}
+                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
-                </motion.button>
+                  Dialogue
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMaiaMode('patient');
+                  }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
+                    maiaMode === 'patient'
+                      ? 'bg-purple-500/30 text-purple-200 border border-purple-500/50'
+                      : 'bg-black/20 text-amber-400/70 hover:text-amber-300 border border-amber-500/20'
+                  }`}
+                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                >
+                  Counsel
+                </button>
+
+                <button
+                  onClick={() => {
+                    setMaiaMode('session');
+                  }}
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
+                    maiaMode === 'session'
+                      ? 'bg-blue-500/30 text-blue-200 border border-blue-500/50'
+                      : 'bg-black/20 text-amber-400/70 hover:text-amber-300 border border-amber-500/20'
+                  }`}
+                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                >
+                  Scribe
+                </button>
+
+                {/* Start Session / Session Status - Inline with other controls */}
                 {!hasActiveSession ? (
                   <motion.button
                     onClick={() => {
-                      console.log('🔥 Starting session directly');
-                      // Start session directly - Safari compatible
-                      setHasActiveSession(true);
-                      // Trigger session start in localStorage for session management
-                      localStorage.setItem('maia_session_active', 'true');
-                      localStorage.setItem('maia_session_start', Date.now().toString());
+                      console.log('🔥 Opening session selector');
+                      setShowSessionSelector(true);
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-[#D4B896]/10 hover:bg-[#D4B896]/20
-                             border border-[#D4B896]/20 hover:border-[#D4B896]/40
-                             text-[#D4B896] text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                             bg-[#D4B896]/15 hover:bg-[#D4B896]/25
+                             border border-[#D4B896]/30 hover:border-[#D4B896]/50
+                             text-[#D4B896] text-xs font-medium transition-all whitespace-nowrap"
+                    whileHover={{ scale: 1.02 }}
                   >
-                    <Clock className="w-4 h-4" />
-                    <span className="hidden sm:inline">Start Session</span>
+                    <Clock className="w-3 h-3" />
+                    Start Session
                   </motion.button>
                 ) : (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                               bg-green-500/10 border border-green-500/30 text-green-400 text-xs">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                    <span className="hidden sm:inline">Session Active</span>
+                  <div className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                               bg-green-500/15 border border-green-500/40 text-green-400 text-xs font-medium whitespace-nowrap">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                    Active
                   </div>
                 )}
+
+                {/* Labtools Button */}
+                <motion.button
+                  onClick={() => {
+                    console.log('🧪 Opening comprehensive LabTools dashboard');
+                    window.open('http://localhost:3001/dashboard', '_blank', 'width=1400,height=900');
+                  }}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
+                           bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/50"
+                  whileHover={{ scale: 1.02 }}
+                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                >
+                  <FlaskConical className="w-3 h-3" />
+                  <span>Lab</span>
+                </motion.button>
+
+                {/* DESKTOP LABORATORY SYSTEM CONTROLS - Only show on desktop */}
+                {isDesktop && (
+                  <>
+                    {/* Separator */}
+                    <div className="w-px h-6 bg-amber-500/20 flex-shrink-0"></div>
+
+                    {/* Document Viewer */}
+                    <motion.button
+                      onClick={() => setShowDocumentViewer(!showDocumentViewer)}
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                        showDocumentViewer
+                          ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300'
+                          : 'bg-slate-500/10 border border-slate-500/30 text-slate-300 hover:bg-slate-500/20'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <FileText className="w-3 h-3" />
+                      <span>Documents</span>
+                    </motion.button>
+
+                    {/* Analytics Dashboard */}
+                    <motion.button
+                      onClick={() => setShowAnalyticsDashboard(!showAnalyticsDashboard)}
+                      className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap ${
+                        showAnalyticsDashboard
+                          ? 'bg-green-500/20 border border-green-500/40 text-green-300'
+                          : 'bg-slate-500/10 border border-slate-500/30 text-slate-300 hover:bg-slate-500/20'
+                      }`}
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <BarChart3 className="w-3 h-3" />
+                      <span>Analytics</span>
+                    </motion.button>
+
+                    {/* Workspace Mode Selector */}
+                    <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-black/20 border border-amber-500/20">
+                      <motion.button
+                        onClick={() => setLabWorkspaceMode('single')}
+                        className={`p-1 rounded text-xs transition-all ${
+                          labWorkspaceMode === 'single'
+                            ? 'bg-amber-500/30 text-amber-200'
+                            : 'text-amber-400/60 hover:text-amber-300'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        title="Single view"
+                      >
+                        <Maximize2 className="w-3 h-3" />
+                      </motion.button>
+                      <motion.button
+                        onClick={() => setLabWorkspaceMode('split')}
+                        className={`p-1 rounded text-xs transition-all ${
+                          labWorkspaceMode === 'split'
+                            ? 'bg-amber-500/30 text-amber-200'
+                            : 'text-amber-400/60 hover:text-amber-300'
+                        }`}
+                        whileHover={{ scale: 1.1 }}
+                        title="Split view"
+                      >
+                        <Split className="w-3 h-3" />
+                      </motion.button>
+                    </div>
+
+                    {/* Extended Session Indicator */}
+                    {extendedSessionActive && (
+                      <div className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                                   bg-indigo-500/15 border border-indigo-500/40 text-indigo-400 text-xs font-medium whitespace-nowrap">
+                        <div className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse" />
+                        Extended Lab Session
+                      </div>
+                    )}
+
+                    {/* Laboratory Mode Indicator */}
+                    <div className="flex-shrink-0 flex items-center gap-1.5 px-2 py-1 rounded-md
+                                 bg-amber-500/10 border border-amber-500/30 text-amber-400/80 text-[10px] font-medium whitespace-nowrap">
+                      🧪 Lab Mode
+                    </div>
+                  </>
+                )}
+
+                {/* Separator */}
+                <div className="w-px h-6 bg-amber-500/20 flex-shrink-0"></div>
+
+                {/* Menu Button - Last in ribbon */}
+                <motion.button
+                  onClick={() => setShowDashboard(!showDashboard)}
+                  className="flex-shrink-0 p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <Menu className="w-5 h-5 text-amber-300" />
+                </motion.button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="flex-1 flex overflow-hidden">
-          {/* Conversation Area */}
-          <div className="flex-1 overflow-hidden relative">
-            <OracleConversation
-              userId={explorerId}
-              userName={explorerName}
-              userBirthDate={userBirthDate}
-              sessionId={sessionId}
-              voiceEnabled={voiceEnabled}
-              initialMode={maiaMode}
-              onModeChange={setMaiaMode}
-              apiEndpoint="/api/between/chat"
-              consciousnessType="maia"
-              initialShowChatInterface={showChatInterface}
-              onShowChatInterfaceChange={setShowChatInterface}
-              showSessionSelector={false} // FORCE DISABLED - was: showSessionSelector
-              onCloseSessionSelector={() => setShowSessionSelector(false)}
-              onSessionActiveChange={setHasActiveSession}
-            />
+        {/* Main Content - Mobile: Bottom-positioned conversation, Desktop: Laboratory workspace */}
+        <div className="flex-1 flex overflow-hidden min-h-0 md:flex-row flex-col relative">
+          {/* Desktop Laboratory Workspace Layout */}
+          {isDesktop ? (
+            <div className={`flex w-full h-full ${labWorkspaceMode === 'split' ? 'gap-4 p-4' : ''}`}>
+              {/* Primary Consciousness Interface */}
+              <div className={`${labWorkspaceMode === 'split' ? 'w-1/2' : 'flex-1'} h-full overflow-hidden relative`}>
+                <OracleConversation
+                  userId={explorerId}
+                  userName={explorerName}
+                  userBirthDate={userBirthDate}
+                  sessionId={sessionId}
+                  voiceEnabled={voiceEnabled}
+                  initialMode={maiaMode}
+                  onModeChange={setMaiaMode}
+                  apiEndpoint="/api/between/chat"
+                  consciousnessType="maia"
+                  initialShowChatInterface={showChatInterface}
+                  onShowChatInterfaceChange={setShowChatInterface}
+                  showSessionSelector={showSessionSelector}
+                  onCloseSessionSelector={() => setShowSessionSelector(false)}
+                  onSessionActiveChange={setHasActiveSession}
+                />
+              </div>
 
-            {/* Claude Code's Living Presence - MOVED to bottom menu bar to free mobile screen space */}
-            {/* <ClaudeCodePresence /> */}
+              {/* Secondary Desktop Laboratory Panel */}
+              {labWorkspaceMode === 'split' && (
+                <div className="w-1/2 h-full overflow-hidden">
+                  {showDocumentViewer && (
+                    <div className="h-full bg-stone-900/95 rounded-lg border border-white/10 p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-stone-200 flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-blue-400" />
+                          Document Laboratory
+                        </h3>
+                        <button
+                          onClick={() => setShowDocumentViewer(false)}
+                          className="p-1 hover:bg-white/5 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4 text-stone-400" />
+                        </button>
+                      </div>
+                      <div className="h-full bg-black/20 rounded-md border border-white/5 p-4">
+                        <p className="text-stone-400 text-sm">
+                          Enhanced document viewer with annotation capabilities coming soon.
+                          This will support PDF viewing, research integration, and cross-referencing
+                          with consciousness insights.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-            {/* Brain Trust Monitor - MOVED to bottom menu bar to free mobile screen space */}
-            {/* <BrainTrustMonitor /> */}
+                  {showAnalyticsDashboard && !showDocumentViewer && (
+                    <div className="h-full bg-stone-900/95 rounded-lg border border-white/10 p-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-medium text-stone-200 flex items-center gap-2">
+                          <BarChart3 className="w-5 h-5 text-green-400" />
+                          Consciousness Analytics
+                        </h3>
+                        <button
+                          onClick={() => setShowAnalyticsDashboard(false)}
+                          className="p-1 hover:bg-white/5 rounded transition-colors"
+                        >
+                          <X className="w-4 h-4 text-stone-400" />
+                        </button>
+                      </div>
+                      <div className="h-full bg-black/20 rounded-md border border-white/5 p-4">
+                        <p className="text-stone-400 text-sm">
+                          Advanced consciousness analytics dashboard coming soon.
+                          This will include pattern recognition, evolution tracking,
+                          element resonance mapping, and breakthrough prediction.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
-            {/* Lab Drawer button is provided by OracleConversation component - bottom right corner */}
-          </div>
+                  {!showDocumentViewer && !showAnalyticsDashboard && (
+                    <div className="h-full bg-stone-900/95 rounded-lg border border-white/10 p-4 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-4xl mb-4">🧪</div>
+                        <h3 className="text-lg font-medium text-stone-200 mb-2">Laboratory Mode Active</h3>
+                        <p className="text-stone-400 text-sm">
+                          Select Documents or Analytics from the header to begin enhanced consciousness work
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            /* Mobile Field System - Absolutely positioned at bottom */
+            <div className="md:flex-1 md:h-full overflow-hidden absolute md:static -bottom-10 left-0 right-0 h-auto">
+              <OracleConversation
+                userId={explorerId}
+                userName={explorerName}
+                userBirthDate={userBirthDate}
+                sessionId={sessionId}
+                voiceEnabled={voiceEnabled}
+                initialMode={maiaMode}
+                onModeChange={setMaiaMode}
+                apiEndpoint="/api/between/chat"
+                consciousnessType="maia"
+                initialShowChatInterface={showChatInterface}
+                onShowChatInterfaceChange={setShowChatInterface}
+                showSessionSelector={showSessionSelector}
+                onCloseSessionSelector={() => setShowSessionSelector(false)}
+                onSessionActiveChange={setHasActiveSession}
+              />
+            </div>
+          )}
 
           {/* Wisdom Journey Dashboard - Slide-out Panel */}
           <AnimatePresence>
@@ -578,19 +824,34 @@ export default function MAIAPage() {
           </AnimatePresence>
         </div>
 
-        {/* Welcome Message for First-Time Users */}
+        {/* SOULLAB Logo - Fixed below text field */}
+        <div className="fixed bottom-2 left-1/2 transform -translate-x-1/2 z-10">
+          <div className="flex items-center gap-2">
+            <img
+              src="/holoflower-amber.png"
+              alt="Holoflower"
+              className="w-6 h-6 opacity-100 drop-shadow-[0_0_6px_rgba(251,146,60,0.6)]"
+              style={{ filter: 'brightness(1.2)' }}
+            />
+            <h1 className="text-lg font-light text-amber-300/90 tracking-wider whitespace-nowrap">
+              SOULLAB
+            </h1>
+          </div>
+        </div>
+
+        {/* Welcome Message for First-Time Users - Mobile Optimized */}
         {isMounted && showWelcome && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 max-w-md w-full mx-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl"
+            className="absolute bottom-6 left-4 right-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl z-50"
           >
             <div className="text-center">
-              <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-white mb-2">
+              <Sparkles className="w-12 h-12 text-amber-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-white mb-3">
                 Welcome, {explorerName}
               </h3>
-              <p className="text-sm text-stone-300 mb-4">
+              <p className="text-base text-stone-300 mb-6 leading-relaxed">
                 Share your story. MAIA will help you discover the wisdom within it.
                 Your journey begins now.
               </p>
@@ -599,7 +860,7 @@ export default function MAIAPage() {
                   localStorage.setItem('maia_welcome_seen', 'true');
                   window.location.reload();
                 }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+                className="px-8 py-4 bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-medium transition-colors text-lg min-w-[120px]"
               >
                 Begin
               </button>
