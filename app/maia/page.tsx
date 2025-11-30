@@ -148,22 +148,48 @@ export default function MAIAPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Keep users on this beautiful page - no redirect
-  // useEffect(() => {
-  //   const betaUser = localStorage.getItem('beta_user');
-  //   if (betaUser) {
-  //     try {
-  //       const userData = JSON.parse(betaUser);
-  //       if (userData.onboarded === true) {
-  //         console.log('🌸 Redirecting to sacred interface...');
-  //         router.replace('/oracle-sacred');
-  //         return;
-  //       }
-  //     } catch (e) {
-  //       console.error('Error parsing user data:', e);
-  //     }
-  //   }
-  // }, [router]);
+  // Authentication check - redirect to proper pages based on user status
+  useEffect(() => {
+    if (typeof window === 'undefined') return; // Skip on server-side
+
+    const betaUser = localStorage.getItem('beta_user');
+    const isSignedIn = !!(betaUser || localStorage.getItem('explorerId') || localStorage.getItem('betaUserId'));
+
+    // If user is coming from sign-out, show welcome page
+    const fromSignOut = sessionStorage.getItem('from_signout');
+    if (fromSignOut) {
+      sessionStorage.removeItem('from_signout');
+      router.replace('/welcome-back');
+      return;
+    }
+
+    if (!isSignedIn) {
+      // No authentication found - redirect to sign in
+      console.log('🔐 No authentication found, redirecting to sign-in');
+      router.replace('/signin');
+      return;
+    }
+
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        if (userData.onboarded === true) {
+          // User is signed in and onboarded - show welcome back
+          console.log('👋 User authenticated, showing welcome back');
+          router.replace('/welcome-back');
+          return;
+        }
+      } catch (e) {
+        console.error('Error parsing user data:', e);
+        // If there's an error parsing user data, redirect to sign-in for safety
+        router.replace('/signin');
+        return;
+      }
+    }
+
+    // If we get here, user has some auth but may need to complete onboarding
+    console.log('✅ User has valid session, staying on MAIA');
+  }, [router]);
 
   // Fix hydration: Initialize user data and session after mount
   useEffect(() => {
@@ -242,7 +268,10 @@ export default function MAIAPage() {
     localStorage.removeItem('maia_session_id');
     localStorage.removeItem('maia_welcome_seen');
     localStorage.removeItem('selected_voice');
-    router.push('/welcome');
+
+    // Set flag to show welcome page when user returns
+    sessionStorage.setItem('from_signout', 'true');
+    router.push('/signin');
   };
 
   useEffect(() => {
