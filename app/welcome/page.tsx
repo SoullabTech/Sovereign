@@ -52,11 +52,29 @@ export default function WelcomePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#a0c4c7] via-[#7fb5b3] to-[#6ee7b7] flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-[#a0c4c7] via-[#7fb5b3] to-[#6ee7b7] flex flex-col items-center relative overflow-hidden">
+
+      {/* Soullab Logo with Holoflower at top */}
+      <div className="relative z-20 flex items-center justify-center pt-8 pb-4">
+        <div className="relative">
+          {/* Holoflower behind logo */}
+          <img
+            src="/holoflower.png"
+            alt="Elemental Holoflower"
+            className="w-16 h-16 opacity-40 absolute -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
+          />
+          {/* Soullab logo */}
+          <img
+            src="/soullab-logo.png"
+            alt="Soullab"
+            className="h-12 relative z-10 filter drop-shadow-lg"
+          />
+        </div>
+      </div>
 
       {/* Background holoflower with amber sunlight */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative flex items-center justify-center transform -translate-y-20">
+        <div className="relative flex items-center justify-center transform -translate-y-10">
           {/* Amber sunlight glow behind holoflower */}
           <div className="absolute inset-0 rounded-full bg-gradient-radial from-amber-300/40 via-amber-200/20 to-transparent scale-150 blur-2xl"></div>
           <div className="absolute inset-0 rounded-full bg-gradient-radial from-yellow-200/30 via-amber-100/15 to-transparent scale-125 blur-xl"></div>
@@ -65,14 +83,14 @@ export default function WelcomePage() {
           <img
             src="/holoflower.png"
             alt="Elemental Holoflower"
-            className="w-[28rem] h-[28rem] opacity-30 filter drop-shadow-2xl mx-auto"
+            className="w-[26rem] h-[26rem] opacity-25 filter drop-shadow-2xl mx-auto"
           />
 
           {/* Amber overlay holoflower */}
           <img
             src="/holoflower-amber.png"
             alt="Amber Holoflower"
-            className="absolute inset-0 w-[28rem] h-[28rem] opacity-20 filter drop-shadow-lg"
+            className="absolute inset-0 w-[26rem] h-[26rem] opacity-15 filter drop-shadow-lg"
           />
         </div>
       </div>
