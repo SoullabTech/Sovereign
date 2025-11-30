@@ -367,8 +367,25 @@ export default function MAIAPage() {
         {/* Atmospheric Glow - Warm light from below */}
         <div className="absolute bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/30 via-transparent to-transparent pointer-events-none z-0" />
 
+        {/* Top Center Logo */}
+        <div className="flex-shrink-0 relative z-[120] pt-4 pb-2">
+          <div className="flex justify-center">
+            <div className="flex items-center gap-2">
+              <img
+                src="/holoflower-amber.png"
+                alt="Soullab Holoflower"
+                className="w-4 h-4 opacity-90 drop-shadow-[0_0_4px_rgba(251,146,60,0.5)]"
+                style={{ filter: 'brightness(1.1)' }}
+              />
+              <span className="text-sm font-light text-amber-300/80 tracking-wider">
+                SOULLAB
+              </span>
+            </div>
+          </div>
+        </div>
+
         {/* MOBILE-FIRST HEADER - Compact design */}
-        <div className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm z-[110] pt-16">
+        <div className="flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm z-[110] pt-8">
           {/* Spice particle effect - very subtle movement */}
           <div className="absolute inset-0 opacity-5 pointer-events-none">
             <motion.div
