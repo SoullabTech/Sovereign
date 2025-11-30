@@ -116,19 +116,19 @@ export class MAIAModelSystem {
         3: {
           preferredModels: ['deepseek-r1:latest', 'llama3.1:70b'],
           fallbackModels: ['nous-hermes2-mixtral:8x7b'],
-          qualityThreshold: 0.75,
+          qualityThreshold: 0.5,
           responseTimeLimit: 8000
         },
         4: {
           preferredModels: ['llama3.1:70b', 'deepseek-r1:latest'],
           fallbackModels: ['nous-hermes2-mixtral:8x7b'],
-          qualityThreshold: 0.8,
+          qualityThreshold: 0.55,
           responseTimeLimit: 12000
         },
         5: {
           preferredModels: ['llama3.1:70b', 'deepseek-r1:latest'],
           fallbackModels: [],
-          qualityThreshold: 0.85,
+          qualityThreshold: 0.6,
           responseTimeLimit: 15000
         }
       },
@@ -154,7 +154,7 @@ export class MAIAModelSystem {
     this.router = new IntelligentModelRouter({
       enableGollama: this.config.enableGollamaBridge,
       fallbackModel: 'deepseek-r1:latest',
-      qualityThreshold: 0.7,
+      qualityThreshold: 0.5,
       enableLearning: true,
       maxResponseTime: 10000
     });

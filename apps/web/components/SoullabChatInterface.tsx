@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Mic, MicOff, Upload, BookOpen, MoreHorizontal, Heart, Brain, Zap } from 'lucide-react';
 import { useSoullabOracle } from '../hooks/useSoullabOracle';
-import { VoicePipelineDebugOverlay } from './system/VoicePipelineDebugOverlay';
 import MayaInputBar from './MayaInputBar';
 import { MayaGreetingContainer } from './MayaGreeting';
 import SessionMemoryBanner from './SessionMemoryBanner';
@@ -49,7 +48,6 @@ export function SoullabChatInterface({
   const [journalInput, setJournalInput] = useState('');
   const [journalTitle, setJournalTitle] = useState('');
   const [uploadQueue, setUploadQueue] = useState<File[]>([]);
-  const [showDebugPanel, setShowDebugPanel] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en-US');
   const [sessionCount, setSessionCount] = useState(1);
   const [showGreeting, setShowGreeting] = useState(true);
@@ -554,11 +552,6 @@ export function SoullabChatInterface({
           </div>
         )}
       </div>
-      
-      {/* Voice Pipeline Debug Overlay (dev only) */}
-      {process.env.NODE_ENV === 'development' && showDebugPanel && (
-        <VoicePipelineDebugOverlay />
-      )}
     </div>
   );
 }

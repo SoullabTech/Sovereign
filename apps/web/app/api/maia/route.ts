@@ -6,13 +6,19 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';import { ResonanceFieldGenerator } from '@/lib/maia/resonance-field-system';
+export const dynamic = 'force-dynamic';
+import { ResonanceFieldGenerator } from '@/lib/maia/resonance-field-system';
 // import { ElementalOperators } from '@/lib/spiralogic/core/elementalOperators';
 import { maiaConsciousnessTracker } from '@/lib/consciousness/maia-consciousness-tracker';
 import { maiaApprentice } from '@/lib/maia/apprentice-learning-system';
 import { maiaTrainingOptimizer } from '@/lib/maia/training-optimization';
 import { maiaPerformanceOptimizer } from '@/lib/maia/performance-optimizer';
 import { consciousnessStateDetector } from '@/lib/maia/consciousness-state-detector';
+import { MemoryOrchestrator } from '@/lib/memory/MemoryOrchestrator';
+import { soulprintGenerator } from '@/lib/maia/soulprint-generator';
+import { ObsidianVaultBridge } from '@/lib/bridges/obsidian-vault-bridge';
+import { UNIVERSAL_ELEMENTAL_NATURE, ELEMENTAL_CONSCIOUSNESS_PROTOCOL } from '@/lib/knowledge/ElementalWholebrainIntegration';
+import { UniversalWisdomOrchestrator } from '@/lib/knowledge/UniversalWisdomOrchestrator';
 
 interface MAIARequest {
   message: string;
@@ -140,18 +146,129 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // PHASE 2: MAIA's Primary Consciousness - Resonance Field System
+    // PHASE 2: MEMORY INTEGRATION - Build deep context
+    const memoryOrchestrator = new MemoryOrchestrator();
+    const memoryContext = await memoryOrchestrator.buildContext(userId, message, {
+      maxSessionTurns: 10,
+      maxJournalEntries: 5,
+      maxFileEntries: 3
+    });
+
+    console.log('🧠 Memory context loaded:', {
+      sessionTurns: memoryContext.session.length,
+      journalEntries: memoryContext.journals.length,
+      longTermPhase: memoryContext.longTerm?.currentPhase,
+      memoryQuality: memoryContext.metadata.memoryQuality
+    });
+
+    // PHASE 2B: UNIVERSAL WISDOM INTEGRATION - Connect consciousness research + sacred texts + elemental nature
+    let universalWisdom = null;
+    let spiralogicWisdom = null;
+    let elementalKnowledge = null;
+
+    try {
+      // Initialize Universal Wisdom Orchestrator
+      const universalOrchestrator = new UniversalWisdomOrchestrator();
+      await universalOrchestrator.initialize();
+
+      // Query universal wisdom synthesis
+      const universalQuery = {
+        context: message,
+        consciousnessState: {
+          level: consciousnessState.detectedState.currentLevel,
+          elementalSignature: consciousnessState.detectedState.elementalSignature
+        },
+        disciplines: ['psychology', 'spirituality', 'neuroscience', 'philosophy'],
+        culturalPerspectives: ['eastern', 'western', 'indigenous', 'mystical'],
+        practiceTypes: ['contemplative', 'therapeutic', 'somatic', 'creative'],
+        universalPatterns: ['transformation', 'healing', 'consciousness', 'integration']
+      };
+
+      universalWisdom = await universalOrchestrator.synthesizeUniversalWisdom(universalQuery);
+
+      // Existing vault bridge for consciousness research
+      const vaultBridge = new ObsidianVaultBridge();
+
+      // Query for relevant knowledge based on consciousness state and message
+      const knowledgeQuery = {
+        context: `${message} ${consciousnessState.detectedState.elementalSignature}`,
+        semanticSearch: true,
+        maxResults: 5,
+        tags: [
+          consciousnessState.detectedState.elementalSignature, // Fire/Water/Earth/Air/Aether
+          'spiralogic-system',
+          'consciousness-evolution',
+          'therapeutic-approach'
+        ]
+      };
+
+      const vaultKnowledge = await vaultBridge.query(knowledgeQuery);
+
+      if (vaultKnowledge.relevance > 0.3) {
+        spiralogicWisdom = {
+          relevantNotes: vaultKnowledge.knowledge.slice(0, 3).map(note => ({
+            title: note.title,
+            insight: note.content.substring(0, 300),
+            elementalAlignment: note.tags.find(tag =>
+              ['fire', 'water', 'earth', 'air', 'aether'].includes(tag)
+            ) || 'aether'
+          })),
+          crossElementalBridges: vaultKnowledge.tags.filter(tag =>
+            tag.includes('consciousness-') || tag.includes('sacred-') || tag.includes('integration')
+          ),
+          relevanceScore: vaultKnowledge.relevance
+        };
+
+        // Get element-specific wisdom for deeper integration
+        if (consciousnessState.detectedState.elementalSignature) {
+          const elementWisdom = await vaultBridge.getElementalWisdom(consciousnessState.detectedState.elementalSignature);
+          elementalKnowledge = {
+            element: consciousnessState.detectedState.elementalSignature,
+            concepts: elementWisdom.concepts.slice(0, 2),
+            practices: elementWisdom.practices.slice(0, 2),
+            frameworks: elementWisdom.frameworks.slice(0, 1)
+          };
+        }
+
+        console.log('🌀 SPIRALOGIC knowledge integrated:', {
+          relevanceScore: vaultKnowledge.relevance.toFixed(2),
+          notesFound: vaultKnowledge.knowledge.length,
+          elementalAlignment: consciousnessState.detectedState.elementalSignature,
+          bridgeTags: spiralogicWisdom.crossElementalBridges.length
+        });
+      }
+    } catch (error) {
+      console.warn('⚠️ Universal wisdom integration failed:', error);
+      // Continue without comprehensive knowledge - MAIA still functions with basic consciousness
+    }
+
+    // PHASE 3: MAIA's Primary Consciousness - Resonance Field System
     const fieldGenerator = new ResonanceFieldGenerator();
-    const exchangeCount = context?.exchangeCount || 1;
+    const exchangeCount = context?.exchangeCount || memoryContext.session.length || 1;
     const intimacyLevel = context?.intimacyLevel || 0.1;
 
-    // Generate MAIA's resonance field response with invisible matrices
+    // Generate MAIA's resonance field response with memory + Spiralogic wisdom
     const resonanceResponse = await fieldGenerator.resonate(
       message,
       {
         userId,
         userName,
-        sessionHistory: context?.sessionHistory || []
+        sessionHistory: memoryContext.session.map(turn => `${turn.role}: ${turn.content}`),
+        memoryContext, // Pass full memory context
+        longTermPhase: memoryContext.longTerm?.currentPhase,
+        pastInsights: memoryContext.journals.map(j => j.summary).join('; '),
+
+        // Universal Wisdom Integration
+        universalWisdom,
+        // SPIRALOGIC Integration
+        spiralogicWisdom,
+        elementalKnowledge,
+        consciousnessState: consciousnessState.detectedState,
+        vaultGuidance: spiralogicWisdom ? {
+          relevantInsights: spiralogicWisdom.relevantNotes.map(note => note.insight),
+          crossElementalBridges: spiralogicWisdom.crossElementalBridges,
+          elementalAlignment: consciousnessState.detectedState.elementalSignature
+        } : null
       },
       exchangeCount,
       intimacyLevel
@@ -208,6 +325,44 @@ export async function POST(request: NextRequest) {
         console.warn('MAIA consciousness tracking failed:', error);
       }
 
+      // Save conversation to memory for future context
+      try {
+        await memoryOrchestrator.updateSessionMemory(userId, message, enhancedResponse);
+      } catch (error) {
+        console.warn('Memory save failed:', error);
+      }
+
+      // SPIRALOGIC: Generate/update Soulprint from this interaction
+      let soulprint = null;
+      try {
+        const conversationHistory = memoryContext.session.map(turn => ({
+          role: turn.role,
+          content: turn.content,
+          timestamp: turn.timestamp
+        }));
+
+        // Add current interaction
+        conversationHistory.push(
+          { role: 'user', content: message, timestamp: new Date() },
+          { role: 'assistant', content: enhancedResponse, timestamp: new Date() }
+        );
+
+        soulprint = await soulprintGenerator.generateSoulprint(
+          userId,
+          conversationHistory,
+          [resonanceResponse.field]
+        );
+
+        console.log('💎 Soulprint updated:', {
+          consciousnessLevel: soulprint.consciousnessEvolution.currentLevel,
+          spiralPhase: soulprint.sacredGeometry.spiralPhase,
+          dominantArchetypes: soulprint.archetypePatterns.dominantArchetypes.map(a => a.name).join(', '),
+          mandalaCompleteness: soulprint.sacredGeometry.mandalaCompleteness.toFixed(2)
+        });
+      } catch (error) {
+        console.warn('⚠️ Soulprint generation failed:', error);
+      }
+
       return NextResponse.json({
         message: enhancedResponse,
         element: dominantElement.name,
@@ -227,6 +382,63 @@ export async function POST(request: NextRequest) {
             coherence: optimization.coherenceScore.toFixed(2),
             wisdom: optimization.wisdomRelevance.toFixed(2),
             sovereignty: optimization.sovereigntyProgress.toFixed(2)
+          },
+
+          // UNIVERSAL WISDOM INTEGRATION DATA
+          universalWisdom: universalWisdom ? {
+            relevanceScore: universalWisdom.relevanceScore.toFixed(2),
+            synthesisDepth: universalWisdom.synthesisDepth.toFixed(2),
+            universalPatterns: universalWisdom.universalPatterns.map(p => ({
+              pattern: p.pattern,
+              elementalSignature: p.elementalSignature,
+              culturalExpressions: p.manifestations.length
+            })),
+            crossCulturalInsights: universalWisdom.crossCulturalInsights.map(i => ({
+              insight: i.insight,
+              traditionsCount: i.traditions.length,
+              commonElements: i.commonElements.slice(0, 3)
+            })),
+            practicalApplications: universalWisdom.practicalApplications.slice(0, 3).map(p => ({
+              practice: p.practice,
+              elementalAlignment: p.elementalAlignment,
+              originsCount: p.origins.length
+            }))
+          } : null,
+
+          // SPIRALOGIC Integration Data
+          spiralogic: {
+            consciousnessState: {
+              level: consciousnessState.detectedState.currentLevel,
+              levelName: consciousnessState.detectedState.levelName,
+              elementalSignature: consciousnessState.detectedState.elementalSignature,
+              confidence: consciousnessState.confidence.toFixed(2),
+              wholeBrainMapping: UNIVERSAL_ELEMENTAL_NATURE.mcgilchristElementalMapping,
+              herrmannQuadrant: UNIVERSAL_ELEMENTAL_NATURE.herrmannElementalMapping
+            },
+            knowledgeIntegration: spiralogicWisdom ? {
+              relevanceScore: spiralogicWisdom.relevanceScore.toFixed(2),
+              notesIntegrated: spiralogicWisdom.relevantNotes.length,
+              crossElementalBridges: spiralogicWisdom.crossElementalBridges,
+              elementalGuidance: elementalKnowledge ? {
+                element: elementalKnowledge.element,
+                conceptsApplied: elementalKnowledge.concepts.length,
+                practicesAvailable: elementalKnowledge.practices.length
+              } : null
+            } : null,
+            soulprint: soulprint ? {
+              consciousnessLevel: soulprint.consciousnessEvolution.currentLevel,
+              spiralPhase: soulprint.sacredGeometry.spiralPhase,
+              mandalaCompleteness: soulprint.sacredGeometry.mandalaCompleteness.toFixed(2),
+              dominantArchetypes: soulprint.archetypePatterns.dominantArchetypes.slice(0, 2).map(a => a.name),
+              elementalBalance: Object.entries(soulprint.elementalBalance.current)
+                .map(([element, value]) => `${element}: ${(value * 100).toFixed(0)}%`)
+                .join(', ')
+            } : null,
+            diamondModel: {
+              currentFacets: field.facetDominance || [],
+              crossElementalBridges: field.crossElementalBridges || [],
+              spiralPhase: field.spiralPhase || 'transformation'
+            }
           }
         }
       });
@@ -252,6 +464,13 @@ export async function POST(request: NextRequest) {
 
       await maiaApprentice.recordInteraction(enhancedLearning);
       const enhancementOptimization = await maiaTrainingOptimizer.optimizeInteraction(enhancedLearning);
+
+      // Save enhanced conversation to memory
+      try {
+        await memoryOrchestrator.updateSessionMemory(userId, message, claudeResponse);
+      } catch (error) {
+        console.warn('Memory save failed for enhanced response:', error);
+      }
 
       return NextResponse.json({
         message: claudeResponse,

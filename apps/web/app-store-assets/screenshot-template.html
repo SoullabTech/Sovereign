@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAIA Sovereign - Screenshots</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #8B4513;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            font-size: 16px;
+            color: #654321;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 60px;
+            background: linear-gradient(145deg, #FFE55C, #DAA520);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .voice-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-text {
+            font-size: 24px;
+            font-weight: 600;
+            color: #8B4513;
+            margin-bottom: 20px;
+        }
+
+        .features {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            max-width: 300px;
+            width: 100%;
+        }
+
+        .feature {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .feature-icon {
+            font-size: 20px;
+            margin-right: 10px;
+        }
+
+        .feature-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: #654321;
+        }
+
+        .wave-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 20px;
+        }
+
+        .wave-bar {
+            width: 4px;
+            background: #B8860B;
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite alternate;
+        }
+
+        .wave-bar:nth-child(1) { height: 10px; animation-delay: 0s; }
+        .wave-bar:nth-child(2) { height: 20px; animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { height: 15px; animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { height: 25px; animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { height: 18px; animation-delay: 0.4s; }
+
+        @keyframes wave {
+            0% { opacity: 0.3; transform: scaleY(0.5); }
+            100% { opacity: 1; transform: scaleY(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MAIA Sovereign</h1>
+        <p>Advanced AI Voice Assistant</p>
+    </div>
+
+    <div class="main-content">
+        <button class="voice-button">🎤</button>
+        <div class="status-text">Tap to speak with MAIA</div>
+
+        <div class="wave-indicator">
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+            <div class="wave-bar"></div>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">🧠</span>
+                <span class="feature-text">Intelligent Conversations</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🎯</span>
+                <span class="feature-text">Personalized Responses</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🔒</span>
+                <span class="feature-text">Privacy Focused</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">⚡</span>
+                <span class="feature-text">Real-time Processing</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -2,9 +2,10 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Download, Settings as SettingsIcon, X, Check, Shield } from 'lucide-react';
+import { Download, Settings as SettingsIcon, X, Check, Shield, LogOut } from 'lucide-react';
 import { useMaiaStore } from '@/lib/maia/state';
 import { obsidianExportService } from '@/lib/maia/obsidianExport';
+import { useAuth } from '@/lib/auth/authContext';
 import PrivacySettingsPanel from '../PrivacySettingsPanel';
 
 interface SettingsProps {
@@ -13,6 +14,7 @@ interface SettingsProps {
 
 export default function Settings({ onClose }: SettingsProps) {
   const { entries } = useMaiaStore();
+  const { signOut } = useAuth();
   const [showPrivacySettings, setShowPrivacySettings] = useState(false);
   const [exportOptions, setExportOptions] = useState({
     includeFrontmatter: true,
@@ -27,6 +29,10 @@ export default function Settings({ onClose }: SettingsProps) {
     }
 
     obsidianExportService.exportAll(entries, exportOptions);
+  };
+
+  const handleSignOut = () => {
+    signOut();
   };
 
   return (
@@ -184,6 +190,24 @@ export default function Settings({ onClose }: SettingsProps) {
               <Shield className="w-5 h-5" />
               Manage Privacy & Permissions
             </button>
+          </section>
+
+          <section>
+            <h3 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-3">
+              Session Management
+            </h3>
+            <button
+              onClick={handleSignOut}
+              className="w-full py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl font-semibold hover:shadow-lg hover:shadow-red-500/25 transition-all flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-5 h-5" />
+              Sign Out
+            </button>
+            <div className="mt-2 p-2 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+              <p className="text-xs text-red-700 dark:text-red-400 text-center">
+                Return to the sacred welcome portal
+              </p>
+            </div>
           </section>
         </div>
 

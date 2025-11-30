@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
-import { searchUserFiles } from '../../backend/src/services/IngestionQueue';
+// Temporarily stub out backend imports that are excluded from build
+// import { searchUserFiles } from '../../backend/src/services/IngestionQueue';
+import { searchUserFiles } from '@/lib/consciousness/WeQIngestionQueue';
 import { OpenAI } from 'openai';
 
 const prisma = new PrismaClient();
@@ -199,13 +201,31 @@ export class MemoryOrchestrator {
   }
 
   private async getSessionContext(
-    userId: string, 
+    userId: string,
     maxTurns: number = 10
   ): Promise<ConversationTurn[]> {
     try {
-      // In production, fetch from Redis or session store
-      // For now, return mock data structure
-      return [];
+      // Fetch from conversations table
+      const { data, error } = await supabase
+        .from('conversations')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(maxTurns * 2); // Get more to handle both user/assistant pairs
+
+      if (error) {
+        console.error('Session context fetch error:', error);
+        return [];
+      }
+
+      // Transform to conversation turns
+      const turns: ConversationTurn[] = data.map(conv => ({
+        role: conv.role as 'user' | 'assistant',
+        content: conv.message,
+        timestamp: new Date(conv.created_at)
+      }));
+
+      return turns.slice(0, maxTurns);
     } catch (error) {
       console.error('Session context error:', error);
       return [];
@@ -293,13 +313,53 @@ export class MemoryOrchestrator {
 
   private async getLongTermProfile(userId: string): Promise<UserProfile | null> {
     try {
-      // In production, fetch from Mem0
-      // For now, return basic structure
+      // Fetch from user_profiles table
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') { // PGRST116 = not found
+        console.error('Long-term profile error:', error);
+        return null;
+      }
+
+      if (!data) {
+        // Create initial profile for new user
+        const initialProfile = {
+          user_id: userId,
+          current_phase: 'exploration',
+          preferences: {},
+          oracle_history: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { data: newProfile, error: createError } = await supabase
+          .from('user_profiles')
+          .insert([initialProfile])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Profile creation error:', createError);
+          return null;
+        }
+
+        return {
+          id: userId,
+          currentPhase: initialProfile.current_phase,
+          preferences: initialProfile.preferences,
+          oracleHistory: initialProfile.oracle_history
+        };
+      }
+
       return {
         id: userId,
-        currentPhase: 'exploration',
-        preferences: {},
-        oracleHistory: []
+        currentPhase: data.current_phase || 'exploration',
+        preferences: data.preferences || {},
+        oracleHistory: data.oracle_history || []
       };
     } catch (error) {
       console.error('Long-term profile error:', error);
@@ -528,8 +588,31 @@ export class MemoryOrchestrator {
     assistantResponse: string
   ): Promise<void> {
     try {
-      // In production, store in Redis/session store
-      console.log(`Updating session memory for user ${userId}`);
+      // Store both user message and assistant response
+      const conversations = [
+        {
+          user_id: userId,
+          role: 'user',
+          message: userMessage,
+          created_at: new Date().toISOString()
+        },
+        {
+          user_id: userId,
+          role: 'assistant',
+          message: assistantResponse,
+          created_at: new Date().toISOString()
+        }
+      ];
+
+      const { error } = await supabase
+        .from('conversations')
+        .insert(conversations);
+
+      if (error) {
+        console.error('Session memory save error:', error);
+      } else {
+        console.log(`✅ Session memory updated for user ${userId}`);
+      }
     } catch (error) {
       console.error('Session memory update error:', error);
     }

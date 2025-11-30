@@ -347,3 +347,77 @@ export function getElementalPracticeRecommendations(coherence: ElementalCoherenc
 
   return practices;
 }
+
+/**
+ * Main ElementalCoherenceCalculator class for real-time coherence optimization
+ */
+export class ElementalCoherenceCalculator {
+  private healthData: ParsedHealthData | null = null;
+  private fasciaAssessment: FascialHealthAssessment | null = null;
+
+  constructor(initialData?: {
+    healthData?: ParsedHealthData;
+    fasciaAssessment?: FascialHealthAssessment;
+  }) {
+    this.healthData = initialData?.healthData || null;
+    this.fasciaAssessment = initialData?.fasciaAssessment || null;
+  }
+
+  /**
+   * Update health data for calculations
+   */
+  updateHealthData(healthData: ParsedHealthData): void {
+    this.healthData = healthData;
+  }
+
+  /**
+   * Update fascia assessment for calculations
+   */
+  updateFasciaAssessment(assessment: FascialHealthAssessment): void {
+    this.fasciaAssessment = assessment;
+  }
+
+  /**
+   * Calculate current elemental coherence
+   */
+  calculateCoherence(): ElementalCoherence {
+    return calculateElementalCoherence(this.healthData, this.fasciaAssessment);
+  }
+
+  /**
+   * Calculate trend from a series of coherence measurements
+   */
+  calculateTrend(assessments: ElementalCoherence[]): 'improving' | 'stable' | 'declining' {
+    return calculateCoherenceTrend(assessments);
+  }
+
+  /**
+   * Get practice recommendations based on current coherence
+   */
+  getPracticeRecommendations(coherence?: ElementalCoherence): {
+    element: string;
+    practice: string;
+    why: string;
+  }[] {
+    const currentCoherence = coherence || this.calculateCoherence();
+    return getElementalPracticeRecommendations(currentCoherence);
+  }
+
+  /**
+   * Get current data sources availability
+   */
+  getDataSources(): {
+    hasHRV: boolean;
+    hasFascia: boolean;
+    hasBreath: boolean;
+  } {
+    const latestHRV = this.healthData?.hrv?.[0] || null;
+    const latestRespiratory = this.healthData?.respiratory?.[0]?.value || null;
+
+    return {
+      hasHRV: latestHRV !== null,
+      hasFascia: this.fasciaAssessment !== null,
+      hasBreath: latestRespiratory !== null
+    };
+  }
+}

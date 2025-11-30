@@ -16,6 +16,24 @@ export default function SacredEntryPortal() {
   const [name, setName] = useState("");
   const [isEntering, setIsEntering] = useState(false);
   const [phase, setPhase] = useState<"arrival" | "elements" | "entering">("arrival");
+  const [isReturning, setIsReturning] = useState(false);
+
+  // Check if user is returning
+  useEffect(() => {
+    const existingUser = localStorage.getItem("maia_user");
+    if (existingUser) {
+      setIsReturning(true);
+      setName(existingUser);
+    }
+  }, []);
+
+  // Get time-based greeting
+  const getTimeGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good Morning";
+    if (hour < 17) return "Good Afternoon";
+    return "Good Evening";
+  };
 
   // Handle entry
   const handleEnter = async (e: React.FormEvent) => {

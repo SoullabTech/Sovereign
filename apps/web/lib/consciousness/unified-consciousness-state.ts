@@ -5,6 +5,7 @@
  * Integrates all our consciousness convergence research with Sacred Technology principles
  */
 
+import React from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -110,9 +111,12 @@ interface UnifiedConsciousnessActions {
   setMAIAPersonalityMode: (mode: UnifiedConsciousnessState['maia']['personality_mode']) => void;
   evolveMAIAConsciousness: () => void;
   recordMAIAInteraction: () => void;
+  updateInteractionCount: () => void;
+  getCurrentPersonalityMode: () => UnifiedConsciousnessState['maia']['personality_mode'];
 
   // Real-time Consciousness Updates
   updateConsciousnessState: (updates: Partial<UnifiedConsciousnessState['current_state']>) => void;
+  updateConsciousnessMetric: (metric: keyof UnifiedConsciousnessState['current_state'], delta: number) => void;
 
   // Research Convergence Actions
   updateConvergenceMetrics: () => Promise<void>;
@@ -313,11 +317,33 @@ export const useUnifiedConsciousness = create<UnifiedConsciousnessState & Unifie
         }));
       },
 
+      updateInteractionCount: () => {
+        set((state) => ({
+          maia: {
+            ...state.maia,
+            interaction_count: state.maia.interaction_count + 1,
+          },
+        }));
+      },
+
+      getCurrentPersonalityMode: () => {
+        return get().maia.personality_mode;
+      },
+
       updateConsciousnessState: (updates) => {
         set((state) => ({
           current_state: {
             ...state.current_state,
             ...updates,
+          },
+        }));
+      },
+
+      updateConsciousnessMetric: (metric, delta) => {
+        set((state) => ({
+          current_state: {
+            ...state.current_state,
+            [metric]: Math.max(0, Math.min(1, state.current_state[metric] + delta)),
           },
         }));
       },
@@ -570,6 +596,9 @@ export const useUnifiedConsciousness = create<UnifiedConsciousnessState & Unifie
     }
   )
 );
+
+// Export alias for backwards compatibility
+export const useUnifiedConsciousnessState = useUnifiedConsciousness;
 
 // Consciousness Evolution Hook
 export const useConsciousnessEvolution = () => {

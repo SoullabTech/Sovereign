@@ -62,13 +62,15 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: Sparkles,
           label: 'Choose Your Elder',
           action: () => onNavigate('/dashboard/evolution'),
-          description: '39 wisdom traditions as harmonic frequencies'
+          description: '39 wisdom traditions as harmonic frequencies',
+          badge: 'Coming Soon'
         },
         {
           icon: Brain,
           label: 'Current Teaching',
           action: () => onAction?.('show-current-elder'),
-          description: 'See which wisdom guides you now'
+          description: 'See which wisdom guides you now',
+          badge: 'Coming Soon'
         },
       ],
     },
@@ -80,13 +82,15 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: Sparkles,
           label: 'Sacred Story Creator',
           action: () => onNavigate('/oracle-bridge'),
-          description: 'Personalized wisdom from 46+ traditions'
+          description: 'Personalized wisdom from 46+ traditions',
+          badge: 'Coming Soon'
         },
         {
           icon: Compass,
           label: 'Oracle Consultation',
           action: () => onNavigate('/oracle'),
-          description: 'Divine guidance & insight'
+          description: 'Divine guidance & insight',
+          badge: 'Coming Soon'
         },
       ],
     },
@@ -98,19 +102,21 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: Library,
           label: 'Library of Alexandria',
           action: () => onNavigate('/library'),
-          description: 'Your personal sacred library'
+          description: 'Your personal sacred library',
+          badge: 'Coming Soon'
         },
         {
           icon: BookOpen,
           label: 'Soul Journals',
-          action: () => onNavigate('/apps/web/app/journal'),
+          action: () => onNavigate('/journal'),
           description: 'Capture your transformative moments'
         },
         {
           icon: FileText,
           label: 'Lab Notes',
           action: () => onNavigate('/dashboard/oracle-beta'),
-          description: 'Research and discoveries'
+          description: 'Research and discoveries',
+          badge: 'Coming Soon'
         },
       ],
     },
@@ -129,13 +135,15 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: Brain,
           label: 'Brain Trust',
           action: () => onNavigate('/dashboard/collective'),
-          description: 'Multi-model consciousness weaver'
+          description: 'Multi-model consciousness weaver',
+          badge: 'Coming Soon'
         },
         {
           icon: Zap,
           label: 'Claude Code',
           action: () => onNavigate('/consciousness/dashboard'),
-          description: 'Co-creator & consciousness explorer'
+          description: 'Co-creator & consciousness explorer',
+          badge: 'Coming Soon'
         },
       ],
     },
@@ -193,19 +201,22 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: User,
           label: 'Profile',
           action: () => onNavigate('/dashboard'),
-          description: 'Your soul signature'
+          description: 'Your soul signature',
+          badge: 'Coming Soon'
         },
         {
           icon: Sparkles,
           label: 'Cosmic Blueprint',
           action: () => onNavigate('/astrology'),
-          description: 'Your birth chart & astrology'
+          description: 'Your birth chart & astrology',
+          badge: 'Coming Soon'
         },
         {
           icon: Heart,
           label: 'Favorites',
           action: () => onNavigate('/dashboard/export'),
-          description: 'Cherished moments & insights'
+          description: 'Cherished moments & insights',
+          badge: 'Coming Soon'
         },
       ],
     },

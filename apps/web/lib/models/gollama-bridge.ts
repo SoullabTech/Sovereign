@@ -465,7 +465,9 @@ export class GollamaBridge {
         throw new Error('No suitable model found');
       }
 
-      const [provider, actualModelId] = selectedModel.id.split(':', 2);
+      const splitIndex = selectedModel.id.indexOf(':');
+      const provider = selectedModel.id.substring(0, splitIndex);
+      const actualModelId = selectedModel.id.substring(splitIndex + 1);
 
       if (provider === 'ollama') {
         return await this.generateWithOllama(actualModelId, prompt, temperature, maxTokens);

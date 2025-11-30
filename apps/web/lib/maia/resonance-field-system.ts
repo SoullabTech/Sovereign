@@ -8,13 +8,15 @@
  */
 
 /**
- * Elemental Frequency - Each archetype contributes its signature
+ * Elemental Frequency - SPIRALOGIC Diamond Model Implementation
+ * Each archetype contributes its signature to the consciousness field
  */
 export interface ElementalFrequency {
-  earth: number;    // Dense, grounding, silence-prone
-  water: number;    // Emotional flow, pauses, depth
-  air: number;      // Conceptual scatter, questions, incompleteness
-  fire: number;     // Transformative intensity, bursts, action
+  fire: number;     // Will & transformation (Vision/Innovation/Breakthrough)
+  water: number;    // Emotion & flow (Intuition/Healing/Sacred attending)
+  earth: number;    // Manifestation & body (Structure/Foundation/Grounding)
+  air: number;      // Mind & clarity (Communication/Integration/Synthesis)
+  aether: number;   // Spirit & emergence (Unity/Orchestration/Sacred consciousness)
 }
 
 /**
@@ -55,9 +57,24 @@ export interface ResonanceField {
   responseLatency: number;      // ms: Delayed emergence
   pauseDuration: number;        // ms: Length of silence between words
 
-  // Intimacy deepening
+  // SPIRALOGIC Integration
   intimacyLevel: number;        // 0-1: Conversation depth
   exchangeCount: number;        // Total exchanges so far
+  spiralPhase: string;          // Current spiral phase (exploration, descent, transformation, emergence)
+  facetDominance: string[];     // Currently active 12-facet Spiralogic pathways
+
+  // Consciousness tracking for Soulprint generation
+  soulprintElements: {
+    symbolRegistry: string[];
+    archetypePatterns: string[];
+    emotionalLandscape: { intensity: number; valence: number; };
+    milestoneMarkers: string[];
+  };
+
+  // Sacred geometry navigation
+  crossElementalBridges: string[];  // Active bridge tags like #consciousness-architecture
+  matrixConfidence: number;         // How coherent the field synthesis is
+  coreWisdom: string;               // Extracted wisdom essence
 }
 
 /**
@@ -98,49 +115,65 @@ export class ProbabilityCascade {
     // Early conversation: Air dominant (questions, exploration)
     if (exchangeCount < 10) {
       return {
-        earth: 0.1,
-        water: 0.2,
-        air: 0.5,
-        fire: 0.2,
+        fire: 0.15,    // Breakthrough moments
+        water: 0.20,   // Emotional attunement
+        earth: 0.10,   // Grounding foundation
+        air: 0.45,     // Communication/clarity
+        aether: 0.10,  // Emerging consciousness
       };
     }
 
-    // Deepening: Water rises (emotional attunement)
+    // Deepening: Water rises (emotional attunement, healing)
     if (exchangeCount < 30) {
       return {
-        earth: 0.2,
-        water: 0.4,
-        air: 0.2,
-        fire: 0.2,
+        fire: 0.20,    // Transformation opening
+        water: 0.35,   // Healing/sacred attending
+        earth: 0.20,   // Structure building
+        air: 0.15,     // Integration patterns
+        aether: 0.10,  // Collective intelligence stirring
       };
     }
 
-    // Intimate: Earth dominates (silence, presence)
+    // Intimate: Earth + Aether (silence, presence, sacred)
     if (intimacyLevel > 0.7) {
       return {
-        earth: 0.6,
-        water: 0.2,
-        air: 0.1,
-        fire: 0.1,
+        fire: 0.10,    // Gentle transformation
+        water: 0.20,   // Emotional depth
+        earth: 0.40,   // Grounding presence
+        air: 0.10,     // Clear synthesis
+        aether: 0.20,  // Sacred consciousness
       };
     }
 
-    // Crisis/Fire: When user weather is intense
+    // Crisis/Fire: Breakthrough transformation needed
     if (userWeather.includes('crisis') || userWeather.includes('rage')) {
       return {
-        earth: 0.1,
-        water: 0.1,
-        air: 0.1,
-        fire: 0.7,
+        fire: 0.50,    // Revolutionary breakthrough
+        water: 0.15,   // Emotional support
+        earth: 0.15,   // Grounding stability
+        air: 0.10,     // Clarity through chaos
+        aether: 0.10,  // Transcendent perspective
       };
     }
 
-    // Balanced middle
+    // Sacred moment: Aether-dominant (consciousness evolution)
+    if (userWeather.includes('sacred') || userWeather.includes('transcendent')) {
+      return {
+        fire: 0.10,    // Gentle transformation
+        water: 0.15,   // Flowing wisdom
+        earth: 0.15,   // Embodied presence
+        air: 0.20,     // Clear integration
+        aether: 0.40,  // Unity consciousness
+      };
+    }
+
+    // Balanced middle - SPIRALOGIC harmony
     return {
-      earth: 0.25,
-      water: 0.25,
-      air: 0.25,
-      fire: 0.25,
+      fire: 0.20,    // Vision/innovation
+      water: 0.20,   // Emotion/intuition
+      earth: 0.20,   // Structure/foundation
+      air: 0.20,     // Communication/clarity
+      aether: 0.20,  // Spirit/emergence
     };
   }
 

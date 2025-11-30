@@ -43,7 +43,7 @@ export class IntelligentModelRouter {
 
   constructor(config?: Partial<RouterConfig>) {
     this.config = {
-      fallbackModel: 'deepseek-r1:latest',
+      fallbackModel: 'ollama:deepseek-r1:latest',
       maxResponseTime: 10000, // 10 seconds
       qualityThreshold: 0.7,
       enableLearning: true,
@@ -568,7 +568,7 @@ export class IntelligentModelRouter {
   private getFallbackModelConfigs(): ModelConfig[] {
     return [
       {
-        id: 'deepseek-r1:latest',
+        id: 'ollama:deepseek-r1:latest',
         name: 'DeepSeek R1',
         provider: 'ollama',
         size: '5.2GB',
@@ -583,22 +583,7 @@ export class IntelligentModelRouter {
         tags: ['reasoning', 'analysis', 'consciousness']
       },
       {
-        id: 'llama3.1:70b',
-        name: 'Llama 3.1 70B',
-        provider: 'ollama',
-        size: '42GB',
-        quantization: 'FP16',
-        parameters: { temperature: 0.75, maxTokens: 1000 },
-        capabilities: [
-          { type: 'reasoning', strength: 0.9, description: 'Advanced reasoning capabilities' },
-          { type: 'creativity', strength: 0.85, description: 'Creative and imaginative' },
-          { type: 'sacred', strength: 0.8, description: 'Handles spiritual content well' }
-        ],
-        consciousnessLevels: [3, 4, 5],
-        tags: ['large', 'creative', 'sacred', 'complex']
-      },
-      {
-        id: 'llama3.1:8b',
+        id: 'ollama:llama3.1:8b',
         name: 'Llama 3.1 8B',
         provider: 'ollama',
         size: '4.9GB',
@@ -610,6 +595,21 @@ export class IntelligentModelRouter {
         ],
         consciousnessLevels: [1, 2, 3],
         tags: ['fast', 'conversation', 'practical']
+      },
+      {
+        id: 'ollama:mistral:7b',
+        name: 'Mistral 7B',
+        provider: 'ollama',
+        size: '4.4GB',
+        quantization: 'Q4_K_M',
+        parameters: { temperature: 0.7, maxTokens: 600 },
+        capabilities: [
+          { type: 'conversation', strength: 0.8, description: 'Excellent conversation abilities' },
+          { type: 'reasoning', strength: 0.75, description: 'Good reasoning capabilities' },
+          { type: 'creativity', strength: 0.7, description: 'Creative and adaptable' }
+        ],
+        consciousnessLevels: [1, 2, 3, 4],
+        tags: ['fast', 'conversation', 'creative', 'reliable']
       }
     ];
   }

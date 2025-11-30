@@ -125,8 +125,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = () => {
     setUser(null);
+    // Clear user-specific localStorage items
     localStorage.removeItem('beta_user');
-    router.push('/');
+    localStorage.removeItem('betaOnboardingComplete');
+    localStorage.removeItem('explorerId');
+    localStorage.removeItem('betaUserId');
+    localStorage.removeItem('explorerName');
+    localStorage.removeItem('maia_user'); // Used by welcome page for returning user detection
+    router.push('/welcome');
   };
 
   return (

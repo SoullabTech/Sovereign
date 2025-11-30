@@ -78,6 +78,29 @@ export default function ConsciousnessMonitorPage() {
               <div className="text-xl font-mono text-white">{lastUpdate}</div>
             </div>
           </div>
+
+          {/* Navigation Links */}
+          <div className="flex items-center space-x-4 mt-4 pt-4 border-t border-white/10">
+            <div className="text-purple-300 bg-purple-500/20 px-3 py-1 rounded-lg border border-purple-400/30">
+              🔧 Lab Tools
+            </div>
+            <div className="text-purple-400">•</div>
+            <Link
+              href="/maya/community"
+              className="px-4 py-2 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-lg border border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/30 transition-all duration-200 flex items-center space-x-2"
+            >
+              <span>🌍</span>
+              <span>Community</span>
+            </Link>
+            <div className="text-purple-400">•</div>
+            <Link
+              href="/maya/diagnostics"
+              className="px-4 py-2 bg-gradient-to-r from-gray-500/20 to-slate-500/20 rounded-lg border border-gray-400/30 text-gray-300 hover:bg-gray-500/30 transition-all duration-200 flex items-center space-x-2"
+            >
+              <span>🔍</span>
+              <span>Diagnostics</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -90,18 +113,21 @@ export default function ConsciousnessMonitorPage() {
             transition={{ delay: 0.1 }}
             className="group"
           >
-            <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:bg-white/20 transition-all duration-300 h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-2xl font-bold text-white">🧬 Consciousness Monitor</h2>
-                <div className="text-3xl">📊</div>
+            <Link href="/maya/community/consciousness-bridge" className="block h-full">
+              <div className="bg-gradient-to-br from-emerald-600/20 via-teal-600/20 to-cyan-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-emerald-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">🌍 Community Consciousness Bridge</h2>
+                  <div className="text-3xl">🤝</div>
+                </div>
+                <p className="text-purple-200 mb-6">
+                  Experience the sacred recognition space - our shared elemental nature and Ubuntu consciousness. Visit the Community for full visualization.
+                </p>
+                <div className="flex items-center gap-2 text-emerald-300 text-sm">
+                  <span>Visit Community space</span>
+                  <span>→</span>
+                </div>
               </div>
-              <p className="text-purple-200 mb-6">
-                Real-time metrics showing MAIA's developmental patterns, attending quality, and consciousness shifts.
-              </p>
-              <div className="text-purple-300 text-sm">
-                Current view • {activePeriod} metrics
-              </div>
-            </div>
+            </Link>
           </motion.div>
 
           <motion.div
@@ -236,6 +262,29 @@ export default function ConsciousnessMonitorPage() {
                 </p>
                 <div className="flex items-center gap-2 text-amber-300 text-sm">
                   <span>Seek consciousness wisdom</span>
+                  <span>→</span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="group"
+          >
+            <Link href="/community/library" className="block h-full">
+              <div className="bg-gradient-to-br from-rose-600/20 via-pink-600/20 to-violet-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-rose-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">📚 Community Library</h2>
+                  <div className="text-3xl">📱</div>
+                </div>
+                <p className="text-purple-200 mb-6">
+                  MAIA Mobile documentation, consciousness guides, transformation stories, and community wisdom collection.
+                </p>
+                <div className="flex items-center gap-2 text-rose-300 text-sm">
+                  <span>Explore wisdom library</span>
                   <span>→</span>
                 </div>
               </div>

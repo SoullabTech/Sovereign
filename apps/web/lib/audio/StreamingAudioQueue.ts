@@ -16,6 +16,8 @@ export class StreamingAudioQueue extends EventEmitter {
   private isPlaying = false;
   private preloadCount = 2; // Preload next 2 chunks
   private audioContext: AudioContext | null = null;
+  private maxQueueSize = 10; // Memory optimization: Limit queue size
+  private audioUnlockListener: (() => void) | null = null;
 
   constructor() {
     super();
@@ -29,11 +31,12 @@ export class StreamingAudioQueue extends EventEmitter {
     if (typeof window !== 'undefined' && !this.audioContext) {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       
-      // Handle Safari auto-play restrictions
+      // Handle Safari auto-play restrictions - Track listener for cleanup
       if (this.audioContext.state === 'suspended') {
-        document.addEventListener('click', () => {
+        this.audioUnlockListener = () => {
           this.audioContext?.resume();
-        }, { once: true });
+        };
+        document.addEventListener('click', this.audioUnlockListener, { once: true });
       }
     }
   }
@@ -47,6 +50,13 @@ export class StreamingAudioQueue extends EventEmitter {
       status: 'pending',
       timestamp: Date.now()
     };
+
+    // Memory optimization: Prevent unbounded queue growth
+    if (this.queue.length >= this.maxQueueSize) {
+      console.warn('[StreamingAudioQueue] Queue at maximum size, removing oldest chunks');
+      const removedChunks = this.queue.splice(0, this.queue.length - this.maxQueueSize + 1);
+      removedChunks.forEach(chunk => this.cleanupAudioChunk(chunk));
+    }
 
     this.queue.push(chunk);
     this.emit('chunk:added', chunk);
@@ -230,26 +240,68 @@ export class StreamingAudioQueue extends EventEmitter {
   }
 
   /**
-   * Stop and clear queue
+   * Clean up a single audio chunk properly - MEMORY LEAK FIX
+   */
+  private cleanupAudioChunk(chunk: AudioChunk) {
+    if (chunk.audio) {
+      // Stop playback
+      chunk.audio.pause();
+
+      // Remove all event listeners to prevent memory leaks
+      chunk.audio.removeEventListener('canplaythrough', () => {});
+      chunk.audio.removeEventListener('error', () => {});
+      chunk.audio.removeEventListener('ended', () => {});
+      chunk.audio.removeEventListener('loadstart', () => {});
+
+      // Clear source and load to release memory
+      chunk.audio.src = '';
+      chunk.audio.load();
+
+      // Remove reference
+      chunk.audio = undefined;
+    }
+  }
+
+  /**
+   * Stop and clear queue - ENHANCED CLEANUP
    */
   stop() {
     this.pause();
-    
-    // Clean up all audio elements
-    if (this.currentChunk?.audio) {
-      this.currentChunk.audio.src = '';
+
+    // Clean up current chunk
+    if (this.currentChunk) {
+      this.cleanupAudioChunk(this.currentChunk);
     }
-    
-    for (const chunk of this.queue) {
-      if (chunk.audio) {
-        chunk.audio.src = '';
-      }
-    }
-    
+
+    // Clean up all queued chunks
+    this.queue.forEach(chunk => this.cleanupAudioChunk(chunk));
+
     this.queue = [];
     this.currentChunk = null;
     this.isPlaying = false;
     this.emit('playback:stopped');
+  }
+
+  /**
+   * Dispose of all resources - Call when component unmounts
+   */
+  dispose() {
+    this.stop();
+
+    // Close audio context
+    if (this.audioContext && this.audioContext.state !== 'closed') {
+      this.audioContext.close();
+      this.audioContext = null;
+    }
+
+    // Remove document event listener if exists
+    if (this.audioUnlockListener) {
+      document.removeEventListener('click', this.audioUnlockListener);
+      this.audioUnlockListener = null;
+    }
+
+    // Remove all event listeners
+    this.removeAllListeners();
   }
 
   /**

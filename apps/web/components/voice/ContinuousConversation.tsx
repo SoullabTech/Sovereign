@@ -66,6 +66,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastNetworkErrorTime = useRef<number>(0);
   const consecutiveRestartCount = useRef<number>(0); // Prevent infinite restart loops
 
+  // Memory optimization: Pool audio data array to prevent constant allocation
+  const audioDataArrayRef = useRef<Uint8Array | null>(null);
+  const animationFrameIdRef = useRef<number | null>(null);
+
   // 🎯 ADAPTIVE SILENCE DETECTION - Monitor audio levels for natural speech pauses
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
@@ -582,7 +586,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         if (!analyserRef.current) return;
 
         const bufferLength = analyserRef.current.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
+
+        // Memory optimization: Reuse the same Uint8Array instead of creating new one every frame
+        if (!audioDataArrayRef.current || audioDataArrayRef.current.length !== bufferLength) {
+          audioDataArrayRef.current = new Uint8Array(bufferLength);
+        }
+        const dataArray = audioDataArrayRef.current;
         analyserRef.current.getByteFrequencyData(dataArray);
 
         // Calculate average level
@@ -633,8 +642,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           }
         }
 
-        if (isListening) {
-          requestAnimationFrame(checkAudioLevel);
+        if (isListeningRef.current) {
+          animationFrameIdRef.current = requestAnimationFrame(checkAudioLevel);
         }
       };
       
@@ -830,10 +839,67 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   //   }
   // }, [audioLevel, isRecording, onAudioLevelChange]);
 
-  // Cleanup on unmount
+  // Cleanup on unmount - ENHANCED MEMORY MANAGEMENT
   useEffect(() => {
     return () => {
-      stopListening();
+      // Cancel animation frame to prevent memory leaks
+      if (animationFrameIdRef.current) {
+        cancelAnimationFrame(animationFrameIdRef.current);
+        animationFrameIdRef.current = null;
+      }
+
+      // Clear all timers
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      if (recognitionTimeoutRef.current) {
+        clearTimeout(recognitionTimeoutRef.current);
+        recognitionTimeoutRef.current = null;
+      }
+      if (conversationTimeoutRef.current) {
+        clearTimeout(conversationTimeoutRef.current);
+        conversationTimeoutRef.current = null;
+      }
+
+      // Stop and clean up audio resources
+      if (micStreamRef.current) {
+        micStreamRef.current.getTracks().forEach(track => {
+          track.stop();
+        });
+        micStreamRef.current = null;
+      }
+
+      // Close and clean up audio context
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close();
+        audioContextRef.current = null;
+      }
+
+      // Clear audio data array
+      audioDataArrayRef.current = null;
+      analyserRef.current = null;
+
+      // Stop speech recognition
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (error) {
+          // Recognition might already be stopped
+        }
+        recognitionRef.current = null;
+      }
+
+      // Clear accumulated data
+      accumulatedTranscript.current = "";
+
+      // Reset all state refs
+      isProcessingRef.current = false;
+      isSpeakingRef.current = false;
+      isListeningRef.current = false;
+      isRecordingRef.current = false;
+      isCallingProcessRef.current = false;
+      isRestartingRef.current = false;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Empty deps - only run on mount/unmount

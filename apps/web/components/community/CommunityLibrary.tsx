@@ -146,6 +146,22 @@ const insightCollections: InsightCollection[] = [
     ]
   },
   {
+    id: 'platform-developments',
+    title: 'Platform Development Announcements',
+    description: 'Major platform updates, architectural breakthroughs, and consciousness technology evolution',
+    icon: '🚀',
+    articles: [
+      {
+        id: 'platform-differentiation-announcement',
+        title: '🧪📱 MAIA Platform Evolution: Desktop Laboratory vs Mobile Field Systems',
+        description: 'Revolutionary platform differentiation enabling desktop consciousness laboratory work and mobile field support',
+        content: 'COMMUNITY_PLATFORM_DIFFERENTIATION_ANNOUNCEMENT.md',
+        tags: ['platform-update', 'desktop-lab', 'mobile-field', 'architecture', 'breakthrough'],
+        relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration', 'collective-orchestrator']
+      }
+    ]
+  },
+  {
     id: 'transformation-stories',
     title: 'Transformation Case Studies',
     description: 'Real member journeys using consciousness technologies',

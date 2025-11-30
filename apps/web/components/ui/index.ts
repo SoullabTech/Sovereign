@@ -16,20 +16,13 @@ export {
   type CardContentProps 
 } from './card';
 
-export { 
-  Badge, 
-  ArchetypeBadge, 
-  CountBadge,
-  type BadgeProps,
-  type ArchetypeBadgeProps,
-  type CountBadgeProps 
+export {
+  Badge,
+  type BadgeProps
 } from './badge';
 
-export { 
-  Progress, 
-  ArchetypeProgress,
-  type ProgressProps,
-  type ArchetypeProgressProps 
+export {
+  Progress
 } from './progress';
 
 export { 

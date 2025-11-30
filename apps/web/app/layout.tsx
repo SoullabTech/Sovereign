@@ -7,6 +7,8 @@ import { ErrorOverlay } from "@/components/system/ErrorOverlay";
 import { AudioUnlockBanner } from "@/components/system/AudioUnlockBanner";
 import { ToastProvider } from "@/components/system/ToastProvider";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { BrowserCompatibilityProvider, BrowserCompatibilityBanner } from "@/components/providers/BrowserCompatibilityProvider";
+import { AuthProvider } from "@/lib/auth/authContext";
 import ThemeToggle from "@/components/ui/ThemeToggle";
 import Link from "next/link";
 import IOSFixInitializer from "@/components/system/IOSFixInitializer";
@@ -47,21 +49,28 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} bg-soul-background text-soul-textPrimary transition-colors duration-200 overflow-x-hidden`}>
-        <ThemeProvider>
-          <IOSFixInitializer />
-          <ToastProvider>
-            {/* Conditional Header */}
-            <HeaderWrapper />
-            
-            {/* Main Content */}
-            <main className="min-h-[calc(100vh-73px)]">
-              {children}
-            </main>
-            
-            <AudioUnlockBanner />
-            <ErrorOverlay />
-          </ToastProvider>
-        </ThemeProvider>
+        <BrowserCompatibilityProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <IOSFixInitializer />
+              <ToastProvider>
+                {/* Browser Compatibility Warning */}
+                <BrowserCompatibilityBanner />
+
+                {/* Conditional Header */}
+                <HeaderWrapper />
+
+                {/* Main Content */}
+                <main className="min-h-[calc(100vh-73px)]">
+                  {children}
+                </main>
+
+                <AudioUnlockBanner />
+                <ErrorOverlay />
+              </ToastProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </BrowserCompatibilityProvider>
       </body>
     </html>
   );
