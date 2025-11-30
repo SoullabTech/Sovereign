@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { Sparkles, ArrowRight, User, Clock } from 'lucide-react';
+import { betaSession } from '@/lib/auth/betaSession';
 
 export default function WelcomeBackPage() {
   const router = useRouter();
@@ -19,59 +20,46 @@ export default function WelcomeBackPage() {
 
   useEffect(() => {
     const checkAuthAndRedirect = () => {
-      // Check authentication status
-      const betaUser = localStorage.getItem('beta_user');
-      const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-      const explorerName = localStorage.getItem('explorerName');
+      // Use betaSession system for consistent authentication
+      const user = betaSession.getCurrentUser();
 
-      // Check if user is properly authenticated
-      let authenticatedUser = null;
-      let userDisplayName = 'Welcome back';
-
-      if (betaUser) {
-        try {
-          const userData = JSON.parse(betaUser);
-          if (userData.id && userData.name) {
-            authenticatedUser = userData;
-            userDisplayName = userData.name;
-          }
-        } catch (e) {
-          console.error('Error parsing beta_user:', e);
-        }
-      }
-
-      if (!authenticatedUser && explorerId && explorerName) {
-        authenticatedUser = { id: explorerId, name: explorerName };
-        userDisplayName = explorerName;
-      }
-
-      if (!authenticatedUser) {
-        // No valid authentication - redirect to sign in
-        console.log('🔐 No valid authentication found, redirecting to sign-in');
-        router.replace('/signin');
+      if (!user) {
+        // No valid authentication - redirect to welcome (not signin) for proper flow
+        console.log('🔐 No valid authentication found, redirecting to welcome');
+        router.replace('/welcome');
         return;
       }
 
       // User is authenticated - set up welcome
+      const userDisplayName = user.name || user.username || 'Explorer';
       setUserName(userDisplayName);
 
-      // Get last visit time
-      const lastVisitTime = localStorage.getItem('last_visit_time');
+      // Get last visit time from user object or localStorage fallback
+      const lastVisitTime = user.lastVisit || localStorage.getItem('last_visit_time');
       if (lastVisitTime) {
-        const visitDate = new Date(parseInt(lastVisitTime));
-        const timeAgo = getTimeAgo(visitDate);
-        setLastVisit(timeAgo);
+        let visitDate: Date;
+        try {
+          // Handle both timestamp formats
+          visitDate = typeof lastVisitTime === 'string' && lastVisitTime.includes('-')
+            ? new Date(lastVisitTime)
+            : new Date(parseInt(lastVisitTime.toString()));
+
+          const timeAgo = getTimeAgo(visitDate);
+          setLastVisit(timeAgo);
+        } catch (e) {
+          console.log('Could not parse last visit time');
+        }
       }
 
-      // Update last visit time for next time
-      localStorage.setItem('last_visit_time', Date.now().toString());
+      // Update last visit time using betaSession
+      betaSession.updateLastVisit();
 
       setIsLoading(false);
 
       // Auto-redirect to MAIA after a brief welcome
       setTimeout(() => {
         console.log('👋 Welcoming user back, proceeding to MAIA');
-        router.replace('/maia');
+        router.push('/maia'); // Use push instead of replace to maintain history
       }, 2500);
     };
 
