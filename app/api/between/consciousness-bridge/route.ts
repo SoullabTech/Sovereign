@@ -85,8 +85,9 @@ interface ConsciousnessBridgeResponse {
 }
 
 // Disable Vercel caching for real-time consciousness data
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+// Note: Commented out for PWA static build compatibility
+// export const dynamic = 'force-dynamic';
+// export const runtime = 'nodejs';
 
 /**
  * OPTIONS: Handle preflight requests for CORS (required for browser compatibility)

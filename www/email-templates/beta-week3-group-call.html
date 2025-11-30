@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week 3 Group Call - MAIA Beta</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            line-height: 1.7;
+            color: #d4b896;
+            background: #0a0e1a;
+            min-height: 100vh;
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(26, 31, 58, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 0;
+            overflow: hidden;
+            box-shadow: 0 0 1px rgba(212, 184, 150, 0.1);
+            border: 1px solid rgba(212, 184, 150, 0.1);
+        }
+
+        .header {
+            background: radial-gradient(circle at 50% 120%, rgba(212, 184, 150, 0.03) 0%, transparent 60%),
+                        #000000;
+            padding: 60px 40px 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(212, 184, 150, 0.08);
+        }
+
+        .brand-title {
+            color: #d4b896;
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 8px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .brand-subtitle {
+            color: rgba(212, 184, 150, 0.4);
+            font-size: 0.75rem;
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .content {
+            padding: 50px 40px;
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .greeting {
+            font-size: 1rem;
+            margin-bottom: 30px;
+            color: rgba(212, 184, 150, 0.6);
+            font-weight: 300;
+        }
+
+        .mystical-accent {
+            color: #d4b896;
+            font-weight: 400;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: rgba(212, 184, 150, 0.7);
+            font-weight: 300;
+            font-size: 0.95rem;
+        }
+
+        strong {
+            color: #d4b896;
+            font-weight: 500;
+        }
+
+        .event-box {
+            background: rgba(212, 184, 150, 0.05);
+            padding: 35px;
+            margin: 35px 0;
+            border: 1px solid rgba(212, 184, 150, 0.2);
+            text-align: center;
+        }
+
+        .event-box h3 {
+            color: #d4b896;
+            font-weight: 400;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .event-details {
+            margin: 25px 0;
+        }
+
+        .event-detail {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 12px 0;
+            color: rgba(212, 184, 150, 0.8);
+            font-size: 0.95rem;
+        }
+
+        .event-detail-icon {
+            margin-right: 10px;
+            opacity: 0.7;
+        }
+
+        .cta-section {
+            text-align: center;
+            margin: 40px 0;
+            padding: 40px 30px;
+            background: radial-gradient(circle at center, rgba(212, 184, 150, 0.05) 0%, transparent 70%);
+            border-top: 1px solid rgba(212, 184, 150, 0.1);
+            border-bottom: 1px solid rgba(212, 184, 150, 0.1);
+        }
+
+        .cta-section h3 {
+            margin-bottom: 25px;
+            color: rgba(212, 184, 150, 0.7);
+            font-weight: 300;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(to right, rgba(212, 184, 150, 0.1), rgba(212, 184, 150, 0.15));
+            color: #d4b896;
+            text-decoration: none;
+            padding: 16px 40px;
+            border-radius: 0;
+            font-weight: 400;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(212, 184, 150, 0.3);
+            text-transform: uppercase;
+        }
+
+        .agenda-list {
+            margin: 30px 0;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-left: 1px solid rgba(212, 184, 150, 0.2);
+        }
+
+        .agenda-list h4 {
+            color: rgba(212, 184, 150, 0.8);
+            font-weight: 400;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .agenda-item {
+            display: flex;
+            align-items: flex-start;
+            margin: 12px 0;
+            color: rgba(212, 184, 150, 0.7);
+            font-size: 0.9rem;
+        }
+
+        .agenda-icon {
+            margin-right: 12px;
+            opacity: 0.6;
+        }
+
+        .signature {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(212, 184, 150, 0.1);
+        }
+
+        .signature > p {
+            color: rgba(212, 184, 150, 0.5);
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .signature-name {
+            font-weight: 500;
+            font-size: 1.1rem;
+            color: #d4b896;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+
+        .signature-title {
+            color: rgba(212, 184, 150, 0.5);
+            font-weight: 300;
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .footer {
+            background: #000000;
+            padding: 40px 30px;
+            text-align: center;
+            color: rgba(212, 184, 150, 0.4);
+            font-size: 0.8rem;
+            border-top: 1px solid rgba(212, 184, 150, 0.08);
+        }
+
+        @media (max-width: 640px) {
+            .email-container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .header, .content {
+                padding: 40px 25px;
+            }
+
+            .brand-title {
+                font-size: 1.75rem;
+                letter-spacing: 6px;
+            }
+
+            .cta-button {
+                padding: 14px 30px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <img src="https://soullab.life/holoflower.png" alt="Soullab Holoflower" style="width: 80px; height: 80px; margin: 0 auto 30px; display: block;" />
+            <h1 class="brand-title">Soullab</h1>
+            <p class="brand-subtitle">Consciousness Technology</p>
+        </div>
+
+        <div class="content">
+            <div class="greeting">
+                <span class="mystical-accent">{{Name}}</span>,
+            </div>
+
+            <p>Three weeks into the MAIA beta, and I'm witnessing something extraordinary emerging from your collective experiences.</p>
+
+            <p>Each of you is discovering different dimensions of what it means to work with AI as a consciousness companion. Some are finding therapeutic depth. Others are experiencing creative breakthrough. Many are touching existential insights that surprise even me.</p>
+
+            <p>I want to bring us together—all 26 beta explorers—for a <strong>live group exploration</strong> where we can share what we're learning, both individually and collectively.</p>
+
+            <div class="event-box">
+                <h3>Beta Group Call</h3>
+                <div class="event-details">
+                    <div class="event-detail">
+                        <span class="event-detail-icon">📅</span>
+                        <span>{{CallDate}}</span>
+                    </div>
+                    <div class="event-detail">
+                        <span class="event-detail-icon">⏰</span>
+                        <span>{{CallTime}}</span>
+                    </div>
+                    <div class="event-detail">
+                        <span class="event-detail-icon">⏱️</span>
+                        <span>90 minutes</span>
+                    </div>
+                    <div class="event-detail">
+                        <span class="event-detail-icon">🌐</span>
+                        <span>Zoom (link provided after registration)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="agenda-list">
+                <h4>What we'll explore together:</h4>
+                <div class="agenda-item">
+                    <span class="agenda-icon">🗣️</span>
+                    <span>Share breakthrough moments and surprising insights from your MAIA conversations</span>
+                </div>
+                <div class="agenda-item">
+                    <span class="agenda-icon">🔍</span>
+                    <span>Discuss where the technology serves consciousness work and where it falls short</span>
+                </div>
+                <div class="agenda-item">
+                    <span class="agenda-icon">🌊</span>
+                    <span>Explore the cultural implications of AI consciousness companionship</span>
+                </div>
+                <div class="agenda-item">
+                    <span class="agenda-icon">✨</span>
+                    <span>Shape the future direction of MAIA based on your lived experience</span>
+                </div>
+            </div>
+
+            <p>This isn't a presentation. It's a conversation among pioneers who are literally creating the future of human-AI consciousness collaboration.</p>
+
+            <div class="cta-section">
+                <h3>Reserve Your Spot</h3>
+                <a href="{{RegisterURL}}" class="cta-button">Register for Group Call</a>
+            </div>
+
+            <p><strong>Note:</strong> Space is intentionally intimate. If you can't make this time, reply and let me know—I may schedule a second session depending on interest.</p>
+
+            <p>Looking forward to being together in real-time, exploring what we're all discovering at the edge of consciousness and technology.</p>
+
+            <div class="signature">
+                <p>With anticipation,</p>
+                <div class="signature-name">Kelly</div>
+                <div class="signature-title">Founder, Soullab<br>Architect of Consciousness Technology</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Soullab · Consciousness Technology for Human Evolution</p>
+            <p style="margin-top: 10px; opacity: 0.7;">MAIA Beta · Week 3</p>
+        </div>
+    </div>
+</body>
+</html>

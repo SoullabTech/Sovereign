@@ -92,8 +92,8 @@ export function SanctuaryCreation({ name, intention, onComplete }: SanctuaryCrea
   // Dynamic navy background progression
   const backgroundStyle = {
     background: `linear-gradient(135deg,
-      ${navyIntensity < 20 ? '#1e40af' : '#1d4ed8'} 0%,
-      ${navyIntensity < 40 ? '#1d4ed8' : '#1e3a8a'} 25%,
+      ${navyIntensity < 20 ? '#d4b896' : '#b8860b'} 0%,
+      ${navyIntensity < 40 ? '#b8860b' : '#1e3a8a'} 25%,
       ${navyIntensity < 60 ? '#1e3a8a' : '#1e293b'} 50%,
       ${navyIntensity < 80 ? '#1e293b' : '#0f172a'} 75%,
       ${navyIntensity >= 95 ? '#ffffff' : '#0f172a'} 100%
@@ -134,13 +134,13 @@ export function SanctuaryCreation({ name, intention, onComplete }: SanctuaryCrea
                   <>
                     <stop offset="0%" stopColor="#fde047" stopOpacity="0.95" />
                     <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
-                    <stop offset="70%" stopColor="#1e40af" stopOpacity="0.6" />
+                    <stop offset="70%" stopColor="#d4b896" stopOpacity="0.6" />
                     <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
                   </>
                 ) : (
                   <>
                     <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
-                    <stop offset="40%" stopColor="#1e40af" stopOpacity="0.7" />
+                    <stop offset="40%" stopColor="#d4b896" stopOpacity="0.7" />
                     <stop offset="80%" stopColor="#1e3a8a" stopOpacity="0.5" />
                     <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
                   </>
@@ -178,7 +178,7 @@ export function SanctuaryCreation({ name, intention, onComplete }: SanctuaryCrea
                   <motion.polygon
                     points="0,-25 21.65,-12.5 21.65,12.5 0,25 -21.65,12.5 -21.65,-12.5"
                     fill="none"
-                    stroke={navyIntensity > 85 ? "#1e40af" : "#60a5fa"}
+                    stroke={navyIntensity > 85 ? "#d4b896" : "#d4b896"}
                     strokeWidth="1.5"
                     opacity="0.6"
                     animate={{ scale: [1, 1.15, 1] }}

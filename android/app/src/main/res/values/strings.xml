@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MAIA - LabTools &amp; IPP</string>
+    <string name="title_activity_main">MAIA - LabTools &amp; IPP</string>
+    <string name="package_name">life.soullab.maia</string>
+    <string name="custom_url_scheme">life.soullab.maia</string>
+</resources>

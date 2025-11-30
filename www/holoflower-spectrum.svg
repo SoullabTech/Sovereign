@@ -1,0 +1,125 @@
+<svg width="400" height="400" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define color gradients for each quadrant -->
+    <radialGradient id="fireGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#FFA500;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DC143C;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="waterGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#00CED1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4682B4;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="earthGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#9ACD32;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#556B2F;stop-opacity:1" />
+    </radialGradient>
+    <radialGradient id="airGradient" cx="50%" cy="50%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#DAA520;stop-opacity:1" />
+    </radialGradient>
+  </defs>
+
+  <g transform="translate(200, 200)">
+    <!-- Generate spiral pattern of dots -->
+    <!-- Ring 1 (outermost) - 24 dots -->
+    <circle cx="0" cy="-180" r="12" fill="#B8860B"/>
+    <circle cx="47" cy="-174" r="12" fill="#DAA520"/>
+    <circle cx="92" cy="-159" r="12" fill="#FFD700"/>
+    <circle cx="134" cy="-134" r="12" fill="#FFA500"/>
+    <circle cx="170" cy="-101" r="12" fill="#FF8C00"/>
+    <circle cx="197" cy="-62" r="12" fill="#FF6347"/>
+    <circle cx="215" cy="-19" r="12" fill="#DC143C"/>
+    <circle cx="222" cy="27" r="12" fill="#C71585"/>
+    <circle cx="215" cy="73" r="12" fill="#8B008B"/>
+    <circle cx="197" cy="116" r="12" fill="#4B0082"/>
+    <circle cx="170" cy="155" r="12" fill="#483D8B"/>
+    <circle cx="134" cy="188" r="12" fill="#4682B4"/>
+    <circle cx="92" cy="213" r="12" fill="#5F9EA0"/>
+    <circle cx="47" cy="228" r="12" fill="#00CED1"/>
+    <circle cx="0" cy="234" r="12" fill="#20B2AA"/>
+    <circle cx="-47" cy="228" r="12" fill="#3CB371"/>
+    <circle cx="-92" cy="213" r="12" fill="#32CD32"/>
+    <circle cx="-134" cy="188" r="12" fill="#9ACD32"/>
+    <circle cx="-170" cy="155" r="12" fill="#6B8E23"/>
+    <circle cx="-197" cy="116" r="12" fill="#556B2F"/>
+    <circle cx="-215" cy="73" r="12" fill="#808000"/>
+    <circle cx="-222" cy="27" r="12" fill="#8B8B00"/>
+    <circle cx="-215" cy="-19" r="12" fill="#BDB76B"/>
+    <circle cx="-197" cy="-62" r="12" fill="#DAA520"/>
+
+    <!-- Ring 2 - 20 dots -->
+    <circle cx="0" cy="-150" r="11" fill="#B8860B"/>
+    <circle cx="46" cy="-142" r="11" fill="#DAA520"/>
+    <circle cx="88" cy="-122" r="11" fill="#FFD700"/>
+    <circle cx="124" cy="-92" r="11" fill="#FFA500"/>
+    <circle cx="152" cy="-55" r="11" fill="#FF8C00"/>
+    <circle cx="169" cy="-12" r="11" fill="#FF6347"/>
+    <circle cx="175" cy="33" r="11" fill="#DC143C"/>
+    <circle cx="169" cy="78" r="11" fill="#8B008B"/>
+    <circle cx="152" cy="119" r="11" fill="#4682B4"/>
+    <circle cx="124" cy="154" r="11" fill="#5F9EA0"/>
+    <circle cx="88" cy="181" r="11" fill="#00CED1"/>
+    <circle cx="46" cy="197" r="11" fill="#3CB371"/>
+    <circle cx="0" cy="203" r="11" fill="#32CD32"/>
+    <circle cx="-46" cy="197" r="11" fill="#9ACD32"/>
+    <circle cx="-88" cy="181" r="11" fill="#6B8E23"/>
+    <circle cx="-124" cy="154" r="11" fill="#556B2F"/>
+    <circle cx="-152" cy="119" r="11" fill="#808000"/>
+    <circle cx="-169" cy="78" r="11" fill="#BDB76B"/>
+    <circle cx="-175" cy="33" r="11" fill="#DAA520"/>
+    <circle cx="-169" cy="-12" r="11" fill="#B8860B"/>
+
+    <!-- Ring 3 - 16 dots -->
+    <circle cx="0" cy="-120" r="10" fill="#DAA520"/>
+    <circle cx="42" cy="-112" r="10" fill="#FFD700"/>
+    <circle cx="80" cy="-93" r="10" fill="#FFA500"/>
+    <circle cx="110" cy="-65" r="10" fill="#FF8C00"/>
+    <circle cx="130" cy="-30" r="10" fill="#DC143C"/>
+    <circle cx="138" cy="10" r="10" fill="#8B008B"/>
+    <circle cx="130" cy="50" r="10" fill="#4682B4"/>
+    <circle cx="110" cy="85" r="10" fill="#00CED1"/>
+    <circle cx="80" cy="113" r="10" fill="#32CD32"/>
+    <circle cx="42" cy="132" r="10" fill="#9ACD32"/>
+    <circle cx="0" cy="140" r="10" fill="#6B8E23"/>
+    <circle cx="-42" cy="132" r="10" fill="#556B2F"/>
+    <circle cx="-80" cy="113" r="10" fill="#808000"/>
+    <circle cx="-110" cy="85" r="10" fill="#BDB76B"/>
+    <circle cx="-130" cy="50" r="10" fill="#DAA520"/>
+    <circle cx="-138" cy="10" r="10" fill="#B8860B"/>
+
+    <!-- Ring 4 - 12 dots -->
+    <circle cx="0" cy="-90" r="9" fill="#FFD700"/>
+    <circle cx="39" cy="-82" r="9" fill="#FFA500"/>
+    <circle cx="71" cy="-61" r="9" fill="#FF6347"/>
+    <circle cx="93" cy="-31" r="9" fill="#DC143C"/>
+    <circle cx="102" cy="5" r="9" fill="#4682B4"/>
+    <circle cx="93" cy="41" r="9" fill="#00CED1"/>
+    <circle cx="71" cy="71" r="9" fill="#32CD32"/>
+    <circle cx="39" cy="88" r="9" fill="#9ACD32"/>
+    <circle cx="0" cy="96" r="9" fill="#6B8E23"/>
+    <circle cx="-39" cy="88" r="9" fill="#808000"/>
+    <circle cx="-71" cy="71" r="9" fill="#BDB76B"/>
+    <circle cx="-93" cy="41" r="9" fill="#DAA520"/>
+
+    <!-- Ring 5 - 8 dots -->
+    <circle cx="0" cy="-60" r="8" fill="#FFA500"/>
+    <circle cx="42" cy="-42" r="8" fill="#FF6347"/>
+    <circle cx="60" cy="0" r="8" fill="#4682B4"/>
+    <circle cx="42" cy="42" r="8" fill="#00CED1"/>
+    <circle cx="0" cy="60" r="8" fill="#32CD32"/>
+    <circle cx="-42" cy="42" r="8" fill="#9ACD32"/>
+    <circle cx="-60" cy="0" r="8" fill="#BDB76B"/>
+    <circle cx="-42" cy="-42" r="8" fill="#FFD700"/>
+
+    <!-- Ring 6 - 6 dots -->
+    <circle cx="0" cy="-35" r="7" fill="#FF8C00"/>
+    <circle cx="30" cy="-17" r="7" fill="#DC143C"/>
+    <circle cx="30" cy="17" r="7" fill="#5F9EA0"/>
+    <circle cx="0" cy="35" r="7" fill="#3CB371"/>
+    <circle cx="-30" cy="17" r="7" fill="#9ACD32"/>
+    <circle cx="-30" cy="-17" r="7" fill="#FFD700"/>
+
+    <!-- Center white circle -->
+    <circle cx="0" cy="0" r="25" fill="white"/>
+  </g>
+</svg>

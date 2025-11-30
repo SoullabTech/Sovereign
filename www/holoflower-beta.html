@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Daily Oracle Check-in - Beta</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: #0a0a0a;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        .container {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Logo */
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            opacity: 0.8;
+        }
+
+        /* Main holoflower */
+        #holoflower {
+            width: min(90vw, 90vh, 500px);
+            height: min(90vw, 90vh, 500px);
+            position: relative;
+            touch-action: none;
+        }
+
+        /* Petal interactions */
+        .petal-group {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .petal-group:hover {
+            transform: scale(1.05);
+        }
+
+        .petal-path {
+            transition: fill 0.3s ease, opacity 0.3s ease;
+        }
+
+        .petal-active {
+            filter: brightness(1.2);
+        }
+
+        /* Value indicator */
+        .value-indicator {
+            position: absolute;
+            background: rgba(147, 51, 234, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 14px;
+            pointer-events: none;
+            transform: translate(-50%, -150%);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .value-indicator.visible {
+            opacity: 1;
+        }
+
+        /* Submit button */
+        .submit-btn {
+            position: absolute;
+            bottom: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Insight modal */
+        .insight-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            z-index: 1000;
+        }
+
+        .insight-modal.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .insight-content {
+            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            text-align: center;
+        }
+
+        .insight-title {
+            color: #9333ea;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .insight-text {
+            line-height: 1.6;
+            color: #e0e0e0;
+            margin-bottom: 20px;
+        }
+
+        .insight-close {
+            background: rgba(147, 51, 234, 0.2);
+            border: 1px solid rgba(147, 51, 234, 0.5);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .insight-close:hover {
+            background: rgba(147, 51, 234, 0.3);
+        }
+
+        /* Beta feedback widget */
+        .beta-feedback {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(30, 30, 46, 0.9);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            display: none;
+            max-width: 250px;
+        }
+
+        .beta-feedback.visible {
+            display: block;
+        }
+
+        .feedback-title {
+            font-size: 12px;
+            color: #9333ea;
+            margin-bottom: 10px;
+        }
+
+        .feedback-btn {
+            background: rgba(147, 51, 234, 0.2);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            color: white;
+            padding: 5px 10px;
+            margin: 2px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .feedback-btn:hover {
+            background: rgba(147, 51, 234, 0.3);
+        }
+
+        .feedback-btn.selected {
+            background: rgba(147, 51, 234, 0.5);
+        }
+
+        /* Loading spinner */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+
+        .loading.visible {
+            display: block;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(147, 51, 234, 0.2);
+            border-top: 3px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .submit-btn {
+                bottom: 20px;
+                padding: 12px 30px;
+                font-size: 14px;
+            }
+
+            .beta-feedback {
+                bottom: 10px;
+                right: 10px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo -->
+        <img src="/fourelementholoflower.svg" alt="Holoflower" class="logo">
+
+        <!-- Main holoflower -->
+        <svg id="holoflower" viewBox="0 0 400 400">
+            <!-- Background circle -->
+            <circle cx="200" cy="200" r="180" fill="none" stroke="rgba(147, 51, 234, 0.1)" stroke-width="1"/>
+
+            <!-- 12 petals -->
+            <g id="petals"></g>
+
+            <!-- Center circle -->
+            <circle cx="200" cy="200" r="30" fill="rgba(255, 255, 255, 0.9)"/>
+            <circle cx="200" cy="200" r="25" fill="rgba(147, 51, 234, 0.3)"/>
+        </svg>
+
+        <!-- Value indicator -->
+        <div id="value-indicator" class="value-indicator">5</div>
+
+        <!-- Submit button -->
+        <button id="submit-btn" class="submit-btn">Submit Daily Check-in</button>
+
+        <!-- Loading spinner -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- Insight modal -->
+    <div id="insight-modal" class="insight-modal">
+        <div class="insight-content">
+            <h3 class="insight-title">Today's Oracle Insight</h3>
+            <p id="insight-text" class="insight-text"></p>
+            <button class="insight-close" onclick="closeInsight()">Continue</button>
+        </div>
+    </div>
+
+    <!-- Beta feedback widget -->
+    <div id="beta-feedback" class="beta-feedback">
+        <div class="feedback-title">Beta Feedback</div>
+        <div id="feedback-questions"></div>
+    </div>
+
+    <script>
+        // Petal configuration
+        const petalConfig = [
+            { name: 'Vision', element: 'fire', color: '#FF6B6B' },
+            { name: 'Passion', element: 'fire', color: '#FF8E53' },
+            { name: 'Will', element: 'fire', color: '#FFA07A' },
+            { name: 'Love', element: 'water', color: '#4ECDC4' },
+            { name: 'Flow', element: 'water', color: '#45B7D1' },
+            { name: 'Depth', element: 'water', color: '#5C97BF' },
+            { name: 'Clarity', element: 'air', color: '#A8DADC' },
+            { name: 'Insight', element: 'air', color: '#B8E6E6' },
+            { name: 'Understanding', element: 'air', color: '#C8F0F0' },
+            { name: 'Stability', element: 'earth', color: '#95C77E' },
+            { name: 'Grounding', element: 'earth', color: '#7CB662' },
+            { name: 'Manifestation', element: 'earth', color: '#63A546' }
+        ];
+
+        // Initialize petal values
+        let petalValues = new Array(12).fill(5);
+        let isDragging = false;
+        let currentPetal = null;
+
+        // Load saved state from localStorage
+        function loadSavedState() {
+            const saved = localStorage.getItem('holoflower-state');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    petalValues = state.values || petalValues;
+                    return true;
+                } catch (e) {
+                    console.error('Failed to load saved state:', e);
+                }
+            }
+            return false;
+        }
+
+        // Save state to localStorage
+        function saveState() {
+            const state = {
+                values: petalValues,
+                timestamp: new Date().toISOString(),
+                configuration: btoa(petalValues.join('-')).substring(0, 12)
+            };
+            localStorage.setItem('holoflower-state', JSON.stringify(state));
+
+            // Also save to history
+            const history = JSON.parse(localStorage.getItem('holoflower-history') || '[]');
+            history.push(state);
+            // Keep only last 30 days
+            if (history.length > 30) {
+                history.shift();
+            }
+            localStorage.setItem('holoflower-history', JSON.stringify(history));
+        }
+
+        // Create petals
+        function createPetals() {
+            const petalsGroup = document.getElementById('petals');
+            petalsGroup.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const angle = (i * 30 - 90) * Math.PI / 180;
+                const petalLength = 50 + (petalValues[i] * 10);
+                const x1 = 200;
+                const y1 = 200;
+                const x2 = 200 + Math.cos(angle) * petalLength;
+                const y2 = 200 + Math.sin(angle) * petalLength;
+
+                // Create petal shape
+                const petal = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                petal.classList.add('petal-group');
+                petal.setAttribute('data-index', i);
+
+                // Petal path
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const controlX1 = x1 + Math.cos(angle - 0.3) * (petalLength * 0.5);
+                const controlY1 = y1 + Math.sin(angle - 0.3) * (petalLength * 0.5);
+                const controlX2 = x1 + Math.cos(angle + 0.3) * (petalLength * 0.5);
+                const controlY2 = y1 + Math.sin(angle + 0.3) * (petalLength * 0.5);
+
+                path.setAttribute('d', `
+                    M ${x1} ${y1}
+                    Q ${controlX1} ${controlY1} ${x2} ${y2}
+                    Q ${controlX2} ${controlY2} ${x1} ${y1}
+                `);
+                path.setAttribute('fill', petalConfig[i].color);
+                path.setAttribute('opacity', '0.7');
+                path.classList.add('petal-path');
+
+                // Petal label
+                const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                text.setAttribute('x', 200 + Math.cos(angle) * (80 + petalLength));
+                text.setAttribute('y', 200 + Math.sin(angle) * (80 + petalLength));
+                text.setAttribute('text-anchor', 'middle');
+                text.setAttribute('dominant-baseline', 'middle');
+                text.setAttribute('fill', 'rgba(255, 255, 255, 0.6)');
+                text.setAttribute('font-size', '10');
+                text.textContent = petalConfig[i].name;
+
+                petal.appendChild(path);
+                petal.appendChild(text);
+                petalsGroup.appendChild(petal);
+
+                // Add event listeners
+                petal.addEventListener('mousedown', startDrag);
+                petal.addEventListener('touchstart', startDrag);
+            }
+        }
+
+        // Drag handling
+        function startDrag(e) {
+            e.preventDefault();
+            isDragging = true;
+            currentPetal = parseInt(e.currentTarget.getAttribute('data-index'));
+
+            const indicator = document.getElementById('value-indicator');
+            indicator.textContent = petalValues[currentPetal];
+            indicator.classList.add('visible');
+
+            updateIndicatorPosition(e);
+        }
+
+        function updateIndicatorPosition(e) {
+            const indicator = document.getElementById('value-indicator');
+            const rect = document.getElementById('holoflower').getBoundingClientRect();
+
+            let x, y;
+            if (e.touches) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else {
+                x = e.clientX;
+                y = e.clientY;
+            }
+
+            indicator.style.left = x + 'px';
+            indicator.style.top = y + 'px';
+        }
+
+        function handleDrag(e) {
+            if (!isDragging || currentPetal === null) return;
+            e.preventDefault();
+
+            const rect = document.getElementById('holoflower').getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let x, y;
+            if (e.touches) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else {
+                x = e.clientX;
+                y = e.clientY;
+            }
+
+            const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+            const maxDistance = Math.min(rect.width, rect.height) / 2;
+            const value = Math.round(Math.min(10, Math.max(0, (distance / maxDistance) * 10)));
+
+            petalValues[currentPetal] = value;
+            createPetals();
+
+            const indicator = document.getElementById('value-indicator');
+            indicator.textContent = value;
+            updateIndicatorPosition(e);
+        }
+
+        function endDrag() {
+            isDragging = false;
+            currentPetal = null;
+            document.getElementById('value-indicator').classList.remove('visible');
+            saveState();
+        }
+
+        // Event listeners
+        document.addEventListener('mousemove', handleDrag);
+        document.addEventListener('touchmove', handleDrag);
+        document.addEventListener('mouseup', endDrag);
+        document.addEventListener('touchend', endDrag);
+
+        // Submit check-in
+        async function submitCheckIn() {
+            const btn = document.getElementById('submit-btn');
+            const loading = document.getElementById('loading');
+
+            btn.style.display = 'none';
+            loading.classList.add('visible');
+
+            // Calculate quadrants
+            const quadrants = {
+                mind: (petalValues[11] + petalValues[0] + petalValues[1]) / 3,
+                body: (petalValues[8] + petalValues[9] + petalValues[10]) / 3,
+                spirit: (petalValues[5] + petalValues[6] + petalValues[7]) / 3,
+                heart: (petalValues[2] + petalValues[3] + petalValues[4]) / 3
+            };
+
+            const coherence = petalValues.reduce((a, b) => a + b) / 120;
+            const configuration = btoa(petalValues.join('-')).substring(0, 12);
+
+            const checkIn = {
+                timestamp: new Date().toISOString(),
+                petalValues,
+                quadrants,
+                coherence,
+                configuration
+            };
+
+            // Save locally
+            saveState();
+
+            try {
+                // Try to send to backend
+                const response = await fetch('/api/checkin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(checkIn)
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    showInsight(data.insight || generateLocalInsight(checkIn));
+                } else {
+                    throw new Error('API unavailable');
+                }
+            } catch (error) {
+                // Fallback to local insights
+                console.log('Using local insights:', error);
+                showInsight(generateLocalInsight(checkIn));
+            }
+
+            loading.classList.remove('visible');
+            showBetaFeedback();
+        }
+
+        // Generate local insight based on configuration
+        function generateLocalInsight(checkIn) {
+            const insights = {
+                balanced: [
+                    "Your inner harmony radiates outward. Today, trust the balance you've cultivated.",
+                    "All elements dance in equilibrium. You are the still point at the center of motion.",
+                    "Perfect coherence creates space for spontaneous wisdom to emerge."
+                ],
+                fire_dominant: [
+                    "Your vision burns bright. Channel this creative force into tangible action.",
+                    "The fire within seeks expression. What transformation are you ready to ignite?",
+                    "Passion leads, but remember to tend the other flames that sustain you."
+                ],
+                water_dominant: [
+                    "Deep currents move through you. Honor what flows beneath the surface.",
+                    "Your emotional wisdom is heightened. Trust what you feel more than what you think.",
+                    "The waters are speaking. Create space for their messages to surface."
+                ],
+                air_dominant: [
+                    "Clarity pierces through confusion. Your mind sees patterns others miss.",
+                    "Mental agility is your gift today. Use it to untangle what seemed impossible.",
+                    "The air element brings messages. Listen to the whispers between thoughts."
+                ],
+                earth_dominant: [
+                    "Grounding is your superpower. Others will seek your stabilizing presence.",
+                    "The earth reminds you: slow, steady progress creates lasting change.",
+                    "Your body knows. Trust its wisdom over mental chatter today."
+                ],
+                expanding: [
+                    "You're entering an expansion phase. Say yes to what stretches you.",
+                    "Growth edges are calling. Comfort zones are meant to be transcended.",
+                    "Your field is widening. New possibilities enter through the periphery."
+                ],
+                contracting: [
+                    "Sacred contraction creates the pearl. Pressure serves your becoming.",
+                    "Drawing inward is not retreat—it's gathering power for the next emergence.",
+                    "The spiral turns inward before it expands. Trust this natural rhythm."
+                ]
+            };
+
+            // Determine dominant pattern
+            const { mind, body, spirit, heart } = checkIn.quadrants;
+            const elements = [
+                { name: 'fire', value: (mind + heart) / 2 },
+                { name: 'water', value: (spirit + heart) / 2 },
+                { name: 'air', value: (mind + spirit) / 2 },
+                { name: 'earth', value: (body + heart) / 2 }
+            ];
+
+            elements.sort((a, b) => b.value - a.value);
+            const dominant = elements[0];
+
+            // Check for balance
+            const variance = Math.max(...Object.values(checkIn.quadrants)) - Math.min(...Object.values(checkIn.quadrants));
+
+            let category;
+            if (variance < 2) {
+                category = 'balanced';
+            } else if (checkIn.coherence > 0.7) {
+                category = 'expanding';
+            } else if (checkIn.coherence < 0.4) {
+                category = 'contracting';
+            } else {
+                category = `${dominant.name}_dominant`;
+            }
+
+            const categoryInsights = insights[category] || insights.balanced;
+            return categoryInsights[Math.floor(Math.random() * categoryInsights.length)];
+        }
+
+        // Show insight modal
+        function showInsight(text) {
+            document.getElementById('insight-text').textContent = text;
+            document.getElementById('insight-modal').classList.add('visible');
+        }
+
+        function closeInsight() {
+            document.getElementById('insight-modal').classList.remove('visible');
+            document.getElementById('submit-btn').style.display = 'block';
+        }
+
+        // Beta feedback
+        function showBetaFeedback() {
+            const feedbackDiv = document.getElementById('beta-feedback');
+            const questionsDiv = document.getElementById('feedback-questions');
+
+            questionsDiv.innerHTML = `
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 11px; margin-bottom: 5px;">Did today's insight resonate?</div>
+                    <button class="feedback-btn" onclick="submitFeedback('resonate', 'yes')">Yes</button>
+                    <button class="feedback-btn" onclick="submitFeedback('resonate', 'no')">No</button>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <div style="font-size: 11px; margin-bottom: 5px;">Check-in felt:</div>
+                    <button class="feedback-btn" onclick="submitFeedback('feeling', 'easy')">Easy</button>
+                    <button class="feedback-btn" onclick="submitFeedback('feeling', 'challenging')">Challenging</button>
+                    <button class="feedback-btn" onclick="submitFeedback('feeling', 'confusing')">Confusing</button>
+                </div>
+                <div>
+                    <div style="font-size: 11px; margin-bottom: 5px;">Would you use daily?</div>
+                    <button class="feedback-btn" onclick="submitFeedback('daily', 'yes')">Yes</button>
+                    <button class="feedback-btn" onclick="submitFeedback('daily', 'maybe')">Maybe</button>
+                    <button class="feedback-btn" onclick="submitFeedback('daily', 'no')">No</button>
+                </div>
+            `;
+
+            feedbackDiv.classList.add('visible');
+
+            // Auto-hide after 30 seconds
+            setTimeout(() => {
+                feedbackDiv.classList.remove('visible');
+            }, 30000);
+        }
+
+        function submitFeedback(question, answer) {
+            const feedback = JSON.parse(localStorage.getItem('beta-feedback') || '{}');
+            if (!feedback[new Date().toDateString()]) {
+                feedback[new Date().toDateString()] = {};
+            }
+            feedback[new Date().toDateString()][question] = answer;
+            localStorage.setItem('beta-feedback', JSON.stringify(feedback));
+
+            // Visual feedback
+            event.target.classList.add('selected');
+
+            // Try to send to backend
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ question, answer, timestamp: new Date().toISOString() })
+            }).catch(e => console.log('Feedback stored locally'));
+        }
+
+        // Initialize
+        document.getElementById('submit-btn').addEventListener('click', submitCheckIn);
+
+        // Load saved state and create petals
+        loadSavedState();
+        createPetals();
+
+        // Check if returning user
+        const history = JSON.parse(localStorage.getItem('holoflower-history') || '[]');
+        if (history.length > 0) {
+            console.log(`Welcome back! You've checked in ${history.length} times.`);
+        }
+    </script>
+</body>
+</html>

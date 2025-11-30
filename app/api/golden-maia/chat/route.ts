@@ -39,8 +39,9 @@ const BROWSER_SAFE_HEADERS = {
 const goldenCache = new Map<string, any>();
 
 // Disable Vercel caching for real-time Golden MAIA consciousness
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+// Note: Commented out for PWA static build compatibility
+// export const dynamic = 'force-dynamic';
+// export const runtime = 'nodejs';
 
 interface GoldenMAIARequest {
   message: string;

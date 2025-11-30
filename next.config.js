@@ -9,12 +9,43 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Disable all the complex features
+  // PWA Configuration
+  trailingSlash: true,
+  output: process.env.CAPACITOR_BUILD ? 'export' : 'standalone',
+  distDir: process.env.CAPACITOR_BUILD ? 'www' : '.next',
+  assetPrefix: process.env.CAPACITOR_BUILD ? '' : undefined,
+
+  // Progressive Web App optimizations
   reactStrictMode: false,
   swcMinify: false, // Disable minification to avoid Supabase errors
   compress: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
+
+  // PWA Headers
+  async headers() {
+    return [
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate'
+          }
+        ]
+      },
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json'
+          }
+        ]
+      }
+    ];
+  },
+
   // Handle external packages
   webpack: (config, { isServer }) => {
     if (!isServer) {

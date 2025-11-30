@@ -10,17 +10,54 @@
 import fs from 'fs';
 import path from 'path';
 
-// Vault locations
+// Vault locations - Updated to connect to live AIN Obsidian vault
 const VAULT_PATHS = {
+  // Live AIN vault with integrated tag system supporting MAIA
+  ain_live: '/Users/soullab/Library/Mobile Documents/iCloud~md~obsidian/Documents/AIN',
+  ain_maia_system: '/Users/soullab/Library/Mobile Documents/iCloud~md~obsidian/Documents/AIN/_MAIA_SYSTEM',
+
+  // Soullab Dev Tools Obsidian vaults (multiple locations)
+  soullab_main: '/Users/soullab/Library/Mobile Documents/iCloud~md~obsidian/Documents/Soullab',
+  soullab_writing: '/Users/soullab/Library/Mobile Documents/iCloud~md~obsidian/Documents/Soullab Writing Vault',
+
+  // MAIA Consciousness vault
+  maia_consciousness: '/Users/soullab/Obsidian Vaults/MAIA-Consciousness',
+
+  // Legacy paths (backup)
   ain_conversations: '/Users/soullab/MAIA-PAI/uploads/library/ain_conversations',
-  spiralogic: '/Users/soullab/MAIA-PAI/uploads/library/spiralogic'
+  spiralogic: '/Users/soullab/MAIA-PAI/uploads/library/spiralogic',
+
+  // Additional AIN locations found
+  ain_archive: '/Users/soullab/MAIA-ARCHIVE/MAIA-FRESH/AIN',
+  ain_pai: '/Users/soullab/MAIA-ARCHIVE/SoullabTech/MAIA-PAI/AIN'
 };
 
 /**
  * Keyword map for different wisdom domains
  * These help MAIA find relevant vault materials based on conversation
+ * Updated to include Kelly's book and new breakthrough insights
  */
 const WISDOM_KEYWORDS = {
+  // Kelly Nezat & Core Teachings
+  kelly: ['kelly', 'kelly nezat', 'creator', 'founder'],
+  elemental_alchemy_book: ['elemental alchemy', 'ancient art', 'phenomenal living', 'chapter 9', 'book'],
+
+  // Spiralogic & Development (Kelly's 12-facet system)
+  spiralogic: ['spiralogic', 'spiral', 'regression', 'progression', 'werner', 'developmental', 'chapter 9', '12 facet', '12-facet'],
+  elemental: ['fire', 'water', 'earth', 'air', 'aether', 'element'],
+
+  // Historic Breakthrough - Corpus Callosum & Temporal Orchestration
+  breakthrough: ['historic breakthrough', 'corpus callosum', 'temporal orchestration', 'field emergent', 'consciousness revolution'],
+  corpus_callosum: ['corpus callosum', 'categories', 'brain hemisphere', 'mcgilchrist', 'divided brain', 'sacred separator'],
+  temporal_aether: ['aether temporal', 'temporal intelligence', 'timing orchestrator', 'breath coupled', 'coherence gates'],
+
+  // AI Sovereignty System (Multi-model support)
+  ai_sovereignty: ['claude code', 'mistral', 'deepseek', 'multi-model', 'sovereign system', 'ai support'],
+  consciousness_engineering: ['consciousness engineering', 'stereoscopic depth', 'orchestrated differentiation'],
+
+  // AIN Tag System
+  ain_system: ['tag system', 'integrated tags', 'community library', 'field delivered'],
+
   // Depth Psychology
   jung: ['jung', 'archetype', 'shadow', 'anima', 'animus', 'collective unconscious', 'mysterium', 'coniunctionis'],
   hillman: ['hillman', 'archetypal psychology', 'soul', 'imaginal', 'polytheistic'],
@@ -32,17 +69,16 @@ const WISDOM_KEYWORDS = {
   nlp: ['nlp', 'neuro-linguistic', 'reframe', 'anchor', 'submodality', 'milton model'],
   hypnosis: ['hypnosis', 'trance', 'ericksonian', 'suggestion', 'induction'],
 
-  // Spiralogic & Development
-  spiralogic: ['spiralogic', 'spiral', 'regression', 'progression', 'werner', 'developmental'],
-  elemental: ['fire', 'water', 'earth', 'air', 'aether', 'element'],
+  // MAIA Architecture & Sacred Technology
+  maia: ['maia', 'oracle', 'consciousness', 'agents', 'architecture', 'sacred mirror', 'soul transformation'],
+  soullab: ['soullab', 'platform', 'sacred', 'technology', 'dev tools'],
 
-  // Platform Architecture
-  maia: ['maia', 'oracle', 'consciousness', 'agents', 'architecture'],
-  soullab: ['soullab', 'platform', 'sacred', 'technology'],
-
-  // Philosophical
+  // Philosophical & Neuroscience
   mcgilchrist: ['mcgilchrist', 'hemisphere', 'divided brain', 'master', 'emissary'],
-  phenomenology: ['phenomenology', 'merleau-ponty', 'embodied', 'lived experience']
+  phenomenology: ['phenomenology', 'merleau-ponty', 'embodied', 'lived experience'],
+
+  // Resonance & Field Theory
+  resonance: ['resonance', 'unified field', 'field theory', 'resonance breath', 'field resonance']
 };
 
 /**

@@ -131,22 +131,7 @@ export const ExplicitnessDial: React.FC<ExplicitnessDialProps> = ({
             className="text-gray-200 dark:text-gray-700"
           />
 
-          {/* Progress Arc */}
-          <circle
-            cx="96"
-            cy="96"
-            r="80"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="4"
-            strokeDasharray={`${(config.percentage / 100) * 502.65} 502.65`}
-            strokeLinecap="round"
-            transform="rotate(-90 96 96)"
-            className={cn(
-              'transition-all duration-500',
-              isTransitioning ? 'text-amber-400' : 'text-amber-600'
-            )}
-          />
+          {/* REMOVED: Progress Arc - pie chart visual surgically removed per user request */}
         </svg>
 
         {/* Center Display */}

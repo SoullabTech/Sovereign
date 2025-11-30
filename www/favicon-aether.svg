@@ -1,0 +1,99 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Aether/Spirit Element - Circle with interwoven triangles (Hand-drawn style) -->
+  <rect width="32" height="32" fill="#0A0A0A"/>
+
+  <!-- Hand-drawn outer circle -->
+  <ellipse cx="16" cy="16" rx="12.8" ry="12.6"
+           fill="none"
+           stroke="#9333EA"
+           stroke-width="2.3"
+           stroke-linecap="round"
+           opacity="0.95">
+    <!-- Ethereal pulse -->
+    <animate attributeName="rx"
+             values="12.8;13.1;12.8"
+             dur="4s"
+             repeatCount="indefinite"/>
+    <animate attributeName="ry"
+             values="12.6;12.9;12.6"
+             dur="4s"
+             repeatCount="indefinite"/>
+  </ellipse>
+
+  <!-- All four triangles interwoven (spirit contains all elements) -->
+
+  <!-- Fire triangle (up) - smaller, centered -->
+  <path d="M 16,10 L 21,19 L 11,19 Z"
+        fill="none"
+        stroke="#FF6B35"
+        stroke-width="1.2"
+        stroke-linecap="round"
+        opacity="0.5"/>
+
+  <!-- Water triangle (down) - overlapping -->
+  <path d="M 16,22 L 11,13 L 21,13 Z"
+        fill="none"
+        stroke="#4ECDC4"
+        stroke-width="1.2"
+        stroke-linecap="round"
+        opacity="0.5"/>
+
+  <!-- Earth line -->
+  <path d="M 12.5,18.5 L 19.5,18.4"
+        stroke="#8B7355"
+        stroke-width="1.2"
+        stroke-linecap="round"
+        opacity="0.5"/>
+
+  <!-- Air line -->
+  <path d="M 12.5,13.5 L 19.5,13.6"
+        stroke="#87CEEB"
+        stroke-width="1.2"
+        stroke-linecap="round"
+        opacity="0.5"/>
+
+  <!-- Central spirit dot -->
+  <circle cx="16" cy="16" r="2.5"
+          fill="#FFD700"
+          opacity="0.9">
+    <animate attributeName="r"
+             values="2.5;3;2.5"
+             dur="3s"
+             repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Inner glow -->
+  <circle cx="16" cy="16" r="1.5"
+          fill="#FFFFFF"
+          opacity="0.8"/>
+
+  <!-- Ethereal sparkles -->
+  <circle cx="10" cy="10" r="0.5" fill="#9333EA" opacity="0.4">
+    <animate attributeName="opacity"
+             values="0.4;0.8;0.4"
+             dur="2s"
+             repeatCount="indefinite"/>
+  </circle>
+  <circle cx="22" cy="10" r="0.5" fill="#9333EA" opacity="0.4">
+    <animate attributeName="opacity"
+             values="0.4;0.8;0.4"
+             dur="2.5s"
+             repeatCount="indefinite"/>
+  </circle>
+  <circle cx="10" cy="22" r="0.5" fill="#9333EA" opacity="0.4">
+    <animate attributeName="opacity"
+             values="0.4;0.8;0.4"
+             dur="3s"
+             repeatCount="indefinite"/>
+  </circle>
+  <circle cx="22" cy="22" r="0.5" fill="#9333EA" opacity="0.4">
+    <animate attributeName="opacity"
+             values="0.4;0.8;0.4"
+             dur="2.2s"
+             repeatCount="indefinite"/>
+  </circle>
+
+  <!-- Hand-drawn texture -->
+  <path d="M 5,16 L 5.3,16.1" stroke="#9333EA" stroke-width="0.8" opacity="0.3"/>
+  <path d="M 27,16 L 26.7,16.2" stroke="#9333EA" stroke-width="0.8" opacity="0.3"/>
+</svg>

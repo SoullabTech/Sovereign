@@ -1,0 +1,45 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Fire Element - Upward Triangle (Hand-drawn style) -->
+  <rect width="32" height="32" fill="#0A0A0A"/>
+
+  <!-- Hand-drawn triangle with slight imperfections -->
+  <path d="M 15.8,7.2 L 26.3,24.8 L 5.5,24.7 Z"
+        fill="none"
+        stroke="#FF6B35"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.95">
+    <!-- Subtle hand-drawn wobble -->
+    <animate attributeName="d"
+             values="M 15.8,7.2 L 26.3,24.8 L 5.5,24.7 Z;
+                     M 16.2,7.1 L 26.1,24.9 L 5.7,24.6 Z;
+                     M 15.8,7.2 L 26.3,24.8 L 5.5,24.7 Z"
+             dur="8s"
+             repeatCount="indefinite"/>
+  </path>
+
+  <!-- Inner glow effect -->
+  <path d="M 15.9,7.3 L 26.2,24.7 L 5.6,24.6 Z"
+        fill="#FF6B35"
+        opacity="0.15"/>
+
+  <!-- Flame flicker inside -->
+  <path d="M 16,12 Q 14,16 16,18 T 16,22"
+        stroke="#FFB347"
+        stroke-width="1.5"
+        fill="none"
+        opacity="0.6"
+        stroke-linecap="round">
+    <animate attributeName="d"
+             values="M 16,12 Q 14,16 16,18 T 16,22;
+                     M 16,12 Q 18,16 16,18 T 16,22;
+                     M 16,12 Q 14,16 16,18 T 16,22"
+             dur="2s"
+             repeatCount="indefinite"/>
+  </path>
+
+  <!-- Hand-drawn texture lines -->
+  <path d="M 8,23 L 8.2,22.8" stroke="#FF6B35" stroke-width="0.8" opacity="0.4"/>
+  <path d="M 24,23 L 23.8,22.7" stroke="#FF6B35" stroke-width="0.8" opacity="0.4"/>
+</svg>

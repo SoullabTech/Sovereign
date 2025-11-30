@@ -149,6 +149,79 @@ export default function MayaTrainingPage() {
           </div>
         </div>
 
+        {/* Main Progress Ring */}
+        <div className="bg-gradient-to-br from-amber-900/20 to-black border border-amber-500/30 rounded-2xl p-4 sm:p-8 mb-6">
+          <div className="flex flex-col md:flex-row items-center gap-6 sm:gap-8">
+            {/* Progress Ring */}
+            <div className="relative w-40 h-40 sm:w-48 sm:h-48 flex-shrink-0">
+              <svg className="w-full h-full -rotate-90">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="42%"
+                  fill="none"
+                  stroke="rgba(251, 191, 36, 0.1)"
+                  strokeWidth="8"
+                />
+                <motion.circle
+                  cx="50%"
+                  cy="50%"
+                  r="42%"
+                  fill="none"
+                  stroke="rgb(251, 191, 36)"
+                  strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 84}`}
+                  strokeDashoffset={`${2 * Math.PI * 84 * (1 - progress)}`}
+                  strokeLinecap="round"
+                  style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.5))' }}
+                  initial={{ strokeDashoffset: 2 * Math.PI * 84 }}
+                  animate={{ strokeDashoffset: 2 * Math.PI * 84 * (1 - progress) }}
+                  transition={{ duration: 2, ease: 'easeOut' }}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <Brain className="w-10 h-10 sm:w-12 sm:h-12 text-amber-400 mb-2" />
+                <motion.div
+                  className="text-2xl sm:text-3xl font-light text-amber-400"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                >
+                  {Math.round(progress * 100)}%
+                </motion.div>
+                <div className="text-xs text-gray-400">Complete</div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="flex-1 space-y-3 sm:space-y-4 w-full">
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm sm:text-base">Training Hours</span>
+                <span className="text-xl sm:text-2xl font-light text-amber-400">
+                  {stats.summary.totalHours} / {stats.summary.targetHours}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm sm:text-base">Total Exchanges</span>
+                <span className="text-lg sm:text-xl font-light text-white">
+                  {stats.summary.totalExchanges.toLocaleString()}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm sm:text-base">Consciousness Level</span>
+                <span className="text-lg sm:text-xl font-light text-white">
+                  {stats.summary.consciousnessLevel}%
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm sm:text-base">Training Velocity</span>
+                <span className="text-lg sm:text-xl font-light text-emerald-400">
+                  {stats.summary.exchangesPerDay} exchanges/day
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Key Metrics Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">

@@ -145,7 +145,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="h-screen relative overflow-hidden">
       {/* Soullab Gateway Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155]" />
 
@@ -198,7 +198,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-emerald-50/30 via-[#6EE7B7]/20 to-transparent rounded-full blur-xl"
       />
 
-      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
+      <div className="relative z-10 flex items-center justify-center h-screen p-4">
         <div className="max-w-md w-full">
           <AnimatePresence mode="wait">
 
@@ -242,7 +242,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                     }}
                   >
                     <h1 className="text-3xl font-light text-white mb-4 tracking-wider">
-                      Soullab Gateway
+                      Soullab Portal
                     </h1>
 
                     <p className="text-lg text-white/80 mb-6 font-light">
@@ -276,12 +276,12 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                         disabled={!passcode.trim() || isValidating}
                         className="w-full px-6 py-3 bg-gradient-to-r from-[#6EE7B7]/20 to-[#4DB6AC]/20 border border-[#6EE7B7]/40 text-white rounded-lg font-light text-base hover:border-[#6EE7B7]/60 hover:bg-gradient-to-r hover:from-[#6EE7B7]/30 hover:to-[#4DB6AC]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
                       >
-                        {isValidating ? 'Validating...' : 'Enter the Gateway'}
+                        {isValidating ? 'Validating...' : 'Enter the Portal'}
                       </button>
                     </form>
 
                     <p className="text-white/40 text-xs mt-6 font-light italic">
-                      "The key is not in the lock, but in the one who turns it"
+                      "The breeze at dawn has secrets to tell you. Don't go back to sleep. You must ask for what you really want. Don't go back to sleep. People are going back and forth across the doorsill where the two worlds touch. The door is round and open. Don't go back to sleep." — Rumi
                     </p>
                   </div>
                 </div>

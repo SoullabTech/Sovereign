@@ -60,9 +60,9 @@ interface ConsciousnessResponse {
   fallback_used: boolean;
 }
 
-// Disable Vercel caching for real-time consciousness data
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+// Disable Vercel caching for real-time consciousness data (only in non-export builds)
+// export const dynamic = 'force-dynamic';
+// export const runtime = 'nodejs';
 
 /**
  * OPTIONS: Handle preflight requests for CORS

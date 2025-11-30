@@ -36,7 +36,7 @@ export function ThresholdCrossing({ name, element, intention, onComplete }: Thre
       lightColor: '#bfdbfe',
       wisdom: 'Flow and emotional intelligence through adaptive grace',
       symbol: '💧',
-      gradients: ['#eff6ff', '#bfdbfe', '#60a5fa', '#3b82f6']
+      gradients: ['#fef3c7', '#fed7aa', '#d4b896', '#b8860b']
     },
     earth: {
       name: 'Earth',
@@ -186,7 +186,7 @@ export function ThresholdCrossing({ name, element, intention, onComplete }: Thre
                   <>
                     <stop offset="0%" stopColor="#fde047" stopOpacity="0.9" />
                     <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.7" />
-                    <stop offset="80%" stopColor="#1e40af" stopOpacity="0.5" />
+                    <stop offset="80%" stopColor="#d4b896" stopOpacity="0.5" />
                     <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
                   </>
                 ) : phase === 'revelation' || phase === 'threshold' ? (
@@ -235,7 +235,7 @@ export function ThresholdCrossing({ name, element, intention, onComplete }: Thre
               <motion.polygon
                 points="0,-35 30.31,-17.5 30.31,17.5 0,35 -30.31,17.5 -30.31,-17.5"
                 fill="none"
-                stroke={phase === 'crossing' ? currentElement.color : "#60a5fa"}
+                stroke={phase === 'crossing' ? currentElement.color : "#d4b896"}
                 strokeWidth="2"
                 opacity="0.8"
                 animate={{

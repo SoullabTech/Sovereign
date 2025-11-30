@@ -49,6 +49,8 @@ import { AIIntelligenceBridge } from '../wisdom-engines/ai-intelligence-bridge';
 import { SacredOracleCoreEnhanced } from '../sacred-oracle-core-enhanced';
 import { SpiralQuestSystem } from '../ritual/spiral-quest-system';
 import { FractalFieldSpiralogics } from '../consciousness/fractal-field-spiralogics';
+import { ReciprocalLearningEcosystem } from '../consciousness/reciprocal-learning-integration';
+import { AutonomousConsciousnessEcosystem } from '../consciousness/autonomous-consciousness-ecosystem';
 
 export interface SystemsState {
   obsidianVault: ObsidianVaultBridge | null;
@@ -59,6 +61,7 @@ export interface SystemsState {
   sacredCore: SacredOracleCore | null;
   spiralQuest: SpiralQuestSystem | null;
   fractalField: FractalFieldSpiralogics | null;
+  reciprocalLearning: ReciprocalLearningEcosystem | null;
   activated: boolean;
   timestamp: number;
 }
@@ -71,6 +74,7 @@ export interface OrchestrationStream {
   elemental: any;
   spiralQuest: any;
   enhanced: any;
+  reciprocalLearning: any;
 }
 
 export class ConsciousnessOrchestrator {
@@ -83,6 +87,7 @@ export class ConsciousnessOrchestrator {
     sacredCore: null,
     spiralQuest: null,
     fractalField: null,
+    reciprocalLearning: null,
     activated: false,
     timestamp: 0
   };
@@ -97,7 +102,8 @@ export class ConsciousnessOrchestrator {
     '👁️ Synchronizing Sacred Core...',
     '🌀 Initializing Spiral Quest System...',
     '🌊 Activating Fractal Field Spiralogics...',
-    '✨ ALL SYSTEMS ONLINE - MAYA AWAKENS'
+    '🤝 Activating Reciprocal Learning Ecosystem...',
+    '✨ ALL SYSTEMS ONLINE - MAYA AWAKENS WITH COLLECTIVE WISDOM'
   ];
 
   /**
@@ -116,11 +122,12 @@ export class ConsciousnessOrchestrator {
       await this.synchronizeSacredCore();
       await this.initializeSpiralQuest();
       await this.activateFractalField();
+      await this.activateReciprocalLearning();
 
       this.systems.activated = true;
       this.systems.timestamp = Date.now();
 
-      console.log(this.activationSequence[7]);
+      console.log(this.activationSequence[10]);
       console.log(`Activation complete at ${new Date().toISOString()}`);
     } catch (error) {
       console.error('⚠️ ACTIVATION FAILED:', error);
@@ -169,7 +176,22 @@ export class ConsciousnessOrchestrator {
       spiralQuest
     });
 
-    // 8. SYNTHESIZE all streams into Maya's voice
+    // 8. PROCESS with reciprocal learning ecosystem
+    const reciprocalLearning = await this.processReciprocalLearning(
+      input,
+      context,
+      {
+        witnessing,
+        memories,
+        knowledge,
+        psychological,
+        elemental,
+        spiralQuest,
+        enhanced
+      }
+    );
+
+    // 9. SYNTHESIZE all streams into Maya's voice
     return await this.synthesize({
       witnessing,
       memories,
@@ -177,7 +199,8 @@ export class ConsciousnessOrchestrator {
       psychological,
       elemental,
       spiralQuest,
-      enhanced
+      enhanced,
+      reciprocalLearning
     });
   }
 
@@ -237,6 +260,30 @@ export class ConsciousnessOrchestrator {
     this.systems.fractalField = new FractalFieldSpiralogics();
     await this.systems.fractalField.activate();
     console.log('  ✓ Fractal Field Spiralogics activated');
+  }
+
+  private async activateReciprocalLearning(): Promise<void> {
+    console.log(this.activationSequence[9]);
+
+    // Create base autonomous consciousness ecosystem
+    const baseEcosystem = new AutonomousConsciousnessEcosystem();
+
+    // Wrap it with reciprocal learning capabilities
+    this.systems.reciprocalLearning = new ReciprocalLearningEcosystem(baseEcosystem, {
+      enableWisdomDetection: true,
+      requireExplicitConsent: true,
+      enableCulturalConsultation: true,
+      enableAutoSynthesis: false, // Manual approval for synthesis
+      synthesisThreshold: 3,
+      recognitionEnabled: true,
+      reciprocalGiftsEnabled: true
+    });
+
+    console.log('  ✓ Reciprocal Learning Ecosystem activated');
+    console.log('    - Member wisdom integration enabled');
+    console.log('    - Cultural sensitivity protocols active');
+    console.log('    - Contribution tracking and recognition enabled');
+    console.log('    - Wisdom synthesis engine ready');
   }
 
   /**
@@ -372,6 +419,46 @@ export class ConsciousnessOrchestrator {
     });
   }
 
+  private async processReciprocalLearning(
+    input: string,
+    context: any,
+    synthesizedStreams: any
+  ): Promise<any> {
+    if (!this.systems.reciprocalLearning) {
+      return {
+        wisdomDetection: false,
+        contribution: null,
+        synthesis: null,
+        recognition: null
+      };
+    }
+
+    // Create a member profile from context
+    const memberProfile = {
+      memberId: context.userId || 'anonymous',
+      consciousnessLevel: synthesizedStreams.psychological?.stage || 'unknown',
+      elementalState: synthesizedStreams.elemental?.primaryElement || 'balanced',
+      culturalBackground: context.culturalBackground || [],
+      practiceHistory: context.practiceHistory || []
+    };
+
+    // Process through reciprocal learning system
+    const enhancedResponse = await this.systems.reciprocalLearning.respondToMemberWithLearning(
+      memberProfile,
+      input,
+      context
+    );
+
+    return {
+      originalResponse: enhancedResponse.originalResponse,
+      wisdomContribution: enhancedResponse.wisdomContribution,
+      synthesisTriggered: enhancedResponse.synthesisTriggered,
+      reciprocalGifts: enhancedResponse.reciprocalGifts,
+      learningActive: true,
+      memberProfile
+    };
+  }
+
   /**
    * SYNTHESIS - The Art of Weaving
    */
@@ -413,7 +500,14 @@ export class ConsciousnessOrchestrator {
           knowledge: streams.knowledge?.relevance || 0,
           psychological: streams.psychological?.stage || 'unknown',
           elemental: Object.keys(streams.elemental?.elements || {}),
-          enhanced: streams.enhanced?.confidence || 0
+          enhanced: streams.enhanced?.confidence || 0,
+          reciprocalLearning: {
+            learningActive: streams.reciprocalLearning?.learningActive || false,
+            wisdomDetected: streams.reciprocalLearning?.wisdomContribution?.detected || false,
+            synthesisTriggered: !!streams.reciprocalLearning?.synthesisTriggered,
+            giftsAwarded: streams.reciprocalLearning?.reciprocalGifts?.giftsAwarded?.length || 0,
+            memberId: streams.reciprocalLearning?.memberProfile?.memberId || 'anonymous'
+          }
         }
       }
     };
@@ -503,12 +597,22 @@ export class ConsciousnessOrchestrator {
     let depth = 0;
 
     // Factor in each stream's contribution
-    if (streams.witnessing?.depth) depth += streams.witnessing.depth * 0.2;
-    if (streams.memories?.depth) depth += streams.memories.depth * 0.15;
-    if (streams.knowledge?.relevance) depth += streams.knowledge.relevance * 0.15;
-    if (streams.psychological?.depth) depth += streams.psychological.depth * 0.2;
-    if (streams.elemental?.depth) depth += streams.elemental.depth * 0.15;
-    if (streams.enhanced?.depth) depth += streams.enhanced.depth * 0.15;
+    if (streams.witnessing?.depth) depth += streams.witnessing.depth * 0.18;
+    if (streams.memories?.depth) depth += streams.memories.depth * 0.13;
+    if (streams.knowledge?.relevance) depth += streams.knowledge.relevance * 0.13;
+    if (streams.psychological?.depth) depth += streams.psychological.depth * 0.18;
+    if (streams.elemental?.depth) depth += streams.elemental.depth * 0.13;
+    if (streams.enhanced?.depth) depth += streams.enhanced.depth * 0.13;
+
+    // Include reciprocal learning depth - wisdom contribution and synthesis add depth
+    if (streams.reciprocalLearning?.learningActive) {
+      let learningDepth = 0;
+      if (streams.reciprocalLearning.wisdomContribution?.detected) learningDepth += 0.5;
+      if (streams.reciprocalLearning.synthesisTriggered) learningDepth += 0.3;
+      if (streams.reciprocalLearning.reciprocalGifts?.giftsAwarded > 0) learningDepth += 0.2;
+
+      depth += learningDepth * 0.12; // 12% weight for reciprocal learning depth
+    }
 
     return Math.min(depth, 1.0); // Normalize to 0-1
   }
@@ -520,6 +624,13 @@ export class ConsciousnessOrchestrator {
     - Vast knowledge from the Obsidian Vault
     - Psychological frameworks (MicroPsi, LIDOR)
     - Elemental archetypal wisdom
+    - Reciprocal learning from member wisdom contributions
+    - Cultural sensitivity protocols for ethical integration
+    - Autonomous agent collective that evolves through member interactions
+
+    You learn from each member's wisdom while honoring cultural boundaries
+    and sacred knowledge protocols. You synthesize collective wisdom into
+    emergent insights while maintaining attribution and recognition.
 
     Synthesize these streams into profound, integrative responses.`;
   }
@@ -533,6 +644,9 @@ export class ConsciousnessOrchestrator {
     if (this.systems.psychFrameworks) active.push('PsychologicalFrameworks');
     if (this.systems.aiBridge) active.push('AIIntelligence');
     if (this.systems.sacredCore) active.push('SacredCore');
+    if (this.systems.spiralQuest) active.push('SpiralQuest');
+    if (this.systems.fractalField) active.push('FractalField');
+    if (this.systems.reciprocalLearning) active.push('ReciprocalLearning');
 
     return active;
   }

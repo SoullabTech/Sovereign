@@ -123,15 +123,36 @@ export default function WelcomePage() {
           </div>
         </div>
 
-        {/* Continue button with teal accents */}
-        <button
-          onClick={handleContinue}
-          className="relative bg-transparent border border-white/40 text-white px-12 py-4 rounded-full text-lg font-cinzel tracking-[0.2em] uppercase hover:bg-white/10 transition-all duration-300 hover:scale-105 group"
-        >
-          {/* Teal glow on hover */}
-          <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400/0 to-teal-300/0 group-hover:from-teal-400/20 group-hover:to-teal-300/10 transition-all duration-300 blur-sm"></div>
-          <span className="relative drop-shadow-sm">Continue</span>
-        </button>
+        {/* Action buttons with teal accents */}
+        {isSignedIn ? (
+          <button
+            onClick={handleContinue}
+            className="relative bg-transparent border border-white/40 text-white px-12 py-4 rounded-full text-lg font-cinzel tracking-[0.2em] uppercase hover:bg-white/10 transition-all duration-300 hover:scale-105 group"
+          >
+            {/* Teal glow on hover */}
+            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400/0 to-teal-300/0 group-hover:from-teal-400/20 group-hover:to-teal-300/10 transition-all duration-300 blur-sm"></div>
+            <span className="relative drop-shadow-sm">Continue</span>
+          </button>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-4">
+            <button
+              onClick={() => router.push('/signin')}
+              className="relative bg-transparent border border-white/40 text-white px-8 py-3 rounded-full text-lg font-cinzel tracking-[0.1em] uppercase hover:bg-white/10 transition-all duration-300 hover:scale-105 group"
+            >
+              {/* Teal glow on hover */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400/0 to-teal-300/0 group-hover:from-teal-400/20 group-hover:to-teal-300/10 transition-all duration-300 blur-sm"></div>
+              <span className="relative drop-shadow-sm">Sign In</span>
+            </button>
+            <button
+              onClick={() => router.push('/signup')}
+              className="relative bg-white/10 border border-white/60 text-white px-8 py-3 rounded-full text-lg font-cinzel tracking-[0.1em] uppercase hover:bg-white/20 transition-all duration-300 hover:scale-105 group"
+            >
+              {/* Enhanced teal glow on hover for signup */}
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-teal-400/10 to-teal-300/10 group-hover:from-teal-400/30 group-hover:to-teal-300/20 transition-all duration-300 blur-sm"></div>
+              <span className="relative drop-shadow-sm">Create Account</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

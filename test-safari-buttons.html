@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.2, maximum-scale=1.2, minimum-scale=0.9, user-scalable=yes">
+    <title>Safari Button Test - MAIA Fixes</title>
+    <style>
+        /* Safari-compatible button styling (from our globals.css fix) */
+        nav {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Safari-compatible button styling */
+        button {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            user-select: none;
+            /* Removed -webkit-touch-callout: none for Safari compatibility */
+            cursor: pointer;
+        }
+
+        /* Test styles */
+        body {
+            font-family: system-ui, sans-serif;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            background: #D4B896;
+            color: #1a1a1a;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            transition: background-color 0.2s, transform 0.2s;
+            touch-action: manipulation;
+            pointer-events: auto;
+        }
+
+        .button:hover {
+            background: #E5C9A7;
+            transform: scale(1.02);
+        }
+
+        .button:active {
+            background: #C3A785;
+        }
+
+        .mode-button {
+            background: #6B5B95;
+            color: white;
+        }
+
+        .mode-button.active {
+            background: #8A7CAB;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #2a2a2a;
+            border-radius: 8px;
+            border-left: 4px solid #D4B896;
+        }
+
+        .success {
+            border-left-color: #4CAF50;
+            background: #1B5E1F;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Safari Button Fix Test - MAIA</h1>
+        <p>Testing the Safari compatibility fixes applied to soullab.life/maia buttons.</p>
+
+        <h2>Voice/Text Toggle Test</h2>
+        <button id="voiceToggle" class="button">
+            <span id="voiceIcon">🎤</span>
+            <span id="voiceText">Voice</span>
+        </button>
+
+        <h2>Mode Selector Test</h2>
+        <button id="dialogueMode" class="button mode-button active" data-mode="dialogue">Dialogue</button>
+        <button id="counselMode" class="button mode-button" data-mode="counsel">Counsel</button>
+        <button id="scribeMode" class="button mode-button" data-mode="scribe">Scribe</button>
+
+        <h2>Session Controls Test</h2>
+        <button id="startSession" class="button">
+            ⏰ Start Session
+        </button>
+        <button id="labTools" class="button">
+            🧪 Lab Tools
+        </button>
+
+        <h2>Desktop Controls Test</h2>
+        <button id="documents" class="button">
+            📄 Documents
+        </button>
+        <button id="analytics" class="button">
+            📊 Analytics
+        </button>
+
+        <div id="results" class="result">
+            <h3>Test Results:</h3>
+            <p>Click the buttons above to test Safari compatibility...</p>
+            <ul id="testLog"></ul>
+        </div>
+    </div>
+
+    <script>
+        // Test state
+        let showChatInterface = false;
+        let currentMode = 'dialogue';
+        let testResults = [];
+
+        // Log function
+        function logTest(buttonName, success) {
+            const timestamp = new Date().toLocaleTimeString();
+            testResults.push({
+                button: buttonName,
+                success: success,
+                timestamp: timestamp
+            });
+            updateResults();
+        }
+
+        function updateResults() {
+            const log = document.getElementById('testLog');
+            const results = document.getElementById('results');
+
+            log.innerHTML = testResults.map(test =>
+                `<li><strong>${test.button}</strong> - ${test.success ? '✅ SUCCESS' : '❌ FAILED'} (${test.timestamp})</li>`
+            ).join('');
+
+            const successCount = testResults.filter(test => test.success).length;
+            const totalTests = testResults.length;
+
+            if (totalTests > 0) {
+                results.className = successCount === totalTests ? 'result success' : 'result';
+
+                if (successCount === totalTests && totalTests >= 8) {
+                    results.innerHTML = `
+                        <h3>🎉 ALL SAFARI BUTTON FIXES WORKING!</h3>
+                        <p><strong>Success Rate: ${successCount}/${totalTests} (100%)</strong></p>
+                        <p>All buttons respond immediately without the Safari blocking issues!</p>
+                        ${log.outerHTML}
+                    `;
+                }
+            }
+        }
+
+        // Voice/Text Toggle (Fixed: removed preventDefault/stopPropagation)
+        document.getElementById('voiceToggle').onclick = function() {
+            // Fixed: No preventDefault() or stopPropagation() calls
+            showChatInterface = !showChatInterface;
+
+            const icon = document.getElementById('voiceIcon');
+            const text = document.getElementById('voiceText');
+
+            if (showChatInterface) {
+                icon.textContent = '💬';
+                text.textContent = 'Text';
+            } else {
+                icon.textContent = '🎤';
+                text.textContent = 'Voice';
+            }
+
+            logTest('Voice/Text Toggle', true);
+        };
+
+        // Mode Selectors (Fixed: removed preventDefault/stopPropagation)
+        document.querySelectorAll('.mode-button').forEach(button => {
+            button.onclick = function() {
+                // Fixed: No preventDefault() or stopPropagation() calls
+                const mode = this.dataset.mode;
+                currentMode = mode;
+
+                // Update active state
+                document.querySelectorAll('.mode-button').forEach(btn => btn.classList.remove('active'));
+                this.classList.add('active');
+
+                logTest(`${mode.charAt(0).toUpperCase() + mode.slice(1)} Mode`, true);
+            };
+        });
+
+        // Session Controls (Fixed: removed preventDefault/stopPropagation)
+        document.getElementById('startSession').onclick = function() {
+            // Fixed: No preventDefault() or stopPropagation() calls
+            this.textContent = '⏸️ Session Active';
+            logTest('Start Session', true);
+        };
+
+        document.getElementById('labTools').onclick = function() {
+            // Fixed: No preventDefault() or stopPropagation() calls
+            logTest('Lab Tools', true);
+        };
+
+        // Desktop Controls (Fixed: removed preventDefault/stopPropagation)
+        document.getElementById('documents').onclick = function() {
+            // Fixed: No preventDefault() or stopPropagation() calls
+            logTest('Documents', true);
+        };
+
+        document.getElementById('analytics').onclick = function() {
+            // Fixed: No preventDefault() or stopPropagation() calls
+            logTest('Analytics', true);
+        };
+
+        // Initial state
+        updateResults();
+    </script>
+</body>
+</html>

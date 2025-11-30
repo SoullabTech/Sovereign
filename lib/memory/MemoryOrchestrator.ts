@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { createClient } from '@supabase/supabase-js';
-import { searchUserFiles } from '../../backend/src/services/IngestionQueue';
+// Temporarily stub out backend imports that are excluded from build
+// import { searchUserFiles } from '../../backend/src/services/IngestionQueue';
+import { searchUserFiles } from '../consciousness/WeQIngestionQueue';
 import { OpenAI } from 'openai';
 
 const prisma = new PrismaClient();

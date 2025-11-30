@@ -115,61 +115,62 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
           className="absolute inset-0"
           style={{ zIndex: 1 }}
         >
-          {/* Breathing Light Field Rings - Based on original holoflower complexity rings */}
+          {/* Breathing Light Field Rings - Maximum brightness and density */}
           <g className="breathing-rings">
-            {[1, 0.8, 0.6, 0.4, 0.2].map((scale, i) => (
+            {[1, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45].map((scale, i) => (
               <circle
                 key={i}
                 cx={size / 2}
                 cy={size / 2}
-                r={size * 0.4 * scale * (1 + coherenceLevel * 0.1)}
+                r={size * 0.45 * scale * (1 + coherenceLevel * 0.15)}
                 fill="none"
-                stroke="url(#lightFieldGradient)"
-                strokeWidth={1 + coherenceLevel * 2}
-                strokeOpacity={0.3 - i * 0.05}
-                strokeDasharray={`${size * 0.02} ${size * 0.01}`}
-                className="transition-all duration-500"
+                stroke="url(#enhancedLightFieldGradient)"
+                strokeWidth={3 + coherenceLevel * 4}
+                strokeOpacity={0.7 - i * 0.04}
+                strokeDasharray={`${size * 0.012} ${size * 0.006}`}
+                className="transition-all duration-400"
                 style={{
-                  animation: `breathe ${3 + i * 0.5}s ease-in-out infinite, rotate ${10 + i * 2}s linear infinite`
+                  animation: `breathe ${2 + i * 0.2}s ease-in-out infinite, rotate ${6 + i * 1}s linear infinite`,
+                  filter: 'drop-shadow(0 0 4px #FFE5B4)'
                 }}
               />
             ))}
           </g>
 
-          {/* Dynamic Voice Response Field */}
-          <g opacity={Math.max(0.3, voiceAmplitude * 0.8 + coherenceLevel * 0.4)} className="voice-field">
+          {/* Amber Voice Response Field - Visualizes voice activity */}
+          <g opacity={Math.max(0.4, voiceAmplitude * 0.9 + coherenceLevel * 0.5)} className="amber-voice-field">
             <circle
               cx={size / 2}
               cy={size / 2}
-              r={size * (0.15 + voiceAmplitude * 0.3)}
+              r={size * (0.18 + voiceAmplitude * 0.35)}
               fill="none"
-              stroke={isMaiaSpeaking ? "url(#maiaVoiceGradient)" : "url(#userVoiceGradient)"}
-              strokeWidth={2 + voiceAmplitude * 4}
-              opacity={0.7}
+              stroke="url(#amberVoiceGradient)"
+              strokeWidth={3 + voiceAmplitude * 5}
+              opacity={0.8}
               className="transition-all duration-200"
-              filter="url(#voiceGlow)"
+              filter="url(#amberVoiceGlow)"
             />
             <circle
               cx={size / 2}
               cy={size / 2}
-              r={size * (0.25 + voiceAmplitude * 0.4)}
+              r={size * (0.28 + voiceAmplitude * 0.45)}
               fill="none"
-              stroke={isMaiaSpeaking ? "url(#maiaVoiceGradient)" : "url(#userVoiceGradient)"}
-              strokeWidth={1 + voiceAmplitude * 2}
-              opacity={0.4}
+              stroke="url(#amberVoiceGradient)"
+              strokeWidth={2 + voiceAmplitude * 3}
+              opacity={0.6}
               className="transition-all duration-300"
-              filter="url(#voiceGlow)"
+              filter="url(#amberVoiceGlow)"
             />
             <circle
               cx={size / 2}
               cy={size / 2}
-              r={size * (0.35 + voiceAmplitude * 0.5)}
+              r={size * (0.38 + voiceAmplitude * 0.55)}
               fill="none"
-              stroke={isMaiaSpeaking ? "url(#maiaVoiceGradient)" : "url(#userVoiceGradient)"}
-              strokeWidth={0.5 + voiceAmplitude * 1}
-              opacity={0.2}
+              stroke="url(#amberVoiceGradient)"
+              strokeWidth={1 + voiceAmplitude * 2}
+              opacity={0.3}
               className="transition-all duration-400"
-              filter="url(#voiceGlow)"
+              filter="url(#amberVoiceGlow)"
             />
           </g>
 
@@ -220,21 +221,25 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
               <stop offset="100%" stopColor="#8b4513" stopOpacity="0.1" />
             </radialGradient>
 
-            <radialGradient id="userVoiceGradient" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#06FFA5" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#00D9FF" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#4DABF7" stopOpacity="0.2" />
+            <radialGradient id="enhancedLightFieldGradient" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#FFE5B4" stopOpacity="1" />
+              <stop offset="30%" stopColor="#FFF4E6" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#D4B896" stopOpacity="0.7" />
+              <stop offset="80%" stopColor="#B8860B" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#8b4513" stopOpacity="0.3" />
             </radialGradient>
 
-            <radialGradient id="maiaVoiceGradient" cx="50%" cy="50%">
-              <stop offset="0%" stopColor="#9D4EDD" stopOpacity="0.9" />
-              <stop offset="50%" stopColor="#C77DFF" stopOpacity="0.6" />
-              <stop offset="100%" stopColor="#E0AAFF" stopOpacity="0.2" />
+            <radialGradient id="amberVoiceGradient" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#FFD700" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#FFA500" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#FF8C00" stopOpacity="0.3" />
             </radialGradient>
+
+            {/* REMOVED: Voice gradients - no longer needed since blue ring removed */}
 
             {/* Glow filters for light field effects */}
-            <filter id="voiceGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+            <filter id="amberVoiceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -283,7 +288,7 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
           transform-origin: 50% 50%;
         }
 
-        .voice-field circle {
+        .amber-voice-field circle {
           transform-origin: 50% 50%;
         }
       `}</style>

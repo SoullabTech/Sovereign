@@ -1,0 +1,217 @@
+<svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Define gradients for each petal group -->
+    <!-- Earth/Gold tones (Top-left) -->
+    <linearGradient id="earth1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#D4AF37" />
+      <stop offset="100%" stop-color="#C19A2B" />
+    </linearGradient>
+    <linearGradient id="earth2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B8941F" />
+      <stop offset="100%" stop-color="#A68319" />
+    </linearGradient>
+    <linearGradient id="earth3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#947013" />
+      <stop offset="100%" stop-color="#7E5D0D" />
+    </linearGradient>
+    
+    <!-- Fire/Red tones (Top-right) -->
+    <linearGradient id="fire1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#CD8A7A" />
+      <stop offset="100%" stop-color="#C17B6A" />
+    </linearGradient>
+    <linearGradient id="fire2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#B56C5A" />
+      <stop offset="100%" stop-color="#A95D4A" />
+    </linearGradient>
+    <linearGradient id="fire3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9D4E3A" />
+      <stop offset="100%" stop-color="#8B3F2A" />
+    </linearGradient>
+    
+    <!-- Water/Blue tones (Bottom-right) -->
+    <linearGradient id="water1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FBBD3" />
+      <stop offset="100%" stop-color="#6FAFC9" />
+    </linearGradient>
+    <linearGradient id="water2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5FA3BF" />
+      <stop offset="100%" stop-color="#4F97B5" />
+    </linearGradient>
+    <linearGradient id="water3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3F8BAB" />
+      <stop offset="100%" stop-color="#2F7FA1" />
+    </linearGradient>
+    
+    <!-- Air/Green tones (Bottom-left) -->
+    <linearGradient id="air1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7A9B65" />
+      <stop offset="100%" stop-color="#6E8F59" />
+    </linearGradient>
+    <linearGradient id="air2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#62834D" />
+      <stop offset="100%" stop-color="#567741" />
+    </linearGradient>
+    <linearGradient id="air3" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4A6B35" />
+      <stop offset="100%" stop-color="#3E5F29" />
+    </linearGradient>
+    
+    <!-- Center gradient -->
+    <radialGradient id="centerGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="20%" stop-color="#FFD700" />
+      <stop offset="40%" stop-color="#FFA500" />
+      <stop offset="60%" stop-color="#FF6B6B" />
+      <stop offset="80%" stop-color="#4ECDC4" />
+      <stop offset="100%" stop-color="#45B7D1" />
+    </radialGradient>
+    
+    <!-- Shadow filter for depth -->
+    <filter id="petalShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="2" dy="2" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Group for all petals -->
+  <g id="holoflower-petals" transform="translate(400, 400)">
+    
+    <!-- Petal 1: Earth Light (Top-left, outer) -->
+    <path id="petal-earth-1" 
+          d="M -30,-50 Q -120,-180 -180,-250 Q -200,-280 -190,-320 Q -180,-350 -150,-360 Q -120,-365 -90,-350 Q -60,-330 -40,-290 Q -20,-240 -10,-180 Q -5,-120 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#earth1)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="earth"
+          data-angle="210"
+          transform="rotate(210)" />
+    
+    <!-- Petal 2: Earth Medium (Top-left, middle) -->
+    <path id="petal-earth-2" 
+          d="M -30,-50 Q -100,-160 -140,-210 Q -160,-240 -150,-270 Q -140,-290 -115,-295 Q -90,-297 -70,-285 Q -50,-270 -35,-235 Q -20,-195 -10,-145 Q -5,-100 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#earth2)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="earth"
+          data-angle="240"
+          transform="rotate(240)" />
+    
+    <!-- Petal 3: Earth Dark (Top-left, inner) -->
+    <path id="petal-earth-3" 
+          d="M -30,-50 Q -80,-140 -110,-180 Q -125,-205 -118,-228 Q -110,-245 -90,-248 Q -70,-249 -55,-240 Q -40,-228 -30,-200 Q -20,-165 -10,-125 Q -5,-85 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#earth3)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="earth"
+          data-angle="270"
+          transform="rotate(270)" />
+    
+    <!-- Petal 4: Fire Light (Top-right, inner) -->
+    <path id="petal-fire-1" 
+          d="M -30,-50 Q -80,-140 -110,-180 Q -125,-205 -118,-228 Q -110,-245 -90,-248 Q -70,-249 -55,-240 Q -40,-228 -30,-200 Q -20,-165 -10,-125 Q -5,-85 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#fire1)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="fire"
+          data-angle="300"
+          transform="rotate(300)" />
+    
+    <!-- Petal 5: Fire Medium (Top-right, middle) -->
+    <path id="petal-fire-2" 
+          d="M -30,-50 Q -100,-160 -140,-210 Q -160,-240 -150,-270 Q -140,-290 -115,-295 Q -90,-297 -70,-285 Q -50,-270 -35,-235 Q -20,-195 -10,-145 Q -5,-100 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#fire2)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="fire"
+          data-angle="330"
+          transform="rotate(330)" />
+    
+    <!-- Petal 6: Fire Dark (Top-right, outer) -->
+    <path id="petal-fire-3" 
+          d="M -30,-50 Q -120,-180 -180,-250 Q -200,-280 -190,-320 Q -180,-350 -150,-360 Q -120,-365 -90,-350 Q -60,-330 -40,-290 Q -20,-240 -10,-180 Q -5,-120 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#fire3)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="fire"
+          data-angle="0"
+          transform="rotate(0)" />
+    
+    <!-- Petal 7: Water Dark (Bottom-right, outer) -->
+    <path id="petal-water-1" 
+          d="M -30,-50 Q -120,-180 -180,-250 Q -200,-280 -190,-320 Q -180,-350 -150,-360 Q -120,-365 -90,-350 Q -60,-330 -40,-290 Q -20,-240 -10,-180 Q -5,-120 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#water3)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="water"
+          data-angle="30"
+          transform="rotate(30)" />
+    
+    <!-- Petal 8: Water Medium (Bottom-right, middle) -->
+    <path id="petal-water-2" 
+          d="M -30,-50 Q -100,-160 -140,-210 Q -160,-240 -150,-270 Q -140,-290 -115,-295 Q -90,-297 -70,-285 Q -50,-270 -35,-235 Q -20,-195 -10,-145 Q -5,-100 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#water2)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="water"
+          data-angle="60"
+          transform="rotate(60)" />
+    
+    <!-- Petal 9: Water Light (Bottom-right, inner) -->
+    <path id="petal-water-3" 
+          d="M -30,-50 Q -80,-140 -110,-180 Q -125,-205 -118,-228 Q -110,-245 -90,-248 Q -70,-249 -55,-240 Q -40,-228 -30,-200 Q -20,-165 -10,-125 Q -5,-85 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#water1)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="water"
+          data-angle="90"
+          transform="rotate(90)" />
+    
+    <!-- Petal 10: Air Dark (Bottom-left, inner) -->
+    <path id="petal-air-1" 
+          d="M -30,-50 Q -80,-140 -110,-180 Q -125,-205 -118,-228 Q -110,-245 -90,-248 Q -70,-249 -55,-240 Q -40,-228 -30,-200 Q -20,-165 -10,-125 Q -5,-85 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#air3)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="air"
+          data-angle="120"
+          transform="rotate(120)" />
+    
+    <!-- Petal 11: Air Medium (Bottom-left, middle) -->
+    <path id="petal-air-2" 
+          d="M -30,-50 Q -100,-160 -140,-210 Q -160,-240 -150,-270 Q -140,-290 -115,-295 Q -90,-297 -70,-285 Q -50,-270 -35,-235 Q -20,-195 -10,-145 Q -5,-100 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#air2)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="air"
+          data-angle="150"
+          transform="rotate(150)" />
+    
+    <!-- Petal 12: Air Light (Bottom-left, outer) -->
+    <path id="petal-air-3" 
+          d="M -30,-50 Q -120,-180 -180,-250 Q -200,-280 -190,-320 Q -180,-350 -150,-360 Q -120,-365 -90,-350 Q -60,-330 -40,-290 Q -20,-240 -10,-180 Q -5,-120 -10,-60 Q -15,-40 -30,-50 Z"
+          fill="url(#air1)" 
+          filter="url(#petalShadow)"
+          class="petal"
+          data-element="air"
+          data-angle="180"
+          transform="rotate(180)" />
+    
+  </g>
+  
+  <!-- Center sacred geometry -->
+  <g id="sacred-center" transform="translate(400, 400)">
+    <circle cx="0" cy="0" r="50" fill="url(#centerGradient)" opacity="0.9" />
+    <circle cx="0" cy="0" r="40" fill="#FFFFFF" opacity="0.7" />
+    <circle cx="0" cy="0" r="30" fill="url(#centerGradient)" opacity="0.8" />
+    <circle cx="0" cy="0" r="20" fill="#FFFFFF" opacity="0.9" />
+    <circle cx="0" cy="0" r="10" fill="#FFD700" opacity="1" />
+  </g>
+</svg>

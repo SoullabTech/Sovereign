@@ -1,0 +1,23 @@
+# CLAUDE CODE - CORRECT PROJECT DIRECTORY
+# ==================================================
+#
+# ✅ THIS IS THE CORRECT MAIA PROJECT
+#
+# Project: MAIA-SOVEREIGN (Spiralogic Oracle)
+# Path: /Users/soullab/MAIA-SOVEREIGN/
+#
+# 🚫 DO NOT WORK IN:
+# - /Users/soullab/MAIA-PAI-SOVEREIGN/ (Wrong - uses Vercel/Cloudflare)
+# - Any /apps/web/ subdirectories
+#
+# ✅ CORRECT ARCHITECTURE:
+# - MAIA App: /app/maia/page.tsx
+# - Intro: /app/intro/page.tsx
+# - Components: /components/onboarding/SageTealDaimonWelcome.tsx
+#
+# 🎨 DESIGN STANDARDS:
+# - Sage/Teal + Dark Navy ONLY
+# - NO PURPLE anywhere
+# - Use SageTealDaimonWelcome for all welcome flows
+#
+# Last Updated: 2024-11-29

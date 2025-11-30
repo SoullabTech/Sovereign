@@ -7,7 +7,8 @@ import { NextRequest, NextResponse } from 'next/server';
  * Now includes consciousness ecosystem data from the consciousness integration
  */
 
-export const dynamic = 'force-dynamic';
+// Note: Commented out for PWA static build compatibility
+// export const dynamic = 'force-dynamic';
 
 // CORS headers for cross-browser compatibility
 const CORS_HEADERS = {

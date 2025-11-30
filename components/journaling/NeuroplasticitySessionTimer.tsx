@@ -139,7 +139,7 @@ export function NeuroplasticitySessionTimer({ mode, onComplete, onTimeUpdate }: 
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               <div className="text-2xl font-bold text-white">
-                {minutes:String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
+                {String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
               </div>
               <div className="text-xs text-stone-400">
                 {isComplete ? 'Complete!' : isActive ? 'Active' : 'Ready'}

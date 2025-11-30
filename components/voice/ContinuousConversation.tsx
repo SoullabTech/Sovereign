@@ -34,7 +34,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     onAudioLevelChange,
     isProcessing = false,
     isSpeaking = false,
-    autoStart = false, // Changed default to false to avoid initialization issues
+    autoStart = false, // Disabled to prevent infinite restart loops
     silenceThreshold = 6000, // 6s to capture full thoughts and complex sentences - increased for longer pauses
     vadSensitivity = 0.3
   } = props;
@@ -332,8 +332,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         lastRestartTime.current = currentTime;
 
         // Stop the infinite loop if too many consecutive restarts
-        if (consecutiveRestartCount.current > 1) { // Reduced to 1 for immediate intervention
-          console.log('🛑 [onend] Too many consecutive restarts (' + consecutiveRestartCount.current + '), stopping voice recognition to prevent infinite loop');
+        if (consecutiveRestartCount.current >= 5) { // Allow 5 restart attempts before blocking
+          console.log('🛑 [onend] Preventing restart loop (' + consecutiveRestartCount.current + '), stopping voice recognition');
           setIsListening(false);
           isListeningRef.current = false;
           return;

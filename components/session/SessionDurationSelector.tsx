@@ -43,9 +43,9 @@ export function SessionDurationSelector({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed top-32 left-1/2 transform -translate-x-1/2
+            className="fixed top-[36%] left-4 right-4
                        bg-stone-900/95 backdrop-blur-xl border border-amber-500/20
-                       rounded-2xl p-6 w-full max-w-md mx-4 z-50"
+                       rounded-2xl p-6 w-auto max-w-none z-50"
           >
             {/* Header */}
             <div className="flex items-center justify-between mb-6">

@@ -2,14 +2,21 @@
   "name": "spiralogic-oracle-system",
   "version": "0.1.0",
   "private": true,
+  "main": "electron/main.js",
+  "homepage": "./",
   "scripts": {
     "dev": "next dev",
     "build": "node scripts/validate-critical-files.js && next build",
     "build:sovereign": "bash scripts/sovereign-build.sh",
     "start": "next start",
+    "desktop:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000/maia/labtools && electron electron/main.js\"",
+    "desktop:build": "npm run build && npm run desktop:package",
+    "desktop:package": "electron-builder",
+    "desktop:start": "electron electron/main.js",
     "lint": "cd apps/web && next lint",
     "check:sovereignty": "tsx scripts/check-maia-sovereignty.ts",
     "validate:critical": "node scripts/validate-critical-files.js",
+    "verify:claude": "bash scripts/verify-claude-project.sh",
     "audit:sovereignty": "tsx scripts/forensic-sovereignty-audit.ts",
     "postinstall": "echo 'Skipping prisma for now'",
     "typecheck": "tsc --noEmit",
@@ -135,9 +142,14 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.61.0",
-    "@capacitor/cli": "^7.4.3",
-    "@capacitor/core": "^7.4.3",
-    "@capacitor/ios": "^7.4.3",
+    "@capacitor/android": "^7.4.4",
+    "@capacitor/cli": "^7.4.4",
+    "@capacitor/clipboard": "^7.0.2",
+    "@capacitor/core": "^7.4.4",
+    "@capacitor/filesystem": "^7.1.5",
+    "@capacitor/ios": "^7.4.4",
+    "@capacitor/local-notifications": "^7.0.3",
+    "@capacitor/share": "^7.0.2",
     "@deepgram/sdk": "^4.11.2",
     "@heroicons/react": "^2.2.0",
     "@huggingface/inference": "^2.8.0",
@@ -247,7 +259,11 @@
     "@types/node": "^24.7.2",
     "@types/pg": "^8.15.6",
     "@types/uuid": "^9.0.8",
+    "concurrently": "^9.2.1",
     "dotenv": "^17.2.3",
+    "electron": "^39.2.4",
+    "electron-builder": "^26.0.12",
+    "electron-reload": "^2.0.0-alpha.1",
     "eslint": "8.56.0",
     "eslint-config-next": "14.0.4",
     "jest": "^29.7.0",
@@ -262,10 +278,107 @@
     "sharp": "^0.34.3",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.2",
-    "tsx": "^4.20.5"
+    "tsx": "^4.20.5",
+    "wait-on": "^9.0.3"
   },
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
+  },
+  "build": {
+    "appId": "life.soullab.maia.labtools",
+    "productName": "MAIA LabTools + IPP",
+    "directories": {
+      "output": "dist-desktop"
+    },
+    "files": [
+      "out/**/*",
+      "electron/**/*",
+      "public/icons/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "docs/testing",
+        "to": "docs/testing",
+        "filter": [
+          "**/*.md"
+        ]
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.healthcare-fitness",
+      "icon": "public/icons/icon-512x512.png",
+      "type": "distribution",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false
+    },
+    "dmg": {
+      "title": "MAIA LabTools + IPP",
+      "backgroundColor": "#1A1513",
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "win": {
+      "icon": "public/icons/icon-512x512.png",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "public/icons/icon-512x512.png",
+      "category": "Science",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
   }
 }

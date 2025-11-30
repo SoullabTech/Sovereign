@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Icon Generator</title>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    <script>
+        // Generate placeholder icons with sacred geometry pattern
+        const sizes = [72, 96, 128, 144, 152, 192, 384, 512];
+
+        function generateIcon(size) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Gradient background
+            const gradient = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+            gradient.addColorStop(0, '#9F7AEA');
+            gradient.addColorStop(0.5, '#805AD5');
+            gradient.addColorStop(1, '#553C9A');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, size, size);
+
+            // Sacred geometry pattern
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = Math.max(1, size/64);
+
+            // Center circle
+            ctx.beginPath();
+            ctx.arc(size/2, size/2, size/3, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // Petals
+            for (let i = 0; i < 6; i++) {
+                const angle = (i * Math.PI * 2) / 6;
+                const x = size/2 + Math.cos(angle) * size/4;
+                const y = size/2 + Math.sin(angle) * size/4;
+                ctx.beginPath();
+                ctx.arc(x, y, size/6, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            // Convert to blob and download
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `icon-${size}x${size}.png`;
+                a.textContent = `Download ${size}x${size}`;
+                document.body.appendChild(a);
+                document.body.appendChild(document.createElement('br'));
+            });
+        }
+
+        // Generate all sizes
+        sizes.forEach(size => generateIcon(size));
+
+        document.body.innerHTML = '<h1>Click each link to download icons, then upload to public/icons/</h1>' + document.body.innerHTML;
+    </script>
+</body>
+</html>

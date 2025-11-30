@@ -21,9 +21,11 @@ export async function GET(request: NextRequest) {
     // Check for other custom user IDs
     else if (userId && userId !== 'guest') {
       // Extract a friendly name from user ID if possible
-      userName = userId.replace(/[-_]/g, ' ')
-                     .replace(/\b\w/g, l => l.toUpperCase())
-                     .replace(/^Guest\d*$/, 'Explorer'); // Clean up guest IDs
+      const fullName = userId.replace(/[-_]/g, ' ')
+                             .replace(/\b\w/g, l => l.toUpperCase())
+                             .replace(/^Guest\d*$/, 'Explorer'); // Clean up guest IDs
+      // Extract first name only for conversational intimacy
+      userName = fullName.split(' ')[0];
     }
 
     const profile = {

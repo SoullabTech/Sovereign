@@ -21,9 +21,9 @@ export default function SignInPage() {
     try {
       // Test credentials for development
       const testCredentials = {
-        'Kelly@Soullab.org': 'password123',
-        'kelly@soullab.org': 'password123',
-        'Kelly': 'password123'
+        'Kelly@Soullab.org': 'Mandala21',
+        'kelly@soullab.org': 'Mandala21',
+        'Kelly': 'Mandala21'
       };
 
       // Check test credentials first
@@ -211,6 +211,16 @@ export default function SignInPage() {
             </form>
 
             <div className="text-center mt-6 pt-6 border-t border-white/20">
+              <p className="text-white/60 text-sm font-cinzel mb-2">
+                Don't have an account?
+              </p>
+              <button
+                onClick={() => router.push('/signup')}
+                className="text-teal-300 hover:text-teal-200 transition-colors font-cinzel text-sm underline mb-4"
+                disabled={isLoading}
+              >
+                Create Account
+              </button>
               <p className="text-white/60 text-sm font-cinzel">
                 Need help? Contact hello@soullab.life
               </p>

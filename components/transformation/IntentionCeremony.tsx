@@ -132,9 +132,9 @@ export function IntentionCeremony({ name, onComplete }: IntentionCeremonyProps) 
     background: `linear-gradient(135deg,
       ${navyGradient < 30 ? '#86efac' : '#059669'} 0%,
       ${navyGradient < 50 ? '#34d399' : '#0f766e'} 25%,
-      ${navyGradient < 70 ? '#059669' : '#1e40af'} 50%,
-      ${navyGradient < 90 ? '#0f766e' : '#1d4ed8'} 75%,
-      ${navyGradient >= 90 ? '#1e3a8a' : '#1e40af'} 100%
+      ${navyGradient < 70 ? '#059669' : '#d4b896'} 50%,
+      ${navyGradient < 90 ? '#0f766e' : '#b8860b'} 75%,
+      ${navyGradient >= 90 ? '#8b4513' : '#d4b896'} 100%
     )`,
     transition: 'background 4s cubic-bezier(0.25, 0.1, 0.25, 1)'
   };
@@ -168,7 +168,7 @@ export function IntentionCeremony({ name, onComplete }: IntentionCeremonyProps) 
               <radialGradient id="intentionGlow" cx="50%" cy="50%" r="50%">
                 <stop offset="0%" stopColor="#fde047" stopOpacity="0.9" />
                 <stop offset="30%" stopColor={navyGradient > 50 ? "#3b82f6" : "#22c55e"} stopOpacity="0.7" />
-                <stop offset="60%" stopColor={navyGradient > 70 ? "#1e40af" : "#14b8a6"} stopOpacity="0.5" />
+                <stop offset="60%" stopColor={navyGradient > 70 ? "#d4b896" : "#14b8a6"} stopOpacity="0.5" />
                 <stop offset="100%" stopColor={navyGradient > 80 ? "#1e293b" : "#0f766e"} stopOpacity="0.3" />
               </radialGradient>
               <filter id="intentionBlur">
@@ -202,7 +202,7 @@ export function IntentionCeremony({ name, onComplete }: IntentionCeremonyProps) 
                 cx="0"
                 cy="0"
                 r={3 + navyGradient * 0.05}
-                fill={navyGradient > 60 ? "#1e40af" : "#fde047"}
+                fill={navyGradient > 60 ? "#d4b896" : "#fde047"}
                 opacity="0.95"
               />
 

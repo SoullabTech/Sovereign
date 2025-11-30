@@ -41,7 +41,7 @@ export function ReturningWelcome({
       color: '#3b82f6',
       lightColor: '#bfdbfe',
       symbol: '💧',
-      gradients: ['#eff6ff', '#bfdbfe', '#60a5fa']
+      gradients: ['#fef3c7', '#fed7aa', '#d4b896']
     },
     earth: {
       name: 'Earth',

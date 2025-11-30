@@ -46,7 +46,7 @@ import { generateGreeting } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { ModeSwitcher } from './ui/ModeSwitcher';
-import { SacredLabDrawer } from './ui/SacredLabDrawer';
+import { SacredLabDrawer } from '../apps/web/components/ui/SacredLabDrawer';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
@@ -268,8 +268,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showClosingRitual, setShowClosingRitual] = useState(false);
   const [pendingSessionDuration, setPendingSessionDuration] = useState<number | null>(null);
 
-  // Holoflower/visualization state
-  const [holoflowerSize, setHoloflowerSize] = useState(400);
+  // Holoflower/visualization state - Mobile responsive
+  const [holoflowerSize, setHoloflowerSize] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768 ? 40 : 350; // 40px on mobile, 350px on desktop
+    }
+    return 350;
+  });
   const [checkIns, setCheckIns] = useState<Record<string, number>>(initialCheckIns);
   const [activeFacetId, setActiveFacetId] = useState<string | undefined>();
   const [currentMotionState, setCurrentMotionState] = useState<MotionState>('idle');
@@ -331,6 +336,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     onMessageAddedRef.current = onMessageAdded;
   }, [onMessageAdded]);
+
+  // Dynamic holoflower size based on window width
+  useEffect(() => {
+    const handleResize = () => {
+      const newSize = window.innerWidth <= 768 ? 40 : 350;
+      setHoloflowerSize(newSize);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // ==================== RECORDING STATE CALLBACK ====================
   // Sync isListening state from ContinuousConversation to parent
@@ -485,6 +501,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   } = useScribeMode();
 
   // Sacred Lab Drawer and Voice Menu states now declared earlier (lines 159-160)
+  // Listen for header lab drawer events
+  useEffect(() => {
+    const handleOpenLabDrawer = () => {
+      console.log('🧪 Opening lab drawer from header event');
+      setShowLabDrawer(true);
+    };
+
+    window.addEventListener('openLabDrawer', handleOpenLabDrawer);
+    return () => window.removeEventListener('openLabDrawer', handleOpenLabDrawer);
+  }, []);
 
   // 🌀 Soullab Realtime - DISABLED
   // This was trying to use OpenAI Realtime API in browser (not supported without dangerouslyAllowBrowser)
@@ -2765,14 +2791,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         </div>
       )}
 
-      {/* Branded Welcome Message */}
-      {showWelcome && userName && (
-        <BrandedWelcome
-          userName={userName}
-          isReturning={isReturningUser}
-          onComplete={() => setShowWelcome(false)}
-        />
-      )}
+      {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
       {/* Scribe Mode Recording Indicator */}
       <AnimatePresence>
@@ -2848,7 +2867,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       {/* 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed State Container */}
       {/* Breathing entrainment, color transitions, field expansion based on state */}
       {/* NO cognitive UI - the experience itself induces the transformation */}
-      <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[25]">
+      <div className="fixed top-20 left-1/2 -translate-x-1/2 z-[25]">
         <TransformationalPresence
           currentState={realtimeMode as PresenceState}
           onStateChange={(newState, transition) => {
@@ -2862,7 +2881,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           }}
           userSilenceDuration={0} // TODO: Track actual silence duration
           userSpeechTempo={120} // TODO: Track actual speech tempo
-          isListening={isListening}
+          isListening={false}
           isSpeaking={isResponding}
           biometricEnabled={true} // ⌚ APPLE WATCH INTEGRATION ENABLED
         >
@@ -2929,7 +2948,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             showLabels={false}
             motionState={currentMotionState}
             coherenceShift={coherenceShift}
-            isListening={isListening}
+            isListening={false}
             isProcessing={isProcessing}
             isResponding={isResponding}
             showBreakthrough={showBreakthrough}
@@ -3510,9 +3529,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
-              <div className="fixed inset-x-0 z-[60]" style={{ bottom: '2rem' }}>
-                {/* Text input area - Optimized mobile design - Raised higher for better accessibility */}
-                <div className="bg-soul-surface/90 px-3 py-3 border-t border-soul-border/40">
+              <div className="fixed inset-x-0 z-[60]" style={{ bottom: '2.5rem' }}>
+                {/* Text input area - Ultra-compact mobile design - Extends below bottom to eliminate white space */}
+                <div className="bg-soul-surface/90 px-2 py-1 pb-3 border-t border-soul-border/40">
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -3541,7 +3560,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                             }
                           }
                         }}
-                        className="flex-1 min-h-[48px] max-h-[120px] px-4 py-3
+                        className="flex-1 min-h-[32px] max-h-[60px] px-3 py-1
                                  bg-[#1a1f2e]/95 backdrop-blur-md
                                  border border-gold-divine/30 rounded-2xl
                                  placeholder:text-gold-divine/50
