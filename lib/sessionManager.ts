@@ -291,7 +291,7 @@ export class SessionManager {
   static redirectToMaia(): void {
     // Sacred pause before transition
     setTimeout(() => {
-      window.location.href = 'https://soullab.life/maia';
+      window.location.href = '/maia';
     }, 1500);
   }
 
