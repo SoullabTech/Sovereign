@@ -3,6 +3,16 @@ import fs from 'fs/promises';
 import path from 'path';
 import { headers } from 'next/headers';
 
+// Generate static params for all supported platforms
+export async function generateStaticParams() {
+  return [
+    { platform: 'mac-arm' },
+    { platform: 'mac-intel' },
+    { platform: 'windows' },
+    { platform: 'linux' }
+  ];
+}
+
 /**
  * MAIA LabTools + IPP Download API
  * Provides secure downloads for authenticated members
