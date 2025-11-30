@@ -21,7 +21,7 @@ import { WeavingVisualization } from '@/components/maya/WeavingVisualization';
 // BetaOnboarding removed - direct access only
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, FlaskConical, FileText, BarChart3, Users, Split, Maximize2 } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, FlaskConical, FileText, BarChart3, Users, Split, Maximize2, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
@@ -550,11 +550,11 @@ export default function MAIAPage() {
                   </div>
                 )}
 
-                {/* Labtools Button */}
+                {/* LabTools Button */}
                 <motion.button
                   onClick={() => {
-                    console.log('🧪 Opening comprehensive LabTools dashboard');
-                    window.open('http://localhost:3001/dashboard', '_blank', 'width=1400,height=900');
+                    console.log('🔬 Opening comprehensive LabTools with all functions');
+                    window.open('/maia/labtools', '_blank', 'width=1400,height=900');
                   }}
                   className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
                            bg-teal-500/10 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20 hover:border-teal-500/50"
@@ -562,22 +562,7 @@ export default function MAIAPage() {
                   style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
                 >
                   <FlaskConical className="w-3 h-3" />
-                  <span>Lab</span>
-                </motion.button>
-
-                {/* Consciousness Monitor Button */}
-                <motion.button
-                  onClick={() => {
-                    console.log('🧠 Opening standalone Consciousness Monitor');
-                    window.open('/consciousness-monitor', '_blank', 'width=1400,height=900');
-                  }}
-                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
-                           bg-green-500/10 border border-green-500/30 text-green-300 hover:bg-green-500/20 hover:border-green-500/50"
-                  whileHover={{ scale: 1.02 }}
-                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
-                >
-                  <Brain className="w-3 h-3" />
-                  <span>Monitor</span>
+                  <span>LabTools</span>
                 </motion.button>
 
                 {/* DESKTOP LABORATORY SYSTEM CONTROLS - Only show on desktop */}
