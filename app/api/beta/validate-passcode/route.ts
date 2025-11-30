@@ -12,8 +12,9 @@ interface ValidatePasscodeResponse {
   message?: string;
 }
 
-// Beta passcodes for sacred access
+// Beta passcodes for sacred access - includes all SOULLAB-[name] passcodes for testers
 const VALID_PASSCODES = [
+  // General consciousness passcodes
   'CONSCIOUS',
   'SACRED',
   'WISDOM',
@@ -24,7 +25,60 @@ const VALID_PASSCODES = [
   'CLARITY',
   'INSIGHT',
   'PRESENCE',
-  // Add more as needed
+  'CONSCIOUSNESS2025',
+  'DAIMON',
+  'SOULLAB',
+  'ORACLE',
+  'MAIA',
+  'BETA-TESTER-2025',
+
+  // SOULLAB-[name] passcodes for 46 beta testers
+  'SOULLAB-NATHAN',
+  'SOULLAB-JASON',
+  'SOULLAB-TRAVIS',
+  'SOULLAB-ANDREA',
+  'SOULLAB-JUSTIN',
+  'SOULLAB-SUSAN',
+  'SOULLAB-MEAGAN',
+  'SOULLAB-PATRICK',
+  'SOULLAB-TAMARA',
+  'SOULLAB-LORALEE',
+  'SOULLAB-ANDREAFAGAN',
+  'SOULLAB-CECE',
+  'SOULLAB-ZSUZSANNA',
+  'SOULLAB-ANGELA',
+  'SOULLAB-KRISTEN',
+  'SOULLAB-DOUG',
+  'SOULLAB-RICK',
+  'SOULLAB-JULIE',
+  'SOULLAB-KIMBERLY',
+  'SOULLAB-LEONARD',
+  'SOULLAB-CYNTHY',
+  'SOULLAB-NINA',
+  'SOULLAB-AUGUSTEN',
+  'SOULLAB-SOPHIE',
+  'SOULLAB-ROMEO',
+  'SOULLAB-STEPHEN',
+  'SOULLAB-WEEZIE',
+  'SOULLAB-KOREY',
+  'SOULLAB-KAREN',
+  'SOULLAB-NATASHA',
+  'SOULLAB-CATHERINE',
+  'SOULLAB-THEA',
+  'SOULLAB-VIRGINIA',
+  'SOULLAB-JONDI',
+  'SOULLAB-JOSEPH',
+  'SOULLAB-KELLY',
+  'SOULLAB-KARA',
+  'SOULLAB-CHRISTIAN',
+  'SOULLAB-CLAUDIA',
+  'SOULLAB-NICOLE',
+  'SOULLAB-MARIECHRISTINE',
+  'SOULLAB-LORNA',
+  'SOULLAB-YVONNE',
+  'SOULLAB-ANNA',
+  'SOULLAB-RISAKO',
+  'SOULLAB-WHITEY'
 ];
 
 export async function POST(request: NextRequest) {

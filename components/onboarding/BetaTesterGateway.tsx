@@ -58,26 +58,40 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
     setError('');
     setIsValidating(true);
 
-    // Simulate validation delay for sacred feeling
-    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      // Call server-side validation API
+      const response = await fetch('/api/beta/validate-passcode', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          passcode: passcode.toUpperCase().trim()
+        }),
+      });
 
-    const validPasscodes = getAllValidPasscodes();
-    const existingTester = findBetaTesterByPasscode(passcode);
+      const data = await response.json();
 
-    if (validPasscodes.includes(passcode.toUpperCase())) {
-      setIsValidating(false);
+      if (data.valid) {
+        // Check if this is an existing beta tester from ganesha contacts
+        const existingTester = findBetaTesterByPasscode(passcode);
 
-      if (existingTester) {
-        // Existing beta tester - show returning user flow
-        setExistingBetaTester(existingTester);
-        setName(existingTester.name);
-        setPhase('returning');
+        if (existingTester) {
+          // Existing beta tester - show returning user flow
+          setExistingBetaTester(existingTester);
+          setName(existingTester.name);
+          setPhase('returning');
+        } else {
+          // New user with general passcode
+          setPhase('account');
+        }
       } else {
-        // New beta tester with general passcode
-        setPhase('account');
+        setError(data.message || 'Access key not recognized. Please check your passcode.');
       }
-    } else {
-      setError('Access key not recognized. Please check your passcode.');
+    } catch (error) {
+      console.error('Passcode validation error:', error);
+      setError('Unable to validate passcode. Please try again.');
+    } finally {
       setIsValidating(false);
     }
   };
