@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# MAIA-SOVEREIGN Android Build Script
+# Builds and packages the Android application
+
+set -e
+
+echo "🤖 MAIA-SOVEREIGN Android Build Pipeline"
+echo "========================================="
+
+# Set Android environment
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21
+export ANDROID_HOME=$HOME/Library/Android/sdk
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
+
+# Build type (debug or release)
+BUILD_TYPE=${1:-debug}
+
+echo "📱 Building Android app (${BUILD_TYPE} mode)..."
+
+# Sync Capacitor
+echo "🔄 Syncing Capacitor..."
+npx cap sync android
+
+# Build the Android app
+if [ "$BUILD_TYPE" == "release" ]; then
+    echo "🏗️ Building release APK..."
+    cd android
+    ./gradlew assembleRelease
+    APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+else
+    echo "🔨 Building debug APK..."
+    cd android
+    ./gradlew assembleDebug
+    APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+fi
+
+# Check if APK was created
+if [ -f "$APK_PATH" ]; then
+    APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+    echo "✅ Android APK built successfully!"
+    echo "📁 Location: $(pwd)/$APK_PATH"
+    echo "📏 Size: $APK_SIZE"
+
+    # Copy to root directory for easy access
+    cp "$APK_PATH" "../maia-android-${BUILD_TYPE}.apk"
+    echo "📋 Copied to: ../maia-android-${BUILD_TYPE}.apk"
+else
+    echo "❌ Android APK build failed!"
+    exit 1
+fi
+
+echo ""
+echo "🎉 Android build pipeline complete!"
+echo ""
+echo "Next steps:"
+echo "  • Test the APK on an Android device or emulator"
+echo "  • For release builds, sign the APK with your keystore"
+echo "  • Deploy to Google Play Store or distribute directly"

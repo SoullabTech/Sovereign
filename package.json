@@ -8,6 +8,8 @@
     "dev": "next dev",
     "build": "node scripts/validate-critical-files.js && next build",
     "build:sovereign": "bash scripts/sovereign-build.sh",
+    "android:build": "bash scripts/build-android.sh debug",
+    "android:release": "bash scripts/build-android.sh release",
     "start": "next start",
     "desktop:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000/maia/labtools && electron electron/main.js\"",
     "desktop:build": "npm run build && npm run desktop:package",
