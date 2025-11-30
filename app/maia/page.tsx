@@ -232,13 +232,17 @@ export default function MAIAPage() {
   };
 
   const handleSignOut = () => {
+    // Clear all user session data
     localStorage.removeItem('beta_user');
     localStorage.removeItem('beta_users');
     localStorage.removeItem('betaOnboardingComplete');
     localStorage.removeItem('explorerId');
     localStorage.removeItem('betaUserId');
     localStorage.removeItem('explorerName');
-    router.push('/');
+    localStorage.removeItem('maia_session_id');
+    localStorage.removeItem('maia_welcome_seen');
+    localStorage.removeItem('selected_voice');
+    router.push('/welcome');
   };
 
   useEffect(() => {
@@ -454,7 +458,7 @@ export default function MAIAPage() {
                   }}
                   className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
                     maiaMode === 'patient'
-                      ? 'bg-purple-500/30 text-purple-200 border border-purple-500/50'
+                      ? 'bg-teal-500/30 text-teal-200 border border-teal-500/50'
                       : 'bg-black/20 text-amber-400/70 hover:text-amber-300 border border-amber-500/20'
                   }`}
                   style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
@@ -507,12 +511,27 @@ export default function MAIAPage() {
                     window.open('http://localhost:3001/dashboard', '_blank', 'width=1400,height=900');
                   }}
                   className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
-                           bg-purple-500/10 border border-purple-500/30 text-purple-300 hover:bg-purple-500/20 hover:border-purple-500/50"
+                           bg-teal-500/10 border border-teal-500/30 text-teal-300 hover:bg-teal-500/20 hover:border-teal-500/50"
                   whileHover={{ scale: 1.02 }}
                   style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
                 >
                   <FlaskConical className="w-3 h-3" />
                   <span>Lab</span>
+                </motion.button>
+
+                {/* Consciousness Monitor Button */}
+                <motion.button
+                  onClick={() => {
+                    console.log('🧠 Opening standalone Consciousness Monitor');
+                    window.open('/consciousness-monitor', '_blank', 'width=1400,height=900');
+                  }}
+                  className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
+                           bg-green-500/10 border border-green-500/30 text-green-300 hover:bg-green-500/20 hover:border-green-500/50"
+                  whileHover={{ scale: 1.02 }}
+                  style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                >
+                  <Brain className="w-3 h-3" />
+                  <span>Monitor</span>
                 </motion.button>
 
                 {/* DESKTOP LABORATORY SYSTEM CONTROLS - Only show on desktop */}
