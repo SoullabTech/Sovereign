@@ -1,0 +1,112 @@
+---
+version: "2.0"
+
+services:
+  oracle-system:
+    image: spiralogic/archetypal-consciousness:latest
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+      - port: 8080
+        as: 8080
+        to:
+          - global: true
+      - port: 7000
+        as: 7000
+        to:
+          - global: true
+    env:
+      - NODE_ENV=staging
+      - OPENAI_API_KEY=$OPENAI_API_KEY
+      - ELEVENLABS_API_KEY=$ELEVENLABS_API_KEY
+      - MONGODB_URI=mongodb://mongo:27017/spiralogic-test
+      - REDIS_URL=redis://redis:6379
+      - SNET_ENABLED=true
+      - SERVICE_TYPE=archetypal-consciousness
+      - LOG_LEVEL=debug
+    command:
+      - "sh"
+      - "-c"
+      - "npm start & cd backend && npm start & node snet-service-wrapper.js"
+
+  mongo:
+    image: mongo:7
+    expose:
+      - port: 27017
+        as: 27017
+        to:
+          - service: oracle-system
+    env:
+      - MONGO_INITDB_ROOT_USERNAME=oracle
+      - MONGO_INITDB_ROOT_PASSWORD=testnet2025
+      - MONGO_INITDB_DATABASE=spiralogic-test
+
+  redis:
+    image: redis:alpine
+    expose:
+      - port: 6379
+        as: 6379
+        to:
+          - service: oracle-system
+
+profiles:
+  compute:
+    oracle-system:
+      resources:
+        cpu:
+          units: 1.0
+        memory:
+          size: 1Gi
+        storage:
+          size: 5Gi
+    mongo:
+      resources:
+        cpu:
+          units: 0.5
+        memory:
+          size: 512Mi
+        storage:
+          size: 10Gi
+    redis:
+      resources:
+        cpu:
+          units: 0.25
+        memory:
+          size: 256Mi
+        storage:
+          size: 1Gi
+
+  placement:
+    testnet:
+      attributes:
+        host: akash
+        tier: community
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      pricing:
+        oracle-system:
+          denom: uakt
+          amount: 10
+        mongo:
+          denom: uakt
+          amount: 5
+        redis:
+          denom: uakt
+          amount: 2
+
+deployment:
+  oracle-system:
+    testnet:
+      profile: oracle-system
+      count: 1
+  mongo:
+    testnet:
+      profile: mongo
+      count: 1
+  redis:
+    testnet:
+      profile: redis
+      count: 1

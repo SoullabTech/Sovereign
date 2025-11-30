@@ -1,0 +1,16 @@
+# Voice Samples Directory
+
+This directory would contain the actual voice sample files in production:
+
+- aunt-annie-sample.mp3 (5-10 second sample)
+- deep-sage-sample.mp3 (5-10 second sample)  
+- matrix-oracle-sample.mp3 (5-10 second sample)
+- fire-essence-sample.mp3 (5-10 second sample)
+
+For development, the preview endpoint returns a mock audio response or could generate samples using TTS services.
+
+## Voice Sample Requirements:
+- Duration: 5-10 seconds
+- Format: MP3, 44.1kHz, 128kbps minimum
+- Content: Representative phrase in the Oracle's voice
+- Size: < 1MB per sample for quick loading

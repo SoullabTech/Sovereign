@@ -1,0 +1,15 @@
+# Core dependencies
+fastapi>=0.115.0
+uvicorn>=0.32.0
+pydantic==2.10.2
+httpx==0.28.1
+numpy==1.24.4
+soundfile==0.12.1
+
+# Simple TTS dependencies - using pyttsx3 instead of Coqui
+pyttsx3==2.90
+gTTS==2.5.1
+pydub==0.25.1
+
+# Audio processing
+scipy>=1.10.0

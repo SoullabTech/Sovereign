@@ -1,0 +1,1358 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sacred Journey Questionnaire - Soullab Retreat</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f0f1e 100%);
+        color: #e0e0e0;
+        min-height: 100vh;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 40px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .spiral-logo {
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 20px;
+        background: conic-gradient(
+          from 0deg,
+          #ff6b6b,
+          #f9ca24,
+          #6c5ce7,
+          #4ecdc4,
+          #ff6b6b
+        );
+        border-radius: 50%;
+        animation: rotate 10s linear infinite;
+      }
+
+      @keyframes rotate {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      h1 {
+        font-size: 2.5em;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle {
+        font-size: 1.2em;
+        color: #a0a0a0;
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        margin: 30px 0;
+        overflow: hidden;
+      }
+
+      .progress {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        border-radius: 3px;
+        transition: width 0.3s ease;
+        width: 0%;
+      }
+
+      .section {
+        margin-bottom: 40px;
+        animation: fadeIn 0.5s ease-in;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section-title {
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .element-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+      }
+
+      .fire {
+        background: linear-gradient(135deg, #ff6b6b, #ff4757);
+      }
+      .water {
+        background: linear-gradient(135deg, #4ecdc4, #44a3aa);
+      }
+      .earth {
+        background: linear-gradient(135deg, #6c5ce7, #5f4bb6);
+      }
+      .air {
+        background: linear-gradient(135deg, #a8e6cf, #7fcdbb);
+      }
+      .aether {
+        background: linear-gradient(135deg, #ffd93d, #ffb142);
+      }
+
+      .form-group {
+        margin-bottom: 25px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 500;
+        color: #fff;
+      }
+
+      input,
+      textarea,
+      select {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        color: #fff;
+        font-size: 16px;
+        transition: all 0.3s ease;
+      }
+
+      input:focus,
+      textarea:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+        background: rgba(255, 255, 255, 0.15);
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      textarea {
+        resize: vertical;
+        min-height: 100px;
+      }
+
+      .checkbox-group,
+      .radio-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+      }
+
+      .checkbox-item,
+      .radio-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 15px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .checkbox-item:hover,
+      .radio-item:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      input[type="checkbox"],
+      input[type="radio"] {
+        width: auto;
+        margin: 0;
+      }
+
+      .slider-container {
+        margin: 20px 0;
+      }
+
+      .slider {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        outline: none;
+        -webkit-appearance: none;
+      }
+
+      .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 24px;
+        height: 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .slider-labels {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        font-size: 0.9em;
+        color: #a0a0a0;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 15px;
+        margin-top: 40px;
+      }
+
+      button {
+        flex: 1;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .oracle-message {
+        background: rgba(102, 126, 234, 0.1);
+        border-left: 4px solid #667eea;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 8px;
+        font-style: italic;
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          padding: 20px;
+        }
+
+        h1 {
+          font-size: 2em;
+        }
+
+        .checkbox-group,
+        .radio-group {
+          flex-direction: column;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="spiral-logo"></div>
+        <h1>Sacred Journey Questionnaire</h1>
+        <p class="subtitle">Preparing Your Container for Transformation</p>
+      </div>
+
+      <div class="progress-bar">
+        <div class="progress" id="progressBar"></div>
+      </div>
+
+      <form id="questionnaireForm">
+        <!-- Section 1: Life Context -->
+        <div class="section" id="section1">
+          <h2 class="section-title">
+            <div class="element-icon earth"></div>
+            Life Context
+          </h2>
+
+          <div class="oracle-message">
+            "Share where you stand in this moment of your journey..."
+          </div>
+
+          <div class="form-group">
+            <label for="currentLifePhase"
+              >What phase of life are you currently in?</label
+            >
+            <textarea
+              id="currentLifePhase"
+              name="currentLifePhase"
+              required
+              placeholder="Describe your current life chapter..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Major transitions you're experiencing:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" name="majorTransitions" value="career" />
+                <span>Career shift</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="majorTransitions"
+                  value="relationship"
+                />
+                <span>Relationship change</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="majorTransitions" value="health" />
+                <span>Health journey</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="majorTransitions"
+                  value="spiritual"
+                />
+                <span>Spiritual awakening</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="majorTransitions" value="loss" />
+                <span>Loss or grief</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="majorTransitions"
+                  value="identity"
+                />
+                <span>Identity exploration</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="primaryRelationships"
+              >Describe your primary relationships:</label
+            >
+            <textarea
+              id="primaryRelationships"
+              name="primaryRelationships"
+              required
+              placeholder="Partner, family, community connections..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="professionalContext"
+              >Your professional/creative context:</label
+            >
+            <textarea
+              id="professionalContext"
+              name="professionalContext"
+              required
+              placeholder="Your work, calling, or creative expression..."
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Section 2: Emotional Landscape -->
+        <div class="section hidden" id="section2">
+          <h2 class="section-title">
+            <div class="element-icon water"></div>
+            Emotional Landscape
+          </h2>
+
+          <div class="oracle-message">
+            "Let us witness the waters of your emotional world..."
+          </div>
+
+          <div class="form-group">
+            <label>Dominant emotions in your life right now:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" name="dominantEmotions" value="joy" />
+                <span>Joy</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="dominantEmotions"
+                  value="sadness"
+                />
+                <span>Sadness</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="dominantEmotions" value="anger" />
+                <span>Anger</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="dominantEmotions" value="fear" />
+                <span>Fear</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="dominantEmotions"
+                  value="excitement"
+                />
+                <span>Excitement</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="dominantEmotions"
+                  value="anxiety"
+                />
+                <span>Anxiety</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="dominantEmotions" value="peace" />
+                <span>Peace</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="dominantEmotions"
+                  value="longing"
+                />
+                <span>Longing</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Your emotional challenges:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalChallenges"
+                  value="overwhelm"
+                />
+                <span>Feeling overwhelmed</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalChallenges"
+                  value="numbness"
+                />
+                <span>Emotional numbness</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalChallenges"
+                  value="expression"
+                />
+                <span>Difficulty expressing</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalChallenges"
+                  value="boundaries"
+                />
+                <span>Boundary issues</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalChallenges"
+                  value="sensitivity"
+                />
+                <span>Over-sensitivity</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalChallenges"
+                  value="trust"
+                />
+                <span>Trust difficulties</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Your emotional strengths:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalStrengths"
+                  value="empathy"
+                />
+                <span>Deep empathy</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalStrengths"
+                  value="intuition"
+                />
+                <span>Strong intuition</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalStrengths"
+                  value="resilience"
+                />
+                <span>Emotional resilience</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalStrengths"
+                  value="authenticity"
+                />
+                <span>Authentic expression</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalStrengths"
+                  value="compassion"
+                />
+                <span>Self-compassion</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="emotionalStrengths"
+                  value="presence"
+                />
+                <span>Emotional presence</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 3: Spiritual Journey -->
+        <div class="section hidden" id="section3">
+          <h2 class="section-title">
+            <div class="element-icon air"></div>
+            Spiritual Journey
+          </h2>
+
+          <div class="oracle-message">"Your spirit calls you deeper..."</div>
+
+          <div class="form-group">
+            <label>Spiritual practices you engage with:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="practicesEngaged"
+                  value="meditation"
+                />
+                <span>Meditation</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="practicesEngaged" value="yoga" />
+                <span>Yoga</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="practicesEngaged" value="prayer" />
+                <span>Prayer</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="practicesEngaged" value="nature" />
+                <span>Nature connection</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="practicesEngaged"
+                  value="ceremony"
+                />
+                <span>Ceremony/Ritual</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="practicesEngaged" value="energy" />
+                <span>Energy work</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="practicesEngaged"
+                  value="breathwork"
+                />
+                <span>Breathwork</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="practicesEngaged"
+                  value="journaling"
+                />
+                <span>Journaling</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="spiritualBeliefs"
+              >Describe your spiritual beliefs or worldview:</label
+            >
+            <textarea
+              id="spiritualBeliefs"
+              name="spiritualBeliefs"
+              required
+              placeholder="What do you believe about the nature of reality, consciousness, the divine..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="connectionToNature"
+              >How connected do you feel to nature?</label
+            >
+            <div class="slider-container">
+              <input
+                type="range"
+                id="connectionToNature"
+                name="connectionToNature"
+                min="1"
+                max="10"
+                value="5"
+                class="slider"
+              />
+              <div class="slider-labels">
+                <span>Disconnected</span>
+                <span>Deeply Connected</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mysticalExperiences"
+              >Any mystical or transcendent experiences to share?</label
+            >
+            <textarea
+              id="mysticalExperiences"
+              name="mysticalExperiences"
+              placeholder="Peak experiences, synchronicities, spiritual openings... (optional)"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Section 4: Shadow Work -->
+        <div class="section hidden" id="section4">
+          <h2 class="section-title">
+            <div class="element-icon fire"></div>
+            Shadow Work
+          </h2>
+
+          <div class="oracle-message">
+            "In the darkness lies your hidden gold..."
+          </div>
+
+          <div class="form-group">
+            <label for="shadowAwareness"
+              >How aware are you of your shadow aspects?</label
+            >
+            <div class="slider-container">
+              <input
+                type="range"
+                id="shadowAwareness"
+                name="shadowAwareness"
+                min="1"
+                max="10"
+                value="5"
+                class="slider"
+              />
+              <div class="slider-labels">
+                <span>Just beginning</span>
+                <span>Deep awareness</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Patterns you're ready to transform:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="people-pleasing"
+                />
+                <span>People-pleasing</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="perfectionism"
+                />
+                <span>Perfectionism</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="control"
+                />
+                <span>Need for control</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="avoidance"
+                />
+                <span>Avoidance</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="self-sabotage"
+                />
+                <span>Self-sabotage</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="victim"
+                />
+                <span>Victim consciousness</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="judgment"
+                />
+                <span>Harsh judgment</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="patternsToTransform"
+                  value="unworthiness"
+                />
+                <span>Unworthiness</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>What you fear most:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="abandonment" />
+                <span>Abandonment</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="failure" />
+                <span>Failure</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="success" />
+                <span>Success</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="intimacy" />
+                <span>Intimacy</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="power" />
+                <span>Own power</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="death" />
+                <span>Death/endings</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="truth" />
+                <span>Truth being seen</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="fears" value="unknown" />
+                <span>The unknown</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="hiddenGifts"
+              >What hidden gifts might lie in your shadow?</label
+            >
+            <textarea
+              id="hiddenGifts"
+              name="hiddenGifts"
+              placeholder="The gold waiting to be reclaimed... (optional)"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Section 5: Intentions -->
+        <div class="section hidden" id="section5">
+          <h2 class="section-title">
+            <div class="element-icon aether"></div>
+            Sacred Intentions
+          </h2>
+
+          <div class="oracle-message">
+            "Speak your deepest calling into being..."
+          </div>
+
+          <div class="form-group">
+            <label for="primaryIntention"
+              >Your primary intention for this retreat (minimum 20
+              words):</label
+            >
+            <textarea
+              id="primaryIntention"
+              name="primaryIntention"
+              required
+              minlength="20"
+              placeholder="What is your soul truly calling for in this sacred container?"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Breakthroughs you desire:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="clarity"
+                />
+                <span>Life purpose clarity</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="healing"
+                />
+                <span>Deep healing</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="creativity"
+                />
+                <span>Creative unleashing</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="relationships"
+                />
+                <span>Relationship transformation</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="abundance"
+                />
+                <span>Abundance activation</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="leadership"
+                />
+                <span>Leadership embodiment</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="spiritual"
+                />
+                <span>Spiritual awakening</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="desiredBreakthroughs"
+                  value="integration"
+                />
+                <span>Shadow integration</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>What you're willing to release:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="willingToRelease"
+                  value="control"
+                />
+                <span>Need to control</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="willingToRelease"
+                  value="stories"
+                />
+                <span>Old stories</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="willingToRelease" value="masks" />
+                <span>Protective masks</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="willingToRelease"
+                  value="resentment"
+                />
+                <span>Resentments</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="willingToRelease"
+                  value="limitations"
+                />
+                <span>Self-imposed limits</span>
+              </label>
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="willingToRelease"
+                  value="attachments"
+                />
+                <span>Unhealthy attachments</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>What you want to embody:</label>
+            <div class="checkbox-group">
+              <label class="checkbox-item">
+                <input
+                  type="checkbox"
+                  name="newToEmbody"
+                  value="authenticity"
+                />
+                <span>Radical authenticity</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="power" />
+                <span>Personal power</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="love" />
+                <span>Unconditional love</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="presence" />
+                <span>Deep presence</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="joy" />
+                <span>Embodied joy</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="wisdom" />
+                <span>Inner wisdom</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="wholeness" />
+                <span>Integrated wholeness</span>
+              </label>
+              <label class="checkbox-item">
+                <input type="checkbox" name="newToEmbody" value="service" />
+                <span>Sacred service</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 6: Readiness -->
+        <div class="section hidden" id="section6">
+          <h2 class="section-title">
+            <div class="element-icon earth"></div>
+            Retreat Readiness
+          </h2>
+
+          <div class="oracle-message">
+            "Assessing your readiness for transformation..."
+          </div>
+
+          <div class="form-group">
+            <label for="physicalHealth">Physical health & vitality:</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="physicalHealth"
+                name="physicalHealth"
+                min="1"
+                max="10"
+                value="5"
+                class="slider"
+              />
+              <div class="slider-labels">
+                <span>Challenged</span>
+                <span>Vibrant</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="mentalClarity">Mental clarity & focus:</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="mentalClarity"
+                name="mentalClarity"
+                min="1"
+                max="10"
+                value="5"
+                class="slider"
+              />
+              <div class="slider-labels">
+                <span>Foggy</span>
+                <span>Crystal clear</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="emotionalOpenness">Emotional openness:</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="emotionalOpenness"
+                name="emotionalOpenness"
+                min="1"
+                max="10"
+                value="5"
+                class="slider"
+              />
+              <div class="slider-labels">
+                <span>Guarded</span>
+                <span>Wide open</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="groupReadiness">Readiness for group process:</label>
+            <div class="slider-container">
+              <input
+                type="range"
+                id="groupReadiness"
+                name="groupReadiness"
+                min="1"
+                max="10"
+                value="5"
+                class="slider"
+              />
+              <div class="slider-labels">
+                <span>Prefer solo</span>
+                <span>Love group work</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input
+                type="checkbox"
+                id="timeCommitment"
+                name="timeCommitment"
+                required
+              />
+              I commit to being fully present for the entire retreat experience
+            </label>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="prevBtn"
+            onclick="changeSection(-1)"
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            id="nextBtn"
+            onclick="changeSection(1)"
+          >
+            Next
+          </button>
+          <button type="submit" class="btn-primary hidden" id="submitBtn">
+            Complete Sacred Assessment
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      let currentSection = 1;
+      const totalSections = 6;
+      const participantId = new URLSearchParams(window.location.search).get(
+        "participantId",
+      );
+
+      function updateProgress() {
+        const progress = (currentSection / totalSections) * 100;
+        document.getElementById("progressBar").style.width = progress + "%";
+      }
+
+      function showSection(sectionNum) {
+        // Hide all sections
+        for (let i = 1; i <= totalSections; i++) {
+          document.getElementById(`section${i}`).classList.add("hidden");
+        }
+
+        // Show current section
+        document
+          .getElementById(`section${sectionNum}`)
+          .classList.remove("hidden");
+
+        // Update buttons
+        document
+          .getElementById("prevBtn")
+          .classList.toggle("hidden", sectionNum === 1);
+        document
+          .getElementById("nextBtn")
+          .classList.toggle("hidden", sectionNum === totalSections);
+        document
+          .getElementById("submitBtn")
+          .classList.toggle("hidden", sectionNum !== totalSections);
+
+        updateProgress();
+      }
+
+      function changeSection(direction) {
+        const newSection = currentSection + direction;
+
+        if (newSection >= 1 && newSection <= totalSections) {
+          // Basic validation for current section
+          if (direction === 1 && !validateSection(currentSection)) {
+            return;
+          }
+
+          currentSection = newSection;
+          showSection(currentSection);
+          window.scrollTo(0, 0);
+        }
+      }
+
+      function validateSection(sectionNum) {
+        const section = document.getElementById(`section${sectionNum}`);
+        const requiredInputs = section.querySelectorAll("[required]");
+
+        for (let input of requiredInputs) {
+          if (!input.value.trim()) {
+            input.focus();
+            alert("Please complete all required fields before proceeding.");
+            return false;
+          }
+        }
+
+        return true;
+      }
+
+      function getFormData() {
+        const formData = new FormData(
+          document.getElementById("questionnaireForm"),
+        );
+        const data = {
+          participantId: participantId,
+          lifeContext: {
+            currentLifePhase: formData.get("currentLifePhase"),
+            majorTransitions: formData.getAll("majorTransitions"),
+            primaryRelationships: formData.get("primaryRelationships"),
+            professionalContext: formData.get("professionalContext"),
+          },
+          emotionalLandscape: {
+            dominantEmotions: formData.getAll("dominantEmotions"),
+            emotionalChallenges: formData.getAll("emotionalChallenges"),
+            emotionalStrengths: formData.getAll("emotionalStrengths"),
+            stressResponses: [], // Could add this field
+          },
+          spiritualJourney: {
+            practicesEngaged: formData.getAll("practicesEngaged"),
+            spiritualBeliefs: formData.get("spiritualBeliefs"),
+            connectionToNature: parseInt(formData.get("connectionToNature")),
+            mysticalExperiences: formData.get("mysticalExperiences"),
+          },
+          shadowWork: {
+            shadowAwareness: parseInt(formData.get("shadowAwareness")),
+            patternsToTransform: formData.getAll("patternsToTransform"),
+            fears: formData.getAll("fears"),
+            hiddenGifts: formData.get("hiddenGifts"),
+          },
+          intentions: {
+            primaryIntention: formData.get("primaryIntention"),
+            secondaryIntentions: [], // Could add this field
+            desiredBreakthroughs: formData.getAll("desiredBreakthroughs"),
+            willingToRelease: formData.getAll("willingToRelease"),
+            newToEmbody: formData.getAll("newToEmbody"),
+          },
+          readiness: {
+            physicalHealth: parseInt(formData.get("physicalHealth")),
+            mentalClarity: parseInt(formData.get("mentalClarity")),
+            emotionalOpenness: parseInt(formData.get("emotionalOpenness")),
+            timeCommitment: formData.get("timeCommitment") === "on",
+            groupReadiness: parseInt(formData.get("groupReadiness")),
+          },
+        };
+
+        return data;
+      }
+
+      document
+        .getElementById("questionnaireForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          if (!validateSection(currentSection)) {
+            return;
+          }
+
+          const submitBtn = document.getElementById("submitBtn");
+          submitBtn.disabled = true;
+          submitBtn.textContent = "Processing your sacred data...";
+
+          try {
+            const data = getFormData();
+
+            const response = await fetch(
+              "/api/retreat/onboarding/questionnaire",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify(data),
+              },
+            );
+
+            if (response.ok) {
+              const result = await response.json();
+
+              // Show completion message
+              document.querySelector(".container").innerHTML = `
+                        <div class="header">
+                            <div class="spiral-logo"></div>
+                            <h1>Sacred Assessment Complete</h1>
+                        </div>
+
+                        <div class="oracle-message">
+                            <h2>Thank you for sharing your sacred journey</h2>
+                            <p>${result.message}</p>
+                        </div>
+
+                        <div class="section">
+                            <h3>Your Elemental Profile:</h3>
+                            <p>Dominant Element: <strong>${result.elementalProfile.dominantElement}</strong></p>
+                        </div>
+
+                        <div class="section">
+                            <h3>Kelly's Reflection:</h3>
+                            <div class="oracle-message">
+                                ${result.founderReflection}
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <a href="${result.nextStep}" class="btn-primary" style="text-decoration: none; display: inline-block; text-align: center;">
+                                Meet Your Personal Oracle
+                            </a>
+                        </div>
+                    `;
+            } else {
+              throw new Error("Submission failed");
+            }
+          } catch (error) {
+            console.error("Error submitting questionnaire:", error);
+            alert(
+              "There was an error submitting your questionnaire. Please try again.",
+            );
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Complete Sacred Assessment";
+          }
+        });
+
+      // Initialize
+      showSection(1);
+
+      // Add smooth transitions for sliders
+      document.querySelectorAll(".slider").forEach((slider) => {
+        slider.addEventListener("input", function () {
+          const value = this.value;
+          const percent = ((value - this.min) / (this.max - this.min)) * 100;
+          this.style.background = `linear-gradient(to right, #667eea 0%, #764ba2 ${percent}%, rgba(255, 255, 255, 0.1) ${percent}%, rgba(255, 255, 255, 0.1) 100%)`;
+        });
+        slider.dispatchEvent(new Event("input"));
+      });
+    </script>
+  </body>
+</html>

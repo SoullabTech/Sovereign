@@ -1,0 +1,57 @@
+{
+  "name": "SpiralogicFireAgent",
+  "service_id": "spiralogic-fire-agent",
+  "organization_id": "spiralogic-org",
+  "version": "1.0.0",
+  "description": "Fire archetype agent for vision activation and creative transformation",
+  "short_description": "Ignite your vision and creative power",
+  "url": "https://your-akash-deployment.com",
+  "model_ipfs_hash": "",
+  "mpe_address": "",
+  "assets": {
+    "hero_image": "ipfs://QmFireAgentHeroImage",
+    "images": ["ipfs://QmFireAgentImage1", "ipfs://QmFireAgentImage2"],
+    "demo_files": []
+  },
+  "pricing": {
+    "price_model": "fixed_price",
+    "price_in_cogs": 1,
+    "default": true
+  },
+  "groups": [
+    {
+      "group_name": "default_group",
+      "pricing": [
+        {
+          "price_model": "fixed_price",
+          "price_in_cogs": 1,
+          "default": true
+        }
+      ],
+      "endpoints": [
+        {
+          "group_name": "default_group",
+          "endpoint": "your-akash-deployment.com:80"
+        }
+      ]
+    }
+  ],
+  "service_spec": {
+    "url": "https://raw.githubusercontent.com/your-org/fire-agent/main/service_spec.json"
+  },
+  "media": [
+    {
+      "order": 1,
+      "url": "ipfs://QmFireAgentDemo",
+      "file_type": "video",
+      "alt_text": "Fire Agent Demo"
+    }
+  ],
+  "contributors": [
+    {
+      "name": "Spiralogic Team",
+      "email_id": "contact@spiralogic.com"
+    }
+  ],
+  "tags": ["oracle", "transformation", "creativity", "vision", "fire", "wisdom"]
+}

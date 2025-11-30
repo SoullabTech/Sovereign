@@ -1,0 +1,31 @@
+# 🐳 Offline Sesame CSM Dockerfile
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04
+
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    python3 python3-pip git wget curl ffmpeg \
+    && rm -rf /var/lib/apt/lists/*
+
+# Python env
+WORKDIR /app
+COPY requirements.txt .
+
+# Add your Sesame repo requirements here
+RUN pip3 install --upgrade pip
+RUN pip3 install -r requirements.txt
+RUN pip3 install fastapi uvicorn[standard] torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu122
+
+# Copy Sesame source code
+COPY csm/ ./csm/
+
+# Copy local model cache into container
+COPY models/sesame /models/sesame
+
+# Environment
+ENV MODEL_DIR=/models/sesame
+ENV PORT=8000
+
+EXPOSE 8000
+
+# Start FastAPI server
+CMD ["uvicorn", "csm.api_server:app", "--host", "0.0.0.0", "--port", "8000"]

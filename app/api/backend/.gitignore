@@ -1,0 +1,46 @@
+# Build output
+dist/
+.tsbuildinfo
+src/**/*.js
+src/**/*.js.map
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# macOS cruft
+.DS_Store
+._*
+
+# Backup files
+*.backup
+*.bak
+
+# Test artifacts
+.nyc_output
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo.env
+backend/.env
+.env
+backend/.env

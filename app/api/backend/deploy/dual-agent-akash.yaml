@@ -1,0 +1,151 @@
+# dual-agent-akash.yaml - Fire + Water Agents Akash Deployment
+version: "2.0"
+services:
+  fire-agent:
+    image: your-registry/fire-agent:latest
+    env:
+      - NODE_ENV=production
+      - PORT=3001
+      - AGENT_TYPE=fire
+      - MAYA_INTEGRATION=true
+    expose:
+      - port: 3001
+        as: 3001
+        to:
+          - global: true
+    resources:
+      cpu:
+        limit: "0.5"
+      memory:
+        limit: "512Mi"
+      storage:
+        limit: "5Gi"
+
+  water-agent:
+    image: your-registry/water-agent:latest
+    env:
+      - NODE_ENV=production
+      - PORT=3002
+      - AGENT_TYPE=water
+      - EMOTIONAL_INTELLIGENCE_ENABLED=true
+      - TRAUMA_INFORMED_MODE=true
+    expose:
+      - port: 3002
+        as: 3002
+        to:
+          - global: true
+    resources:
+      cpu:
+        limit: "0.5"
+      memory:
+        limit: "512Mi"
+      storage:
+        limit: "5Gi"
+
+  orchestrator:
+    image: your-registry/orchestrator:latest
+    env:
+      - NODE_ENV=production
+      - PORT=3000
+      - FIRE_AGENT_URL=http://fire-agent:3001
+      - WATER_AGENT_URL=http://water-agent:3002
+      - COLLECTIVE_INTELLIGENCE=true
+    expose:
+      - port: 3000
+        as: 80
+        to:
+          - global: true
+    depends_on:
+      - fire-agent
+      - water-agent
+    resources:
+      cpu:
+        limit: "1.0"
+      memory:
+        limit: "1Gi"
+      storage:
+        limit: "10Gi"
+
+  redis:
+    image: redis:alpine
+    resources:
+      cpu:
+        limit: "0.2"
+      memory:
+        limit: "256Mi"
+      storage:
+        limit: "1Gi"
+
+profiles:
+  compute:
+    fire-agent:
+      resources:
+        cpu:
+          limit: "0.5"
+        memory:
+          limit: "512Mi"
+        storage:
+          limit: "5Gi"
+    water-agent:
+      resources:
+        cpu:
+          limit: "0.5"
+        memory:
+          limit: "512Mi"
+        storage:
+          limit: "5Gi"
+    orchestrator:
+      resources:
+        cpu:
+          limit: "1.0"
+        memory:
+          limit: "1Gi"
+        storage:
+          limit: "10Gi"
+    redis:
+      resources:
+        cpu:
+          limit: "0.2"
+        memory:
+          limit: "256Mi"
+        storage:
+          limit: "1Gi"
+
+  placement:
+    westcoast:
+      attributes:
+        region: us-west
+      signedBy:
+        anyOf:
+          - "akash1365yvmc4s7awdyj3n2sav7xfx76adc6dnmlx63"
+      pricing:
+        fire-agent:
+          denom: uakt
+          amount: 500
+        water-agent:
+          denom: uakt
+          amount: 500
+        orchestrator:
+          denom: uakt
+          amount: 1000
+        redis:
+          denom: uakt
+          amount: 200
+
+deployment:
+  fire-agent:
+    westcoast:
+      profile: fire-agent
+      count: 1
+  water-agent:
+    westcoast:
+      profile: water-agent
+      count: 1
+  orchestrator:
+    westcoast:
+      profile: orchestrator
+      count: 1
+  redis:
+    westcoast:
+      profile: redis
+      count: 1

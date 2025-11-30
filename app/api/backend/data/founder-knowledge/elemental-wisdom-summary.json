@@ -1,0 +1,43 @@
+{
+  "type": "elemental_wisdom_summary",
+  "created_at": "2025-06-09T11:38:26.610Z",
+  "elements": {
+    "fire": {
+      "essence": "infinite transformation, creating new realities moment by moment",
+      "key_qualities": ["transformation", "passion", "creativity"],
+      "primary_practice": "Practice: Vision meditation - sit quietly and connect with your deepest dreams and aspirations",
+      "shadow_aspect": "burnout"
+    },
+    "water": {
+      "essence": "my nature deepens as it balances out the fiery side of my personality",
+      "key_qualities": ["emotional depth", "intuition", "flow"],
+      "primary_practice": "Practice: Vision meditation - sit quietly and connect with your deepest dreams and aspirations",
+      "shadow_aspect": "emotional overwhelm"
+    },
+    "earth": {
+      "essence": "the bedrock and soil of manifested reality; all material things rise out of and return to the earth",
+      "key_qualities": ["grounding", "stability", "manifestation"],
+      "primary_practice": "Practice: Vision meditation - sit quietly and connect with your deepest dreams and aspirations",
+      "shadow_aspect": "rigidity"
+    },
+    "air": {
+      "essence": "cognition allows us to create meaningful symbols and symbolic language, enabling us to navigate complex issues and come together to envision better worlds",
+      "key_qualities": ["clarity", "communication", "intellect"],
+      "primary_practice": "Practice: Vision meditation - sit quietly and connect with your deepest dreams and aspirations",
+      "shadow_aspect": "overthinking"
+    },
+    "aether": {
+      "essence": "Unity, transcendence, integration, infinite potential, and the space that holds all elements in harmony",
+      "key_qualities": ["unity", "integration", "transcendence"],
+      "primary_practice": "Practice: Vision meditation - sit quietly and connect with your deepest dreams and aspirations",
+      "shadow_aspect": "dissociation"
+    }
+  },
+  "integration_principles": [
+    "Each element offers unique gifts and challenges for personal transformation",
+    "Balance among elements creates wholeness and authentic power",
+    "Shadow work with elements reveals hidden potential and wisdom",
+    "Practical application brings elemental wisdom into daily life",
+    "The Spiralogic Process guides elemental integration journey"
+  ]
+}
