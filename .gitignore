@@ -182,6 +182,14 @@ apps/**/node_modules/
 *.dll
 *.node
 
+# Desktop build artifacts (Electron)
+dist-desktop/
+electron-dist/
+*.dmg
+*.app
+*.exe
+*.AppImage
+
 # Large PDFs and documents
 *.pdf
 uploads/**/*.pdf
