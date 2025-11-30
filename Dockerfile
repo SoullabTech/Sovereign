@@ -3,12 +3,15 @@ FROM node:18-alpine AS base
 
 # Install dependencies only when needed
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat build-base python3 make g++
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts --legacy-peer-deps
+RUN npm ci --legacy-peer-deps
+
+# Rebuild native modules for Alpine Linux architecture
+RUN npm rebuild sqlite3 --build-from-source
 
 # Rebuild the source code only when needed
 FROM base AS builder
