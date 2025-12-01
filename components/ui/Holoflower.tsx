@@ -100,11 +100,6 @@ export function Holoflower({
             ease: "easeInOut"
           }}
         >
-          {/* Subtle dark background to make white pattern visible */}
-          <div
-            className={`${sizes.image} absolute inset-0 bg-gradient-to-br from-gray-800/20 via-gray-700/25 to-gray-600/30 rounded-full opacity-60`}
-            style={{ zIndex: 1 }}
-          />
 
           {/* Subtle white overlay layer */}
           <img
@@ -136,11 +131,6 @@ export function Holoflower({
         </motion.div>
       ) : (
         <div className="relative z-10">
-          {/* Subtle dark background to make white pattern visible */}
-          <div
-            className={`${sizes.image} absolute inset-0 bg-gradient-to-br from-gray-800/20 via-gray-700/25 to-gray-600/30 rounded-full opacity-60`}
-            style={{ zIndex: 1 }}
-          />
 
           {/* Subtle white overlay layer */}
           <img

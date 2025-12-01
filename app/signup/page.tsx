@@ -124,7 +124,7 @@ export default function SignUpPage() {
   };
 
   const handleBack = () => {
-    router.push('/welcome');
+    router.push('/welcome-back');
   };
 
   const handleSignInRedirect = () => {

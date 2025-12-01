@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'MAIA - LabTools & IPP',
   webDir: 'www',
   server: {
-    url: 'http://soullab.life',
+    url: 'http://localhost:3005',
     cleartext: true,
     androidScheme: 'http',
     allowMixedContent: true,

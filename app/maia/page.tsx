@@ -765,7 +765,7 @@ export default function MAIAPage() {
                     localStorage.removeItem('sessionId');
                     // Force redirect to welcome after clearing
                     setTimeout(() => {
-                      router.push('/welcome');
+                      router.push('/welcome-back');
                     }, 100);
                   }}
                   className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"

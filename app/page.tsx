@@ -18,7 +18,7 @@ export default function RootPage() {
   useEffect(() => {
     // Sacred pause for consciousness detection then auto-route to welcome system
     const timer = setTimeout(() => {
-      router.push('/welcome');
+      router.push('/welcome-back');
     }, 1000);
 
     return () => clearTimeout(timer);
