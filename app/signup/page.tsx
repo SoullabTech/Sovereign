@@ -110,9 +110,9 @@ export default function SignUpPage() {
 
       setSuccess('Account created successfully! Redirecting...');
 
-      // Brief success display then redirect
+      // Brief success display then redirect to onboarding ritual
       setTimeout(() => {
-        router.push('/maia');
+        router.push('/onboarding');
       }, 1500);
 
     } catch (err) {

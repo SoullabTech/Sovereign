@@ -56,7 +56,76 @@ const nextConfig = {
         tls: false,
       };
     }
+
+    // Fix undici library bundling issue for Node.js v22+
+    config.externals = config.externals || [];
+    if (isServer) {
+      // Externalize undici and related problematic libraries
+      config.externals.push({
+        'undici': 'commonjs undici',
+        'formdata-polyfill/esm.min.js': 'commonjs formdata-polyfill/esm.min.js'
+      });
+    }
+
+    // 🔥 CRITICAL COMPONENT OPTIMIZATION - SacredLabDrawer & PFI System
+    // Ensure SacredLabDrawer and core components are prioritized during builds
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        ...config.optimization.splitChunks,
+        cacheGroups: {
+          ...config.optimization.splitChunks.cacheGroups,
+          // Critical core components - high priority
+          'sacred-core': {
+            name: 'sacred-core',
+            chunks: 'all',
+            test: /[\\/]components[\\/](SacredLabDrawer|LanguageSelector)\.tsx?$/,
+            priority: 100,
+            enforce: true,
+          },
+          // MAIA page - high priority
+          'maia-core': {
+            name: 'maia-core',
+            chunks: 'all',
+            test: /[\\/]app[\\/]maia[\\/]page\.tsx?$/,
+            priority: 90,
+            enforce: true,
+          },
+          // Sacred luxury retreat onboarding - protected from removal
+          'sacred-onboarding': {
+            name: 'sacred-onboarding',
+            chunks: 'all',
+            test: /[\\/]components[\\/]onboarding[\\/](CompleteWelcomeFlow|MAIADaimonIntroduction|DaimonWelcomeRitual|SacredSoulInduction)\.tsx?$/,
+            priority: 85,
+            enforce: true,
+          },
+          // PFI consciousness system
+          'pfi-system': {
+            name: 'pfi-system',
+            chunks: 'all',
+            test: /[\\/]lib[\\/]consciousness[\\/]field[\\/]/,
+            priority: 80,
+            enforce: true,
+          },
+        },
+      },
+    };
+
+    // Add webpack alias for critical components to prevent import issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@/components/SacredLabDrawer': require('path').resolve(__dirname, 'components/SacredLabDrawer.tsx'),
+      '@/types/core-components': require('path').resolve(__dirname, 'types/core-components.ts'),
+    };
+
     return config;
+  },
+
+  // Experimental features to ensure critical components load first
+  experimental: {
+    optimizeCss: true,
+    // Ensure SacredLabDrawer is in the critical path
+    largePageDataBytes: 128 * 1000, // 128KB
   },
 };
 

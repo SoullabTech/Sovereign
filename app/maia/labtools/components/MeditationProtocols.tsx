@@ -12,14 +12,14 @@ interface MeditationProtocol extends Protocol {
     sacred: number;
     harmonic: number[];
   };
-  consciousnessTargets: {
-    theta_enhancement: number;
-    gamma_activation: number;
-    coherence_boost: number;
-    field_synchrony: number;
+  qualities: {
+    deep_calm: number;
+    clear_awareness: number;
+    heart_coherence: number;
+    field_connection: number;
   };
   adaptiveFeatures: string[];
-  contraindications: string[];
+  considerations: string[];
 }
 
 interface Props {
@@ -34,12 +34,12 @@ export function MeditationProtocols({ service }: Props) {
   // Advanced meditation protocols beyond basic consciousness work
   const advancedMeditationProtocols: MeditationProtocol[] = [
     {
-      id: 'consciousness_cascade',
-      name: 'Consciousness Cascade',
+      id: 'opening_cascade',
+      name: 'Opening Cascade',
       category: 'meditation',
       intensity: 0.9,
       duration: 45,
-      description: 'Advanced breakthrough meditation with cascade synchronization across all consciousness modules',
+      description: 'An invitation to deep opening - what emerges when different parts of you synchronize?',
       safetyLevel: 'advanced',
       meditationType: 'consciousness_expansion',
       sacredPattern: 'golden_spiral',
@@ -49,11 +49,11 @@ export function MeditationProtocols({ service }: Props) {
         sacred: 741,
         harmonic: [528, 741, 852, 963, 1074]
       },
-      consciousnessTargets: {
-        theta_enhancement: 0.7,
-        gamma_activation: 0.9,
-        coherence_boost: 0.8,
-        field_synchrony: 0.85
+      qualities: {
+        deep_calm: 0.7,
+        clear_awareness: 0.9,
+        heart_coherence: 0.8,
+        field_connection: 0.85
       },
       adaptiveFeatures: [
         'Real-time EEG adaptation',
@@ -61,11 +61,11 @@ export function MeditationProtocols({ service }: Props) {
         'Breakthrough cascade triggering',
         'Sacred geometry frequency modulation'
       ],
-      contraindications: [
-        'Epilepsy or seizure disorders',
-        'Severe anxiety disorders',
-        'Recent psychedelic use (48h)',
-        'Pregnancy'
+      considerations: [
+        'May not be suitable if you have seizure sensitivity',
+        'Could feel intense if anxiety is very active',
+        'Best to wait after recent psychedelic experience (48h)',
+        'Check with your body if pregnant'
       ]
     },
     {
@@ -84,11 +84,11 @@ export function MeditationProtocols({ service }: Props) {
         sacred: 528,
         harmonic: [432, 540, 675, 810, 1012.5]
       },
-      consciousnessTargets: {
-        theta_enhancement: 0.8,
-        gamma_activation: 0.4,
-        coherence_boost: 0.9,
-        field_synchrony: 0.7
+      qualities: {
+        deep_calm: 0.8,
+        clear_awareness: 0.4,
+        heart_coherence: 0.9,
+        field_connection: 0.7
       },
       adaptiveFeatures: [
         'Golden ratio timing cycles',
@@ -96,9 +96,9 @@ export function MeditationProtocols({ service }: Props) {
         'Sacred pattern visualization sync',
         'Field geometry optimization'
       ],
-      contraindications: [
-        'Hearing impairments',
-        'Tinnitus'
+      considerations: [
+        'May be difficult with hearing sensitivity',
+        'Consider if you have tinnitus'
       ]
     },
     {
@@ -107,7 +107,7 @@ export function MeditationProtocols({ service }: Props) {
       category: 'meditation',
       intensity: 0.95,
       duration: 60,
-      description: 'Ultra-deep meditation accessing quantum consciousness frequencies below 1Hz',
+      description: 'An invitation into profound stillness - exploring what emerges in the deepest quietude',
       safetyLevel: 'advanced',
       meditationType: 'quantum_coherence',
       sacredPattern: 'merkaba',
@@ -117,11 +117,11 @@ export function MeditationProtocols({ service }: Props) {
         sacred: 1618,
         harmonic: [0.1, 0.5, 1.618, 2.618, 4.236]
       },
-      consciousnessTargets: {
-        theta_enhancement: 0.6,
-        gamma_activation: 0.3,
-        coherence_boost: 0.95,
-        field_synchrony: 0.9
+      qualities: {
+        deep_calm: 0.95,
+        clear_awareness: 0.6,
+        heart_coherence: 0.9,
+        field_connection: 0.9
       },
       adaptiveFeatures: [
         'Quantum epsilon frequencies',
@@ -129,11 +129,11 @@ export function MeditationProtocols({ service }: Props) {
         'Consciousness field coupling',
         'Non-local awareness cultivation'
       ],
-      contraindications: [
-        'Heart conditions',
-        'Blood pressure medication',
-        'Recent head injury',
-        'Dissociative disorders'
+      considerations: [
+        'May feel intense with heart sensitivities',
+        'Check with your body if on blood pressure medication',
+        'Best to wait after recent head trauma',
+        'May not feel grounding if dissociation is present'
       ]
     },
     {
@@ -142,7 +142,7 @@ export function MeditationProtocols({ service }: Props) {
       category: 'meditation',
       intensity: 0.85,
       duration: 40,
-      description: 'Targeted protocol for facilitating consciousness breakthroughs and integration',
+      description: 'An invitation to what wants to emerge - supporting natural moments of opening and integration',
       safetyLevel: 'intense',
       meditationType: 'breakthrough_cultivation',
       sacredPattern: 'flower_of_life',
@@ -152,11 +152,11 @@ export function MeditationProtocols({ service }: Props) {
         sacred: 852,
         harmonic: [89, 178, 356, 741, 852]
       },
-      consciousnessTargets: {
-        theta_enhancement: 0.75,
-        gamma_activation: 0.85,
-        coherence_boost: 0.7,
-        field_synchrony: 0.8
+      qualities: {
+        deep_calm: 0.7,
+        clear_awareness: 0.85,
+        heart_coherence: 0.75,
+        field_connection: 0.8
       },
       adaptiveFeatures: [
         'Breakthrough threshold detection',
@@ -164,10 +164,10 @@ export function MeditationProtocols({ service }: Props) {
         'Wisdom crystallization support',
         'Pattern recognition enhancement'
       ],
-      contraindications: [
-        'Unstable mood disorders',
-        'Psychosis history',
-        'Severe PTSD'
+      considerations: [
+        'May feel overwhelming if emotions are very unstable',
+        'Check with your inner wisdom if you have history with psychosis',
+        'May not feel safe if trauma is very fresh or intense'
       ]
     },
     {
@@ -176,7 +176,7 @@ export function MeditationProtocols({ service }: Props) {
       category: 'meditation',
       intensity: 0.6,
       duration: 25,
-      description: 'Gentle meditation focused on consciousness field coherence and torus stabilization',
+      description: 'A gentle invitation to field coherence - feeling into the natural harmony that wants to emerge',
       safetyLevel: 'gentle',
       meditationType: 'field_harmonization',
       sacredPattern: 'sri_yantra',
@@ -186,11 +186,11 @@ export function MeditationProtocols({ service }: Props) {
         sacred: 528,
         harmonic: [108, 216, 432, 528, 639]
       },
-      consciousnessTargets: {
-        theta_enhancement: 0.6,
-        gamma_activation: 0.2,
-        coherence_boost: 0.8,
-        field_synchrony: 0.95
+      qualities: {
+        deep_calm: 0.8,
+        clear_awareness: 0.6,
+        heart_coherence: 0.8,
+        field_connection: 0.95
       },
       adaptiveFeatures: [
         'Torus field stabilization',
@@ -198,7 +198,7 @@ export function MeditationProtocols({ service }: Props) {
         'Gentle frequency transitions',
         'Field symmetry enhancement'
       ],
-      contraindications: []
+      considerations: []
     }
   ];
 
@@ -260,7 +260,7 @@ export function MeditationProtocols({ service }: Props) {
     <div className="bg-black/30 backdrop-blur-sm border border-purple-500/30 rounded-xl p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-xl font-bold text-white flex items-center gap-2">
-          🔮 Advanced Meditation Protocols
+          🔮 Meditation Invitations
         </h3>
         {activeProtocol && (
           <button
@@ -311,19 +311,19 @@ export function MeditationProtocols({ service }: Props) {
                 </div>
 
                 <div className="bg-black/20 rounded-lg p-3">
-                  <h5 className="text-sm font-medium text-purple-300 mb-2">Consciousness Targets</h5>
+                  <h5 className="text-sm font-medium text-purple-300 mb-2">Qualities</h5>
                   <div className="space-y-1 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Theta:</span>
-                      <span className="text-white">{((activeProtocol as MeditationProtocol).consciousnessTargets.theta_enhancement * 100).toFixed(0)}%</span>
+                      <span className="text-gray-400">Deep Calm:</span>
+                      <span className="text-white">{((activeProtocol as MeditationProtocol).qualities.deep_calm * 100).toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Gamma:</span>
-                      <span className="text-white">{((activeProtocol as MeditationProtocol).consciousnessTargets.gamma_activation * 100).toFixed(0)}%</span>
+                      <span className="text-gray-400">Clear Awareness:</span>
+                      <span className="text-white">{((activeProtocol as MeditationProtocol).qualities.clear_awareness * 100).toFixed(0)}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Coherence:</span>
-                      <span className="text-white">{((activeProtocol as MeditationProtocol).consciousnessTargets.coherence_boost * 100).toFixed(0)}%</span>
+                      <span className="text-gray-400">Heart Coherence:</span>
+                      <span className="text-white">{((activeProtocol as MeditationProtocol).qualities.heart_coherence * 100).toFixed(0)}%</span>
                     </div>
                   </div>
                 </div>
@@ -397,11 +397,11 @@ export function MeditationProtocols({ service }: Props) {
                     </div>
                   </div>
 
-                  {/* Consciousness Targets */}
+                  {/* Qualities */}
                   <div className="bg-black/20 rounded-lg p-3">
-                    <h5 className="text-sm font-medium text-purple-300 mb-2">Consciousness Targets</h5>
+                    <h5 className="text-sm font-medium text-purple-300 mb-2">Qualities</h5>
                     <div className="space-y-2">
-                      {Object.entries(selectedProtocol.consciousnessTargets).map(([key, value]) => (
+                      {Object.entries(selectedProtocol.qualities).map(([key, value]) => (
                         <div key={key} className="flex justify-between items-center">
                           <span className="text-xs text-gray-400 capitalize">
                             {key.replace('_', ' ')}:
@@ -435,15 +435,15 @@ export function MeditationProtocols({ service }: Props) {
                   </div>
                 )}
 
-                {/* Contraindications */}
-                {selectedProtocol.contraindications.length > 0 && (
+                {/* Considerations */}
+                {selectedProtocol.considerations.length > 0 && (
                   <div className="mb-4">
-                    <h5 className="text-sm font-medium text-red-300 mb-2">Contraindications</h5>
-                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3">
-                      <ul className="text-xs text-red-200 space-y-1">
-                        {selectedProtocol.contraindications.map((item, i) => (
+                    <h5 className="text-sm font-medium text-amber-300 mb-2">Considerations</h5>
+                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
+                      <ul className="text-xs text-amber-200 space-y-1">
+                        {selectedProtocol.considerations.map((item, i) => (
                           <li key={i} className="flex items-center gap-2">
-                            <span className="text-red-400">⚠️</span>
+                            <span className="text-amber-400">💭</span>
                             {item}
                           </li>
                         ))}

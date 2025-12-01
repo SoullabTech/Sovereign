@@ -16,6 +16,9 @@ import { RealTimeBiometricMeditationConsole } from './components/RealTimeBiometr
 import { MeditationProtocols } from './components/MeditationProtocols';
 import { SacredGeometryField } from './components/SacredGeometryField';
 import { LabToolsService } from './lib/LabToolsService';
+import DreamJournalInterface from '../../../components/dreams/DreamJournalInterface';
+import { SacredLabDrawer } from '../../../components/ui/SacredLabDrawer';
+import { FieldCoherenceDashboard } from '../../../apps/web/components/biometrics/FieldCoherenceDashboard';
 // IPP Components - TODO: Create these components
 // import IPPDashboard from '../../../components/clinical/IPPDashboard';
 // import IPPAssessment from '../../../components/clinical/IPPAssessment';
@@ -23,8 +26,9 @@ import { LabToolsService } from './lib/LabToolsService';
 export default function MAIALabTools() {
   const [labToolsService] = useState(() => new LabToolsService());
   const [isConnected, setIsConnected] = useState(false);
-  const [activeView, setActiveView] = useState<'consciousness' | 'meditation' | 'monitor' | 'ipp'>('monitor');
+  const [activeView, setActiveView] = useState<'consciousness' | 'meditation' | 'monitor' | 'dreams' | 'ipp'>('monitor');
   const [meditationActive, setMeditationActive] = useState(false);
+  const [isFieldDrawerOpen, setIsFieldDrawerOpen] = useState(false);
 
   useEffect(() => {
     // Initialize real-time consciousness monitoring
@@ -103,6 +107,16 @@ export default function MAIALabTools() {
                 🧘 Meditation
               </button>
               <button
+                onClick={() => setActiveView('dreams')}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  activeView === 'dreams'
+                    ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/50'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                🌙 Dreams
+              </button>
+              <button
                 onClick={() => setActiveView('ipp')}
                 className={`px-4 py-2 rounded-lg text-sm transition-all ${
                   activeView === 'ipp'
@@ -111,6 +125,12 @@ export default function MAIALabTools() {
                 }`}
               >
                 👨‍👩‍👧‍👦 IPP
+              </button>
+              <button
+                onClick={() => setIsFieldDrawerOpen(true)}
+                className="px-4 py-2 rounded-lg text-sm transition-all text-gray-400 hover:text-white hover:bg-orange-500/20 border border-orange-500/30"
+              >
+                🌊 Field
               </button>
             </div>
           </div>
@@ -264,6 +284,14 @@ export default function MAIALabTools() {
               <IntegrationNotes service={labToolsService} />
             </div>
           </>
+        ) : activeView === 'dreams' ? (
+          // Dream & Unconscious Integration View
+          <>
+            {/* Full Width Dream Journal Interface */}
+            <div className="col-span-12">
+              <DreamJournalInterface />
+            </div>
+          </>
         ) : (
           // IPP Clinical Assessment View
           <>
@@ -371,6 +399,14 @@ export default function MAIALabTools() {
                 <span>⚡ Breakthrough Detection: Online</span>
               </>
             )}
+            {activeView === 'dreams' && (
+              <>
+                <span>🌙 Dreams: Active</span>
+                <span>🎙️ Voice Recording: Ready</span>
+                <span>🔮 DreamWeaver: Online</span>
+                <span>🧠 Archetypal Analysis: Ready</span>
+              </>
+            )}
             {activeView === 'ipp' && (
               <>
                 <span>👨‍👩‍👧‍👦 IPP: Active</span>
@@ -385,12 +421,28 @@ export default function MAIALabTools() {
               activeView === 'monitor' ? '📊 Monitor' :
               activeView === 'consciousness' ? '🧠 Consciousness' :
               activeView === 'meditation' ? '🧘 Meditation' :
+              activeView === 'dreams' ? '🌙 Dreams' :
               '👨‍👩‍👧‍👦 IPP'
             }</span>
             <span>Last updated: {new Date().toLocaleTimeString()}</span>
           </div>
         </div>
       </footer>
+
+      {/* Field Coherence Drawer */}
+      <SacredLabDrawer
+        isOpen={isFieldDrawerOpen}
+        onClose={() => setIsFieldDrawerOpen(false)}
+        title="MAIA Field Coherence"
+      >
+        <div className="space-y-4">
+          <div className="text-[#E5D6C5] text-sm mb-4">
+            Real-time consciousness field monitoring, elemental balance tracking,
+            and breakthrough trajectory analysis.
+          </div>
+          <FieldCoherenceDashboard />
+        </div>
+      </SacredLabDrawer>
     </div>
   );
 }

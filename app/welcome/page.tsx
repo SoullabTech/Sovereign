@@ -13,11 +13,19 @@ export default function WelcomePage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check if user is authenticated and get their info
-    const user = betaSession.getCurrentUser();
-    if (user) {
-      setUserName(user.name || user.username || 'Explorer');
+    // Force session refresh to ensure we get current state after potential logout
+    const sessionState = betaSession.restoreSession();
+
+    // Only consider user signed in if session is truly authenticated
+    if (sessionState.isAuthenticated && sessionState.user) {
+      setUserName(sessionState.user.name || sessionState.user.username || 'Explorer');
       setIsSignedIn(true);
+      console.log('✅ [Welcome] User authenticated:', sessionState.user.name);
+    } else {
+      // Ensure clean state after logout
+      setUserName('');
+      setIsSignedIn(false);
+      console.log('🔐 [Welcome] No authenticated session - requiring sign in');
     }
 
     // Set time of day greeting
@@ -30,13 +38,37 @@ export default function WelcomePage() {
       setTimeOfDay('Good evening');
     }
 
+    // Listen for storage changes (including logout events)
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'beta_user') {
+        if (!event.newValue) {
+          // beta_user was removed - user logged out
+          console.log('🔐 [Welcome] Logout detected - updating UI');
+          setIsSignedIn(false);
+          setUserName('');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
     setIsLoading(false);
+
+    // Cleanup
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   const handleContinue = () => {
     if (isSignedIn) {
-      // User is still signed in, go straight to MAIA
-      router.push('/maia');
+      // Check if user has completed sacred onboarding
+      const user = betaSession.getCurrentUser();
+      if (user && !user.onboarded) {
+        router.push('/onboarding');
+      } else {
+        router.push('/maia');
+      }
     } else {
       // User needs to sign back in
       router.push('/signin');
@@ -115,10 +147,10 @@ export default function WelcomePage() {
               {timeOfDay}
             </p>
             <h1 className="text-white text-3xl md:text-4xl font-cinzel tracking-wide mb-3 drop-shadow-lg">
-              Welcome back{userName && `, ${userName}`}
+              {isSignedIn ? `Welcome back${userName ? `, ${userName}` : ''}` : 'Welcome to Soullab'}
             </h1>
             <p className="text-white/80 text-lg font-cinzel tracking-wide drop-shadow-md">
-              Your elements await
+              {isSignedIn ? 'Your elements await' : 'Consciousness technology for transformation'}
             </p>
           </div>
         </div>
@@ -144,7 +176,7 @@ export default function WelcomePage() {
               <span className="relative drop-shadow-sm">Sign In</span>
             </button>
             <button
-              onClick={() => router.push('/signup')}
+              onClick={() => router.push('/soul-gateway')}
               className="relative bg-white/10 border border-white/60 text-white px-8 py-3 rounded-full text-lg font-cinzel tracking-[0.1em] uppercase hover:bg-white/20 transition-all duration-300 hover:scale-105 group"
             >
               {/* Enhanced teal glow on hover for signup */}

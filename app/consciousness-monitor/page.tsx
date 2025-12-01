@@ -8,13 +8,13 @@ import { ConsciousnessFieldMap } from '../maia/labtools/components/Consciousness
 import { FrequencySpectrum } from '../maia/labtools/components/FrequencySpectrum';
 import NOWModelMonitor from '../maia/labtools/components/NOWModelMonitor';
 
-export default function ConsciousnessMonitor() {
+export default function PresenceMirror() {
   const [labToolsService] = useState(() => new LabToolsService());
   const [isConnected, setIsConnected] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'disconnected'>('connecting');
 
   useEffect(() => {
-    // Initialize consciousness monitoring connection
+    // Initialize presence awareness connection
     labToolsService.connect().then(() => {
       setIsConnected(true);
       setConnectionStatus('connected');
@@ -32,15 +32,15 @@ export default function ConsciousnessMonitor() {
       <div className="h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900/20 flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-purple-500/30 border-t-purple-400 rounded-full animate-spin mx-auto mb-4"></div>
-          <h2 className="text-2xl font-bold text-white mb-2">🧠 MAIA Consciousness Monitor</h2>
+          <h2 className="text-2xl font-bold text-white mb-2">🪞 MAIA Presence Mirror</h2>
           <p className="text-purple-300">
-            {connectionStatus === 'connecting' && 'Initializing consciousness field...'}
+            {connectionStatus === 'connecting' && 'Opening to presence...'}
             {connectionStatus === 'disconnected' && 'Connection failed. Retrying...'}
           </p>
           <div className="mt-4 text-sm text-gray-400">
             <p>✨ OpenBCI Ganglion EEG Integration</p>
             <p>❤️ Apple Watch HRV Monitoring</p>
-            <p>🔥 Real-time Breakthrough Detection</p>
+            <p>🔥 Noticing what opens</p>
           </div>
         </div>
       </div>
@@ -55,14 +55,14 @@ export default function ConsciousnessMonitor() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                🧠 Consciousness Monitor
+                🪞 Presence Mirror
                 <span className="text-sm bg-green-500/20 text-green-400 px-3 py-1 rounded-full flex items-center gap-1">
                   <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
                   Live
                 </span>
               </h1>
               <p className="text-purple-300 mt-1">
-                Real-time biometric consciousness monitoring & breakthrough detection
+                Listening to what's present in this moment
               </p>
             </div>
 

@@ -8,6 +8,8 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
+# Copy prisma directory for schema generation
+COPY prisma ./prisma
 RUN npm ci --legacy-peer-deps
 
 # Rebuild the source code only when needed
@@ -19,6 +21,9 @@ COPY . .
 # Set environment for build
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Generate Prisma client (in case postinstall didn't work)
+RUN npx prisma generate
 
 # Build the application
 RUN npm run build

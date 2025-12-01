@@ -1,28 +1,59 @@
 PODS:
   - Capacitor (7.4.4):
     - CapacitorCordova
+  - CapacitorClipboard (7.0.2):
+    - Capacitor
   - CapacitorCordova (7.4.4)
+  - CapacitorFilesystem (7.1.5):
+    - Capacitor
+    - IONFilesystemLib (~> 1.0.1)
   - CapacitorHealthkit (0.1.3):
     - Capacitor
+  - CapacitorLocalNotifications (7.0.3):
+    - Capacitor
+  - CapacitorShare (7.0.2):
+    - Capacitor
+  - IONFilesystemLib (1.0.1)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorClipboard (from `../../node_modules/@capacitor/clipboard`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - CapacitorHealthkit (from `../../node_modules/capacitor-healthkit`)
+  - "CapacitorLocalNotifications (from `../../node_modules/@capacitor/local-notifications`)"
+  - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
+
+SPEC REPOS:
+  trunk:
+    - IONFilesystemLib
 
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorClipboard:
+    :path: "../../node_modules/@capacitor/clipboard"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorFilesystem:
+    :path: "../../node_modules/@capacitor/filesystem"
   CapacitorHealthkit:
     :path: "../../node_modules/capacitor-healthkit"
+  CapacitorLocalNotifications:
+    :path: "../../node_modules/@capacitor/local-notifications"
+  CapacitorShare:
+    :path: "../../node_modules/@capacitor/share"
 
 SPEC CHECKSUMS:
   Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
+  CapacitorClipboard: 7e227702976d4435a5a40df54f65e154d0dfc1f3
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
+  CapacitorFilesystem: 609d5cceca1ed93d7f25839dbfdfd224bfe78209
   CapacitorHealthkit: 3fd80dcce469e65aec3d36f89d7d7e94c317381c
+  CapacitorLocalNotifications: 0811aef56ab2e5f7f9ae72f47d3473ab50c29038
+  CapacitorShare: be166411fa995ead2d39b104aa0aae56d8615c66
+  IONFilesystemLib: 89258b8e3e85465da93127d25d7ce37f977e8a6f
 
-PODFILE CHECKSUM: 799cd6a6de094a0d26c4d734b63fdd39b40e440b
+PODFILE CHECKSUM: 96e7410fc45fd5a166b928b4e29366bb81957cc2
 
 COCOAPODS: 1.16.2

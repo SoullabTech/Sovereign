@@ -66,6 +66,14 @@ export interface WisdomMoment {
 export class DreamWeaverEngine {
 
   /**
+   * Initialize the Dream Weaver Engine
+   */
+  async initialize(): Promise<void> {
+    console.log('🌟 Dream Weaver Engine initialized');
+    return Promise.resolve();
+  }
+
+  /**
    * Kelly's Questions - The ones that unlock wisdom
    * These are learned from 35 years of practice
    */

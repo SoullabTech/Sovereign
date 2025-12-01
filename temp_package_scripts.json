@@ -1,0 +1,4 @@
+{
+  "build:safe": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+  "build:minimal": "NODE_OPTIONS='--max-old-space-size=2048' NEXT_MINIMAL=true next build"
+}

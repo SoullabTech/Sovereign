@@ -64,13 +64,47 @@ jspm_packages/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# Environment variables and secrets
 .env
 .env.local
 .env.development.local
 .env.test.local
 .env.production
 .env.production.local
+.env.*.local
+.env.override
+
+# API Keys and Secrets
+*.key
+*.pem
+*.p12
+*.jks
+*.cert
+*.crt
+secrets/
+keys/
+config/secrets.*
+credentials.*
+serviceAccountKey.json
+*-key.json
+*.secret
+.secrets
+secret.yaml
+secret.yml
+
+# Cloud provider configurations
+.aws/
+.gcp/
+.azure/
+gcloud/
+.terraform/
+terraform.tfstate*
+.tfvars
+
+# Docker secrets
+docker-compose.override.yml
+docker-compose.*.yml
+.docker-compose.env
 
 # parcel-bundler cache
 .cache
@@ -132,6 +166,17 @@ Thumbs.db
 
 # Docker
 .docker
+
+# SSL/TLS certificates for soullab.life
+ssl/
+*.crt
+*.pem
+*.p12
+*.pfx
+fullchain.pem
+privkey.pem
+cert.pem
+chain.pem
 
 # MAIA-specific ignores
 # Voice processing artifacts

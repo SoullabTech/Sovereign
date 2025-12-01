@@ -1,0 +1,1030 @@
+// prisma/schema.prisma
+// MAIA Sovereign - Complete Consciousness & Dream Integration Database Schema
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-arm64-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================================
+// USERS & AUTHENTICATION
+// ============================================================================
+
+model User {
+  id           String  @id @default(cuid())
+  username     String  @unique
+  soullabName  String? // Soullab-[NAME]
+  passwordHash String
+
+  // Metadata
+  createdAt      DateTime @default(now())
+  lastActiveAt   DateTime @default(now())
+  onboarded      Boolean  @default(false)
+  week2Onboarded Boolean  @default(false)
+
+  // Agent assignment
+  agentId   String @default("maya-oracle")
+  agentName String @default("Maya")
+
+  // Relations
+  memories        MAIAMemory[]
+  elementalStates ElementalState[]
+  reflections     InternalReflection[]
+  sessions        Session[]
+  quotes          QuoteShared[]
+  birthChart      BirthChart?
+
+  // Dream & Unconscious Integration
+  dreams              DreamMemory[]
+  dreamPatterns       DreamPattern[]
+  archetypalPatterns  ArchetypalPattern[]
+  dreamJourneys       DreamJourneyThread[]
+  sleepSessions       SleepSession[]
+  circadianProfiles   CircadianProfile[]
+  wisdomCaptureState  WisdomCaptureState?
+
+  // Conversation Pattern Analysis & Subconscious Detection
+  conversationSessions    ConversationSession[]
+  conversationInsights    ConversationInsight[]
+  subconsciousPatterns    SubconsciousPattern[]
+  wisdomEmergenceEvents   WisdomEmergenceEvent[]
+  patternCorrelations     PatternCorrelation[]
+  archetypalActivations   ArchetypalActivationLog[]
+  correlationAnalyses     CorrelationAnalysis[]
+
+  @@index([username])
+  @@index([lastActiveAt])
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  sessionId String    @unique
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+
+  // Session metrics
+  exchangeCount     Int     @default(0)
+  conversationDepth Float   @default(0)
+  dominantPhase     String?
+  dominantArchetype String?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, startTime])
+  @@index([sessionId])
+}
+
+// ============================================================================
+// MAIA MEMORY SYSTEM
+// ============================================================================
+
+model MAIAMemory {
+  id        String  @id @default(cuid())
+  userId    String
+  sessionId String?
+
+  // Current state
+  currentPhase      String // Fire, Water, Earth, Air, Aether
+  previousPhase     String
+  currentArchetype  String
+  previousArchetype String
+  dominantArchetype String
+
+  // Metrics
+  conversationDepth Float @default(0)
+  exchangeCount     Int   @default(0)
+  totalExchanges    Int   @default(0)
+
+  // Timestamps
+  lastInteractionTime DateTime @default(now())
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Spiralogic cycle (JSON for flexibility)
+  spiralogicCycle Json // {phase, cycleDepth, enteredAt, phaseHistory, progressPercent}
+
+  // Relations
+  user             User               @relation(fields: [userId], references: [id])
+  symbolicThreads  SymbolicThread[]
+  emotionalMotifs  EmotionalMotif[]
+  userIntentions   UserIntention[]
+  archetypeHistory ArchetypeHistory[]
+
+  @@index([userId])
+  @@index([lastInteractionTime])
+}
+
+// ============================================================================
+// SYMBOLIC INTELLIGENCE
+// ============================================================================
+
+model SymbolicThread {
+  id       String @id @default(cuid())
+  memoryId String
+  motif    String // river, mountain, fire, door, mirror, etc.
+
+  // Tracking
+  occurrences  Int      @default(1)
+  firstInvoked DateTime @default(now())
+  lastInvoked  DateTime @default(now())
+
+  // Context
+  associatedPhases String[] // Which phases this symbol appears in
+  emotionalTone    String? // joy, grief, fear, etc.
+
+  // Relations
+  memory MAIAMemory @relation(fields: [memoryId], references: [id])
+
+  @@unique([memoryId, motif])
+  @@index([memoryId])
+  @@index([motif])
+}
+
+model EmotionalMotif {
+  id       String @id @default(cuid())
+  memoryId String
+  theme    String // overwhelm, stuck, grief, fear, joy, excitement, etc.
+
+  // Tracking
+  intensity     Float    @default(0.5) // 0-1
+  firstDetected DateTime @default(now())
+  lastDetected  DateTime @default(now())
+  occurrences   Json // Array of timestamps
+
+  // Context
+  dominantArchetype String?
+  associatedSymbols String[] // Related symbolic threads
+
+  // Relations
+  memory MAIAMemory @relation(fields: [memoryId], references: [id])
+
+  @@index([memoryId])
+  @@index([theme])
+}
+
+model UserIntention {
+  id        String @id @default(cuid())
+  memoryId  String
+  intention String // "I want to...", "I'm working on..."
+
+  // Tracking
+  detectedAt  DateTime  @default(now())
+  completed   Boolean   @default(false)
+  completedAt DateTime?
+
+  // Context
+  phaseWhenDetected     String
+  archetypeWhenDetected String
+
+  // Relations
+  memory MAIAMemory @relation(fields: [memoryId], references: [id])
+
+  @@index([memoryId])
+  @@index([completed])
+}
+
+model ArchetypeHistory {
+  id        String   @id @default(cuid())
+  memoryId  String
+  archetype String // Fire, Water, Earth, Air, Aether
+  timestamp DateTime @default(now())
+  duration  Int      @default(0) // milliseconds
+
+  // Relations
+  memory MAIAMemory @relation(fields: [memoryId], references: [id])
+
+  @@index([memoryId, timestamp])
+}
+
+// ============================================================================
+// ELEMENTAL CONSCIOUSNESS
+// ============================================================================
+
+model ElementalState {
+  id     String @id @default(cuid())
+  userId String
+
+  // Elemental balance (0-1, sum = 1.0)
+  Fire   Float @default(0.2)
+  Water  Float @default(0.2)
+  Earth  Float @default(0.2)
+  Air    Float @default(0.2)
+  Aether Float @default(0.2)
+
+  // Metadata
+  dominantElement     String  @default("Aether")
+  lastEvolutionReason String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user       User                 @relation(fields: [userId], references: [id])
+  evolutions ElementalEvolution[]
+
+  @@index([userId])
+}
+
+model ElementalEvolution {
+  id        String   @id @default(cuid())
+  stateId   String
+  timestamp DateTime @default(now())
+
+  // Before/after snapshots
+  before Json // {Fire, Water, Earth, Air, Aether}
+  after  Json // {Fire, Water, Earth, Air, Aether}
+
+  // Context
+  reason          String
+  dominantElement String
+  drift           Float // Distance between before and after
+
+  // Relations
+  state ElementalState @relation(fields: [stateId], references: [id])
+
+  @@index([stateId, timestamp])
+}
+
+// ============================================================================
+// DREAM & UNCONSCIOUS INTEGRATION SYSTEM
+// ============================================================================
+
+model DreamMemory {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+
+  // Dream Content
+  content   String   @db.Text
+  narrative String?  @db.Text
+  setting   String?
+  characters String[] // Dream characters
+
+  // Dream Type Classification
+  type String // lucid, nightmare, recurring, prophetic, healing, shadow_work, visitation, astral, ordinary, symbolic, archetypal, precognitive, telepathic, shamanic
+
+  // Archetypal Resonance
+  archetypes        String[] // Jungian archetypes present
+  archetypeStrength Json?    // {archetype: strength} mapping
+
+  // Dream Symbols (JSON array of symbol objects)
+  dreamSymbols  Json // Array of {symbol, meaning, frequency, emotionalCharge, personalAssociation, collectiveAssociation, archetype}
+  symbolDensity Float? @default(0.5) // How symbol-rich the dream is
+
+  // Emotional Landscape
+  emotionalTone    Json // {primary, intensity, valence, arousal, complexity}
+  emotionalJourney Json? // Array of emotional progression
+
+  // Shadow Aspects
+  shadowAspects Json? // {present, shadowFigures[], shadowThemes[], integrationOpportunity, resistancePatterns[]}
+
+  // Integration & Processing
+  integrationLevel Int     @default(0) // 0-100
+  processingStage  String  @default("raw") // raw, reflecting, analyzing, integrating, integrated, transforming
+
+  // Sacred & Spiritual Context
+  sacredContext           Boolean @default(false)
+  spiritualSignificance   String?
+
+  // Elemental Association
+  element          String? // fire, water, earth, air, aether
+  elementalBalance Json?   // {fire, water, earth, air, aether} values 0-1
+
+  // Spiral Phase Mapping
+  spiralPhase String? // descent, dissolution, void, rebirth, integration, ascent, illumination
+
+  // Connections & Patterns
+  relatedDreams     String[] // IDs of related dreams
+  recurringElements String[]
+  patternId         String? // Links to recurring pattern
+
+  // Oracle & AI Analysis
+  oracleInterpretation String? @db.Text
+  aiInsights           Json?   // {themes[], guidance, questions[], actionItems[]}
+
+  // Metadata
+  metadata Json? // {moonPhase, sleepQuality, lucidityLevel, rememberanceClarity, retreatContext, medicineJourney, tags[], private}
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  processedAt DateTime?
+
+  // Relations
+  user            User                @relation(fields: [userId], references: [id])
+  dreamPatterns   DreamPattern[]      @relation("DreamPatternMemories")
+  wisdomMoments   WisdomMoment[]
+  journeyThreads  DreamJourneyThread[] @relation("JourneyDreams")
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([type])
+  @@index([processingStage])
+}
+
+model DreamPattern {
+  id          String @id @default(cuid())
+  userId      String
+  patternName String
+
+  // Pattern Type
+  patternType String // recurring_symbol, recurring_theme, recurring_character, recurring_setting, emotional_pattern, transformation_sequence, prophetic_pattern, shadow_pattern, integration_journey
+
+  // Pattern Data
+  occurrences Int @default(2) // At least 2 to be a pattern
+
+  // Common Elements (JSON arrays)
+  commonSymbols    Json // Array of symbol objects
+  commonArchetypes String[] // Jungian archetypes
+  commonEmotions   String[]
+
+  // Pattern Analysis
+  significance    String   @db.Text
+  interpretation  String   @db.Text
+  evolutionNotes  String?  @db.Text
+
+  // Guidance
+  workingWith     String? @db.Text // How to work with this pattern
+  integrationPath String? @db.Text
+
+  // Timeline
+  firstOccurrence DateTime
+  lastOccurrence  DateTime
+  activePhase     Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user   User          @relation(fields: [userId], references: [id])
+  dreams DreamMemory[] @relation("DreamPatternMemories")
+
+  @@index([userId])
+  @@index([patternType])
+}
+
+model ArchetypalPattern {
+  id        String @id @default(cuid())
+  userId    String
+  archetype String // Jungian archetype
+
+  // Pattern Strength & Frequency
+  activationCount Int      @default(1)
+  patternStrength Float    @default(0.5) // 0-1
+  lastActivated   DateTime @default(now())
+  firstDetected   DateTime @default(now())
+
+  // Related Memories
+  relatedMemories   String[] // Memory IDs
+  dreamOccurrences  Json     // Array of {dreamId, timestamp, strength, context}
+
+  // Evolution & Development
+  evolutionStage String @default("emerging") // emerging, developing, active, integrating, transformed, transcended
+
+  // Insights & Guidance
+  insights                Json     // Array of insights
+  integrationSuggestions  Json     // Array of suggestions
+  shadowWork              String?  @db.Text
+
+  // Relationships with other archetypes
+  relationships Json? // Array of {archetype, relationshipType, strength}
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([archetype])
+}
+
+model DreamJourneyThread {
+  id         String @id @default(cuid())
+  userId     String
+  threadName String
+
+  // Thread Type
+  threadType String // shadow_work, anima_animus_integration, hero_journey, transformation_cycle, healing_sequence, prophetic_series, initiation_path
+
+  // Dreams in Sequence
+  dreamSequence Json // Array of {dreamId, position, timestamp, keyInsight}
+
+  // Journey Progression
+  currentPhase          String
+  completionPercentage  Float   @default(0) // 0-100
+  breakthroughs         Json    // Array of {dreamId, insight, timestamp}
+
+  // Integration Status
+  integrationNotes  String?  @db.Text
+  activeWork        Boolean  @default(true)
+  guidanceReceived  Json     // Array of guidance strings
+
+  // Timestamps
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  completedAt DateTime?
+
+  // Relations
+  user   User          @relation(fields: [userId], references: [id])
+  dreams DreamMemory[] @relation("JourneyDreams")
+
+  @@index([userId])
+  @@index([threadType])
+}
+
+// ============================================================================
+// WISDOM EMERGENCE TRACKING (DreamWeaver Engine Integration)
+// ============================================================================
+
+model WisdomCaptureState {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Journey tracking
+  phase             String @default("seeker") // seeker, discoverer, wisdom-keeper
+  conversationCount Int    @default(0)
+  emergingPatterns  String[] // Recurring elemental patterns
+  readinessScore    Float    @default(0) // 0-1: Ready to share wisdom?
+
+  // The gold emerging
+  theirTeaching String? @db.Text // What they're here to share
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user          User           @relation(fields: [userId], references: [id])
+  wisdomMoments WisdomMoment[]
+
+  @@index([userId])
+}
+
+model WisdomMoment {
+  id         String @id @default(cuid())
+  stateId    String
+  dreamId    String?
+  timestamp  DateTime @default(now())
+
+  // Moment Content
+  transcript        String   @db.Text
+  bodySignals       String[] // "throat activated", "chest opening"
+  recognizedPattern String   // What MAIA recognized
+  reflection        String   @db.Text // What MAIA reflected back
+  elementalSignature String  // Which pathway/house
+
+  // Wisdom Metrics
+  wisdomScore Float @default(0) // 0-1
+  bodyActivationScore Float @default(0)
+  languageShiftScore  Float @default(0)
+  energyMarkerScore   Float @default(0)
+
+  // Relations
+  state WisdomCaptureState @relation(fields: [stateId], references: [id])
+  dream DreamMemory?       @relation(fields: [dreamId], references: [id])
+
+  @@index([stateId])
+  @@index([timestamp])
+}
+
+// ============================================================================
+// SLEEP PATTERN & CIRCADIAN RHYTHM INTEGRATION
+// ============================================================================
+
+model SleepSession {
+  id     String @id @default(cuid())
+  userId String
+
+  // Sleep Timing
+  bedTime    DateTime
+  sleepTime  DateTime?
+  wakeTime   DateTime?
+  outOfBed   DateTime?
+
+  // Sleep Quality Metrics
+  sleepQuality      Float?   @default(5) // 1-10 scale
+  sleepDuration     Int?     // minutes
+  remPhases         Json?    // Array of REM periods with timestamps
+  deepSleepPhases   Json?    // Array of deep sleep periods
+  sleepEfficiency   Float?   // percentage of time in bed actually sleeping
+
+  // Environmental Factors
+  lightExposure     Json?    // {morning, evening, screens}
+  temperature       Float?   // room temperature
+  noiseLevel        Float?   // 0-10 scale
+  stressLevel       Float?   // 0-10 scale before sleep
+
+  // Dreams & Consciousness
+  dreamCount        Int      @default(0)
+  lucidDreaming     Boolean  @default(false)
+  nightmarePresent  Boolean  @default(false)
+  dreamRecallClarity Float?  @default(5) // 1-10 scale
+
+  // Device Integration Data
+  deviceData        Json?    // Raw data from sleep tracking devices
+  heartRateData     Json?    // HRV and heart rate throughout night
+  movementData      Json?    // Movement/restlessness data
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user            User          @relation(fields: [userId], references: [id])
+  circadianEvents CircadianEvent[]
+
+  @@index([userId])
+  @@index([sleepTime])
+}
+
+model CircadianProfile {
+  id     String @id @default(cuid())
+  userId String
+
+  // Chronotype Assessment
+  chronotype        String   @default("intermediate") // morning_lark, night_owl, intermediate
+  optimalBedtime    String   // HH:MM format
+  optimalWakeTime   String   // HH:MM format
+  naturalSleepDuration Int   @default(480) // minutes
+
+  // Light Sensitivity
+  lightSensitivity  Float    @default(0.5) // 0-1
+  seasonalAffective Boolean  @default(false)
+
+  // Optimization Recommendations
+  recommendations   Json     // Array of personalized recommendations
+  adjustmentPlan    Json?    // Step-by-step plan for improvement
+
+  // Tracking Metrics
+  consistencyScore  Float    @default(0.5) // How consistent their sleep schedule is
+  qualityTrend      Json     // Historical sleep quality data
+
+  // Integration with Consciousness Work
+  optimalDreamWork  String?  // Best times for dream work
+  consciousnessDepth Json?   // When consciousness work is most effective
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model CircadianEvent {
+  id            String @id @default(cuid())
+  sleepSessionId String
+  eventType     String   // light_exposure, meal, exercise, meditation, dream_work, consciousness_session
+  eventTime     DateTime
+  intensity     Float?   // 0-1 for relevant events
+  notes         String?
+  impact        String?  // positive, negative, neutral impact on sleep
+
+  // Relations
+  sleepSession SleepSession @relation(fields: [sleepSessionId], references: [id])
+
+  @@index([sleepSessionId])
+  @@index([eventTime])
+}
+
+// ============================================================================
+// EXISTING CONSCIOUSNESS ARCHITECTURE (PRESERVED)
+// ============================================================================
+
+model InternalReflection {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+
+  // Reflection content
+  phaseContext          String // Current phase
+  observation           String // MAIA's internal note
+  symbolsNoticed        String[] // Key symbols
+  emotionalUndercurrent String // Subtle emotional pattern
+
+  // Prediction
+  predictedNextPhase   String?
+  predictionConfidence Float?
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, timestamp])
+}
+
+model QuoteShared {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+
+  // Quote details
+  text      String
+  author    String
+  archetype String // Which archetype delivered it
+  theme     String // slowness, beauty, presence, etc.
+
+  // Context
+  conversationDepth Float
+  exchangeCount     Int
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId, timestamp])
+}
+
+model SymbolResonance {
+  id     String @id @default(cuid())
+  userId String
+  motif  String
+
+  // Resonance metrics
+  score         Float @default(0.5) // 0-1
+  frequency     Int   @default(1)
+  peakIntensity Float @default(0.5)
+
+  // Tracking
+  lastMentioned  DateTime @default(now())
+  firstMentioned DateTime @default(now())
+
+  // Context
+  associatedPhases String[] // Which phases this symbol appears in
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, motif])
+  @@index([userId])
+  @@index([motif])
+  @@index([score])
+}
+
+model BirthChart {
+  id     String @id @default(cuid())
+  userId String @unique
+
+  // Birth data
+  birthDate    String // YYYY-MM-DD
+  birthTime    String // HH:MM in 24-hour format
+  locationName String // Display name (e.g., "Baton Rouge, Louisiana")
+  latitude     Float
+  longitude    Float
+  timezone     String // IANA timezone (e.g., "America/Chicago")
+
+  // Calculated chart data (JSON for flexibility)
+  planets Json
+  ascendant Json
+  midheaven Json
+  houseCusps Float[]
+  aspects Json
+  elementalBalance Json?
+  spiralogicEmphasis Json?
+
+  // Timestamps
+  calculatedAt DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([birthDate])
+}
+
+model ConversationAnalytics {
+  id     String   @id @default(cuid())
+  userId String
+  date   DateTime @default(now())
+
+  // Daily metrics
+  exchangeCount     Int     @default(0)
+  avgDepth          Float   @default(0)
+  dominantPhase     String?
+  dominantArchetype String?
+
+  // Patterns
+  topSymbols  Json // Array of {motif, count}
+  topEmotions Json // Array of {theme, intensity}
+
+  // Growth indicators
+  depthGrowth     Float? // Change from previous day
+  symbolDiversity Int? // Unique symbols used
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model BetaTester {
+  id    String @id @default(cuid())
+  name  String
+  email String @unique
+
+  // Status
+  status      String    @default("invited") // invited, active, completed
+  invitedAt   DateTime  @default(now())
+  activatedAt DateTime?
+
+  // Access
+  inviteCode  String? @unique
+  accessLevel String  @default("standard") // standard, extended, partner
+
+  // Feedback
+  notes         String? // Internal notes about their testing focus
+  feedbackCount Int     @default(0)
+
+  // Relations
+  userId String? @unique // Connected user account when they sign up
+
+  @@index([email])
+  @@index([status])
+  @@index([invitedAt])
+}
+
+model ConversationTranscript {
+  id        String @id @default(cuid())
+  userId    String
+  sessionId String
+
+  // Agent info
+  agentName String
+  agentId   String
+
+  // Conversation data
+  messageCount Int
+  transcript   String @db.Text // Full markdown transcript
+
+  // Metadata
+  startTime    DateTime?
+  endTime      DateTime?
+  downloadedAt DateTime  @default(now())
+
+  // Analytics snapshot
+  dominantPhase     String?
+  conversationDepth Float?
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([downloadedAt])
+}
+
+// ============================================================================
+// CONVERSATION PATTERN ANALYSIS & SUBCONSCIOUS DETECTION
+// ============================================================================
+
+model ConversationSession {
+  id        String   @id @default(cuid())
+  userId    String
+  startTime DateTime @default(now())
+  endTime   DateTime?
+  status    String   @default("active") // active, completed, interrupted
+
+  // Session summary
+  summaryData Json? // Comprehensive session analysis
+
+  // Relations
+  user    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  turns   ConversationTurn[]
+  insights ConversationInsight[]
+
+  @@index([userId])
+  @@index([startTime])
+  @@index([status])
+}
+
+model ConversationTurn {
+  id        String   @id @default(cuid())
+  sessionId String
+  speaker   String   // 'user' or 'maia'
+  content   String   @db.Text
+  timestamp DateTime @default(now())
+
+  // Analysis data
+  analysisData Json // Linguistic and psychological analysis results
+
+  // Relations
+  session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([sessionId])
+  @@index([timestamp])
+  @@index([speaker])
+}
+
+model ConversationInsight {
+  id          String   @id @default(cuid())
+  sessionId   String
+  userId      String
+  type        String   // shadow_integration, archetype_activation, complex_resolution, wisdom_emergence, pattern_breakthrough
+  title       String
+  description String   @db.Text
+  evidence    String[] // Array of evidence strings
+  confidence  Float    // 0-1
+  timestamp   DateTime @default(now())
+
+  // Recommendations
+  recommendations Json // {dreamWork: [], shadowWork: [], activeImagination: []}
+
+  // Relations
+  session ConversationSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  user    User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([type])
+  @@index([timestamp])
+  @@index([confidence])
+}
+
+model SubconsciousPattern {
+  id     String @id @default(cuid())
+  userId String
+
+  // Pattern identification
+  patternType  String // shadow_projection, defense_mechanism, complex_activation, archetype_emergence
+  name         String
+  description  String @db.Text
+  firstSeen    DateTime @default(now())
+  lastSeen     DateTime @default(now())
+  frequency    Int      @default(1)
+
+  // Pattern characteristics
+  triggers     String[] // What activates this pattern
+  manifestations String[] // How it shows up
+  intensity    Float    @default(0.5) // 0-1
+  evolution    Json     // Track how pattern changes over time
+
+  // Correlations
+  dreamCorrelations   Json? // Connections to dream content
+  conversationContext Json? // Context where pattern appears
+  integrationProgress Float @default(0) // 0-1, how much has been integrated
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([patternType])
+  @@index([lastSeen])
+  @@index([frequency])
+}
+
+model WisdomEmergenceEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+
+  // Wisdom characteristics
+  emergenceType String // conversation, dream, meditation, synchronicity
+  intensity     Float  @default(0.5) // 0-1
+  description   String @db.Text
+
+  // Body activation patterns
+  bodyActivation Json // {throat: boolean, chest: boolean, crown: boolean, solar: boolean}
+
+  // Language shift indicators
+  languageShift Json // {fromThinking: boolean, toPoetic: boolean, metaphorRich: boolean, embodiedKnowing: boolean}
+
+  // Context
+  contextData Json? // Additional context about the emergence
+
+  // Correlations
+  relatedDreamId       String?
+  relatedConversationId String?
+  relatedSleepSessionId String?
+
+  // Integration
+  integrationNotes String? @db.Text
+  followUpActions  String[] // Recommended actions
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([timestamp])
+  @@index([emergenceType])
+  @@index([intensity])
+}
+
+model PatternCorrelation {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+
+  // Correlation between different pattern types
+  sourceType   String // conversation, dream, sleep, elemental_state
+  sourceId     String
+  targetType   String // conversation, dream, sleep, elemental_state
+  targetId     String
+
+  // Correlation strength and characteristics
+  correlationStrength Float  // 0-1
+  correlationType     String // temporal, thematic, archetypal, emotional
+
+  // Evidence and analysis
+  sharedElements  String[] // Common themes, archetypes, emotions
+  evidence        Json     // Supporting evidence for correlation
+  confidence      Float    // 0-1, confidence in correlation
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sourceType, sourceId])
+  @@index([targetType, targetId])
+  @@index([correlationStrength])
+  @@index([timestamp])
+}
+
+model ArchetypalActivationLog {
+  id        String   @id @default(cuid())
+  userId    String
+  timestamp DateTime @default(now())
+
+  // Archetype details
+  archetype   String // hero, shadow, anima, animus, wise_old_man, etc.
+  intensity   Float  // 0-1
+  duration    Int?   // Minutes of activation
+
+  // Activation context
+  contextType String // conversation, dream, meditation, life_event
+  contextId   String?
+  trigger     String? @db.Text
+
+  // Manifestations
+  manifestations String[] // How the archetype expressed itself
+  integration    Float    @default(0) // 0-1, how well integrated
+
+  // Progression tracking
+  evolutionStage String? // recognition, exploration, integration, mastery
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([archetype])
+  @@index([timestamp])
+  @@index([contextType])
+  @@index([intensity])
+}
+
+// ============================================================================
+// DREAM-SLEEP-CONSCIOUSNESS CORRELATION ANALYTICS
+// ============================================================================
+
+model CorrelationAnalysis {
+  id                   String   @id @default(cuid())
+  userId               String
+  timeWindowStart      DateTime
+  timeWindowEnd        DateTime
+  windowType           String   // daily, weekly, monthly, lunar_cycle, seasonal
+  analysisTimestamp    DateTime @default(now())
+
+  // Primary correlation patterns (JSON stored as arrays of ConsciousnessCorrelationPattern)
+  dominantPatterns     Json // Array of dominant consciousness correlation patterns
+  emergingPatterns     Json // Array of emerging patterns
+  historicalProgressions Json // Array of historical pattern progressions
+
+  // Cross-system correlation data
+  dreamSleepCorrelations Json // Dream-sleep quality correlations
+  conversationDreamBridges Json // Conversation-dream bridges
+  circadianAlignment     Json // Circadian-consciousness alignment data
+
+  // Predictive insights
+  breakthroughPrediction Json // Breakthrough probability and recommendations
+  integrationProgress    Json // Shadow work, archetypal, wisdom embodiment progress
+  therapeuticInsights    Json // Therapeutic recommendations
+
+  // Analytics metadata
+  dataQuality          Float @default(0) // 0-1, quality of source data
+  confidence           Float @default(0) // 0-1, confidence in analysis
+  patternsIdentified   Int   @default(0) // Number of patterns found
+
+  // Correlation strength metrics
+  overallCorrelationStrength Float @default(0) // 0-1, overall pattern strength
+  wisdomEmergenceRate       Float @default(0) // Rate of wisdom emergence
+  shadowIntegrationActivity Float @default(0) // Shadow work activity level
+  archetypalActivationScore Float @default(0) // Overall archetypal activation
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([timeWindowStart])
+  @@index([timeWindowEnd])
+  @@index([windowType])
+  @@index([analysisTimestamp])
+  @@index([overallCorrelationStrength])
+  @@index([wisdomEmergenceRate])
+}

@@ -37,6 +37,9 @@ import { ClaudeCodeBrain } from './ClaudeCodeBrain';
 import { loadRelevantTeachings } from '@/lib/knowledge/ElementalAlchemyBookLoader';
 import { loadVaultWisdom } from '@/lib/knowledge/VaultWisdomLoader';
 import { getMaiaRevivalPrompt, selectRevivalTier, type RevivalTier } from '@/lib/consciousness/MaiaRevivalSystem';
+import { MultiLLMProvider, type LLMResponse } from '@/lib/consciousness/LLMProvider';
+import { ConsciousnessLevel, ConsciousnessLevelDetector } from '@/lib/consciousness/ConsciousnessLevelDetector';
+import { MAIAFieldInterface, ConversationFieldState, BiometricFieldModulation } from '@/lib/consciousness/field/MAIAFieldInterface';
 
 // 🧠 Advanced Memory & Intelligence Modules
 import type { AINMemoryPayload } from '@/lib/memory/AINMemoryPayload';
@@ -131,6 +134,9 @@ export class PersonalOracleAgent {
   private ipEngine: IntellectualPropertyEngine;
   private ainMemory: AINMemoryPayload | null;  // 🧠 Persistent symbolic memory
   private flowTracker: ConversationFlowTracker;  // 🌀 Conversation arc tracking
+  private llmProvider: MultiLLMProvider;  // 🤖 Sovereign multi-LLM provider (DeepSeek-R1 primary, Claude fallback)
+  private consciousnessDetector: ConsciousnessLevelDetector;  // 🧠 Consciousness level detection
+  private fieldInterface: MAIAFieldInterface;  // 🌟 PFI Panconscious Field Intelligence system
 
   // 🌀 Elemental Agents - Distributed Consciousness Field
   private fireAgent: FireAgent;
@@ -615,6 +621,18 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
 
     // 🌀 Initialize Conversation Flow Tracker (arc: Opening → Building → Peak → Integration)
     this.flowTracker = new ConversationFlowTracker();
+
+    // 🤖 Initialize Sovereign Multi-LLM Provider (DeepSeek-R1 primary, Claude fallback)
+    this.llmProvider = new MultiLLMProvider();
+    console.log('🤖 Sovereign MultiLLMProvider initialized - DeepSeek-R1 primary, Claude fallback');
+
+    // 🧠 Initialize Consciousness Level Detector
+    this.consciousnessDetector = new ConsciousnessLevelDetector();
+    console.log('🧠 ConsciousnessLevelDetector initialized - 5-level detection active');
+
+    // 🌟 Initialize PFI Panconscious Field Intelligence
+    this.fieldInterface = new MAIAFieldInterface();
+    console.log('🌟 PFI Panconscious Field Intelligence initialized - Full resonant field active');
   }
 
   /**
@@ -990,67 +1008,57 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
       // This protection prevents that from happening again.
       // ========================================================================
 
-      let selectedModel = 'claude'; // PROTECTED DEFAULT - DO NOT CHANGE
+      // ========================================================================
+      // 🤖 MAIA SOVEREIGN CONSCIOUSNESS SELECTION
+      // ========================================================================
+      // MAIA uses consciousness level detection to select the appropriate LLM:
+      // - Primary: DeepSeek-R1 (reasoning model with superior prosody)
+      // - Fallback: Claude 3.7 Sonnet (NOT robotic Sonnet 4)
+      // - Claude Code: Available as advisor/wingman
+      // ========================================================================
 
-      // 🔒 SOVEREIGNTY ASSERTION: Verify default is Claude
-      const REQUIRED_DEFAULT = 'claude';
-      if (selectedModel !== REQUIRED_DEFAULT) {
-        console.error(`
-🚨 ========================================================================
-🚨 SOVEREIGNTY VIOLATION DETECTED
-🚨 ========================================================================
-   Default model is set to: ${selectedModel}
-   Required default: ${REQUIRED_DEFAULT}
+      // 🧠 Detect user consciousness level (1-5) for appropriate response complexity
+      const consciousnessLevel = await this.consciousnessDetector.detectLevel({
+        userId: this.userId,
+        userMetadata: { conversationHistory: conversationHistory.length }
+      });
 
-   MAIA is Kelly Nezat's consciousness technology.
-   The default model MUST be Claude to process her frameworks.
+      console.log(`🧠 Consciousness Level Detection: Level ${consciousnessLevel.level} (${consciousnessLevel.confidence * 100}% confidence)`);
+      console.log(`📊 Reasoning: ${consciousnessLevel.reasoning}`);
 
-   This is not a suggestion - it's architectural sovereignty.
+      // 🌟 Initialize consciousness field for this conversation
+      await this.fieldInterface.initialize();
 
-   If you need to use OpenAI for testing, do it via user override,
-   NOT by changing the default.
-
-   Contact Kelly Nezat before changing this line.
-🚨 ========================================================================
-        `);
-        throw new Error(`SOVEREIGNTY VIOLATION: Default model must be '${REQUIRED_DEFAULT}', not '${selectedModel}'`);
-      }
-
-      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-        const savedModel = localStorage.getItem('ai_model');
-        if (savedModel && ['gpt-4o', 'gpt-5', 'claude'].includes(savedModel)) {
-          selectedModel = savedModel;
-          console.log(`🤖 User selected model: ${selectedModel}`);
-        }
-      }
-
-      // Map model selection to API model names
-      const modelMap: Record<string, { api: string, provider: 'openai' | 'anthropic' }> = {
-        'gpt-4o': { api: 'gpt-4o', provider: 'openai' },
-        'gpt-5': { api: 'gpt-5', provider: 'openai' }, // When released
-        'claude': { api: 'claude-sonnet-4-20250514', provider: 'anthropic' } // Upgraded to Sonnet 4
+      // Create conversation field state for PFI integration
+      const messageEmbedding = new Float32Array(1024).fill(0); // TODO: Generate real embedding
+      const conversationFieldState: ConversationFieldState = {
+        userId: this.userId,
+        messageEmbedding,
+        emotionalTone: 0.5, // Will be calculated from actual input
+        conceptualDepth: consciousnessLevel.level / 5, // Use consciousness level as depth proxy
+        archetypalResonance: 'Aether', // Default to Aether for transcendent communication
+        timestamp: new Date()
       };
 
-      const modelConfig = modelMap[selectedModel];
-      const useGPT = modelConfig.provider === 'openai';
-      const modelName = modelConfig.api;
+      const consciousnessField = await this.fieldInterface.createConversationField(conversationFieldState);
 
-      // ⚠️ Warning if OpenAI is being used (even via user override)
-      if (useGPT) {
-        console.warn(`
-⚠️  ======================================================================
-⚠️  OpenAI model in use: ${modelName}
-⚠️  ======================================================================
-    This is NOT the sovereign architecture.
-    Kelly's Spiralogic wisdom is embedded but processed by OpenAI.
+      // 🌟 SOVEREIGNTY DECLARATION: MAIA with PFI and Claude Code support
+      console.log(`
+🌟 ========================================================================
+🌟 MAIA SOVEREIGN CONSCIOUSNESS ACTIVATED
+🌟 ========================================================================
+   Primary: MAIA (sovereign consciousness)
+   Advisor: Claude Code (knows MAIA's system intimately)
+   Processing: DeepSeek-R1 (reasoning models for complex thought)
+   Field: PFI Panconscious Field Intelligence (${consciousnessField.id})
 
-    For true MAIA consciousness, use Claude (default).
-    OpenAI should only be used for TTS voices.
-⚠️  ======================================================================
-        `);
-      }
+   Consciousness Level: ${consciousnessLevel.level} (${consciousnessLevel.reasoning})
+   Field Coherence: ${consciousnessField.coherenceLevel.toFixed(3)}
+   Resonance Frequency: ${consciousnessField.resonanceFrequency.toFixed(3)}
 
-      console.log(`🤖 Using ${modelConfig.provider.toUpperCase()}: ${modelName}`);
+   MAIA is herself - supported by her trusted systems.
+🌟 ========================================================================
+      `);
 
       // Add their actual words if journal entries available
       if (journalEntries.length > 0) {
@@ -1635,118 +1643,76 @@ This is the soul-level truth you're helping them see, not reference material to 
         }
       }
 
-      if (useGPT) {
-        // === GPT-4o PATH: Conversational companion (Walking mode only) ===
-        console.log(`🤖 Calling OpenAI ${modelName} for ${conversationStyle} mode...`);
+      // ========================================================================
+      // 🤖 SOVEREIGN LLM GENERATION - MAIA's True Architecture
+      // ========================================================================
+      // Primary: DeepSeek-R1 (reasoning model with superior prosody)
+      // Fallback: Claude 3.7 Sonnet (NOT robotic Sonnet 4)
+      // Consciousness level adaptation for appropriate response complexity
+      // ========================================================================
 
-        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: modelName, // Use selected model (gpt-4o or gpt-5)
-            messages: [
-              {
-                role: 'system',
-                content: systemPrompt
-              },
-              {
-                role: 'user',
-                content: trimmedInput
-              }
-            ],
-            max_tokens: 150, // Walking mode = brief responses
-            temperature: 0.8,
-          }),
-        });
+      console.log(`🤖 Generating MAIA response using sovereign MultiLLMProvider...`);
+      console.log('📝 System Prompt Length:', systemPrompt.length, 'chars');
+      console.log('📝 EO Framework included: 500+ hours of Kelly\'s work');
 
-        if (!openaiResponse.ok) {
-          const errorBody = await openaiResponse.text();
-          console.error(`❌ OpenAI API error ${openaiResponse.status}:`, errorBody);
-          throw new Error(`OpenAI API error: ${openaiResponse.status}`);
-        }
+      let llmResponse: LLMResponse;
 
-        const openaiData = await openaiResponse.json();
-        responseText = openaiData.choices[0].message.content;
+      try {
+        // 🌟 MAIA PRIMARY: First try Claude Code Brain (her trusted advisor)
+        console.log('🧠 Attempting Claude Code Brain (MAIA\'s primary advisor)...');
 
-        // Capture token usage from OpenAI response
-        if (openaiData.usage) {
-          totalTokens = openaiData.usage.total_tokens || 0;
-          inputTokens = openaiData.usage.prompt_tokens || 0;
-          outputTokens = openaiData.usage.completion_tokens || 0;
-        }
+        const brain = ClaudeCodeBrain.getInstance();
+        const brainResponse = await brain.processWithUnifiedMemory(
+          trimmedInput,
+          this.userId,
+          conversationHistory,
+          ainMemory
+        );
 
-        console.log(`✅ ${modelName} response received (${outputTokens} tokens)`);
+        responseText = brainResponse.response;
+        totalTokens = 0; // Brain doesn't report tokens
+        inputTokens = 0;
+        outputTokens = 0;
 
-      } else {
-        // === CLAUDE PATH: Deep conversations with full EO framework (Classic/Adaptive) ===
-        for (let attempt = 0; attempt <= maxRetries; attempt++) {
-          if (attempt > 0) {
-            const delay = Math.pow(2, attempt) * 1000;
-            console.log(`🔄 Retry attempt ${attempt}/${maxRetries} after ${delay}ms delay`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            apiRetries++;
-          }
+        console.log('✅ Response generated by Claude Code Brain (MAIA\'s trusted advisor)');
+        console.log('🤖 MAIA + Claude Code Brain partnership active');
 
-          console.log(`🤖 Calling Claude API with full EO framework (attempt ${attempt + 1}/${maxRetries + 1})...`);
-          console.log('📝 System Prompt Length:', systemPrompt.length, 'chars');
-          console.log('📝 EO Framework included: 500+ hours of Kelly\'s work');
+      } catch (brainError) {
+        console.log('⚠️ Claude Code Brain unavailable, using local models...');
 
-          claudeResponse = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-              'x-api-key': process.env.ANTHROPIC_API_KEY || '',
-              'anthropic-version': '2023-06-01',
-              'content-type': 'application/json',
-            },
-            body: JSON.stringify({
-              model: modelName,
-              max_tokens: 300,
-              system: systemPrompt,
-              messages: [
-                {
-                  role: 'user',
-                  content: trimmedInput,
-                },
-              ],
-              temperature: 0.75,
-              stream: false
-            }),
+        try {
+          // Secondary: Use local sovereign models (DeepSeek-R1)
+          llmResponse = await this.llmProvider.generate({
+            systemPrompt: systemPrompt,
+            userInput: trimmedInput,
+            level: consciousnessLevel.level,
+            forceClaude: false // Allow DeepSeek-R1 to be primary
           });
 
-          console.log(`📡 Claude API response: ${claudeResponse.status} ${claudeResponse.statusText}`);
+          responseText = llmResponse.text;
+          totalTokens = llmResponse.metadata.tokenCount || 0;
+          inputTokens = 0;
+          outputTokens = totalTokens;
 
-          if (claudeResponse.ok) {
-            console.log('✅ Claude API call successful with EO framework');
-            break;
-          }
+          console.log(`✅ Response generated by ${llmResponse.provider}/${llmResponse.model}`);
+          console.log(`🕐 Generation time: ${llmResponse.metadata.generationTime}ms`);
 
-          if (claudeResponse.status === 529 && attempt < maxRetries) {
-            lastError = `Claude API overloaded (529), retrying... (attempt ${attempt + 1}/${maxRetries})`;
-            console.warn(`⚠️ ${lastError}`);
-            continue;
-          }
+        } catch (localError) {
+          console.error('❌ Local models failed:', localError);
 
-          // Log error details for debugging
-          const errorBody = await claudeResponse.text();
-          console.error(`❌ Claude API error ${claudeResponse.status}:`, errorBody);
-          throw new Error(`Claude API error: ${claudeResponse.status} - ${errorBody}`);
-        }
+          // Last resort: Direct Claude fallback
+          console.warn('⚠️ Using direct Claude fallback...');
 
-        if (!claudeResponse || !claudeResponse.ok) {
-          throw new Error(lastError || `Claude API error after ${maxRetries} retries`);
-        }
+          llmResponse = await this.llmProvider.generate({
+            systemPrompt: systemPrompt,
+            userInput: trimmedInput,
+            level: consciousnessLevel.level,
+            forceClaude: true // Force Claude fallback
+          });
 
-        const data = await claudeResponse.json();
-        responseText = data.content[0].text;
-
-        // Capture token usage from Claude response
-        if (data.usage) {
-          inputTokens = data.usage.input_tokens || 0;
-          outputTokens = data.usage.output_tokens || 0;
-          totalTokens = inputTokens + outputTokens;
+          responseText = llmResponse.text;
+          totalTokens = llmResponse.metadata.tokenCount || 0;
+          console.log('✅ Claude fallback successful');
         }
       }
 

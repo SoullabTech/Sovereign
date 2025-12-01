@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Key, User, Lock, ArrowRight, Eye, EyeOff, Sparkles } from 'lucide-react';
-import Image from 'next/image';
-import { ganeshaContacts, GaneshaContact } from '../../lib/ganesha/contacts';
+import { ganeshaContacts, GaneshaContact } from '@/lib/ganesha/contacts';
 
 interface BetaTesterGatewayProps {
   onComplete: (userData: {
@@ -58,40 +57,26 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
     setError('');
     setIsValidating(true);
 
-    try {
-      // Call server-side validation API
-      const response = await fetch('/api/beta/validate-passcode', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          passcode: passcode.toUpperCase().trim()
-        }),
-      });
+    // Simulate validation delay for sacred feeling
+    await new Promise(resolve => setTimeout(resolve, 800));
 
-      const data = await response.json();
+    const validPasscodes = getAllValidPasscodes();
+    const existingTester = findBetaTesterByPasscode(passcode);
 
-      if (data.valid) {
-        // Check if this is an existing beta tester from ganesha contacts
-        const existingTester = findBetaTesterByPasscode(passcode);
+    if (validPasscodes.includes(passcode.toUpperCase())) {
+      setIsValidating(false);
 
-        if (existingTester) {
-          // Existing beta tester - show returning user flow
-          setExistingBetaTester(existingTester);
-          setName(existingTester.name);
-          setPhase('returning');
-        } else {
-          // New user with general passcode
-          setPhase('account');
-        }
+      if (existingTester) {
+        // Existing beta tester - show returning user flow
+        setExistingBetaTester(existingTester);
+        setName(existingTester.name);
+        setPhase('returning');
       } else {
-        setError(data.message || 'Access key not recognized. Please check your passcode.');
+        // New beta tester with general passcode
+        setPhase('account');
       }
-    } catch (error) {
-      console.error('Passcode validation error:', error);
-      setError('Unable to validate passcode. Please try again.');
-    } finally {
+    } else {
+      setError('Sacred key not recognized. Please check your passcode.');
       setIsValidating(false);
     }
   };
@@ -159,8 +144,8 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
   };
 
   return (
-    <div className="h-screen relative overflow-hidden">
-      {/* Soullab Gateway Background */}
+    <div className="min-h-screen relative overflow-hidden">
+      {/* Sacred Gateway Background */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155]" />
 
       {/* Mystical overlay */}
@@ -212,7 +197,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
         className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[radial-gradient(circle,_var(--tw-gradient-stops))] from-emerald-50/30 via-[#6EE7B7]/20 to-transparent rounded-full blur-xl"
       />
 
-      <div className="relative z-10 flex items-center justify-center h-screen p-4">
+      <div className="relative z-10 flex items-center justify-center min-h-screen p-6">
         <div className="max-w-md w-full">
           <AnimatePresence mode="wait">
 
@@ -238,16 +223,10 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                     ease: "easeInOut"
                   }}
                 >
-                  <Image
-                    src="/holoflower-amber.png"
-                    alt="Holoflower"
-                    width={48}
-                    height={48}
-                    className="w-full h-full drop-shadow-lg"
-                  />
+                  <Key className="w-full h-full text-[#6EE7B7] drop-shadow-lg" />
                 </motion.div>
 
-                {/* Soullab gateway container */}
+                {/* Sacred gateway container */}
                 <div className="bg-gradient-to-b from-[#1e293b]/80 to-[#334155]/60 backdrop-blur-sm rounded-xl p-8 border border-[#6EE7B7]/20 shadow-2xl text-center">
                   <div
                     className="space-y-6"
@@ -256,11 +235,11 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                     }}
                   >
                     <h1 className="text-3xl font-light text-white mb-4 tracking-wider">
-                      Soullab Portal
+                      Sacred Gateway
                     </h1>
 
                     <p className="text-lg text-white/80 mb-6 font-light">
-                      Enter the access key to begin your journey
+                      Enter the sacred key to begin your journey
                     </p>
 
                     <form onSubmit={handlePasscodeSubmit} className="space-y-6">
@@ -290,12 +269,12 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                         disabled={!passcode.trim() || isValidating}
                         className="w-full px-6 py-3 bg-gradient-to-r from-[#6EE7B7]/20 to-[#4DB6AC]/20 border border-[#6EE7B7]/40 text-white rounded-lg font-light text-base hover:border-[#6EE7B7]/60 hover:bg-gradient-to-r hover:from-[#6EE7B7]/30 hover:to-[#4DB6AC]/30 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 backdrop-blur-sm"
                       >
-                        {isValidating ? 'Validating...' : 'Enter the Portal'}
+                        {isValidating ? 'Validating...' : 'Enter the Gateway'}
                       </button>
                     </form>
 
                     <p className="text-white/40 text-xs mt-6 font-light italic">
-                      "The breeze at dawn has secrets to tell you. Don't go back to sleep. You must ask for what you really want. Don't go back to sleep. People are going back and forth across the doorsill where the two worlds touch. The door is round and open. Don't go back to sleep." — Rumi
+                      "The key is not in the lock, but in the one who turns it"
                     </p>
                   </div>
                 </div>
@@ -451,13 +430,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                     ease: "easeInOut"
                   }}
                 >
-                  <Image
-                    src="/holoflower-amber.png"
-                    alt="Holoflower"
-                    width={72}
-                    height={72}
-                    className="w-full h-full drop-shadow-lg"
-                  />
+                  <Sparkles className="w-full h-full text-[#6EE7B7] drop-shadow-lg" />
                 </motion.div>
 
                 {/* Welcome back container */}
@@ -483,7 +456,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
 
                     <div className="bg-[#0f172a]/30 rounded-lg p-4 border border-[#6EE7B7]/20 mb-6">
                       <p className="text-white/80 text-sm font-light text-center">
-                        Your access key {existingBetaTester?.metadata.passcode} has been recognized.<br />
+                        Your sacred key {existingBetaTester?.metadata.passcode} has been recognized.<br />
                         Complete your account setup to continue your consciousness journey.
                       </p>
                     </div>
@@ -544,7 +517,7 @@ export default function BetaTesterGateway({ onComplete }: BetaTesterGatewayProps
                         type="submit"
                         className="w-full px-6 py-3 bg-gradient-to-r from-[#6EE7B7]/20 to-[#4DB6AC]/20 border border-[#6EE7B7]/40 text-white rounded-lg font-light text-base hover:border-[#6EE7B7]/60 hover:bg-gradient-to-r hover:from-[#6EE7B7]/30 hover:to-[#4DB6AC]/30 transition-all duration-300 backdrop-blur-sm flex items-center justify-center gap-2 mt-6"
                       >
-                        Continue Journey
+                        Continue Sacred Journey
                         <ArrowRight className="w-5 h-5" />
                       </button>
                     </form>

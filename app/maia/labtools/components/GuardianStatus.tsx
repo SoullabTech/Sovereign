@@ -36,7 +36,7 @@ export function GuardianStatus({ service }: GuardianStatusProps) {
   return (
     <div className="bg-gray-900/50 backdrop-blur-sm border border-purple-500/30 rounded-lg p-4">
       <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-        🛡️ Guardian Protocol
+        🛡️ Presence Guardian
         <StatusIndicator status={overallStatus} />
       </h2>
 
@@ -46,25 +46,25 @@ export function GuardianStatus({ service }: GuardianStatusProps) {
           layer="Field"
           status={guardianState?.field || 'unknown'}
           icon="⚡"
-          description="Electromagnetic coherence"
+          description="Energy presence"
         />
         <LayerStatus
           layer="Psyche"
           status={guardianState?.psyche || 'unknown'}
           icon="🌊"
-          description="Archetypal patterns"
+          description="Soul patterns"
         />
         <LayerStatus
           layer="Soma"
           status={guardianState?.soma || 'unknown'}
           icon="🫀"
-          description="Nervous system state"
+          description="Body wisdom"
         />
         <LayerStatus
           layer="Meaning"
           status={guardianState?.meaning || 'unknown'}
           icon="✨"
-          description="Integration capacity"
+          description="Integration flow"
         />
       </div>
 
@@ -157,11 +157,11 @@ function WindowOfToleranceDisplay({ state }: WindowOfToleranceProps) {
 
   const getStateDescription = (state: string) => {
     switch (state) {
-      case 'optimal': return 'Balanced arousal - ideal for learning and growth';
-      case 'hyperarousal': return 'High activation - may need calming';
-      case 'hypoarousal': return 'Low activation - may need gentle stimulation';
-      case 'overwhelm': return 'Outside window - requires immediate support';
-      default: return 'State unknown';
+      case 'optimal': return 'Sweet spot - everything flows naturally';
+      case 'hyperarousal': return 'High energy - might benefit from grounding';
+      case 'hypoarousal': return 'Low energy - gentle awakening could help';
+      case 'overwhelm': return 'Beyond comfort - extra care needed';
+      default: return 'State unclear';
     }
   };
 
@@ -274,11 +274,11 @@ interface StatusIndicatorProps {
 function StatusIndicator({ status }: StatusIndicatorProps) {
   const getStatusProps = (status: string) => {
     switch (status) {
-      case 'safe': return { color: 'bg-green-400', text: 'All Clear' };
-      case 'caution': return { color: 'bg-yellow-400', text: 'Monitoring' };
-      case 'warning': return { color: 'bg-orange-400', text: 'Alert' };
-      case 'emergency': return { color: 'bg-red-400 animate-pulse', text: 'Emergency' };
-      default: return { color: 'bg-gray-400', text: 'Unknown' };
+      case 'safe': return { color: 'bg-green-400', text: 'Flowing Well' };
+      case 'caution': return { color: 'bg-yellow-400', text: 'Gentle Care' };
+      case 'warning': return { color: 'bg-orange-400', text: 'Extra Support' };
+      case 'emergency': return { color: 'bg-red-400 animate-pulse', text: 'Needs Care' };
+      default: return { color: 'bg-gray-400', text: 'Sensing...' };
     }
   };
 

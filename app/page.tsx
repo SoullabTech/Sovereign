@@ -4,18 +4,19 @@
  * ROOT PAGE - SACRED PATHWAY DETECTION
  *
  * Auto-detects user state and routes to appropriate sacred experience
- * Three Sacred Pathways: First Initiation / Returning Practitioner / Continuous Session
+ * Two Sacred Pathways: First Initiation / Returning Practitioner
  */
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { betaSession } from '@/lib/auth/betaSession';
 
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Sacred pause then redirect to welcome orchestrator
+    // Sacred pause for consciousness detection then auto-route to welcome system
     const timer = setTimeout(() => {
       router.push('/welcome');
     }, 1000);

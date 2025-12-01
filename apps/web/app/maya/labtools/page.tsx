@@ -274,6 +274,29 @@ export default function ConsciousnessMonitorPage() {
             transition={{ delay: 0.7 }}
             className="group"
           >
+            <Link href="/pfi-monitor" className="block h-full">
+              <div className="bg-gradient-to-br from-emerald-600/20 via-cyan-600/20 to-teal-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-emerald-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-white">🌊 PFI Live Monitoring</h2>
+                  <div className="text-3xl">⚡</div>
+                </div>
+                <p className="text-purple-200 mb-6">
+                  Real-time Panconscious Field Intelligence tracking - morphic resonance levels, soul recognition, and live archetypal field engagement with MAIA.
+                </p>
+                <div className="flex items-center gap-2 text-emerald-300 text-sm">
+                  <span>Monitor live field engagement</span>
+                  <span>→</span>
+                </div>
+              </div>
+            </Link>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="group"
+          >
             <Link href="/community/library" className="block h-full">
               <div className="bg-gradient-to-br from-rose-600/20 via-pink-600/20 to-violet-600/20 backdrop-blur-md rounded-2xl p-6 border border-white/20 hover:border-rose-400/50 hover:bg-white/20 transition-all duration-300 h-full group-hover:scale-105 transform">
                 <div className="flex items-center justify-between mb-4">

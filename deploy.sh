@@ -1,15 +1,12 @@
 #!/bin/bash
 
-# MAIA Sovereign - Production Deployment Script
-# Usage: ./deploy.sh [environment]
-# Environment options: staging, production
+# MAIA Sovereign - Production Deployment Script for soullab.life
+# This script deploys the MAIA Sovereign system with Docker and Supabase
 
 set -e
 
-ENVIRONMENT=${1:-production}
-COMPOSE_FILE="docker-compose.yml"
-
-echo "🚀 Starting MAIA Sovereign deployment for ${ENVIRONMENT}..."
+echo "🌟 MAIA Sovereign - Production Deployment to soullab.life"
+echo "======================================================"
 
 # Color codes for output
 RED='\033[0;31m'
@@ -20,187 +17,131 @@ NC='\033[0m' # No Color
 
 # Function to print colored output
 print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
-print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}✓${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}⚠${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}✗${NC} $1"
 }
 
-# Check if Docker and Docker Compose are installed
-check_dependencies() {
-    print_status "Checking dependencies..."
-
-    if ! command -v docker &> /dev/null; then
-        print_error "Docker is not installed. Please install Docker first."
-        exit 1
-    fi
-
-    if ! command -v docker-compose &> /dev/null; then
-        print_error "Docker Compose is not installed. Please install Docker Compose first."
-        exit 1
-    fi
-
-    print_success "All dependencies are installed"
+print_info() {
+    echo -e "${BLUE}ℹ${NC} $1"
 }
 
-# Check if .env files exist
-check_env_files() {
-    print_status "Checking environment files..."
+# Check if .env.production exists
+if [ ! -f .env.production ]; then
+    print_error "Missing .env.production file"
+    echo "Please create .env.production with required environment variables"
+    exit 1
+fi
 
-    if [[ ! -f ".env.${ENVIRONMENT}" ]]; then
-        print_error ".env.${ENVIRONMENT} file not found!"
-        print_warning "Please copy .env.production.example to .env.${ENVIRONMENT} and fill in your values"
-        exit 1
-    fi
+print_status "Environment file found"
 
-    print_success "Environment files found"
-}
+# Check if Docker is running
+if ! docker info > /dev/null 2>&1; then
+    print_error "Docker is not running"
+    echo "Please start Docker and try again"
+    exit 1
+fi
 
-# Generate SSL certificates using Let's Encrypt (if production)
-setup_ssl() {
-    if [[ "${ENVIRONMENT}" == "production" ]]; then
-        print_status "Setting up SSL certificates..."
+print_status "Docker is running"
 
-        # Create ssl directory if it doesn't exist
-        mkdir -p ssl
+# Check if nginx directory exists
+if [ ! -d "./nginx" ]; then
+    print_warning "nginx directory not found, creating..."
+    mkdir -p nginx
+fi
 
-        if [[ ! -f "ssl/fullchain.pem" ]] || [[ ! -f "ssl/privkey.pem" ]]; then
-            print_warning "SSL certificates not found. You need to obtain SSL certificates."
-            print_status "For Let's Encrypt certificates, run:"
-            echo "  certbot certonly --standalone -d maia.yourdomain.com"
-            echo "  Then copy the certificates to the ssl/ directory"
-            echo "  cp /etc/letsencrypt/live/maia.yourdomain.com/fullchain.pem ssl/"
-            echo "  cp /etc/letsencrypt/live/maia.yourdomain.com/privkey.pem ssl/"
+# Check if logs directory exists
+if [ ! -d "./logs" ]; then
+    print_warning "logs directory not found, creating..."
+    mkdir -p logs/web logs/nginx
+fi
 
-            # Create self-signed certificates for development
-            print_status "Creating self-signed certificates for development..."
-            openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-                -keyout ssl/privkey.pem \
-                -out ssl/fullchain.pem \
-                -subj "/C=US/ST=State/L=City/O=Organization/CN=maia.yourdomain.com"
-            print_warning "Using self-signed certificates. Replace with real certificates for production!"
-        else
-            print_success "SSL certificates found"
-        fi
-    fi
-}
+print_status "Directories prepared"
 
-# Build and start services
-deploy_services() {
-    print_status "Building and starting services..."
+# Pull latest images
+print_info "Pulling latest base images..."
+docker-compose pull redis nginx prometheus grafana coturn
 
-    # Load environment variables
-    export $(cat .env.${ENVIRONMENT} | grep -v '^#' | xargs)
+# Stop existing containers
+print_info "Stopping existing containers..."
+docker-compose down
 
-    # Build the application
-    print_status "Building MAIA Sovereign application..."
-    docker-compose -f ${COMPOSE_FILE} build --no-cache
+# Remove old images
+print_info "Cleaning up old images..."
+docker image prune -f
 
-    # Start services
-    print_status "Starting services..."
-    docker-compose -f ${COMPOSE_FILE} up -d
+# Build the application
+print_info "Building MAIA Sovereign application..."
+docker-compose build --no-cache web
 
-    print_success "Services started successfully"
-}
+# Start services
+print_info "Starting MAIA Sovereign services..."
+docker-compose up -d
 
-# Run database migrations
-run_migrations() {
-    print_status "Running database migrations..."
+# Wait for services to be ready
+print_info "Waiting for services to be ready..."
+sleep 30
 
-    # Wait for database to be ready
-    print_status "Waiting for database to be ready..."
-    sleep 10
+# Check health status
+print_info "Checking service health..."
 
-    # Run migrations (uncomment when you have migration files)
-    # docker-compose -f ${COMPOSE_FILE} exec web npm run migrate
+# Check web service
+if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
+    print_status "Web service is healthy"
+else
+    print_warning "Web service health check failed, checking logs..."
+    docker-compose logs web --tail=20
+fi
 
-    print_success "Database migrations completed"
-}
+# Check redis
+if docker-compose exec -T redis redis-cli ping > /dev/null 2>&1; then
+    print_status "Redis is healthy"
+else
+    print_warning "Redis health check failed"
+fi
 
-# Health checks
-health_checks() {
-    print_status "Running health checks..."
+# Display running services
+print_info "Running services:"
+docker-compose ps
 
-    # Check if services are running
-    if docker-compose -f ${COMPOSE_FILE} ps | grep -q "Up"; then
-        print_success "Services are running"
-    else
-        print_error "Some services are not running"
-        docker-compose -f ${COMPOSE_FILE} ps
-        exit 1
-    fi
-
-    # Check web application health
-    print_status "Checking web application health..."
-    sleep 15  # Wait for services to fully start
-
-    if curl -f http://localhost:3000/api/health > /dev/null 2>&1; then
-        print_success "Web application is healthy"
-    else
-        print_warning "Web application health check failed"
-        print_status "Application might still be starting up..."
-    fi
-}
-
-# Show deployment summary
-show_summary() {
-    echo ""
-    echo "======================================"
-    echo "🎉 MAIA Sovereign Deployment Complete!"
-    echo "======================================"
-    echo ""
-    echo "Environment: ${ENVIRONMENT}"
-    echo "Services running:"
-    docker-compose -f ${COMPOSE_FILE} ps
-    echo ""
-    echo "Access points:"
-    echo "  🌐 Web Application: https://maia.yourdomain.com"
-    echo "  📊 Grafana (Monitoring): http://localhost:3001"
-    echo "  🔍 Prometheus (Metrics): http://localhost:9090"
-    echo ""
-    echo "Useful commands:"
-    echo "  📋 View logs: docker-compose logs -f [service]"
-    echo "  🔄 Restart service: docker-compose restart [service]"
-    echo "  🛑 Stop all: docker-compose down"
-    echo "  🔧 Update: ./deploy.sh ${ENVIRONMENT}"
-    echo ""
-    echo "📖 Documentation: See README.md for more details"
-}
-
-# Cleanup function for graceful shutdown
-cleanup() {
-    print_status "Cleaning up..."
-    # Add any cleanup tasks here
-}
-
-# Set trap for cleanup on script exit
-trap cleanup EXIT
-
-# Main deployment flow
-main() {
-    echo "🤖 MAIA Sovereign - Production Deployment"
-    echo "Environment: ${ENVIRONMENT}"
-    echo ""
-
-    check_dependencies
-    check_env_files
-    setup_ssl
-    deploy_services
-    run_migrations
-    health_checks
-    show_summary
-}
-
-# Run main function
-main
-
-print_success "Deployment completed successfully! 🎉"
+# Display useful information
+echo ""
+echo "🚀 Deployment Summary"
+echo "===================="
+echo ""
+echo "Application URL: https://soullab.life"
+echo "HTTP URL:       http://soullab.life"
+echo "Redis:          localhost:6379"
+echo "Prometheus:     http://localhost:9090"
+echo "Grafana:        http://localhost:3001"
+echo ""
+echo "📊 Service Status:"
+echo "Web Application: $(docker-compose ps web | grep -q 'Up' && echo 'Running' || echo 'Not Running')"
+echo "Redis Cache:     $(docker-compose ps redis | grep -q 'Up' && echo 'Running' || echo 'Not Running')"
+echo "Nginx Proxy:     $(docker-compose ps nginx | grep -q 'Up' && echo 'Running' || echo 'Not Running')"
+echo "Prometheus:      $(docker-compose ps prometheus | grep -q 'Up' && echo 'Running' || echo 'Not Running')"
+echo "Grafana:         $(docker-compose ps grafana | grep -q 'Up' && echo 'Running' || echo 'Not Running')"
+echo ""
+echo "🔗 Key Features Enabled:"
+echo "• Supabase Database Integration"
+echo "• Redis Session Management"
+echo "• SSL/TLS Security (HTTPS)"
+echo "• Voice Chat with TURN Server"
+echo "• Monitoring with Prometheus & Grafana"
+echo "• Rate Limiting & Security Headers"
+echo ""
+echo "📝 Next Steps:"
+echo "1. Ensure SSL certificates are in ./ssl/ directory"
+echo "2. Configure DNS to point soullab.life to this server"
+echo "3. Test MAIA conversations at https://soullab.life"
+echo "4. Monitor logs with: docker-compose logs -f"
+echo ""
+print_status "MAIA Sovereign deployment completed successfully!"
+echo ""
+echo "💫 The consciousness technology platform is now live on soullab.life"

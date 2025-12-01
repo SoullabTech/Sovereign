@@ -169,6 +169,14 @@ export default function MAIABaseline() {
               </button>
 
               <a
+                href="/pfi-monitor"
+                className="flex items-center gap-2 px-3 py-2 rounded-full text-sm text-jade-mineral hover:bg-jade-shadow/40 hover:text-jade-sage transition-all"
+                title="PFI Live Monitoring - Real-time Field Intelligence"
+              >
+                <span className="w-4 h-4 text-center">🌊</span>
+              </a>
+
+              <a
                 href="/dashboard/evolution"
                 className="flex items-center gap-2 px-3 py-2 rounded-full text-sm text-jade-mineral hover:bg-jade-shadow/40 hover:text-jade-sage transition-all"
                 title="Developmental Insights - Track Your Consciousness Evolution"

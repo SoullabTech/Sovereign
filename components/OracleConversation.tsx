@@ -2,7 +2,7 @@
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2 } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -247,7 +247,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showCaptions, setShowCaptions] = useState(true);
   const [showVoiceText, setShowVoiceText] = useState(true);
   const [showCustomizer, setShowCustomizer] = useState(false);
-  const [enableVoiceInChat, setEnableVoiceInChat] = useState(true); // Default to TRUE - users expect voice
+  const [enableVoiceInChat, setEnableVoiceInChat] = useState(() => {
+    // Load saved preference from localStorage, default to true
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('enableVoiceInChat');
+      return saved !== null ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
+  const [enableVoiceInput, setEnableVoiceInput] = useState(false); // Voice input mode toggle for chat interface
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [oracleAgentId, setOracleAgentId] = useState<string | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -3511,7 +3519,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               {/* Voice toggle for chat mode - HIDDEN on mobile, visible on desktop */}
               <div className="hidden md:block fixed top-20 right-20 z-50">
                 <button
-                  onClick={() => setEnableVoiceInChat(!enableVoiceInChat)}
+                  onClick={() => {
+                    const newValue = !enableVoiceInChat;
+                    setEnableVoiceInChat(newValue);
+                    localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
+                    console.log('🎤 Voice in chat toggled:', newValue ? 'ON' : 'OFF');
+                  }}
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                     enableVoiceInChat
                       ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
@@ -3548,30 +3561,53 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       <textarea
                         ref={textInputRef}
                         name="message"
-                        placeholder="Share your thoughts with MAIA..."
-                        disabled={isProcessing}
+                        placeholder={enableVoiceInput ? "Voice input enabled - tap the mic button to speak..." : "Share your thoughts with MAIA..."}
+                        disabled={isProcessing || enableVoiceInput}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && !e.shiftKey) {
                             e.preventDefault();
                             const textarea = e.currentTarget;
-                            if (textarea.value.trim()) {
+                            if (textarea.value.trim() && !enableVoiceInput) {
                               handleTextMessage(textarea.value);
                               textarea.value = '';
                             }
                           }
                         }}
-                        className="flex-1 min-h-[32px] max-h-[60px] px-3 py-1
-                                 bg-[#1a1f2e]/95 backdrop-blur-md
-                                 border border-gold-divine/30 rounded-2xl
-                                 placeholder:text-gold-divine/50
+                        className={`flex-1 min-h-[32px] max-h-[60px] px-3 py-1
+                                 backdrop-blur-md rounded-2xl
                                  text-base leading-relaxed md:text-sm
-                                 focus:outline-none focus:border-gold-divine/50 focus:ring-1 focus:ring-gold-divine/20
-                                 disabled:opacity-50 resize-none
-                                 touch-manipulation"
-                        style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}
+                                 focus:outline-none focus:ring-1
+                                 resize-none touch-manipulation transition-all
+                                 ${enableVoiceInput
+                                   ? 'bg-blue-900/30 border border-blue-400/40 placeholder:text-blue-300/60 focus:border-blue-400/60 focus:ring-blue-400/20 cursor-not-allowed'
+                                   : 'bg-[#1a1f2e]/95 border border-gold-divine/30 placeholder:text-gold-divine/50 focus:border-gold-divine/50 focus:ring-gold-divine/20'
+                                 } ${(isProcessing || enableVoiceInput) ? 'opacity-50' : ''}`}
+                        style={{ color: enableVoiceInput ? '#93C5FD' : '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}
                         autoComplete="off"
                         autoFocus={false}
                       />
+
+                      {/* Voice response toggle - Controls whether MAIA speaks responses aloud */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newValue = !enableVoiceInChat;
+                          setEnableVoiceInChat(newValue);
+                          localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
+                          console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
+                        }}
+                        className={`flex-shrink-0 px-3 py-2 border rounded-lg flex items-center justify-center gap-1.5
+                                   hover:scale-105 active:scale-95 transition-all shadow-sm text-xs font-medium
+                                   ${enableVoiceInChat
+                                     ? 'bg-amber-500/20 border-amber-400/50 text-amber-300 shadow-amber-500/20'
+                                     : 'bg-gray-500/20 border-gray-400/50 text-gray-400 shadow-gray-500/20'
+                                   }`}
+                        aria-label={enableVoiceInChat ? "Disable voice responses" : "Enable voice responses"}
+                        title={enableVoiceInChat ? "MAIA will speak responses aloud" : "MAIA responses will be silent"}
+                      >
+                        <Volume2 className="w-4 h-4" strokeWidth={2.5} />
+                        <span className="whitespace-nowrap">{enableVoiceInChat ? 'Voice On' : 'Voice Off'}</span>
+                      </button>
 
                       {/* Compact send button - moved to left side next to text bar */}
                       <button
@@ -3707,16 +3743,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       )}
 
 
-      {/* Voice state visualization (development) */}
-      {process.env.NODE_ENV === 'development' && userVoiceState && (
-        <div className="fixed top-[calc(env(safe-area-inset-top,0px)+2rem)] left-8 bg-black/80 text-white text-xs p-3 rounded-lg">
-          <div className="font-bold mb-2">Voice State</div>
-          <div>Amplitude: {(userVoiceState.amplitude * 100).toFixed(0)}%</div>
-          <div>Emotion: {userVoiceState.emotion}</div>
-          <div>Breath: {(userVoiceState.breathDepth * 100).toFixed(0)}%</div>
-          <div>Speaking: {userVoiceState.isSpeaking ? 'Yes' : 'No'}</div>
-        </div>
-      )}
 
       {/* Bottom Right Lab Tools Button - Contains journal access */}
       <button
@@ -3818,7 +3844,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       {/* {userId && <SoulprintMetricsWidget userId={userId} />} */}
 
       {/* Continuous Conversation - Uses browser Web Speech Recognition API (no webm issues) */}
-      {voiceEnabled && !showChatInterface && (
+      {voiceEnabled && (!showChatInterface || (showChatInterface && enableVoiceInput)) && (
         <div className="sr-only">
           <ContinuousConversation
             ref={voiceMicRef}

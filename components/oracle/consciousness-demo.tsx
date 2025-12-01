@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react';
 import { useMAIAOracle, OracleResponse, OracleDiagnosis } from '@/hooks/use-maia-oracle';
 import { SimpleHoloflower } from './holoflower-simple';
-import { useUnifiedConsciousnessState } from '@/lib/consciousness/unified-consciousness-state';
+import { useUnifiedConsciousness } from '@/lib/consciousness/unified-consciousness-state';
 
 export function ConsciousnessOracleDemo() {
   const { askOracle, diagnoseUser, testCringeDetection, getSystemStatus, loading, error } = useMAIAOracle();
@@ -19,7 +19,7 @@ export function ConsciousnessOracleDemo() {
   const [holoflowerStage, setHoloflowerStage] = useState<'dormant' | 'awakening' | 'processing' | 'blooming' | 'complete'>('dormant');
 
   // Initialize consciousness state for oracle integration
-  const consciousnessState = useUnifiedConsciousnessState();
+  const consciousnessState = useUnifiedConsciousness();
 
   const handleAskOracle = async () => {
     if (!message.trim()) return;

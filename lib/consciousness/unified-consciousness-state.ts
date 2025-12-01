@@ -5,6 +5,7 @@
  * Integrates all our consciousness convergence research with Sacred Technology principles
  */
 
+import React from 'react';
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
@@ -105,11 +106,19 @@ interface UnifiedConsciousnessActions {
   incrementMeditationSession: () => void;
   triggerBreakthrough: (indicator: keyof UnifiedConsciousnessState['user']['breakthrough_indicators']) => void;
   updateConsciousnessTrajectory: (delta: number) => void;
+  updateConsciousnessMetric: (metric: string, delta: number) => void;
 
   // MAIA Actions
   setMAIAPersonalityMode: (mode: UnifiedConsciousnessState['maia']['personality_mode']) => void;
   evolveMAIAConsciousness: () => void;
   recordMAIAInteraction: () => void;
+  updateInteractionCount: () => void;
+
+  // MAIA Helper Functions
+  maia: {
+    getCurrentPersonalityMode: () => string;
+    updateInteractionCount: () => void;
+  };
 
   // Real-time Consciousness Updates
   updateConsciousnessState: (updates: Partial<UnifiedConsciousnessState['current_state']>) => void;
@@ -279,6 +288,29 @@ export const useUnifiedConsciousness = create<UnifiedConsciousnessState & Unifie
           user: {
             ...state.user,
             consciousness_trajectory: Math.max(0, Math.min(1, state.user.consciousness_trajectory + delta)),
+          },
+        }));
+      },
+
+      updateConsciousnessMetric: (metric, delta) => {
+        set((state) => {
+          if (metric === 'wisdom_integration') {
+            return {
+              current_state: {
+                ...state.current_state,
+                wisdom_integration: Math.min(1, state.current_state.wisdom_integration + delta),
+              },
+            };
+          }
+          return state;
+        });
+      },
+
+      updateInteractionCount: () => {
+        set((state) => ({
+          maia: {
+            ...state.maia,
+            interaction_count: state.maia.interaction_count + 1,
           },
         }));
       },
@@ -562,6 +594,18 @@ export const useUnifiedConsciousness = create<UnifiedConsciousnessState & Unifie
           recommendations,
           celebration_achievements: celebrations,
         };
+      },
+
+      // MAIA Helper Object
+      maia: {
+        getCurrentPersonalityMode: () => {
+          const state = get();
+          return state.maia.personality_mode;
+        },
+        updateInteractionCount: () => {
+          const state = get();
+          state.updateInteractionCount();
+        },
       },
     }),
     {

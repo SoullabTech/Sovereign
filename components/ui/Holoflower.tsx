@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion';
 
 interface HoloflowerProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   animate?: boolean;
   glowIntensity?: 'low' | 'medium' | 'high';
   variant?: 'single' | 'spectrum';
@@ -15,7 +15,8 @@ const sizeMap = {
   sm: { container: 'w-12 h-12', image: 'w-8 h-8', glow: 'w-10 h-10', blur: '10px' },
   md: { container: 'w-16 h-16', image: 'w-12 h-12', glow: 'w-14 h-14', blur: '12px' },
   lg: { container: 'w-24 h-24', image: 'w-16 h-16', glow: 'w-20 h-20', blur: '15px' },
-  xl: { container: 'w-32 h-32', image: 'w-24 h-24', glow: 'w-28 h-28', blur: '20px' }
+  xl: { container: 'w-32 h-32', image: 'w-24 h-24', glow: 'w-28 h-28', blur: '20px' },
+  xxl: { container: 'w-64 h-64', image: 'w-48 h-48', glow: 'w-56 h-56', blur: '30px' }
 };
 
 const glowMap = {
