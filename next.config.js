@@ -54,18 +54,52 @@ const nextConfig = {
         fs: false,
         net: false,
         tls: false,
+        crypto: false,
+        stream: false,
+        util: false,
+        url: false,
+        zlib: false,
       };
     }
 
-    // Fix undici library bundling issue for Node.js v22+
+    // Enhanced fix for undici library bundling issue for Node.js v22+
     config.externals = config.externals || [];
     if (isServer) {
-      // Externalize undici and related problematic libraries
+      // More comprehensive externalization of problematic libraries
       config.externals.push({
         'undici': 'commonjs undici',
-        'formdata-polyfill/esm.min.js': 'commonjs formdata-polyfill/esm.min.js'
+        'formdata-polyfill/esm.min.js': 'commonjs formdata-polyfill/esm.min.js',
+        'node:util': 'commonjs util',
+        'node:crypto': 'commonjs crypto',
+        'node:stream': 'commonjs stream',
+        'node:url': 'commonjs url',
+        'node:zlib': 'commonjs zlib',
       });
+
+      // Additional externalization as function for problematic packages
+      if (Array.isArray(config.externals)) {
+        config.externals.push(({ context, request }, callback) => {
+          // Externalize any undici-related imports
+          if (/^undici/.test(request) || /node:/.test(request)) {
+            return callback(null, `commonjs ${request}`);
+          }
+          callback();
+        });
+      }
     }
+
+    // Ignore problematic modules during bundling
+    config.ignoreWarnings = [
+      ...(config.ignoreWarnings || []),
+      /Failed to parse source map/,
+      /Critical dependency: the request of a dependency is an expression/,
+    ];
+
+    // Resolve aliases to prevent bundling issues
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      'undici': false,
+    };
 
     // 🔥 CRITICAL COMPONENT OPTIMIZATION - SacredLabDrawer & PFI System
     // Ensure SacredLabDrawer and core components are prioritized during builds
