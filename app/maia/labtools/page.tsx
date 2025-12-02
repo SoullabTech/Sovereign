@@ -18,7 +18,7 @@ import { SacredGeometryField } from './components/SacredGeometryField';
 import { LabToolsService } from './lib/LabToolsService';
 import DreamJournalInterface from '../../../components/dreams/DreamJournalInterface';
 import { SacredLabDrawer } from '../../../components/ui/SacredLabDrawer';
-import { FieldCoherenceDashboard } from '../../../apps/web/components/biometrics/FieldCoherenceDashboard';
+// import { FieldCoherenceDashboard } from '../../../apps/web/components/biometrics/FieldCoherenceDashboard'; // REMOVED: was in deleted apps/web directory
 // IPP Components - TODO: Create these components
 // import IPPDashboard from '../../../components/clinical/IPPDashboard';
 // import IPPAssessment from '../../../components/clinical/IPPAssessment';
@@ -440,7 +440,11 @@ export default function MAIALabTools() {
             Real-time consciousness field monitoring, elemental balance tracking,
             and breakthrough trajectory analysis.
           </div>
-          <FieldCoherenceDashboard />
+          {/* Temporary placeholder for FieldCoherenceDashboard */}
+          <div className="bg-gray-900/50 backdrop-blur-sm border border-green-500/30 rounded-lg p-4">
+            <h3 className="text-lg font-bold text-white mb-3">🌊 Field Coherence Dashboard</h3>
+            <p className="text-gray-300">Field coherence monitoring dashboard will be restored soon...</p>
+          </div>
         </div>
       </SacredLabDrawer>
     </div>
