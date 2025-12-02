@@ -258,10 +258,10 @@ button {
 }
 */
 
-/* Force ALL buttons to have AMBER TEXT with strong overrides */
+/* Force ALL buttons to have GOLDEN AMBER TEXT with strong overrides */
 button {
   background: rgba(255, 255, 255, 0.1) !important; /* Subtle background */
-  color: #f59e0b !important; /* AMBER TEXT */
+  color: #fbbf24 !important; /* GOLDEN AMBER TEXT - less orange */
   border: 1px solid rgba(255, 255, 255, 0.2) !important;
 }
 
