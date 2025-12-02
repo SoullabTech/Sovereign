@@ -4,6 +4,7 @@
  * sacred knowledge, traditional protocols, and indigenous rights
  */
 
+import { EventEmitter } from 'events';
 import {
   MemberWisdomContribution,
   CulturalContext,
@@ -106,13 +107,14 @@ export interface RiskFactor {
   mitigation: string;
 }
 
-export class CulturalSensitivityValidator {
+export class CulturalSensitivityValidator extends EventEmitter {
   private traditionalKnowledge: Map<string, CulturalTradition> = new Map();
   private indigenousProtocols: Map<string, IndigenousWisdomProtocol> = new Map();
   private sacredTermsDatabase: Map<string, string[]> = new Map();
   private culturalConsultants: Map<string, CulturalConsultant> = new Map();
 
   constructor() {
+    super(); // Call EventEmitter constructor
     this.initializeCulturalDatabase();
     this.initializeIndigenousProtocols();
     this.initializeSacredTermsDatabase();

@@ -165,14 +165,14 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] relative overflow-hidden">
-      {/* Soullab Logo at top - 3x bigger with Dune Typography */}
-      <div className="absolute top-16 left-1/2 transform -translate-x-1/2 z-30">
-        <h1 className="text-white text-6xl font-extralight tracking-[0.3em] uppercase">Soullab</h1>
-      </div>
+      <div className="relative z-20 min-h-screen flex flex-col">
+        {/* Soullab Logo at top - starts immediately visible */}
+        <div className="pt-8 pb-6 text-center z-30">
+          <h1 className="text-white text-3xl sm:text-4xl md:text-6xl font-extralight tracking-[0.3em] uppercase">Soullab</h1>
+        </div>
 
-
-      <div className="relative z-20 flex items-center justify-center min-h-screen p-6">
-        <div className="max-w-lg w-full">
+        <div className="flex-1 flex items-center justify-center px-6">
+          <div className="max-w-lg w-full">
           <AnimatePresence mode="wait">
 
             {/* Phase 1: We've Been Expecting You - Soul Key Entry */}
@@ -183,7 +183,7 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 1.2 }}
-                className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4"
+                className="space-y-10"
               >
                 {/* Clean crystal clear Holoflower - positioned lower */}
                 <div className="mb-8 relative">
@@ -697,6 +697,7 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
             )}
 
           </AnimatePresence>
+          </div>
         </div>
       </div>
     </div>

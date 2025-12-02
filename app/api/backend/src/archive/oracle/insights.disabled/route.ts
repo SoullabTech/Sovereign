@@ -4,8 +4,8 @@ import { llamaService } from "../../../services/memory/LlamaService";
 import { logger } from "../../../utils/logger";
 import path from "path";
 
-// Force this route to be dynamic for static export compatibility
-export const dynamic = 'force-dynamic';
+// Only force dynamic for non-static builds
+export const dynamic = process.env.CAPACITOR_BUILD ? undefined : 'force-dynamic';
 
 // Archetypal prompts for mythic reflection
 const ARCHETYPE_PROMPTS = {

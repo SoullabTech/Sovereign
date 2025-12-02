@@ -3544,7 +3544,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               {showChatInterface && (
               <div className="fixed inset-x-0 z-[60]" style={{ bottom: '2.5rem' }}>
                 {/* Text input area - Ultra-compact mobile design - Extends below bottom to eliminate white space */}
-                <div className="bg-soul-surface/90 px-2 py-1 pb-3 border-t border-soul-border/40">
+                <div className="bg-soul-surface/90 px-2 py-1 pb-1 border-t border-soul-border/40">
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
@@ -3556,38 +3556,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                     }}
                     className="max-w-4xl mx-auto"
                   >
-                    {/* Compact input with inline send button */}
-                    <div className="flex items-end gap-2">
-                      <textarea
-                        ref={textInputRef}
-                        name="message"
-                        placeholder={enableVoiceInput ? "Voice input enabled - tap the mic button to speak..." : "Share your thoughts with MAIA..."}
-                        disabled={isProcessing || enableVoiceInput}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            const textarea = e.currentTarget;
-                            if (textarea.value.trim() && !enableVoiceInput) {
-                              handleTextMessage(textarea.value);
-                              textarea.value = '';
-                            }
-                          }
-                        }}
-                        className={`flex-1 min-h-[32px] max-h-[60px] px-3 py-1
-                                 backdrop-blur-md rounded-2xl
-                                 text-base leading-relaxed md:text-sm
-                                 focus:outline-none focus:ring-1
-                                 resize-none touch-manipulation transition-all
-                                 ${enableVoiceInput
-                                   ? 'bg-blue-900/30 border border-blue-400/40 placeholder:text-blue-300/60 focus:border-blue-400/60 focus:ring-blue-400/20 cursor-not-allowed'
-                                   : 'bg-[#1a1f2e]/95 border border-gold-divine/30 placeholder:text-gold-divine/50 focus:border-gold-divine/50 focus:ring-gold-divine/20'
-                                 } ${(isProcessing || enableVoiceInput) ? 'opacity-50' : ''}`}
-                        style={{ color: enableVoiceInput ? '#93C5FD' : '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}
-                        autoComplete="off"
-                        autoFocus={false}
-                      />
-
-                      {/* Voice response toggle - Controls whether MAIA speaks responses aloud */}
+                    {/* Balanced layout: Voice (left) + Textarea (center) + Action buttons (right) */}
+                    <div className="flex items-center gap-1">
+                      {/* Voice response toggle - left side */}
                       <button
                         type="button"
                         onClick={() => {
@@ -3596,8 +3567,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           localStorage.setItem('enableVoiceInChat', JSON.stringify(newValue));
                           console.log('🔊 Voice responses toggled:', newValue ? 'ON' : 'OFF');
                         }}
-                        className={`flex-shrink-0 px-3 py-2 border rounded-lg flex items-center justify-center gap-1.5
-                                   hover:scale-105 active:scale-95 transition-all shadow-sm text-xs font-medium
+                        className={`flex-shrink-0 w-6 h-6 border rounded-lg flex items-center justify-center
+                                   hover:scale-105 active:scale-95 transition-all shadow-sm
                                    ${enableVoiceInChat
                                      ? 'bg-amber-500/20 border-amber-400/50 text-amber-300 shadow-amber-500/20'
                                      : 'bg-gray-500/20 border-gray-400/50 text-gray-400 shadow-gray-500/20'
@@ -3605,51 +3576,85 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                         aria-label={enableVoiceInChat ? "Disable voice responses" : "Enable voice responses"}
                         title={enableVoiceInChat ? "MAIA will speak responses aloud" : "MAIA responses will be silent"}
                       >
-                        <Volume2 className="w-4 h-4" strokeWidth={2.5} />
-                        <span className="whitespace-nowrap">{enableVoiceInChat ? 'Voice On' : 'Voice Off'}</span>
+                        <Volume2 className="w-3 h-3" strokeWidth={2.5} />
                       </button>
 
-                      {/* Compact send button - moved to left side next to text bar */}
-                      <button
-                        type="submit"
-                        disabled={isProcessing}
-                        className="flex-shrink-0 w-10 h-10 bg-amber-500/30 border border-amber-400/50
-                                 rounded-full text-amber-300 flex items-center justify-center
-                                 hover:bg-amber-500/40 hover:border-amber-400/70 active:scale-95 transition-all
-                                 disabled:opacity-30 shadow-lg shadow-amber-500/20"
-                        aria-label="Send"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                        </svg>
-                      </button>
+                      {/* Flexible textarea - center, takes maximum available space */}
+                      <div className="flex-1 min-w-0">
+                        <textarea
+                          ref={textInputRef}
+                          name="message"
+                          placeholder={enableVoiceInput ? "Voice input enabled - tap the mic button to speak..." : "Share your thoughts with MAIA..."}
+                          disabled={isProcessing || enableVoiceInput}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              const textarea = e.currentTarget;
+                              if (textarea.value.trim() && !enableVoiceInput) {
+                                handleTextMessage(textarea.value);
+                                textarea.value = '';
+                              }
+                            }
+                          }}
+                          className={`w-full min-h-[28px] max-h-[56px] px-2.5 py-1.5
+                                   backdrop-blur-md rounded-2xl
+                                   text-sm leading-relaxed
+                                   focus:outline-none focus:ring-1
+                                   resize-none touch-manipulation transition-all
+                                   ${enableVoiceInput
+                                     ? 'bg-blue-900/30 border border-blue-400/40 placeholder:text-blue-300/60 focus:border-blue-400/60 focus:ring-blue-400/20 cursor-not-allowed'
+                                     : 'bg-[#1a1f2e]/95 border border-gold-divine/30 placeholder:text-gold-divine/50 focus:border-gold-divine/50 focus:ring-gold-divine/20'
+                                   } ${(isProcessing || enableVoiceInput) ? 'opacity-50' : ''}`}
+                          style={{ color: enableVoiceInput ? '#93C5FD' : '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}
+                          autoComplete="off"
+                          autoFocus={false}
+                        />
+                      </div>
 
-                      {/* File upload button */}
-                      <input
-                        type="file"
-                        id="chatFileUpload"
-                        className="hidden"
-                        multiple
-                        accept="image/*,application/pdf,.txt,.doc,.docx"
-                        onChange={(e) => {
-                          const files = Array.from(e.target.files || []);
-                          if (files.length > 0) {
-                            const fileNames = files.map(f => f.name).join(', ');
-                            handleTextMessage(`Please analyze these files: ${fileNames}`, files);
-                            e.target.value = '';
-                          }
-                        }}
-                      />
-                      <label
-                        htmlFor="chatFileUpload"
-                        className="flex-shrink-0 w-10 h-10 bg-amber-500/30 border border-amber-400/50
-                                 rounded-full text-amber-300 flex items-center justify-center
-                                 hover:bg-amber-500/40 hover:border-amber-400/70 active:scale-95 transition-all
-                                 cursor-pointer shadow-lg shadow-amber-500/20"
-                        title="Upload files"
-                      >
-                        <Paperclip className="w-5 h-5 text-amber-300" strokeWidth={2.5} />
-                      </label>
+                      {/* Action buttons group - right side */}
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {/* Compact send button */}
+                        <button
+                          type="submit"
+                          disabled={isProcessing}
+                          className="flex-shrink-0 w-6 h-6 bg-amber-500/30 border border-amber-400/50
+                                   rounded-full text-amber-300 flex items-center justify-center
+                                   hover:bg-amber-500/40 hover:border-amber-400/70 active:scale-95 transition-all
+                                   disabled:opacity-30 shadow-lg shadow-amber-500/20"
+                          aria-label="Send"
+                        >
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                          </svg>
+                        </button>
+
+                        {/* File upload button */}
+                        <input
+                          type="file"
+                          id="chatFileUpload"
+                          className="hidden"
+                          multiple
+                          accept="image/*,application/pdf,.txt,.doc,.docx"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length > 0) {
+                              const fileNames = files.map(f => f.name).join(', ');
+                              handleTextMessage(`Please analyze these files: ${fileNames}`, files);
+                              e.target.value = '';
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor="chatFileUpload"
+                          className="flex-shrink-0 w-6 h-6 bg-amber-500/30 border border-amber-400/50
+                                   rounded-full text-amber-300 flex items-center justify-center
+                                   hover:bg-amber-500/40 hover:border-amber-400/70 active:scale-95 transition-all
+                                   cursor-pointer shadow-lg shadow-amber-500/20"
+                          title="Upload files"
+                        >
+                          <Paperclip className="w-3 h-3 text-amber-300" strokeWidth={2.5} />
+                        </label>
+                      </div>
 
                     </div>
                   </form>

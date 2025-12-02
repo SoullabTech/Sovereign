@@ -604,19 +604,12 @@ export default function MAIAPage() {
             }}
           />
 
-          {/* Single Horizontal Scrolling Header - Logo and Controls in one ribbon */}
+          {/* Carousel Header - iPhone Optimized Sliding Controls */}
           <div className="relative pb-1">
-            <div className="overflow-x-auto scrollbar-hide px-2 md:overflow-visible md:flex md:justify-center" style={{
-              WebkitOverflowScrolling: 'touch',
-              scrollBehavior: 'smooth'
-            }}>
-              <div
-                className="flex items-center gap-1 md:w-auto md:min-w-0"
-                style={{
-                  width: 'max-content',
-                  minWidth: isDesktop ? 'auto' : '120vw'
-                }}
-              >
+            {/* Desktop: Standard layout */}
+            {isDesktop ? (
+              <div className="flex justify-center px-2">
+                <div className="flex items-center gap-1">
                 {/* Voice/Text Toggle */}
                 <button
                   onClick={() => {
@@ -784,8 +777,184 @@ export default function MAIAPage() {
                 >
                   <Brain className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
                 </motion.button>
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Mobile: Draggable Carousel */
+              <div className="relative overflow-hidden px-2">
+                <motion.div
+                  className="flex items-center gap-1"
+                  style={{
+                    width: 'max-content',
+                    minWidth: '120vw'
+                  }}
+                  drag="x"
+                  dragConstraints={{
+                    left: -300, // Allow dragging left to see more items
+                    right: 0    // Prevent dragging too far right
+                  }}
+                  dragElastic={0.1}
+                  dragMomentum={false}
+                  whileDrag={{
+                    scale: 0.98,
+                    transition: { duration: 0.1 }
+                  }}
+                  initial={{ x: 0 }}
+                  animate={{ x: 0 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 400,
+                    damping: 40
+                  }}
+                >
+                  {/* Voice/Text Toggle */}
+                  <button
+                    onClick={() => {
+                      setShowChatInterface(!showChatInterface);
+                    }}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-md border transition-all flex items-center gap-1.5 touch-manipulation ${
+                      showChatInterface
+                        ? 'bg-blue-500/20 border-blue-500/40 text-blue-300'
+                        : 'bg-amber-500/80 border-2 border-amber-400 text-amber-100 font-bold shadow-lg'
+                    }`}
+                    style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                  >
+                    <span className="text-sm">
+                      {showChatInterface ? '💬' : '🎤'}
+                    </span>
+                    <span className="text-xs font-medium whitespace-nowrap">
+                      {showChatInterface ? 'Text' : 'Voice'}
+                    </span>
+                  </button>
+
+                  {/* Mode Selector Buttons - All in horizontal row */}
+                  <button
+                    onClick={() => {
+                      setMaiaMode('normal');
+                    }}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
+                      maiaMode === 'normal'
+                        ? 'bg-amber-500/80 text-amber-100 border-2 border-amber-400 font-bold shadow-lg'
+                        : 'bg-amber-500/60 text-amber-100 hover:text-amber-50 border-2 border-amber-500 hover:border-amber-400 shadow-md'
+                    }`}
+                    style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                  >
+                    Dialogue
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setMaiaMode('patient');
+                    }}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
+                      maiaMode === 'patient'
+                        ? 'bg-teal-500/30 text-teal-200 border border-teal-500/50'
+                        : 'bg-black/20 text-amber-400/70 hover:text-amber-300 border border-amber-500/20'
+                    }`}
+                    style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                  >
+                    Counsel
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setMaiaMode('session');
+                    }}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation ${
+                      maiaMode === 'session'
+                        ? 'bg-blue-500/30 text-blue-200 border border-blue-500/50'
+                        : 'bg-black/20 text-amber-400/70 hover:text-amber-300 border border-amber-500/20'
+                    }`}
+                    style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                  >
+                    Scribe
+                  </button>
+
+                  {/* Start Session / Session Status */}
+                  {!hasActiveSession ? (
+                    <motion.button
+                      onClick={() => {
+                        console.log('🔥 Opening session selector');
+                        setShowSessionSelector(true);
+                      }}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                               bg-[#D4B896]/15 hover:bg-[#D4B896]/25
+                               border border-[#D4B896]/30 hover:border-[#D4B896]/50
+                               text-[#D4B896] text-xs font-medium transition-all whitespace-nowrap"
+                      whileHover={{ scale: 1.02 }}
+                    >
+                      <Clock className="w-3 h-3" />
+                      Start Session
+                    </motion.button>
+                  ) : (
+                    <div className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md
+                                 bg-green-500/15 border border-green-500/40 text-green-400 text-xs font-medium whitespace-nowrap">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+                      Active
+                    </div>
+                  )}
+
+                  {/* Community Commons Button */}
+                  <div className="relative z-[130]">
+                    <motion.button
+                      onClick={() => {
+                        console.log('📚 Opening Community Commons panel');
+                        setShowCommunityCommons(!showCommunityCommons);
+                      }}
+                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
+                               bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/50"
+                      whileHover={{ scale: 1.02 }}
+                      style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                    >
+                      <Users className="w-3 h-3" />
+                      <span>Commons</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform ${showCommunityCommons ? 'rotate-180' : ''}`} />
+                    </motion.button>
+                  </div>
+
+                  {/* Separator */}
+                  <div className="w-px h-6 bg-amber-500/20 flex-shrink-0"></div>
+
+                  {/* Logout Button */}
+                  <motion.button
+                    onClick={() => {
+                      console.log('🔐 [MAIA] User logout - clearing all session data');
+                      import('@/lib/auth/betaSession').then(({ betaSession }) => {
+                        betaSession.clearSession();
+                      });
+                      localStorage.removeItem('betaOnboardingComplete');
+                      localStorage.removeItem('authToken');
+                      localStorage.removeItem('sessionId');
+                      setTimeout(() => {
+                        router.push('/welcome-back');
+                      }, 100);
+                    }}
+                    className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    title="Logout"
+                  >
+                    <LogOut className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
+                  </motion.button>
+
+                  {/* Sacred Lab Menu Button */}
+                  <motion.button
+                    onClick={() => setShowSacredLabDrawer(!showSacredLabDrawer)}
+                    className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
+                    whileHover={{ scale: 1.05 }}
+                    title="Sacred Lab Tools - PFI Interface"
+                  >
+                    <Brain className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
+                  </motion.button>
+                </motion.div>
+
+                {/* Mobile Carousel Indicators */}
+                <div className="flex justify-center mt-2 gap-1">
+                  <div className="w-2 h-2 rounded-full bg-amber-400/40"></div>
+                  <div className="w-2 h-2 rounded-full bg-amber-400/20"></div>
+                  <div className="w-2 h-2 rounded-full bg-amber-400/20"></div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1043,7 +1212,7 @@ export default function MAIAPage() {
         </div>
 
         {/* SOULLAB Logo - Fixed below text field */}
-        <div className="fixed bottom-2 left-1/2 transform -translate-x-1/2 z-10">
+        <div className="fixed bottom-6 md:bottom-4 left-1/2 transform -translate-x-1/2 z-10">
           <div className="flex items-center gap-2">
             <img
               src="/holoflower-amber.png"

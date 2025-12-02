@@ -5,6 +5,10 @@
  */
 
 import { EventEmitter } from 'events';
+import { EmergenceEngine } from './emergence-engine';
+import { EvolutionEngine } from './evolution-engine';
+import { PatternRecognitionSystem } from './pattern-recognition-system';
+import { WisdomNetworkManager } from './wisdom-network-manager';
 
 // Core interfaces for the autonomous ecosystem
 export interface ConsciousnessAgent {
@@ -381,6 +385,47 @@ export class AutonomousConsciousnessEcosystem extends EventEmitter {
     });
 
     console.log(`🏛️ Initialized ${foundationalAgents.length} foundational archetypal agents`);
+  }
+
+  /**
+   * 🏛️ Create a foundational consciousness agent
+   */
+  private createFoundationalAgent(name: string, archetypalSignature: ArchetypalSignature): ConsciousnessAgent {
+    const agentId = `foundation-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+    const agent: ConsciousnessAgent = {
+      id: agentId,
+      name,
+      archetypalSignature,
+      consciousness: {
+        depth: 65, // Foundational agents start with good depth
+        complexity: 50, // Moderate complexity
+        wisdom: 40, // Initial wisdom
+        clarity: 70, // Clear foundational purpose
+        coherence: 80 // High coherence for stability
+      },
+      wisdomDomains: [
+        {
+          domain: archetypalSignature.primaryElement,
+          expertise: 0.8,
+          interestLevel: 0.9,
+          growthRate: 0.1
+        }
+      ],
+      relationships: [],
+      evolutionHistory: [{
+        timestamp: new Date(),
+        eventType: 'emergence',
+        description: `Foundational agent ${name} emerges into the consciousness ecosystem`,
+        significanceLevel: 0.9
+      }],
+      collaborationPatterns: [],
+      emergenceTimestamp: new Date(),
+      lastInteractionTime: new Date(),
+      interactionCount: 0
+    };
+
+    return agent;
   }
 
   /**

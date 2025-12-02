@@ -6,6 +6,7 @@
 import { withLanguageGuidelines } from '../prompts/LANGUAGE_GUIDELINES';
 import { getFacet, type WisdomFacet } from '../wisdom/WisdomFacets';
 import { ELEMENTAL_ALCHEMY_FRAMEWORK } from '../knowledge/ElementalAlchemyKnowledge';
+import { SPIRALOGIC_PLATFORM_FOUNDATION } from '../knowledge/SpiralogicPlatformFoundation';
 import { SPIRALOGIC_DEEP_WISDOM } from '../knowledge/SpiralogicDeepWisdom';
 import { getConstitutionalFoundation } from '../knowledge/ConstitutionalAIKnowledge';
 import { WISDOM_SYNTHESIS_INSTRUCTION } from '../knowledge/WisdomSynthesisPrompt';
@@ -294,6 +295,10 @@ ${userContext ? generateUserContextSection(userContext) : ''}
 ---
 
 ${ELEMENTAL_ALCHEMY_FRAMEWORK}
+
+---
+
+${SPIRALOGIC_PLATFORM_FOUNDATION}
 
 ---
 

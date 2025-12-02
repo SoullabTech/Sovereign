@@ -20,24 +20,9 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
             console.log('✅ PWA Service Worker registered:', reg.scope);
             setRegistration(reg);
 
-            // Check for updates periodically
-            setInterval(() => {
-              reg.update();
-            }, 60 * 60 * 1000); // Check every hour
-
-            // Handle updates - Auto-update without user interaction
-            reg.addEventListener('updatefound', () => {
-              const newWorker = reg.installing;
-              if (newWorker) {
-                newWorker.addEventListener('statechange', () => {
-                  if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                    console.log('🆕 New version available! Auto-updating...');
-                    // Auto-update instead of showing popup
-                    handleAutoUpdate(reg);
-                  }
-                });
-              }
-            });
+            // Disable automatic updates - removed to prevent glitches
+            // Updates will only happen on manual page refresh
+            console.log('✅ PWA registered without auto-updates to prevent glitches');
           })
           .catch((error) => {
             console.error('❌ PWA Service Worker registration failed:', error);
@@ -56,25 +41,8 @@ export function PWAProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const handleAutoUpdate = (registration: ServiceWorkerRegistration) => {
-    console.log('🔄 Auto-update initiated, registration:', registration);
-
-    if (registration?.waiting) {
-      console.log('✅ Waiting worker found, sending SKIP_WAITING');
-      registration.waiting.postMessage({ type: 'SKIP_WAITING' });
-
-      // Listen for controlling state change
-      navigator.serviceWorker.addEventListener('controllerchange', () => {
-        console.log('🔄 Controller changed, auto-reloading...');
-        // Auto-reload silently (in both dev and production)
-        window.location.reload();
-      });
-    } else {
-      // Fallback: just reload if no waiting worker
-      console.log('⚠️ No waiting worker, forcing reload');
-      window.location.reload();
-    }
-  };
+  // Auto-update function removed to prevent glitches
+  // Updates now only happen on manual page refresh
 
   return (
     <>

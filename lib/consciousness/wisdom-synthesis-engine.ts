@@ -4,6 +4,7 @@
  * while respecting cultural boundaries and creating novel insights
  */
 
+import { EventEmitter } from 'events';
 import {
   MemberWisdomContribution,
   ExtractedInsight,
@@ -179,13 +180,14 @@ export interface SynthesisRequest {
   expectedApplications: string[];
 }
 
-export class WisdomSynthesisEngine {
+export class WisdomSynthesisEngine extends EventEmitter {
   private syntheses: Map<string, WisdomSynthesis> = new Map();
   private synthesisOpportunities: SynthesisOpportunity[] = [];
   private synthesisRequests: SynthesisRequest[] = [];
   private culturalConsultants: Map<string, string[]> = new Map();
 
   constructor() {
+    super(); // Call EventEmitter constructor
     this.initializeCulturalConsultants();
     this.startOpportunityDetection();
   }

@@ -215,19 +215,9 @@ export const usePWA = () => {
         const registration = await navigator.serviceWorker.register('/sw-enhanced.js');
         console.log('Service Worker registered:', registration);
 
-        // Check for updates - Auto-update without user intervention
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (newWorker) {
-            newWorker.addEventListener('statechange', () => {
-              if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
-                // New service worker activated, auto-refresh
-                console.log('🆕 New version detected, auto-updating...');
-                window.location.reload();
-              }
-            });
-          }
-        });
+        // Auto-update functionality removed to prevent glitches
+        // Updates will only happen on manual page refresh
+        console.log('✅ Service Worker registered without auto-updates');
 
         return registration;
       } catch (error) {
