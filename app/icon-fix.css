@@ -257,3 +257,56 @@ button {
   outline: 2px solid rgba(255, 0, 0, 0.3) !important;
 }
 */
+
+/* Force ALL buttons to have AMBER TEXT with strong overrides */
+button {
+  background: rgba(255, 255, 255, 0.1) !important; /* Subtle background */
+  color: #f59e0b !important; /* AMBER TEXT */
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Voice and Dialogue buttons - amber styling */
+button:has(span:contains("Voice")),
+button:has(:contains("Voice")),
+button:has(span:contains("Dialogue")),
+button:has(:contains("Dialogue")) {
+  background: #f59e0b !important; /* Amber-500 */
+  color: #ffffff !important;
+  border: 1px solid #d97706 !important; /* Amber-600 border */
+}
+
+button:has(span:contains("Voice")):hover,
+button:has(:contains("Voice")):hover,
+button:has(span:contains("Dialogue")):hover,
+button:has(:contains("Dialogue")):hover {
+  background: #d97706 !important; /* Amber-600 on hover */
+  color: #ffffff !important;
+}
+
+/* Targeted fix for brain icon and logout button visibility */
+/* Only affects buttons in the header/nav area on the right side */
+header button:not([class*="voice"]):not([class*="dialogue"]):not([class*="counsel"]):not([class*="scribe"]),
+nav button:not([class*="voice"]):not([class*="dialogue"]):not([class*="counsel"]):not([class*="scribe"]),
+button[aria-label*="Lab"],
+button[aria-label*="logout"],
+button[aria-label*="Log out"],
+button[aria-label*="Settings"],
+.header-actions button,
+[class*="nav-right"] button {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Hover states for visibility */
+header button:not([class*="voice"]):not([class*="dialogue"]):not([class*="counsel"]):not([class*="scribe"]):hover,
+nav button:not([class*="voice"]):not([class*="dialogue"]):not([class*="counsel"]):not([class*="scribe"]):hover,
+button[aria-label*="Lab"]:hover,
+button[aria-label*="logout"]:hover,
+button[aria-label*="Log out"]:hover,
+button[aria-label*="Settings"]:hover,
+.header-actions button:hover,
+[class*="nav-right"] button:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+}
