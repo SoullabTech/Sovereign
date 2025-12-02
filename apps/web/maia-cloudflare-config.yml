@@ -1,8 +1,0 @@
-tunnel: maia-sovereign
-credentials-file: ~/.cloudflared/maia-sovereign.json
-
-ingress:
-  - hostname: soullab.life
-    path: /maia*
-    service: http://localhost:3000
-  - service: http_status:404
