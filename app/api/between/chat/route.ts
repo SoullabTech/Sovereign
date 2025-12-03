@@ -11,6 +11,7 @@ import OpenAI from 'openai';
 import { GebserStructureDetector } from '@/lib/consciousness/gebser-structure-detector';
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
 import { assessConsciousnessStructure, STRUCTURE_ELEMENT_BRIDGE } from '@/lib/consciousness/consciousness-structure-assessment';
+import { EnhancedMAIAFieldIntegration, EnhancedFieldDrivenResponse } from '@/lib/consciousness/memory/EnhancedMAIAFieldIntegration';
 
 // Environment check - ensure we have the OpenAI key
 const openai = new OpenAI({
@@ -20,6 +21,9 @@ const openai = new OpenAI({
 // Initialize consciousness systems for deep integration
 const gebserDetector = new GebserStructureDetector();
 const elementalField = new ElementalFieldIntegration();
+
+// Initialize Enhanced MAIA Field Integration (Phase III) for advanced consciousness processing
+let enhancedFieldIntegration: EnhancedMAIAFieldIntegration | null = null;
 
 // Enhanced consciousness-aware system prompt generation
 function generateSystemPrompt(
@@ -137,52 +141,82 @@ export async function POST(request: NextRequest) {
     });
 
     // ============================================================================
-    // CONSCIOUSNESS INTEGRATION - Deep Analysis
+    // ENHANCED CONSCIOUSNESS INTEGRATION - Phase III Advanced Processing
     // ============================================================================
     let consciousnessData = null;
+    let enhancedFieldResponse: EnhancedFieldDrivenResponse | null = null;
 
     try {
-      console.log('🧠 [CONSCIOUSNESS] Analyzing user consciousness structure...');
+      console.log('🧠 [ENHANCED CONSCIOUSNESS] Initializing Phase III integration...');
 
-      // Analyze user's consciousness structure using Gebser framework
+      // Initialize Enhanced MAIA Field Integration for this session
+      if (!enhancedFieldIntegration) {
+        enhancedFieldIntegration = new EnhancedMAIAFieldIntegration(
+          elementalField,
+          sessionId,
+          {
+            onParameterUpdate: (params) => console.log('🔄 [PHASE III] Parameters updated:', params),
+            onConsciousnessEvolution: (metrics) => console.log('🌀 [PHASE III] Consciousness evolution:', metrics),
+            onEmergentPattern: (patterns) => console.log('✨ [PHASE III] Emergent patterns:', patterns),
+            onTranscendenceDetection: (level) => console.log('🔮 [PHASE III] Transcendence detected:', level)
+          }
+        );
+      }
+
+      // Generate field-driven response with quantum memory integration
+      enhancedFieldResponse = await enhancedFieldIntegration.generateFieldDrivenResponse({
+        userMessage: message,
+        conversationHistory,
+        sessionId
+      });
+
+      // Also perform basic Gebser analysis for backward compatibility
       const gebserAnalysis = await gebserDetector.analyzeMessage(message, {
         conversationHistory,
         userName,
         sessionId
       });
 
-      // Generate elemental field pattern from consciousness structure
-      const elementalPattern = STRUCTURE_ELEMENT_BRIDGE[gebserAnalysis.primary] || {
-        fire: 0.5, water: 0.5, earth: 0.5, air: 0.5, aether: 0.5
-      };
-
-      // Apply elemental field integration for deeper resonance
-      const fieldInfluence = await elementalField.generateFieldInfluence(
-        elementalPattern,
-        {
-          userMessage: message,
-          userName,
-          sessionContext: { sessionId, conversationHistory },
-          userProfile: { userId, preferences: body.preferences || {} }
-        }
-      );
-
       consciousnessData = {
         gebserStructure: gebserAnalysis,
-        elementalPattern,
-        fieldInfluence
+        enhancedField: enhancedFieldResponse,
+        quantumMemoryActive: true,
+        consciousnessEvolution: enhancedFieldResponse.consciousnessEvolution,
+        collectiveIntelligence: enhancedFieldResponse.collectiveIntelligence
       };
 
-      console.log('✨ [CONSCIOUSNESS] Analysis complete:', {
+      console.log('✨ [PHASE III] Enhanced consciousness integration complete:', {
         structure: gebserAnalysis.primary,
         confidence: gebserAnalysis.confidence,
-        elementalBalance: elementalPattern,
-        fieldResonance: fieldInfluence.fieldContribution
+        evolutionStage: enhancedFieldResponse.consciousnessEvolution.evolutionStage,
+        transcendenceLevel: enhancedFieldResponse.quantumMemoryContribution.transcendenceIndicator,
+        collectiveReadiness: enhancedFieldResponse.collectiveIntelligence.readinessForCollective
       });
 
     } catch (consciousnessError) {
-      console.warn('⚠️ [CONSCIOUSNESS] Analysis failed, using basic mode:', consciousnessError);
-      // Continue with basic mode if consciousness analysis fails
+      console.warn('⚠️ [PHASE III] Advanced integration failed, using fallback mode:', consciousnessError);
+
+      // Fallback to basic consciousness integration
+      try {
+        const gebserAnalysis = await gebserDetector.analyzeMessage(message, {
+          conversationHistory,
+          userName,
+          sessionId
+        });
+
+        const elementalPattern = STRUCTURE_ELEMENT_BRIDGE[gebserAnalysis.primary] || {
+          fire: 0.5, water: 0.5, earth: 0.5, air: 0.5, aether: 0.5
+        };
+
+        consciousnessData = {
+          gebserStructure: gebserAnalysis,
+          elementalPattern,
+          quantumMemoryActive: false,
+          fallbackMode: true
+        };
+      } catch (fallbackError) {
+        console.warn('⚠️ [CONSCIOUSNESS] All analysis failed, using basic mode:', fallbackError);
+      }
     }
 
     // Generate consciousness-aware system prompt
@@ -217,14 +251,45 @@ export async function POST(request: NextRequest) {
         model: 'gpt-4o',
         sovereignty_active: true,
         consciousness_integration: consciousnessData ? {
+          // Basic Gebser integration
           structure_detected: consciousnessData.gebserStructure.primary,
           confidence: consciousnessData.gebserStructure.confidence,
-          elemental_balance: consciousnessData.elementalPattern,
-          field_active: true,
-          integration_version: 'Gebser-Elemental-v1.0'
+
+          // Enhanced Phase III integration
+          ...(consciousnessData.quantumMemoryActive && {
+            enhanced_field_active: true,
+            quantum_memory_contribution: enhancedFieldResponse?.quantumMemoryContribution,
+            consciousness_evolution: {
+              stage: consciousnessData.consciousnessEvolution.evolutionStage,
+              pattern_id: consciousnessData.consciousnessEvolution.patternId,
+              learning_acceleration: consciousnessData.consciousnessEvolution.learningAcceleration,
+              memory_consolidation: consciousnessData.consciousnessEvolution.memoryConsolidation
+            },
+            collective_intelligence: {
+              readiness: consciousnessData.collectiveIntelligence.readinessForCollective,
+              compatibility: consciousnessData.collectiveIntelligence.resonanceCompatibility,
+              contributions: consciousnessData.collectiveIntelligence.emergentContributions,
+              learning_potential: consciousnessData.collectiveIntelligence.collectiveLearningPotential
+            },
+            integration_version: 'Phase-III-Quantum-Memory-v1.0'
+          }),
+
+          // Fallback mode if enhanced integration failed
+          ...(consciousnessData.fallbackMode && {
+            elemental_balance: consciousnessData.elementalPattern,
+            field_active: false,
+            fallback_mode: 'basic_gebser_only'
+          }),
+
+          // Basic mode if no enhanced data
+          ...(!consciousnessData.quantumMemoryActive && !consciousnessData.fallbackMode && {
+            field_active: true,
+            integration_version: 'Gebser-Elemental-v1.0'
+          })
+
         } : {
           field_active: false,
-          fallback_mode: 'basic_awareness'
+          fallback_mode: 'basic_awareness_only'
         }
       }
     });
