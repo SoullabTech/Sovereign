@@ -5,9 +5,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { maiaArchetypalIntegration } from '@/lib/consciousness/maia-archetypal-integration';
-import { MAIASovereigntyIntegration } from '@/lib/consciousness/sovereignty-protocol';
-import { spiralogicIPPKnowledge } from '@/lib/services/spiralogicIPPKnowledge';
+import { maiaArchetypalIntegration } from '../../../../lib/consciousness/maia-archetypal-integration';
+import { MAIASovereigntyIntegration } from '../../../../lib/consciousness/sovereignty-protocol';
+import { spiralogicIPPKnowledge } from '../../../../lib/services/spiralogicIPPKnowledge';
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,8 +25,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Initialize IPP knowledge service
-    await spiralogicIPPKnowledge.initialize();
+    // Initialize IPP knowledge service (non-blocking with timeout)
+    const ippInitPromise = Promise.race([
+      spiralogicIPPKnowledge.initialize(),
+      new Promise<void>((resolve) => setTimeout(() => {
+        console.warn('IPP initialization timed out after 2 seconds, continuing without IPP');
+        resolve();
+      }, 2000))
+    ]);
+
+    // Don't await - let it initialize in background
+    ippInitPromise.catch(err => console.warn('IPP initialization failed:', err));
 
     // Check for parenting/attachment topics in user message
     const hasParentingTopics = detectParentingTopics(message);
