@@ -10,7 +10,7 @@ import {
 } from "../utils/sharedUtilities";
 import { AgentRegistry } from "../core/factories/AgentRegistry";
 import { astrologyService } from "../services/archive/astrologyService";
-import { journalingService } from "../services/journalingService";
+// import { journalingService } from "../services/journalingService"; // Temporarily disabled for production build
 import { assessmentService } from "../services/assessmentService";
 import {
   getRelevantMemories,

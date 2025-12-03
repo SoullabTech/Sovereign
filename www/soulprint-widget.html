@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holoflower Soulprint Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Soulprint Widget - can be embedded anywhere */
+        .soulprint-widget {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .soulprint-widget:hover {
+            transform: scale(1.05);
+        }
+
+        .soulprint-widget.pulse {
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.98); opacity: 0.9; }
+        }
+
+        /* Coherence Badge */
+        .coherence-badge {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: #0a0a0a;
+            border: 2px solid #9333ea;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            box-shadow: 0 2px 8px rgba(147, 51, 234, 0.4);
+        }
+
+        /* Last Update Indicator */
+        .last-update {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            white-space: nowrap;
+        }
+
+        /* State Indicator Dot */
+        .state-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        .state-indicator.expanding {
+            background: #44ff44;
+        }
+
+        .state-indicator.stable {
+            background: #ffaa00;
+        }
+
+        .state-indicator.contracting {
+            background: #ff4444;
+        }
+
+        @keyframes breathe {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Tooltip */
+        .soulprint-tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(30, 30, 46, 0.95);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            margin-bottom: 10px;
+        }
+
+        .soulprint-widget:hover .soulprint-tooltip {
+            opacity: 1;
+        }
+
+        /* Loading state */
+        .soulprint-loading {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(10, 10, 10, 0.8);
+            border-radius: 50%;
+        }
+
+        .loading-spinner {
+            width: 30px;
+            height: 30px;
+            border: 2px solid rgba(147, 51, 234, 0.2);
+            border-top: 2px solid #9333ea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body style="background: #0a0a0a; padding: 50px;">
+
+    <!-- Soulprint Widget Container -->
+    <div class="soulprint-widget pulse" id="soulprint">
+        <!-- Loading State (shown initially) -->
+        <div class="soulprint-loading" id="loading">
+            <div class="loading-spinner"></div>
+        </div>
+
+        <!-- SVG Holoflower -->
+        <svg viewBox="0 0 120 120" style="width: 100%; height: 100%;">
+            <!-- Ghost outline -->
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(147, 51, 234, 0.1)" stroke-width="1"/>
+
+            <!-- 12 Petals (will be dynamically updated) -->
+            <g id="soulprint-petals"></g>
+
+            <!-- Center -->
+            <circle cx="60" cy="60" r="12" fill="rgba(255, 255, 255, 0.9)"/>
+            <circle cx="60" cy="60" r="10" fill="rgba(147, 51, 234, 0.3)"/>
+        </svg>
+
+        <!-- Overlays -->
+        <div class="state-indicator expanding"></div>
+        <div class="coherence-badge" id="coherence">--</div>
+        <div class="last-update" id="last-update">Loading...</div>
+        <div class="soulprint-tooltip" id="tooltip">Click to enter daily check-in</div>
+    </div>
+
+    <script>
+        // Petal colors (matching main holoflower)
+        const petalColors = [
+            '#FF6B6B', '#FF8E53', '#FFA07A', // Fire
+            '#4ECDC4', '#45B7D1', '#5C97BF', // Water
+            '#A8DADC', '#B8E6E6', '#C8F0F0', // Air
+            '#95C77E', '#7CB662', '#63A546'  // Earth
+        ];
+
+        // Load saved state from localStorage
+        function loadSoulprint() {
+            const saved = localStorage.getItem('holoflower-state');
+            if (saved) {
+                try {
+                    const state = JSON.parse(saved);
+                    return state;
+                } catch (e) {
+                    console.error('Failed to load soulprint:', e);
+                }
+            }
+            return null;
+        }
+
+        // Calculate time since last update
+        function getTimeSince(timestamp) {
+            const now = new Date();
+            const then = new Date(timestamp);
+            const diff = now - then;
+
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (days > 0) return `${days}d ago`;
+            if (hours > 0) return `${hours}h ago`;
+            if (minutes > 0) return `${minutes}m ago`;
+            return 'Just now';
+        }
+
+        // Draw soulprint petals
+        function drawSoulprint(petalValues) {
+            const petalsGroup = document.getElementById('soulprint-petals');
+            petalsGroup.innerHTML = '';
+
+            for (let i = 0; i < 12; i++) {
+                const angle = (i * 30 - 90) * Math.PI / 180;
+                const value = petalValues[i] || 5;
+                const petalLength = 15 + (value * 3); // Scaled down for widget
+
+                const x1 = 60;
+                const y1 = 60;
+                const x2 = 60 + Math.cos(angle) * petalLength;
+                const y2 = 60 + Math.sin(angle) * petalLength;
+
+                // Create petal path
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                const controlX1 = x1 + Math.cos(angle - 0.2) * (petalLength * 0.5);
+                const controlY1 = y1 + Math.sin(angle - 0.2) * (petalLength * 0.5);
+                const controlX2 = x1 + Math.cos(angle + 0.2) * (petalLength * 0.5);
+                const controlY2 = y1 + Math.sin(angle + 0.2) * (petalLength * 0.5);
+
+                path.setAttribute('d', `
+                    M ${x1} ${y1}
+                    Q ${controlX1} ${controlY1} ${x2} ${y2}
+                    Q ${controlX2} ${controlY2} ${x1} ${y1}
+                `);
+                path.setAttribute('fill', petalColors[i]);
+                path.setAttribute('opacity', '0.7');
+
+                petalsGroup.appendChild(path);
+            }
+        }
+
+        // Update widget display
+        function updateSoulprint() {
+            const state = loadSoulprint();
+            const loading = document.getElementById('loading');
+            const coherenceEl = document.getElementById('coherence');
+            const updateEl = document.getElementById('last-update');
+            const stateIndicator = document.querySelector('.state-indicator');
+
+            if (state) {
+                // Hide loading
+                loading.style.display = 'none';
+
+                // Draw petals
+                drawSoulprint(state.values);
+
+                // Update coherence
+                const coherence = state.values.reduce((a, b) => a + b, 0) / 120;
+                coherenceEl.textContent = Math.round(coherence * 100);
+
+                // Update time
+                updateEl.textContent = getTimeSince(state.timestamp);
+
+                // Update state indicator based on coherence trend
+                if (coherence > 0.7) {
+                    stateIndicator.className = 'state-indicator expanding';
+                } else if (coherence < 0.4) {
+                    stateIndicator.className = 'state-indicator contracting';
+                } else {
+                    stateIndicator.className = 'state-indicator stable';
+                }
+
+                // Update tooltip
+                document.getElementById('tooltip').textContent =
+                    coherence > 0.7 ? 'Expanding state - enter to explore' :
+                    coherence < 0.4 ? 'Contracting state - enter to reflect' :
+                    'Stable state - enter to check in';
+            } else {
+                // No saved state - show invitation
+                loading.style.display = 'none';
+                coherenceEl.textContent = '?';
+                updateEl.textContent = 'No check-in yet';
+                document.getElementById('tooltip').textContent = 'Begin your first check-in';
+
+                // Draw default centered petals
+                drawSoulprint(new Array(12).fill(5));
+            }
+        }
+
+        // Navigate to full holoflower
+        document.getElementById('soulprint').addEventListener('click', () => {
+            // In production, this would navigate to the full check-in page
+            window.location.href = '/holoflower-beta.html';
+        });
+
+        // Initial load
+        updateSoulprint();
+
+        // Auto-refresh every 30 seconds
+        setInterval(updateSoulprint, 30000);
+
+        // Listen for storage changes (if user completes check-in in another tab)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'holoflower-state') {
+                updateSoulprint();
+            }
+        });
+    </script>
+
+</body>
+</html>

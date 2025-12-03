@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Volume2, MessageCircle, Sparkles, StopCircle } from 'lucide-react';
+import { Mic, MicOff, Volume2, MessageCircle, Sparkles, StopCircle, User, UserX } from 'lucide-react';
 import { useVoiceChat } from '@/hooks/useVoiceChat';
 import { useMayaStream } from '@/hooks/useMayaStream';
 
@@ -11,6 +11,7 @@ export default function MayaVoiceInterface() {
   const [mode, setMode] = useState<'voice' | 'chat'>('voice');
   const [textInput, setTextInput] = useState('');
   const [conversationDepth, setConversationDepth] = useState<'quick' | 'normal' | 'deep'>('normal');
+  const [isSpeakerMuted, setIsSpeakerMuted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -37,16 +38,16 @@ export default function MayaVoiceInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Speak Maya's responses
+  // Speak Maya's responses (only if speaker not muted)
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && !isSpeakerMuted) {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === 'assistant' && !isStreaming) {
         // Speak Maya's response
         speak(lastMessage.content);
       }
     }
-  }, [messages, isStreaming, speak]);
+  }, [messages, isStreaming, speak, isSpeakerMuted]);
 
   const handleTextSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,28 +86,48 @@ export default function MayaVoiceInterface() {
               </div>
             </div>
 
-            {/* Mode Toggle */}
-            <div className="flex gap-2 p-1 bg-black/30 rounded-lg">
+            {/* Controls */}
+            <div className="flex gap-3 items-center">
+              {/* Speaker Mute Button */}
               <button
-                onClick={() => setMode('voice')}
-                className={`px-3 py-1.5 rounded transition-all ${
-                  mode === 'voice'
-                    ? 'bg-amber-500 text-black'
-                    : 'text-gray-400 hover:text-amber-200'
+                onClick={() => setIsSpeakerMuted(!isSpeakerMuted)}
+                className={`p-2 rounded-lg transition-all ${
+                  isSpeakerMuted
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+                    : 'bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:border-amber-500/60'
                 }`}
+                title={isSpeakerMuted ? 'Maya is muted - click to unmute' : 'Maya can speak - click to mute'}
               >
-                Voice
+                {isSpeakerMuted ? (
+                  <UserX className="w-4 h-4" />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
               </button>
-              <button
-                onClick={() => setMode('chat')}
-                className={`px-3 py-1.5 rounded transition-all ${
-                  mode === 'chat'
-                    ? 'bg-amber-500 text-black'
-                    : 'text-gray-400 hover:text-amber-200'
-                }`}
-              >
-                Chat
-              </button>
+
+              {/* Mode Toggle */}
+              <div className="flex gap-2 p-1 bg-black/30 rounded-lg">
+                <button
+                  onClick={() => setMode('voice')}
+                  className={`px-3 py-1.5 rounded transition-all ${
+                    mode === 'voice'
+                      ? 'bg-amber-500 text-black'
+                      : 'text-gray-400 hover:text-amber-200'
+                  }`}
+                >
+                  Voice
+                </button>
+                <button
+                  onClick={() => setMode('chat')}
+                  className={`px-3 py-1.5 rounded transition-all ${
+                    mode === 'chat'
+                      ? 'bg-amber-500 text-black'
+                      : 'text-gray-400 hover:text-amber-200'
+                  }`}
+                >
+                  Chat
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -214,9 +235,9 @@ export default function MayaVoiceInterface() {
                 )}
               </AnimatePresence>
 
-              {/* Voice Button */}
+              {/* Voice Session Indicator */}
               <div className="relative">
-                {/* Volume rings */}
+                {/* Volume rings - visual feedback only */}
                 {isListening && (
                   <>
                     {[1, 2, 3].map((i) => (
@@ -233,25 +254,24 @@ export default function MayaVoiceInterface() {
                   </>
                 )}
 
-                <button
-                  onClick={toggleListening}
-                  disabled={isSpeaking}
+                {/* Voice activity indicator - no longer a button since voice/chat toggle handles mic */}
+                <div
                   className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-all ${
                     isListening
                       ? 'bg-amber-500 shadow-lg shadow-amber-500/50'
                       : isSpeaking
                       ? 'bg-amber-500 shadow-lg shadow-amber-500/50'
-                      : 'bg-gray-700 hover:bg-gray-600'
-                  } ${isSpeaking ? 'cursor-not-allowed opacity-70' : ''}`}
+                      : 'bg-gray-700/50'
+                  }`}
                 >
                   {isSpeaking ? (
                     <Volume2 className="w-8 h-8 text-white" />
                   ) : isListening ? (
                     <Mic className="w-8 h-8 text-white" />
                   ) : (
-                    <MicOff className="w-8 h-8 text-white" />
+                    <Sparkles className="w-8 h-8 text-amber-400/60" />
                   )}
-                </button>
+                </div>
               </div>
 
               {/* Manual Stop Button - appears when user is speaking */}

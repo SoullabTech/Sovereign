@@ -4,8 +4,8 @@ import { llamaService } from "../../../services/memory/LlamaService";
 import { logger } from "../../../utils/logger";
 import path from "path";
 
-// Only force dynamic for non-static builds
-export const dynamic = process.env.CAPACITOR_BUILD ? undefined : 'force-dynamic';
+// Force static for Capacitor builds, dynamic for dev
+export const dynamic = process.env.CAPACITOR_BUILD ? 'force-static' : 'force-dynamic';
 
 // Archetypal prompts for mythic reflection
 const ARCHETYPE_PROMPTS = {

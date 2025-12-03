@@ -3,8 +3,8 @@ import path from "path";
 import { memoryStore } from "../../backend/src/services/memory/MemoryStore";
 import { logger } from "../../backend/src/utils/logger";
 
-// Only force dynamic for non-static builds
-export const dynamic = process.env.CAPACITOR_BUILD ? undefined : 'force-dynamic';
+// Force static for Capacitor builds, dynamic for dev
+export const dynamic = process.env.CAPACITOR_BUILD ? 'force-static' : 'force-dynamic';
 
 /**
  * GET /api/voice/list

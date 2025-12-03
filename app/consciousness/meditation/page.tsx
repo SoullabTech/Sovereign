@@ -1,7 +1,7 @@
 import dynamicImport from 'next/dynamic';
 
-// Force dynamic rendering - no static generation
-export const dynamic = 'force-dynamic';
+// Force static for Capacitor builds, dynamic for dev
+export const dynamic = process.env.CAPACITOR_BUILD ? 'force-static' : 'force-dynamic';
 
 const MeditationAwakeningPlatform = dynamicImport(
   () => import('@/components/consciousness/MeditationAwakeningPlatform'),

@@ -1,0 +1,193 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 800" width="800" height="800">
+  <defs>
+    <!-- Gradients for the torus flow - Light Sepia Tones -->
+    <radialGradient id="torusGolden" cx="50%" cy="30%">
+      <stop offset="0%" style="stop-color:#D4C5B0;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#C9B896;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#BFA780;stop-opacity:0.2" />
+    </radialGradient>
+
+    <radialGradient id="torusBlue" cx="50%" cy="70%">
+      <stop offset="0%" style="stop-color:#B8AFA0;stop-opacity:0.6" />
+      <stop offset="50%" style="stop-color:#A89D8E;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:#988C7C;stop-opacity:0.2" />
+    </radialGradient>
+
+    <!-- Filter for glow effect -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Grid pattern for radial perspective -->
+    <pattern id="radialGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="20" cy="20" r="1" fill="rgba(255,255,255,0.1)"/>
+    </pattern>
+  </defs>
+
+  <!-- Background field - Light sepia -->
+  <rect width="800" height="800" fill="#F5F0E8"/>
+
+  <!-- Outer universe torus (subtle, vast) -->
+  <g opacity="0.3">
+    <!-- Top ring of outer torus -->
+    <ellipse cx="400" cy="150" rx="300" ry="60"
+             fill="none" stroke="url(#torusGolden)" stroke-width="3"
+             opacity="0.4"/>
+
+    <!-- Bottom ring of outer torus -->
+    <ellipse cx="400" cy="650" rx="300" ry="60"
+             fill="none" stroke="url(#torusBlue)" stroke-width="3"
+             opacity="0.4"/>
+
+    <!-- Connecting flow lines -->
+    <path d="M 100,150 Q 50,400 100,650"
+          fill="none" stroke="rgba(193,168,128,0.3)" stroke-width="2"/>
+    <path d="M 700,150 Q 750,400 700,650"
+          fill="none" stroke="rgba(168,157,142,0.3)" stroke-width="2"/>
+  </g>
+
+  <!-- Middle collective torus (tree) -->
+  <g opacity="0.5">
+    <!-- Top funnel (golden - descending) -->
+    <ellipse cx="400" cy="200" rx="240" ry="50"
+             fill="none" stroke="url(#torusGolden)" stroke-width="4"
+             filter="url(#glow)"/>
+
+    <!-- Bottom funnel (blue - ascending) -->
+    <ellipse cx="400" cy="600" rx="240" ry="50"
+             fill="none" stroke="url(#torusBlue)" stroke-width="4"
+             filter="url(#glow)"/>
+
+    <!-- Connecting vortex lines -->
+    <path d="M 160,200 Q 200,400 160,600"
+          fill="none" stroke="rgba(193,168,128,0.4)" stroke-width="3"
+          stroke-dasharray="5,5"/>
+    <path d="M 640,200 Q 600,400 640,600"
+          fill="none" stroke="rgba(168,157,142,0.4)" stroke-width="3"
+          stroke-dasharray="5,5"/>
+  </g>
+
+  <!-- Inner personal torus (apple) - embracing the map -->
+  <g>
+    <!-- Top funnel (golden - experience entering form) -->
+    <ellipse cx="400" cy="260" rx="180" ry="40"
+             fill="url(#torusGolden)" opacity="0.6"
+             filter="url(#glow)"/>
+    <ellipse cx="400" cy="260" rx="180" ry="40"
+             fill="none" stroke="#C9B896" stroke-width="2"/>
+
+    <!-- Vortex spiral lines descending -->
+    <g opacity="0.7">
+      <ellipse cx="400" cy="300" rx="160" ry="35"
+               fill="none" stroke="#C1A880" stroke-width="1.5" opacity="0.5"/>
+      <ellipse cx="400" cy="340" rx="140" ry="30"
+               fill="none" stroke="#B39870" stroke-width="1.5" opacity="0.4"/>
+      <ellipse cx="400" cy="380" rx="120" ry="25"
+               fill="none" stroke="#A58860" stroke-width="1.5" opacity="0.3"/>
+    </g>
+
+    <!-- Central consciousness map area (placeholder for your map) -->
+    <circle cx="400" cy="400" r="100"
+            fill="rgba(240,235,225,0.9)"
+            stroke="rgba(193,168,128,0.5)" stroke-width="2"/>
+
+    <!-- Radial perspective grid around center -->
+    <g opacity="0.3">
+      <line x1="400" y1="300" x2="400" y2="500" stroke="#8B7D6B" stroke-width="0.5"/>
+      <line x1="300" y1="400" x2="500" y2="400" stroke="#8B7D6B" stroke-width="0.5"/>
+      <line x1="330" y1="330" x2="470" y2="470" stroke="#8B7D6B" stroke-width="0.5"/>
+      <line x1="470" y1="330" x2="330" y2="470" stroke="#8B7D6B" stroke-width="0.5"/>
+    </g>
+
+    <!-- Inner circle for map placement -->
+    <text x="400" y="400" text-anchor="middle" dominant-baseline="middle"
+          fill="rgba(139,125,107,0.6)" font-size="12" font-family="serif" font-style="italic">
+      CONSCIOUSNESS MAP
+    </text>
+    <text x="400" y="420" text-anchor="middle" dominant-baseline="middle"
+          fill="rgba(139,125,107,0.5)" font-size="10" font-family="serif" font-style="italic">
+      (Place 12-house wheel here)
+    </text>
+
+    <!-- Vortex spiral lines ascending -->
+    <g opacity="0.7">
+      <ellipse cx="400" cy="420" rx="120" ry="25"
+               fill="none" stroke="#A89D8E" stroke-width="1.5" opacity="0.3"/>
+      <ellipse cx="400" cy="460" rx="140" ry="30"
+               fill="none" stroke="#9B9082" stroke-width="1.5" opacity="0.4"/>
+      <ellipse cx="400" cy="500" rx="160" ry="35"
+               fill="none" stroke="#8E8376" stroke-width="1.5" opacity="0.5"/>
+    </g>
+
+    <!-- Bottom funnel (blue - matter returning to spirit) -->
+    <ellipse cx="400" cy="540" rx="180" ry="40"
+             fill="url(#torusBlue)" opacity="0.6"
+             filter="url(#glow)"/>
+    <ellipse cx="400" cy="540" rx="180" ry="40"
+             fill="none" stroke="#A89D8E" stroke-width="2"/>
+  </g>
+
+  <!-- Flow direction arrows -->
+  <defs>
+    <marker id="arrowGold" markerWidth="10" markerHeight="10"
+            refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#C1A880" opacity="0.6"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="10" markerHeight="10"
+            refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L0,6 L9,3 z" fill="#A89D8E" opacity="0.6"/>
+    </marker>
+  </defs>
+
+  <!-- Directional flow indicators -->
+  <g opacity="0.6">
+    <!-- Descending flow (warm sepia) -->
+    <path d="M 230,280 Q 220,340 240,380"
+          fill="none" stroke="#C1A880" stroke-width="2"
+          marker-end="url(#arrowGold)"/>
+    <path d="M 570,280 Q 580,340 560,380"
+          fill="none" stroke="#C1A880" stroke-width="2"
+          marker-end="url(#arrowGold)"/>
+
+    <!-- Ascending flow (cool sepia) -->
+    <path d="M 240,420 Q 220,460 230,520"
+          fill="none" stroke="#A89D8E" stroke-width="2"
+          marker-end="url(#arrowBlue)"/>
+    <path d="M 560,420 Q 580,460 570,520"
+          fill="none" stroke="#A89D8E" stroke-width="2"
+          marker-end="url(#arrowBlue)"/>
+  </g>
+
+  <!-- Labels for the three levels -->
+  <g font-family="serif" font-style="italic" opacity="0.65">
+    <!-- Universe level -->
+    <text x="400" y="100" text-anchor="middle" fill="#8B7D6B" font-size="14">
+      Universe (Cosmic Torus)
+    </text>
+
+    <!-- Tree/Collective level -->
+    <text x="120" y="400" text-anchor="middle" fill="#9B8A76" font-size="12"
+          writing-mode="tb" glyph-orientation-vertical="0">
+      Collective (Tree)
+    </text>
+
+    <!-- Apple/Individual level -->
+    <text x="400" y="250" text-anchor="middle" fill="#A89D8E" font-size="11">
+      Personal (Apple)
+    </text>
+  </g>
+
+  <!-- Fractal indicator -->
+  <g transform="translate(50, 700)" opacity="0.5">
+    <text fill="#8B7D6B" font-size="10" font-family="serif" font-style="italic">
+      "As above, so below"
+    </text>
+    <text y="15" fill="#8B7D6B" font-size="10" font-family="serif" font-style="italic">
+      Each torus contains the pattern
+    </text>
+  </g>
+</svg>

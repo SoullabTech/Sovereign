@@ -85,14 +85,15 @@ async function getMemoryEnhancedIntegration(): Promise<{
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
+    let {
       userMessage,
       conversationHistory = [],
       userId = 'anonymous_user',
       sessionId = `session_${Date.now()}`,
-      userProfile = {},
-      enableMemory = true
+      userProfile = {}
     } = body;
+
+    let enableMemory = body.enableMemory ?? true;
 
     if (!userMessage) {
       return NextResponse.json({

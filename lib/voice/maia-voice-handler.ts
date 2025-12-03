@@ -1,7 +1,13 @@
 /**
- * Maya Voice Handler
+ * Maya Voice Handler with Feedback Prevention
  * Manages TTS playback and audio queue for seamless voice responses
+ * Integrated with VoiceFeedbackPrevention to prevent echo loops
  */
+
+import {
+  VoiceFeedbackPrevention,
+  playAudioWithFeedbackPrevention
+} from './voice-feedback-prevention';
 
 export interface VoiceConfig {
   voice?: string;
@@ -25,6 +31,7 @@ export class MayaVoiceHandler {
   private currentAudio: HTMLAudioElement | null = null;
   private onPlayingChange?: (isPlaying: boolean) => void;
   private onError?: (error: Error) => void;
+  private feedbackPrevention: VoiceFeedbackPrevention;
 
   constructor(options?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -32,6 +39,16 @@ export class MayaVoiceHandler {
   }) {
     this.onPlayingChange = options?.onPlayingChange;
     this.onError = options?.onError;
+
+    // Initialize feedback prevention system
+    this.feedbackPrevention = VoiceFeedbackPrevention.getInstance();
+
+    // Listen for user interruptions
+    if (typeof window !== 'undefined') {
+      window.addEventListener('maya-voice-interrupted', () => {
+        this.handleInterruption();
+      });
+    }
   }
 
   /**
@@ -148,9 +165,19 @@ export class MayaVoiceHandler {
   }
 
   /**
-   * Play audio with queue management
+   * Handle user interruption of Maya's speech
+   */
+  private handleInterruption(): void {
+    console.log('🛑 [MAYA] User interrupted - stopping all audio');
+    this.stopAll();
+  }
+
+  /**
+   * Play audio with queue management and feedback prevention
    */
   private async playAudio(audio: HTMLAudioElement): Promise<void> {
+    // Use feedback prevention system for audio playback
+    this.feedbackPrevention.registerAudioElement(audio);
     this.audioQueue.push(audio);
 
     if (!this.isPlaying) {
@@ -159,7 +186,7 @@ export class MayaVoiceHandler {
   }
 
   /**
-   * Process audio queue
+   * Process audio queue with feedback prevention
    */
   private async processQueue(): Promise<void> {
     if (this.audioQueue.length === 0) {
@@ -179,34 +206,35 @@ export class MayaVoiceHandler {
     const audio = this.audioQueue.shift()!;
     this.currentAudio = audio;
 
-    return new Promise<void>((resolve) => {
-      audio.onended = () => {
-        // Clean up blob URL
-        URL.revokeObjectURL(audio.src);
-        resolve();
-        // Process next in queue
-        this.processQueue();
-      };
+    try {
+      // Use feedback prevention helper for proper playback
+      await playAudioWithFeedbackPrevention(audio);
 
-      audio.onerror = (error) => {
-        console.error('Audio playback error:', error);
-        URL.revokeObjectURL(audio.src);
-        resolve();
-        // Continue with queue even on error
-        this.processQueue();
-      };
+      // Clean up and continue to next item
+      URL.revokeObjectURL(audio.src);
+      this.currentAudio = null;
 
-      // Start playback
-      audio.play().catch((error) => {
-        console.error('Failed to play audio:', error);
-        resolve();
-        this.processQueue();
-      });
-    });
+      // Process next in queue
+      await this.processQueue();
+
+    } catch (error) {
+      console.error('Audio playback error with feedback prevention:', error);
+
+      // Clean up on error
+      URL.revokeObjectURL(audio.src);
+      this.currentAudio = null;
+
+      if (this.onError) {
+        this.onError(error instanceof Error ? error : new Error('Audio playback failed'));
+      }
+
+      // Continue with queue even on error
+      await this.processQueue();
+    }
   }
 
   /**
-   * Stop all audio playback
+   * Stop all audio playback with feedback prevention cleanup
    */
   stopAll(): void {
     // Stop current audio
@@ -214,11 +242,20 @@ export class MayaVoiceHandler {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
       URL.revokeObjectURL(this.currentAudio.src);
+
+      // Unregister from feedback prevention system
+      this.feedbackPrevention.unregisterAudioElement(this.currentAudio);
     }
 
-    // Clear queue
+    // Clear queue and clean up feedback prevention
     this.audioQueue.forEach(audio => {
-      URL.revokeObjectURL(audio.src);
+      try {
+        audio.pause();
+        URL.revokeObjectURL(audio.src);
+        this.feedbackPrevention.unregisterAudioElement(audio);
+      } catch (error) {
+        // Audio might already be cleaned up
+      }
     });
     this.audioQueue = [];
 
@@ -227,6 +264,11 @@ export class MayaVoiceHandler {
 
     if (this.onPlayingChange) {
       this.onPlayingChange(false);
+    }
+
+    // Dispatch maya voice end event to ensure proper state cleanup
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('maya-voice-end'));
     }
   }
 

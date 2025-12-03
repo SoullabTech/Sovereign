@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'MAIA - LabTools & IPP',
   webDir: 'www',
   server: {
-    url: 'http://localhost:3005',
+    url: 'http://192.168.4.210:3005/maia',
     cleartext: true,
     androidScheme: 'http',
     allowMixedContent: true,

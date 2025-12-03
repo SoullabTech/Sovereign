@@ -1,0 +1,106 @@
+🏜️ THIS WEEK IN THE DESERT
+The Handbook Has Arrived
+
+Monday, October 21, 2025
+
+═══════════════════════════════════════════════════
+
+Hi {{Name}},
+
+📖 YOUR NEW SINGLE SOURCE OF TRUTH
+
+We just completed a massive documentation consolidation:
+• Before: 148 scattered beta docs (overwhelming)
+• After: One essential handbook (clarity)
+
+→ Read the Beta Handbook:
+https://github.com/SoullabTech/MAIA-PAI/blob/main/BETA_HANDBOOK.md
+
+The desert teaches through clarity, not chaos. This handbook is your map.
+
+───────────────────────────────────────────────────
+
+🎛️ NEW FEATURE: CUSTOMIZE HOW MAIA LISTENS & RESPONDS
+
+Available Now: Two independent mode systems that let you shape your MAIA experience.
+
+1️⃣ VOICE LISTENING MODES - How MAIA hears you
+
+💬 Dialogue (3.5 seconds)
+   → Natural back-and-forth conversation
+
+🤔 Patient (8 seconds)
+   → Gathering thoughts, deeper reflection
+
+🎙️ Scribe (Manual finish)
+   → Long monologues, stream of consciousness
+
+2️⃣ CONVERSATION PERSONALITY MODES - How MAIA responds
+
+🚶 Walking
+   → Brief, ambient (1-3 sentences) - like walking with a friend
+
+🏠 Classic
+   → Full therapeutic depth with poetic language
+
+🔄 Adaptive
+   → Matches your energy and communication style
+
+HOW THEY WORK TOGETHER:
+• Patient + Walking → Take time to speak, get brief responses
+• Dialogue + Classic → Quick flow with full depth
+• Scribe + Adaptive → Long monologue with personalized reflection
+
+→ Full Mode Guide & Examples:
+https://github.com/SoullabTech/MAIA-PAI/blob/main/MAIA_MODES_ANNOUNCEMENT.md
+
+───────────────────────────────────────────────────
+
+🎨 WHAT WE SHIPPED LAST WEEK
+
+Dune Aesthetic System (Live Now)
+
+The entire platform now embodies our heuristic methodology through visual design:
+• Field Protocol → "The Litany Against Ignorance"
+• Privacy Levels → "Water Rights" (Personal Water, Sietch Shared, Desert Teaching)
+• Five Stages → Witnessing, Computation, Walking, Prescience, Teaching
+
+Why Dune? Because like Fremen learning from the desert, you discover your own wisdom through direct experience. No guru. No dogma. Just you and what emerges.
+
+→ Visit the Field Protocol:
+https://www.soullab.life/field-protocol
+
+───────────────────────────────────────────────────
+
+❓ THIS WEEK'S QUESTION
+
+Have you created your first Field Record yet?
+
+We want to understand:
+• What's working about the 5-stage process?
+• What feels confusing or clunky?
+• Are you using voice or text to document?
+• Which privacy level (Water Rights) do you prefer?
+
+Reply to this email with your experience. Even "I haven't tried it yet because..." is valuable feedback.
+
+───────────────────────────────────────────────────
+
+🏜️ THE LITANY
+
+"I must not fear. Fear is the mind-killer."
+
+Walk into the desert this week. Document one experience through the five stages. See what wisdom emerges when you truly witness.
+
+The desert teaches those who listen.
+
+🏜️✨
+
+───────────────────────────────────────────────────
+
+QUICK LINKS
+• Beta Handbook: https://github.com/SoullabTech/MAIA-PAI/blob/main/BETA_HANDBOOK.md
+• Field Protocol: https://www.soullab.life/field-protocol
+• Email Us: beta@soullab.life
+
+— The Soullab Team

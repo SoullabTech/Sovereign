@@ -69,6 +69,8 @@ export default function BooksLab() {
     currentStatus: 'idle'
   });
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   const categories = [
     { id: 'consciousness', name: 'Consciousness', color: 'emerald' },
@@ -86,6 +88,56 @@ export default function BooksLab() {
     earth: '🌍',
     air: '💨',
     aether: '✨'
+  };
+
+  // File upload handlers
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+
+    const newBooks: StagedBook[] = [];
+    Array.from(files).forEach((file) => {
+      if (file.type === 'application/pdf' || file.name.endsWith('.pdf') ||
+          file.type === 'text/plain' || file.name.endsWith('.txt') ||
+          file.name.endsWith('.md')) {
+        newBooks.push({
+          name: file.name,
+          size: file.size,
+          type: file.name.endsWith('.pdf') ? 'pdf' : file.name.endsWith('.md') ? 'md' : 'txt',
+          category: 'ready_to_process',
+          status: 'staged'
+        });
+      }
+    });
+
+    if (newBooks.length > 0) {
+      setStagedBooks(prev => [...prev, ...newBooks]);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileSelect(e.dataTransfer.files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
+  const openFolder = (category: string) => {
+    // Open the books staging directory in Finder
+    const stagingPath = '/Users/soullab/MAIA-SOVEREIGN/books/staging';
+    window.open(`file://${stagingPath}`, '_blank');
   };
 
   // Simulate checking staging directory
@@ -266,11 +318,34 @@ export default function BooksLab() {
                   <Upload className="mr-2 text-amber-400" size={20} />
                   Upload Books
                 </h3>
-                <div className="border-2 border-dashed border-stone-600 rounded-lg p-8 text-center hover:border-amber-400/50 transition-all">
+                <div
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
+                    isDragging
+                      ? 'border-amber-400 bg-amber-400/10'
+                      : 'border-stone-600 hover:border-amber-400/50'
+                  }`}
+                  onDrop={handleDrop}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onClick={openFileDialog}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.txt,.md"
+                    onChange={(e) => handleFileSelect(e.target.files)}
+                    className="hidden"
+                  />
                   <BookOpen className="mx-auto text-stone-400 mb-4" size={48} />
-                  <p className="text-stone-300 mb-2">Drop your books here or click to browse</p>
+                  <p className="text-stone-300 mb-2">
+                    {isDragging ? 'Drop your books here' : 'Drop your books here or click to browse'}
+                  </p>
                   <p className="text-sm text-stone-500">Supports PDF, TXT, and MD files</p>
-                  <button className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all">
+                  <button
+                    className="mt-4 px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg transition-all pointer-events-none"
+                    type="button"
+                  >
                     Choose Files
                   </button>
                 </div>
@@ -289,7 +364,10 @@ export default function BooksLab() {
                     <div className="text-xs text-stone-500 mb-2">
                       {stagedBooks.filter(book => book.category === category.id).length} books staged
                     </div>
-                    <button className="w-full py-2 text-xs border border-stone-600 rounded hover:bg-stone-800/50 transition-all text-stone-400 hover:text-stone-300">
+                    <button
+                      onClick={() => openFolder(category.id)}
+                      className="w-full py-2 text-xs border border-stone-600 rounded hover:bg-stone-800/50 transition-all text-stone-400 hover:text-stone-300"
+                    >
                       Open Folder
                     </button>
                   </div>

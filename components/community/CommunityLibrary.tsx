@@ -50,6 +50,46 @@ interface InsightArticle {
 
 const insightCollections: InsightCollection[] = [
   {
+    id: 'philosophical-foundations',
+    title: 'Philosophical Foundations',
+    description: 'Theoretical framework for understanding consciousness evolution and Soullab\'s mission',
+    icon: '🏛️',
+    articles: [
+      {
+        id: 'consciousness-evolution-framework',
+        title: 'The Evolution of Human Consciousness',
+        description: 'A comprehensive framework for understanding consciousness development from mechanistic to integral awareness',
+        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
+        tags: ['consciousness', 'evolution', 'philosophy', 'integral', 'process-philosophy'],
+        relatedTechnologies: ['maia-oracle', 'consciousness-field', 'collective-orchestrator']
+      },
+      {
+        id: 'post-mechanistic-paradigm',
+        title: 'Beyond Mechanistic Materialism',
+        description: 'Understanding reality as living process rather than dead matter',
+        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
+        tags: ['philosophy', 'mechanistic', 'organic', 'process'],
+        relatedTechnologies: ['consciousness-field', 'elemental-circulation']
+      },
+      {
+        id: 'consciousness-structures',
+        title: 'Structures of Consciousness',
+        description: 'Jean Gebser\'s model of consciousness evolution and its applications',
+        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
+        tags: ['gebser', 'consciousness-structures', 'development', 'evolution'],
+        relatedTechnologies: ['collective-orchestrator', 'breakthrough-prediction']
+      },
+      {
+        id: 'integral-emergence',
+        title: 'The Integral Transition',
+        description: 'Understanding the current evolution from perspectival to integral consciousness',
+        content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
+        tags: ['integral', 'transition', 'perspectival', 'evolution'],
+        relatedTechnologies: ['consciousness-field', 'maia-oracle', 'collective-orchestrator']
+      }
+    ]
+  },
+  {
     id: 'consciousness-insights',
     title: 'Consciousness Development Insights',
     description: 'Practical wisdom for using consciousness technologies in daily life',

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holoflower HUD - Game Style Consciousness Indicator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #0a0a0a;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* Main page content (placeholder) */
+        .main-content {
+            padding: 60px 20px;
+            color: #fff;
+        }
+
+        /* HUD Container - Fixed position like Zelda UI */
+        .holoflower-hud {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 140px;
+            height: 140px;
+            z-index: 1000;
+            pointer-events: none; /* Allow clicking through except on interactive parts */
+        }
+
+        /* Main Soulprint Display */
+        .soulprint-display {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            pointer-events: all;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .soulprint-display:hover {
+            transform: scale(1.1);
+        }
+
+        /* Particle Canvas for Effects */
+        .particle-canvas {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        /* SVG Container */
+        .soulprint-svg {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Glow Effects */
+        .glow-ring {
+            position: absolute;
+            inset: -10px;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+
+        .glow-ring.high-coherence {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6),
+                        0 0 60px rgba(255, 215, 0, 0.3);
+            opacity: 1;
+            animation: golden-pulse 3s ease-in-out infinite;
+        }
+
+        .glow-ring.expanding {
+            box-shadow: 0 0 30px rgba(68, 255, 68, 0.6);
+            opacity: 1;
+            animation: expand-pulse 2s ease-out infinite;
+        }
+
+        .glow-ring.contracting {
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.6);
+            opacity: 1;
+            animation: contract-pulse 2s ease-in infinite;
+        }
+
+        @keyframes golden-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        @keyframes expand-pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.3); opacity: 0; }
+        }
+
+        @keyframes contract-pulse {
+            0% { transform: scale(1.3); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Health/Coherence Bar (Zelda-style) */
+        .coherence-bar {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .coherence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #9333ea, #c084fc);
+            transition: width 0.5s ease, background 0.3s;
+            box-shadow: 0 0 10px rgba(147, 51, 234, 0.5);
+        }
+
+        .coherence-fill.critical {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            animation: critical-flash 0.5s ease-in-out infinite;
+        }
+
+        .coherence-fill.excellent {
+            background: linear-gradient(90deg, #fbbf24, #fcd34d);
+        }
+
+        @keyframes critical-flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Quick Stats Overlay (appears on hover) */
+        .stats-overlay {
+            position: absolute;
+            top: 0;
+            left: 150px;
+            background: rgba(30, 30, 46, 0.95);
+            border: 1px solid rgba(147, 51, 234, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 180px;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateX(-10px);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .soulprint-display:hover .stats-overlay {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            font-size: 11px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .stat-icon.mind { background: #D4A76A; }
+        .stat-icon.body { background: #C4856F; }
+        .stat-icon.spirit { background: #7A9FAD; }
+        .stat-icon.heart { background: #7A9A65; }
+
+        .stat-value {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        /* Notification Badge */
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 20px;
+            height: 20px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            color: white;
+            animation: badge-pulse 2s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes badge-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Drift Warning Effect */
+        .drift-warning {
+            position: absolute;
+            inset: -20px;
+            border: 2px solid #ef4444;
+            border-radius: 50%;
+            opacity: 0;
+            pointer-events: none;
+            animation: drift-warning 1s ease-in-out infinite;
+        }
+
+        .drift-warning.active {
+            opacity: 1;
+        }
+
+        @keyframes drift-warning {
+            0%, 100% { transform: scale(1); opacity: 0; }
+            50% { transform: scale(1.1); opacity: 1; }
+        }
+
+        /* Click Feedback */
+        .click-ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(147, 51, 234, 0.3);
+            transform: translate(-50%, -50%);
+            animation: ripple 0.6s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            from {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            to {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+
+        /* Power-up effect when coherence increases */
+        .powerup-burst {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .powerup-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fbbf24;
+            border-radius: 50%;
+            animation: particle-burst 1s ease-out forwards;
+        }
+
+        @keyframes particle-burst {
+            from {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            to {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Time Since Indicator */
+        .time-indicator {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.4);
+            white-space: nowrap;
+        }
+
+        .time-indicator.stale {
+            color: #fbbf24;
+        }
+
+        .time-indicator.critical {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main Page Content (placeholder) -->
+    <div class="main-content">
+        <h1 style="color: #9333ea;">Your Dashboard</h1>
+        <p style="color: rgba(255,255,255,0.6);">The holoflower HUD shows your consciousness state at all times.</p>
+    </div>
+
+    <!-- Holoflower HUD (Game-style indicator) -->
+    <div class="holoflower-hud">
+        <div class="soulprint-display" id="soulprint-display">
+            <!-- Time Indicator -->
+            <div class="time-indicator" id="time-indicator">Loading...</div>
+
+            <!-- Glow Ring Effect -->
+            <div class="glow-ring" id="glow-ring"></div>
+
+            <!-- Drift Warning -->
+            <div class="drift-warning" id="drift-warning"></div>
+
+            <!-- Particle Canvas -->
+            <canvas class="particle-canvas" id="particle-canvas" width="140" height="140"></canvas>
+
+            <!-- SVG Holoflower -->
+            <svg class="soulprint-svg" viewBox="0 0 140 140">
+                <!-- Background ring -->
+                <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(147, 51, 234, 0.1)" stroke-width="2"/>
+
+                <!-- Petals -->
+                <g id="hud-petals"></g>
+
+                <!-- Center core -->
+                <circle cx="70" cy="70" r="15" fill="rgba(255, 255, 255, 0.9)"/>
+                <circle cx="70" cy="70" r="12" fill="rgba(147, 51, 234, 0.3)"/>
+
+                <!-- Inner pulse -->
+                <circle cx="70" cy="70" r="8" fill="rgba(147, 51, 234, 0.5)">
+                    <animate attributeName="r" values="8;10;8" dur="3s" repeatCount="indefinite"/>
+                    <animate attributeName="opacity" values="0.5;0.3;0.5" dur="3s" repeatCount="indefinite"/>
+                </circle>
+            </svg>
+
+            <!-- Coherence Bar -->
+            <div class="coherence-bar">
+                <div class="coherence-fill" id="coherence-fill" style="width: 50%"></div>
+            </div>
+
+            <!-- Stats Overlay -->
+            <div class="stats-overlay">
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-icon mind"></div>
+                        <span>Mind: <span class="stat-value" id="stat-mind">--</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon body"></div>
+                        <span>Body: <span class="stat-value" id="stat-body">--</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon spirit"></div>
+                        <span>Spirit: <span class="stat-value" id="stat-spirit">--</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-icon heart"></div>
+                        <span>Heart: <span class="stat-value" id="stat-heart">--</span></span>
+                    </div>
+                </div>
+                <div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(147, 51, 234, 0.2);">
+                    <div style="font-size: 10px; color: rgba(255,255,255,0.5);">Configuration: <span id="config-code">----</span></div>
+                </div>
+            </div>
+
+            <!-- Notification Badge (shows when check-in needed) -->
+            <div class="notification-badge" id="notification" style="display: none;">!</div>
+
+            <!-- Power-up Burst Container -->
+            <div class="powerup-burst" id="powerup-burst"></div>
+        </div>
+    </div>
+
+    <script>
+        // Game-style HUD Controller
+        class HoloflowerHUD {
+            constructor() {
+                this.petalColors = [
+                    '#FF6B6B', '#FF8E53', '#FFA07A', // Fire
+                    '#4ECDC4', '#45B7D1', '#5C97BF', // Water
+                    '#A8DADC', '#B8E6E6', '#C8F0F0', // Air
+                    '#95C77E', '#7CB662', '#63A546'  // Earth
+                ];
+
+                this.state = null;
+                this.particles = [];
+                this.canvas = document.getElementById('particle-canvas');
+                this.ctx = this.canvas.getContext('2d');
+
+                this.init();
+            }
+
+            init() {
+                this.loadState();
+                this.startAnimationLoop();
+                this.setupEventListeners();
+
+                // Check for updates every 10 seconds
+                setInterval(() => this.checkForUpdates(), 10000);
+            }
+
+            loadState() {
+                const saved = localStorage.getItem('holoflower-state');
+                if (saved) {
+                    const newState = JSON.parse(saved);
+
+                    // Check for coherence changes to trigger effects
+                    if (this.state) {
+                        const oldCoherence = this.calculateCoherence(this.state.values);
+                        const newCoherence = this.calculateCoherence(newState.values);
+
+                        if (newCoherence > oldCoherence + 0.1) {
+                            this.triggerPowerUp();
+                        } else if (newCoherence < oldCoherence - 0.1) {
+                            this.triggerWarning();
+                        }
+                    }
+
+                    this.state = newState;
+                    this.updateDisplay();
+                } else {
+                    // No state - show invitation
+                    this.showNoDataState();
+                }
+            }
+
+            calculateCoherence(values) {
+                return values.reduce((a, b) => a + b, 0) / 120;
+            }
+
+            updateDisplay() {
+                if (!this.state) return;
+
+                const coherence = this.calculateCoherence(this.state.values);
+                const quadrants = this.calculateQuadrants(this.state.values);
+
+                // Draw petals
+                this.drawPetals(this.state.values);
+
+                // Update coherence bar
+                this.updateCoherenceBar(coherence);
+
+                // Update stats
+                document.getElementById('stat-mind').textContent = quadrants.mind.toFixed(1);
+                document.getElementById('stat-body').textContent = quadrants.body.toFixed(1);
+                document.getElementById('stat-spirit').textContent = quadrants.spirit.toFixed(1);
+                document.getElementById('stat-heart').textContent = quadrants.heart.toFixed(1);
+                document.getElementById('config-code').textContent =
+                    this.state.configuration ? this.state.configuration.substring(0, 8) : '--------';
+
+                // Update time indicator
+                this.updateTimeIndicator(this.state.timestamp);
+
+                // Update glow effect based on coherence
+                this.updateGlowEffect(coherence);
+
+                // Check for drift warning
+                this.checkDriftWarning();
+            }
+
+            drawPetals(values) {
+                const petalsGroup = document.getElementById('hud-petals');
+                petalsGroup.innerHTML = '';
+
+                for (let i = 0; i < 12; i++) {
+                    const angle = (i * 30 - 90) * Math.PI / 180;
+                    const value = values[i] || 5;
+                    const petalLength = 20 + (value * 3.5);
+
+                    const x1 = 70;
+                    const y1 = 70;
+                    const x2 = 70 + Math.cos(angle) * petalLength;
+                    const y2 = 70 + Math.sin(angle) * petalLength;
+
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const controlX1 = x1 + Math.cos(angle - 0.2) * (petalLength * 0.5);
+                    const controlY1 = y1 + Math.sin(angle - 0.2) * (petalLength * 0.5);
+                    const controlX2 = x1 + Math.cos(angle + 0.2) * (petalLength * 0.5);
+                    const controlY2 = y1 + Math.sin(angle + 0.2) * (petalLength * 0.5);
+
+                    path.setAttribute('d', `
+                        M ${x1} ${y1}
+                        Q ${controlX1} ${controlY1} ${x2} ${y2}
+                        Q ${controlX2} ${controlY2} ${x1} ${y1}
+                    `);
+                    path.setAttribute('fill', this.petalColors[i]);
+                    path.setAttribute('opacity', '0.8');
+
+                    // Add subtle animation
+                    if (value > 7) {
+                        path.style.animation = `pulse ${3 + i * 0.1}s ease-in-out infinite`;
+                    }
+
+                    petalsGroup.appendChild(path);
+                }
+            }
+
+            updateCoherenceBar(coherence) {
+                const fill = document.getElementById('coherence-fill');
+                fill.style.width = `${coherence * 100}%`;
+
+                fill.className = 'coherence-fill';
+                if (coherence < 0.3) {
+                    fill.classList.add('critical');
+                } else if (coherence > 0.7) {
+                    fill.classList.add('excellent');
+                }
+            }
+
+            updateTimeIndicator(timestamp) {
+                const indicator = document.getElementById('time-indicator');
+                const now = new Date();
+                const then = new Date(timestamp);
+                const hours = Math.floor((now - then) / 3600000);
+
+                let text = '';
+                let className = 'time-indicator';
+
+                if (hours < 1) {
+                    text = 'Fresh';
+                } else if (hours < 24) {
+                    text = `${hours}h ago`;
+                } else if (hours < 48) {
+                    text = '1 day ago';
+                    className += ' stale';
+                } else {
+                    text = `${Math.floor(hours / 24)} days ago`;
+                    className += ' critical';
+                }
+
+                indicator.textContent = text;
+                indicator.className = className;
+
+                // Show notification if stale
+                const notification = document.getElementById('notification');
+                if (hours > 24) {
+                    notification.style.display = 'flex';
+                } else {
+                    notification.style.display = 'none';
+                }
+            }
+
+            updateGlowEffect(coherence) {
+                const glow = document.getElementById('glow-ring');
+                glow.className = 'glow-ring';
+
+                if (coherence > 0.7) {
+                    glow.classList.add('high-coherence');
+                } else if (coherence > 0.5) {
+                    glow.classList.add('expanding');
+                } else if (coherence < 0.3) {
+                    glow.classList.add('contracting');
+                }
+            }
+
+            calculateQuadrants(values) {
+                return {
+                    mind: (values[11] + values[0] + values[1]) / 3,
+                    body: (values[8] + values[9] + values[10]) / 3,
+                    spirit: (values[5] + values[6] + values[7]) / 3,
+                    heart: (values[2] + values[3] + values[4]) / 3
+                };
+            }
+
+            triggerPowerUp() {
+                const burst = document.getElementById('powerup-burst');
+                burst.innerHTML = '';
+
+                // Create particle burst
+                for (let i = 0; i < 12; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'powerup-particle';
+                    particle.style.left = '70px';
+                    particle.style.top = '70px';
+
+                    const angle = (i * 30) * Math.PI / 180;
+                    const distance = 100 + Math.random() * 50;
+                    particle.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+                    particle.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+
+                    burst.appendChild(particle);
+                }
+
+                // Clean up after animation
+                setTimeout(() => {
+                    burst.innerHTML = '';
+                }, 1000);
+            }
+
+            triggerWarning() {
+                const warning = document.getElementById('drift-warning');
+                warning.classList.add('active');
+
+                setTimeout(() => {
+                    warning.classList.remove('active');
+                }, 2000);
+            }
+
+            checkDriftWarning() {
+                // Check for pattern drift (simplified for demo)
+                if (this.state && this.state.values) {
+                    const variance = Math.max(...this.state.values) - Math.min(...this.state.values);
+                    if (variance > 7) {
+                        this.triggerWarning();
+                    }
+                }
+            }
+
+            showNoDataState() {
+                // Show invitation state
+                this.drawPetals(new Array(12).fill(5));
+                document.getElementById('time-indicator').textContent = 'Begin Journey';
+                document.getElementById('notification').style.display = 'flex';
+            }
+
+            // Particle animation system
+            startAnimationLoop() {
+                const animate = () => {
+                    this.ctx.clearRect(0, 0, 140, 140);
+
+                    // Update and draw particles
+                    this.particles = this.particles.filter(particle => {
+                        particle.life -= 0.02;
+                        if (particle.life <= 0) return false;
+
+                        particle.x += particle.vx;
+                        particle.y += particle.vy;
+                        particle.vy += 0.1; // gravity
+
+                        this.ctx.globalAlpha = particle.life;
+                        this.ctx.fillStyle = particle.color;
+                        this.ctx.fillRect(particle.x, particle.y, particle.size, particle.size);
+
+                        return true;
+                    });
+
+                    requestAnimationFrame(animate);
+                };
+                animate();
+            }
+
+            setupEventListeners() {
+                const display = document.getElementById('soulprint-display');
+
+                display.addEventListener('click', (e) => {
+                    // Create ripple effect
+                    const ripple = document.createElement('div');
+                    ripple.className = 'click-ripple';
+                    ripple.style.left = e.offsetX + 'px';
+                    ripple.style.top = e.offsetY + 'px';
+                    display.appendChild(ripple);
+
+                    setTimeout(() => ripple.remove(), 600);
+
+                    // Navigate to full check-in
+                    setTimeout(() => {
+                        window.location.href = '/holoflower-beta.html';
+                    }, 200);
+                });
+
+                // Listen for storage changes
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'holoflower-state') {
+                        this.loadState();
+                    }
+                });
+            }
+
+            checkForUpdates() {
+                // Periodically check for state changes
+                this.loadState();
+
+                // Add ambient particles occasionally
+                if (Math.random() < 0.3 && this.state) {
+                    const coherence = this.calculateCoherence(this.state.values);
+                    if (coherence > 0.6) {
+                        this.addAmbientParticle();
+                    }
+                }
+            }
+
+            addAmbientParticle() {
+                this.particles.push({
+                    x: 70 + (Math.random() - 0.5) * 20,
+                    y: 70,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: -Math.random() * 2,
+                    size: Math.random() * 3 + 1,
+                    color: '#fbbf24',
+                    life: 1
+                });
+            }
+        }
+
+        // Initialize HUD
+        const hud = new HoloflowerHUD();
+    </script>
+
+</body>
+</html>

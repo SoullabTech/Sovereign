@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Holoflower Daily Oracle - Beta Cheat Sheet</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .cheat-sheet {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .title h1 {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #ffd700, #fff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .flower-icon {
+            width: 40px;
+            height: 40px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        .flower-icon svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1) rotate(0deg);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1) rotate(5deg);
+                opacity: 1;
+            }
+        }
+
+        .flower-icon svg ellipse {
+            animation: petal-breathe 4s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes petal-breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .flower-icon svg ellipse:nth-child(odd) {
+            animation-delay: 0.2s;
+        }
+
+        .section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hud-states {
+            display: grid;
+            gap: 10px;
+        }
+
+        .state {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .state:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .state-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .gold-shimmer {
+            background: radial-gradient(circle, rgba(255, 215, 0, 0.15), transparent);
+            border: 2px solid rgba(255, 215, 0, 0.6);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gold-shimmer::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            background: conic-gradient(
+                from 0deg,
+                transparent,
+                rgba(255, 215, 0, 0.4),
+                transparent,
+                rgba(255, 215, 0, 0.4),
+                transparent
+            );
+            animation: rotate-glow 3s linear infinite;
+            border-radius: 50%;
+        }
+
+        @keyframes rotate-glow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse-state {
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pulse-state::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, transparent 30%, rgba(255, 255, 255, 0.2));
+            animation: ripple-out 2s ease-out infinite;
+        }
+
+        @keyframes ripple-out {
+            0% {
+                transform: scale(0.8);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+
+        .red-edge {
+            background: radial-gradient(circle, rgba(255, 107, 107, 0.1), transparent);
+            border: 2px solid rgba(255, 107, 107, 0.5);
+            position: relative;
+        }
+
+        .red-edge::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid rgba(255, 107, 107, 0.6);
+            animation: warning-pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes warning-pulse {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        .play-levels {
+            display: grid;
+            gap: 12px;
+        }
+
+        .level {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .level-name {
+            font-weight: 600;
+            color: #66d9ef;
+            font-size: 14px;
+        }
+
+        .level-desc {
+            font-size: 13px;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        .ritual-steps {
+            counter-reset: step-counter;
+            display: grid;
+            gap: 10px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+            padding-left: 35px;
+        }
+
+        .step::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            width: 25px;
+            height: 25px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .daily-loop {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: 12px;
+        }
+
+        .loop-item {
+            text-align: center;
+            font-size: 12px;
+        }
+
+        .loop-arrow {
+            color: #667eea;
+            font-size: 20px;
+        }
+
+        .tip {
+            padding: 15px;
+            background: linear-gradient(135deg, rgba(46, 213, 115, 0.1), rgba(0, 184, 148, 0.1));
+            border-radius: 12px;
+            border: 1px solid rgba(46, 213, 115, 0.3);
+            font-size: 13px;
+            line-height: 1.5;
+            text-align: center;
+            font-style: italic;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            opacity: 0.5;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="cheat-sheet">
+        <div class="title">
+            <div class="flower-icon">
+                <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Center circle -->
+                    <circle cx="200" cy="200" r="40" fill="rgba(255, 255, 255, 0.1)" stroke="rgba(255, 255, 255, 0.3)" stroke-width="1"/>
+
+                    <!-- 12 Petals in circular arrangement -->
+                    <g transform="translate(200, 200)">
+                        <!-- Mind Petals (Gold) - Top Left -->
+                        <ellipse transform="rotate(210)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(255, 215, 0, 0.4)" stroke="rgba(255, 215, 0, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(240)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(255, 215, 0, 0.4)" stroke="rgba(255, 215, 0, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(270)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(255, 215, 0, 0.4)" stroke="rgba(255, 215, 0, 0.8)" stroke-width="1"/>
+
+                        <!-- Spirit Petals (Blue) - Top Right -->
+                        <ellipse transform="rotate(300)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(100, 149, 237, 0.4)" stroke="rgba(100, 149, 237, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(330)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(100, 149, 237, 0.4)" stroke="rgba(100, 149, 237, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(0)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(100, 149, 237, 0.4)" stroke="rgba(100, 149, 237, 0.8)" stroke-width="1"/>
+
+                        <!-- Heart Petals (Green) - Bottom Right -->
+                        <ellipse transform="rotate(30)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(46, 213, 115, 0.4)" stroke="rgba(46, 213, 115, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(60)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(46, 213, 115, 0.4)" stroke="rgba(46, 213, 115, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(90)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(46, 213, 115, 0.4)" stroke="rgba(46, 213, 115, 0.8)" stroke-width="1"/>
+
+                        <!-- Body Petals (Rust) - Bottom Left -->
+                        <ellipse transform="rotate(120)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(210, 105, 30, 0.4)" stroke="rgba(210, 105, 30, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(150)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(210, 105, 30, 0.4)" stroke="rgba(210, 105, 30, 0.8)" stroke-width="1"/>
+                        <ellipse transform="rotate(180)" cx="0" cy="-80" rx="25" ry="60" fill="rgba(210, 105, 30, 0.4)" stroke="rgba(210, 105, 30, 0.8)" stroke-width="1"/>
+                    </g>
+
+                    <!-- Central glow -->
+                    <circle cx="200" cy="200" r="20" fill="rgba(255, 255, 255, 0.2)" filter="url(#glow)"/>
+
+                    <defs>
+                        <filter id="glow">
+                            <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                            <feMerge>
+                                <feMergeNode in="coloredBlur"/>
+                                <feMergeNode in="SourceGraphic"/>
+                            </feMerge>
+                        </filter>
+                    </defs>
+                </svg>
+            </div>
+            <h1>Holoflower Daily Oracle</h1>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span>🌟</span> Visual States
+            </div>
+            <div class="hud-states">
+                <div class="state">
+                    <div class="state-icon gold-shimmer">
+                        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="8" fill="none" stroke="rgba(255, 215, 0, 0.8)" stroke-width="1.5"/>
+                            <circle cx="20" cy="20" r="12" fill="none" stroke="rgba(255, 215, 0, 0.4)" stroke-width="1" opacity="0.6"/>
+                            <circle cx="20" cy="20" r="16" fill="none" stroke="rgba(255, 215, 0, 0.2)" stroke-width="0.5" opacity="0.4"/>
+                        </svg>
+                    </div>
+                    <span>Golden glow = Coherent & aligned</span>
+                </div>
+                <div class="state">
+                    <div class="state-icon pulse-state">
+                        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="10" fill="none" stroke="rgba(255, 255, 255, 0.6)" stroke-width="1.5"/>
+                            <circle cx="20" cy="20" r="6" fill="rgba(255, 255, 255, 0.15)"/>
+                        </svg>
+                    </div>
+                    <span>Gentle pulse = Invitation to check in</span>
+                </div>
+                <div class="state">
+                    <div class="state-icon red-edge">
+                        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="20" cy="20" r="10" fill="none" stroke="rgba(255, 107, 107, 0.7)" stroke-width="2" stroke-dasharray="3 2"/>
+                            <circle cx="20" cy="20" r="5" fill="rgba(255, 107, 107, 0.2)"/>
+                        </svg>
+                    </div>
+                    <span>Warm edge = Notice the drift</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span>✨</span> Three Modes of Engagement
+            </div>
+            <div class="play-levels">
+                <div class="level">
+                    <span class="level-name">1. Awareness</span>
+                    <span class="level-desc">A moment - Notice your state</span>
+                </div>
+                <div class="level">
+                    <span class="level-name">2. Attunement</span>
+                    <span class="level-desc">A breath - Adjust a single aspect</span>
+                </div>
+                <div class="level">
+                    <span class="level-name">3. Reflection</span>
+                    <span class="level-desc">A pause - Complete check-in for insight</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span>🌀</span> Daily Practice
+            </div>
+            <div class="ritual-steps">
+                <div class="step">
+                    <span>Touch & shape your inner landscape</span>
+                </div>
+                <div class="step">
+                    <span>Observe the pattern that emerges</span>
+                </div>
+                <div class="step">
+                    <span>Receive your reflection</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">
+                <span>🔮</span> Natural Rhythm
+            </div>
+            <div class="daily-loop">
+                <div class="loop-item">
+                    <div>💗</div>
+                    <div>Notice</div>
+                </div>
+                <span class="loop-arrow">→</span>
+                <div class="loop-item">
+                    <div>🌀</div>
+                    <div>Engage</div>
+                </div>
+                <span class="loop-arrow">→</span>
+                <div class="loop-item">
+                    <div>🔮</div>
+                    <div>Reflect</div>
+                </div>
+                <span class="loop-arrow">→</span>
+                <div class="loop-item">
+                    <div>✨</div>
+                    <div>Integrate</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tip">
+            💡 Your holoflower is a living mirror—always present, gently breathing, reflecting your inner state without judgment.
+        </div>
+
+        <div class="footer">
+            Beta Launch • Monday 09.29.25
+        </div>
+    </div>
+</body>
+</html>

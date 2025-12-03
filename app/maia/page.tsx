@@ -24,7 +24,7 @@ import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor'
 import { ElementalExploration } from '@/components/consciousness/ConsciousnessSimulationLab';
 import { SacredLabDrawer } from '@/components/SacredLabDrawer';
 import CommunityCommonsPanel from '@/components/community/CommunityCommonsPanel';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, FileText, BarChart3, Users, ChevronDown, Activity } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, FileText, BarChart3, Users, ChevronDown, Activity, Beaker } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
@@ -698,6 +698,25 @@ export default function MAIAPage() {
                 )}
 
 
+                {/* Sacred Lab Tools Button - Primary position */}
+                <motion.button
+                  onClick={() => setShowSacredLabDrawer(!showSacredLabDrawer)}
+                  className="flex-shrink-0 p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/15 hover:from-amber-500/30 hover:to-orange-500/25 border-2 border-amber-500/50 hover:border-amber-400/80 transition-all duration-300 shadow-lg hover:shadow-amber-500/25 backdrop-blur-sm"
+                  whileHover={{
+                    scale: 1.08,
+                    boxShadow: "0 0 25px rgba(245, 158, 11, 0.4)"
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Sacred Lab Tools - PFI Interface"
+                >
+                  <Beaker className="w-6 h-6" style={{
+                    color: 'rgb(251, 191, 36) !important',
+                    stroke: 'rgb(251, 191, 36) !important',
+                    fill: 'rgb(251, 191, 36) !important',
+                    filter: 'brightness(1.3) drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))'
+                  }} />
+                </motion.button>
+
                 {/* Community Commons Button */}
                 <div className="relative z-[130]">
                   <motion.button
@@ -705,16 +724,38 @@ export default function MAIAPage() {
                       console.log('📚 Opening Community Commons panel');
                       setShowCommunityCommons(!showCommunityCommons);
                     }}
-                    className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
-                             bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/50"
-                    whileHover={{ scale: 1.02 }}
+                    className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
+                    whileHover={{ scale: 1.05 }}
                     style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                    title="Community Commons"
                   >
-                    <Users className="w-3 h-3" />
-                    <span>Commons</span>
-                    <ChevronDown className={`w-3 h-3 transition-transform ${showCommunityCommons ? 'rotate-180' : ''}`} />
+                    <Users className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
                   </motion.button>
                 </div>
+
+                {/* Logout Button - Between Commons and Lab separator */}
+                <motion.button
+                  onClick={() => {
+                    console.log('🚪 User logging out');
+                    // Clear session storage
+                    import('@/lib/auth/betaSession').then(({ betaSession }) => {
+                      betaSession.clearSession();
+                    });
+                    // Clear any remaining legacy session data
+                    localStorage.removeItem('betaOnboardingComplete');
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('sessionId');
+                    // Force redirect to welcome after clearing
+                    setTimeout(() => {
+                      router.push('/welcome-back');
+                    }, 100);
+                  }}
+                  className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  title="Logout"
+                >
+                  <LogOut className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
+                </motion.button>
 
 
                 {/* DESKTOP LABORATORY SYSTEM CONTROLS - Only show on desktop */}
@@ -745,38 +786,7 @@ export default function MAIAPage() {
                 <div className="w-px h-6 bg-amber-500/20 flex-shrink-0"></div>
 
                 {/* Logout Button */}
-                <motion.button
-                  onClick={() => {
-                    console.log('🔐 [MAIA] User logout - clearing all session data');
-                    // Use proper betaSession logout method
-                    import('@/lib/auth/betaSession').then(({ betaSession }) => {
-                      betaSession.clearSession();
-                    });
-                    // Clear any remaining legacy session data
-                    localStorage.removeItem('betaOnboardingComplete');
-                    localStorage.removeItem('authToken');
-                    localStorage.removeItem('sessionId');
-                    // Force redirect to welcome after clearing
-                    setTimeout(() => {
-                      router.push('/welcome-back');
-                    }, 100);
-                  }}
-                  className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  title="Logout"
-                >
-                  <LogOut className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
-                </motion.button>
 
-                {/* Sacred Lab Menu Button - Last in ribbon */}
-                <motion.button
-                  onClick={() => setShowSacredLabDrawer(!showSacredLabDrawer)}
-                  className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  title="Sacred Lab Tools - PFI Interface"
-                >
-                  <Brain className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
-                </motion.button>
                 </div>
               </div>
             ) : (
@@ -894,28 +904,43 @@ export default function MAIAPage() {
                     </div>
                   )}
 
-                  {/* Community Commons Button */}
+                  {/* Sacred Lab Menu Button - First */}
+                  <motion.button
+                    onClick={() => setShowSacredLabDrawer(!showSacredLabDrawer)}
+                    className="flex-shrink-0 p-3 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/15 hover:from-amber-500/30 hover:to-orange-500/25 border-2 border-amber-500/50 hover:border-amber-400/80 transition-all duration-300 shadow-lg hover:shadow-amber-500/25 backdrop-blur-sm"
+                    whileHover={{
+                      scale: 1.08,
+                      boxShadow: "0 0 25px rgba(245, 158, 11, 0.4)"
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                    title="Sacred Lab Tools - PFI Interface"
+                  >
+                    <Beaker className="w-6 h-6" style={{
+                      color: 'rgb(251, 191, 36) !important',
+                      stroke: 'rgb(251, 191, 36) !important',
+                      fill: 'rgb(251, 191, 36) !important',
+                      filter: 'brightness(1.3) drop-shadow(0 0 8px rgba(251, 191, 36, 0.6))'
+                    }} />
+                  </motion.button>
+
+                  {/* Community Commons Button - Second */}
                   <div className="relative z-[130]">
                     <motion.button
                       onClick={() => {
                         console.log('📚 Opening Community Commons panel');
                         setShowCommunityCommons(!showCommunityCommons);
                       }}
-                      className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all whitespace-nowrap touch-manipulation
-                               bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 hover:border-amber-500/50"
-                      whileHover={{ scale: 1.02 }}
+                      className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
+                      whileHover={{ scale: 1.05 }}
                       style={{ touchAction: 'manipulation', pointerEvents: 'auto' }}
+                      title="Community Commons"
                     >
-                      <Users className="w-3 h-3" />
-                      <span>Commons</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${showCommunityCommons ? 'rotate-180' : ''}`} />
+                      <Users className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
                     </motion.button>
                   </div>
 
-                  {/* Separator */}
-                  <div className="w-px h-6 bg-amber-500/20 flex-shrink-0"></div>
-
-                  {/* Logout Button */}
+                  {/* Logout Button - Third */}
                   <motion.button
                     onClick={() => {
                       console.log('🔐 [MAIA] User logout - clearing all session data');
@@ -936,15 +961,8 @@ export default function MAIAPage() {
                     <LogOut className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
                   </motion.button>
 
-                  {/* Sacred Lab Menu Button */}
-                  <motion.button
-                    onClick={() => setShowSacredLabDrawer(!showSacredLabDrawer)}
-                    className="flex-shrink-0 p-2 rounded-lg bg-transparent hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500 transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    title="Sacred Lab Tools - PFI Interface"
-                  >
-                    <Brain className="w-5 h-5" style={{ color: 'rgb(251, 191, 36) !important', stroke: 'rgb(251, 191, 36) !important', fill: 'rgb(251, 191, 36) !important', filter: 'brightness(1.2)' }} />
-                  </motion.button>
+                  {/* Separator */}
+                  <div className="w-px h-6 bg-amber-500/20 flex-shrink-0"></div>
                 </motion.div>
 
                 {/* Mobile Carousel Indicators */}

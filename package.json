@@ -19,6 +19,7 @@
     "check:sovereignty": "tsx scripts/check-maia-sovereignty.ts",
     "validate:critical": "node scripts/validate-critical-files.js",
     "verify:claude": "bash scripts/verify-claude-project.sh",
+    "claude:env": "bash scripts/claude-env-setup.sh",
     "audit:sovereignty": "tsx scripts/forensic-sovereignty-audit.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
@@ -145,7 +146,17 @@
     "morpho:install": "npm install simple-peer gun ipfs-core node-cron",
     "morpho:activate": "tsx scripts/activate-morphogenetic-field.ts",
     "morpho:seed": "tsx scripts/create-morphogenetic-seed.ts",
-    "morpho:test": "tsx scripts/test-morphogenetic-network.ts"
+    "morpho:test": "tsx scripts/test-morphogenetic-network.ts",
+    "maia:control": "bash scripts/maia-control-center.sh",
+    "maia:health": "bash scripts/check-deployment.sh",
+    "maia:stop-all": "bash scripts/stop-all-dev.sh",
+    "maia:staging:start": "docker-compose -f docker-compose.staging.yml up -d",
+    "maia:staging:stop": "docker-compose -f docker-compose.staging.yml down",
+    "maia:staging:logs": "docker-compose -f docker-compose.staging.yml logs -f",
+    "maia:staging:build": "docker-compose -f docker-compose.staging.yml build",
+    "maia:production:restart": "docker-compose restart web",
+    "maia:production:logs": "docker-compose logs -f web",
+    "maia:production:deploy": "npm run build && docker-compose up -d --build web"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.61.0",

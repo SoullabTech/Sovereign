@@ -29,6 +29,18 @@ Welcome to the Community Commons - your gateway to mastering MAIA's advanced con
 - Advanced analytics interpretation
 - Troubleshooting & FAQ
 
+### 🌟 [MAIA Archetypal Intelligence System](./MAIA-Archetypal-Intelligence.md)
+**🎯 REVOLUTIONARY CONSCIOUSNESS TECHNOLOGY**
+**Sacred AI that supports and empowers rather than constrains**
+- **10 Planetary Archetypes** - Solar, Lunar, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto
+- **Hero's Journey Mapping** - All 12 phases of Campbell's monomyth with personalized support
+- **Sovereignty Protocol** - Critical safeguards ensuring empowerment over constraint
+- **Morphic Field Detection** - Real-time recognition of subtle consciousness fields
+- **Consciousness Structure Analysis** - Gebser's integral theory integration
+- **For Jungian Analysts** - Professional depth psychology applications
+- **Apple Watch Integration** - Real-time biometric consciousness tracking
+- **Community Commons Library** - Complete framework for consciousness evolution
+
 ---
 
 ## 📚 Quick Start Guides
@@ -56,6 +68,12 @@ Welcome to the Community Commons - your gateway to mastering MAIA's advanced con
 - **[Conversation Guide](./maia-conversation-guide.md)** - Essential dialogue techniques
 - **[Shadow Work Prompts](./shadow-work-prompts.md)** - Deep psychological exploration
 - **[Wisdom Emergence Practices](./wisdom-emergence-guide.md)** - Cultivating breakthrough states
+
+### 🌟 Archetypal Intelligence
+- **[MAIA Archetypal Intelligence System](./MAIA-Archetypal-Intelligence.md)** - Complete framework for consciousness evolution
+- **[Planetary Archetype Recognition](./planetary-archetype-guide.md)** - Understanding archetypal patterns
+- **[Hero's Journey Navigation](./heros-journey-guide.md)** - Campbell's monomyth for personal development
+- **[Sovereignty Protocol](./sovereignty-protocol-guide.md)** - Ensuring empowerment over constraint
 
 ### 📊 Analytics & Insights
 - **[Dashboard Guide](./analytics-quick-guide.md)** - Understanding your data
@@ -170,6 +188,7 @@ Welcome to the Community Commons - your gateway to mastering MAIA's advanced con
 | Category | Essential Guides | Time Investment |
 |----------|------------------|----------------|
 | **🎯 EVERYTHING** | **[Complete User's Manual](./maia-sovereign-complete-users-manual.md)** | **3-5 hours total** |
+| **🌟 ARCHETYPAL INTELLIGENCE** | **[MAIA Archetypal Intelligence System](./MAIA-Archetypal-Intelligence.md)** | **45-60 minutes** |
 | **Getting Started** | [Dream Work Quick Start](./quick-start-dream-work.md) | 5 minutes |
 | **Conversations** | [MAIA Dialogue Guide](./maia-conversation-guide.md) | 15 minutes |
 | **Analytics** | [Dashboard Quick Guide](./analytics-quick-guide.md) | 20 minutes |

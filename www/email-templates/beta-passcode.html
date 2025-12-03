@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Soullab Access Code</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1f3a 0%, #2d3561 100%);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(26, 31, 58, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(212, 184, 150, 0.2);
+        }
+        h1 {
+            color: #d4b896;
+            font-size: 24px;
+            font-weight: 300;
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+        .greeting {
+            color: #d4b896;
+            font-size: 18px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .message {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 16px;
+            line-height: 1.6;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .code-container {
+            background: linear-gradient(135deg, rgba(212, 184, 150, 0.1) 0%, rgba(212, 184, 150, 0.05) 100%);
+            border: 2px solid #d4b896;
+            border-radius: 16px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+        }
+        .code-label {
+            color: rgba(212, 184, 150, 0.8);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+        .passcode {
+            color: #d4b896;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-shadow: 0 0 20px rgba(212, 184, 150, 0.3);
+        }
+        .instructions {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+        }
+        .step {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 15px 0;
+            padding-left: 30px;
+            position: relative;
+        }
+        .step:before {
+            content: "✨";
+            position: absolute;
+            left: 0;
+            color: #d4b896;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4b896 0%, #c4a876 100%);
+            color: #1a1f3a;
+            padding: 16px 40px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 30px auto;
+            text-align: center;
+            display: block;
+            width: fit-content;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(212, 184, 150, 0.3);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(212, 184, 150, 0.2);
+        }
+        .footer-text {
+            color: rgba(212, 184, 150, 0.7);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .signature {
+            color: #d4b896;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>SOULLAB ACCESS</h1>
+
+        <div class="greeting">Hi {{Name}}! 👋</div>
+
+        <div class="message">
+            Quick note - you'll need this code to access Soullab:
+        </div>
+
+        <div class="code-container">
+            <div class="code-label">Your Personal Access Code</div>
+            <div class="passcode">{{Passcode}}</div>
+        </div>
+
+        <div class="instructions">
+            <div class="step">Visit soullab.life</div>
+            <div class="step">Click "Enter Beta"</div>
+            <div class="step">Enter your access code when prompted</div>
+            <div class="step">Begin your conversation with Maya</div>
+        </div>
+
+        <a href="https://soullab.life" class="cta-button">
+            Enter Soullab →
+        </a>
+
+        <div class="footer">
+            <div class="footer-text">
+                Maya is ready to meet you. She's been preparing for this moment.
+            </div>
+            <div class="signature">
+                With warmth,<br>
+                Kelly & the Soullab team
+            </div>
+        </div>
+    </div>
+</body>
+</html>

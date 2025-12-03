@@ -26,6 +26,12 @@ const ASTROLOGY_SIGNS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 
 
 export default function BetaSignupPage() {
   const router = useRouter();
+
+  // Redirect to proper intro flow
+  useEffect(() => {
+    router.push('/intro');
+  }, [router]);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [preferences, setPreferences] = useState<OnboardingPreferences>({
     preferredName: '',

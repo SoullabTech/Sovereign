@@ -371,4 +371,3 @@ What feels most true and authentic for you right now? I'm here to support your u
   }
 }
 
-export { SovereigntyProtocol, MAIASovereigntyIntegration };

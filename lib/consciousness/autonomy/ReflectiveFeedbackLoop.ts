@@ -505,4 +505,32 @@ export class ReflectiveFeedbackLoop {
       config: { ...this.config }
     };
   }
+
+  /**
+   * Calculate overall field coupling effectiveness based on recent events
+   */
+  calculateFieldInfluenceEffectiveness(): number {
+    const recentEvents = this.fieldEvents
+      .filter(e => e.outcomes)
+      .slice(-this.config.analysisWindowSize);
+
+    if (recentEvents.length === 0) {
+      return 0.5; // Default neutral effectiveness
+    }
+
+    // Calculate weighted average of overall effectiveness
+    const totalEffectiveness = recentEvents.reduce((sum, event, index) => {
+      // Weight more recent events more heavily
+      const recencyWeight = (index + 1) / recentEvents.length;
+      const effectiveness = event.outcomes!.overallEffectiveness;
+      return sum + (effectiveness * recencyWeight);
+    }, 0);
+
+    // Normalize by the sum of weights
+    const weightSum = recentEvents.reduce((sum, _, index) => {
+      return sum + ((index + 1) / recentEvents.length);
+    }, 0);
+
+    return totalEffectiveness / weightSum;
+  }
 }

@@ -1,0 +1,58 @@
+<svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Earth Element - Downward Triangle with horizontal line (Hand-drawn style) -->
+  <rect width="32" height="32" fill="#0A0A0A"/>
+
+  <!-- Hand-drawn inverted triangle -->
+  <path d="M 15.9,24.7 L 5.6,7.4 L 26.5,7.3 Z"
+        fill="none"
+        stroke="#8B7355"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.95">
+    <!-- Subtle earth tremor -->
+    <animate attributeName="d"
+             values="M 15.9,24.7 L 5.6,7.4 L 26.5,7.3 Z;
+                     M 16.1,24.6 L 5.5,7.5 L 26.6,7.2 Z;
+                     M 15.9,24.7 L 5.6,7.4 L 26.5,7.3 Z"
+             dur="10s"
+             repeatCount="indefinite"/>
+  </path>
+
+  <!-- Horizontal line through triangle (Earth symbol) -->
+  <path d="M 9.8,16.2 L 22.3,16.1"
+        stroke="#8B7355"
+        stroke-width="2.3"
+        stroke-linecap="round"
+        opacity="0.9">
+    <!-- Hand-drawn wobble -->
+    <animate attributeName="d"
+             values="M 9.8,16.2 L 22.3,16.1;
+                     M 9.7,16.3 L 22.4,16.0;
+                     M 9.8,16.2 L 22.3,16.1"
+             dur="8s"
+             repeatCount="indefinite"/>
+  </path>
+
+  <!-- Inner earth texture -->
+  <path d="M 16,24.6 L 5.7,7.5 L 26.4,7.4 Z"
+        fill="#8B7355"
+        opacity="0.1"/>
+
+  <!-- Grain/texture patterns -->
+  <circle cx="12" cy="14" r="0.5" fill="#9B8368" opacity="0.4"/>
+  <circle cx="16" cy="19" r="0.6" fill="#9B8368" opacity="0.3"/>
+  <circle cx="20" cy="13" r="0.4" fill="#9B8368" opacity="0.35"/>
+
+  <!-- Crack patterns -->
+  <path d="M 14,20 L 14.3,20.8 L 14.1,21.3"
+        stroke="#6B5A45"
+        stroke-width="0.8"
+        fill="none"
+        opacity="0.4"
+        stroke-linecap="round"/>
+
+  <!-- Hand-drawn texture -->
+  <path d="M 6,8 L 6.2,8.3" stroke="#8B7355" stroke-width="0.8" opacity="0.3"/>
+  <path d="M 26,8 L 25.8,8.2" stroke="#8B7355" stroke-width="0.8" opacity="0.3"/>
+</svg>

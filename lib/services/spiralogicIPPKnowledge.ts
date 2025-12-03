@@ -31,7 +31,8 @@ export class SpiralogicIPPKnowledgeService {
   private contentPath: string;
 
   constructor() {
-    this.contentPath = join(process.cwd(), 'apps', 'web', 'docs', 'community-library', 'spiralogic-ipp');
+    // Point to the actual Community-Commons IPP content location
+    this.contentPath = '/Users/soullab/Community-Commons/04-Practices/Personal';
   }
 
   /**

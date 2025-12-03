@@ -137,42 +137,116 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
             ))}
           </g>
 
-          {/* Amber Voice Response Field - Visualizes voice activity */}
-          <g opacity={Math.max(0.4, voiceAmplitude * 0.9 + coherenceLevel * 0.5)} className="amber-voice-field">
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={size * (0.18 + voiceAmplitude * 0.35)}
-              fill="none"
-              stroke="url(#amberVoiceGradient)"
-              strokeWidth={3 + voiceAmplitude * 5}
-              opacity={0.8}
-              className="transition-all duration-200"
-              filter="url(#amberVoiceGlow)"
-            />
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={size * (0.28 + voiceAmplitude * 0.45)}
-              fill="none"
-              stroke="url(#amberVoiceGradient)"
-              strokeWidth={2 + voiceAmplitude * 3}
-              opacity={0.6}
-              className="transition-all duration-300"
-              filter="url(#amberVoiceGlow)"
-            />
-            <circle
-              cx={size / 2}
-              cy={size / 2}
-              r={size * (0.38 + voiceAmplitude * 0.55)}
-              fill="none"
-              stroke="url(#amberVoiceGradient)"
-              strokeWidth={1 + voiceAmplitude * 2}
-              opacity={0.3}
-              className="transition-all duration-400"
-              filter="url(#amberVoiceGlow)"
-            />
-          </g>
+          {/* Magical Voice Recognition Field - Different states for listening, user speaking, and MAIA speaking */}
+          {/* User Speaking Aura - Warm golden glow when user voice is detected */}
+          {voiceAmplitude > 0.1 && !isMaiaSpeaking && (
+            <g opacity={Math.min(0.4, voiceAmplitude * 0.8)} className="user-voice-field">
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size * (0.16 + voiceAmplitude * 0.25)}
+                fill="none"
+                stroke="url(#userVoiceGradient)"
+                strokeWidth={1 + voiceAmplitude * 2}
+                opacity={0.5}
+                className="transition-all duration-150"
+                filter="url(#magicalGlow)"
+                style={{
+                  animation: `voicePulse ${0.8 + voiceAmplitude}s ease-in-out infinite`
+                }}
+              />
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size * (0.24 + voiceAmplitude * 0.35)}
+                fill="none"
+                stroke="url(#userVoiceGradient)"
+                strokeWidth={1 + voiceAmplitude * 1}
+                opacity={0.3}
+                className="transition-all duration-200"
+                filter="url(#magicalGlow)"
+              />
+            </g>
+          )}
+
+          {/* MAIA Speaking Field - Gentle purple/lavender when MAIA is speaking */}
+          {isMaiaSpeaking && (
+            <g opacity={0.3} className="maia-voice-field">
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size * 0.18}
+                fill="none"
+                stroke="url(#maiaVoiceGradient)"
+                strokeWidth={2}
+                opacity={0.5}
+                className="transition-all duration-300"
+                filter="url(#maiaGlow)"
+                style={{
+                  animation: `maiaSpeak 2s ease-in-out infinite`
+                }}
+              />
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size * 0.26}
+                fill="none"
+                stroke="url(#maiaVoiceGradient)"
+                strokeWidth={1}
+                opacity={0.3}
+                className="transition-all duration-400"
+                filter="url(#maiaGlow)"
+              />
+            </g>
+          )}
+
+          {/* Listening Shimmer - Subtle blue/silver sparkles when listening */}
+          {isListening && !voiceAmplitude && (
+            <g opacity={0.25} className="listening-field">
+              <circle
+                cx={size / 2}
+                cy={size / 2}
+                r={size * 0.14}
+                fill="none"
+                stroke="url(#listeningGradient)"
+                strokeWidth={1}
+                opacity={0.4}
+                className="transition-all duration-500"
+                filter="url(#listeningGlow)"
+                style={{
+                  animation: `listeningShimmer 3s ease-in-out infinite`
+                }}
+                strokeDasharray={`${size * 0.008} ${size * 0.016}`}
+              />
+            </g>
+          )}
+
+          {/* Magical Particle Ring - Subtle sparkles around the field */}
+          {(isListening || voiceAmplitude > 0 || isMaiaSpeaking) && (
+            <g opacity={0.15} className="magical-particles">
+              {[...Array(6)].map((_, i) => {
+                const angle = (i / 6) * Math.PI * 2;
+                const baseRadius = size * 0.37;
+                const x = size / 2 + Math.cos(angle) * baseRadius;
+                const y = size / 2 + Math.sin(angle) * baseRadius;
+                return (
+                  <circle
+                    key={i}
+                    cx={x}
+                    cy={y}
+                    r={1}
+                    fill={isMaiaSpeaking ? "#E6E6FA" : voiceAmplitude > 0.1 ? "#FFD700" : "#E0E6FF"}
+                    opacity={0.5}
+                    className="transition-all duration-300"
+                    style={{
+                      animation: `sparkle ${2 + i * 0.3}s ease-in-out infinite`,
+                      animationDelay: `${i * 0.2}s`
+                    }}
+                  />
+                );
+              })}
+            </g>
+          )}
 
           {/* Central Core */}
           <circle
@@ -235,7 +309,25 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
               <stop offset="100%" stopColor="#FF8C00" stopOpacity="0.3" />
             </radialGradient>
 
-            {/* REMOVED: Voice gradients - no longer needed since blue ring removed */}
+            {/* Magical Voice Recognition Gradients */}
+            <radialGradient id="userVoiceGradient" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#FFD700" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#FFA500" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#FF8C00" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#CD853F" stopOpacity="0.2" />
+            </radialGradient>
+
+            <radialGradient id="maiaVoiceGradient" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#E6E6FA" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#DDA0DD" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#9370DB" stopOpacity="0.3" />
+            </radialGradient>
+
+            <radialGradient id="listeningGradient" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#E0E6FF" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#B0C4DE" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#4682B4" stopOpacity="0.2" />
+            </radialGradient>
 
             {/* Glow filters for light field effects */}
             <filter id="amberVoiceGlow" x="-50%" y="-50%" width="200%" height="200%">
@@ -248,6 +340,31 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
 
             <filter id="breathingGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Magical Voice Recognition Filters */}
+            <filter id="magicalGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="maiaGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+              <feMerge>
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="listeningGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur"/>
                 <feMergeNode in="SourceGraphic"/>
@@ -289,6 +406,81 @@ export const SacredHoloflower: React.FC<SacredHoloflowerProps> = ({
         }
 
         .amber-voice-field circle {
+          transform-origin: 50% 50%;
+        }
+
+        /* Magical Voice Recognition Animations */
+        @keyframes voicePulse {
+          0%, 100% {
+            transform: scale(1);
+            opacity: 0.6;
+          }
+          50% {
+            transform: scale(1.08);
+            opacity: 0.9;
+          }
+        }
+
+        @keyframes maiaSpeak {
+          0%, 100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 0.7;
+          }
+          33% {
+            transform: scale(1.03) rotate(2deg);
+            opacity: 0.8;
+          }
+          66% {
+            transform: scale(1.06) rotate(-1deg);
+            opacity: 0.9;
+          }
+        }
+
+        @keyframes listeningShimmer {
+          0%, 100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 0.4;
+            stroke-dashoffset: 0;
+          }
+          50% {
+            transform: scale(1.02) rotate(180deg);
+            opacity: 0.7;
+            stroke-dashoffset: 10;
+          }
+        }
+
+        @keyframes sparkle {
+          0%, 100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 0.3;
+          }
+          25% {
+            transform: scale(1.2) rotate(90deg);
+            opacity: 0.8;
+          }
+          50% {
+            transform: scale(0.8) rotate(180deg);
+            opacity: 0.6;
+          }
+          75% {
+            transform: scale(1.1) rotate(270deg);
+            opacity: 0.9;
+          }
+        }
+
+        .user-voice-field circle {
+          transform-origin: 50% 50%;
+        }
+
+        .maia-voice-field circle {
+          transform-origin: 50% 50%;
+        }
+
+        .listening-field circle {
+          transform-origin: 50% 50%;
+        }
+
+        .magical-particles circle {
           transform-origin: 50% 50%;
         }
       `}</style>

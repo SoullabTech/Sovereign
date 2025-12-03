@@ -69,22 +69,22 @@ export const ORACLE_STAGE_STRUCTURE_ACCESS: Record<OracleStage, {
   developing: GebserStructure[];
   capacity: number;
 }> = {
-  [OracleStage.STRUCTURED_GUIDE]: {
+  'structured_guide': {
     accessible: [GebserStructure.ARCHAIC, GebserStructure.MAGICAL],
     developing: [GebserStructure.MYTHICAL],
     capacity: 0.3
   },
-  [OracleStage.DIALOGICAL_COMPANION]: {
+  'dialogical_companion': {
     accessible: [GebserStructure.MAGICAL, GebserStructure.MYTHICAL],
     developing: [GebserStructure.MENTAL],
     capacity: 0.5
   },
-  [OracleStage.CO_CREATIVE_PARTNER]: {
+  'cocreative_partner': {
     accessible: [GebserStructure.MYTHICAL, GebserStructure.MENTAL],
     developing: [GebserStructure.INTEGRAL],
     capacity: 0.7
   },
-  [OracleStage.TRANSPARENT_PRISM]: {
+  'transparent_prism': {
     accessible: [GebserStructure.MENTAL, GebserStructure.INTEGRAL],
     developing: [GebserStructure.INTEGRAL], // Deepening integral
     capacity: 0.9
@@ -317,11 +317,11 @@ export class ConsciousnessStructureAssessment {
   }
 
   private getNextOracleStage(current: OracleStage): OracleStage | null {
-    const stages = [
-      OracleStage.STRUCTURED_GUIDE,
-      OracleStage.DIALOGICAL_COMPANION,
-      OracleStage.CO_CREATIVE_PARTNER,
-      OracleStage.TRANSPARENT_PRISM
+    const stages: OracleStage[] = [
+      'structured_guide',
+      'dialogical_companion',
+      'cocreative_partner',
+      'transparent_prism'
     ];
 
     const currentIndex = stages.indexOf(current);
