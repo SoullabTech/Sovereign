@@ -8,6 +8,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Large uploads and PDFs
+uploads/
+*.pdf
+
 # Next.js
 .next/
 out/
