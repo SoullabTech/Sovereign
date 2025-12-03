@@ -22,6 +22,10 @@ export default function IntroPage() {
   }, []);
 
   const handleWelcomeComplete = () => {
+    // Mark onboarding as completed so user only sees it once
+    localStorage.setItem('onboarding_completed', 'true');
+    console.log('✅ Onboarding completed - user will not see intro again');
+
     // After sage/teal welcome, redirect to beta-signup or maia based on user state
     const betaUser = localStorage.getItem('beta_user');
     if (betaUser) {

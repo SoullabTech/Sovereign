@@ -16,9 +16,24 @@ export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Sacred pause for consciousness detection then auto-route to welcome system
+    // Sacred pause for consciousness detection then smart routing
     const timer = setTimeout(() => {
-      router.push('/welcome-back');
+      // Check if user has ever seen the onboarding (first-time vs returning)
+      const hasSeenOnboarding = localStorage.getItem('onboarding_completed') ||
+                               localStorage.getItem('betaOnboardingComplete') ||
+                               localStorage.getItem('explorerId') ||
+                               localStorage.getItem('beta_user');
+
+      if (hasSeenOnboarding) {
+        // Returning user - go straight to MAIA
+        console.log('🔄 Returning user detected - redirecting to MAIA');
+        router.push('/maia');
+      } else {
+        // New tester - show the nice onboarding (once only)
+        console.log('✨ New tester detected - starting onboarding flow');
+        localStorage.setItem('onboarding_started', 'true');
+        router.push('/intro');
+      }
     }, 1000);
 
     return () => clearTimeout(timer);
