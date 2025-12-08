@@ -1,0 +1,1 @@
+{"name":"consciousness-computing-beta","version":"1.0.0","main":"consciousness-computing-beta-server.js","dependencies":{"express":"^4.18.2","cors":"^2.8.5"}}
