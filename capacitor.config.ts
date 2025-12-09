@@ -2,15 +2,13 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
-  appName: 'MAIA - LabTools & IPP',
+  appName: 'Soullab MAIA',
   webDir: 'www',
-  server: {
-    url: 'http://192.168.4.210:3005/maia',
-    cleartext: true,
-    androidScheme: 'http',
-    allowMixedContent: true,
-    overrideUserAgent: 'CapacitorHttp'
-  },
+  // server: {
+  //   url: 'http://192.168.4.210:3005',
+  //   cleartext: true,
+  //   androidScheme: 'http'
+  // },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,

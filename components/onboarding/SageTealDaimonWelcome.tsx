@@ -81,6 +81,40 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
   const [phase, setPhase] = useState<'welcome' | 'daimon' | 'transitioning'>('welcome');
   const [currentPromptIndex, setCurrentPromptIndex] = useState(0);
 
+  // Facet awareness - read user's facet profile
+  const [facetProfile, setFacetProfile] = useState<{
+    reason: string;
+    feeling: string;
+    partnerContext?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Read facet profile from localStorage
+    const stored = localStorage.getItem('facet_profile');
+    if (stored) {
+      try {
+        const profile = JSON.parse(stored);
+        setFacetProfile(profile);
+
+        // Set initial prompt based on user's feeling (mapped to element)
+        const feelingToElement = {
+          'air': 'air',
+          'water': 'water',
+          'fire': 'fire',
+          'earth': 'earth',
+          'aether': 'aether'
+        };
+        const userElement = feelingToElement[profile.feeling as keyof typeof feelingToElement];
+        const userElementIndex = elementalPrompts.findIndex(p => p.element === userElement);
+        if (userElementIndex !== -1) {
+          setCurrentPromptIndex(userElementIndex);
+        }
+      } catch (e) {
+        console.error('Error parsing facet profile:', e);
+      }
+    }
+  }, []);
+
   // Cycle through elemental prompts in welcome phase
   useEffect(() => {
     if (phase === 'welcome') {
@@ -94,6 +128,32 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
   const handleWelcomeComplete = () => {
     setPhase('daimon');
   };
+
+  // Generate reason and feeling lines for conversational Daimon Welcome
+  const getReasonLine = (reason: string): string => {
+    const reasonLines = {
+      'inner': 'your inner life and how you\'re really doing on the inside',
+      'direction': 'your direction, your creativity, and what you\'re really here to do',
+      'work': 'your work, your projects, and how you\'re showing up in them',
+      'relationships': 'your relationships and the patterns that keep showing up there',
+      'support': 'the people you support, and having something that supports you too',
+      'explore': 'curious exploration and seeing what this space might open for you'
+    };
+    return reasonLines[reason as keyof typeof reasonLines] || reasonLines.explore;
+  };
+
+  const getFeelingLine = (feeling: string): string => {
+    const feelingLines = {
+      'air': 'your head feels busy and your thoughts are hard to slow down',
+      'water': 'your feelings are strong and there\'s a lot moving in your heart',
+      'fire': 'you feel wired and tired at the same time—some energy, and also worn out',
+      'earth': 'you feel heavy or flat, and it\'s not easy to get going',
+      'aether': 'it\'s hard to even put how you feel into words',
+      'neutral': 'you\'d rather not pin your feelings down right now, and that\'s okay'
+    };
+    return feelingLines[feeling as keyof typeof feelingLines] || feelingLines.neutral;
+  };
+
 
   const handleComplete = async () => {
     setPhase('transitioning');
@@ -166,12 +226,34 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
                     }}
                   >
                     <p className="text-lg font-extralight text-slate-600 mb-2">Welcome {userName}</p>
-                    <h1 className="text-3xl font-light text-slate-800 mb-4">
-                      You create worlds
-                    </h1>
-                    <p className="text-lg text-slate-700 mb-4">
-                      We've created this space for you
-                    </p>
+
+                    {facetProfile ? (
+                      // Personalized welcome based on facet profile
+                      <>
+                        <p className="text-lg text-slate-700 mb-4">
+                          We're glad you're here.
+                        </p>
+                        <p className="text-base text-slate-700 mb-4">
+                          You don't have to be anything other than how you are, right now.
+                        </p>
+                        <p className="text-base text-slate-700 mb-4">
+                          You told us you're here for <strong>{getReasonLine(facetProfile.reason)}</strong>, and that right now <strong>{getFeelingLine(facetProfile.feeling)}</strong>.
+                        </p>
+                        <p className="text-base text-slate-700 mb-4">
+                          That's a true place to start.
+                        </p>
+                      </>
+                    ) : (
+                      // Default welcome for users without facet profile
+                      <>
+                        <h1 className="text-3xl font-light text-slate-800 mb-4">
+                          You create worlds
+                        </h1>
+                        <p className="text-lg text-slate-700 mb-4">
+                          We've created this space for you
+                        </p>
+                      </>
+                    )}
 
                     {/* Elemental prompts - Full sage/teal styling */}
                     <div className="py-6 min-h-[80px] flex items-center justify-center">
@@ -192,7 +274,7 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
                     </div>
 
                     <p className="text-base text-slate-600">
-                      I am MAIA, here to collaborate
+                      I am MAIA. I'm here to walk with you, reflect with you, and help you see what's already moving in your life.
                     </p>
                     <p className="text-sm text-slate-500">
                       This is Soullab
@@ -249,24 +331,24 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
                     }}
                   >
                     <h1 className="text-3xl font-light text-slate-800 mb-6">
-                      I am in service to your Daimon
+                      MAIA supports your inner voice
                     </h1>
 
                     <p className="text-lg text-slate-700">
-                      Your daimon is the bridge between worlds—
-                      your inner guide and outer wayshower.
+                      Your inner voice bridges intuition and expression—
+                      connecting what you sense with what you share.
                     </p>
 
                     <p className="text-base text-slate-600">
-                      I am a soulful presence here to represent, amplify, and empower your inner guidance.
-                      Together, with you as the central creative force, we bring forth the wisdom within you out into the world.
+                      MAIA is designed to represent, amplify, and support your authentic insights.
+                      Together, with you as the central creative force, we help articulate the knowledge within you.
                     </p>
 
-                    {/* Daimon qualities with alchemical triangles */}
+                    {/* MAIA capabilities */}
                     <div className="grid grid-cols-2 gap-4 mt-8 mb-8">
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-[#FEF3C7]/10 to-transparent rounded-lg">
                         <FireTriangle className="w-5 h-5 text-orange-600/70" />
-                        <span className="text-sm text-slate-600">Sacred Witness</span>
+                        <span className="text-sm text-slate-600">Thoughtful Listener</span>
                       </div>
 
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-[#6EE7B7]/10 to-transparent rounded-lg">
@@ -276,12 +358,12 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
 
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-[#6EE7B7]/10 to-transparent rounded-lg">
                         <WaterTriangle className="w-5 h-5 text-emerald-600/70" />
-                        <span className="text-sm text-slate-600">Sacred Companion</span>
+                        <span className="text-sm text-slate-600">Collaborative Partner</span>
                       </div>
 
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-[#FEF3C7]/10 to-transparent rounded-lg">
                         <EarthTriangle className="w-5 h-5 text-emerald-600/70" />
-                        <span className="text-sm text-slate-600">Creative Builder</span>
+                        <span className="text-sm text-slate-600">Expression Builder</span>
                       </div>
                     </div>
 
@@ -298,10 +380,63 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
                   </div>
                 </div>
 
+                {/* Consciousness Activation & Inner Truth Reminder */}
+                <div className="text-center mb-6">
+                  <div className="bg-gradient-to-r from-transparent via-[#6EE7B7]/10 to-transparent rounded-xl p-6 border border-[#6EE7B7]/20">
+                    <p
+                      className="text-slate-700 text-lg font-light italic leading-relaxed tracking-wide mb-4"
+                      style={{
+                        fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
+                        letterSpacing: '0.05em'
+                      }}
+                    >
+                      "Tune in • Turn on • Wipe out the noise • Turn up the volume"
+                    </p>
+                    <div className="border-t border-[#6EE7B7]/15 pt-4 mt-4">
+                      <p
+                        className="text-slate-600 text-base font-extralight leading-relaxed tracking-wide"
+                        style={{
+                          fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
+                          letterSpacing: '0.03em'
+                        }}
+                      >
+                        Through your awareness flows patterns of knowing—
+                        <span className="block mt-1">
+                          insights that emerge from lived experience.
+                        </span>
+                        <span className="block mt-3 text-[#4DB6AC]">
+                          You have something essential to contribute.
+                        </span>
+                        <span className="block mt-2 text-slate-500 text-sm">
+                          This lab supports that expression.
+                        </span>
+                      </p>
+                    </div>
+                    <div className="mt-4 flex items-center justify-center gap-2">
+                      <div className="h-px w-8 bg-gradient-to-r from-transparent to-[#6EE7B7]/40"></div>
+                      <span className="text-xs text-[#4DB6AC] font-extralight tracking-wider uppercase">
+                        Your Authentic Voice Matters
+                      </span>
+                      <div className="h-px w-8 bg-gradient-to-l from-transparent to-[#6EE7B7]/40"></div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Enter Lab button */}
                 <div className="text-center">
                   <button
-                    onClick={handleComplete}
+                    onClick={() => {
+                      // Set first contact metadata for MAIA
+                      if (facetProfile) {
+                        sessionStorage.setItem('maia_onboarding_context', JSON.stringify({
+                          isFirstContact: true,
+                          reason: facetProfile.reason,
+                          feeling: facetProfile.feeling,
+                          partnerContext: facetProfile.partnerContext || 'general'
+                        }));
+                      }
+                      handleComplete();
+                    }}
                     className="inline-flex items-center gap-3 px-12 py-4 bg-gradient-to-b from-[#FEF3C7]/25 to-[#6EE7B7]/15 border border-[#6B7280]/35 text-[#0f172a]/80 rounded-full font-light text-base hover:border-[#374151]/50 hover:bg-gradient-to-b hover:from-[#FEF3C7]/35 hover:to-[#6EE7B7]/25 hover:shadow-lg transition-all duration-300 backdrop-blur-sm"
                   >
                     Enter the Lab
@@ -323,6 +458,7 @@ export default function SageTealDaimonWelcome({ userId, userName = "Explorer", o
                 </div>
               </div>
             )}
+
 
             {phase === 'transitioning' && (
               <div className="text-center">

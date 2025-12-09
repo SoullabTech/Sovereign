@@ -476,3 +476,18 @@ interface ConversationApproach {
 }
 
 export const consciousnessAssessment = new ConsciousnessStructureAssessment();
+
+// Export function for backward compatibility
+export async function assessConsciousnessStructure(
+  userId: string,
+  conversationHistory: Array<{ content: string; timestamp: string; role: 'user' | 'assistant' }>,
+  currentOracleStage: OracleStage,
+  existingProfile?: ConsciousnessProfile
+) {
+  return consciousnessAssessment.assessUserConsciousness(
+    userId,
+    conversationHistory,
+    currentOracleStage,
+    existingProfile
+  );
+}

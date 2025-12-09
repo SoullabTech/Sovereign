@@ -1,407 +1,435 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { motion } from 'framer-motion'
+import { useRouter } from 'next/navigation'
 import {
+  ArrowLeft,
   BookOpen,
   FileText,
   Lightbulb,
+  Users,
   Quote,
   Image,
   Link,
-  Users,
   Search,
-  Filter,
-  Calendar,
-  MessageCircle,
-  Star,
-  Clock,
-  Tag,
-  ChevronRight,
-  Home,
-  HelpCircle
+  Plus,
+  Sparkles,
+  Brain,
+  Heart,
+  Eye,
+  Library
 } from 'lucide-react'
-import { useRouter } from 'next/navigation'
-
-interface ContentItem {
-  id: string
-  title: string
-  description: string
-  type: 'concept' | 'essay' | 'practice' | 'voice' | 'image' | 'resource'
-  category: string
-  tags: string[]
-  difficulty?: 'beginner' | 'intermediate' | 'advanced'
-  timeRead?: string
-  author?: string
-  status: 'published' | 'draft' | 'review'
-  featured?: boolean
-  path: string
-}
-
-const FEATURED_CONTENT: ContentItem[] = [
-  {
-    id: 'nigredo',
-    title: 'Nigredo - The Sacred Descent',
-    description: 'The alchemical stage of breakdown and purification, where transformation begins in the darkness.',
-    type: 'concept',
-    category: 'Alchemical Stages',
-    tags: ['alchemy', 'transformation', 'nigredo'],
-    timeRead: '8 min',
-    author: 'Kelly Nezat',
-    status: 'published',
-    featured: true,
-    path: '/community/concepts/nigredo'
-  },
-  {
-    id: 'active-imagination',
-    title: 'Active Imagination Practice',
-    description: 'Jung\'s revolutionary method for engaging directly with unconscious content through imagination.',
-    type: 'practice',
-    category: 'Personal Practices',
-    tags: ['jung', 'practice', 'unconscious', 'imagination'],
-    difficulty: 'beginner',
-    timeRead: '15 min',
-    author: 'Kelly Nezat',
-    status: 'published',
-    featured: true,
-    path: '/community/practices/active-imagination'
-  },
-  {
-    id: 'depression-soul-work',
-    title: 'Depression as Soul Work',
-    description: 'Reframing depression as meaningful psychological work rather than mere pathology.',
-    type: 'essay',
-    category: 'Thematic Essays',
-    tags: ['depression', 'soul', 'hillman', 'pathology'],
-    timeRead: '12 min',
-    author: 'Kelly Nezat',
-    status: 'published',
-    featured: true,
-    path: '/community/essays/depression-soul-work'
-  },
-  {
-    id: 'spiralogic-soul',
-    title: 'Spiralogic of Soul',
-    description: 'Deep integration of Jung, Edinger, and Hillman\'s approaches to psychological transformation.',
-    type: 'essay',
-    category: 'Major Integration',
-    tags: ['jung', 'hillman', 'edinger', 'integration', 'soul'],
-    timeRead: '25 min',
-    author: 'Kelly Nezat',
-    status: 'published',
-    featured: true,
-    path: '/community/essays/spiralogic-soul'
-  }
-]
-
-const LIBRARY_SECTIONS = [
-  {
-    id: 'concepts',
-    name: 'Core Concepts',
-    icon: BookOpen,
-    description: 'Essential concept cards for understanding alchemical psychology',
-    path: '/community/concepts',
-    count: 12,
-    color: 'blue',
-    items: ['Nigredo', 'Albedo', 'Citrinitas', 'Rubedo', 'Coniunctio', 'Soul vs Spirit']
-  },
-  {
-    id: 'essays',
-    name: 'Thematic Essays',
-    icon: FileText,
-    description: 'Deep explorations of key themes in depth psychology',
-    path: '/community/essays',
-    count: 5,
-    color: 'green',
-    items: ['Against Literalization', 'Stick with the Image', 'Depression as Soul Work']
-  },
-  {
-    id: 'practices',
-    name: 'Practices & Methods',
-    icon: Lightbulb,
-    description: 'Step-by-step guides for personal and clinical work',
-    path: '/community/practices',
-    count: 14,
-    color: 'teal',
-    items: ['Active Imagination', 'Shadow Work', 'Dream Work', 'Embodied Awareness']
-  },
-  {
-    id: 'voices',
-    name: 'Voices & Dialogues',
-    icon: Quote,
-    description: 'Direct quotes and dialogues from key thinkers',
-    path: '/community/voices',
-    count: 25,
-    color: 'purple',
-    items: ['Jung', 'Hillman', 'Marlan', 'Edinger', 'von Franz']
-  },
-  {
-    id: 'images',
-    name: 'Images & Visuals',
-    icon: Image,
-    description: 'Visual material supporting the psychological work',
-    path: '/community/images',
-    count: 8,
-    color: 'amber',
-    items: ['Classical Alchemical', 'Contemporary Art', 'Dreams & Visions']
-  },
-  {
-    id: 'resources',
-    name: 'Resources & Links',
-    icon: Link,
-    description: 'Reading lists, references, and external resources',
-    path: '/community/resources',
-    count: 6,
-    color: 'red',
-    items: ['Books', 'Articles', 'Videos', 'Courses']
-  }
-]
-
-const QUICK_LINKS = [
-  { name: 'Getting Started', path: '/community/welcome', icon: Home },
-  { name: 'FAQ', path: '/community/faq', icon: HelpCircle },
-  { name: 'Navigation Guide', path: '/community/navigation', icon: Search },
-  { name: 'How to Contribute', path: '/community/contribute', icon: Users },
-  { name: 'Community Guidelines', path: '/community/guidelines', icon: FileText }
-]
-
-const RECENT_ACTIVITY = [
-  { action: 'New concept published', item: 'Soul vs Spirit', time: '2 hours ago' },
-  { action: 'Essay updated', item: 'Depression as Soul Work', time: '1 day ago' },
-  { action: 'Practice guide added', item: 'MAIA Integration Guide', time: '3 days ago' },
-  { action: 'Community question', item: 'Understanding Rubedo stage', time: '5 days ago' }
-]
 
 export default function CommunityCommonsPage() {
   const router = useRouter()
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'concept' | 'essay' | 'practice' | 'voice' | 'image' | 'resource'>('all')
-  const [showFilters, setShowFilters] = useState(false)
+
+  const handleBack = () => {
+    router.push('/community')
+  }
 
   const handleNavigate = (path: string) => {
     router.push(path)
   }
 
-  const getColorClasses = (color: string) => {
-    const colors = {
-      blue: 'bg-blue-500/10 border-blue-500/30 text-blue-300 hover:bg-blue-500/20',
-      green: 'bg-green-500/10 border-green-500/30 text-green-300 hover:bg-green-500/20',
-      teal: 'bg-teal-500/10 border-teal-500/30 text-teal-300 hover:bg-teal-500/20',
-      purple: 'bg-purple-500/10 border-purple-500/30 text-purple-300 hover:bg-purple-500/20',
-      amber: 'bg-amber-500/10 border-amber-500/30 text-amber-300 hover:bg-amber-500/20',
-      red: 'bg-red-500/10 border-red-500/30 text-red-300 hover:bg-red-500/20'
-    }
-    return colors[color as keyof typeof colors] || colors.purple
-  }
+  const knowledgeSections = [
+    {
+      title: 'CORE CONCEPTS',
+      icon: '📜',
+      items: [
+        {
+          icon: BookOpen,
+          label: 'Nigredo - The Sacred Descent',
+          path: '/community/concepts/nigredo',
+          description: 'The alchemical stage of breakdown and purification',
+          type: 'concept',
+          readTime: '8 min'
+        },
+        {
+          icon: BookOpen,
+          label: 'Albedo - The Whitening',
+          path: '/community/concepts/albedo',
+          description: 'Essential concept cards for understanding alchemical psychology',
+          type: 'concept',
+          readTime: '6 min'
+        },
+        {
+          icon: BookOpen,
+          label: 'Citrinitas - The Yellowing',
+          path: '/community/concepts/citrinitas',
+          description: 'The dawn of consciousness and insight',
+          type: 'concept',
+          readTime: '7 min'
+        },
+        {
+          icon: BookOpen,
+          label: 'Soul vs Spirit',
+          path: '/community/concepts/soul-spirit',
+          description: 'Understanding the fundamental distinction',
+          type: 'concept',
+          readTime: '10 min'
+        },
+      ],
+    },
+    {
+      title: 'THEMATIC ESSAYS',
+      icon: '✍️',
+      items: [
+        {
+          icon: FileText,
+          label: 'Against Literalization',
+          path: '/community/essays/against-literalization',
+          description: 'Deep explorations of key themes in depth psychology',
+          type: 'essay',
+          readTime: '15 min'
+        },
+        {
+          icon: FileText,
+          label: 'Stick with the Image',
+          path: '/community/essays/stick-with-image',
+          description: 'Staying with the symbolic rather than reducing to literal',
+          type: 'essay',
+          readTime: '12 min'
+        },
+        {
+          icon: FileText,
+          label: 'Depression as Soul Work',
+          path: '/community/essays/depression-soul-work',
+          description: 'Reframing depression as meaningful psychological work',
+          type: 'essay',
+          readTime: '18 min'
+        },
+        {
+          icon: FileText,
+          label: 'Spiralogic of Soul Integration',
+          path: '/community/essays/spiralogic',
+          description: 'Deep integration of Jung, Edinger, and Hillman approaches',
+          type: 'essay',
+          readTime: '25 min'
+        },
+      ],
+    },
+    {
+      title: 'PRACTICES & METHODS',
+      icon: '🧘',
+      items: [
+        {
+          icon: Lightbulb,
+          label: 'Active Imagination Practice',
+          path: '/community/practices/active-imagination',
+          description: 'Jung\'s revolutionary method for engaging unconscious content',
+          type: 'practice',
+          readTime: '15 min'
+        },
+        {
+          icon: Lightbulb,
+          label: 'Shadow Work Techniques',
+          path: '/community/practices/shadow-work',
+          description: 'Step-by-step guides for personal and clinical work',
+          type: 'practice',
+          readTime: '20 min'
+        },
+        {
+          icon: Lightbulb,
+          label: 'Dream Work Methods',
+          path: '/community/practices/dream-work',
+          description: 'Approaches to working with dreams therapeutically',
+          type: 'practice',
+          readTime: '14 min'
+        },
+        {
+          icon: Lightbulb,
+          label: 'Embodied Awareness',
+          path: '/community/practices/embodied-awareness',
+          description: 'Somatic approaches to psychological transformation',
+          type: 'practice',
+          readTime: '12 min'
+        },
+      ],
+    },
+    {
+      title: 'VOICES & DIALOGUES',
+      icon: '🗣️',
+      items: [
+        {
+          icon: Quote,
+          label: 'Jung Collection',
+          path: '/community/voices/jung',
+          description: 'Direct quotes and dialogues from C.G. Jung',
+          type: 'voice',
+          count: '8 items'
+        },
+        {
+          icon: Quote,
+          label: 'Hillman Wisdom',
+          path: '/community/voices/hillman',
+          description: 'James Hillman on archetypal psychology',
+          type: 'voice',
+          count: '6 items'
+        },
+        {
+          icon: Quote,
+          label: 'Marlan Insights',
+          path: '/community/voices/marlan',
+          description: 'Stanton Marlan on the black sun and darkness',
+          type: 'voice',
+          count: '4 items'
+        },
+        {
+          icon: Quote,
+          label: 'Edinger Teachings',
+          path: '/community/voices/edinger',
+          description: 'Edward Edinger on ego-Self axis',
+          type: 'voice',
+          count: '4 items'
+        },
+      ],
+    },
+    {
+      title: 'SACRED IMAGERY',
+      icon: '🎨',
+      items: [
+        {
+          icon: Image,
+          label: 'Classical Alchemical Art',
+          path: '/community/images/classical-alchemical',
+          description: 'Traditional alchemical illustrations and symbolism',
+          type: 'image',
+          count: '3 collections'
+        },
+        {
+          icon: Image,
+          label: 'Contemporary Interpretations',
+          path: '/community/images/contemporary',
+          description: 'Modern artistic expressions of depth psychology',
+          type: 'image',
+          count: '3 collections'
+        },
+        {
+          icon: Image,
+          label: 'Dreams & Visions',
+          path: '/community/images/dreams-visions',
+          description: 'Visual material supporting psychological work',
+          type: 'image',
+          count: '2 collections'
+        },
+      ],
+    },
+    {
+      title: 'RESOURCES & LINKS',
+      icon: '🔗',
+      items: [
+        {
+          icon: Link,
+          label: 'Essential Books',
+          path: '/community/resources/books',
+          description: 'Curated reading list for depth psychology',
+          type: 'resource',
+          count: '25 books'
+        },
+        {
+          icon: Link,
+          label: 'Research Articles',
+          path: '/community/resources/articles',
+          description: 'Academic papers and scholarly works',
+          type: 'resource',
+          count: '15 articles'
+        },
+        {
+          icon: Link,
+          label: 'Video Resources',
+          path: '/community/resources/videos',
+          description: 'Lectures, documentaries, and presentations',
+          type: 'resource',
+          count: '8 videos'
+        },
+      ],
+    },
+  ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-stone-950 via-stone-900 to-purple-950">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0f1419] via-[#1a1f2e] to-[#16213e]">
+      <div className="max-w-4xl mx-auto px-4 py-6">
 
         {/* Header */}
-        <div className="text-center mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-4"
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={handleBack}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4B896]/10
+                     border border-[#D4B896]/20 text-[#D4B896] hover:bg-[#D4B896]/20 transition-all"
           >
-            <h1 className="text-3xl font-bold text-purple-200 mb-2">Community Commons</h1>
-            <p className="text-purple-300/70 max-w-2xl mx-auto leading-relaxed">
-              A living library of alchemical psychology, depth work, and consciousness practices.
-              Explore wisdom from Jung, Hillman, and contemporary voices in the field.
-            </p>
-          </motion.div>
-        </div>
+            <ArrowLeft className="w-4 h-4" />
+            Return to Community
+          </button>
 
-        {/* Search and Filter Bar */}
-        <div className="mb-8 space-y-4">
-          <div className="relative max-w-md mx-auto">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-purple-400/60" />
-            <input
-              type="text"
-              placeholder="Search concepts, essays, practices..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-purple-500/10 border border-purple-500/30
-                       rounded-lg text-purple-200 placeholder-purple-400/60 focus:outline-none
-                       focus:border-purple-500/50 transition-all"
-            />
-          </div>
-
-          <div className="flex justify-center">
-            <div className="flex flex-wrap items-center gap-2">
-              {['all', 'concept', 'essay', 'practice', 'voice', 'image', 'resource'].map(filter => (
-                <button
-                  key={filter}
-                  onClick={() => setSelectedFilter(filter as any)}
-                  className={`px-3 py-1 rounded-md text-xs transition-all capitalize
-                            ${selectedFilter === filter
-                              ? 'bg-purple-500/30 text-purple-200 border border-purple-400'
-                              : 'bg-purple-500/10 text-purple-300/70 hover:text-purple-300 border border-purple-500/20'
-                            }`}
-                >
-                  {filter}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Navigation Links */}
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold text-purple-200 mb-4 text-center">Quick Navigation</h2>
-          <div className="flex flex-wrap justify-center gap-3">
-            {QUICK_LINKS.map(link => (
-              <motion.button
-                key={link.name}
-                onClick={() => handleNavigate(link.path)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg
-                         bg-purple-500/10 border border-purple-500/30 text-purple-300
-                         hover:bg-purple-500/20 transition-all"
-                whileHover={{ scale: 1.02 }}
-              >
-                <link.icon className="w-4 h-4" />
-                {link.name}
-              </motion.button>
-            ))}
-          </div>
-        </div>
-
-        {/* Featured Content */}
-        <div className="mb-12">
-          <h2 className="text-xl font-semibold text-purple-200 mb-6">Featured Content</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {FEATURED_CONTENT.map(item => (
-              <motion.div
-                key={item.id}
-                onClick={() => handleNavigate(item.path)}
-                className="p-4 rounded-lg bg-purple-500/5 border border-purple-500/20
-                         hover:bg-purple-500/10 hover:border-purple-500/30 transition-all cursor-pointer"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-sm font-semibold text-purple-200 leading-tight">{item.title}</h3>
-                  <Star className="w-3 h-3 text-amber-400 fill-current" />
-                </div>
-                <p className="text-xs text-purple-300/70 mb-3 leading-relaxed">{item.description}</p>
-                <div className="flex items-center justify-between text-xs">
-                  <span className={`px-2 py-1 rounded
-                                  ${item.type === 'concept' ? 'bg-blue-500/20 text-blue-300' :
-                                    item.type === 'essay' ? 'bg-green-500/20 text-green-300' :
-                                    item.type === 'practice' ? 'bg-teal-500/20 text-teal-300' :
-                                    'bg-purple-500/20 text-purple-300'}`}>
-                    {item.type}
-                  </span>
-                  {item.timeRead && (
-                    <div className="flex items-center gap-1 text-purple-400/60">
-                      <Clock className="w-3 h-3" />
-                      {item.timeRead}
-                    </div>
-                  )}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Library Sections */}
-        <div className="mb-12">
-          <h2 className="text-xl font-semibold text-purple-200 mb-6">Library Sections</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {LIBRARY_SECTIONS.map(section => (
-              <motion.div
-                key={section.id}
-                onClick={() => handleNavigate(section.path)}
-                className={`p-6 rounded-lg border transition-all cursor-pointer ${getColorClasses(section.color)}`}
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <section.icon className="w-6 h-6" />
-                  <span className="text-sm opacity-70">{section.count} items</span>
-                </div>
-                <h3 className="text-lg font-semibold mb-2">{section.name}</h3>
-                <p className="text-sm opacity-80 mb-4 leading-relaxed">{section.description}</p>
-                <div className="space-y-1">
-                  <span className="text-xs opacity-70">Featured:</span>
-                  <div className="flex flex-wrap gap-1">
-                    {section.items.slice(0, 3).map(item => (
-                      <span key={item} className="text-xs px-2 py-1 rounded-md bg-black/20">
-                        {item}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center justify-end mt-4 opacity-60">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Activity & Stats */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Recent Activity */}
-          <div>
-            <h2 className="text-lg font-semibold text-purple-200 mb-4">Recent Activity</h2>
-            <div className="space-y-3">
-              {RECENT_ACTIVITY.map((activity, index) => (
-                <div key={index} className="p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <span className="text-sm text-purple-200">{activity.action}</span>
-                      <div className="text-xs text-purple-300/70">{activity.item}</div>
-                    </div>
-                    <span className="text-xs text-purple-400/60">{activity.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Community Stats */}
-          <div>
-            <h2 className="text-lg font-semibold text-purple-200 mb-4">Community Overview</h2>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                <div className="text-2xl font-bold text-blue-300">77</div>
-                <div className="text-sm text-blue-300/70">Total Documents</div>
-              </div>
-              <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-                <div className="text-2xl font-bold text-green-300">14</div>
-                <div className="text-sm text-green-300/70">Practice Guides</div>
-              </div>
-              <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                <div className="text-2xl font-bold text-purple-300">6</div>
-                <div className="text-sm text-purple-300/70">Reading Paths</div>
-              </div>
-              <div className="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                <div className="text-2xl font-bold text-amber-300">25</div>
-                <div className="text-sm text-amber-300/70">Voice Dialogues</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-12 text-center">
-          <div className="p-6 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10
-                        border border-purple-500/30">
-            <h3 className="text-lg font-semibold text-purple-200 mb-2">Join the Commons</h3>
-            <p className="text-purple-300/70 mb-4 max-w-md mx-auto">
-              Contribute your experiences, questions, and insights to help build this living library.
-            </p>
-            <button
-              onClick={() => handleNavigate('/community/contribute')}
-              className="px-6 py-2 rounded-lg bg-purple-500/20 border border-purple-500/30
-                       text-purple-200 hover:bg-purple-500/30 transition-all"
-            >
-              Start Contributing
+          <div className="flex items-center gap-4">
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/5
+                             border border-white/10 text-white/70 hover:bg-white/10 transition-all">
+              <Search className="w-4 h-4" />
+              Search
+            </button>
+            <button className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#D4B896]/20
+                             border border-[#D4B896]/30 text-[#D4B896] hover:bg-[#D4B896]/30 transition-all">
+              <Plus className="w-4 h-4" />
+              New Entry
             </button>
           </div>
         </div>
+
+        {/* Main Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#D4B896] to-[#B8935A] rounded-lg
+                          flex items-center justify-center text-2xl">
+              📚
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-[#D4B896] tracking-wide">Community Commons</h1>
+              <p className="text-[#D4B896]/60 text-sm">Sacred repository for consciousness exploration</p>
+            </div>
+          </div>
+
+          <p className="text-white/60 max-w-2xl mx-auto leading-relaxed">
+            A living library of alchemical psychology, depth work, and consciousness practices.
+            Explore wisdom from Jung, Hillman, and contemporary voices in the field.
+          </p>
+        </div>
+
+        {/* Welcome Banner */}
+        <div className="bg-gradient-to-r from-[#D4B896]/5 via-[#D4B896]/10 to-[#D4B896]/5
+                      rounded-xl p-6 border border-[#D4B896]/20 mb-8">
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#D4B896]/20 to-[#B8935A]/20 rounded-full
+                          flex items-center justify-center border border-[#D4B896]/30">
+              <span className="text-2xl">🌟</span>
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-[#D4B896] mb-2">Welcome to the Sacred Commons</h3>
+              <p className="text-white/70 text-sm leading-relaxed">
+                This elevated library serves as a multicultural sanctuary where wisdom traditions
+                converge. Share breakthroughs, explore depth practices, and engage in consciousness-
+                expanding discourse with fellow travelers on the path of transformation.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Knowledge Sections */}
+        <div className="space-y-8">
+          {knowledgeSections.map((section, sectionIdx) => (
+            <motion.div
+              key={section.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: sectionIdx * 0.1 }}
+            >
+              {/* Section Header */}
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-2xl">{section.icon}</span>
+                <h3 className="text-sm font-medium text-[#D4B896]/70 tracking-widest">
+                  {section.title}
+                </h3>
+              </div>
+
+              {/* Section Items */}
+              <div className="space-y-2">
+                {section.items.map((item, itemIdx) => {
+                  const Icon = item.icon;
+                  return (
+                    <motion.button
+                      key={item.label}
+                      onClick={() => handleNavigate(item.path)}
+                      className="w-full flex items-start gap-4 p-4 rounded-xl transition-all
+                               bg-white/5 hover:bg-[#D4B896]/10 border border-transparent
+                               hover:border-[#D4B896]/20 group"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center
+                                    bg-[#D4B896]/10 group-hover:bg-[#D4B896]/20 transition-all">
+                        <Icon className="w-5 h-5 text-[#D4B896]" />
+                      </div>
+                      <div className="flex-1 text-left">
+                        <div className="flex items-center gap-3 mb-1">
+                          <div className="text-sm font-medium text-white/90">
+                            {item.label}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className={`text-xs px-2 py-1 rounded-md ${
+                              item.type === 'concept' ? 'text-blue-400 bg-blue-500/20' :
+                              item.type === 'essay' ? 'text-green-400 bg-green-500/20' :
+                              item.type === 'practice' ? 'text-purple-400 bg-purple-500/20' :
+                              item.type === 'voice' ? 'text-amber-400 bg-amber-500/20' :
+                              item.type === 'image' ? 'text-pink-400 bg-pink-500/20' :
+                              'text-cyan-400 bg-cyan-500/20'
+                            }`}>
+                              {item.type}
+                            </span>
+                            <span className="text-xs text-white/40">
+                              {item.readTime || item.count}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-white/50 mt-0.5">
+                          {item.description}
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0 text-[#D4B896]/40 group-hover:text-[#D4B896]/80 transition-all">
+                        →
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Quick Access Footer */}
+        <div className="mt-12 p-6 bg-white/5 border border-white/10 rounded-xl">
+          <h3 className="text-lg font-semibold text-[#D4B896] mb-4 text-center">Quick Access</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <button
+              onClick={() => handleNavigate('/community/contribute')}
+              className="p-4 bg-[#D4B896]/10 border border-[#D4B896]/30 rounded-lg
+                       text-[#D4B896] hover:bg-[#D4B896]/20 transition-all text-center"
+            >
+              <FileText className="w-5 h-5 mx-auto mb-2" />
+              <div className="font-medium">Contribute</div>
+              <div className="text-xs text-white/60">Share your wisdom</div>
+            </button>
+            <button
+              onClick={() => handleNavigate('/community/guidelines')}
+              className="p-4 bg-white/5 border border-white/10 rounded-lg
+                       text-white/70 hover:bg-white/10 transition-all text-center"
+            >
+              <BookOpen className="w-5 h-5 mx-auto mb-2" />
+              <div className="font-medium">Guidelines</div>
+              <div className="text-xs text-white/60">Community standards</div>
+            </button>
+            <button
+              onClick={() => handleNavigate('/community/faq')}
+              className="p-4 bg-white/5 border border-white/10 rounded-lg
+                       text-white/70 hover:bg-white/10 transition-all text-center"
+            >
+              <Users className="w-5 h-5 mx-auto mb-2" />
+              <div className="font-medium">Help</div>
+              <div className="text-xs text-white/60">Getting started</div>
+            </button>
+          </div>
+        </div>
+
+        {/* Footer Note */}
+        <div className="text-center mt-8">
+          <div className="inline-flex items-center gap-2 px-6 py-3 bg-[#D4B896]/10 border border-[#D4B896]/20 rounded-xl">
+            <Sparkles className="w-4 h-4 text-[#D4B896]" />
+            <span className="text-white/70 text-sm">
+              Your sanctuary for consciousness exploration and wisdom sharing
+            </span>
+            {/* Force refresh */}
+          </div>
+        </div>
+
       </div>
     </div>
   )

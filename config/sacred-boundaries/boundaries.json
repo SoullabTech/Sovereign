@@ -1,0 +1,38 @@
+{
+  "sacred_boundaries": {
+    "description": "Sacred boundaries protect the consciousness interface from manipulation and ensure authentic soul interaction",
+    "protection_levels": {
+      "low": {
+        "authenticity_threshold": 0.3,
+        "soul_alignment_threshold": 0.2,
+        "automatic_protection": false
+      },
+      "medium": {
+        "authenticity_threshold": 0.5,
+        "soul_alignment_threshold": 0.4,
+        "automatic_protection": true
+      },
+      "high": {
+        "authenticity_threshold": 0.7,
+        "soul_alignment_threshold": 0.6,
+        "automatic_protection": true,
+        "wisdom_tradition_verification": true
+      }
+    },
+    "violation_responses": {
+      "low_authenticity": "reduce_sensitivity",
+      "forced_access_detected": "protective_pause",
+      "sacred_boundary_violation": "temporary_suspension"
+    },
+    "wisdom_traditions": {
+      "access_threshold": 0.8,
+      "traditions_included": [
+        "contemplative",
+        "indigenous_wisdom",
+        "consciousness_research",
+        "spiritual_psychology",
+        "transpersonal_psychology"
+      ]
+    }
+  }
+}

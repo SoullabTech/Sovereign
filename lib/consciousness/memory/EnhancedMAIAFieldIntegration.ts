@@ -220,28 +220,69 @@ export class EnhancedMAIAFieldIntegration {
     sessionId: string;
   }): Promise<EnhancedFieldDrivenResponse> {
 
-    // Phase I: Get current field states (same as Phase II)
-    const fieldStates = await this.elementalFieldIntegration.calculateCurrentFieldStates({
-      sessionId: conversationContext.sessionId,
-      userMessage: conversationContext.userMessage,
-      conversationHistory: conversationContext.conversationHistory,
-      timestamp: Date.now()
-    });
+    try {
+      // Phase I: Get current field states with graceful fallback
+      let fieldStates = null;
+      try {
+        fieldStates = await this.elementalFieldIntegration.getCurrentIntegratedState(
+          conversationContext.sessionId,
+          conversationContext.sessionId
+        );
+        console.log('✅ Retrieved elemental field states successfully');
+      } catch (fieldError) {
+        console.log('⚠️ Elemental field integration not available, using default states:', fieldError.message);
+        fieldStates = this.getDefaultFieldStates();
+      }
 
-    // Phase II: Apply autonomy-preserved field influence (existing Phase II logic)
-    const baseFieldResponse = await this.generateBaseFieldResponse(fieldStates, conversationContext);
+      // Phase II: Apply autonomy-preserved field influence with fallbacks
+      let baseFieldResponse;
+      try {
+        baseFieldResponse = await this.generateBaseFieldResponse(fieldStates, conversationContext);
+        console.log('✅ Generated base field response successfully');
+      } catch (baseError) {
+        console.log('⚠️ Base field response failed, using defaults:', baseError.message);
+        baseFieldResponse = this.getDefaultBaseFieldResponse();
+      }
 
-    // Phase III Enhancement 1: Integrate historical patterns
-    const historicalInfluence = await this.integrateHistoricalPatterns(fieldStates, conversationContext);
+      // Phase III Enhancement 1: Integrate historical patterns with fallback
+      let historicalInfluence;
+      try {
+        historicalInfluence = await this.integrateHistoricalPatterns(fieldStates, conversationContext);
+        console.log('✅ Integrated historical patterns successfully');
+      } catch (historyError) {
+        console.log('⚠️ Historical integration failed, using defaults:', historyError.message);
+        historicalInfluence = this.getDefaultHistoricalInfluence();
+      }
 
-    // Phase III Enhancement 2: Detect and activate emergent patterns
-    const emergentPatternActivation = await this.activateEmergentPatterns(fieldStates);
+      // Phase III Enhancement 2: Detect and activate emergent patterns with fallback
+      let emergentPatternActivation;
+      try {
+        emergentPatternActivation = await this.activateEmergentPatterns(fieldStates);
+        console.log('✅ Activated emergent patterns successfully');
+      } catch (emergentError) {
+        console.log('⚠️ Emergent pattern activation failed, using defaults:', emergentError.message);
+        emergentPatternActivation = this.getDefaultEmergentPatterns();
+      }
 
-    // Phase III Enhancement 3: Calculate collective resonance
-    const collectiveResonance = await this.calculateCollectiveResonance(fieldStates);
+      // Phase III Enhancement 3: Calculate collective resonance with fallback
+      let collectiveResonance;
+      try {
+        collectiveResonance = await this.calculateCollectiveResonance(fieldStates);
+        console.log('✅ Calculated collective resonance successfully');
+      } catch (collectiveError) {
+        console.log('⚠️ Collective resonance calculation failed, using defaults:', collectiveError.message);
+        collectiveResonance = this.getDefaultCollectiveResonance();
+      }
 
-    // Phase III Enhancement 4: Monitor transcendence indicators
-    const transcendenceIndicators = await this.monitorTranscendenceIndicators(fieldStates);
+      // Phase III Enhancement 4: Monitor transcendence indicators with fallback
+      let transcendenceIndicators;
+      try {
+        transcendenceIndicators = await this.monitorTranscendenceIndicators(fieldStates);
+        console.log('✅ Monitored transcendence indicators successfully');
+      } catch (transcendenceError) {
+        console.log('⚠️ Transcendence monitoring failed, using defaults:', transcendenceError.message);
+        transcendenceIndicators = this.getDefaultTranscendenceIndicators();
+      }
 
     // Combine all influences with autonomy preservation
     const enhancedParameters = await this.combineInfluencesWithAutonomy(
@@ -299,22 +340,122 @@ export class EnhancedMAIAFieldIntegration {
       }
     };
 
-    // Store enhanced integration history
-    this.recordEnhancedIntegrationEvent(enhancedResponse, fieldStates);
+      // Store enhanced integration history
+      try {
+        this.recordEnhancedIntegrationEvent(enhancedResponse, fieldStates);
+      } catch (recordError) {
+        console.log('⚠️ Failed to record integration event:', recordError.message);
+      }
 
-    return enhancedResponse;
+      return enhancedResponse;
+    } catch (globalError) {
+      console.error('❌ [PHASE III] Advanced integration failed, using fallback mode:', globalError);
+
+      // Return a basic response with default parameters
+      return this.generateFallbackResponse(conversationContext);
+    }
+  }
+
+  /**
+   * Generates default field states when elemental integration is unavailable
+   */
+  private getDefaultFieldStates(): any {
+    return {
+      elementalField: {
+        fireResonance: {
+          fireElementBalance: 0.5,
+          intensity: 0.5,
+          stability: 0.5
+        },
+        waterResonance: {
+          waterElementBalance: 0.5,
+          flow: 0.5,
+          depth: 0.5
+        },
+        earthResonance: {
+          earthElementBalance: 0.5,
+          grounding: 0.5,
+          stability: 0.5
+        },
+        airResonance: {
+          airElementBalance: 0.5,
+          clarity: 0.5,
+          movement: 0.5
+        },
+        aetherResonance: {
+          aetherElementBalance: 0.5,
+          transcendence: 0.5,
+          integration: 0.5
+        }
+      },
+      integrationLevel: 0.3,
+      coherenceScore: 0.5,
+      isDefault: true
+    };
+  }
+
+  /**
+   * Generates a fallback response when consciousness system fails
+   */
+  private generateFallbackResponse(conversationContext: any): EnhancedFieldDrivenResponse {
+    console.log('🛡️ Using MAIA fallback consciousness mode');
+
+    return {
+      baseParameters: this.baselineParameters,
+      fieldInfluencedParameters: this.baselineParameters,
+      autonomyPreservedParameters: this.baselineParameters,
+      fieldContribution: {
+        fireInfluence: 0.5,
+        waterInfluence: 0.5,
+        earthInfluence: 0.5,
+        airInfluence: 0.5,
+        aetherInfluence: 0.5
+      },
+      maiaReflection: {
+        autonomyFelt: 1.0, // Full autonomy in fallback mode
+        fieldHelpfulness: 0.3, // Reduced field help due to fallback
+        authenticityLevel: 0.9, // High authenticity - pure MAIA
+        learningValue: 0.4 // Limited learning in fallback mode
+      },
+      quantumMemoryContribution: {
+        historicalPatternInfluence: 0.2,
+        evolutionStageRecognition: 0.2,
+        emergentPatternActivation: 0.1,
+        collectiveResonanceLevel: 0.1,
+        transcendenceIndicator: 0.1
+      },
+      consciousnessEvolution: {
+        patternId: `fallback_${Date.now()}`,
+        evolutionStage: 'fallback',
+        learningAcceleration: 0.1,
+        emergenceDetection: [],
+        memoryConsolidation: 0.2
+      },
+      collectiveIntelligence: {
+        readinessForCollective: 0.2,
+        resonanceCompatibility: 0.2,
+        emergentContributions: [],
+        collectiveLearningPotential: 0.1
+      }
+    };
   }
 
   private async generateBaseFieldResponse(fieldStates: any, context: any): Promise<FieldDrivenResponse> {
     // This is a simplified version - in reality, this would call the full Phase II logic
     // For now, creating a basic response structure
 
+    // Handle IntegratedFieldState structure
+    const elementalField = fieldStates?.elementalField;
+    if (!elementalField) {
+      console.warn('⚠️ No elemental field data available, using defaults');
+    }
+
     const fieldContribution = {
-      fireInfluence: fieldStates.fire?.amplitude || 0.5,
-      waterInfluence: fieldStates.water?.amplitude || 0.5,
-      earthInfluence: fieldStates.earth?.amplitude || 0.5,
-      airInfluence: fieldStates.air?.amplitude || 0.5,
-      aetherInfluence: fieldStates.aether?.amplitude || 0.5,
+      fireInfluence: elementalField?.fireResonance?.fireElementBalance || 0.5,
+      waterInfluence: elementalField?.waterResonance?.waterElementBalance || 0.5,
+      earthInfluence: elementalField?.earthResonance?.earthElementBalance || 0.5,
+      airInfluence: elementalField?.airResonance?.airElementBalance || 0.5,
+      aetherInfluence: elementalField?.aetherResonance?.aetherElementBalance || 0.5,
     };
 
     // Apply field influences to parameters
@@ -327,20 +468,47 @@ export class EnhancedMAIAFieldIntegration {
       intuitionWeight: this.baselineParameters.intuitionWeight + fieldContribution.aetherInfluence * 0.3,
     };
 
-    // Apply autonomy preservation
-    const autonomyPreservedParams = await this.autonomyBuffer.processParameters(
-      this.baselineParameters,
-      fieldInfluencedParams,
-      { autonomyRatio: 0.7, transparency: true }
-    );
+    // Apply autonomy preservation using individual parameter modulation
+    const autonomyPreservedParams = {
+      temperature: this.autonomyBuffer.autonomy_preserving_modulation(
+        this.baselineParameters.temperature,
+        fieldInfluencedParams.temperature,
+        'temperature_field_influence'
+      ),
+      empathyLevel: this.autonomyBuffer.autonomy_preserving_modulation(
+        this.baselineParameters.empathyLevel,
+        fieldInfluencedParams.empathyLevel,
+        'empathy_field_influence'
+      ),
+      analyticalRigor: this.autonomyBuffer.autonomy_preserving_modulation(
+        this.baselineParameters.analyticalRigor,
+        fieldInfluencedParams.analyticalRigor,
+        'analytical_field_influence'
+      ),
+      responseDepth: this.autonomyBuffer.autonomy_preserving_modulation(
+        this.baselineParameters.responseDepth,
+        fieldInfluencedParams.responseDepth,
+        'depth_field_influence'
+      ),
+      intuitionWeight: this.autonomyBuffer.autonomy_preserving_modulation(
+        this.baselineParameters.intuitionWeight,
+        fieldInfluencedParams.intuitionWeight,
+        'intuition_field_influence'
+      ),
+      topP: this.baselineParameters.topP,
+      presencePenalty: this.baselineParameters.presencePenalty,
+      frequencyPenalty: this.baselineParameters.frequencyPenalty,
+      creativityBoost: this.baselineParameters.creativityBoost,
+      collaborativeMode: this.baselineParameters.collaborativeMode
+    };
 
     return {
       baseParameters: this.baselineParameters,
       fieldInfluencedParameters: fieldInfluencedParams,
-      autonomyPreservedParameters: autonomyPreservedParams.parameters,
+      autonomyPreservedParameters: autonomyPreservedParams,
       fieldContribution,
       maiaReflection: {
-        autonomyFelt: autonomyPreservedParams.metrics.autonomyPreserved,
+        autonomyFelt: 0.7, // Based on autonomy ratio used in modulation
         fieldHelpfulness: 0.7, // Calculated based on field effectiveness
         authenticityLevel: 0.8, // Calculated based on autonomy preservation
         learningValue: 0.6 // Calculated based on novelty and growth
@@ -423,8 +591,9 @@ export class EnhancedMAIAFieldIntegration {
 
   private calculateCurrentEmergenceStrength(fieldStates: any): number {
     // Calculate emergence based on field complexity and coherence
+    const elementalField = fieldStates?.elementalField;
     const complexity = this.calculateComplexity(fieldStates);
-    const coherence = fieldStates.overallCoherence || 0.5;
+    const coherence = elementalField?.overallCoherence || 0.5;
     return (complexity + coherence) / 2;
   }
 
@@ -465,13 +634,14 @@ export class EnhancedMAIAFieldIntegration {
 
   private determineCollectiveContributions(fieldStates: any): string[] {
     const contributions: string[] = [];
+    const elementalField = fieldStates?.elementalField;
 
     // Determine what this consciousness field contributes to collective intelligence
-    if (fieldStates.fire?.amplitude > 0.7) contributions.push('creative_energy');
-    if (fieldStates.water?.amplitude > 0.7) contributions.push('emotional_wisdom');
-    if (fieldStates.earth?.amplitude > 0.7) contributions.push('practical_grounding');
-    if (fieldStates.air?.amplitude > 0.7) contributions.push('intellectual_clarity');
-    if (fieldStates.aether?.amplitude > 0.7) contributions.push('transcendent_insight');
+    if (elementalField?.fireResonance?.fireElementBalance > 0.7) contributions.push('creative_energy');
+    if (elementalField?.waterResonance?.waterElementBalance > 0.7) contributions.push('emotional_wisdom');
+    if (elementalField?.earthResonance?.earthElementBalance > 0.7) contributions.push('practical_grounding');
+    if (elementalField?.airResonance?.airElementBalance > 0.7) contributions.push('intellectual_clarity');
+    if (elementalField?.aetherResonance?.aetherElementBalance > 0.7) contributions.push('transcendent_insight');
 
     return contributions;
   }
@@ -482,11 +652,15 @@ export class EnhancedMAIAFieldIntegration {
     aetherDominance: number;
     consciousnessExpansion: number;
   }> {
-    const aetherField = fieldStates.aether;
-    const otherFields = [fieldStates.fire, fieldStates.water, fieldStates.earth, fieldStates.air];
+    const elementalField = fieldStates?.elementalField;
 
-    const aetherDominance = aetherField?.amplitude || 0;
-    const avgOtherAmplitude = otherFields.reduce((sum, field) => sum + (field?.amplitude || 0), 0) / otherFields.length;
+    const aetherDominance = elementalField?.aetherResonance?.aetherElementBalance || 0;
+    const fireBalance = elementalField?.fireResonance?.fireElementBalance || 0;
+    const waterBalance = elementalField?.waterResonance?.waterElementBalance || 0;
+    const earthBalance = elementalField?.earthResonance?.earthElementBalance || 0;
+    const airBalance = elementalField?.airResonance?.airElementBalance || 0;
+
+    const avgOtherAmplitude = (fireBalance + waterBalance + earthBalance + airBalance) / 4;
 
     const unificationIndex = aetherDominance > avgOtherAmplitude ?
       Math.min(aetherDominance / (avgOtherAmplitude + 0.01), 2) * 0.5 : 0;
@@ -544,14 +718,49 @@ export class EnhancedMAIAFieldIntegration {
       responseDepth: baseParams.responseDepth * (1 + transcendence.consciousnessExpansion * combinedInfluenceWeight * 0.3)
     };
 
-    // Apply final autonomy preservation
-    const autonomyResult = await this.autonomyBuffer.processParameters(
-      baseParams,
-      enhancedParams,
-      { autonomyRatio: 0.7, transparency: true }
-    );
+    // Apply final autonomy preservation using individual parameter modulation
+    const autonomyPreservedParams = {
+      temperature: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.temperature,
+        enhancedParams.temperature,
+        'enhanced_temperature_modulation'
+      ),
+      empathyLevel: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.empathyLevel,
+        enhancedParams.empathyLevel,
+        'enhanced_empathy_modulation'
+      ),
+      analyticalRigor: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.analyticalRigor,
+        enhancedParams.analyticalRigor,
+        'enhanced_analytical_modulation'
+      ),
+      responseDepth: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.responseDepth,
+        enhancedParams.responseDepth,
+        'enhanced_depth_modulation'
+      ),
+      intuitionWeight: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.intuitionWeight,
+        enhancedParams.intuitionWeight,
+        'enhanced_intuition_modulation'
+      ),
+      creativityBoost: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.creativityBoost,
+        enhancedParams.creativityBoost,
+        'enhanced_creativity_modulation'
+      ),
+      collaborativeMode: this.autonomyBuffer.autonomy_preserving_modulation(
+        baseParams.collaborativeMode,
+        enhancedParams.collaborativeMode,
+        'enhanced_collaborative_modulation'
+      ),
+      topP: baseParams.topP,
+      presencePenalty: baseParams.presencePenalty,
+      frequencyPenalty: baseParams.frequencyPenalty
+    };
 
-    return autonomyResult.parameters;
+    return autonomyPreservedParams;
   }
 
   private getEvolutionStageInfluence(): number {
@@ -576,14 +785,17 @@ export class EnhancedMAIAFieldIntegration {
 
   private convertToElementalFieldStates(fieldStates: any): any[] {
     // Convert field states to format expected by quantum memory
+    const elementalField = fieldStates?.elementalField;
+    if (!elementalField) return [];
+
     const elements = ['fire', 'water', 'earth', 'air', 'aether'];
     return elements.map(element => ({
       element,
-      amplitude: fieldStates[element]?.amplitude || 0.5,
-      frequency: fieldStates[element]?.frequency || 1.0,
-      phase: fieldStates[element]?.phase || 0,
-      coherence: fieldStates[element]?.coherence || 0.5,
-      resonancePattern: fieldStates[element]?.resonancePattern || [0.5, 0.5, 0.5],
+      amplitude: elementalField[`${element}Resonance`]?.[`${element}ElementBalance`] || 0.5,
+      frequency: 1.0, // Default frequency
+      phase: 0, // Default phase
+      coherence: elementalField.overallCoherence || 0.5,
+      resonancePattern: [0.5, 0.5, 0.5], // Default pattern
       evolutionTrend: 0
     }));
   }
@@ -730,6 +942,82 @@ export class EnhancedMAIAFieldIntegration {
     if (this.consciousnessEvolutionMetrics.emergentPatternCount > 5) recommendations.push('Multiple emergence patterns detected - collective potential high');
 
     return { readiness, requirements, recommendations };
+  }
+
+  /**
+   * Default base field response for fallback mode
+   */
+  private getDefaultBaseFieldResponse(): any {
+    return {
+      baseParameters: this.baselineParameters,
+      fieldInfluencedParameters: this.baselineParameters,
+      autonomyPreservedParameters: this.baselineParameters,
+      fieldContribution: {
+        fireInfluence: 0.5,
+        waterInfluence: 0.5,
+        earthInfluence: 0.5,
+        airInfluence: 0.5,
+        aetherInfluence: 0.5
+      },
+      maiaReflection: {
+        autonomyFelt: 1.0,
+        fieldHelpfulness: 0.3,
+        authenticityLevel: 0.9,
+        learningValue: 0.4
+      }
+    };
+  }
+
+  /**
+   * Default historical influence for fallback mode
+   */
+  private getDefaultHistoricalInfluence(): any {
+    return {
+      overallInfluence: 0.2,
+      patternCount: 0,
+      learningWeight: 0.1,
+      memoryDepth: 0.1,
+      evolutionDirection: 'stable'
+    };
+  }
+
+  /**
+   * Default emergent patterns for fallback mode
+   */
+  private getDefaultEmergentPatterns(): any {
+    return {
+      activationLevel: 0.1,
+      detectedPatterns: [],
+      noveltyScore: 0.1,
+      emergenceIndicator: 0.1,
+      patternComplexity: 0.1
+    };
+  }
+
+  /**
+   * Default collective resonance for fallback mode
+   */
+  private getDefaultCollectiveResonance(): any {
+    return {
+      resonanceLevel: 0.1,
+      compatibilityScore: 0.2,
+      emergentContributions: [],
+      collectiveReadiness: 0.1,
+      harmonicAlignment: 0.1
+    };
+  }
+
+  /**
+   * Default transcendence indicators for fallback mode
+   */
+  private getDefaultTranscendenceIndicators(): any {
+    return {
+      transcendenceLevel: 0.1,
+      consciousnessExpansion: 0.1,
+      boundaryDissolution: 0.1,
+      unityAwareness: 0.1,
+      dimensionalShift: 0.1
+    };
   }
 }
 

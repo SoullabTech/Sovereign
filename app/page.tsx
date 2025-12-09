@@ -1,144 +1,153 @@
 'use client';
 
-/**
- * ROOT PAGE - SACRED PATHWAY DETECTION
- *
- * Auto-detects user state and routes to appropriate sacred experience
- * Two Sacred Pathways: First Initiation / Returning Practitioner
- */
-
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
 import { betaSession } from '@/lib/auth/betaSession';
 
 export default function RootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    // Sacred pause for consciousness detection then smart routing
-    const timer = setTimeout(() => {
-      // Check if user has ever seen the onboarding (first-time vs returning)
-      const hasSeenOnboarding = localStorage.getItem('onboarding_completed') ||
-                               localStorage.getItem('betaOnboardingComplete') ||
-                               localStorage.getItem('explorerId') ||
-                               localStorage.getItem('beta_user');
+    // Check authentication status using betaSession
+    const sessionState = betaSession.restoreSession();
+    const onboardingComplete = localStorage.getItem('onboarding_completed');
+    const daimonIntroComplete = localStorage.getItem('daimonIntroComplete');
+    const facetProfile = localStorage.getItem('facet_profile');
 
-      if (hasSeenOnboarding) {
-        // Returning user - go straight to MAIA
-        console.log('🔄 Returning user detected - redirecting to MAIA');
-        router.push('/maia');
+    // Check for partner context from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const institution = urlParams.get('institution');
+    const context = urlParams.get('context');
+
+    if (sessionState.isAuthenticated && sessionState.user) {
+      // User is authenticated - check completion status
+      if (sessionState.user.onboarded && onboardingComplete && daimonIntroComplete) {
+
+        // Signed in and fully onboarded - handle partner context if present
+        if ((institution === 'yale' || institution === 'qri') && context) {
+          // Route to partner context handler
+          router.replace(`/partner-welcome?institution=${institution}&context=${context}`);
+        } else {
+          // Regular returning member - go straight to MAIA
+          router.replace('/maia');
+        }
+
       } else {
-        // New tester - show the nice onboarding (once only)
-        console.log('✨ New tester detected - starting onboarding flow');
-        localStorage.setItem('onboarding_started', 'true');
-        router.push('/intro');
+        // User needs to complete onboarding
+        if (facetProfile) {
+          // Facet complete - proceed to Sacred Soul Induction
+          router.replace('/onboarding');
+        } else {
+          // Start with Facet Router (handle partner context)
+          const facetUrl = (institution === 'yale' || institution === 'qri') && context
+            ? `/onboarding/facet?institution=${institution}&context=${context}`
+            : '/onboarding/facet';
+          router.replace(facetUrl);
+        }
       }
-    }, 1000);
+    } else {
+      // No authentication - signed out user
 
-    return () => clearTimeout(timer);
+      // Check if they came through partner door
+      if ((institution === 'yale' || institution === 'qri') && context) {
+        // Show partner-aware welcome-back page
+        router.replace(`/welcome-back?institution=${institution}&context=${context}`);
+      } else if (facetProfile) {
+        // Has facet but no user account - proceed to Sacred Soul Induction
+        router.replace('/onboarding');
+      } else {
+        // Completely new or signed out - show welcome-back
+        router.replace('/welcome-back');
+      }
+    }
   }, [router]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage-50 via-sage-100 to-sage-200 flex items-center justify-center">
-      {/* Sacred loading with breathing holoflower */}
-      <div className="text-center space-y-8">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #f9fafb 0%, #f3f4f6 50%, #e5e7eb 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '20px'
+    }}>
+      <div style={{ textAlign: 'center' }}>
 
-        {/* Breathing consciousness symbol */}
-        <motion.div
-          className="w-16 h-16 mx-auto relative"
-          animate={{
-            scale: [1, 1.1, 1],
-            opacity: [0.7, 1, 0.7]
-          }}
-          transition={{
-            duration: 3,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-        >
-          <svg width="64" height="64" viewBox="0 0 64 64">
-            <defs>
-              <radialGradient id="breathingGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
-                <stop offset="70%" stopColor="#14b8a6" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
-              </radialGradient>
-            </defs>
+        {/* Sacred Holoflower */}
+        <div style={{
+          width: '64px',
+          height: '64px',
+          margin: '0 auto 24px',
+        }}>
+          <img
+            src="/holoflower.svg"
+            alt="Sacred Holoflower"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              filter: 'drop-shadow(0 0 20px rgba(212, 184, 150, 0.3))',
+              animation: 'spin 8s linear infinite'
+            }}
+          />
+        </div>
 
-            {/* Sacred geometry holoflower */}
-            <g transform="translate(32,32)">
-              {[0, 1, 2, 3, 4, 5].map((i) => (
-                <motion.path
-                  key={i}
-                  d="M0,-16 Q-8,-10 -11,0 Q-8,10 0,16 Q8,10 11,0 Q8,-10 0,-16"
-                  fill="url(#breathingGlow)"
-                  transform={`rotate(${i * 60})`}
-                  animate={{
-                    opacity: [0.4, 0.8, 0.4],
-                    scale: [0.9, 1.1, 0.9]
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    delay: i * 0.1,
-                    ease: "easeInOut"
-                  }}
-                />
-              ))}
+        {/* Title */}
+        <h1 style={{
+          fontSize: '20px',
+          fontWeight: '300',
+          color: '#1f2937',
+          letterSpacing: '0.2em',
+          marginBottom: '12px'
+        }}>
+          SOULLAB
+        </h1>
 
-              {/* Center point of consciousness */}
-              <circle
-                cx="0"
-                cy="0"
-                r="2"
-                fill="#16a34a"
-                opacity="0.9"
-              />
-            </g>
-          </svg>
-        </motion.div>
+        {/* Subtitle */}
+        <p style={{
+          fontSize: '14px',
+          color: '#6b7280',
+          fontStyle: 'italic',
+          marginBottom: '20px'
+        }}>
+          Consciousness technology for transformation
+        </p>
 
-        {/* Elegant sacred text */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 1.5 }}
-          className="space-y-3"
-        >
-          <h1 className="text-lg font-light text-sage-800 tracking-[0.15em] font-serif">
-            SOULLAB
-          </h1>
-          <p className="text-sm text-sage-600 font-light italic">
-            Consciousness technology for transformation
-          </p>
-        </motion.div>
-
-        {/* Subtle loading indicator */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1.5 }}
-          className="flex items-center justify-center space-x-1"
-        >
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              className="w-1.5 h-1.5 bg-sage-400 rounded-full"
-              animate={{
-                opacity: [0.3, 1, 0.3],
-                scale: [1, 1.2, 1]
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                delay: i * 0.2
-              }}
-            />
-          ))}
-        </motion.div>
+        {/* Navigation buttons */}
+        <div style={{ marginTop: '40px' }}>
+          <a href="/beta-signup" style={{
+            display: 'inline-block',
+            padding: '12px 24px',
+            backgroundColor: '#A0C4C7',
+            color: '#1f2937',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '16px',
+            marginRight: '12px'
+          }}>
+            Begin Journey
+          </a>
+          <a href="/simple" style={{
+            display: 'inline-block',
+            padding: '12px 24px',
+            backgroundColor: '#6b7280',
+            color: 'white',
+            textDecoration: 'none',
+            borderRadius: '8px',
+            fontSize: '16px'
+          }}>
+            Test Connection
+          </a>
+        </div>
 
       </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

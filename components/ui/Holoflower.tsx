@@ -9,6 +9,7 @@ interface HoloflowerProps {
   variant?: 'single' | 'spectrum';
   theme?: 'light' | 'dark'; // for light or dark backgrounds
   className?: string;
+  customColor?: string; // for dynamic color changes based on mode
 }
 
 const sizeMap = {
@@ -20,9 +21,16 @@ const sizeMap = {
 };
 
 const glowMap = {
-  low: { opacity: [0.15, 0.2, 0.15], color: 'rgba(212, 184, 150, 0.2)' },
-  medium: { opacity: [0.2, 0.25, 0.2], color: 'rgba(212, 184, 150, 0.25)' },
-  high: { opacity: [0.25, 0.3, 0.25], color: 'rgba(212, 184, 150, 0.3)' }
+  low: { opacity: [0.15, 0.2, 0.15] },
+  medium: { opacity: [0.2, 0.25, 0.2] },
+  high: { opacity: [0.25, 0.3, 0.25] }
+};
+
+// Color mapping for different modes
+const colorMap = {
+  counsel: 'rgba(20, 184, 166, 0.5)', // teal-500 with transparency
+  scribe: 'rgba(59, 130, 246, 0.6)',   // blue-500 with transparency
+  default: 'rgba(251, 191, 36, 0.4)'   // amber-400 default
 };
 
 export function Holoflower({
@@ -31,11 +39,15 @@ export function Holoflower({
   glowIntensity = 'medium',
   variant = 'single',
   theme = 'dark',
-  className = ''
+  className = '',
+  customColor
 }: HoloflowerProps) {
   const sizes = sizeMap[size];
   const glow = glowMap[glowIntensity];
   const svgPath = variant === 'spectrum' ? '/elementalHoloflower.svg' : '/holoflower.svg';
+
+  // Determine the color to use - custom color takes precedence
+  const glowColor = customColor || colorMap.default;
 
   return (
     <div className={`${sizes.container} relative flex items-center justify-center ${className}`} style={{ background: 'transparent', boxShadow: 'none', border: 'none', outline: 'none', overflow: 'visible' }}>
@@ -68,7 +80,7 @@ export function Holoflower({
           <div
             className={`${sizes.glow} rounded-full`}
             style={{
-              background: `radial-gradient(circle, ${glow.color} 0%, rgba(212, 184, 150, 0.15) 30%, rgba(212, 184, 150, 0.1) 60%, rgba(212, 184, 150, 0.05) 80%, transparent 95%)`,
+              background: `radial-gradient(circle, ${glowColor} 0%, ${glowColor.replace(/,\s*[\d.]+\)/, ', 0.15)')} 30%, ${glowColor.replace(/,\s*[\d.]+\)/, ', 0.1)')} 60%, ${glowColor.replace(/,\s*[\d.]+\)/, ', 0.05)')} 80%, transparent 95%)`,
               filter: `blur(${sizes.blur})`,
             }}
           />

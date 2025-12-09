@@ -1,0 +1,117 @@
+/**
+ * Z-INDEX HIERARCHY - Solid Permanent Fix for Safari Issues
+ *
+ * This establishes a consistent stacking order across the entire application
+ * to prevent Safari z-index conflicts that block navigation buttons.
+ */
+
+:root {
+  /* Z-Index Scale - Use these custom properties throughout the app */
+  --z-background: 0;
+  --z-content: 10;
+  --z-sticky: 20;
+  --z-dropdown: 30;
+  --z-input-area: 40;
+  --z-buttons: 45;
+  --z-header-nav: 60;      /* Navigation bar - ALWAYS visible */
+  --z-header-buttons: 61;  /* Navigation buttons */
+  --z-modal-backdrop: 70;
+  --z-modal-content: 80;
+  --z-toast: 90;
+  --z-emergency: 100;
+  --z-debug: 9999;
+}
+
+/* Navigation Header - Primary Protection */
+.header-navigation {
+  position: relative !important;
+  z-index: var(--z-header-nav) !important;
+  isolation: isolate;
+  will-change: auto;
+}
+
+/* Safari-specific navigation protection */
+@supports (-webkit-touch-callout: none) {
+  .header-navigation {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+  }
+
+  .header-navigation button {
+    position: relative;
+    z-index: var(--z-header-buttons);
+    pointer-events: auto !important;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+/* Input Area - Below Navigation */
+.input-area {
+  z-index: var(--z-input-area) !important;
+}
+
+/* Bottom Buttons - Below Navigation */
+.bottom-buttons {
+  z-index: var(--z-buttons) !important;
+}
+
+/* Modal Overlays - Above Navigation but Controlled */
+.modal-backdrop {
+  z-index: var(--z-modal-backdrop) !important;
+}
+
+.modal-content {
+  z-index: var(--z-modal-content) !important;
+}
+
+/* Force-override classes for problematic elements */
+.z-below-nav {
+  z-index: calc(var(--z-header-nav) - 1) !important;
+}
+
+.z-above-nav {
+  z-index: calc(var(--z-header-nav) + 10) !important;
+}
+
+/* Main content area - Always below navigation */
+.main-content {
+  position: relative;
+  z-index: var(--z-content);
+  isolation: isolate;
+}
+
+/* Emergency override for Safari issues */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .safari-nav-fix {
+    position: relative !important;
+    z-index: 9998 !important;
+    isolation: isolate !important;
+  }
+
+  .safari-nav-fix button {
+    position: relative !important;
+    z-index: 9999 !important;
+  }
+}
+
+/* Debug class to identify z-index issues */
+.debug-z-index {
+  outline: 2px solid red !important;
+  background: rgba(255, 0, 0, 0.1) !important;
+}
+
+.debug-z-index::before {
+  content: "Z-INDEX: " attr(class);
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: rgba(255, 0, 0, 0.8);
+  color: white;
+  padding: 2px 4px;
+  font-size: 10px;
+  z-index: var(--z-debug);
+  pointer-events: none;
+}

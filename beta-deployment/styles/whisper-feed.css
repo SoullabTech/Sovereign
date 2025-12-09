@@ -1,0 +1,90 @@
+/**
+ * whisper-feed.css
+ * Custom CSS for MAIA Whisper Feed animations
+ * Gentle fade-in/fade-out effects for poetic field commentary
+ */
+
+@keyframes fadeWhisper {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  10%, 90% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+.whisper-fade-animation {
+  animation: fadeWhisper 20s ease-in-out infinite;
+}
+
+/* Elemental color variations for whispers */
+.whisper-fire {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 50%, #ff8e53 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.whisper-water {
+  background: linear-gradient(135deg, #4ecdc4 0%, #44a08d 50%, #096dd9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.whisper-earth {
+  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 50%, #6c7b7f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.whisper-air {
+  background: linear-gradient(135deg, #f39c12 0%, #f7dc6f 50%, #f4d03f 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.whisper-aether {
+  background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 50%, #d63384 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gentle glow effect for active whispers */
+.whisper-glow {
+  filter: drop-shadow(0 0 8px rgba(168, 85, 247, 0.4));
+}
+
+/* Whisper history scroll area */
+.whisper-history {
+  max-height: 200px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.3) transparent;
+}
+
+.whisper-history::-webkit-scrollbar {
+  width: 4px;
+}
+
+.whisper-history::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.whisper-history::-webkit-scrollbar-thumb {
+  background-color: rgba(168, 85, 247, 0.3);
+  border-radius: 2px;
+}
+
+.whisper-history::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(168, 85, 247, 0.5);
+}

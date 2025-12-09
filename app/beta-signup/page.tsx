@@ -27,10 +27,7 @@ const ASTROLOGY_SIGNS = ['aries', 'taurus', 'gemini', 'cancer', 'leo', 'virgo', 
 export default function BetaSignupPage() {
   const router = useRouter();
 
-  // Redirect to proper intro flow
-  useEffect(() => {
-    router.push('/intro');
-  }, [router]);
+  // Allow users to access the onboarding form directly
 
   const [currentStep, setCurrentStep] = useState(1);
   const [preferences, setPreferences] = useState<OnboardingPreferences>({
@@ -93,8 +90,8 @@ export default function BetaSignupPage() {
     // Simulate oracle binding process
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Redirect to MAIA interface
-    router.push('/maia');
+    // Redirect to intro to complete onboarding flow
+    router.push('/intro');
   };
 
   const renderStepIndicator = () => (

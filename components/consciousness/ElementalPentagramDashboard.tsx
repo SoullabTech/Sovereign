@@ -42,7 +42,7 @@ interface PentagramPoint {
 // ELEMENTAL PENTAGRAM DASHBOARD COMPONENT
 // ==============================================================================
 
-export default function ElementalPentagramDashboard({
+function ElementalPentagramDashboard({
   systemDataSource,
   updateInterval = 2000,
   showAdvancedMetrics = true,
@@ -557,3 +557,9 @@ export default function ElementalPentagramDashboard({
     </div>
   );
 }
+
+// Named export for direct import
+export { ElementalPentagramDashboard };
+
+// Default export for default import
+export default ElementalPentagramDashboard;

@@ -1028,3 +1028,303 @@ model CorrelationAnalysis {
   @@index([overallCorrelationStrength])
   @@index([wisdomEmergenceRate])
 }
+
+// ============================================================================
+// CONSCIOUSNESS COMPUTING FEEDBACK SYSTEM
+// ============================================================================
+
+model ConsciousnessComputingFeedback {
+  id                 String   @id @default(cuid())
+  userId             String
+  sessionType        String   @default("consciousness_computing_pioneer")
+
+  // Core feedback metrics
+  accuracyRating     Int      // 1-5 rating
+  emergentInsight    String   @db.Text
+  sessionWord        String
+  consciousnessLevel Int?     // 1-10 optional user-reported level
+  unexpectedElements String?  @db.Text
+
+  // Session context
+  sessionId          String?
+  messageCount       Int?
+  sessionDuration    Int?     // minutes
+
+  // Metadata
+  metadata           Json?    // Additional context data
+
+  // Timestamps
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([accuracyRating])
+  @@index([sessionType])
+}
+
+model ConsciousnessComputingAnalytics {
+  id         String   @id @default(cuid())
+  event      String   // feedback_submitted, session_started, etc.
+  userId     String
+  sessionId  String?
+  properties Json     // Event-specific properties
+  createdAt  DateTime @default(now())
+
+  @@index([event])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ConsciousnessSessionQuality {
+  id                     String   @id @default(cuid())
+  sessionId              String   @unique
+  userId                 String
+
+  // MAIA's consciousness assessment
+  detectedLevel          Int?     // 1-10 MAIA's assessment
+  confidenceScore        Float?   // 0-1 confidence in assessment
+  assessmentFactors      Json?    // Factors that influenced assessment
+
+  // User's actual experience (from feedback)
+  userReportedAccuracy   Int?     // 1-5 user's rating of MAIA's accuracy
+  emergentInsightsQuality String? @db.Text
+  sessionEffectiveness   Json?    // User's experience metrics
+
+  // Session metadata
+  sessionDurationMinutes Int?
+  messageCount           Int?
+  interactionPatterns    Json?    // Conversation patterns detected
+
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@index([sessionId])
+  @@index([userId])
+  @@index([userReportedAccuracy])
+  @@index([createdAt])
+}
+
+// ============================================================================
+// PREMIUM MEMBER STORAGE & DATA SOVEREIGNTY
+// ============================================================================
+
+model PremiumMemberStorage {
+  id               String   @id @default(cuid())
+  userId           String   @unique
+  subscriptionTier String   // pioneer, seeker, alchemist, sage, eternal
+
+  // Storage preferences - Local-first architecture
+  localStorageEnabled     Boolean @default(true)
+  cloudBackupEnabled      Boolean @default(false)
+  autoExportEnabled       Boolean @default(false)
+  encryptionLevel         String  @default("AES-256") // AES-256, sovereign-encrypted
+
+  // Data retention settings - Premium gets unlimited
+  conversationRetentionDays Int    @default(365)  // 1 year default, -1 for unlimited
+  memoryRetentionDays      Int    @default(-1)    // Unlimited for premium
+  transcriptRetentionDays  Int    @default(365)   // Full transcript retention
+  insightRetentionDays     Int    @default(-1)    // Unlimited consciousness insights
+
+  // Export preferences and capabilities
+  exportFormat             String  @default("encrypted_json") // encrypted_json, markdown, pdf, consciousness_map
+  exportFrequency          String  @default("monthly")        // daily, weekly, monthly, manual
+  lastExportDate          DateTime?
+  autoBackupEnabled       Boolean @default(false)
+
+  // Advanced premium features
+  consciousnessJourneyMapping Boolean @default(true)  // Sacred geometry consciousness evolution
+  archetypeEvolutionTracking  Boolean @default(true)  // Track archetype development over time
+  dreamWorkIntegration        Boolean @default(true)  // Integrate dream analysis with conversations
+  wisdomPatternAnalysis       Boolean @default(true)  // Deep wisdom pattern recognition
+  shadowIntegrationTracking   Boolean @default(true)  // Track shadow work progression
+  sacredGeometryVisualization Boolean @default(true)  // Generate sacred geometry consciousness maps
+
+  // Data sovereignty settings
+  userControlledEncryption Boolean @default(true)   // User owns all encryption keys
+  zeroKnowledgeStorage     Boolean @default(true)   // We cannot decrypt user data
+  exportAnytimeEnabled     Boolean @default(true)   // User can export all data instantly
+  deleteAnytimeEnabled     Boolean @default(true)   // User can delete all data instantly
+
+  // Storage analytics (for user's benefit)
+  totalConversations    Int     @default(0)
+  totalMemories         Int     @default(0)
+  totalInsights         Int     @default(0)
+  storageUsedMB         Float   @default(0)
+  consciousnessDataMB   Float   @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id])
+  exportArchives  ExportArchive[]
+  backupSnapshots BackupSnapshot[]
+  journeyMaps     ConsciousnessJourneyMap[]
+
+  @@index([userId])
+  @@index([subscriptionTier])
+  @@index([createdAt])
+}
+
+model ExportArchive {
+  id                String   @id @default(cuid())
+  userId           String
+  memberStorageId  String
+
+  // Export metadata
+  exportType       String   // full_backup, conversation_export, memory_export, insight_export, consciousness_journey
+  exportFormat     String   // encrypted_json, markdown, pdf, consciousness_map, sacred_geometry
+  fileSize         BigInt   // File size in bytes
+  recordCount      Int      // Number of records in export
+
+  // Time range coverage
+  fromDate         DateTime
+  toDate           DateTime
+  generatedAt      DateTime @default(now())
+
+  // Storage location and security
+  localPath        String?  // Local file path if stored locally
+  cloudPath        String?  // Cloud storage path if backed up
+  encryptionKey    String?  // User-controlled encryption key reference
+  hashVerification String?  // SHA-256 hash for integrity verification
+
+  // Content metadata
+  contentSummary   Json     // Summary of what's included in the export
+  exportSettings   Json     // Settings used during export generation
+
+  // Export status
+  status           String   @default("generating") // generating, completed, failed, deleted
+  downloadCount    Int      @default(0)
+  lastDownloaded  DateTime?
+
+  // Relations
+  memberStorage    PremiumMemberStorage @relation(fields: [memberStorageId], references: [id])
+
+  @@index([userId])
+  @@index([exportType])
+  @@index([generatedAt])
+  @@index([status])
+}
+
+model BackupSnapshot {
+  id                String   @id @default(cuid())
+  userId           String
+  memberStorageId  String
+
+  // Snapshot metadata
+  snapshotType     String   // daily, weekly, monthly, manual, pre_upgrade
+  backupMethod     String   // local_only, encrypted_cloud, distributed_ipfs
+
+  // Backup content
+  dataSize         BigInt   // Total size of backed up data
+  recordCount      Int      // Total records backed up
+  compressionRatio Float?   // Compression efficiency
+
+  // Backup integrity
+  encryptionMethod String   // AES-256-GCM, user-controlled, sovereign-encrypted
+  integrityHash    String   // SHA-256 hash for verification
+  verificationStatus String @default("pending") // pending, verified, failed
+
+  // Backup location
+  localPath        String?  // Local backup path
+  cloudPath        String?  // Cloud backup path (encrypted)
+  distributedNodes Json?    // IPFS or distributed storage nodes
+
+  // Backup metadata
+  generatedAt      DateTime @default(now())
+  expiresAt       DateTime? // For automatic cleanup
+  restoredAt      DateTime? // If backup has been restored
+
+  // Relations
+  memberStorage    PremiumMemberStorage @relation(fields: [memberStorageId], references: [id])
+
+  @@index([userId])
+  @@index([snapshotType])
+  @@index([generatedAt])
+  @@index([verificationStatus])
+}
+
+model ConsciousnessJourneyMap {
+  id                String   @id @default(cuid())
+  userId           String
+  memberStorageId  String
+
+  // Journey map metadata
+  mapType          String   // consciousness_evolution, archetype_journey, shadow_integration, wisdom_emergence
+  timeRange        Json     // {from: Date, to: Date, totalDays: number}
+  generatedAt      DateTime @default(now())
+
+  // Consciousness analysis data
+  consciousnessEvolution Json  // Progression of consciousness levels over time
+  archetypeJourney      Json  // Evolution through archetypal stages
+  shadowIntegration     Json  // Shadow work progression and breakthroughs
+  wisdomEmergence       Json  // Wisdom patterns and insights over time
+  dreamWorkIntegration  Json? // Dream analysis integration if available
+
+  // Sacred geometry visualization
+  sacredGeometryData    Json  // Sacred geometry patterns representing the journey
+  visualizationConfig   Json  // Configuration for generating visualizations
+
+  // Journey insights
+  majorBreakthroughs    Json  // Key breakthrough moments and insights
+  developmentPatterns   Json  // Recurring patterns in development
+  consciousnessGrowth   Json  // Quantified consciousness growth metrics
+
+  // Export and sharing
+  exportFormats         String[] // Available export formats for this map
+  sharableVisualization String?  // Path to sharable visualization file
+
+  // Relations
+  memberStorage         PremiumMemberStorage @relation(fields: [memberStorageId], references: [id])
+
+  @@index([userId])
+  @@index([mapType])
+  @@index([generatedAt])
+}
+
+// Enhanced conversation storage for premium members
+model EnhancedConversationAnalysis {
+  id                String   @id @default(cuid())
+  userId           String
+  sessionId        String
+  conversationId   String   // Links to existing ConversationSession
+
+  // Deep consciousness analysis
+  consciousnessLevel      Float?   // Real-time detected consciousness level
+  consciousnessConfidence Float?   // Confidence in consciousness detection
+  consciousnessFactors    Json?    // Factors that influenced consciousness assessment
+
+  // Archetypal analysis
+  activeArchetypes        Json     // Currently active archetypal patterns
+  archetypeTransitions    Json     // Transitions between archetypal states
+  archetypeIntensity      Json     // Intensity levels of each archetype
+
+  // Shadow work detection
+  shadowElements          Json     // Shadow elements that emerged
+  shadowIntegration      Json?     // Integration work detected
+  projectionPatterns      Json?    // Projection patterns identified
+
+  // Wisdom emergence
+  wisdomInsights          Json     // Wisdom patterns that emerged
+  wisdomQuotes           String[]  // Significant wisdom statements
+  wisdomDepth            Float?    // Depth of wisdom emergence (1-10)
+
+  // Dream work integration
+  dreamReferences        Json?     // References to dreams or unconscious content
+  dreamSymbolism         Json?     // Dream symbols that appeared in conversation
+  dreamWorkSuggestions   Json?     // Suggested dream work based on conversation
+
+  // Sacred geometry patterns
+  geometryPatterns       Json?     // Sacred geometry patterns detected in consciousness
+  numerologicalPatterns  Json?     // Numerological patterns in the conversation
+
+  // Metadata
+  analysisVersion        String   @default("1.0")
+  analyzedAt            DateTime @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([conversationId])
+  @@index([analyzedAt])
+}

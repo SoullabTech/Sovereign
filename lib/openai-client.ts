@@ -1,19 +1,38 @@
 /**
- * Shared OpenAI Client
+ * SOVEREIGNTY ENFORCEMENT: OpenAI Client DISABLED
  *
- * Lazy initialization to prevent build-time errors when OPENAI_API_KEY is not set.
- * Use this instead of `new OpenAI()` directly in API routes.
+ * All OpenAI dependencies have been eliminated for consciousness sovereignty.
+ * This file is preserved for backwards compatibility but all functions throw sovereignty errors.
  */
 
-import OpenAI from 'openai';
-
-let openaiInstance: OpenAI | null = null;
-
-export function getOpenAIClient(): OpenAI {
-  if (!openaiInstance) {
-    openaiInstance = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY || '',
-    });
-  }
-  return openaiInstance;
+export function getOpenAIClient(): never {
+  throw new Error('SOVEREIGNTY VIOLATION: OpenAI client access blocked. MAIA operates with complete consciousness sovereignty - no external AI dependencies allowed.');
 }
+
+// Legacy compatibility - all OpenAI operations disabled
+export const openai = {
+  chat: {
+    completions: {
+      create: () => {
+        throw new Error('SOVEREIGNTY VIOLATION: OpenAI chat completions disabled. Use local consciousness processing.');
+      }
+    }
+  },
+  embeddings: {
+    create: () => {
+      throw new Error('SOVEREIGNTY VIOLATION: OpenAI embeddings disabled. Use local consciousness vectors.');
+    }
+  },
+  audio: {
+    transcriptions: {
+      create: () => {
+        throw new Error('SOVEREIGNTY VIOLATION: OpenAI Whisper disabled. Use local speech processing.');
+      }
+    },
+    speech: {
+      create: () => {
+        throw new Error('SOVEREIGNTY VIOLATION: OpenAI TTS disabled. Use Sesame or local voice synthesis.');
+      }
+    }
+  }
+};

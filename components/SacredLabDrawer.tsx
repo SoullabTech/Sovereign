@@ -143,6 +143,20 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           isLanguageSelector: true
         },
         {
+          icon: Layers,
+          label: 'Consciousness Shader System',
+          action: () => onNavigate('/consciousness/portals'),
+          description: 'Cultural portals with complexity adaptation',
+          badge: '✨ Live'
+        },
+        {
+          icon: Gauge,
+          label: 'Portal Admin Dashboard',
+          action: () => onNavigate('/consciousness/portals/admin'),
+          description: 'Analytics & management for portal system',
+          badge: 'Admin'
+        },
+        {
           icon: Brain,
           label: 'Brain Trust',
           action: () => onNavigate('/dashboard/collective'),
@@ -162,6 +176,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       title: 'MONITORING DASHBOARDS',
       icon: '📈',
       items: [
+        {
+          icon: BarChart3,
+          label: 'Cross-Portal Analytics',
+          action: () => onNavigate('/consciousness/portals/analytics'),
+          description: 'Journey analysis & AI-driven insights',
+          badge: '✨ Live'
+        },
         {
           icon: Monitor,
           label: 'Field Monitor',

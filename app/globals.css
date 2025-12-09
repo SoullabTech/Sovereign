@@ -10,6 +10,10 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Z-Index Hierarchy - Solid Permanent Fix for Safari */
+@import './styles/z-index-hierarchy.css';
+@import './styles/mobile-fixes.css';
+
 /* Global icon visibility fix - ensures all icons are visible */
 @import url('./icon-fix.css');
 
@@ -18,6 +22,9 @@
 
 /* Consciousness-aware recognition animations */
 @import url('./styles/consciousness-animations.css');
+
+/* Living Mandala demonstration interface */
+@import url('../styles/mandala-demo.css');
 
 /* Bene Gesserit ceremonial theme */
 /* @import url('./styles/benegesserit-theme.css'); */
@@ -417,4 +424,254 @@
     font-weight: 300;
     letter-spacing: 0.02em;
   }
+}
+
+/* ====================================================================
+ * MAIA SPIRALOGIC ELEMENTAL ANIMATIONS
+ * ==================================================================== */
+
+/* Disposable Pixels Container */
+.disposable-pixels-container {
+  @apply relative p-6 space-y-4;
+}
+
+/* Elemental Message Bubbles */
+.elemental-message-bubble {
+  @apply p-6 rounded-lg backdrop-blur-sm;
+  @apply shadow-lg transition-all duration-300;
+}
+
+/* Elemental Animations */
+.elemental-fire {
+  animation: fireFlicker 3s infinite;
+}
+
+.elemental-water {
+  animation: waterFlow 4s infinite ease-in-out;
+}
+
+.elemental-earth {
+  animation: earthGrow 2s ease-out;
+}
+
+.elemental-air {
+  animation: airFloat 6s infinite ease-in-out;
+}
+
+/* Disposable Action Pixels */
+.disposable-action-pixel {
+  @apply inline-flex items-center space-x-2 px-4 py-2 rounded-lg;
+  @apply cursor-pointer transition-all duration-200;
+  @apply backdrop-blur-sm font-medium text-sm;
+}
+
+.priority-1 {
+  @apply ring-2 ring-amber-400/50;
+}
+
+.priority-2 {
+  @apply ring-1 ring-blue-400/30;
+}
+
+.priority-3 {
+  @apply ring-1 ring-green-400/20;
+}
+
+/* Phase Indicator Pixels */
+.phase-indicator-pixel {
+  @apply w-12 h-12 rounded-full relative;
+  @apply flex items-center justify-center;
+  @apply backdrop-blur-sm border;
+}
+
+/* Elemental Keyframe Animations */
+@keyframes fireFlicker {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  25% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(0.98);
+  }
+  75% {
+    opacity: 0.9;
+    transform: scale(1.01);
+  }
+}
+
+@keyframes waterFlow {
+  0%, 100% {
+    border-radius: 16px;
+    transform: translateY(0);
+  }
+  50% {
+    border-radius: 50px;
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes earthGrow {
+  0% {
+    transform: scale(0) translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes airFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translateY(-5px) scale(1.02);
+    opacity: 1;
+  }
+}
+
+/* Confidence Ring Animation */
+.confidence-circle {
+  transform-origin: center;
+  animation: confidencePulse 2s ease-in-out infinite;
+}
+
+@keyframes confidencePulse {
+  0%, 100% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ====================================================================
+   LIVING MANDALA - CONSCIOUSNESS-RESPONSIVE INTERFACE
+   ==================================================================== */
+
+/* Import the complete Living Mandala CSS foundation */
+@import '../styles/living-mandala.css';
+
+/* Additional Petal Content Styling */
+.petal-content {
+  @apply absolute inset-0 flex flex-col items-center justify-center;
+  @apply text-xs font-medium opacity-70;
+  transition: opacity 0.3s ease;
+}
+
+.spiralogic-petal:hover .petal-content {
+  @apply opacity-100;
+}
+
+.petal-symbol {
+  @apply text-lg mb-1;
+}
+
+.petal-phase {
+  @apply text-xs font-bold;
+}
+
+.petal-quality {
+  @apply text-xs opacity-60 mt-1;
+}
+
+/* Petal Tooltips */
+.petal-tooltip {
+  @apply absolute top-full left-1/2 transform -translate-x-1/2 mt-2;
+  @apply bg-black/80 text-white text-xs rounded-lg px-3 py-2;
+  @apply backdrop-blur-sm border border-white/20;
+  @apply pointer-events-none z-30;
+  max-width: 200px;
+}
+
+.tooltip-title {
+  @apply font-semibold text-amber-200 mb-1;
+}
+
+.tooltip-description {
+  @apply text-gray-300 leading-relaxed;
+}
+
+/* MAIA Presence Core */
+.maia-presence {
+  @apply absolute inset-0 flex flex-col items-center justify-center;
+}
+
+.maia-symbol {
+  @apply text-2xl opacity-80;
+  animation: consciousness-spiral 12s linear infinite;
+}
+
+.phase-indicator {
+  @apply text-xs font-bold mt-1 opacity-70;
+  @apply tracking-wider;
+}
+
+/* Consciousness Depth Indicator */
+.consciousness-depth {
+  @apply absolute inset-0 rounded-full;
+}
+
+.depth-ring {
+  @apply absolute inset-0 rounded-full;
+  @apply border-2 border-white/20;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0%,
+    var(--primary-breath) calc(var(--depth, 0.3) * 100%),
+    transparent calc(var(--depth, 0.3) * 100%)
+  );
+}
+
+/* Field Activity Overlay */
+.field-activity-overlay {
+  @apply absolute top-4 right-4 space-y-2;
+  @apply pointer-events-none;
+}
+
+.field-activity-item {
+  @apply text-xs text-white/60 bg-black/30;
+  @apply px-2 py-1 rounded backdrop-blur-sm;
+  @apply border border-white/10;
+}
+
+/* Mandala Content Area */
+.mandala-content {
+  @apply relative z-10;
+  @apply flex flex-col items-center justify-center;
+  @apply min-h-[60vh] p-8;
+}
+
+/* User Presence States */
+.living-mandala.user-present {
+  --ambient-pulse: calc(var(--ambient-pulse) * 1.1);
+}
+
+.living-mandala.user-away {
+  --ambient-pulse: calc(var(--ambient-pulse) * 0.7);
+  filter: saturate(0.8) brightness(0.9);
+}
+
+.living-mandala.user-away .spiralogic-petal {
+  opacity: 0.5;
+  animation-duration: calc(var(--field-frequency) * 1.5);
+}
+
+/* Current Phase Highlighting */
+.spiralogic-petal.current-phase {
+  @apply ring-2 ring-white/40;
+  background: var(--primary-breath) !important;
+  transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(1.15);
+  z-index: 15;
+}
+
+.spiralogic-petal.current-phase .petal-content {
+  @apply opacity-100 text-white;
 }

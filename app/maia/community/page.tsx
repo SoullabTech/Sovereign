@@ -4,6 +4,9 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CommunityPost, SystemMode, PostType, FeedFilters } from '@/lib/community/types';
+import { useFeatureAccess } from '@/hooks/useSubscription';
+import { PREMIUM_FEATURES } from '@/lib/subscription/types';
+import { UpgradePrompt } from '@/components/subscription/UpgradePrompt';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -149,6 +152,7 @@ const communityStats = {
 
 export default function CommunityBBSPage() {
   const router = useRouter();
+  const commonsAccess = useFeatureAccess(PREMIUM_FEATURES.COMMUNITY_COMMONS);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
@@ -334,6 +338,97 @@ export default function CommunityBBSPage() {
                   <Compass className="w-5 h-5" />
                   Sacred Territories
                 </h2>
+
+                {/* Community Commons Special Link */}
+                {commonsAccess.hasAccess ? (
+                  <Link href="/maia/community/commons">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      className="bg-gradient-to-r from-amber-600/20 to-yellow-600/20 border border-amber-500/40 rounded-xl p-6 cursor-pointer
+                               hover:border-amber-500/60 hover:bg-gradient-to-r hover:from-amber-600/30 hover:to-yellow-600/30 transition-all
+                               ring-2 ring-amber-500/30"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-start gap-4">
+                          <div className="p-3 bg-amber-400/20 border border-amber-400/40 rounded-lg">
+                            <BookOpen className="w-6 h-6 text-amber-300" />
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-amber-100">Community Commons</h3>
+                              <Sparkles className="w-4 h-4 text-amber-400" />
+                            </div>
+                            <p className="text-amber-300/80 text-sm mb-3">
+                              Sacred repository for consciousness exploration - wisdom texts, practices, voices, and resources
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-md">
+                                Core Concepts
+                              </span>
+                              <span className="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-md">
+                                Sacred Practices
+                              </span>
+                              <span className="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs rounded-md">
+                                Wisdom Voices
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <ChevronRight className="w-5 h-5 text-amber-400 mb-2" />
+                          <div className="text-sm text-amber-300/70">
+                            <div>Library</div>
+                            <div className="text-xs">Knowledge Base</div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </Link>
+                ) : (
+                  <motion.div
+                    whileHover={{ scale: 1.02 }}
+                    className="bg-gradient-to-r from-slate-600/20 to-slate-700/20 border border-amber-500/40 rounded-xl p-6 cursor-pointer
+                             hover:border-amber-500/60 transition-all ring-2 ring-amber-500/30"
+                    onClick={() => commonsAccess.require()}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 bg-amber-400/10 border border-amber-400/20 rounded-lg">
+                          <Crown className="w-6 h-6 text-amber-400" />
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h3 className="font-semibold text-amber-100">Community Commons</h3>
+                            <span className="px-2 py-1 bg-amber-600/20 text-amber-300 text-xs rounded-md font-medium">
+                              SACRED ACCESS
+                            </span>
+                          </div>
+                          <p className="text-amber-300/60 text-sm mb-3">
+                            Sacred repository for consciousness exploration - wisdom texts, practices, voices, and resources
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            <span className="px-2 py-1 bg-amber-500/5 text-amber-300/50 text-xs rounded-md">
+                              Core Concepts
+                            </span>
+                            <span className="px-2 py-1 bg-amber-500/5 text-amber-300/50 text-xs rounded-md">
+                              Sacred Practices
+                            </span>
+                            <span className="px-2 py-1 bg-amber-500/5 text-amber-300/50 text-xs rounded-md">
+                              Wisdom Voices
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <Crown className="w-5 h-5 text-amber-400 mb-2" />
+                        <div className="text-sm text-amber-300/70">
+                          <div>Upgrade</div>
+                          <div className="text-xs">Required</div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
 
                 {forumCategories.map((category) => (
                   <motion.div

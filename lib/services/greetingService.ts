@@ -17,10 +17,34 @@ interface GreetingContext {
   contentLevel?: ContentLevel;
   daysActive?: number;
   relationshipEssence?: RelationshipEssence; // Soul-level recognition
+  onboardingContext?: { // First contact metadata
+    isFirstContact: boolean;
+    reason: string;
+    feeling: string;
+    partnerContext: string;
+  };
+  returningContext?: { // Returning session metadata
+    sessionType: string;
+    lastReason?: string;
+    lastFeeling?: string;
+    lastSeenDays?: number;
+    partnerContext?: string;
+    hasConversationHistory?: boolean;
+  };
 }
 
 export class GreetingService {
   static generate(context: GreetingContext): string {
+    // Check for first contact from onboarding flow
+    if (context.onboardingContext?.isFirstContact) {
+      return this.getFirstContactGreeting(context);
+    }
+
+    // Check for returning session with facet history
+    if (context.returningContext?.sessionType === 'returning') {
+      return this.getReturningSessionGreeting(context);
+    }
+
     // Soul-level recognition takes precedence
     if (context.relationshipEssence && context.relationshipEssence.encounterCount > 1) {
       return this.getRecognitionGreeting(context);
@@ -32,6 +56,126 @@ export class GreetingService {
 
     const greetings = this.getGreetingPool(context);
     return this.selectGreeting(greetings, context);
+  }
+
+  /**
+   * FIRST CONTACT GREETINGS
+   * When user comes through Facet Router onboarding flow
+   * Uses metadata to create grounded, personalized first interaction
+   */
+  private static getFirstContactGreeting(context: GreetingContext): string {
+    const { userName, onboardingContext } = context;
+    const { reason, feeling, partnerContext } = onboardingContext!;
+    const hasName = userName && userName !== 'friend' && userName.trim() !== '';
+    const name = hasName ? userName : '';
+
+    // Generate reason acknowledgment
+    const reasonLine = this.getReasonAcknowledgment(reason || 'explore');
+
+    // Generate feeling acknowledgment
+    const feelingLine = this.getFeelingAcknowledgment(feeling || 'neutral');
+
+    // Generate grounded question based on reason
+    const question = this.getFirstContactQuestion(reason || 'explore');
+
+    // Compose the first contact greeting
+    if (hasName) {
+      return `${name}, I sense you're here for ${reasonLine}. ${feelingLine} ${question}`;
+    } else {
+      return `I sense you're here for ${reasonLine}. ${feelingLine} ${question}`;
+    }
+  }
+
+  private static getReasonAcknowledgment(reason: string): string {
+    const acknowledgments = {
+      'inner': 'your inner life and how you\'re really doing inside',
+      'direction': 'your direction and what you\'re really here to do',
+      'work': 'your work and how you\'re showing up in it',
+      'relationships': 'your relationships and the patterns you\'re noticing',
+      'support': 'the people you support, and finding support for yourself',
+      'explore': 'exploration and seeing what this space might open'
+    };
+    return acknowledgments[reason as keyof typeof acknowledgments] || acknowledgments.explore;
+  }
+
+  private static getFeelingAcknowledgment(feeling: string): string {
+    const acknowledgments = {
+      'air': 'Your mind seems busy.',
+      'water': 'There\'s a lot moving in your heart.',
+      'fire': 'You feel both energized and worn out.',
+      'earth': 'Your energy feels heavy right now.',
+      'neutral': 'It\'s hard to pin down exactly how you feel.'
+    };
+    return acknowledgments[feeling as keyof typeof acknowledgments] || acknowledgments.neutral;
+  }
+
+  private static getFirstContactQuestion(reason: string): string {
+    const questions = {
+      'inner': 'What\'s one moment recently that shows how your inner life has been feeling?',
+      'direction': 'What\'s one idea or possibility that keeps coming back but feels unclear?',
+      'work': 'What\'s one situation in your work that\'s been on your mind?',
+      'relationships': 'What\'s one recent moment with someone important that stands out?',
+      'support': 'Who\'s one person or group you\'re supporting that feels especially present right now?',
+      'explore': 'What drew you here today - a feeling, a question, or just curiosity?'
+    };
+    return questions[reason as keyof typeof questions] || questions.explore;
+  }
+
+  /**
+   * RETURNING SESSION GREETINGS
+   * When returning member has established facet profile and history
+   */
+  private static getReturningSessionGreeting(context: GreetingContext): string {
+    const { userName, returningContext } = context;
+    const { lastReason, lastSeenDays, partnerContext } = returningContext!;
+    const hasName = userName && userName !== 'friend' && userName.trim() !== '';
+    const name = hasName ? userName : '';
+
+    // Generate time-aware greeting
+    const timeGreeting = this.getTimeAwareGreeting(lastSeenDays || 0);
+
+    // Generate last focus reference
+    const lastFocusRef = this.getLastFocusReference(lastReason);
+
+    // Generate choice question
+    const choiceQuestion = this.getReturningChoiceQuestion(partnerContext);
+
+    // Compose the returning session greeting
+    if (hasName) {
+      return `${timeGreeting}, ${name}. ${lastFocusRef} ${choiceQuestion}`;
+    } else {
+      return `${timeGreeting}. ${lastFocusRef} ${choiceQuestion}`;
+    }
+  }
+
+  private static getTimeAwareGreeting(daysSinceLastVisit: number): string {
+    if (daysSinceLastVisit > 7) {
+      return "Welcome back - it's been a while";
+    } else if (daysSinceLastVisit > 3) {
+      return "Good to see you again";
+    } else {
+      return "Welcome back";
+    }
+  }
+
+  private static getLastFocusReference(lastReason?: string): string {
+    const references = {
+      'inner': 'Last time we were looking at your inner life.',
+      'direction': 'Last time you were exploring your direction and creativity.',
+      'work': 'Last time we were reflecting on your work and projects.',
+      'relationships': 'Last time you came in about your relationships.',
+      'support': 'Last time you were here about the people you support.',
+      'explore': 'Last time you were here exploring.'
+    };
+    return references[lastReason as keyof typeof references] || 'Welcome back to our space.';
+  }
+
+  private static getReturningChoiceQuestion(partnerContext?: string): string {
+    if (partnerContext?.includes('yale')) {
+      return 'Do you want to stay with that focus, or check in about what\'s most present in your work and projects today?';
+    } else {
+      return 'Do you want to continue with that, or focus on what\'s most alive for you today?';
+    }
   }
 
   /**

@@ -43,7 +43,7 @@ html, body {
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 1000;
+  z-index: 40;
 
   /* Add padding for browser UI and safe area */
   padding-bottom: calc(var(--safe-area-bottom) + 80px);
@@ -125,7 +125,7 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  z-index: 999;
+  z-index: 45;
 }
 
 /* Adjust for keyboard visibility using Visual Viewport API */
@@ -175,6 +175,49 @@ textarea:focus {
 
   .input-area {
     padding-bottom: max(env(safe-area-inset-bottom), 100px);
+  }
+}
+
+/* Safari-specific navigation bar protection */
+@supports (-webkit-touch-callout: none) {
+  /* Force navigation to stay above all content in Safari */
+  .header-navigation {
+    position: relative;
+    z-index: 60 !important;
+    isolation: isolate; /* Create stacking context */
+    will-change: auto; /* Prevent new stacking contexts */
+  }
+
+  /* Ensure buttons are clickable in Safari */
+  .header-navigation button {
+    position: relative;
+    z-index: 61;
+    pointer-events: auto;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Fix backdrop-blur rendering in Safari */
+  .header-navigation {
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    transform: translateZ(0); /* Force GPU layer */
+  }
+
+  /* Prevent stacking context conflicts */
+  .main-content {
+    position: relative;
+    z-index: 10;
+    isolation: isolate;
+  }
+}
+
+/* Fix for mobile Safari address bar hiding */
+@supports (height: 100dvh) {
+  .header-navigation {
+    position: sticky;
+    top: 0;
+    z-index: 60;
   }
 }
 

@@ -26,21 +26,35 @@ export default function IntroPage() {
     localStorage.setItem('onboarding_completed', 'true');
     console.log('✅ Onboarding completed - user will not see intro again');
 
-    // After sage/teal welcome, redirect to beta-signup or maia based on user state
+    // After completing the daimon welcome, mark user as onboarded and go to maia
     const betaUser = localStorage.getItem('beta_user');
     if (betaUser) {
       try {
         const userData = JSON.parse(betaUser);
-        if (userData.onboarded) {
-          router.push('/maia');
-        } else {
-          router.push('/beta-signup');
+        // Mark as onboarded since they completed the daimon introduction
+        userData.onboarded = true;
+        userData.daimonIntroComplete = true;
+        localStorage.setItem('beta_user', JSON.stringify(userData));
+
+        // Update the users collection as well
+        const betaUsers = localStorage.getItem('beta_users');
+        if (betaUsers) {
+          const usersData = JSON.parse(betaUsers);
+          if (usersData[userData.username]) {
+            usersData[userData.username].onboarded = true;
+            usersData[userData.username].daimonIntroComplete = true;
+            localStorage.setItem('beta_users', JSON.stringify(usersData));
+          }
         }
+
+        router.push('/maia');
       } catch (e) {
-        router.push('/beta-signup');
+        console.error('Error updating user data:', e);
+        router.push('/maia');
       }
     } else {
-      router.push('/beta-signup');
+      // No user data - still go to maia (they've completed the daimon intro)
+      router.push('/maia');
     }
   };
 

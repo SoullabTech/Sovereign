@@ -1,1 +1,0 @@
-self.__SSG_MANIFEST=new Set(["\u002Fastrology\u002Faspects\u002F[slug]","\u002Fastrology\u002Fpathways\u002F[element]","\u002Fcommunity\u002Fcategory\u002F[slug]","\u002Fmaia\u002Fcommunity\u002Fcategory\u002F[slug]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
@@ -9,45 +9,95 @@ import { betaSession } from '@/lib/auth/betaSession';
 
 export default function WelcomeBackPage() {
   const router = useRouter();
-  const [userName, setUserName] = useState<string>('Sacred Practitioner');
-  const [greeting, setGreeting] = useState('Good morning');
+  const searchParams = useSearchParams();
+  const [userName, setUserName] = useState<string>('');
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
+  // Partner context from URL
+  const institution = searchParams.get('institution');
+  const context = searchParams.get('context');
+  const isPartnerEntry = institution === 'yale' && context;
+
   useEffect(() => {
-    // Check authentication status using betaSession
+    // If user is authenticated, they should have been routed to /maia directly
+    // So this page is only for signed-out users
     const sessionState = betaSession.restoreSession();
 
     if (sessionState.isAuthenticated && sessionState.user) {
-      // User is already authenticated - set up for brief welcome then auto-continue
+      // This shouldn't happen with the new routing, but handle gracefully
       setIsAuthenticated(true);
-      setUserName(sessionState.user.name || sessionState.user.username || 'Sacred Practitioner');
-
-      // Auto-continue to MAIA after brief welcome (2 seconds)
-      const timer = setTimeout(() => {
-        sessionStorage.setItem('welcome_back_complete', 'true');
-        router.push('/maia');
-      }, 2000);
-
-      // Cleanup timer on unmount
-      return () => clearTimeout(timer);
+      setUserName(sessionState.user.name || sessionState.user.username || '');
     } else {
-      // User is not authenticated - show sign in option
+      // Expected case: signed-out user needs to sign in
       setIsAuthenticated(false);
-    }
 
-    // Set greeting based on time of day
-    const hour = new Date().getHours();
-    if (hour < 12) {
-      setGreeting('Good morning');
-    } else if (hour < 18) {
-      setGreeting('Good afternoon');
-    } else {
-      setGreeting('Good evening');
+      // Try to get stored name for personalization (privacy-safe)
+      try {
+        const betaUser = localStorage.getItem('beta_user');
+        if (betaUser) {
+          const userData = JSON.parse(betaUser);
+          if (userData.name) {
+            setUserName(userData.name);
+          }
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
     }
 
     setIsLoading(false);
   }, [router]);
+
+  const getWelcomeMessage = () => {
+    if (isPartnerEntry) {
+      const contextNames = {
+        'tsai': 'Tsai Center',
+        'staff': 'Staff Wellbeing',
+        'clinical': 'Clinical Research',
+        'community': 'Community Programs',
+        'research': institution === 'qri' ? 'Research' : 'Research',
+        'collaboration': 'Collaboration',
+        'applied': 'Applied Research'
+      };
+      const contextName = contextNames[context as keyof typeof contextNames] || (institution === 'qri' ? 'QRI' : 'Partner Context');
+      const institutionName = institution === 'qri' ? 'QRI' : 'Yale';
+
+      const message = userName
+        ? `Hi, ${userName}.\nYou're entering through the ${institutionName} / ${contextName} path this time.\nWhen you sign in, MAIA can reflect with you on your projects, research, and inner life.`
+        : `You're entering through the ${institutionName} / ${contextName} path.\nWhen you sign in, MAIA can reflect with you on your projects, research, and inner life.`;
+
+      return (
+        <p className="text-base text-teal-800/80 font-light mb-8 leading-relaxed whitespace-pre-line">
+          {message}
+        </p>
+      );
+    } else {
+      const message = userName
+        ? `Hi, ${userName}.\nWhen you sign in, MAIA will remember where you left off and what you were here for.`
+        : 'When you sign in, MAIA will remember where you left off and what you were here for.';
+
+      return (
+        <p className="text-base text-teal-800/80 font-light mb-8 leading-relaxed whitespace-pre-line">
+          {message}
+        </p>
+      );
+    }
+  };
+
+  const handleSignIn = () => {
+    // Preserve partner context through sign-in
+    const signInUrl = isPartnerEntry
+      ? `/signin?institution=${institution}&context=${context}`
+      : '/signin';
+    router.push(signInUrl);
+  };
+
+  const handleStartFresh = () => {
+    // Clear localStorage and start completely fresh
+    localStorage.clear();
+    router.push('/onboarding/facet');
+  };
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -75,65 +125,47 @@ export default function WelcomeBackPage() {
         </div>
       </div>
 
-      {/* Welcome Card - Different content based on authentication */}
-      <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-8 max-w-md w-full text-center mb-16">
-        <p className="text-sm text-teal-800/70 font-light mb-2">
-          {greeting}
-        </p>
+      {/* Welcome Card - Privacy-safe messaging for signed-out users */}
+      <div
+        className="rounded-2xl p-8 shadow-2xl border text-center max-w-lg w-full mb-8"
+        style={{
+          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(110, 231, 183, 0.05), rgba(255, 255, 255, 0.15))',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid rgba(255, 255, 255, 0.2)',
+          boxShadow: '0 35px 70px -12px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+        }}
+      >
+        <h1 className="text-3xl font-extralight text-teal-900 mb-6 tracking-[0.2em]">
+          Welcome back to Soullab
+        </h1>
 
-        {isAuthenticated ? (
-          // Authenticated user - show brief welcome then auto-continue
-          <>
-            <h1 className="text-2xl font-light text-teal-900 mb-3">
-              Welcome back, {userName}
-            </h1>
-            <p className="text-sm text-teal-800/60 font-light mb-4">
-              Your elements await
-            </p>
-            <div className="text-xs text-teal-700/50 italic">
-              Continuing to your sacred space...
-            </div>
-          </>
-        ) : (
-          // Non-authenticated user - show sign in option
-          <>
-            <h1 className="text-2xl font-light text-teal-900 mb-3">
-              Welcome to Soullab
-            </h1>
-            <p className="text-sm text-teal-800/60 font-light">
-              Your consciousness journey awaits
-            </p>
-          </>
-        )}
-      </div>
+        {getWelcomeMessage()}
 
-      {/* Action Button - Different behavior based on authentication */}
-      {isAuthenticated ? (
-        // For authenticated users, show that auto-continue is happening
-        <div className="text-teal-800/60 font-light text-sm flex items-center gap-2">
-          <motion.div
-            className="w-1 h-1 bg-teal-700 rounded-full"
-            animate={{
-              scale: [1, 1.5, 1],
-              opacity: [0.5, 1, 0.5]
-            }}
-            transition={{
-              duration: 1,
-              repeat: Infinity
-            }}
-          />
-          Preparing sacred space...
-        </div>
-      ) : (
-        // For non-authenticated users, show sign in button
-        <button
-          onClick={() => router.push('/signin')}
-          className="bg-transparent border border-teal-700/40 text-teal-800 py-3 px-8 rounded-full font-light tracking-wider text-sm hover:bg-teal-700/10 transition-all duration-300 flex items-center gap-2 group"
+        {/* Sign In Button */}
+        <motion.button
+          onClick={handleSignIn}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="w-full p-4 rounded-xl mb-4 transition-all duration-300"
+          style={{
+            background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
+            border: '1px solid rgba(110, 231, 183, 0.4)',
+            backdropFilter: 'blur(4px)',
+          }}
         >
-          <span>Enter Sacred Space</span>
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+          <div className="text-teal-900 font-medium text-lg">
+            Sign In
+          </div>
+        </motion.button>
+
+        {/* Start Fresh Link */}
+        <button
+          onClick={handleStartFresh}
+          className="text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+        >
+          {userName ? `Not ${userName}? Start fresh` : 'Not you? Start fresh'}
         </button>
-      )}
+      </div>
 
     </div>
   );

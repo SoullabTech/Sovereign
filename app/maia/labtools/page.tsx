@@ -59,7 +59,7 @@ export default function MAIALabTools() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-                🛡️ MAIA LabTools
+                🛡️ MAIA Guardian Console
                 <span className="text-sm bg-green-500/20 text-green-400 px-3 py-1 rounded-full">
                   Guardian Active
                 </span>

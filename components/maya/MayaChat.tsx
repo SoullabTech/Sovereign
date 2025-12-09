@@ -1,12 +1,20 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMayaStream } from '@/hooks/useMayaStream';
+import { DisposablePixels } from '@/components/maia/DisposablePixels';
 import HybridInput from '@/components/chat/HybridInput';
 
 export default function MayaChat() {
-  const { messages, isStreaming, sendMessage } = useMayaStream();
+  const {
+    messages,
+    isStreaming,
+    sendMessage,
+    spiralogicResponse,
+    currentPhase
+  } = useMayaStream();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [currentInput, setCurrentInput] = useState('');
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -119,12 +127,27 @@ export default function MayaChat() {
       {/* Input */}
       <div className="border-t border-amber-500/20 p-4 backdrop-blur-sm bg-black/30">
         <HybridInput
-          onSend={sendMessage}
+          onSend={(message) => {
+            setCurrentInput(message);
+            sendMessage(message);
+          }}
           disabled={isStreaming}
           placeholder="Share your thoughts..."
           className="w-full"
         />
       </div>
+
+      {/* Disposable Pixels Overlay - Spiralogic Interface */}
+      {currentPhase && (
+        <DisposablePixels
+          userId={sessionStorage.getItem('explorerId') || 'anonymous'}
+          input={currentInput}
+          onResponse={(response) => {
+            console.log('🌀 Spiralogic phase detected:', response.spiralogic);
+          }}
+          className="absolute top-0 left-0 w-full h-full pointer-events-none z-20"
+        />
+      )}
       </div>
     </div>
   );

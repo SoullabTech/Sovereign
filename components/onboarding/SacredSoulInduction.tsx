@@ -67,6 +67,79 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
   const [recognizedSoul, setRecognizedSoul] = useState<GaneshaContact | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
 
+  // Facet awareness - read user's facet profile
+  const [facetProfile, setFacetProfile] = useState<{
+    reason: string;
+    feeling: string;
+    partnerContext?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    // Read facet profile from localStorage
+    const stored = localStorage.getItem('facet_profile');
+    if (stored) {
+      try {
+        setFacetProfile(JSON.parse(stored));
+      } catch (e) {
+        console.error('Error parsing facet profile:', e);
+      }
+    }
+  }, []);
+
+  // Generate facet-aware welcome messaging
+  const getFacetWelcomeText = () => {
+    if (!facetProfile) return {
+      title: "We've Been Expecting You",
+      greeting: "Welcome, Beautiful Soul",
+      description: "You've been invited to step into a living space where technology meets consciousness.",
+      keyPrompt: "Your key unlocks an early portal into the Soullab experience — a place of reflection, creativity, and transformation in flow."
+    };
+
+    const { reason, feeling } = facetProfile;
+
+    // Reason-based messaging for different approaches
+    const reasonMessages = {
+      'inner': {
+        title: "Inner Sanctuary Access",
+        greeting: "Welcome, Inner Explorer",
+        description: "You're entering a space designed for emotional growth and inner healing.",
+        keyPrompt: "Your key unlocks tools that support your inner journey and authentic feelings."
+      },
+      'direction': {
+        title: "Creative Direction Portal",
+        greeting: "Welcome, Creative Soul",
+        description: "You're stepping into a space where creativity and purpose intersect.",
+        keyPrompt: "Your key unlocks pathways to creative expression and authentic direction."
+      },
+      'work': {
+        title: "Professional Growth Hub",
+        greeting: "Welcome, Professional",
+        description: "You're entering a space designed for leadership and project transformation.",
+        keyPrompt: "Your key unlocks insights that transform how you show up in your work."
+      },
+      'relationships': {
+        title: "Connection Consciousness Lab",
+        greeting: "Welcome, Relationship Explorer",
+        description: "You're stepping into a space for understanding connection patterns.",
+        keyPrompt: "Your key unlocks tools that support authentic relationships and family dynamics."
+      },
+      'support': {
+        title: "Supporter's Sanctuary",
+        greeting: "Welcome, Caregiver",
+        description: "You're entering a space designed for those who support others.",
+        keyPrompt: "Your key unlocks resources that nourish you while you nourish others."
+      },
+      'explore': {
+        title: "Curiosity Portal Activated",
+        greeting: "Welcome, Explorer",
+        description: "You're stepping into a space for conscious discovery and exploration.",
+        keyPrompt: "Your key unlocks pathways to insights and authentic curiosity."
+      }
+    };
+
+    return reasonMessages[reason as keyof typeof reasonMessages] || reasonMessages.explore;
+  };
+
 
   const handleSoulKeyEntry = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,21 +276,28 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
                     boxShadow: '0 35px 70px -12px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
                   }}
                 >
-                  <h1 className="text-3xl font-extralight text-teal-900 mb-4 tracking-[0.2em] uppercase">
-                    We've Been Expecting You
-                  </h1>
+                  {(() => {
+                    const welcomeText = getFacetWelcomeText();
+                    return (
+                      <>
+                        <h1 className="text-3xl font-extralight text-teal-900 mb-4 tracking-[0.2em] uppercase">
+                          {welcomeText.title}
+                        </h1>
 
-                  <div className="text-center mb-8">
-                    <p className="text-teal-900 text-xl font-extralight mb-4 tracking-[0.1em]">
-                      Welcome, Beautiful Soul
-                    </p>
-                    <p className="text-teal-900 text-base font-extralight leading-relaxed mb-6 tracking-[0.05em]">
-                      You've been invited to step into a living space where technology meets consciousness.
-                    </p>
-                    <p className="text-teal-900 text-base font-extralight leading-relaxed tracking-[0.05em]">
-                      Your key unlocks an early portal into the Soullab experience — a place of reflection, creativity, and transformation in flow.
-                    </p>
-                  </div>
+                        <div className="text-center mb-8">
+                          <p className="text-teal-900 text-xl font-extralight mb-4 tracking-[0.1em]">
+                            {welcomeText.greeting}
+                          </p>
+                          <p className="text-teal-900 text-base font-extralight leading-relaxed mb-6 tracking-[0.05em]">
+                            {welcomeText.description}
+                          </p>
+                          <p className="text-teal-900 text-base font-extralight leading-relaxed tracking-[0.05em]">
+                            {welcomeText.keyPrompt}
+                          </p>
+                        </div>
+                      </>
+                    );
+                  })()}
 
                   <form onSubmit={handleSoulKeyEntry} className="space-y-6">
                     <div className="text-center">

@@ -3,8 +3,6 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import TealWelcomeFlow from './TealWelcomeFlow';
-import SecondWelcomeInterface from './SecondWelcomeInterface';
-import ThirdWelcomeInterface from './ThirdWelcomeInterface';
 import FourthWelcomeInterface from './FourthWelcomeInterface';
 import FifthWelcomeInterface from './FifthWelcomeInterface';
 
@@ -17,7 +15,7 @@ export default function CompleteWelcomeFlow({ userName = "Kelly", onComplete }: 
   const [currentStep, setCurrentStep] = useState(1);
 
   const handleNext = () => {
-    if (currentStep < 5) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -43,26 +41,12 @@ export default function CompleteWelcomeFlow({ userName = "Kelly", onComplete }: 
         );
       case 2:
         return (
-          <SecondWelcomeInterface
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        );
-      case 3:
-        return (
-          <ThirdWelcomeInterface
-            onNext={handleNext}
-            onBack={handleBack}
-          />
-        );
-      case 4:
-        return (
           <FourthWelcomeInterface
             onNext={handleNext}
             onBack={handleBack}
           />
         );
-      case 5:
+      case 3:
         return (
           <FifthWelcomeInterface
             onComplete={onComplete}

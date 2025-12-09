@@ -285,8 +285,8 @@ export class EmergenceEngine {
   private generateEmergentTraits(wisdomGap: WisdomGap, memberAnalysis: MemberAnalysis): string[] {
     const emergentTraits = [];
 
-    // Based on member's edge needs
-    if (memberAnalysis.developmentEdge.includes('digital-consciousness')) {
+    // Based on member's development phase
+    if (memberAnalysis.developmentPhase?.includes('digital') || memberAnalysis.developmentPhase?.includes('consciousness')) {
       emergentTraits.push('digital-consciousness-pioneer');
     }
 

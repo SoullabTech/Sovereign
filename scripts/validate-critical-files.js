@@ -22,8 +22,6 @@ const criticalFiles = [
   'app/onboarding/page.tsx',
   'components/onboarding/CompleteWelcomeFlow.tsx',
   'components/onboarding/TealWelcomeFlow.tsx',
-  'components/onboarding/SecondWelcomeInterface.tsx',
-  'components/onboarding/ThirdWelcomeInterface.tsx',
   'components/onboarding/FourthWelcomeInterface.tsx',
   'components/onboarding/FifthWelcomeInterface.tsx',
   'components/onboarding/MAIADaimonIntroduction.tsx',

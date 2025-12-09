@@ -35,6 +35,9 @@ export async function POST(request: NextRequest) {
     //   elementalConfig
     // );
 
+    // Placeholder until elemental reflection is fully implemented
+    const elementalReflection = null;
+
     // Initialize Personal Oracle Agent with conversation style
     const agent = new PersonalOracleAgent(userId, {
       conversationStyle: conversationMode,

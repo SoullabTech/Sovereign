@@ -86,6 +86,22 @@ const insightCollections: InsightCollection[] = [
         content: 'docs/community-library/CONSCIOUSNESS_EVOLUTION_FRAMEWORK.md',
         tags: ['integral', 'transition', 'perspectival', 'evolution'],
         relatedTechnologies: ['consciousness-field', 'maia-oracle', 'collective-orchestrator']
+      },
+      {
+        id: 'jungian-alchemy-framework',
+        title: 'Jungian Alchemy: Digital Transformation Framework',
+        description: 'Jung\'s revolutionary analysis of alchemy as psychological transformation applied to sacred technology design',
+        content: 'docs/community-library/JUNGIAN_ALCHEMY_FRAMEWORK.md',
+        tags: ['jung', 'alchemy', 'transformation', 'individuation', 'sacred-technology'],
+        relatedTechnologies: ['maia-oracle', 'alchemical-detection', 'consciousness-field', 'breakthrough-prediction']
+      },
+      {
+        id: 'disposable-pixel-philosophy',
+        title: 'The Disposable Pixel Philosophy: Alchemical Interface Design',
+        description: 'Revolutionary UI design that dissolves itself in service of user transformation - technology that makes itself unnecessary',
+        content: 'docs/community-library/DISPOSABLE_PIXEL_PHILOSOPHY.md',
+        tags: ['interface-design', 'sacred-technology', 'alchemy', 'transformation', 'ui-philosophy'],
+        relatedTechnologies: ['maia-oracle', 'adaptive-interface', 'consciousness-field', 'alchemical-detection']
       }
     ]
   },

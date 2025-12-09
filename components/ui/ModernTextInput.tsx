@@ -305,21 +305,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
 
             {/* Action Buttons - Positioned in lower right */}
             <div className="absolute bottom-1 right-1 flex items-center gap-1">
-              {/* Voice Input Toggle - Small and in corner */}
-              {onVoiceInputToggle && (
-                <button
-                  type="button"
-                  onClick={onVoiceInputToggle}
-                  className={`w-7 h-7 rounded-lg flex items-center justify-center transition-all duration-200 touch-manipulation ${
-                    enableVoiceInput
-                      ? 'bg-blue-500/20 text-blue-400 shadow-lg shadow-blue-500/10'
-                      : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
-                  }`}
-                  title={enableVoiceInput ? "Stop voice input" : "Start voice input"}
-                >
-                  {enableVoiceInput ? <Mic className="w-3 h-3" /> : <MicOff className="w-3 h-3" />}
-                </button>
-              )}
+              {/* Voice Input Toggle - Removed since voice toggle is now in upper right navigation */}
 
               {/* Send Button - Small arrow like ChatGPT */}
               {canSubmit && (

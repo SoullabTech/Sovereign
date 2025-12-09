@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { SevenLayerArchitectureProvider } from "@/components/architecture/SevenLayerArchitectureProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -46,7 +48,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`} suppressHydrationWarning>
-        {children}
+        <SubscriptionProvider>
+          <SevenLayerArchitectureProvider
+            autoSync={true}
+            syncInterval={30000}
+          >
+            {children}
+          </SevenLayerArchitectureProvider>
+        </SubscriptionProvider>
       </body>
     </html>
   );

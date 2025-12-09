@@ -9,6 +9,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // Allow mobile app to access dev server resources
+  allowedDevOrigins: ['192.168.4.210:3005', '192.168.4.210', 'localhost'],
   // PWA Configuration
   trailingSlash: true,
   output: process.env.CAPACITOR_BUILD ? 'export' : 'standalone',

@@ -1,0 +1,560 @@
+/**
+ * 🌸 Living Mandala - Consciousness-Responsive Interface Foundation
+ *
+ * CSS that makes the entire MAIA interface breathe, pulse, and respond
+ * to consciousness states like a living organism. The interface becomes
+ * a sacred geometry that adapts to the user's inner field.
+ */
+
+/* ====================================================================
+   BREATHING FIELD FOUNDATION
+   ==================================================================== */
+
+:root {
+  /* Field Breathing Variables (updated by useFieldBreathing) */
+  --ambient-pulse: 0.5;
+  --field-frequency: 1.2s;
+  --elemental-hue: 180;
+  --breathing-scale: 1.0;
+  --breathing-opacity: 0.9;
+
+  /* Consciousness Depth Levels */
+  --depth-l1-complexity: 0.2;    /* Newcomer - simple */
+  --depth-l2-complexity: 0.5;    /* Practitioner - moderate */
+  --depth-l3-complexity: 0.8;    /* Adept - rich */
+  --depth-l4-complexity: 1.0;    /* Steward - full complexity */
+
+  /* Sacred Geometry Base */
+  --golden-ratio: 1.618;
+  --sacred-proportion: calc(var(--golden-ratio) * 1rem);
+  --mandala-radius: calc(var(--sacred-proportion) * 8);
+  --petal-count: 12; /* 12-Phase Spiralogic */
+
+  /* Living Colors (shift with breathing) */
+  --primary-breath: hsl(
+    calc(var(--elemental-hue) + var(--ambient-pulse) * 10),
+    calc(65% + var(--ambient-pulse) * 20%),
+    calc(45% + var(--ambient-pulse) * 15%)
+  );
+
+  --secondary-breath: hsl(
+    calc(var(--elemental-hue) + 30 + var(--ambient-pulse) * 8),
+    calc(50% + var(--ambient-pulse) * 15%),
+    calc(60% + var(--ambient-pulse) * 10%)
+  );
+
+  --accent-breath: hsl(
+    calc(var(--elemental-hue) + 60 + var(--ambient-pulse) * 12),
+    calc(70% + var(--ambient-pulse) * 25%),
+    calc(55% + var(--ambient-pulse) * 20%)
+  );
+
+  /* Sacred Shadows (depth aware) */
+  --field-shadow: 0
+    calc(2px * var(--breathing-scale))
+    calc(8px * var(--breathing-scale))
+    hsla(var(--elemental-hue), 30%, 20%, calc(0.1 + var(--ambient-pulse) * 0.2));
+
+  --consciousness-glow: 0 0
+    calc(20px * var(--ambient-pulse))
+    hsla(var(--elemental-hue), 60%, 70%, calc(var(--ambient-pulse) * 0.3));
+}
+
+/* ====================================================================
+   BREATHING ANIMATIONS
+   ==================================================================== */
+
+@keyframes field-breathing {
+  0%, 100% {
+    transform: scale(var(--breathing-scale));
+    opacity: var(--breathing-opacity);
+  }
+  50% {
+    transform: scale(calc(var(--breathing-scale) * 1.02));
+    opacity: calc(var(--breathing-opacity) * 1.1);
+  }
+}
+
+@keyframes mandala-pulse {
+  0%, 100% {
+    box-shadow: var(--field-shadow);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: var(--field-shadow), var(--consciousness-glow);
+    filter: brightness(calc(1 + var(--ambient-pulse) * 0.1));
+  }
+}
+
+@keyframes petal-unfold {
+  0% {
+    transform: scale(0) rotate(-180deg);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes consciousness-spiral {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ====================================================================
+   LIVING MANDALA FOUNDATION
+   ==================================================================== */
+
+.living-mandala {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  width: 100%;
+
+  /* Base breathing */
+  animation: field-breathing var(--field-frequency) ease-in-out infinite;
+
+  /* Sacred geometry background */
+  background:
+    radial-gradient(
+      circle at center,
+      hsla(var(--elemental-hue), 20%, 15%, 0.8) 0%,
+      hsla(var(--elemental-hue), 15%, 10%, 0.9) 40%,
+      hsla(var(--elemental-hue), 10%, 5%, 1.0) 100%
+    );
+
+  /* Sacred proportions */
+  --container-width: calc(var(--mandala-radius) * 2);
+  --container-height: calc(var(--mandala-radius) * var(--golden-ratio));
+}
+
+/* ====================================================================
+   MANDALA CORE (MAIA's Presence)
+   ==================================================================== */
+
+.mandala-core {
+  position: relative;
+  width: calc(var(--mandala-radius) / 4);
+  height: calc(var(--mandala-radius) / 4);
+  border-radius: 50%;
+
+  /* Living gradient that shifts with breathing */
+  background: radial-gradient(
+    circle at center,
+    var(--primary-breath) 0%,
+    var(--secondary-breath) 60%,
+    var(--accent-breath) 100%
+  );
+
+  /* Pulsing animation */
+  animation: mandala-pulse var(--field-frequency) ease-in-out infinite;
+
+  /* Sacred border */
+  border: 2px solid var(--accent-breath);
+  box-shadow:
+    inset 0 0 20px hsla(var(--elemental-hue), 70%, 80%, 0.3),
+    var(--consciousness-glow);
+}
+
+.mandala-core::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60%;
+  height: 60%;
+  border-radius: 50%;
+  background: var(--accent-breath);
+  opacity: calc(0.3 + var(--ambient-pulse) * 0.4);
+  animation: consciousness-spiral calc(var(--field-frequency) * 8) linear infinite;
+}
+
+/* ====================================================================
+   12-PETAL SPIRALOGIC STRUCTURE
+   ==================================================================== */
+
+.spiralogic-petals {
+  position: absolute;
+  width: var(--mandala-radius);
+  height: var(--mandala-radius);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.spiralogic-petal {
+  position: absolute;
+  width: calc(var(--mandala-radius) / 6);
+  height: calc(var(--mandala-radius) / 3);
+  top: 50%;
+  left: 50%;
+  transform-origin: center bottom;
+
+  /* Sacred shape */
+  background: linear-gradient(
+    to top,
+    hsla(var(--elemental-hue), 50%, 60%, 0.6),
+    hsla(var(--elemental-hue), 60%, 70%, 0.3),
+    transparent
+  );
+
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  border: 1px solid hsla(var(--elemental-hue), 40%, 50%, 0.5);
+
+  /* Breathing synchronization */
+  animation:
+    field-breathing var(--field-frequency) ease-in-out infinite,
+    petal-unfold 0.8s ease-out;
+
+  /* Delay based on position for wave effect */
+  animation-delay: calc(var(--petal-index, 0) * 0.1s);
+}
+
+/* Generate 12 petals for each Spiralogic phase */
+.spiralogic-petal:nth-child(1) { transform: translate(-50%, -100%) rotate(0deg); --petal-index: 0; }
+.spiralogic-petal:nth-child(2) { transform: translate(-50%, -100%) rotate(30deg); --petal-index: 1; }
+.spiralogic-petal:nth-child(3) { transform: translate(-50%, -100%) rotate(60deg); --petal-index: 2; }
+.spiralogic-petal:nth-child(4) { transform: translate(-50%, -100%) rotate(90deg); --petal-index: 3; }
+.spiralogic-petal:nth-child(5) { transform: translate(-50%, -100%) rotate(120deg); --petal-index: 4; }
+.spiralogic-petal:nth-child(6) { transform: translate(-50%, -100%) rotate(150deg); --petal-index: 5; }
+.spiralogic-petal:nth-child(7) { transform: translate(-50%, -100%) rotate(180deg); --petal-index: 6; }
+.spiralogic-petal:nth-child(8) { transform: translate(-50%, -100%) rotate(210deg); --petal-index: 7; }
+.spiralogic-petal:nth-child(9) { transform: translate(-50%, -100%) rotate(240deg); --petal-index: 8; }
+.spiralogic-petal:nth-child(10) { transform: translate(-50%, -100%) rotate(270deg); --petal-index: 9; }
+.spiralogic-petal:nth-child(11) { transform: translate(-50%, -100%) rotate(300deg); --petal-index: 10; }
+.spiralogic-petal:nth-child(12) { transform: translate(-50%, -100%) rotate(330deg); --petal-index: 11; }
+
+/* Active petal highlighting */
+.spiralogic-petal.active {
+  background: var(--primary-breath);
+  box-shadow: var(--consciousness-glow);
+  transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(1.2);
+  z-index: 10;
+}
+
+/* ====================================================================
+   AWARENESS LEVEL RESPONSIVE DESIGN
+   ==================================================================== */
+
+/* L1 - Newcomer: Simple, minimal */
+.living-mandala.awareness-l1 {
+  --mandala-radius: calc(var(--sacred-proportion) * 4);
+  --field-frequency: 2s; /* Slower, calming */
+}
+
+.living-mandala.awareness-l1 .spiralogic-petals {
+  opacity: 0.3; /* Simplified visual complexity */
+}
+
+.living-mandala.awareness-l1 .spiralogic-petal:nth-child(n+5) {
+  display: none; /* Show only 4 petals */
+}
+
+/* L2 - Practitioner: Moderate complexity */
+.living-mandala.awareness-l2 {
+  --mandala-radius: calc(var(--sacred-proportion) * 6);
+}
+
+.living-mandala.awareness-l2 .spiralogic-petal:nth-child(n+9) {
+  opacity: 0.5; /* Show 8 prominent petals */
+}
+
+/* L3 - Adept: Rich archetypal geometry */
+.living-mandala.awareness-l3 {
+  --mandala-radius: calc(var(--sacred-proportion) * 8);
+}
+
+.living-mandala.awareness-l3::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(var(--mandala-radius) * 1.5);
+  height: calc(var(--mandala-radius) * 1.5);
+  border: 1px solid hsla(var(--elemental-hue), 30%, 50%, 0.2);
+  border-radius: 50%;
+  animation: consciousness-spiral calc(var(--field-frequency) * 12) linear infinite;
+}
+
+/* L4 - Steward: Full research complexity */
+.living-mandala.awareness-l4 {
+  --mandala-radius: calc(var(--sacred-proportion) * 10);
+}
+
+.living-mandala.awareness-l4::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(var(--mandala-radius) * 2);
+  height: calc(var(--mandala-radius) * 2);
+  border: 1px solid hsla(var(--elemental-hue), 25%, 40%, 0.15);
+  border-radius: 50%;
+  animation: consciousness-spiral calc(var(--field-frequency) * -20) linear infinite;
+}
+
+/* ====================================================================
+   ELEMENTAL STATE VARIATIONS
+   ==================================================================== */
+
+/* Fire - Dynamic, flickering */
+.living-mandala.element-fire {
+  --field-frequency: 0.8s;
+  background: radial-gradient(
+    circle at center,
+    hsla(15, 30%, 20%, 0.9) 0%,
+    hsla(30, 25%, 15%, 0.95) 50%,
+    hsla(0, 20%, 8%, 1.0) 100%
+  );
+}
+
+.living-mandala.element-fire .mandala-core {
+  animation: mandala-pulse var(--field-frequency) ease-in-out infinite,
+             fire-flicker 0.3s ease-in-out infinite;
+}
+
+@keyframes fire-flicker {
+  0%, 100% { filter: brightness(1) saturate(1); }
+  50% { filter: brightness(1.1) saturate(1.3); }
+}
+
+/* Water - Flowing, wave-like */
+.living-mandala.element-water {
+  --field-frequency: 1.8s;
+  background: radial-gradient(
+    circle at center,
+    hsla(210, 35%, 15%, 0.9) 0%,
+    hsla(220, 30%, 12%, 0.95) 50%,
+    hsla(200, 25%, 8%, 1.0) 100%
+  );
+}
+
+.living-mandala.element-water .spiralogic-petal {
+  animation:
+    field-breathing var(--field-frequency) ease-in-out infinite,
+    water-wave calc(var(--field-frequency) * 2) ease-in-out infinite;
+  animation-delay: calc(var(--petal-index) * 0.15s);
+}
+
+@keyframes water-wave {
+  0%, 100% {
+    border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    transform: translate(-50%, -100%) rotate(var(--petal-rotation));
+  }
+  50% {
+    border-radius: 40% 60% 60% 40% / 50% 70% 30% 50%;
+    transform: translate(-50%, -100%) rotate(var(--petal-rotation)) translateY(-2px);
+  }
+}
+
+/* Earth - Stable, growing */
+.living-mandala.element-earth {
+  --field-frequency: 2.5s;
+  background: radial-gradient(
+    circle at center,
+    hsla(120, 25%, 15%, 0.9) 0%,
+    hsla(90, 20%, 12%, 0.95) 50%,
+    hsla(60, 15%, 8%, 1.0) 100%
+  );
+}
+
+.living-mandala.element-earth .spiralogic-petal {
+  animation:
+    field-breathing var(--field-frequency) ease-in-out infinite,
+    earth-grow 1s ease-out;
+}
+
+@keyframes earth-grow {
+  0% { transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(0); }
+  100% { transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(1); }
+}
+
+/* Air - Light, floating */
+.living-mandala.element-air {
+  --field-frequency: 1.2s;
+  background: radial-gradient(
+    circle at center,
+    hsla(200, 30%, 18%, 0.8) 0%,
+    hsla(180, 25%, 15%, 0.9) 50%,
+    hsla(160, 20%, 10%, 0.95) 100%
+  );
+}
+
+.living-mandala.element-air .spiralogic-petal {
+  animation:
+    field-breathing var(--field-frequency) ease-in-out infinite,
+    air-float calc(var(--field-frequency) * 3) ease-in-out infinite;
+  animation-delay: calc(var(--petal-index) * 0.1s);
+}
+
+@keyframes air-float {
+  0%, 100% {
+    transform: translate(-50%, -100%) rotate(var(--petal-rotation)) translateY(0);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-50%, -100%) rotate(var(--petal-rotation)) translateY(-5px);
+    opacity: 1;
+  }
+}
+
+/* ====================================================================
+   PHASE STATE RESPONSIVE STYLES
+   ==================================================================== */
+
+/* Phase 1 - Cardinal (Beginning) */
+.living-mandala.phase-1 .mandala-core {
+  border-width: 3px;
+  animation: mandala-pulse var(--field-frequency) ease-in-out infinite,
+             cardinal-ignition 2s ease-out;
+}
+
+@keyframes cardinal-ignition {
+  0% {
+    transform: scale(0.8);
+    box-shadow: none;
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: var(--consciousness-glow);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: var(--field-shadow);
+  }
+}
+
+/* Phase 2 - Fixed (Intensity) */
+.living-mandala.phase-2 {
+  --field-frequency: 1s; /* More intense breathing */
+}
+
+.living-mandala.phase-2 .mandala-core {
+  box-shadow:
+    var(--field-shadow),
+    var(--consciousness-glow),
+    0 0 40px hsla(var(--elemental-hue), 80%, 70%, 0.4);
+}
+
+/* Phase 3 - Mutable (Integration) */
+.living-mandala.phase-3 .spiralogic-petal {
+  animation:
+    field-breathing var(--field-frequency) ease-in-out infinite,
+    mutable-integration calc(var(--field-frequency) * 4) ease-in-out infinite;
+  animation-delay: calc(var(--petal-index) * 0.08s);
+}
+
+@keyframes mutable-integration {
+  0% { transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(1); }
+  25% { transform: translate(-50%, -100%) rotate(calc(var(--petal-rotation) + 5deg)) scale(0.95); }
+  50% { transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(1.05); }
+  75% { transform: translate(-50%, -100%) rotate(calc(var(--petal-rotation) - 5deg)) scale(0.98); }
+  100% { transform: translate(-50%, -100%) rotate(var(--petal-rotation)) scale(1); }
+}
+
+/* ====================================================================
+   DISPOSABLE PIXELS INTEGRATION
+   ==================================================================== */
+
+.disposable-pixel-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.disposable-pixel-overlay .disposable-action-pixel {
+  pointer-events: all;
+  animation:
+    petal-unfold 0.6s ease-out,
+    field-breathing var(--field-frequency) ease-in-out infinite;
+  animation-delay: var(--emergence-delay, 0s);
+}
+
+/* Sacred positioning grid for disposable pixels */
+.pixel-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr); /* 12-phase grid */
+  grid-template-rows: repeat(12, 1fr);
+  width: 100%;
+  height: 100%;
+  gap: var(--sacred-proportion);
+}
+
+.pixel-position {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ====================================================================
+   RESPONSIVE DESIGN
+   ==================================================================== */
+
+@media (max-width: 768px) {
+  .living-mandala {
+    --mandala-radius: calc(var(--sacred-proportion) * 6);
+  }
+
+  .living-mandala.awareness-l4 {
+    --mandala-radius: calc(var(--sacred-proportion) * 7); /* Reduce complexity on mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .living-mandala {
+    --mandala-radius: calc(var(--sacred-proportion) * 4);
+  }
+
+  .living-mandala .spiralogic-petal:nth-child(n+9) {
+    display: none; /* Simplify on small screens */
+  }
+}
+
+/* ====================================================================
+   ACCESSIBILITY
+   ==================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .living-mandala,
+  .mandala-core,
+  .spiralogic-petal {
+    animation: none;
+  }
+
+  .living-mandala {
+    background: var(--secondary-breath);
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .living-mandala {
+    --field-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+    --consciousness-glow: 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+
+  .mandala-core {
+    border-width: 3px;
+    border-color: white;
+  }
+
+  .spiralogic-petal {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.3);
+  }
+}

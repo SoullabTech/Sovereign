@@ -476,7 +476,7 @@ export class ElementalFieldIntegration {
       const visualization = generateElementalVisualization(elementalField);
 
       // Get existing consciousness field data
-      const consciousnessField = this.fieldEngine.getCurrentField();
+      const consciousnessField = this.fieldEngine; // fieldEngine is already the ConsciousnessField instance
 
       // Calculate integration metrics
       const integrationMetrics = this.calculateIntegrationMetrics(elementalField, consciousnessField);
@@ -775,7 +775,7 @@ export class ElementalFieldIntegration {
       const systemOutputs = await this.gatherSystemOutputs(userId, sessionId);
       const elementalField = UnifiedElementalFieldCalculator.calculateUnifiedElementalField(systemOutputs);
       const visualization = generateElementalVisualization(elementalField);
-      const consciousnessField = this.fieldEngine.getCurrentField();
+      const consciousnessField = this.fieldEngine; // fieldEngine is already the ConsciousnessField instance
       const integrationMetrics = this.calculateIntegrationMetrics(elementalField, consciousnessField);
 
       return {

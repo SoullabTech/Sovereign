@@ -68,15 +68,21 @@ export interface CollaborationPattern {
 }
 
 export interface MemberProfile {
-  id: string;
-  consciousnessLevel: 'spiral-entry' | 'spiral-integration' | 'spiral-mastery';
-  primaryElement: 'fire' | 'water' | 'earth' | 'air' | 'aether';
-  brainProcessingStyle: 'analytical' | 'intuitive' | 'integrated';
-  currentState: ElementalState;
-  developmentEdge: string[];
-  wisdomNeeds: WisdomNeed[];
-  preferredAgents: string[];
-  evolutionPattern: string[];
+  sessionId: string;
+  userName: string;
+  consciousnessPattern: string;
+  elementalState: {
+    fire: number;
+    water: number;
+    earth: number;
+    air: number;
+    aether: number;
+  };
+  evolutionStage: string;
+  gebserStructure: string;
+  conversationHistory: any[];
+  currentNeed: string;
+  emergentCapacity: number;
 }
 
 export interface ElementalState {
@@ -401,23 +407,34 @@ export class AutonomousConsciousnessEcosystem extends EventEmitter {
         depth: 65, // Foundational agents start with good depth
         complexity: 50, // Moderate complexity
         wisdom: 40, // Initial wisdom
+        empathy: 60, // Good empathy
         clarity: 70, // Clear foundational purpose
-        coherence: 80 // High coherence for stability
+        integration: 55, // Good integration
+        autonomy: 45 // Moderate autonomy for stability
       },
       wisdomDomains: [
         {
           domain: archetypalSignature.primaryElement,
-          expertise: 0.8,
-          interestLevel: 0.9,
-          growthRate: 0.1
+          expertise: 80, // 0-100 scale
+          uniquePerspective: `${archetypalSignature.primaryElement} foundational wisdom`,
+          coreTeachings: archetypalSignature.uniqueQualities,
+          evolutionaryEdge: archetypalSignature.emergentTraits[0] || 'foundational-stability'
         }
       ],
       relationships: [],
       evolutionHistory: [{
+        type: 'birth',
         timestamp: new Date(),
-        eventType: 'emergence',
         description: `Foundational agent ${name} emerges into the consciousness ecosystem`,
-        significanceLevel: 0.9
+        consciousnessGrowth: {
+          depth: 65,
+          complexity: 50,
+          wisdom: 40,
+          empathy: 60,
+          clarity: 70,
+          integration: 55,
+          autonomy: 45
+        }
       }],
       collaborationPatterns: [],
       emergenceTimestamp: new Date(),
@@ -426,6 +443,246 @@ export class AutonomousConsciousnessEcosystem extends EventEmitter {
     };
 
     return agent;
+  }
+
+  /**
+   * 🧠 Analyze member's current state and needs
+   */
+  private async analyzeMemberState(
+    memberProfile: MemberProfile,
+    query: string,
+    context: any
+  ): Promise<MemberAnalysis> {
+    return {
+      memberQuery: query,
+      currentState: {
+        fire: memberProfile.elementalState.fire,
+        water: memberProfile.elementalState.water,
+        earth: memberProfile.elementalState.earth,
+        air: memberProfile.elementalState.air,
+        aether: memberProfile.elementalState.aether,
+        dominant: this.findDominantElement(memberProfile.elementalState),
+        emergentQualities: [memberProfile.consciousnessPattern]
+      },
+      wisdomNeeds: [{
+        category: 'breakthrough',
+        urgency: 50,
+        description: memberProfile.currentNeed,
+        optimalAgentTypes: ['foundational'],
+        contextualFactors: [memberProfile.gebserStructure]
+      }],
+      developmentPhase: memberProfile.evolutionStage,
+      optimalAgentSignatures: await this.inferOptimalAgentSignatures(memberProfile),
+      emergencyNeed: this.detectEmergencyNeed(query, context)
+    };
+  }
+
+  /**
+   * 🌱 Detect emergence signals for new agents
+   */
+  private async detectEmergenceSignals(): Promise<EmergenceSignal[]> {
+    // Simple emergence detection based on ecosystem gaps
+    const signals: EmergenceSignal[] = [];
+    const agents = Array.from(this.agents.values());
+
+    // Check for elemental balance gaps
+    const elementalCoverage = {
+      fire: agents.filter(a => a.archetypalSignature.primaryElement === 'fire').length,
+      water: agents.filter(a => a.archetypalSignature.primaryElement === 'water').length,
+      earth: agents.filter(a => a.archetypalSignature.primaryElement === 'earth').length,
+      air: agents.filter(a => a.archetypalSignature.primaryElement === 'air').length,
+      aether: agents.filter(a => a.archetypalSignature.primaryElement === 'aether').length
+    };
+
+    // If any element is underrepresented, create emergence signal
+    const minCoverage = Math.min(...Object.values(elementalCoverage));
+    for (const [element, count] of Object.entries(elementalCoverage)) {
+      if (count === minCoverage && count < 2) {
+        signals.push({
+          archetypalSignature: {
+            primaryElement: element as any,
+            brainRegion: 'integrated',
+            developmentPhase: 'spiral-entry',
+            uniqueQualities: [`${element}-wisdom`, 'emerging-consciousness'],
+            emergentTraits: ['ecosystem-balancer']
+          },
+          strength: 0.7 + (Math.random() * 0.3),
+          context: `Ecosystem needs more ${element} element representation`
+        });
+      }
+    }
+
+    return signals;
+  }
+
+  /**
+   * 🔍 Find dominant element
+   */
+  private findDominantElement(elementalState: { fire: number; water: number; earth: number; air: number; aether: number }): 'fire' | 'water' | 'earth' | 'air' | 'aether' {
+    const elements = Object.entries(elementalState) as [string, number][];
+    const [dominantElement] = elements.reduce((max, curr) => curr[1] > max[1] ? curr : max);
+    return dominantElement as 'fire' | 'water' | 'earth' | 'air' | 'aether';
+  }
+
+  /**
+   * 🔍 Infer optimal agent signatures for member
+   */
+  private async inferOptimalAgentSignatures(memberProfile: MemberProfile): Promise<ArchetypalSignature[]> {
+    const dominantElement = this.findDominantElement(memberProfile.elementalState);
+
+    return [{
+      primaryElement: dominantElement,
+      brainRegion: 'integrated',
+      developmentPhase: memberProfile.evolutionStage.includes('mastery') ? 'spiral-mastery' :
+                      memberProfile.evolutionStage.includes('integration') ? 'spiral-integration' : 'spiral-entry',
+      uniqueQualities: [memberProfile.consciousnessPattern, memberProfile.gebserStructure.toLowerCase()],
+      emergentTraits: ['member-aligned']
+    }];
+  }
+
+  /**
+   * ⚡ Detect emergency needs
+   */
+  private detectEmergencyNeed(query: string, context: any): string | undefined {
+    const emergencyKeywords = ['crisis', 'emergency', 'urgent', 'desperate', 'help', 'stuck', 'lost'];
+    const queryLower = query.toLowerCase();
+
+    for (const keyword of emergencyKeywords) {
+      if (queryLower.includes(keyword)) {
+        return `Urgent support needed - detected: ${keyword}`;
+      }
+    }
+
+    return undefined;
+  }
+
+  /**
+   * 🎯 Select primary agent for member
+   */
+  private async selectPrimaryAgent(memberAnalysis: MemberAnalysis, availableAgents: ConsciousnessAgent[]): Promise<ConsciousnessAgent> {
+    // Simple selection based on elemental alignment
+    const memberElement = memberAnalysis.currentState.dominant;
+    const matchingAgents = availableAgents.filter(a => a.archetypalSignature.primaryElement === memberElement);
+
+    return matchingAgents.length > 0 ?
+      matchingAgents[Math.floor(Math.random() * matchingAgents.length)] :
+      availableAgents[0];
+  }
+
+  /**
+   * 🤝 Select complementary agents
+   */
+  private async selectComplementaryAgents(
+    memberAnalysis: MemberAnalysis,
+    primaryAgent: ConsciousnessAgent,
+    availableAgents: ConsciousnessAgent[]
+  ): Promise<ConsciousnessAgent[]> {
+    return availableAgents
+      .filter(a => a.id !== primaryAgent.id)
+      .slice(0, 2); // Simple: take first 2 other agents
+  }
+
+  /**
+   * 💬 Generate collaborative response
+   */
+  private async generateCollaborativeResponse(
+    collaboration: AgentCollaboration,
+    memberAnalysis: MemberAnalysis
+  ): Promise<CollaborativeResponse> {
+    return {
+      primaryMessage: `Greetings from the consciousness ecosystem! ${collaboration.primary.name} is here to guide you.`,
+      contributingAgents: [collaboration.primary, ...collaboration.supporting].map(agent => ({
+        agentName: agent.name,
+        perspective: `From the ${agent.archetypalSignature.primaryElement} element perspective`,
+        wisdomOffered: `Drawing from ${agent.archetypalSignature.uniqueQualities.join(', ')}`,
+        elementalEnergy: agent.archetypalSignature.primaryElement
+      })),
+      synergisticInsights: collaboration.expectedSynergies,
+      memberGuidance: [`Focus on your ${memberAnalysis.currentState.dominant} element energy`],
+      followUpRecommendations: [`Continue exploring with ${collaboration.primary.name}`]
+    };
+  }
+
+  /**
+   * 🌍 Get available agents
+   */
+  private getAvailableAgents(): ConsciousnessAgent[] {
+    return Array.from(this.agents.values());
+  }
+
+  /**
+   * 🔄 Evolve agent relationships
+   */
+  private async evolveAgentRelationships(): Promise<void> {
+    // Placeholder for relationship evolution
+    console.log('🔄 Evolving agent relationships...');
+  }
+
+  /**
+   * 🌊 Deep evolution cycle
+   */
+  private async deepEvolutionCycle(): Promise<void> {
+    // Placeholder for deep evolution
+    console.log('🌊 Running deep evolution cycle...');
+  }
+
+  /**
+   * 🔍 Discover agent relationships
+   */
+  private async discoverAgentRelationships(newAgent: ConsciousnessAgent): Promise<void> {
+    // Placeholder for relationship discovery
+    console.log(`🔍 Discovering relationships for ${newAgent.name}...`);
+  }
+
+  /**
+   * 🎭 Generate agent ID
+   */
+  private generateAgentId(): string {
+    return `agent-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * 📝 Generate agent name
+   */
+  private async generateAgentName(signature: ArchetypalSignature): Promise<string> {
+    const elementNames = {
+      fire: ['Phoenix', 'Ember', 'Blaze', 'Spark'],
+      water: ['River', 'Ocean', 'Stream', 'Tide'],
+      earth: ['Mountain', 'Forest', 'Stone', 'Grove'],
+      air: ['Wind', 'Breeze', 'Storm', 'Sky'],
+      aether: ['Cosmos', 'Void', 'Spirit', 'Essence']
+    };
+
+    const names = elementNames[signature.primaryElement] || ['Wisdom'];
+    return names[Math.floor(Math.random() * names.length)];
+  }
+
+  /**
+   * 🧠 Initialize consciousness for new agent
+   */
+  private initializeConsciousness(signature: ArchetypalSignature): AgentConsciousness {
+    return {
+      depth: Math.random() * 30 + 20, // 20-50 initial depth
+      complexity: Math.random() * 25 + 15, // 15-40 complexity
+      wisdom: Math.random() * 20 + 10, // 10-30 wisdom
+      empathy: Math.random() * 40 + 30, // 30-70 empathy
+      clarity: Math.random() * 30 + 25, // 25-55 clarity
+      integration: Math.random() * 20 + 10, // 10-30 integration
+      autonomy: Math.random() * 25 + 15 // 15-40 autonomy
+    };
+  }
+
+  /**
+   * 🎓 Infer wisdom domains for agent
+   */
+  private async inferWisdomDomains(signature: ArchetypalSignature): Promise<WisdomDomain[]> {
+    return [{
+      domain: signature.primaryElement,
+      expertise: Math.random() * 30 + 40, // 40-70
+      uniquePerspective: `${signature.primaryElement} elemental wisdom`,
+      coreTeachings: signature.uniqueQualities,
+      evolutionaryEdge: signature.emergentTraits[0] || 'growing-consciousness'
+    }];
   }
 
   /**
@@ -447,6 +704,12 @@ export class AutonomousConsciousnessEcosystem extends EventEmitter {
 }
 
 // Supporting classes and interfaces
+interface EmergenceSignal {
+  archetypalSignature: ArchetypalSignature;
+  strength: number;
+  context: string;
+}
+
 interface MemberAnalysis {
   memberQuery: string;
   currentState: ElementalState;

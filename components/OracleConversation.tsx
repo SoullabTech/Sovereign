@@ -20,6 +20,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 // import { VoiceActivatedMaia as SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/VoiceActivatedMaiaFixed'; // File doesn't exist
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
+import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
 import { QuickSettingsSheet } from './QuickSettingsSheet';
 import { SoulprintMetricsWidget } from './SoulprintMetricsWidget';
@@ -803,12 +804,51 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     // Load soul-recognized greeting asynchronously
     (async () => {
+      // Read onboarding context from sessionStorage for first contact
+      let onboardingContext;
+      try {
+        const storedContext = sessionStorage.getItem('maia_onboarding_context');
+        if (storedContext) {
+          onboardingContext = JSON.parse(storedContext);
+          // Clear the flag after reading so it's only used once
+          sessionStorage.removeItem('maia_onboarding_context');
+        }
+      } catch (error) {
+        console.warn('Failed to parse onboarding context:', error);
+      }
+
+      // Create returning session context for established users
+      let returningContext;
+      if (!onboardingContext && !isFirstVisit) {
+        try {
+          // Get last known facet data from localStorage
+          const lastReason = localStorage.getItem('sl_onboarding_reason');
+          const lastFeeling = localStorage.getItem('sl_onboarding_feeling');
+          const partnerContext = sessionStorage.getItem('partner_context') || localStorage.getItem('sl_partner_context');
+          const partnerContextData = sessionStorage.getItem('partner_context_data');
+
+          returningContext = {
+            sessionType: 'returning',
+            lastReason: lastReason || undefined,
+            lastFeeling: lastFeeling || undefined,
+            lastSeenDays: daysSinceLastVisit,
+            partnerContext: partnerContext || 'general',
+            partnerContextData: partnerContextData ? JSON.parse(partnerContextData) : undefined,
+            hasConversationHistory: messages.length > 0
+          };
+        } catch (error) {
+          console.warn('Failed to create returning context:', error);
+        }
+      }
+
       const greetingData = await generateGreeting({
         userName: userName || 'friend',
         userId: userId, // Pass userId for soul-level recognition
         isFirstVisit,
         daysSinceLastVisit,
         daysActive: daysSinceLastVisit > 0 ? 7 : 1,
+        onboardingContext, // Pass onboarding metadata for first contact
+        returningContext, // Pass returning session metadata
       });
 
       // Add greeting as first message
@@ -2771,7 +2811,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     <div className="oracle-conversation min-h-screen bg-soul-background overflow-hidden">
       {/* iOS Audio Enable Button - DISABLED - causing black screen */}
       {false && needsIOSAudioPermission && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur z-[100] flex items-center justify-center">
+        <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">
           <div className="max-w-md p-8 text-center">
             <button
               onClick={enableAudio}
@@ -2815,7 +2855,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50"
+            className="fixed top-8 left-1/2 transform -translate-x-1/2 z-below-nav"
           >
             <div className="bg-gradient-to-r from-jade-shadow/90 to-jade-night/90 backdrop-blur-xl rounded-full px-6 py-3 border border-jade-sage/50 shadow-2xl">
               <div className="flex items-center gap-3">
@@ -2856,7 +2896,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       {/* Agent Customizer - Moved to SacredLabDrawer in future iteration */}
       {showCustomizer && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+        <div className="modal-backdrop fixed inset-0 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowCustomizer(false)} />
           <div className="relative z-10">
             <AgentCustomizer
@@ -2969,7 +3009,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             showBreakthrough={showBreakthrough}
             voiceAmplitude={voiceAmplitude}
             isMaiaSpeaking={isResponding || isAudioPlaying}
-            dimmed={conversationMode === 'chat' || messages.filter(m => !m.id.startsWith('greeting-')).length > 0}
+            dimmed={conversationMode === 'chat'}
           />
 
           {/* Central Holoflower Logo with Glow and Sparkles */}
@@ -3014,6 +3054,39 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 }}
               />
             </div>
+
+            {/* Mode-colored persistent light field - always visible with mode colors */}
+            {true && (
+              <motion.div
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-5"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '280px',
+                    height: '280px',
+                    background: listeningMode === 'normal'
+                      ? 'radial-gradient(circle, rgba(251, 191, 36, 0.85) 0%, rgba(251, 191, 36, 0.45) 40%, rgba(251, 191, 36, 0.18) 70%, rgba(251, 191, 36, 0.05) 90%, transparent 100%)' // Dialogue - Amber (brightest)
+                      : listeningMode === 'patient'
+                      ? 'radial-gradient(circle, rgba(20, 184, 166, 0.85) 0%, rgba(20, 184, 166, 0.45) 40%, rgba(20, 184, 166, 0.18) 70%, rgba(20, 184, 166, 0.05) 90%, transparent 100%)' // Counsel - Teal (brightest)
+                      : listeningMode === 'session'
+                      ? 'radial-gradient(circle, rgba(59, 130, 246, 0.85) 0%, rgba(59, 130, 246, 0.45) 40%, rgba(59, 130, 246, 0.18) 70%, rgba(59, 130, 246, 0.05) 90%, transparent 100%)' // Scribe - Blue (brightest)
+                      : 'radial-gradient(circle, rgba(251, 191, 36, 0.85) 0%, rgba(251, 191, 36, 0.45) 40%, rgba(251, 191, 36, 0.18) 70%, rgba(251, 191, 36, 0.05) 90%, transparent 100%)', // Default - Amber (brightest)
+                    filter: 'blur(18px)',
+                  }}
+                  animate={{
+                    scale: smoothedAudioLevel > 0.5 ? 1 + smoothedAudioLevel * 0.15 : 1,
+                    opacity: smoothedAudioLevel > 0.5 ? 0.4 + smoothedAudioLevel * 0.15 : 0.3,
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    ease: "easeInOut"
+                  }}
+                />
+              </motion.div>
+            )}
 
             {/* Sparkles emanating from center - ULTRA SLOW & EPHEMERAL */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -3148,27 +3221,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   />
                 ))}
 
-                {/* Audio level responsive center field glow - only show for strong speech */}
-                {/* Accessibility: High threshold (0.5) + exponential smoothing prevents keyboard flashing (seizure risk) */}
-                {smoothedAudioLevel > 0.5 && (
-                  <motion.div
-                    className="absolute rounded-full"
-                    style={{
-                      width: '280px',
-                      height: '280px',
-                      background: 'radial-gradient(circle, rgba(251, 191, 36, 0.35) 0%, rgba(251, 191, 36, 0.1) 60%, transparent 100%)',
-                      filter: 'blur(18px)',
-                    }}
-                    animate={{
-                      scale: 1 + smoothedAudioLevel * 0.15,
-                      opacity: 0.4 + smoothedAudioLevel * 0.15,
-                    }}
-                    transition={{
-                      duration: 0.8,
-                      ease: "easeInOut"
-                    }}
-                  />
-                )}
               </motion.div>
             )}
 
@@ -3471,7 +3523,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           {/* Text Display Toggle for Voice Mode */}
           {!showChatInterface && (
-            <div className="fixed top-20 md:top-20 right-4 md:right-8 z-50">
+            <div className="fixed top-20 md:top-20 right-4 md:right-8 z-below-nav">
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
                 className="px-3 py-1.5 rounded-full text-xs font-medium bg-black/20 backdrop-blur-md
@@ -3524,7 +3576,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               </div>
 
               {/* Voice toggle for chat mode - HIDDEN on mobile, visible on desktop */}
-              <div className="hidden md:block fixed top-20 right-20 z-50">
+              <div className="hidden md:block fixed top-20 right-20 z-below-nav">
                 <button
                   onClick={() => {
                     const newValue = !enableVoiceInChat;
@@ -3549,21 +3601,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
               {/* Compact text input area - mobile-first, fixed at bottom */}
               {showChatInterface && (
-              <div className="fixed inset-x-0 z-[60]" style={{ bottom: '2.5rem' }}>
+              <div className="fixed inset-x-0 z-below-nav" style={{ bottom: '2.5rem' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   <ModernTextInput
                     ref={textInputRef}
                     disabled={isProcessing}
                     isProcessing={isProcessing}
-                    enableVoiceInput={enableVoiceInput}
                     enableVoiceInChat={enableVoiceInChat}
                     onSubmit={handleTextMessage}
-                    onVoiceInputToggle={() => {
-                      const newValue = !enableVoiceInput;
-                      setEnableVoiceInput(newValue);
-                      console.log('🎤 Voice input toggled:', newValue ? 'ON' : 'OFF');
-                    }}
                     onVoiceResponseToggle={() => {
                       const newValue = !enableVoiceInChat;
                       setEnableVoiceInChat(newValue);
@@ -3604,7 +3650,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="fixed left-1/2 transform -translate-x-1/2 z-50"
+              className="fixed left-1/2 transform -translate-x-1/2 z-below-nav"
               style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
             >
               <div className="bg-soul-surface/90 backdrop-blur-md rounded-lg px-4 py-2 border border-soul-border/40">
@@ -3622,7 +3668,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 20, scale: 0.95 }}
                 transition={{ duration: 0.2 }}
-                className="fixed top-24 left-1/2 transform -translate-x-1/2 z-50 max-w-sm"
+                className="fixed top-24 left-1/2 transform -translate-x-1/2 z-below-nav max-w-sm"
               >
                 <div className="bg-gradient-to-br from-amber-500/20 to-gold-divine/20 backdrop-blur-xl rounded-2xl p-4 border border-amber-400/30 shadow-2xl">
                   <div className="flex items-start gap-3">
@@ -3689,7 +3735,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           console.log('🔬 Lab button clicked!');
           setShowLabDrawer(true);
         }}
-        className="fixed bottom-6 right-6 z-[999] p-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 shadow-2xl shadow-amber-500/50 hover:scale-110 active:scale-95 border-2 border-amber-400/50"
+        className="fixed bottom-6 right-6 z-below-nav p-6 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 transition-all duration-300 shadow-2xl shadow-amber-500/50 hover:scale-110 active:scale-95 border-2 border-amber-400/50"
         style={{
           paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))',
           minWidth: '70px',
@@ -3705,7 +3751,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         <>
           {/* Backdrop to close when clicking outside */}
           <div
-            className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-sm"
+            className="modal-backdrop fixed inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setShowVoiceMenu(false)}
           />
           <motion.div
@@ -3713,7 +3759,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-[#1a1a2e]/98 to-[#16213e]/98 backdrop-blur-xl border border-[#D4B896]/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden z-[100]"
+            className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-[#1a1a2e]/98 to-[#16213e]/98 backdrop-blur-xl border border-[#D4B896]/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
           >
             <div className="p-4">
               <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#D4B896]/20">
@@ -3932,7 +3978,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: showRhythmDebug ? 0.9 : 0 }}
-          className="fixed top-4 right-4 bg-black/80 text-amber-300 p-4 rounded-lg font-mono text-xs z-50 pointer-events-none"
+          className="fixed top-4 right-4 bg-black/80 text-amber-300 p-4 rounded-lg font-mono text-xs z-below-nav pointer-events-none"
           style={{ maxWidth: '300px' }}
         >
           <div className="flex justify-between items-center mb-2 pointer-events-auto">
@@ -4000,6 +4046,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         isReturningUser={isReturningUser}
         onComplete={handleClosingRitualComplete}
         onSkip={handleClosingRitualSkip}
+      />
+
+      {/* 🧠 Consciousness Computing Feedback Prompt */}
+      <ConsciousnessComputingPrompt
+        messageCount={messages.length}
       />
 
     </div>

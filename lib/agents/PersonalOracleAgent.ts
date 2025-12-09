@@ -856,11 +856,16 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
       console.log(`💭 Retrieved ${conversationHistory.length} memories and ${breakthroughs.length} breakthroughs for ${this.userId}`);
 
       // 💫 LOAD RELATIONSHIP ANAMNESIS - Soul Recognition
-      const anamnesis = getRelationshipAnamnesis();
-      const soulSignature = anamnesis.detectSoulSignature(trimmedInput, this.userId, {
-        conversationHistory,
-        userName: this.settings?.name
-      });
+      let soulSignature = `soul_${this.userId}`;
+      try {
+        const anamnesis = getRelationshipAnamnesis();
+        soulSignature = anamnesis.detectSoulSignature(trimmedInput, this.userId, {
+          conversationHistory,
+          userName: this.settings?.name
+        });
+      } catch (error) {
+        console.log('⚠️ RelationshipAnamnesis not available, using fallback soul signature');
+      }
 
       let existingEssence: RelationshipEssence | null = null;
       let anamnesisPrompt = '';
@@ -1527,6 +1532,63 @@ This is the soul-level truth you're helping them see, not reference material to 
         console.warn('⚠️ Elemental Oracle 2.0 consultation failed:', eoError);
       }
       */
+
+      // 🌟 FIRST CONTACT INSTRUCTIONS (if user came through onboarding flow)
+      const onboardingContext = (context as any)?.onboardingContext;
+      const returningContext = (context as any)?.returningContext;
+
+      if (onboardingContext?.isFirstContact) {
+        const { MAIA_ONBOARDING_FIRST_CONTACT } = await import('@/lib/services/maiaTouchpoints');
+        systemPrompt += `\n\n${MAIA_ONBOARDING_FIRST_CONTACT}\n\n`;
+
+        // Add onboarding metadata for MAIA to use
+        systemPrompt += `\n## Onboarding Metadata:\n`;
+        systemPrompt += `- reason: "${onboardingContext.reason || 'explore'}"\n`;
+        systemPrompt += `- feeling: "${onboardingContext.feeling || 'neutral'}"\n`;
+        systemPrompt += `- partnerContext: "${onboardingContext.partnerContext || 'general'}"\n`;
+        systemPrompt += `- hasCustomProfessionalContext: ${onboardingContext.hasCustomProfessionalContext || false}\n\n`;
+
+        // Add professional context if available for first contact with partner context
+        if (onboardingContext.hasCustomProfessionalContext && onboardingContext.partnerContext !== 'general') {
+          try {
+            // Get partner context from session storage during first contact
+            const partnerContextData = typeof sessionStorage !== 'undefined'
+              ? JSON.parse(sessionStorage.getItem('partner_context_data') || '{}')
+              : null;
+
+            if (partnerContextData && Object.keys(partnerContextData).length > 0) {
+              const { generatePartnerContextPrompt } = await import('@/lib/services/partnerContextService');
+              const partnerPrompt = generatePartnerContextPrompt(partnerContextData);
+              if (partnerPrompt) {
+                systemPrompt += partnerPrompt;
+              }
+            }
+          } catch (error) {
+            console.warn('Failed to load partner context for first contact:', error);
+          }
+        }
+      } else if (returningContext?.sessionType === 'returning') {
+        const { MAIA_RETURNING_SESSION_BEHAVIOR } = await import('@/lib/services/maiaTouchpoints');
+        systemPrompt += `\n\n${MAIA_RETURNING_SESSION_BEHAVIOR}\n\n`;
+
+        // Add returning session metadata for MAIA to use
+        systemPrompt += `\n## Returning Session Metadata:\n`;
+        systemPrompt += `- sessionType: "${returningContext.sessionType}"\n`;
+        systemPrompt += `- lastReason: "${returningContext.lastReason || 'unknown'}"\n`;
+        systemPrompt += `- lastFeeling: "${returningContext.lastFeeling || 'unknown'}"\n`;
+        systemPrompt += `- lastSeenDays: ${returningContext.lastSeenDays || 'unknown'}\n`;
+        systemPrompt += `- partnerContext: "${returningContext.partnerContext || 'general'}"\n`;
+        systemPrompt += `- hasConversationHistory: ${returningContext.hasConversationHistory || false}\n\n`;
+
+        // Add professional context if available
+        if (returningContext.partnerContextData) {
+          const { generatePartnerContextPrompt } = await import('@/lib/services/partnerContextService');
+          const partnerPrompt = generatePartnerContextPrompt(returningContext.partnerContextData);
+          if (partnerPrompt) {
+            systemPrompt += partnerPrompt;
+          }
+        }
+      }
 
       // 🎭 MAIA'S INTEGRATION DIRECTIVE
       systemPrompt += `\n---\n\n**You are MAIA.** The context above is available to you - use it naturally when relevant. Don't announce what you have access to or wax poetic about integration. Just respond directly to what they're saying. The wisdom is yours to weave in when it fits, not to perform.\n`;

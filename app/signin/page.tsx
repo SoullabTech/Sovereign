@@ -1,16 +1,37 @@
 'use client';
 
-import { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import SacredSoulInduction from '@/components/onboarding/SacredSoulInduction';
+import { useRouter } from 'next/navigation';
 
 export default function SigninPage() {
-  useEffect(() => {
-    // Redirect to the existing luxurious retreat signin
-    window.location.href = '/soul-gateway';
-  }, []);
+  const router = useRouter();
+
+  const handleComplete = (userData: { name: string; username: string; password: string; }) => {
+    // Create user session from sacred soul induction data
+    const newUser = {
+      id: `user_${Date.now()}`,
+      username: userData.username,
+      name: userData.name,
+      password: userData.password,
+      onboarded: true,
+      daimonIntroComplete: true,
+      createdAt: new Date().toISOString(),
+    };
+
+    localStorage.setItem('beta_user', JSON.stringify(newUser));
+
+    // Also update the beta_users storage
+    const users = JSON.parse(localStorage.getItem('beta_users') || '{}');
+    users[userData.username] = newUser;
+    localStorage.setItem('beta_users', JSON.stringify(users));
+
+    router.push('/welcome-back');
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/20 flex items-center justify-center">
-      <div className="text-amber-300">Redirecting to signin...</div>
-    </div>
+    <SacredSoulInduction
+      onComplete={handleComplete}
+    />
   );
 }
