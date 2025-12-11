@@ -1,0 +1,27 @@
+{
+  "name": "pioneer-circle-manager",
+  "version": "1.0.0",
+  "description": "Pioneer Circle Manager API for consciousness computing beta testing",
+  "main": "pioneer-circle-manager.js",
+  "scripts": {
+    "start": "node pioneer-circle-manager.js",
+    "dev": "node pioneer-circle-manager.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "consciousness",
+    "beta-testing",
+    "pioneer-circle",
+    "management",
+    "api"
+  ],
+  "author": "Soullab Consciousness Computing",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

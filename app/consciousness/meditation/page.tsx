@@ -1,12 +1,13 @@
+'use client';
+
 import dynamicImport from 'next/dynamic';
 
-// Force static for Capacitor builds, dynamic for dev
-export const dynamic = process.env.CAPACITOR_BUILD ? 'force-static' : 'force-dynamic';
-
 const MeditationAwakeningPlatform = dynamicImport(
-  () => import('@/components/consciousness/MeditationAwakeningPlatform'),
-  { ssr: false }
+  () => import('@/components/consciousness/MeditationAwakeningPlatform')
 );
+
+// Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
+export const dynamic = 'force-dynamic';
 
 export default function ConsciousnessMeditationPage() {
   return (

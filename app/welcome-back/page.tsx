@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Heart, Crown, Sparkles, ArrowRight } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 
-export default function WelcomeBackPage() {
+function WelcomeBackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [userName, setUserName] = useState<string>('');
@@ -20,30 +20,28 @@ export default function WelcomeBackPage() {
   const isPartnerEntry = institution === 'yale' && context;
 
   useEffect(() => {
-    // If user is authenticated, they should have been routed to /maia directly
-    // So this page is only for signed-out users
     const sessionState = betaSession.restoreSession();
 
     if (sessionState.isAuthenticated && sessionState.user) {
-      // This shouldn't happen with the new routing, but handle gracefully
-      setIsAuthenticated(true);
-      setUserName(sessionState.user.name || sessionState.user.username || '');
-    } else {
-      // Expected case: signed-out user needs to sign in
-      setIsAuthenticated(false);
+      // User is already authenticated - redirect to /maia immediately
+      router.push('/maia');
+      return;
+    }
 
-      // Try to get stored name for personalization (privacy-safe)
-      try {
-        const betaUser = localStorage.getItem('beta_user');
-        if (betaUser) {
-          const userData = JSON.parse(betaUser);
-          if (userData.name) {
-            setUserName(userData.name);
-          }
+    // Expected case: signed-out user needs to sign in
+    setIsAuthenticated(false);
+
+    // Try to get stored name for personalization (privacy-safe)
+    try {
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        const userData = JSON.parse(betaUser);
+        if (userData.name) {
+          setUserName(userData.name);
         }
-      } catch (e) {
-        // Ignore parsing errors
       }
+    } catch (e) {
+      // Ignore parsing errors
     }
 
     setIsLoading(false);
@@ -96,7 +94,7 @@ export default function WelcomeBackPage() {
   const handleStartFresh = () => {
     // Clear localStorage and start completely fresh
     localStorage.clear();
-    router.push('/onboarding/facet');
+    router.push('/test-elemental');
   };
 
   // Show loading state while checking authentication
@@ -168,5 +166,13 @@ export default function WelcomeBackPage() {
       </div>
 
     </div>
+  );
+}
+
+export default function WelcomeBackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center text-teal-900">Loading welcome page...</div>}>
+      <WelcomeBackContent />
+    </Suspense>
   );
 }

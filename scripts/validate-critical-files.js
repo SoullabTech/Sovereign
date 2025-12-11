@@ -21,7 +21,9 @@ const criticalFiles = [
   'app/welcome/page.tsx',
   'app/onboarding/page.tsx',
   'components/onboarding/CompleteWelcomeFlow.tsx',
-  'components/onboarding/TealWelcomeFlow.tsx',
+  'components/onboarding/FAQSection.tsx',
+  'components/onboarding/ConsciousnessPreparation.tsx',
+  'components/onboarding/SageTealWelcome.tsx',
   'components/onboarding/FourthWelcomeInterface.tsx',
   'components/onboarding/FifthWelcomeInterface.tsx',
   'components/onboarding/MAIADaimonIntroduction.tsx',
@@ -33,6 +35,13 @@ const criticalFiles = [
   'components/onboarding/PlatformOrientation.tsx',
   'app/soul-gateway/page.tsx',
   'public/holoflower.svg',
+  // PARTNER CONFIGURATION SYSTEM - TSAI CITY INTEGRATION 🌐
+  'lib/partner/partner-config.ts',
+  'lib/partner/usePartnerConfig.ts',
+  'components/partner/PartnerProvider.tsx',
+  'components/partner/PartnerWelcomeFlow.tsx',
+  'components/partner/PartnerWelcomeHeader.tsx',
+  'app/partner/[slug]/page.tsx',
 ];
 
 let allFilesExist = true;

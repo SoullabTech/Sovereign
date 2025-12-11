@@ -330,11 +330,5 @@ function applyConstellationVisibilityFilter(constellation: any, mode: Constellat
 }
 
 // ==============================================================================
-// SESSION UTILITIES (would integrate with actual auth)
+// SESSION UTILITIES - Using imported getSessionUserId from lib/auth/session-utils
 // ==============================================================================
-
-async function getSessionUserId(request: NextRequest): Promise<string | null> {
-  // This would integrate with your actual auth system
-  // For now, return a mock user ID for testing
-  return 'user_mock_123';
-}

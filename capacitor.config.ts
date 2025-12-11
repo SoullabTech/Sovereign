@@ -2,13 +2,12 @@ import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
-  appName: 'Soullab MAIA',
-  webDir: 'www',
-  // server: {
-  //   url: 'http://192.168.4.210:3005',
-  //   cleartext: true,
-  //   androidScheme: 'http'
-  // },
+  appName: 'MAIA Consciousness Computing',
+  webDir: 'out',
+  bundledWebRuntime: false,
+  server: {
+    androidScheme: 'https'
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,

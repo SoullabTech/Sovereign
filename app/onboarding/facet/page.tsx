@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import FacetRouter from '@/components/onboarding/FacetRouter';
+import FacetRouterSimplified from '@/components/onboarding/FacetRouterSimplified';
 
-export default function FacetRouterPage() {
+function FacetRouterContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -36,9 +36,17 @@ export default function FacetRouterPage() {
   };
 
   return (
-    <FacetRouter
+    <FacetRouterSimplified
       partnerContext={partnerContext}
       onComplete={handleFacetComplete}
     />
+  );
+}
+
+export default function FacetPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center">Loading facet selection...</div>}>
+      <FacetRouterContent />
+    </Suspense>
   );
 }

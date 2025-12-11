@@ -125,37 +125,40 @@ export function useMaiaChat() {
     timing.startResponse(content?.substring(0, 50));
     
     try {
-      const res = await fetch("/api/maia/chat", {
+      const res = await fetch("/api/sovereign/app/maia", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          content,
-          context,
+        body: JSON.stringify({
+          message: content,  // Changed from 'content' to 'message' for sovereign API
           sessionId,
-          coherenceLevel,
-          timestamp: new Date().toISOString()
+          userId: 'anonymous',  // Add required userId field
+          conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),  // Add conversation history
+          consciousnessContext: {
+            coherenceLevel,
+            timestamp: new Date().toISOString()
+          }
         })
       });
 
       if (res.ok) {
         const data = await res.json();
         
-        // Add Maia's response
+        // Add Maia's response - Updated for sovereign API format
         const maiaMessage: ChatMessage = {
-          id: data.messageId,
+          id: data.session?.awarenessProfile?.userId || Date.now().toString(),
           role: "maia",
-          content: data.response,
-          timestamp: data.timestamp,
+          content: data.message,  // Sovereign API uses 'message' not 'response'
+          timestamp: data.session?.timestamp || new Date().toISOString(),
           source: "maia", // Mark as MAIA output for echo prevention
-          coherenceLevel: data.coherenceLevel,
-          elements: data.elements,
-          motionState: data.motionState,
+          coherenceLevel: data.fieldState?.coherence || 0.7,
+          elements: data.elemental?.balance || {},
+          motionState: data.consciousness?.awarenessLevel || "responding",
           sessionId
         };
-        
+
         setMessages(prev => [...prev, maiaMessage]);
-        setCoherenceLevel(data.coherenceLevel);
-        setState(data.motionState || "responding");
+        setCoherenceLevel(data.fieldState?.coherence || 0.7);
+        setState(data.consciousness?.awarenessLevel || "responding");
 
         // Complete timing metrics
         timing.endResponse();

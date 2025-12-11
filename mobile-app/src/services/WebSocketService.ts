@@ -21,7 +21,7 @@ export type ConnectionStatusListener = (status: ConnectionStatus) => void;
 
 class WebSocketServiceClass {
   private ws: WebSocket | null = null;
-  private wsUrl: string = 'ws://localhost:8080'; // Ritual WebSocket server
+  private wsUrl: string = 'ws://localhost:8080'; // Ritual WebSocket server (currently disabled for iOS Simulator compatibility)
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
@@ -54,8 +54,11 @@ class WebSocketServiceClass {
     try {
       await this.connect();
     } catch (error) {
-      console.error('🔴 Failed to initialize WebSocket:', error);
-      this.updateConnectionStatus('websocket', 'error');
+      console.warn('⚠️ WebSocket not available - running in offline mode:', error);
+      this.updateConnectionStatus('websocket', 'disconnected');
+      this.updateConnectionStatus('fieldStream', 'inactive');
+      // Continue app initialization even without WebSocket
+      return Promise.resolve();
     }
   }
 

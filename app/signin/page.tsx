@@ -26,7 +26,7 @@ export default function SigninPage() {
     users[userData.username] = newUser;
     localStorage.setItem('beta_users', JSON.stringify(users));
 
-    router.push('/welcome-back');
+    router.push('/maia');
   };
 
   return (

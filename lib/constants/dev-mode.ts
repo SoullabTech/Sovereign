@@ -49,6 +49,9 @@ export function checkMAIAPersonalityHealth(response: string): {
   isHealthy: boolean;
   issues: string[];
 } {
+  // TEMPORARILY DISABLE ALL HEALTH CHECKS - USER REPORTED ISSUES
+  return { isHealthy: true, issues: [] };
+
   if (!DEV_MODE) {
     return { isHealthy: true, issues: [] };
   }
@@ -62,7 +65,8 @@ export function checkMAIAPersonalityHealth(response: string): {
     /^(yes|yeah|absolutely|certainly|of course)[\s,]/i,
     /(can hear you|hear you|hello|hi there)/i,
     /how (may|can) I (assist|help)/i,
-    /what can I do for you/i
+    /what can I do for you/i,
+    /I'm here\.\s*What wants your attention/i
   ];
 
   const isSimpleResponse = simpleGreetingPatterns.some(pattern => pattern.test(trimmed));

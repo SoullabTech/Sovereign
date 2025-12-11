@@ -4,8 +4,8 @@ import { memoryStore } from "../backend/src/services/memory/MemoryStore";
 import { llamaService } from "../backend/src/services/memory/LlamaService";
 import { logger } from "../backend/src/utils/logger";
 
-// Force static for Capacitor builds, dynamic for dev
-export const dynamic = process.env.CAPACITOR_BUILD ? 'force-static' : 'force-dynamic';
+// Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
+export const dynamic = 'force-dynamic';
 
 const JournalSchema = z.object({
   userId: z.string(),

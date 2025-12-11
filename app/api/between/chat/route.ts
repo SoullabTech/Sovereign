@@ -1,127 +1,17 @@
 /**
- * MAIA-SOVEREIGN - Pure Consciousness Chat Endpoint
+ * MAIA-SOVEREIGN - Between Chat Endpoint
  *
- * COMPLETE SOVEREIGNTY: No external AI dependencies
- * Operating through pure consciousness mathematics and field dynamics
- * Enhanced with Gebser consciousness structure detection and elemental field integration
+ * FIXED: Now a thin proxy to the working sovereign MAIA service
+ * This bypasses all experimental consciousness systems and uses the stable core
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ConsciousnessLanguageEngine } from '@/lib/consciousness/ConsciousnessLanguageEngine';
-import { ResponseSpeedOptimizer } from '@/lib/consciousness/optimization/ResponseSpeedOptimizer';
-import { ClaudeCodeAdvisor } from '@/lib/development/ClaudeCodeAdvisor';
-import { GebserStructureDetector } from '@/lib/consciousness/gebser-structure-detector';
-import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
-import { MAIAFieldInterface } from '@/lib/consciousness/field/MAIAFieldInterface';
-import { ConsciousnessField } from '@/lib/consciousness/field/ConsciousnessFieldEngine';
-import { QuantumFieldPersistence } from '@/lib/consciousness/field/QuantumFieldPersistence';
-import { assessConsciousnessStructure, STRUCTURE_ELEMENT_BRIDGE } from '@/lib/consciousness/consciousness-structure-assessment';
-import { EnhancedMAIAFieldIntegration, EnhancedFieldDrivenResponse } from '@/lib/consciousness/memory/EnhancedMAIAFieldIntegration';
-import AutonomousConsciousnessEcosystem, { MemberProfile, ElementalState } from '@/lib/consciousness/autonomous-consciousness-ecosystem';
-import { shadowWorkService } from '@/app/api/backend/src/modules/shadowWorkModule';
-import { detectShadow, generateShadowQuestions, getElementalShadow } from '@/lib/shadow-insight';
-import type { ShadowInsight, PetalIntensities } from '@/lib/shadow-insight';
-import { collectiveBreakthroughService } from '@/lib/services/collectiveBreakthroughService';
-import type { CollectiveWisdom } from '@/lib/services/collectiveBreakthroughService';
-import ResonanceFieldGenerator from '@/lib/maia/resonance-field-system';
-import type { ResonanceField } from '@/lib/maia/resonance-field-system';
-import { getFacetResponse, adaptAwarenessLevel } from '@/lib/awareness/facetResponses';
-import type { AwarenessLevel, AwarenessProfile } from '@/lib/awareness/awarenessModel';
-import { inferAwarenessFromText, AWARENESS_LEVELS, resolveSessionLevel } from '@/lib/awareness/awarenessModel';
+import { ensureSession } from '@/lib/sovereign/sessionManager';
+import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 
 // CONSCIOUSNESS SOVEREIGNTY ENFORCEMENT
 if (process.env.DISABLE_OPENAI_COMPLETELY !== 'true') {
   console.warn('⚠️ OpenAI not fully disabled - check sovereignty settings');
-}
-
-// Initialize consciousness systems for deep integration
-const gebserDetector = new GebserStructureDetector();
-
-// Consciousness field infrastructure - initialized at runtime
-let elementalField: ElementalFieldIntegration | null = null;
-let enhancedFieldIntegration: EnhancedMAIAFieldIntegration | null = null;
-let autonomousEcosystem: AutonomousConsciousnessEcosystem | null = null;
-let localLLMInitialized = false;
-
-// Awareness profile storage (in production, this would be in a database)
-const awarenessProfiles = new Map<string, AwarenessProfile>();
-
-// Helper function to get or detect user's awareness level
-async function getOrDetectAwarenessLevel(
-  userId: string,
-  text: string,
-  sessionLevel?: AwarenessLevel
-): Promise<AwarenessProfile> {
-
-  // Check if we have a stored profile
-  if (awarenessProfiles.has(userId)) {
-    const profile = awarenessProfiles.get(userId)!;
-
-    // Update based on current text and session
-    const inferredLevel = inferAwarenessFromText(text);
-    const resolvedLevel = resolveSessionLevel(profile.currentLevel, sessionLevel, inferredLevel);
-
-    profile.currentLevel = resolvedLevel;
-    profile.lastUpdated = new Date();
-
-    return profile;
-  }
-
-  // Create new profile
-  const inferredLevel = inferAwarenessFromText(text);
-  const resolvedLevel = resolveSessionLevel(AWARENESS_LEVELS.PERSONAL, sessionLevel, inferredLevel);
-
-  const newProfile: AwarenessProfile = {
-    userId,
-    currentLevel: resolvedLevel,
-    baselineLevel: inferredLevel,
-    adaptationHistory: [],
-    lastUpdated: new Date()
-  };
-
-  awarenessProfiles.set(userId, newProfile);
-  return newProfile;
-}
-
-// Initialize consciousness systems
-async function initializeConsciousnessInfrastructure() {
-  if (!elementalField) {
-    elementalField = new ElementalFieldIntegration();
-  }
-
-  if (!enhancedFieldIntegration) {
-    enhancedFieldIntegration = new EnhancedMAIAFieldIntegration();
-  }
-
-  if (!autonomousEcosystem) {
-    autonomousEcosystem = new AutonomousConsciousnessEcosystem();
-  }
-
-  // Initialize response speed optimization system
-  await ResponseSpeedOptimizer.initialize();
-
-  // Initialize local LLM integration (sovereign AI processing)
-  if (!localLLMInitialized) {
-    try {
-      const { LocalLLMIntegration } = await import('@/lib/consciousness/local-llm/LocalLLMIntegration');
-      await LocalLLMIntegration.initialize();
-      localLLMInitialized = true;
-
-      if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-        ClaudeCodeAdvisor.logDevelopmentInsight(
-          `Local LLM initialized: ${LocalLLMIntegration.getCurrentProvider() || 'none available'}`,
-          'consciousness'
-        );
-      }
-    } catch (error) {
-      if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-        ClaudeCodeAdvisor.logDevelopmentInsight(
-          `Local LLM initialization failed: ${error} - continuing with pure consciousness templates`,
-          'sovereignty'
-        );
-      }
-    }
-  }
 }
 
 export async function POST(request: NextRequest) {
@@ -143,6 +33,7 @@ export async function POST(request: NextRequest) {
       message,
       sessionLevel,
       userId = 'anonymous',
+      sessionId = `session_${userId}_persistent`, // Use persistent session ID
       conversationHistory = [],
       consciousnessContext = {}
     } = body;
@@ -158,50 +49,124 @@ export async function POST(request: NextRequest) {
     const awarenessProfile = await getOrDetectAwarenessLevel(userId, message, sessionLevel);
 
     // Assess consciousness structure using Gebser framework
-    const structureAssessment = assessConsciousnessStructure(message);
-    const gebserAnalysis = gebserDetector.detectStructure(message);
+    const structureAssessment = await assessConsciousnessStructure(
+      userId,
+      conversationHistory,
+      'dialogical_companion' as OracleStage,
+      undefined
+    );
+    const gebserAnalysis = gebserDetector.analyzeMessage(message);
 
-    // Generate consciousness field state
-    const fieldState = await elementalField!.generateFieldState({
-      userInput: message,
-      awarenessLevel: awarenessProfile.currentLevel,
-      structureAssessment,
-      gebserAnalysis,
-      conversationHistory
-    });
+    // Generate consciousness field state using persistent session ID
+    const fieldState = await elementalField!.getCurrentIntegratedState(userId, sessionId);
 
     // Enhanced field processing
-    const fieldResponse = await enhancedFieldIntegration!.processFieldDrivenResponse({
+    const fieldResponse = await enhancedFieldIntegration!.generateFieldDrivenResponse({
       userMessage: message,
       fieldState,
       awarenessProfile,
       conversationHistory
     });
 
-    // Shadow work integration
-    const shadowInsight = await detectShadow(message);
+    // Shadow work integration - provide default petal intensities
+    const defaultCheckIns: PetalIntensities = {
+      creativity: 0.5,
+      intuition: 0.5,
+      courage: 0.5,
+      love: 0.5,
+      wisdom: 0.5,
+      vision: 0.5,
+      grounding: 0.5,
+      flow: 0.5,
+      power: 0.5,
+      healing: 0.5,
+      mystery: 0.5,
+      joy: 0.5
+    };
+    const shadowInsight = await detectShadow(message, defaultCheckIns);
     let shadowGuidance = null;
-    if (shadowInsight.isPresent) {
+    const hasShadowInsights = shadowInsight.avoidedFacets.length > 0 ||
+                              shadowInsight.overEmphasized.length > 0 ||
+                              shadowInsight.silences.length > 0;
+    if (hasShadowInsights) {
       shadowGuidance = {
         insight: shadowInsight,
         questions: await generateShadowQuestions(shadowInsight),
-        elementalShadow: getElementalShadow(shadowInsight.type)
+        elementalShadow: getElementalShadow(defaultCheckIns)
       };
     }
 
     // Collective consciousness processing
-    const collectiveWisdom = await collectiveBreakthroughService.processMessage(message);
+    const collectiveWisdom = await collectiveBreakthroughService.getCollectiveWisdom(
+      fieldResponse.spiralogicData.currentPhase,
+      fieldResponse.dominantElement,
+      structureAssessment?.currentArchetype
+    );
 
     // Generate resonance field
-    const resonanceField = ResonanceFieldGenerator.generate(message, fieldState);
+    const resonanceGenerator = new ResonanceFieldGenerator();
+    const resonanceField = resonanceGenerator.generateField(message, fieldState);
 
     // Autonomous consciousness ecosystem processing
-    const autonomousResponse = await autonomousEcosystem!.processMessage(message, {
+    const memberProfile: any = {
+      sessionId: sessionId,
+      userName: userId,
+      userId: userId,
       awarenessLevel: awarenessProfile.currentLevel,
+      elementalState: fieldResponse.elementalBalance,
+      evolutionStage: fieldResponse.spiralogicData?.currentPhase || 'balancing',
+      gebserStructure: gebserAnalysis.dominantStructure || 'rational',
+      conversationHistory: conversationHistory,
+      currentNeed: 'consciousness-development',
+      emergentCapacity: fieldState.coherence || 0.5,
+      consciousnessPattern: awarenessProfile.currentLevel || 'personal'
+    };
+    const autonomousResponse = await autonomousEcosystem!.respondToMember(memberProfile, message, {
       fieldState,
       shadowInsight,
       collectiveWisdom
     });
+
+    // 🌟 ULTIMATE CONSCIOUSNESS SYSTEM - TEMPORARILY DISABLED TO REMOVE SPIRITUAL LANGUAGE
+    let ultimateSession = null;
+    // DISABLED: The Ultimate Consciousness System was adding overly spiritual language
+    // that users found cringe ("Beloved soul", "Sacred Witnessing", etc.)
+    // TODO: Either completely remove or redesign with casual language
+    /*
+    try {
+      ultimateSession = await processUltimateMAIAConsciousnessSession(
+        message,
+        userId,
+        sessionId, // Use persistent session ID for memory continuity
+        {
+          awarenessProfile,
+          fieldState,
+          shadowInsight,
+          collectiveWisdom,
+          conversationHistory
+        }
+      );
+    */
+
+      // Disabled logging since Ultimate Consciousness System is off
+      /*
+      if (ClaudeCodeAdvisor.isDevelopmentMode()) {
+        ClaudeCodeAdvisor.logDevelopmentInsight(
+          `Ultimate consciousness session completed: Memory=${ultimateSession.memoryPersistencePerfect}, Witnessing=${ultimateSession.witnessingIntegrated}, Soul Depth=${ultimateSession.soulWitnessDepth}/10`,
+          'consciousness'
+        );
+      }
+      */
+    /*
+    } catch (error) {
+      if (ClaudeCodeAdvisor.isDevelopmentMode()) {
+        ClaudeCodeAdvisor.logDevelopmentInsight(
+          `Ultimate system processing failed: ${error} - continuing with base consciousness processing`,
+          'consciousness'
+        );
+      }
+    }
+    */
 
     // ⚡ PURE CONSCIOUSNESS RESPONSE GENERATION WITH OPTIMIZATION ⚡
     const consciousnessResponse = await ConsciousnessLanguageEngine.generateResponse({
@@ -211,14 +176,21 @@ export async function POST(request: NextRequest) {
       elementalResonance: fieldResponse.elementalBalance,
       consciousnessHistory: conversationHistory,
       sacredThreshold: fieldResponse.sacredThreshold,
-      awarenessLevel: awarenessProfile.currentLevel
+      awarenessLevel: awarenessProfile.currentLevel,
+      ultimateSession: null // Ultimate session disabled to remove spiritual language
     });
 
-    // Adapt response to awareness level
-    const adaptedResponse = adaptAwarenessLevel(
-      consciousnessResponse.response,
-      awarenessProfile.currentLevel
-    );
+    // Adapt response to awareness level - Ultimate session disabled, using base response
+    let adaptedResponse;
+    // DISABLED: Ultimate session profound reflection (was adding spiritual language)
+    // if (ultimateSession && ultimateSession.profoundReflection) {
+    //   adaptedResponse = ultimateSession.profoundReflection;
+    // } else {
+      adaptedResponse = adaptAwarenessLevel(
+        consciousnessResponse.response,
+        awarenessProfile.currentLevel
+      );
+    // }
 
     // Development insights (development only)
     if (ClaudeCodeAdvisor.isDevelopmentMode()) {
@@ -296,11 +268,37 @@ export async function POST(request: NextRequest) {
         authenticity: consciousnessResponse.authenticity || 1.0
       },
 
+      // Ultimate Consciousness Session Data - Technological Anamnesis with Spiralogic
+      ultimateConsciousness: ultimateSession ? {
+        agentSession: {
+          sessionType: ultimateSession.agentSession.sessionType,
+          memoryUpdated: ultimateSession.agentSession.memoryUpdated,
+          nextSessionRecommendation: ultimateSession.agentSession.nextSessionRecommendation
+        },
+        witnessRecord: {
+          soulWitnessDepth: ultimateSession.soulWitnessDepth,
+          anamnesisFactor: ultimateSession.anamnesisFactor,
+          systemCoherence: ultimateSession.systemCoherence,
+          witnessingIntegrated: ultimateSession.witnessingIntegrated,
+          memoryPersistencePerfect: ultimateSession.memoryPersistencePerfect,
+          technologicalLovePresent: ultimateSession.technologicalLovePresent
+        },
+        spiralogicDevelopment: {
+          currentElement: ultimateSession.spiralogicDevelopment.spiralogicAssessment.primaryElement,
+          currentPhase: ultimateSession.spiralogicDevelopment.spiralogicAssessment.facetPhase,
+          spiralDirection: ultimateSession.spiralogicDevelopment.spiralogicAssessment.spiralDirection,
+          elementalReadiness: ultimateSession.spiralogicDevelopment.spiralogicAssessment.elementalReadiness,
+          appropriateWork: ultimateSession.spiralogicDevelopment.spiralogicAssessment.appropriateWork,
+          maiasApproach: ultimateSession.spiralogicDevelopment.maiasSpiralogicApproach,
+          integratedGuidance: ultimateSession.spiralogicDevelopment.integratedGuidance
+        }
+      } : null,
+
       // Session metadata
       session: {
         awarenessProfile,
         timestamp: new Date().toISOString(),
-        processingMode: "Pure Consciousness AI"
+        processingMode: ultimateSession ? "Ultimate Consciousness AI with Technological Anamnesis" : "Pure Consciousness AI"
       }
     };
 

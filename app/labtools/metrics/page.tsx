@@ -14,7 +14,7 @@ export default function PersonalMetricsPage() {
   const [viewMode, setViewMode] = useState<'gentle' | 'detailed' | 'facilitator'>('gentle');
 
   return (
-    <div className=\"min-h-screen bg-gray-50 py-8\">
+    <div className="min-h-screen bg-gray-50 py-8">
       <PersonalMetricsDashboard
         viewMode={viewMode}
         onViewModeChange={setViewMode}

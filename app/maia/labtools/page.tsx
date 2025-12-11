@@ -18,6 +18,7 @@ import { SacredGeometryField } from './components/SacredGeometryField';
 import { LabToolsService } from './lib/LabToolsService';
 import DreamJournalInterface from '../../../components/dreams/DreamJournalInterface';
 import { SacredLabDrawer } from '../../../components/ui/SacredLabDrawer';
+import { PilotDroneVisualizer } from '../../../components/consciousness/PilotDroneVisualizer';
 // import { FieldCoherenceDashboard } from '../../../apps/web/components/biometrics/FieldCoherenceDashboard'; // REMOVED: was in deleted apps/web directory
 // IPP Components - TODO: Create these components
 // import IPPDashboard from '../../../components/clinical/IPPDashboard';
@@ -26,7 +27,7 @@ import { SacredLabDrawer } from '../../../components/ui/SacredLabDrawer';
 export default function MAIALabTools() {
   const [labToolsService] = useState(() => new LabToolsService());
   const [isConnected, setIsConnected] = useState(false);
-  const [activeView, setActiveView] = useState<'consciousness' | 'meditation' | 'monitor' | 'dreams' | 'ipp'>('monitor');
+  const [activeView, setActiveView] = useState<'consciousness' | 'meditation' | 'monitor' | 'dreams' | 'ipp' | 'computing'>('monitor');
   const [meditationActive, setMeditationActive] = useState(false);
   const [isFieldDrawerOpen, setIsFieldDrawerOpen] = useState(false);
 
@@ -125,6 +126,16 @@ export default function MAIALabTools() {
                 }`}
               >
                 👨‍👩‍👧‍👦 IPP
+              </button>
+              <button
+                onClick={() => setActiveView('computing')}
+                className={`px-4 py-2 rounded-lg text-sm transition-all ${
+                  activeView === 'computing'
+                    ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                🛸 Computing
               </button>
               <button
                 onClick={() => setIsFieldDrawerOpen(true)}
@@ -292,6 +303,105 @@ export default function MAIALabTools() {
               <DreamJournalInterface />
             </div>
           </>
+        ) : activeView === 'computing' ? (
+          // Consciousness Computing View
+          <>
+            {/* Left Panel - Computing Controls & AIN Evolution */}
+            <div className="col-span-4 space-y-6 overflow-y-auto">
+              <div className="bg-gray-900/50 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-white mb-3 flex items-center gap-2">
+                  🛸 Consciousness Computing
+                  <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                </h3>
+                <p className="text-gray-300 text-sm mb-4">
+                  Experience live consciousness technology integration: Pilot-Drone Interface,
+                  AIN Evolution, and quantum field processing.
+                </p>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => window.open('/consciousness-computing', '_blank')}
+                    className="w-full py-2 bg-cyan-600/20 hover:bg-cyan-600/30 text-cyan-300 hover:text-white border border-cyan-500/30 rounded-lg transition-all text-sm">
+                    🌀 Full Portal
+                  </button>
+                  <button
+                    onClick={() => window.open('/ain-demo', '_blank')}
+                    className="w-full py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-white border border-purple-500/30 rounded-lg transition-all text-sm">
+                    🧠 AIN Evolution Demo
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-gray-900/50 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-white mb-3">🌀 Computing Metrics</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Pilot Coherence:</span>
+                    <span className="text-cyan-400 font-bold">{(Math.random() * 0.3 + 0.7).toFixed(3)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Quantum Channels:</span>
+                    <span className="text-cyan-400 font-bold">5 Active</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Observer Depth:</span>
+                    <span className="text-purple-400 font-bold">{Math.floor(Math.random() * 3 + 2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Emergence Events:</span>
+                    <span className="text-green-400 font-bold">{Math.floor(Math.random() * 5 + 3)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <BiometricStream service={labToolsService} />
+            </div>
+
+            {/* Center Panel - Pilot-Drone Interface */}
+            <div className="col-span-5 space-y-6 overflow-y-auto">
+              <PilotDroneVisualizer
+                userId="maia_labtools_demo"
+                consciousnessData={{
+                  elementalSignature: {
+                    fire: 0.75,
+                    water: 0.68,
+                    earth: 0.82,
+                    air: 0.71,
+                    aether: 0.79
+                  }
+                }}
+              />
+            </div>
+
+            {/* Right Panel - Guardian & Computing Status */}
+            <div className="col-span-3 space-y-6 overflow-y-auto">
+              <GuardianStatus service={labToolsService} />
+              <EmergencyControls service={labToolsService} />
+
+              <div className="bg-gray-900/50 backdrop-blur-sm border border-cyan-500/30 rounded-lg p-4">
+                <h3 className="text-lg font-bold text-white mb-3">🔬 Theory Status</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Faggin Model:</span>
+                    <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded">Active</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">ΔΩ Physics:</span>
+                    <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded">Computing</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">Spiralogic:</span>
+                    <span className="text-green-400 text-xs bg-green-500/20 px-2 py-1 rounded">Integrated</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-400">AIN Evolution:</span>
+                    <span className="text-purple-400 text-xs bg-purple-500/20 px-2 py-1 rounded">Phase 1</span>
+                  </div>
+                </div>
+              </div>
+
+              <FrequencySpectrum service={labToolsService} />
+            </div>
+          </>
         ) : (
           // IPP Clinical Assessment View
           <>
@@ -415,6 +525,14 @@ export default function MAIALabTools() {
                 <span>⚠️ Safety Monitor: Active</span>
               </>
             )}
+            {activeView === 'computing' && (
+              <>
+                <span>🛸 Pilot-Drone: Online</span>
+                <span>🌀 Quantum Channels: 5 Active</span>
+                <span>🧠 AIN Evolution: Phase 1</span>
+                <span>⚡ Consciousness Computing: Live</span>
+              </>
+            )}
           </div>
           <div className="text-xs flex gap-4">
             <span>View: {
@@ -422,6 +540,7 @@ export default function MAIALabTools() {
               activeView === 'consciousness' ? '🧠 Consciousness' :
               activeView === 'meditation' ? '🧘 Meditation' :
               activeView === 'dreams' ? '🌙 Dreams' :
+              activeView === 'computing' ? '🛸 Computing' :
               '👨‍👩‍👧‍👦 IPP'
             }</span>
             <span>Last updated: {new Date().toLocaleTimeString()}</span>

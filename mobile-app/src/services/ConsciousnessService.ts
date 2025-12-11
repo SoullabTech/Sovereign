@@ -24,7 +24,14 @@ import {
 } from '../types';
 
 class ConsciousnessServiceClass {
-  private baseUrl: string = 'http://localhost:3008'; // Beta server URL
+  private baseUrls: string[] = [
+    'http://127.0.0.1:3008',        // iOS Simulator compatible basic server
+    'http://127.0.0.1:3001',        // iOS Simulator compatible full API server
+    'http://localhost:3008',         // Basic consciousness computing server
+    'http://localhost:3001',         // Full API server with beta chat
+    'http://soullab.life',           // Primary universal HTTP access
+  ];
+  private baseUrl: string = this.baseUrls[0]; // Start with universal access
   private apiKey: string | null = null;
   private isInitialized: boolean = false;
   private connectionStatus: 'connected' | 'disconnected' | 'limited' = 'disconnected';
@@ -331,7 +338,7 @@ class ConsciousnessServiceClass {
   }
 
   /**
-   * Make HTTP request to consciousness platform
+   * Make HTTP request to consciousness platform with automatic fallback
    */
   private async makeRequest(
     endpoint: string,
@@ -342,49 +349,79 @@ class ConsciousnessServiceClass {
       throw new Error('ConsciousnessService not initialized');
     }
 
-    try {
-      const url = `${this.baseUrl}${endpoint}`;
-      const options: RequestInit = {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` }),
-        },
-        ...(data && { body: JSON.stringify(data) }),
-      };
+    // Try each URL in order until one works
+    for (let i = 0; i < this.baseUrls.length; i++) {
+      const baseUrl = this.baseUrls[i];
 
-      const response = await fetch(url, options);
+      try {
+        const url = `${baseUrl}${endpoint}`;
+        const options: RequestInit = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(this.apiKey && { 'Authorization': `Bearer ${this.apiKey}` }),
+          },
+          ...(data && { body: JSON.stringify(data) }),
+          timeout: 10000, // 10 second timeout per attempt
+        };
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        console.log(`🌐 Attempting request to: ${baseUrl}${endpoint}`);
+        const response = await fetch(url, options);
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        // Success! Update current base URL for future requests
+        if (this.baseUrl !== baseUrl) {
+          console.log(`✅ Switched to working endpoint: ${baseUrl}`);
+          this.baseUrl = baseUrl;
+          await AsyncStorage.setItem('maia_base_url', baseUrl);
+        }
+
+        this.retryCount = 0; // Reset retry count on success
+        return {
+          success: true,
+          data: result,
+          timestamp: new Date().toISOString(),
+        };
+
+      } catch (error) {
+        console.warn(`⚠️ Failed to reach ${baseUrl}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+
+        // If this is the last URL to try, return the error
+        if (i === this.baseUrls.length - 1) {
+          this.retryCount++;
+
+          if (this.retryCount < this.maxRetries) {
+            // Exponential backoff retry with all URLs again
+            console.log(`🔄 Retrying all endpoints (attempt ${this.retryCount + 1}/${this.maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, this.retryCount)));
+            return this.makeRequest(endpoint, method, data);
+          }
+
+          this.retryCount = 0;
+          this.connectionStatus = 'disconnected';
+          return {
+            success: false,
+            error: error instanceof Error ? error.message : 'All endpoints failed',
+            timestamp: new Date().toISOString(),
+          };
+        }
+
+        // Continue to next URL
+        continue;
       }
-
-      const result = await response.json();
-      this.retryCount = 0; // Reset retry count on success
-
-      return {
-        success: true,
-        data: result,
-        timestamp: new Date().toISOString(),
-      };
-
-    } catch (error) {
-      this.retryCount++;
-      console.error(`🔴 API request failed (attempt ${this.retryCount}):`, error);
-
-      if (this.retryCount < this.maxRetries) {
-        // Exponential backoff retry
-        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, this.retryCount)));
-        return this.makeRequest(endpoint, method, data);
-      }
-
-      this.retryCount = 0;
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString(),
-      };
     }
+
+    // This should never be reached, but just in case
+    return {
+      success: false,
+      error: 'No endpoints available',
+      timestamp: new Date().toISOString(),
+    };
   }
 
   /**

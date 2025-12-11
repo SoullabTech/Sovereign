@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { betaSession } from '@/lib/auth/betaSession';
-import { ArrowLeft, UserPlus, Edit3, Trash2, Save, X, Key, Users } from 'lucide-react';
+import { ArrowLeft, UserPlus, Edit3, Trash2, Save, X, Key, Users, Activity } from 'lucide-react';
+import { SystemHealthDisplay } from '@/components/system-health/SystemHealthDisplay';
 
 interface User {
   id: string;
@@ -228,6 +229,15 @@ export default function AdminPage() {
             {message}
           </div>
         )}
+
+        {/* System Health Monitoring */}
+        <div className="mb-8">
+          <div className="flex items-center space-x-2 mb-4">
+            <Activity className="w-6 h-6 text-teal-400" />
+            <h2 className="text-xl font-cinzel text-white">System Health Monitoring</h2>
+          </div>
+          <SystemHealthDisplay showDetails={true} className="mb-6" />
+        </div>
 
         {/* Add User Button */}
         <div className="mb-6 flex justify-between items-center">

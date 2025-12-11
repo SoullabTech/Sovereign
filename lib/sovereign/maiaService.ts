@@ -1,5 +1,6 @@
 // backend: lib/sovereign/maiaService.ts
 import { incrementTurnCount } from './sessionManager';
+import { buildMaiaWisePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
 
 export type MaiaResponse = {
   text: string;

@@ -53,7 +53,7 @@ const extractFirstName = (nameOrKey: string): string => {
   return firstWord || nameOrKey;
 };
 
-export default function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
+function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
   const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing'>('arrival');
   const [soulKey, setSoulKey] = useState('');
   const [name, setName] = useState('');
@@ -100,38 +100,38 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
     // Reason-based messaging for different approaches
     const reasonMessages = {
       'inner': {
-        title: "Inner Sanctuary Access",
+        title: "We've Been Expecting You",
         greeting: "Welcome, Inner Explorer",
         description: "You're entering a space designed for emotional growth and inner healing.",
         keyPrompt: "Your key unlocks tools that support your inner journey and authentic feelings."
       },
       'direction': {
-        title: "Creative Direction Portal",
+        title: "We've Been Expecting You",
         greeting: "Welcome, Creative Soul",
         description: "You're stepping into a space where creativity and purpose intersect.",
         keyPrompt: "Your key unlocks pathways to creative expression and authentic direction."
       },
       'work': {
-        title: "Professional Growth Hub",
+        title: "We've Been Expecting You",
         greeting: "Welcome, Professional",
         description: "You're entering a space designed for leadership and project transformation.",
         keyPrompt: "Your key unlocks insights that transform how you show up in your work."
       },
       'relationships': {
-        title: "Connection Consciousness Lab",
+        title: "We've Been Expecting You",
         greeting: "Welcome, Relationship Explorer",
         description: "You're stepping into a space for understanding connection patterns.",
         keyPrompt: "Your key unlocks tools that support authentic relationships and family dynamics."
       },
       'support': {
-        title: "Supporter's Sanctuary",
+        title: "We've Been Expecting You",
         greeting: "Welcome, Caregiver",
         description: "You're entering a space designed for those who support others.",
         keyPrompt: "Your key unlocks resources that nourish you while you nourish others."
       },
       'explore': {
-        title: "Curiosity Portal Activated",
-        greeting: "Welcome, Explorer",
+        title: "We've Been Expecting You",
+        greeting: "Welcome, Beautiful Soul",
         description: "You're stepping into a space for conscious discovery and exploration.",
         keyPrompt: "Your key unlocks pathways to insights and authentic curiosity."
       }
@@ -252,22 +252,42 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
             {phase === 'arrival' && (
               <motion.div
                 key="arrival"
-                initial={{ opacity: 0, y: 30 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 1.2 }}
+                transition={{
+                  duration: 0.8,
+                  ease: [0.25, 0.46, 0.45, 0.94],
+                  delay: 0.2
+                }}
                 className="space-y-10"
               >
                 {/* Clean crystal clear Holoflower - positioned lower */}
-                <div className="mb-8 relative">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{
+                    duration: 1.0,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    delay: 0.4
+                  }}
+                  className="mb-8 relative"
+                >
                   {/* Extra large crystal clear Holoflower */}
                   <div className="w-64 h-64 mx-auto relative z-50 flex items-center justify-center">
                     <Holoflower size="xxl" glowIntensity="high" animate={true} />
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Welcome Card with deep shadows */}
-                <div
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.25, 0.46, 0.45, 0.94],
+                    delay: 0.8
+                  }}
                   className="rounded-2xl p-8 max-w-md w-full text-center mb-16 shadow-2xl border"
                   style={{
                     background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(251, 191, 36, 0.05), rgba(255, 255, 255, 0.15))',
@@ -329,7 +349,16 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
                       </motion.div>
                     )}
 
-                    <div className="relative">
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{
+                        duration: 0.6,
+                        ease: [0.25, 0.46, 0.45, 0.94],
+                        delay: 1.2
+                      }}
+                      className="relative"
+                    >
                       {/* Flowing light effect behind button */}
                       <motion.div
                         className="absolute inset-0 rounded-xl opacity-60"
@@ -351,21 +380,78 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
                       <motion.button
                         type="submit"
                         disabled={!soulKey.trim() || isRecognizing}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-teal-900 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                        whileHover={{
+                          scale: 1.02,
+                          y: -2
+                        }}
+                        whileTap={{
+                          scale: 0.98,
+                          y: 1
+                        }}
+                        className="relative z-10 w-full px-8 py-5 rounded-xl font-black text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        style={{
+                          background: `
+                            linear-gradient(145deg, #fcd34d 0%, #fbbf24 20%, #f59e0b 60%, #d97706 100%),
+                            linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
+                          `,
+                          border: '3px solid #92400e',
+                          borderTop: '3px solid #f59e0b',
+                          borderBottom: '3px solid #78350f',
+                          boxShadow: `
+                            0 8px 16px rgba(0, 0, 0, 0.3),
+                            0 4px 8px rgba(0, 0, 0, 0.2),
+                            0 12px 24px rgba(146, 64, 14, 0.4),
+                            inset 0 2px 4px rgba(255, 255, 255, 0.4),
+                            inset 0 -3px 6px rgba(0, 0, 0, 0.2),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                          `,
+                          color: '#1f2937',
+                          textShadow: '0 1px 2px rgba(255, 255, 255, 0.5), 0 -1px 1px rgba(0, 0, 0, 0.3)',
+                          transform: 'translateY(-2px)'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = `
+                            linear-gradient(145deg, #fde047 0%, #fcd34d 20%, #fbbf24 60%, #f59e0b 100%),
+                            linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
+                          `;
+                          e.currentTarget.style.boxShadow = `
+                            0 10px 20px rgba(0, 0, 0, 0.4),
+                            0 6px 12px rgba(0, 0, 0, 0.3),
+                            0 16px 32px rgba(146, 64, 14, 0.5),
+                            inset 0 3px 6px rgba(255, 255, 255, 0.5),
+                            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.7)
+                          `;
+                          e.currentTarget.style.transform = 'translateY(-4px)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = `
+                            linear-gradient(145deg, #fcd34d 0%, #fbbf24 20%, #f59e0b 60%, #d97706 100%),
+                            linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
+                          `;
+                          e.currentTarget.style.boxShadow = `
+                            0 8px 16px rgba(0, 0, 0, 0.3),
+                            0 4px 8px rgba(0, 0, 0, 0.2),
+                            0 12px 24px rgba(146, 64, 14, 0.4),
+                            inset 0 2px 4px rgba(255, 255, 255, 0.4),
+                            inset 0 -3px 6px rgba(0, 0, 0, 0.2),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                          `;
+                          e.currentTarget.style.transform = 'translateY(-2px)';
+                        }}
                       >
                         {isRecognizing ? 'Recognizing...' : 'Enter the lab'}
                       </motion.button>
-                    </div>
+                    </motion.div>
                   </form>
 
                   <div className="text-center mt-8">
                     <p className="text-teal-800/60 text-sm font-extralight italic tracking-[0.1em]">
-                      "Every evolution begins with presence."
+"Attention changes the world. How you attend to it changes what it is you find there."
+                      — Iain McGilchrist
                     </p>
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Infinity Symbol to ground the card */}
                 <div className="flex justify-center mt-4">
@@ -513,7 +599,10 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
                           type="submit"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-teal-900 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-black rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          style={{
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                          }}
                         >
                           Onward!
                         </motion.button>
@@ -705,7 +794,10 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
                           type="submit"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-teal-900 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-black rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          style={{
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                          }}
                         >
                           Onward!
                         </motion.button>
@@ -783,3 +875,6 @@ export default function SacredSoulInduction({ onComplete }: SacredSoulInductionP
     </div>
   );
 }
+
+export { SacredSoulInduction };
+export default SacredSoulInduction;

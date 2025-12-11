@@ -82,6 +82,20 @@
   "Facilitate emotional flow"
   '("Create safe space" "Feel emotions without judgment" "Allow natural flow" "Integrate wisdom"))
 
+(create-basic-protocol
+  "air-expansion"
+  :air
+  12
+  "Expand mental clarity and perspective"
+  '("Take conscious breaths" "Clear mental space" "Expand awareness" "Embrace new perspectives"))
+
+(create-basic-protocol
+  "aether-unity"
+  :aether
+  25
+  "Connect with transcendent unity consciousness"
+  '("Enter sacred stillness" "Feel universal connection" "Transcend ordinary boundaries" "Rest in unity awareness"))
+
 ;;; ============================================================================
 ;;; SPIRALOGIC INTEGRATION
 ;;; ============================================================================
@@ -111,8 +125,8 @@
     (:fire-visibility '("fire-ignition"))
     (:earth-grounding '("earth-grounding"))
     (:water-depth '("water-flow"))
-    (:air-expansion '("breath-expansion"))
-    (:aether-transcendence '("unity-meditation"))
+    (:air-expansion '("air-expansion"))
+    (:aether-transcendence '("aether-unity"))
     (otherwise '("integration-protocol"))))
 
 ;;; ============================================================================

@@ -15,7 +15,6 @@ def capacitor_pods
   pod 'CapacitorFilesystem', :path => '../../node_modules/@capacitor/filesystem'
   pod 'CapacitorLocalNotifications', :path => '../../node_modules/@capacitor/local-notifications'
   pod 'CapacitorShare', :path => '../../node_modules/@capacitor/share'
-  pod 'CapacitorHealthkit', :path => '../../node_modules/capacitor-healthkit'
 end
 
 target 'App' do

@@ -103,7 +103,12 @@ export type WebSocketMessageType =
   | 'SYSTEM_STATUS'
   | 'INITIAL_STATE'
   | 'ARCHETYPE_SHIFT'
-  | 'CONNECTION_STATUS';
+  | 'CONNECTION_STATUS'
+  | 'PING'
+  | 'PONG'
+  | 'SUBSCRIBE_FCI'
+  | 'SUBSCRIBE_RITUALS'
+  | 'LOG_RITUAL_EVENT';
 
 export interface WhisperMessage {
   type: 'MAIA_WHISPER';

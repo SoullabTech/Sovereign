@@ -195,7 +195,7 @@ export class GebserStructureDetector {
     messages: Array<{ content: string; timestamp: string; role: 'user' | 'assistant' }>
   ): Promise<ConsciousnessStructureProfile> {
 
-    const userMessages = messages.filter(m => m.role === 'user');
+    const userMessages = (messages || []).filter(m => m.role === 'user');
     const messageAnalyses = userMessages.map(m => this.analyzeMessage(m.content));
 
     // Aggregate structure access over time

@@ -1,0 +1,27 @@
+{
+  "name": "navigator-consciousness-api",
+  "version": "1.0.0",
+  "description": "Navigator API for real-time consciousness analysis using Spiralogic",
+  "main": "navigator-api.js",
+  "scripts": {
+    "start": "node navigator-api.js",
+    "dev": "node navigator-api.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "consciousness",
+    "spiralogic",
+    "navigator",
+    "api",
+    "analysis"
+  ],
+  "author": "Soullab Consciousness Computing",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

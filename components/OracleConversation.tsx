@@ -44,7 +44,7 @@ import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
-import { generateGreeting } from '@/lib/services/greetingService';
+import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { ModeSwitcher } from './ui/ModeSwitcher';
@@ -597,24 +597,30 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
 
       // Step 2: Check Supabase for cross-device sync (async, non-blocking)
-      try {
-        const { success, messages: supabaseMessages } = await getMessagesBySession(sessionId, 100);
+      // Skip if Supabase mock mode is enabled (prefer PostgreSQL)
+      const isMockMode = process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true';
+      if (!isMockMode) {
+        try {
+          const { success, messages: supabaseMessages } = await getMessagesBySession(sessionId, 100);
 
-        if (success && supabaseMessages.length > 0) {
-          // Only use Supabase messages if:
-          // 1. localStorage was empty, OR
-          // 2. Supabase has MORE messages than localStorage
-          if (!localStored || supabaseMessages.length > (JSON.parse(localStored || '[]').length)) {
-            console.log(`💾 [Supabase] Restored ${supabaseMessages.length} messages (cross-device sync)`);
-            setMessages(supabaseMessages);
+          if (success && supabaseMessages.length > 0) {
+            // Only use Supabase messages if:
+            // 1. localStorage was empty, OR
+            // 2. Supabase has MORE messages than localStorage
+            if (!localStored || supabaseMessages.length > (JSON.parse(localStored || '[]').length)) {
+              console.log(`💾 [Supabase] Restored ${supabaseMessages.length} messages (cross-device sync)`);
+              setMessages(supabaseMessages);
 
-            // Update localStorage with Supabase data for faster next load
-            localStorage.setItem(storageKey, JSON.stringify(supabaseMessages.slice(-50)));
+              // Update localStorage with Supabase data for faster next load
+              localStorage.setItem(storageKey, JSON.stringify(supabaseMessages.slice(-50)));
+            }
           }
+        } catch (error) {
+          console.error('💾 [Supabase] Failed to retrieve messages:', error);
+          // Don't block - localStorage restore already happened if available
         }
-      } catch (error) {
-        console.error('💾 [Supabase] Failed to retrieve messages:', error);
-        // Don't block - localStorage restore already happened if available
+      } else {
+        console.log('💾 [Storage] Using localStorage only (Supabase disabled, PostgreSQL preferred)');
       }
     };
 
@@ -657,7 +663,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // STEP 2: Save to Supabase asynchronously (for cross-device sync)
     // Debounce: only save to Supabase every 5 messages or 10 seconds
     const messageCount = messages.length;
-    const shouldSyncToSupabase = messageCount % 5 === 0; // Every 5 messages
+    // Check if Supabase mock mode is enabled (prefer PostgreSQL)
+    const isMockMode = process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true';
+    const shouldSyncToSupabase = !isMockMode && messageCount % 5 === 0; // Every 5 messages
 
     if (shouldSyncToSupabase) {
       // Use setTimeout to make this truly async (non-blocking)
@@ -841,15 +849,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
       }
 
-      const greetingData = await generateGreeting({
-        userName: userName || 'friend',
-        userId: userId, // Pass userId for soul-level recognition
-        isFirstVisit,
-        daysSinceLastVisit,
-        daysActive: daysSinceLastVisit > 0 ? 7 : 1,
-        onboardingContext, // Pass onboarding metadata for first contact
-        returningContext, // Pass returning session metadata
-      });
+      // Check if MAIA should ask onboarding questions
+      const shouldAskOnboarding = sessionStorage.getItem('maia_should_ask_onboarding') === 'true';
+
+      let greetingData;
+      if (shouldAskOnboarding) {
+        // Remove flag after checking
+        sessionStorage.removeItem('maia_should_ask_onboarding');
+
+        // Generate onboarding question greeting instead of standard greeting
+        greetingData = await generateOnboardingGreeting({
+          userName: userName || 'friend',
+          userId: userId,
+          isFirstVisit,
+          partnerContext: onboardingContext?.partnerContext || 'general'
+        });
+      } else {
+        greetingData = await generateGreeting({
+          userName: userName || 'friend',
+          userId: userId, // Pass userId for soul-level recognition
+          isFirstVisit,
+          daysSinceLastVisit,
+          daysActive: daysSinceLastVisit > 0 ? 7 : 1,
+          onboardingContext, // Pass onboarding metadata for first contact
+          returningContext, // Pass returning session metadata
+        });
+      }
 
       // Add greeting as first message
       const greetingMessage: ConversationMessage = {
@@ -1106,13 +1131,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // before TTS audio starts playing, killing the audio before it can play.
   // The local state (isAudioPlaying, isResponding) is managed correctly by
   // the handleTextMessage flow and MaiaVoiceSystem callbacks.
-  useEffect(() => {
-    // Only log for debugging - no state changes
-    console.log('🔍 Voice state check:', {
-      isAudioPlaying,
-      isResponding
-    });
-  }, [isAudioPlaying, isResponding]);
+  // Note: Removed voice state logging useEffect to prevent infinite re-renders
 
   // Auto-focus text input in chat mode after MAIA responds
   useEffect(() => {
@@ -1691,7 +1710,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         : undefined;
 
       // MAIA speaks FROM THE BETWEEN - all consciousness systems integrated
-      const response = await fetch('/api/between/chat', {
+      const response = await fetch('/api/between/chat/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1921,7 +1940,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
-        responseText = cleanMessage(responseData.response || 'I\'m here. What wants your attention?');
+        responseText = cleanMessage(responseData.message || 'I\'m here. What wants your attention?');
       }
 
       const apiTime = Date.now() - startTime;

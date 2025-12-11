@@ -16,11 +16,11 @@ interface FacetRouterProps {
 }
 
 export default function FacetRouter({ partnerContext = 'general', onComplete }: FacetRouterProps) {
-  const [phase, setPhase] = useState<'reason' | 'feeling' | 'complete'>('reason');
   const [selectedReason, setSelectedReason] = useState<string>('');
   const [selectedFeeling, setSelectedFeeling] = useState<string>('');
+  const [step, setStep] = useState<'reason' | 'feeling'>('reason');
 
-  // Reason options
+  // Reason options (kept for reference - now used by MAIA)
   const reasonOptions = [
     {
       key: 'inner',
@@ -101,12 +101,11 @@ export default function FacetRouter({ partnerContext = 'general', onComplete }: 
 
   const handleReasonSelect = (reason: string) => {
     setSelectedReason(reason);
-    setPhase('feeling');
+    setStep('feeling');
   };
 
   const handleFeelingSelect = (feeling: string) => {
     setSelectedFeeling(feeling);
-    setPhase('complete');
 
     // Store onboarding context for MAIA's first contact
     storeOnboardingContext(
@@ -176,8 +175,8 @@ export default function FacetRouter({ partnerContext = 'general', onComplete }: 
 
           <AnimatePresence mode="wait">
 
-            {/* Phase 1: Reason Selection */}
-            {phase === 'reason' && (
+            {/* Step 1: Reason Selection */}
+            {step === 'reason' && (
               <motion.div
                 key="reason"
                 initial={{ opacity: 0, y: 30 }}
@@ -263,8 +262,8 @@ export default function FacetRouter({ partnerContext = 'general', onComplete }: 
               </motion.div>
             )}
 
-            {/* Phase 2: Feeling Selection */}
-            {phase === 'feeling' && (
+            {/* Step 2: Feeling Selection */}
+            {step === 'feeling' && (
               <motion.div
                 key="feeling"
                 initial={{ opacity: 0, y: 30 }}

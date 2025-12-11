@@ -14,12 +14,14 @@ const nextConfig = {
   // PWA Configuration
   trailingSlash: true,
   output: process.env.CAPACITOR_BUILD ? 'export' : 'standalone',
-  distDir: process.env.CAPACITOR_BUILD ? 'www' : '.next',
+  distDir: process.env.CAPACITOR_BUILD ? 'out' : '.next',
   assetPrefix: process.env.CAPACITOR_BUILD ? '' : undefined,
+
+  // Fix workspace root warning - set explicit output file tracing
+  outputFileTracingRoot: __dirname,
 
   // Progressive Web App optimizations
   reactStrictMode: false,
-  swcMinify: false, // Disable minification to avoid Supabase errors
   compress: true,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,

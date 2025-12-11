@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { getInstitutionalProfile } from '@/lib/config/institutionalProfiles';
 import { CustomProfessionalContext, PartnerContextData } from '@/lib/types/partnerContext';
 
-export default function PartnerWelcomePage() {
+function PartnerWelcomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [userName, setUserName] = useState<string>('');
@@ -353,5 +353,13 @@ export default function PartnerWelcomePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function PartnerWelcomePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center text-teal-900">Loading partner welcome...</div>}>
+      <PartnerWelcomeContent />
+    </Suspense>
   );
 }

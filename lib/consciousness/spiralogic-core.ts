@@ -1969,6 +1969,35 @@ export function getFacetMiniFlow(facetId: string, flowName: string): FacetMiniFl
 }
 
 // ====================================================================
+// SPIRALOGIC CORE CLASS
+// ====================================================================
+
+export class SpiralogicCore {
+  constructor() {
+    // Initialize spiralogic core system
+  }
+
+  async getAllActiveSpirals(userId: string): Promise<any[]> {
+    // Return empty array for mobile build compatibility
+    return [];
+  }
+
+  async getElementalProfile(userId: string): Promise<any> {
+    // Return basic profile for mobile build compatibility
+    return {
+      primaryElement: 'Aether',
+      phase: 1,
+      facets: []
+    };
+  }
+
+  async processSpiralogicUpdate(data: any): Promise<any> {
+    // Process spiralogic updates
+    return { success: true, data };
+  }
+}
+
+// ====================================================================
 // EXPORTS
 // ====================================================================
 

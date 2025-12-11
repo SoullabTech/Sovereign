@@ -54,16 +54,10 @@ export function BetweenChatInterface() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Initialize with MAIA's greeting FROM THE BETWEEN
+  // Initialize with empty message list - MAIA will respond dynamically
   useEffect(() => {
-    const greeting: Message = {
-      id: 'greeting',
-      role: 'maia',
-      content: "I'm here.\n\nWhat wants your attention right now?",
-      timestamp: new Date(),
-      metadata: { fieldDepth: 0.7 }
-    }
-    setMessages([greeting])
+    // No hardcoded greeting - let MAIA respond naturally to first user interaction
+    setMessages([])
   }, [])
 
   // Auto-scroll to latest message
@@ -240,7 +234,7 @@ async function generateMaiaResponse(
 
   try {
     // Call THE BETWEEN chat API
-    const response = await fetch('/api/between/chat', {
+    const response = await fetch('/api/between/chat/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({

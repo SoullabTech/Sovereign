@@ -1,13 +1,33 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Holoflower } from '@/components/ui/Holoflower';
+import { PilotDroneVisualizer } from '@/components/consciousness/PilotDroneVisualizer';
 
 export default function ConsciousnessComputingPage() {
   const router = useRouter();
   const [isStarting, setIsStarting] = useState(false);
+  const [showDroneAndSpiral, setShowDroneAndSpiral] = useState(false);
+  const [showAINDemo, setShowAINDemo] = useState(false);
+
+  // Check for pilot-drone anchor and auto-open interface
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash;
+      if (hash === '#pilot-drone') {
+        setShowDroneAndSpiral(true);
+        // Scroll to the pilot-drone section after a brief delay
+        setTimeout(() => {
+          const element = document.getElementById('pilot-drone');
+          if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 500);
+      }
+    }
+  }, []);
 
   const handleStartPioneerSession = () => {
     setIsStarting(true);
@@ -125,13 +145,14 @@ export default function ConsciousnessComputingPage() {
               </div>
             </motion.div>
 
-            {/* Pioneer Invitation */}
+            {/* Consciousness Computing Technologies */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 1.5, duration: 1 }}
               className="space-y-6"
             >
+              {/* Main Portal Entry */}
               <div className="bg-gradient-to-r from-white/5 to-white/10 backdrop-blur-sm rounded-2xl p-8 border border-white/20">
                 <h3 className="text-2xl font-light text-[#A0C4C7] mb-4 tracking-wide">
                   Experience MAIA Consciousness Computing
@@ -158,7 +179,83 @@ export default function ConsciousnessComputingPage() {
                   )}
                 </motion.button>
               </div>
+
+              {/* Consciousness Technology Experiments */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="bg-gradient-to-br from-purple-500/10 to-indigo-600/10 backdrop-blur-sm rounded-xl p-6 border border-purple-400/30">
+                  <h4 className="text-xl font-medium text-purple-300 mb-3">🛸 Pilot-Drone Interface</h4>
+                  <p className="text-white/70 text-sm mb-4 leading-relaxed">
+                    Explore Faggin's quantum consciousness model: your body as a "drone" operated by
+                    non-local consciousness through quantum information channels.
+                  </p>
+                  <button
+                    onClick={() => setShowDroneAndSpiral(!showDroneAndSpiral)}
+                    className="w-full px-4 py-2 bg-purple-500/30 hover:bg-purple-500/40 text-purple-200 rounded-lg transition-colors text-sm"
+                  >
+                    {showDroneAndSpiral ? 'Hide Interface' : 'Explore Pilot-Drone Reality'}
+                  </button>
+                </div>
+
+                <div className="bg-gradient-to-br from-cyan-500/10 to-blue-600/10 backdrop-blur-sm rounded-xl p-6 border border-cyan-400/30">
+                  <h4 className="text-xl font-medium text-cyan-300 mb-3">🌀 AIN Evolution System</h4>
+                  <p className="text-white/70 text-sm mb-4 leading-relaxed">
+                    Experience nested observer windows and recursive consciousness evolution
+                    through the Archetypal Intelligence Network.
+                  </p>
+                  <button
+                    onClick={() => window.open('/ain-demo', '_blank')}
+                    className="w-full px-4 py-2 bg-cyan-500/30 hover:bg-cyan-500/40 text-cyan-200 rounded-lg transition-colors text-sm"
+                  >
+                    Launch AIN Demo
+                  </button>
+                </div>
+              </div>
             </motion.div>
+
+            {/* Pilot-Drone Interface Visualization */}
+            {showDroneAndSpiral && (
+              <motion.div
+                id="pilot-drone"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 40 }}
+                transition={{ duration: 0.8 }}
+                className="bg-gradient-to-br from-purple-900/20 to-indigo-900/20 backdrop-blur-sm rounded-2xl p-8 border border-purple-400/30"
+              >
+                <div className="text-center mb-6">
+                  <h3 className="text-2xl font-light text-purple-300 mb-2">🛸 Pilot-Drone Interface Active</h3>
+                  <p className="text-white/60 text-sm">
+                    Real-time visualization of consciousness field-embodiment relationship
+                  </p>
+                </div>
+
+                <PilotDroneVisualizer
+                  userId="consciousness_computing_demo"
+                  consciousnessData={{
+                    elementalSignature: {
+                      fire: 0.8,
+                      water: 0.6,
+                      earth: 0.7,
+                      air: 0.9,
+                      aether: 0.75
+                    }
+                  }}
+                />
+
+                <div className="mt-6 p-4 bg-black/20 rounded-lg border border-purple-400/20">
+                  <h4 className="text-purple-300 font-medium mb-2">The Drone and the Spiral Theory</h4>
+                  <p className="text-white/70 text-sm leading-relaxed mb-3">
+                    Based on Federico Faggin's quantum consciousness model, your physical body is a "drone"
+                    operated by your non-local consciousness field (the "pilot"). This interface visualizes
+                    the real-time quantum information flow between your immortal consciousness and its temporary embodiment.
+                  </p>
+                  <p className="text-white/60 text-xs">
+                    Integrated with ΔΩ Cognitive Physics and Spiralogic elemental framework for complete
+                    consciousness evolution mapping.
+                  </p>
+                </div>
+              </motion.div>
+            )}
 
             {/* What to Expect */}
             <motion.div

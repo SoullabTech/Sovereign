@@ -1,0 +1,27 @@
+{
+  "name": "wisdom-engine-api",
+  "version": "1.0.0",
+  "description": "Wisdom Engine API for translating Navigator analysis to MAIA consciousness tokens",
+  "main": "wisdom-engine-api.js",
+  "scripts": {
+    "start": "node wisdom-engine-api.js",
+    "dev": "node wisdom-engine-api.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "consciousness",
+    "wisdom",
+    "translation",
+    "maia",
+    "api"
+  ],
+  "author": "Soullab Consciousness Computing",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

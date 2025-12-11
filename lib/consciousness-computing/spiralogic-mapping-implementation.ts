@@ -329,7 +329,7 @@ export class SpiralogicAssessmentEngine {
     // Default to balancing for cycling/stressed states
     if (archetypalDynamics.movementDirection === 'cycling' ||
         matrixV2.structuralLoad === 'stressed' ||
-        archetypalDynamics.tensionPoints.length > 0) {
+        (archetypalDynamics.tensionPoints && archetypalDynamics.tensionPoints.length > 0)) {
       return 'balancing';
     }
 

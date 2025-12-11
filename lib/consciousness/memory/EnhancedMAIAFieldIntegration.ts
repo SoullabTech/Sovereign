@@ -337,7 +337,20 @@ export class EnhancedMAIAFieldIntegration {
         resonanceCompatibility: collectiveResonance.compatibilityScore,
         emergentContributions: collectiveResonance.emergentContributions,
         collectiveLearningPotential: this.calculateCollectiveLearningPotential()
-      }
+      },
+
+      // Add missing fields that API route expects
+      spiralogicData: {
+        currentPhase: this.extractSpiralogicPhase(fieldStates),
+        progression: 0.5, // Default progression
+        readiness: 0.7    // Default readiness
+      },
+
+      dominantElement: this.extractDominantElement(fieldStates),
+      elementalBalance: this.extractElementalBalance(fieldStates),
+      elementalResonance: 0.6, // Default resonance
+      emergentPatterns: emergentPatternActivation.detectedPatterns || [],
+      sacredThreshold: 0.5 // Default threshold
     };
 
       // Store enhanced integration history
@@ -1017,6 +1030,64 @@ export class EnhancedMAIAFieldIntegration {
       boundaryDissolution: 0.1,
       unityAwareness: 0.1,
       dimensionalShift: 0.1
+    };
+  }
+
+  /**
+   * Extract spiralogic phase from field states
+   */
+  private extractSpiralogicPhase(fieldStates: any): string {
+    // Default to 'bonding' phase - in full implementation, this would analyze field states
+    if (fieldStates?.elementalField) {
+      const fireLevel = fieldStates.elementalField.fireResonance?.intensity || 0.5;
+      const waterLevel = fieldStates.elementalField.waterResonance?.intensity || 0.5;
+      const earthLevel = fieldStates.elementalField.earthResonance?.intensity || 0.5;
+
+      if (fireLevel > 0.7) return 'becoming';
+      if (waterLevel > 0.7) return 'balancing';
+      if (earthLevel > 0.7) return 'bonding';
+    }
+    return 'bonding'; // Default phase
+  }
+
+  /**
+   * Extract dominant element from field states
+   */
+  private extractDominantElement(fieldStates: any): string {
+    if (fieldStates?.elementalField) {
+      const elements = {
+        fire: fieldStates.elementalField.fireResonance?.intensity || 0.5,
+        water: fieldStates.elementalField.waterResonance?.intensity || 0.5,
+        earth: fieldStates.elementalField.earthResonance?.intensity || 0.5,
+        air: fieldStates.elementalField.airResonance?.intensity || 0.5,
+        aether: fieldStates.elementalField.aetherResonance?.intensity || 0.5
+      };
+
+      return Object.entries(elements).reduce((a, b) => a[1] > b[1] ? a : b)[0];
+    }
+    return 'water'; // Default element
+  }
+
+  /**
+   * Extract elemental balance from field states
+   */
+  private extractElementalBalance(fieldStates: any): any {
+    if (fieldStates?.elementalField) {
+      return {
+        fire: fieldStates.elementalField.fireResonance?.intensity || 0.5,
+        water: fieldStates.elementalField.waterResonance?.intensity || 0.5,
+        earth: fieldStates.elementalField.earthResonance?.intensity || 0.5,
+        air: fieldStates.elementalField.airResonance?.intensity || 0.5,
+        aether: fieldStates.elementalField.aetherResonance?.intensity || 0.5
+      };
+    }
+
+    return {
+      fire: 0.5,
+      water: 0.5,
+      earth: 0.5,
+      air: 0.5,
+      aether: 0.5
     };
   }
 }

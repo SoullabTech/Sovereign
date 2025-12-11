@@ -25,7 +25,9 @@ import {
   Upload,
   Download,
   Eye,
-  Zap
+  Zap,
+  Shield,
+  Star
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -139,6 +141,18 @@ export default function LabToolsPage() {
           label: 'Field Analytics',
           path: '/labtools/field-analytics',
           description: 'Collective consciousness field observation'
+        },
+        {
+          icon: Shield,
+          label: 'Data Sovereignty',
+          path: '/labtools/sovereignty',
+          description: 'Complete control over your consciousness data'
+        },
+        {
+          icon: Star,
+          label: 'Pioneer Circle',
+          path: '/labtools/beta-testing',
+          description: 'Beta testing with 10-participant sacred laboratory'
         },
       ],
     },

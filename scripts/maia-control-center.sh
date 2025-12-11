@@ -18,17 +18,20 @@ BOLD='\\033[1m'
 
 # Configuration
 PRODUCTION_URL="https://soullab.life/maia/"
+MAIA_URL="${MAIA_URL:-http://localhost:3002}"
 PRODUCTION_PORT=3002
 STAGING_PORT=3010
 DEV_PORT=3000
 MONITORING_PORT=3020
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPTS_DIR}/.." && pwd)"
 
 # Function to display header
 show_header() {
     clear
     echo -e "${CYAN}${BOLD}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${CYAN}${BOLD}║                    MAIA CONTROL CENTER                       ║${NC}"
-    echo -e "${CYAN}${BOLD}║                 One-Person Management System                 ║${NC}"
+    echo -e "${CYAN}${BOLD}║                 MAIA ENTERPRISE CONTROL CENTER               ║${NC}"
+    echo -e "${CYAN}${BOLD}║              Solo Operator - Enterprise Operations            ║${NC}"
     echo -e "${CYAN}${BOLD}╚══════════════════════════════════════════════════════════════╝${NC}"
     echo ""
     echo -e "${BLUE}Production: ${GREEN}$PRODUCTION_URL${NC}"
@@ -81,24 +84,411 @@ check_system_status() {
     echo ""
 }
 
+# Enterprise function: Full health check (combines existing + sovereign focus)
+enterprise_health_check() {
+    echo -e "${BLUE}🔍 Running Enterprise Health Check...${NC}"
+    echo ""
+
+    # API Health Check (enhanced for sovereign focus)
+    echo -e "${CYAN}📡 Testing MAIA Sovereign Endpoints:${NC}"
+
+    # Health endpoint
+    echo -n "  /api/health: "
+    if curl -s -o /dev/null -w "%{http_code}" "${MAIA_URL}/api/health" | grep -q "200"; then
+        echo -e "${GREEN}✅ OK${NC}"
+    else
+        echo -e "${RED}❌ FAILED${NC}"
+    fi
+
+    # Sovereign endpoint with timing
+    echo -n "  /api/sovereign/app/maia: "
+    start_time=$(date +%s%3N)
+    response=$(curl -s -X POST "${MAIA_URL}/api/sovereign/app/maia" \
+        -H "Content-Type: application/json" \
+        -d '{"message":"health check","sessionId":"health-check-'"$(date +%s)"'"}' \
+        -w "%{http_code}")
+    end_time=$(date +%s%3N)
+
+    duration=$((end_time - start_time))
+
+    if echo "$response" | tail -c 4 | grep -q "200"; then
+        echo -e "${GREEN}✅ OK (${duration}ms)${NC}"
+    else
+        echo -e "${RED}❌ FAILED (${duration}ms)${NC}"
+    fi
+
+    echo ""
+
+    # Docker Container Status (focused on MAIA sovereign)
+    echo -e "${CYAN}🐳 MAIA Container Status:${NC}"
+    if command -v docker >/dev/null 2>&1; then
+        containers=$(docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "(maia|sovereign)" || echo "  No MAIA containers running")
+        echo "$containers"
+
+        # Health status
+        echo ""
+        echo -e "${CYAN}🏥 Container Health:${NC}"
+        maia_containers=$(docker ps --format "{{.Names}}" | grep -E "(maia|sovereign)" || true)
+        if [ -n "$maia_containers" ]; then
+            for container in $maia_containers; do
+                health=$(docker inspect --format='{{.State.Health.Status}}' "$container" 2>/dev/null || echo "no-healthcheck")
+                case "$health" in
+                    "healthy")
+                        echo -e "  $container: ${GREEN}✅ Healthy${NC}"
+                        ;;
+                    "unhealthy")
+                        echo -e "  $container: ${RED}❌ Unhealthy${NC}"
+                        ;;
+                    "starting")
+                        echo -e "  $container: ${YELLOW}🔄 Starting${NC}"
+                        ;;
+                    *)
+                        echo -e "  $container: ${BLUE}ℹ️ No healthcheck${NC}"
+                        ;;
+                esac
+            done
+        else
+            echo "  No MAIA containers found"
+        fi
+    else
+        echo -e "  ${YELLOW}⚠️ Docker not available${NC}"
+    fi
+
+    echo ""
+}
+
+# Enterprise function: Sovereign quick test
+enterprise_sovereign_test() {
+    echo -e "${BLUE}🧪 Running Sovereign Quick Test...${NC}"
+    echo ""
+
+    if [ -f "${SCRIPTS_DIR}/test-sovereign-session.sh" ]; then
+        echo "Using existing sovereign test script..."
+        "${SCRIPTS_DIR}/test-sovereign-session.sh" "${MAIA_URL}"
+    else
+        echo "Running inline sovereign test..."
+
+        session_id="enterprise-test-$(date +%s)"
+        echo "Session ID: $session_id"
+        echo ""
+
+        # Test sovereign response with timing
+        echo "Testing sovereign session management..."
+        start_time=$(date +%s%3N)
+
+        response=$(curl -s -X POST "${MAIA_URL}/api/sovereign/app/maia" \
+            -H "Content-Type: application/json" \
+            -d "{\"message\":\"Enterprise test: session management validation\",\"sessionId\":\"$session_id\"}")
+
+        end_time=$(date +%s%3N)
+        duration=$((end_time - start_time))
+
+        echo "Response time: ${duration}ms"
+
+        if echo "$response" | grep -q "message" && echo "$response" | grep -q "$session_id"; then
+            echo -e "${GREEN}✅ Sovereign API responding correctly${NC}"
+            echo -e "${GREEN}✅ Session management working${NC}"
+        else
+            echo -e "${RED}❌ Sovereign API test failed${NC}"
+            echo "Response: $response"
+        fi
+    fi
+
+    echo ""
+}
+
+# Enterprise function: Tail logs with sovereign focus
+enterprise_tail_logs() {
+    echo -e "${BLUE}📜 Container Logs (Sovereign Focus):${NC}"
+    echo ""
+    echo "  [1] Web container logs (sovereign responses)"
+    echo "  [2] Postgres container logs"
+    echo "  [3] All MAIA containers"
+    echo "  [4] Sovereign latency logs only"
+    echo ""
+    read -p "Select log source [1-4]: " log_choice
+
+    case $log_choice in
+        1)
+            echo -e "${CYAN}Tailing web container logs with sovereign focus (Ctrl+C to exit):${NC}"
+            container=$(docker ps --format "{{.Names}}" | grep -E "(maia.*web|sovereign.*web)" | head -1)
+            if [ -n "$container" ]; then
+                docker logs -f "$container" | grep --line-buffered -E "(Sovereign|✅|⚠️|❌)"
+            else
+                echo -e "${RED}❌ No MAIA web container found${NC}"
+            fi
+            ;;
+        2)
+            echo -e "${CYAN}Tailing Postgres logs (Ctrl+C to exit):${NC}"
+            postgres_container=$(docker ps --format "{{.Names}}" | grep postgres | head -1)
+            if [ -n "$postgres_container" ]; then
+                docker logs -f "$postgres_container"
+            else
+                echo -e "${RED}❌ No Postgres container found${NC}"
+            fi
+            ;;
+        3)
+            echo -e "${CYAN}Tailing all MAIA container logs (Ctrl+C to exit):${NC}"
+            maia_container=$(docker ps --format "{{.Names}}" | grep -E "(maia|sovereign)" | head -1)
+            if [ -n "$maia_container" ]; then
+                docker logs -f "$maia_container"
+            else
+                echo -e "${RED}❌ No MAIA containers found${NC}"
+            fi
+            ;;
+        4)
+            echo -e "${CYAN}Tailing sovereign latency logs only (Ctrl+C to exit):${NC}"
+            container=$(docker ps --format "{{.Names}}" | grep -E "(maia.*web|sovereign.*web)" | head -1)
+            if [ -n "$container" ]; then
+                docker logs -f "$container" | grep --line-buffered "Sovereign response"
+            else
+                echo -e "${RED}❌ No MAIA web container found${NC}"
+            fi
+            ;;
+        *)
+            echo -e "${RED}Invalid choice${NC}"
+            ;;
+    esac
+
+    echo ""
+}
+
+# Enterprise function: Database backup
+enterprise_backup_now() {
+    echo -e "${BLUE}💾 Creating Database Backup...${NC}"
+    echo ""
+
+    if [ -f "${SCRIPTS_DIR}/backup-db.sh" ]; then
+        echo "Using dedicated backup script..."
+        "${SCRIPTS_DIR}/backup-db.sh"
+    else
+        echo -e "${YELLOW}⚠️ Dedicated backup script not found${NC}"
+        echo "Creating manual backup..."
+
+        # Check for DATABASE_URL
+        if [ -z "${DATABASE_URL:-}" ]; then
+            echo -e "${RED}❌ DATABASE_URL not set${NC}"
+            echo "Please set DATABASE_URL environment variable"
+            echo "Example: export DATABASE_URL='postgres://user:pass@localhost/dbname'"
+            return 1
+        fi
+
+        # Create backup directory
+        backup_dir="$HOME/maia_backups"
+        mkdir -p "$backup_dir"
+
+        # Generate backup with enterprise naming
+        timestamp=$(date +"%Y%m%d_%H%M%S")
+        backup_file="$backup_dir/maia_enterprise_${timestamp}.sql.gz"
+
+        echo "Creating backup at $backup_file"
+        if command -v pg_dump >/dev/null 2>&1; then
+            if pg_dump "$DATABASE_URL" | gzip > "$backup_file"; then
+                echo -e "${GREEN}✅ Backup complete${NC}"
+                echo "Backup size: $(du -h "$backup_file" | cut -f1)"
+
+                # Keep only last 14 backups
+                ls -1t "$backup_dir"/maia_*.sql.gz | sed '1,14d' | xargs -r rm 2>/dev/null || true
+                echo "Cleaned up old backups (keeping last 14)"
+            else
+                echo -e "${RED}❌ Backup failed${NC}"
+                return 1
+            fi
+        else
+            echo -e "${RED}❌ pg_dump not found${NC}"
+            echo "Please install PostgreSQL client tools"
+            return 1
+        fi
+    fi
+
+    echo ""
+}
+
+# Enterprise function: Restore from backup
+enterprise_restore_backup() {
+    echo -e "${BLUE}🔄 Restore from Backup...${NC}"
+    echo ""
+
+    backup_dir="$HOME/maia_backups"
+
+    if [ ! -d "$backup_dir" ]; then
+        echo -e "${RED}❌ No backup directory found at $backup_dir${NC}"
+        return 1
+    fi
+
+    # List available backups (enterprise format)
+    backups=($(ls -1t "$backup_dir"/maia_*.sql.gz 2>/dev/null || true))
+
+    if [ ${#backups[@]} -eq 0 ]; then
+        echo -e "${RED}❌ No backups found${NC}"
+        echo "Run option [4] to create a backup first"
+        return 1
+    fi
+
+    echo -e "${CYAN}Available backups (newest first):${NC}"
+    for i in "${!backups[@]}"; do
+        backup_file="${backups[$i]}"
+        backup_date=$(basename "$backup_file" | sed 's/maia.*_\([0-9_]*\)\.sql\.gz/\1/' | sed 's/_/ /g')
+        backup_size=$(du -h "$backup_file" | cut -f1)
+        echo "  [$((i+1))] $backup_date ($backup_size)"
+    done
+    echo ""
+
+    read -p "Select backup to restore [1-${#backups[@]}] or 'c' to cancel: " restore_choice
+
+    if [ "$restore_choice" = "c" ]; then
+        echo "Cancelled"
+        return 0
+    fi
+
+    if ! [[ "$restore_choice" =~ ^[0-9]+$ ]] || [ "$restore_choice" -lt 1 ] || [ "$restore_choice" -gt ${#backups[@]} ]; then
+        echo -e "${RED}❌ Invalid selection${NC}"
+        return 1
+    fi
+
+    selected_backup="${backups[$((restore_choice-1))]}"
+
+    if [ -f "${SCRIPTS_DIR}/restore-db.sh" ]; then
+        echo "Using dedicated restore script..."
+        "${SCRIPTS_DIR}/restore-db.sh" "$selected_backup"
+    else
+        echo -e "${YELLOW}⚠️ Dedicated restore script not found${NC}"
+        echo "Proceeding with manual restore..."
+
+        if [ -z "${DATABASE_URL:-}" ]; then
+            echo -e "${RED}❌ DATABASE_URL not set${NC}"
+            return 1
+        fi
+
+        echo -e "${RED}⚠️ This will overwrite the current database. Ctrl+C to abort.${NC}"
+        echo -e "${YELLOW}Proceeding in 5 seconds...${NC}"
+        sleep 5
+
+        echo "Restoring from $selected_backup..."
+        if command -v psql >/dev/null 2>&1; then
+            if gunzip -c "$selected_backup" | psql "$DATABASE_URL"; then
+                echo -e "${GREEN}✅ Restore complete${NC}"
+            else
+                echo -e "${RED}❌ Restore failed${NC}"
+                return 1
+            fi
+        else
+            echo -e "${RED}❌ psql not found${NC}"
+            echo "Please install PostgreSQL client tools"
+            return 1
+        fi
+    fi
+
+    echo ""
+}
+
+# Enterprise function: Latency summary (sovereign focus)
+enterprise_latency_summary() {
+    echo -e "${BLUE}⚡ Sovereign Performance Summary (Last 10 Minutes)${NC}"
+    echo ""
+
+    # Find the main web container
+    container=$(docker ps --format "{{.Names}}" | grep -E "(maia.*web|sovereign.*web)" | head -1)
+
+    if [ -z "$container" ]; then
+        echo -e "${RED}❌ No MAIA web container found${NC}"
+        return 1
+    fi
+
+    echo -e "${CYAN}Analyzing logs from container: $container${NC}"
+    echo ""
+
+    # Get logs from last 10 minutes and filter for sovereign responses
+    logs=$(docker logs --since=10m "$container" 2>&1 | grep "Sovereign response" || true)
+
+    if [ -z "$logs" ]; then
+        echo -e "${YELLOW}⚠️ No sovereign response logs found in last 10 minutes${NC}"
+        echo "This could mean:"
+        echo "  - No requests processed recently"
+        echo "  - Container restarted recently"
+        echo "  - Logging configuration issue"
+        return 0
+    fi
+
+    # Count response types
+    success_count=$(echo "$logs" | grep -c "✅" || echo "0")
+    slow_count=$(echo "$logs" | grep -c "⚠️" || echo "0")
+    timeout_count=$(echo "$logs" | grep -c "❌" || echo "0")
+    total_count=$((success_count + slow_count + timeout_count))
+
+    echo -e "${CYAN}Response Analysis:${NC}"
+    echo "  ✅ Fast responses:    $success_count"
+    echo "  ⚠️ Slow responses:    $slow_count"
+    echo "  ❌ Timeouts:         $timeout_count"
+    echo "  📊 Total requests:   $total_count"
+    echo ""
+
+    # Extract timing information
+    timings=$(echo "$logs" | grep -o '[0-9]\+ms' | grep -o '[0-9]\+' || true)
+
+    if [ -n "$timings" ] && [ "$total_count" -gt 0 ]; then
+        # Calculate statistics
+        total=0
+        count=0
+        min=999999
+        max=0
+
+        while read -r timing; do
+            if [ -n "$timing" ]; then
+                total=$((total + timing))
+                count=$((count + 1))
+                if [ "$timing" -lt "$min" ]; then min=$timing; fi
+                if [ "$timing" -gt "$max" ]; then max=$timing; fi
+            fi
+        done <<< "$timings"
+
+        if [ "$count" -gt 0 ]; then
+            avg=$((total / count))
+            echo -e "${CYAN}Performance Metrics:${NC}"
+            echo "  Average latency:  ${avg}ms"
+            echo "  Min latency:      ${min}ms"
+            echo "  Max latency:      ${max}ms"
+            echo ""
+
+            # Enterprise-level health assessment
+            if [ "$avg" -lt 50 ] && [ "$slow_count" -eq 0 ] && [ "$timeout_count" -eq 0 ]; then
+                echo -e "${GREEN}🚀 EXCELLENT: Enterprise-grade performance${NC}"
+                echo "  System operating at peak efficiency"
+            elif [ "$avg" -lt 200 ] && [ "$timeout_count" -eq 0 ]; then
+                echo -e "${GREEN}✅ GOOD: Performance within acceptable ranges${NC}"
+                echo "  System stable and responsive"
+            elif [ "$avg" -lt 500 ] && [ "$timeout_count" -eq 0 ]; then
+                echo -e "${YELLOW}⚠️ DEGRADED: Performance below optimal${NC}"
+                echo "  Consider investigating system load"
+            else
+                echo -e "${RED}❌ CRITICAL: Performance issues detected${NC}"
+                echo "  Immediate attention required"
+            fi
+        fi
+    fi
+
+    echo ""
+    echo -e "${BLUE}Recent Response Sample:${NC}"
+    echo "$logs" | tail -3 | while read -r line; do
+        echo "  $line"
+    done
+    echo ""
+}
+
 # Function to show main menu
 show_menu() {
-    echo -e "${BOLD}🎛️  CONTROL PANEL${NC}"
-    echo "=================="
-    echo "1. 🔍 Check System Status"
-    echo "2. 🖥️  Start Development Environment"
-    echo "3. 🎯 Start Staging Environment"
-    echo "4. 🚀 Deploy to Production (Safe)"
-    echo "5. ⚠️  Emergency Production Restart"
-    echo "6. 🛑 Stop All Development Processes"
-    echo "7. 📊 Launch Monitoring Dashboard"
-    echo "8. 🔧 Problem Solving Tools"
-    echo "9. 📋 View System Logs"
-    echo "10. 💾 Emergency Backup"
-    echo "11. 🔄 Rollback to Previous Version"
-    echo "0. ❌ Exit"
+    echo -e "${BOLD}🎛️  ENTERPRISE OPERATIONS CONSOLE${NC}"
+    echo "======================================="
+    echo "  ${GREEN}[1]${NC} Full Health Check      - API endpoints + container status"
+    echo "  ${GREEN}[2]${NC} Sovereign Quick Test    - Session management validation"
+    echo "  ${GREEN}[3]${NC} Tail Logs              - Real-time container logs"
+    echo "  ${GREEN}[4]${NC} Backup Now             - Create database backup"
+    echo "  ${GREEN}[5]${NC} Restore Last Backup    - Restore from most recent backup"
+    echo "  ${GREEN}[6]${NC} Latency Summary         - Last 10 minutes performance"
     echo ""
-    echo -n "Select option [0-11]: "
+    echo "  ${YELLOW}[q]${NC} Quit"
+    echo ""
+    echo -n "Choose an option [1-6, q]: "
 }
 
 # Function to start development environment safely
@@ -421,10 +811,11 @@ rollback_version() {
     fi
 }
 
-# Main control loop
+# Main control loop (enterprise version)
 main() {
-    # Create logs directory if it doesn't exist
-    mkdir -p logs backups
+    # Create necessary directories
+    mkdir -p logs backups "$HOME/maia_backups"
+    cd "$PROJECT_ROOT"
 
     while true; do
         show_header
@@ -436,35 +827,38 @@ main() {
 
         case $choice in
             1)
-                ./scripts/check-deployment.sh
-                echo "Press Enter to continue..."
-                read
+                enterprise_health_check
                 ;;
-            2) start_development ;;
-            3) start_staging ;;
-            4) deploy_production ;;
-            5) emergency_restart ;;
-            6) stop_all_development ;;
-            7) launch_monitoring ;;
-            8) problem_solving_tools ;;
-            9) view_logs ;;
-            10) emergency_backup ;;
-            11) rollback_version ;;
-            0)
-                echo -e "${CYAN}Goodbye! 👋${NC}"
+            2)
+                enterprise_sovereign_test
+                ;;
+            3)
+                enterprise_tail_logs
+                ;;
+            4)
+                enterprise_backup_now
+                ;;
+            5)
+                enterprise_restore_backup
+                ;;
+            6)
+                enterprise_latency_summary
+                ;;
+            q|Q)
+                echo -e "${GREEN}Enterprise operations complete. MAIA sovereign systems stable.${NC}"
+                echo -e "${CYAN}Thank you for maintaining the field! 🧬${NC}"
                 exit 0
                 ;;
             *)
-                echo -e "${RED}Invalid option. Please try again.${NC}"
-                sleep 2
+                echo -e "${RED}Invalid option. Please choose 1-6 or q.${NC}"
+                sleep 1
+                continue
                 ;;
         esac
 
-        if [ "$choice" != "8" ] && [ "$choice" != "9" ]; then
-            echo ""
-            echo "Press Enter to continue..."
-            read
-        fi
+        echo ""
+        echo "Press Enter to return to menu..."
+        read
     done
 }
 

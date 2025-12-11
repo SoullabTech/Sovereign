@@ -169,11 +169,5 @@ function filterConstellationByExposure(
 }
 
 // ==============================================================================
-// MOCK SESSION UTILITY (replace with actual auth)
+// Uses imported getSessionUserId from lib/auth/session-utils
 // ==============================================================================
-
-async function getSessionUserId(request: NextRequest): Promise<string | null> {
-  // This would integrate with your actual authentication system
-  // For demonstration, return a mock user ID
-  return 'user_demo_constellation';
-}

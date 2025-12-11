@@ -1,0 +1,6 @@
+module Pods_MAIAConsciousnessTemp {
+  umbrella header "Pods-MAIAConsciousnessTemp-umbrella.h"
+
+  export *
+  module * { export * }
+}

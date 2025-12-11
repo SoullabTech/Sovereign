@@ -33,6 +33,13 @@ interface GreetingContext {
   };
 }
 
+interface OnboardingGreetingContext {
+  userName: string;
+  userId?: string;
+  isFirstVisit: boolean;
+  partnerContext?: string;
+}
+
 export class GreetingService {
   static generate(context: GreetingContext): string {
     // Check for first contact from onboarding flow
@@ -581,6 +588,74 @@ export async function generateGreeting(context: Partial<GreetingContext>): Promi
   const suggestedOpenings = contentLevel === 'lab_collaborator'
     ? GreetingService.getLabLanguageSuggestions()
     : GreetingService.getSimpleOpenings();
+
+  return {
+    greeting,
+    alchemicalFraming,
+    suggestedOpenings
+  };
+}
+
+/**
+ * Generate onboarding greeting that asks the questions previously handled by FacetRouter
+ */
+export async function generateOnboardingGreeting(context: OnboardingGreetingContext) {
+  const { userName, isFirstVisit } = context;
+  const hasName = userName && userName !== 'friend' && userName.trim() !== '';
+  const name = hasName ? userName : '';
+
+  // Get time of day for context
+  const timeOfDay = getTimeOfDay();
+  const timeGreeting = {
+    morning: 'Good morning',
+    afternoon: 'Good afternoon',
+    evening: 'Good evening',
+    night: 'Hello'
+  }[timeOfDay];
+
+  // Create personalized greeting that includes the onboarding questions
+  let greeting = '';
+
+  if (hasName) {
+    greeting = `${timeGreeting}, ${name}. `;
+  } else {
+    greeting = `${timeGreeting}. `;
+  }
+
+  if (isFirstVisit) {
+    greeting += `Welcome to MAIA. I'm here to understand what brings you to this conversation space.\n\n`;
+  } else {
+    greeting += `I'd like to understand what brings you here today.\n\n`;
+  }
+
+  greeting += `To start, I have two simple questions - the same ones we used to ask on separate pages, but I find conversation works better:\n\n`;
+
+  greeting += `**What are you here for today?** Pick what feels closest:\n`;
+  greeting += `• My inner life / feelings - working with emotions, healing, personal growth\n`;
+  greeting += `• My direction / creativity - finding purpose, creative expression, life direction\n`;
+  greeting += `• My work or projects - professional development, leadership, ventures\n`;
+  greeting += `• My relationships - family dynamics, connection patterns, communication\n`;
+  greeting += `• The people I support - helping others, teaching, healing, caregiving\n`;
+  greeting += `• Just exploring - curious about consciousness, open to discovery\n\n`;
+
+  greeting += `**How do you feel right now?** Again, just pick what's closest:\n`;
+  greeting += `• My head is busy - lots of thoughts, hard to slow down\n`;
+  greeting += `• My feelings are strong - a lot is moving in my heart\n`;
+  greeting += `• I feel wired and tired - I have energy, but I'm kind of worn out too\n`;
+  greeting += `• I feel heavy or flat - low energy, hard to get going\n`;
+  greeting += `• It's hard to say - I'm not sure, or it keeps changing\n\n`;
+
+  greeting += `Just tell me in your own words - you don't need to use the exact phrases above. What brings you here, and how are you feeling right now?`;
+
+  const alchemicalFraming = 'onboarding_conversation';
+  const suggestedOpenings = [
+    "I'm here for...",
+    "I feel...",
+    "What brings me here is...",
+    "Right now I'm...",
+    "I'm curious about...",
+    "I'm exploring..."
+  ];
 
   return {
     greeting,

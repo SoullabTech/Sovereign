@@ -69,7 +69,7 @@ export default function PresenceMirror() {
             {/* Quick Controls */}
             <div className="flex items-center gap-4">
               <button
-                onClick={() => window.open('/maia/labtools', '_blank')}
+                onClick={() => window.open('/labtools', '_blank')}
                 className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 hover:text-white border border-purple-500/30 rounded-lg transition-all text-sm"
               >
                 🛡️ Full LabTools

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import SacredSoulInduction from '@/components/onboarding/SacredSoulInduction';
+import CompleteWelcomeFlow from '@/components/onboarding/CompleteWelcomeFlow';
 import { useRouter } from 'next/navigation';
 
 export default function OnboardingPage() {
@@ -15,7 +15,7 @@ export default function OnboardingPage() {
       try {
         const userData = JSON.parse(betaUser);
         if (userData.onboarded) {
-          router.push('/welcome-back');
+          router.push('/maia');
           return;
         }
         setUserName(userData.name || userData.username || 'Kelly');
@@ -25,15 +25,15 @@ export default function OnboardingPage() {
     }
   }, [router]);
 
-  const handleComplete = (userData: { name: string; username: string; password: string; }) => {
-    // Create user session from sacred soul induction data
+  const handleComplete = () => {
+    // Mark user as having completed the full onboarding experience
     const newUser = {
       id: `user_${Date.now()}`,
-      username: userData.username,
-      name: userData.name,
-      password: userData.password,
+      username: userName.toLowerCase(),
+      name: userName,
       onboarded: true,
       daimonIntroComplete: true,
+      welcomeFlowComplete: true,
       createdAt: new Date().toISOString(),
     };
 
@@ -41,14 +41,15 @@ export default function OnboardingPage() {
 
     // Also update the beta_users storage
     const users = JSON.parse(localStorage.getItem('beta_users') || '{}');
-    users[userData.username] = newUser;
+    users[userName.toLowerCase()] = newUser;
     localStorage.setItem('beta_users', JSON.stringify(users));
 
-    router.push('/welcome-back');
+    router.push('/maia');
   };
 
   return (
-    <SacredSoulInduction
+    <CompleteWelcomeFlow
+      userName={userName}
       onComplete={handleComplete}
     />
   );

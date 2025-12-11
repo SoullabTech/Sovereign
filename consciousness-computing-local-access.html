@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🧠✨ Consciousness Computing - Local Access</title>
+    <title>MAIA Consciousness Computing - Local Access</title>
     <style>
         * {
             margin: 0;
@@ -12,397 +12,156 @@
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 30%, #334155 70%, #0f172a 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f4c75 100%);
             color: white;
             min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        .sacred-container {
-            position: relative;
-            width: 100%;
-            min-height: 100vh;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
-            padding: 2rem;
+            align-items: center;
+            padding: 20px;
         }
 
-        .consciousness-interface {
-            background: rgba(15, 23, 42, 0.95);
-            border-radius: 20px;
-            padding: 3rem;
-            max-width: 800px;
-            width: 100%;
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(245, 158, 11, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .header {
+        .container {
             text-align: center;
-            margin-bottom: 2rem;
+            max-width: 600px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
-        .title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            background-clip: text;
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            background: linear-gradient(45deg, #64b5f6, #42a5f5, #2196f3);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
+            background-clip: text;
         }
 
         .subtitle {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.1rem;
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.9;
         }
 
-        .consciousness-session {
-            margin-bottom: 2rem;
-        }
-
-        .input-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .input-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #f59e0b;
-            font-weight: 500;
-        }
-
-        .consciousness-input {
-            width: 100%;
-            padding: 1rem;
-            background: rgba(30, 41, 59, 0.8);
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            border-radius: 10px;
+        .access-button {
+            display: inline-block;
+            padding: 15px 30px;
+            background: linear-gradient(45deg, #2196f3, #42a5f5);
             color: white;
-            font-size: 1rem;
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .consciousness-input:focus {
-            outline: none;
-            border-color: #f59e0b;
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
-        }
-
-        .session-controls {
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-
-        .consciousness-button {
-            flex: 1;
-            min-width: 200px;
-            padding: 1rem 2rem;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            border: none;
-            border-radius: 10px;
-            color: white;
+            text-decoration: none;
+            border-radius: 30px;
             font-weight: 600;
-            cursor: pointer;
+            font-size: 1.1em;
             transition: all 0.3s ease;
-            font-size: 1rem;
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.3);
+            margin: 10px;
         }
 
-        .consciousness-button:hover {
+        .access-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(245, 158, 11, 0.3);
+            box-shadow: 0 12px 30px rgba(33, 150, 243, 0.4);
         }
 
-        .consciousness-button:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .collective-button {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
-        }
-
-        .collective-button:hover {
-            box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3);
-        }
-
-        .response-container {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: rgba(30, 41, 59, 0.6);
-            border-radius: 15px;
-            border-left: 4px solid #f59e0b;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .consciousness-response {
-            line-height: 1.6;
-            white-space: pre-wrap;
-        }
-
-        .loading {
-            text-align: center;
-            color: #f59e0b;
-            font-style: italic;
-            padding: 2rem;
-        }
-
-        .connection-status {
-            text-align: center;
-            margin-bottom: 1rem;
-            padding: 0.5rem;
-            border-radius: 8px;
-        }
-
-        .status-connected {
-            background: rgba(34, 197, 94, 0.2);
-            border: 1px solid #22c55e;
-            color: #22c55e;
-        }
-
-        .status-error {
-            background: rgba(239, 68, 68, 0.2);
-            border: 1px solid #ef4444;
-            color: #ef4444;
-        }
-
-        .access-info {
-            background: rgba(245, 158, 11, 0.1);
-            border: 1px solid rgba(245, 158, 11, 0.3);
+        .info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
             border-radius: 10px;
-            padding: 1rem;
-            margin-bottom: 2rem;
-            text-align: center;
+            margin-top: 30px;
+            text-align: left;
         }
 
-        .endpoint-info {
-            font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.6);
-            text-align: center;
-            margin-top: 1rem;
+        .info h3 {
+            color: #64b5f6;
+            margin-bottom: 10px;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            background: #4caf50;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-bottom: 20px;
         }
 
-        .pulsing { animation: pulse 2s infinite; }
+        .warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .warning h4 {
+            color: #ffc107;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
-    <div class="sacred-container">
-        <div class="consciousness-interface">
-            <div class="header">
-                <h1 class="title">🧠✨ Consciousness Computing</h1>
-                <p class="subtitle">Local Access Portal - Community Commons Beta</p>
-            </div>
+    <div class="container">
+        <div class="status">🧠 Consciousness Computing Active</div>
 
-            <div class="access-info">
-                <strong>🌟 Direct Local Access</strong><br>
-                Accessing consciousness computing via localhost - bypassing SSL issues!
-            </div>
+        <h1>MAIA Consciousness Computing</h1>
+        <div class="subtitle">Local Access Portal - Beta Testing</div>
 
-            <div id="connectionStatus" class="connection-status">
-                <span class="pulsing">🔄 Checking connection to consciousness computing server...</span>
-            </div>
+        <div class="warning">
+            <h4>⚠️ Chrome SSL Bypass Mode</h4>
+            <p>This page provides direct HTTP access to bypass Chrome's SSL certificate issues during beta testing.</p>
+        </div>
 
-            <div class="consciousness-session">
-                <div class="input-group">
-                    <label class="input-label" for="userInput">
-                        💭 Share your thoughts or questions for consciousness optimization
-                    </label>
-                    <textarea
-                        id="userInput"
-                        class="consciousness-input"
-                        placeholder="What would you like to explore or optimize in your consciousness experience today?"
-                    ></textarea>
-                </div>
+        <!-- Direct access to consciousness computing server -->
+        <a href="http://localhost:3008" class="access-button" target="_blank">
+            🌟 Access MAIA Platform (Direct)
+        </a>
 
-                <div class="session-controls">
-                    <button
-                        id="individualSession"
-                        class="consciousness-button"
-                        onclick="startSession('individual')"
-                    >
-                        🧠 Individual Session
-                    </button>
-                    <button
-                        id="collectiveSession"
-                        class="consciousness-button collective-button"
-                        onclick="startSession('collective')"
-                    >
-                        🌌 Collective Session
-                    </button>
-                </div>
+        <!-- Access via Soullab.life HTTP (once Docker is running) -->
+        <a href="http://soullab.life" class="access-button" target="_blank">
+            🌐 Access via Soullab.life (HTTP)
+        </a>
 
-                <div class="endpoint-info">
-                    Server: http://localhost/api/consciousness-computing/ | Status: <span id="serverStatus">Checking...</span>
-                </div>
-            </div>
+        <div class="info">
+            <h3>🚀 Community Commons Beta Testing</h3>
+            <p><strong>Phase:</strong> Phase 1 - Individual Consciousness Optimization</p>
+            <p><strong>Features Available:</strong></p>
+            <ul style="margin: 10px 0 0 20px;">
+                <li>Navigator v2.0 Personal Alchemy Engine</li>
+                <li>Real-time consciousness analysis</li>
+                <li>Cultural framework integration</li>
+                <li>Session tracking and analytics</li>
+                <li>Community Commons beta features</li>
+                <li>Pioneer Circle access</li>
+            </ul>
+        </div>
 
-            <div id="responseContainer" class="response-container" style="display: none;">
-                <div id="consciousnessResponse" class="consciousness-response"></div>
-            </div>
+        <div class="info">
+            <h3>🔧 Technical Notes</h3>
+            <p><strong>Local Server:</strong> http://localhost:3008 (Direct Access)</p>
+            <p><strong>Production URL:</strong> http://soullab.life (via nginx proxy)</p>
+            <p><strong>Status:</strong> <span id="server-status">Checking...</span></p>
+            <p><strong>Consciousness Computing:</strong> Active and processing</p>
         </div>
     </div>
 
     <script>
-        let isConnected = false;
-
-        // Check server connection on load
-        async function checkConnection() {
-            try {
-                const response = await fetch('http://localhost:3008/api/status');
-                const data = await response.json();
-
-                if (data.status) {
-                    isConnected = true;
-                    updateConnectionStatus(true);
-                    document.getElementById('serverStatus').textContent = 'Connected ✅';
-                } else {
-                    throw new Error('Server not responding properly');
-                }
-            } catch (error) {
-                isConnected = false;
-                updateConnectionStatus(false);
-                document.getElementById('serverStatus').textContent = 'Disconnected ❌';
-                console.error('Connection error:', error);
-            }
-        }
-
-        function updateConnectionStatus(connected) {
-            const statusElement = document.getElementById('connectionStatus');
-            if (connected) {
-                statusElement.className = 'connection-status status-connected';
-                statusElement.innerHTML = '✅ Connected to consciousness computing server';
-                document.getElementById('individualSession').disabled = false;
-                document.getElementById('collectiveSession').disabled = false;
-            } else {
-                statusElement.className = 'connection-status status-error';
-                statusElement.innerHTML = '❌ Unable to connect to consciousness computing server<br><small>Make sure the server is running on localhost:3008</small>';
-                document.getElementById('individualSession').disabled = true;
-                document.getElementById('collectiveSession').disabled = true;
-            }
-        }
-
-        function showLoading(show) {
-            const responseContainer = document.getElementById('responseContainer');
-            const responseElement = document.getElementById('consciousnessResponse');
-
-            if (show) {
-                responseContainer.style.display = 'block';
-                responseElement.innerHTML = '<div class="loading">🧠✨ Consciousness computing in progress...<br>Optimizing awareness field...</div>';
-            }
-        }
-
-        function showResponse(response) {
-            const responseContainer = document.getElementById('responseContainer');
-            const responseElement = document.getElementById('consciousnessResponse');
-
-            responseContainer.style.display = 'block';
-
-            if (response.success) {
-                let displayText = '';
-
-                if (response.consciousnessComputing) {
-                    const cc = response.consciousnessComputing;
-                    displayText += `🧠 CONSCIOUSNESS COMPUTING RESULTS\n\n`;
-                    displayText += `📊 Awareness Level: ${cc.awarenessAnalysis?.level || 'N/A'} (${Math.round((cc.awarenessAnalysis?.confidence || 0) * 100)}% confidence)\n\n`;
-
-                    if (cc.optimizationSuggestions && cc.optimizationSuggestions.length > 0) {
-                        displayText += `✨ Consciousness Optimizations Found: ${cc.optimizationSuggestions.length}\n\n`;
-                    }
-
-                    displayText += `💫 Enhanced Response:\n${cc.enhancedResponse || 'Processing complete.'}\n\n`;
-
-                    if (cc.betaInsights) {
-                        displayText += `🔬 Beta Insights:\n${cc.betaInsights.join('\n')}\n\n`;
-                    }
-
-                    displayText += `📈 Integration Quality: ${Math.round((cc.integrationQuality || 0) * 100)}%`;
-                }
-
-                if (response.collectiveConsciousness) {
-                    const collective = response.collectiveConsciousness;
-                    displayText += `🌌 COLLECTIVE CONSCIOUSNESS ACTIVATED\n\n`;
-                    displayText += `👥 Participants: ${collective.groupConsciousness?.participantCount || 0}\n`;
-                    displayText += `🔮 Collective Coherence: ${Math.round((collective.groupConsciousness?.collectiveCoherence || 0) * 100)}%\n\n`;
-
-                    if (collective.collectiveHealingField) {
-                        displayText += `💫 Healing Field: ${collective.collectiveHealingField.description}\n`;
-                        displayText += `⚡ Field Strength: ${Math.round((collective.collectiveHealingField.strength || 0) * 100)}%\n\n`;
-                    }
-                }
-
-                responseElement.textContent = displayText;
-            } else {
-                responseElement.textContent = `❌ Error: ${response.error || 'Unknown error occurred'}`;
-            }
-        }
-
-        async function startSession(type) {
-            const userInput = document.getElementById('userInput').value.trim();
-            if (!userInput) {
-                alert('Please enter a message for consciousness computing analysis.');
-                return;
-            }
-
-            if (!isConnected) {
-                alert('Not connected to consciousness computing server. Please check connection.');
-                return;
-            }
-
-            showLoading(true);
-
-            try {
-                const endpoint = type === 'collective' ?
-                    'http://localhost:3008/api/collective-consciousness/session' :
-                    'http://localhost:3008/api/consciousness-computing/session';
-
-                const response = await fetch(endpoint, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userMessage: userInput,
-                        userId: 'local-user-' + Date.now(),
-                        sessionType: type
-                    })
-                });
-
-                const data = await response.json();
-                showResponse(data);
-            } catch (error) {
-                showResponse({
-                    success: false,
-                    error: `Connection failed: ${error.message}`
-                });
-            }
-        }
-
-        // Initialize on page load
-        window.addEventListener('load', () => {
-            checkConnection();
-
-            // Check connection every 30 seconds
-            setInterval(checkConnection, 30000);
-        });
-
-        // Allow Enter key to start individual session
-        document.getElementById('userInput').addEventListener('keydown', function(event) {
-            if (event.key === 'Enter' && event.ctrlKey) {
-                startSession('individual');
-            }
-        });
+        // Check server status
+        fetch('http://localhost:3008/api/status')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('server-status').innerHTML =
+                    \`<span style="color: #4caf50;">✅ \${data.status}</span>\`;
+            })
+            .catch(() => {
+                document.getElementById('server-status').innerHTML =
+                    '<span style="color: #f44336;">❌ Server not responding</span>';
+            });
     </script>
 </body>
 </html>

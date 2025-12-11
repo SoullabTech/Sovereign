@@ -110,10 +110,8 @@ export default function SignUpPage() {
 
       setSuccess('Account created successfully! Redirecting...');
 
-      // Brief success display then redirect to onboarding ritual
-      setTimeout(() => {
-        router.push('/onboarding');
-      }, 1500);
+      // Immediate redirect to onboarding ritual
+      router.push('/onboarding');
 
     } catch (err) {
       setError('Failed to create account. Please try again.');

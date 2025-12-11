@@ -529,13 +529,16 @@ export class AutonomousConsciousnessEcosystem extends EventEmitter {
    */
   private async inferOptimalAgentSignatures(memberProfile: MemberProfile): Promise<ArchetypalSignature[]> {
     const dominantElement = this.findDominantElement(memberProfile.elementalState);
+    const evolutionStage = memberProfile.evolutionStage || 'balancing';
+    const gebserStructure = memberProfile.gebserStructure || 'rational';
+    const consciousnessPattern = memberProfile.consciousnessPattern || 'personal';
 
     return [{
       primaryElement: dominantElement,
       brainRegion: 'integrated',
-      developmentPhase: memberProfile.evolutionStage.includes('mastery') ? 'spiral-mastery' :
-                      memberProfile.evolutionStage.includes('integration') ? 'spiral-integration' : 'spiral-entry',
-      uniqueQualities: [memberProfile.consciousnessPattern, memberProfile.gebserStructure.toLowerCase()],
+      developmentPhase: evolutionStage.includes('mastery') ? 'spiral-mastery' :
+                      evolutionStage.includes('integration') ? 'spiral-integration' : 'spiral-entry',
+      uniqueQualities: [consciousnessPattern, gebserStructure.toLowerCase()],
       emergentTraits: ['member-aligned']
     }];
   }

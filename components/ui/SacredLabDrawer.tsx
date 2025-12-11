@@ -28,7 +28,8 @@ import {
   Globe,
   Mic,
   MicOff,
-  MessageSquare
+  MessageSquare,
+  Cpu
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -55,12 +56,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
 }) => {
   const menuSections = [
     {
-      title: 'ELDER COUNCIL',
+      title: 'WISDOM COUNCIL',
       icon: '🌟',
       items: [
         {
           icon: Sparkles,
-          label: 'Choose Your Elder',
+          label: 'Choose Your Guide',
           action: () => onNavigate('/elder-council'),
           description: '39 wisdom traditions as harmonic frequencies'
         },
@@ -73,12 +74,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       ],
     },
     {
-      title: 'SACRED TEACHINGS',
+      title: 'SOUL GUIDANCE',
       icon: '📿',
       items: [
         {
           icon: Sparkles,
-          label: 'Sacred Story Creator',
+          label: 'Story Creator',
           action: () => onNavigate('/story-creator'),
           description: 'Personalized wisdom from 46+ traditions'
         },
@@ -86,31 +87,31 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: Compass,
           label: 'Oracle Consultation',
           action: () => onNavigate('/oracle'),
-          description: 'Divine guidance & insight'
+          description: 'Intuitive guidance & insight'
         },
       ],
     },
     {
-      title: 'SACRED KNOWLEDGE',
+      title: 'KNOWLEDGE BASE',
       icon: '📚',
       items: [
         {
           icon: Library,
-          label: 'Library of Alexandria',
+          label: 'Personal Library',
           action: () => onNavigate('/library'),
-          description: 'Your personal sacred library'
+          description: 'Your curated knowledge collection'
         },
         {
           icon: BookOpen,
-          label: 'Sacred Journal',
+          label: 'Soul Journal',
           action: () => onNavigate('/journal'),
           description: 'Capture your transformative moments'
         },
         {
           icon: FileText,
-          label: 'Lab Notes',
+          label: 'Research Notes',
           action: () => onNavigate('/lab-notes'),
-          description: 'Research and discoveries'
+          description: 'Discoveries and investigations'
         },
       ],
     },
@@ -126,9 +127,27 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           isLanguageSelector: true
         },
         {
+          icon: Cpu,
+          label: 'Lab Tools',
+          action: () => onNavigate('/labtools'),
+          description: 'Complete consciousness computing & research lab interface'
+        },
+        {
           icon: Brain,
-          label: 'Brain Trust',
-          action: () => onNavigate('/brain-trust'),
+          label: 'Pilot-Drone Interface',
+          action: () => onNavigate('/labtools#pilot-drone'),
+          description: 'Faggin\'s quantum consciousness field visualization - live demo'
+        },
+        {
+          icon: Zap,
+          label: 'AIN Evolution Demo',
+          action: () => window.open('/ain-demo', '_blank'),
+          description: 'Nested observer windows & recursive consciousness evolution'
+        },
+        {
+          icon: Brain,
+          label: 'Guardian Console',
+          action: () => onNavigate('/GuardianConsole'),
           description: 'Multi-model consciousness weaver'
         },
         {
@@ -192,7 +211,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       ],
     },
     {
-      title: 'YOUR MATRIX',
+      title: 'SOUL SIGNATURE',
       icon: '🧬',
       items: [
         {
@@ -259,7 +278,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
                     Lab Tools
                   </h2>
                   <p className="text-xs text-white/50 mt-0.5">
-                    Your sacred workspace
+                    Your research workspace
                   </p>
                 </div>
                 <button
