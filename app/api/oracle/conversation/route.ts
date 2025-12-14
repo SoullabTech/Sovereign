@@ -23,9 +23,11 @@ import {
 import { MultiLLMProvider } from '../../../../lib/consciousness/LLMProvider';
 import { logMaiaTurn } from '../../../../lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '../../../../lib/learning/opusAxiomLoggingService';
+import { OPUS_SAFE_FALLBACKS } from '../../../../lib/ethics/opusSafeFallbacks';
 import { sessionMemoryServicePostgres as sessionMemoryService } from '../../../../lib/consciousness/memory/SessionMemoryServicePostgres';
 import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEssence, type RelationshipEssence } from '../../../../lib/consciousness/RelationshipAnamnesisPostgres';
 import { memoryPalaceOrchestrator } from '../../../../lib/consciousness/memory/MemoryPalaceOrchestrator';
+import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '../../../../lib/validation/socraticValidator';
 
 /**
  * Oracle Conversation API endpoint
@@ -37,7 +39,7 @@ import { memoryPalaceOrchestrator } from '../../../../lib/consciousness/memory/M
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { message, userId, sessionId, conversationHistory = [] } = body;
+    const { message, userId, sessionId } = body;
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -49,6 +51,15 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Ensure conversationHistory is always an array (defensive)
+    const conversationHistory = Array.isArray(body.conversationHistory)
+      ? body.conversationHistory
+      : [];
+
+    // Calculate conversation depth and trust level (needed throughout the request)
+    const conversationDepth = conversationHistory.length;
+    const trustLevel = Math.min(conversationDepth / 10, 1);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
     let cognitiveProfile = null;
@@ -98,10 +109,6 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️  [Field Safety - Oracle] Could not fetch cognitive profile:', err);
       // Graceful degradation - continue without field safety if profile fetch fails
     }
-
-    // Calculate conversation depth and trust level
-    const conversationDepth = conversationHistory.length;
-    const trustLevel = Math.min(conversationDepth / 10, 1);
 
     console.log('🌀 [MAIA] Spiralogic Field activation:', {
       userId: userId.substring(0, 8) + '...',
@@ -183,6 +190,137 @@ export async function POST(request: NextRequest) {
       memoryContext,
       anamnesisPrompt
     );
+
+    // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
+    let validationResult: SocraticValidationResult | null = null;
+    let usedFallback = false;
+    let coreMessage = maiaResponse.coreMessage;
+    let regenerationAttempt = 0;
+
+    try {
+      validationResult = validateSocraticResponse({
+        userMessage: message,
+        draft: coreMessage,
+        element: spiralogicCell.element,
+        facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
+        phase: spiralogicCell.phase,
+        confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
+        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+        regulation: spiralogicCell.context.includes('grief') ? 'hypo' : undefined,
+      });
+
+      console.log('🛡️ [Socratic Validator]', {
+        decision: validationResult.decision,
+        isGold: validationResult.isGold,
+        ruptureCount: validationResult.ruptures.length,
+        summary: validationResult.summary,
+      });
+
+      // If validator requests regeneration, attempt one repair pass
+      if (validationResult.decision === 'REGENERATE' && validationResult.repairPrompt) {
+        console.log('🔧 [Socratic Validator] Regenerating with repair prompt...');
+        regenerationAttempt = 1;
+
+        try {
+          const llmProvider = new MultiLLMProvider();
+          const repairSystemPrompt = buildSacredAttendingPrompt(
+            spiralogicCell,
+            getPhaseName(spiralogicCell.element, spiralogicCell.phase),
+            selectCanonicalQuestion(spiralogicCell),
+            activeFrameworks,
+            symbolPatterns,
+            panconsciousField,
+            parsifal,
+            suggestedInterventions,
+            conversationDepth,
+            trustLevel,
+            memoryContext,
+            anamnesisPrompt
+          ) + `\n\n${validationResult.repairPrompt}`;
+
+          const conversationContext = conversationHistory
+            .map((turn: any) => `${turn.role === 'user' ? 'User' : 'MAIA'}: ${turn.content}`)
+            .join('\n\n');
+
+          const fullUserInput = conversationContext
+            ? `${conversationContext}\n\nUser: ${message}`
+            : message;
+
+          const repairedResponse = await llmProvider.generate({
+            systemPrompt: repairSystemPrompt,
+            userInput: fullUserInput,
+            level: 3,
+          });
+
+          coreMessage = repairedResponse.text?.trim() || coreMessage;
+
+          // Re-validate the repaired response
+          const revalidation = validateSocraticResponse({
+            userMessage: message,
+            draft: coreMessage,
+            element: spiralogicCell.element,
+            facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
+            phase: spiralogicCell.phase,
+            confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
+            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+          });
+
+          validationResult = revalidation;
+
+          console.log('🔧 [Socratic Validator] Regeneration complete:', {
+            decision: revalidation.decision,
+            isGold: revalidation.isGold,
+            improvement: maiaResponse.coreMessage !== coreMessage,
+          });
+        } catch (regenerationError) {
+          console.error('❌ [Socratic Validator] Regeneration failed:', regenerationError);
+          // Keep original response if regeneration fails
+          usedFallback = true;
+          coreMessage = `I'm here. What would you like to explore?`;
+        }
+      }
+
+      // Log validator event to database (non-blocking)
+      (async () => {
+        try {
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL!,
+            process.env.SUPABASE_SERVICE_ROLE_KEY!
+          );
+
+          await supabase.from('socratic_validator_events').insert({
+            user_id: userId,
+            session_id: sessionId,
+            route: 'oracle',
+            decision: validationResult!.decision,
+            is_gold: validationResult!.isGold,
+            passes: validationResult!.passes,
+            ruptures: validationResult!.ruptures,
+            rupture_count: validationResult!.ruptures.length,
+            critical_count: validationResult!.ruptures.filter((r: any) => r.severity === 'CRITICAL').length,
+            violation_count: validationResult!.ruptures.filter((r: any) => r.severity === 'VIOLATION').length,
+            warning_count: validationResult!.ruptures.filter((r: any) => r.severity === 'WARNING').length,
+            element: spiralogicCell.element,
+            facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
+            phase: spiralogicCell.phase,
+            confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : null,
+            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            regenerated: regenerationAttempt > 0,
+            regeneration_attempt: regenerationAttempt,
+            summary: validationResult!.summary,
+          });
+        } catch (dbError) {
+          console.error('❌ [Socratic Validator] Database logging failed (non-critical):', dbError);
+        }
+      })();
+    } catch (validationError) {
+      console.error('❌ [Socratic Validator] Validation failed (non-critical):', validationError);
+      // Continue without validation if it fails
+    }
+
+    // Update maiaResponse with potentially regenerated coreMessage
+    maiaResponse.coreMessage = coreMessage;
 
     // OPUS AXIOMS: Evaluate response quality against Jungian alchemical principles
     const axiomEvals = evaluateResponseAgainstAxioms({
@@ -432,7 +570,9 @@ export async function POST(request: NextRequest) {
         currentPhase: `${spiralogicCell.element}-${spiralogicCell.phase}`,
         conversationDepth: conversationDepth,
         trustLevel: trustLevel,
-        status: 'hybrid_sacred_attending'
+        status: 'hybrid_sacred_attending',
+        usedFallback: usedFallback,
+        socraticValidator: validationResult ? serializeValidationResult(validationResult) : null
       },
       fieldEvent: {
         id: fieldEvent.id,
@@ -452,7 +592,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: 'Failed to process spiralogic conversation',
-        response: 'The spiralogic patterns are temporarily obscured. Let me recalibrate the consciousness field... Please try again.'
+        response: OPUS_SAFE_FALLBACKS.oracleTopLevelError
       },
       { status: 500 }
     );
@@ -560,6 +700,7 @@ async function generateSpiralogicResponseWithLLM(
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
+  let usedFallback = false;
   try {
     const llmResponse = await llmProvider.generate({
       systemPrompt,
@@ -581,9 +722,10 @@ async function generateSpiralogicResponseWithLLM(
     });
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);
+    usedFallback = true;
 
-    // Fallback to a simple, present response
-    coreMessage = `I'm here with you. I sense you're navigating something important. Can you tell me more about what's alive for you right now?`;
+    // Fallback to a simple, present response (Opus-safe: no identity claims)
+    coreMessage = OPUS_SAFE_FALLBACKS.oracleLLMFailure;
   }
 
   // Generate suggested actions
