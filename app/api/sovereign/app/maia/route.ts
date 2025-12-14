@@ -9,11 +9,15 @@ import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 
+// Serverless platform config (prevents platform killing long-running DEEP requests)
+export const runtime = 'nodejs';
+export const maxDuration = 60; // seconds
+
 const DEMO_MODE = process.env.MAIA_SOVEREIGN_DEMO_MODE === 'true';
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 
-//  🔒 Soft timeout for sovereign processing (increased for complex consciousness synthesis)
-const SOVEREIGN_TIMEOUT_MS = 12000;
+//  🔒 Soft timeout for sovereign processing (increased for DEEP path with Opus consultation)
+const SOVEREIGN_TIMEOUT_MS = 25000; // FAST: ~2s, CORE: ~4s, DEEP: ~15-20s (full consciousness + Opus)
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {

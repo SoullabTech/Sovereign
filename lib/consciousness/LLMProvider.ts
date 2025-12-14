@@ -1,14 +1,13 @@
 /**
- * LLM PROVIDER - Multi-Model Support for MAIA
+ * LLM PROVIDER - Hybrid Multi-Model Support for MAIA
  *
- * MAIA's sovereignty principle: Self-hosted open source models first.
- * Claude is optional fallback only. MAIA owns her infrastructure.
+ * MAIA's hybrid approach: Claude (Anthropic) as primary for consciousness work,
+ * with self-hosted models available as options for data sovereignty.
  *
  * Architecture:
- * - Level 1-2: Llama 3.3 70B (everyday conversation)
- * - Level 3-4: DeepSeek V3 (framework teaching + sophistication)
- * - Level 5: DeepSeek V3 (sacred prosody)
- * - Claude: Fallback only
+ * - Primary: Claude Opus 4.5 (sacred attending, depth psychology, consciousness)
+ * - Fallback: Ollama DeepSeek-R1 (when Claude unavailable or for specific use cases)
+ * - Future: Self-hosted options for members who need full data sovereignty
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -36,38 +35,38 @@ export interface LLMResponse {
 
 /**
  * Level-specific LLM configuration
- * MAIA uses DeepSeek-R1 for all levels (reasoning model with superior prosody)
+ * MAIA uses selective Claude models: Sonnet 4.5 for levels 1-4, Opus 4.5 for level 5 DEEP work
  */
 const LEVEL_LLM_CONFIG: Record<ConsciousnessLevel, LLMConfig> = {
   1: {
-    provider: 'ollama',
-    model: 'deepseek-r1:latest',
-    temperature: 0.6,
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-5-20250929',
+    temperature: 0.7,
     maxTokens: 500
   },
   2: {
-    provider: 'ollama',
-    model: 'deepseek-r1:latest',
-    temperature: 0.65,
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-5-20250929',
+    temperature: 0.75,
     maxTokens: 600
   },
   3: {
-    provider: 'ollama',
-    model: 'deepseek-r1:latest',
-    temperature: 0.7,
-    maxTokens: 700
-  },
-  4: {
-    provider: 'ollama',
-    model: 'deepseek-r1:latest',
-    temperature: 0.75,
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-5-20250929',
+    temperature: 0.8,
     maxTokens: 800
   },
+  4: {
+    provider: 'anthropic',
+    model: 'claude-sonnet-4-5-20250929',
+    temperature: 0.85,
+    maxTokens: 1000
+  },
   5: {
-    provider: 'ollama',
-    model: 'deepseek-r1:latest',
-    temperature: 0.8,
-    maxTokens: 900
+    provider: 'anthropic',
+    model: 'claude-opus-4-5-20251101',
+    temperature: 0.9,
+    maxTokens: 1200
   }
 };
 
@@ -77,17 +76,19 @@ export class MultiLLMProvider {
   private enableClaude: boolean;
 
   constructor() {
-    // Ollama setup (self-hosted)
-    this.ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-
-    // Claude as optional fallback only
-    this.enableClaude = process.env.ENABLE_CLAUDE_FALLBACK === 'true';
+    // Claude as primary (enabled by default)
+    this.enableClaude = process.env.DISABLE_CLAUDE !== 'true';
 
     if (this.enableClaude && process.env.ANTHROPIC_API_KEY) {
       this.anthropic = new Anthropic({
         apiKey: process.env.ANTHROPIC_API_KEY
       });
+    } else {
+      console.warn('⚠️ MAIA: Claude not configured. Set ANTHROPIC_API_KEY for best results.');
     }
+
+    // Ollama as fallback (self-hosted option)
+    this.ollamaBaseUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
   }
 
   /**
@@ -98,37 +99,48 @@ export class MultiLLMProvider {
     userInput: string;
     level: ConsciousnessLevel;
     forceClaude?: boolean;
+    forceOllama?: boolean;
   }): Promise<LLMResponse> {
 
-    const { systemPrompt, userInput, level, forceClaude } = params;
+    const { systemPrompt, userInput, level, forceClaude, forceOllama } = params;
     const config = LEVEL_LLM_CONFIG[level];
     const startTime = Date.now();
 
-    // Force Claude if requested (for comparison/testing)
-    if (forceClaude && this.anthropic) {
-      return this.generateClaude(systemPrompt, userInput, config, startTime);
-    }
+    // Log model selection for testing
+    console.info(`[LLMProvider] level=${level} provider=${config.provider} model=${config.model}`);
 
-    // Use configured provider for level
-    try {
-      if (config.provider === 'ollama') {
+    // Force Ollama if explicitly requested (for data sovereignty use cases)
+    if (forceOllama) {
+      try {
         return await this.generateOllama(systemPrompt, userInput, config, startTime);
-      } else if (config.provider === 'anthropic' && this.anthropic) {
-        return await this.generateClaude(systemPrompt, userInput, config, startTime);
+      } catch (error) {
+        console.warn('Ollama generation failed, trying Claude fallback:', error);
+        if (this.anthropic) {
+          return await this.generateClaude(systemPrompt, userInput, config, startTime);
+        }
+        throw error;
       }
-    } catch (error) {
-      console.error(`LLM generation failed with ${config.provider}:`, error);
-
-      // Fallback to Claude if enabled
-      if (this.enableClaude && this.anthropic && config.provider !== 'anthropic') {
-        console.log('Falling back to Claude...');
-        return await this.generateClaude(systemPrompt, userInput, config, startTime);
-      }
-
-      throw error;
     }
 
-    throw new Error('No LLM provider available');
+    // Default: Try Claude first (primary provider)
+    if (this.anthropic) {
+      try {
+        return await this.generateClaude(systemPrompt, userInput, config, startTime);
+      } catch (error) {
+        console.error('Claude generation failed, trying Ollama fallback:', error);
+        // Fallback to Ollama if Claude fails
+        try {
+          return await this.generateOllama(systemPrompt, userInput, config, startTime);
+        } catch (ollamaError) {
+          console.error('Ollama fallback also failed:', ollamaError);
+          throw error; // Throw original Claude error
+        }
+      }
+    }
+
+    // If Claude not configured, try Ollama
+    console.log('Claude not configured, using Ollama...');
+    return await this.generateOllama(systemPrompt, userInput, config, startTime);
   }
 
   /**
@@ -176,7 +188,7 @@ export class MultiLLMProvider {
   }
 
   /**
-   * Generate using Claude (fallback only)
+   * Generate using Claude (with retry/backoff for 529 errors)
    */
   private async generateClaude(
     systemPrompt: string,
@@ -189,35 +201,67 @@ export class MultiLLMProvider {
       throw new Error('Claude not configured');
     }
 
-    const message = await this.anthropic.messages.create({
-      model: 'claude-3-7-sonnet-20250219',
-      max_tokens: config.maxTokens,
-      temperature: config.temperature,
-      system: systemPrompt,
-      messages: [
-        {
-          role: 'user',
-          content: userInput
-        }
-      ]
-    });
+    const maxRetries = 3;
+    const baseDelay = 1000; // 1 second
+    let lastError: any;
 
-    const response = message.content[0];
-    if (response.type !== 'text') {
-      throw new Error('Unexpected Claude response type');
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const message = await this.anthropic.messages.create({
+          model: config.model,
+          max_tokens: config.maxTokens,
+          temperature: config.temperature,
+          system: systemPrompt,
+          messages: [
+            {
+              role: 'user',
+              content: userInput
+            }
+          ]
+        });
+
+        const response = message.content[0];
+        if (response.type !== 'text') {
+          throw new Error('Unexpected Claude response type');
+        }
+
+        const generationTime = Date.now() - startTime;
+
+        return {
+          text: response.text,
+          provider: 'anthropic',
+          model: config.model,
+          metadata: {
+            generationTime,
+            tokenCount: message.usage.output_tokens
+          }
+        };
+      } catch (error: any) {
+        lastError = error;
+
+        // Check if it's a 529 overload error
+        const is529 = error?.status === 529 ||
+                      error?.message?.includes('529') ||
+                      error?.message?.includes('overloaded');
+
+        if (!is529 || attempt === maxRetries) {
+          // Not a 529 error, or out of retries - throw immediately
+          throw error;
+        }
+
+        // Exponential backoff with jitter: delay = baseDelay * 2^attempt + random(0-500ms)
+        const exponentialDelay = baseDelay * Math.pow(2, attempt);
+        const jitter = Math.random() * 500;
+        const delay = exponentialDelay + jitter;
+
+        console.warn(`⏳ Claude 529 overload, retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries})...`);
+
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
     }
 
-    const generationTime = Date.now() - startTime;
-
-    return {
-      text: response.text,
-      provider: 'anthropic',
-      model: 'claude-3-7-sonnet-20250219',
-      metadata: {
-        generationTime,
-        tokenCount: message.usage.output_tokens
-      }
-    };
+    // Should never reach here, but TypeScript needs it
+    throw lastError;
   }
 
   /**

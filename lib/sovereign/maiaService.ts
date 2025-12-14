@@ -21,7 +21,8 @@ import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
 import { enforceFieldSafety } from '../field/enforceFieldSafety';
-import { getCognitiveProfile } from './cognitiveProfileService';
+import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
+import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 
 export type MaiaResponse = {
   text: string;
@@ -44,6 +45,111 @@ type MaiaRequest = {
  * CORE: 2-6s - Normal conversation with light consciousness awareness
  * DEEP: 6-20s - Complex topics requiring full consciousness orchestration
  */
+
+/**
+ * Shared Socratic Validator function for all paths
+ * Validates response and optionally regenerates if needed
+ */
+async function validateAndRepairResponse(
+  sessionId: string,
+  userMessage: string,
+  draftResponse: string,
+  meta: Record<string, unknown>,
+  processingPath: 'FAST' | 'CORE' | 'DEEP',
+  regenerateFn?: (repairPrompt: string) => Promise<string>
+): Promise<{ response: string; validation: SocraticValidationResult | null; regenerated: boolean }> {
+  try {
+    // Extract context for validation
+    const atlas = (meta as any).atlasContext as AtlasResult | undefined;
+    const cognitiveProfile = (meta as any).cognitiveProfile;
+    const bloomDetection = (meta as any).bloomDetection as BloomDetection | undefined;
+
+    const validation = validateSocraticResponse({
+      userMessage,
+      draft: draftResponse,
+      element: atlas?.element?.toLowerCase(),
+      facet: atlas?.facet,
+      phase: atlas?.phase,
+      confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
+      isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+      regulation: atlas?.regulation,
+      capacity: atlas?.capacity,
+    });
+
+    console.log(`🛡️ [Socratic Validator ${processingPath}]`, {
+      decision: validation.decision,
+      isGold: validation.isGold,
+      ruptureCount: validation.ruptures.length,
+      summary: validation.summary,
+    });
+
+    // If regeneration requested and function provided, attempt repair
+    let finalResponse = draftResponse;
+    let wasRegenerated = false;
+
+    if (validation.decision === 'REGENERATE' && validation.repairPrompt && regenerateFn) {
+      console.log(`🔧 [Socratic Validator ${processingPath}] Regenerating with repair prompt...`);
+
+      try {
+        finalResponse = await regenerateFn(validation.repairPrompt);
+        wasRegenerated = true;
+
+        console.log(`✅ [Socratic Validator ${processingPath}] Regeneration complete`);
+      } catch (error) {
+        console.error(`❌ [Socratic Validator ${processingPath}] Regeneration failed:`, error);
+        // Keep original if regeneration fails
+      }
+    }
+
+    // Log to database (non-blocking)
+    (async () => {
+      try {
+        const eventData = {
+          session_id: sessionId,
+          route: processingPath.toLowerCase(),
+          decision: validation.decision,
+          is_gold: validation.isGold,
+          passes: validation.passes,
+          ruptures: validation.ruptures,
+          rupture_count: validation.ruptures.length,
+          critical_count: validation.ruptures.filter((r: any) => r.severity === 'CRITICAL').length,
+          violation_count: validation.ruptures.filter((r: any) => r.severity === 'VIOLATION').length,
+          warning_count: validation.ruptures.filter((r: any) => r.severity === 'WARNING').length,
+          element: atlas?.element,
+          facet: atlas?.facet,
+          phase: atlas?.phase,
+          confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : null,
+          is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+          regenerated: wasRegenerated,
+          regeneration_attempt: wasRegenerated ? 1 : 0,
+          summary: validation.summary,
+        };
+
+        // Try Supabase first (production), fall back to local Postgres (dev)
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        if (supabaseUrl && supabaseKey && !supabaseUrl.includes('disabled')) {
+          // Production: Use Supabase
+          const { createClient } = await import('@supabase/supabase-js');
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          await supabase.from('socratic_validator_events').insert(eventData);
+        } else {
+          // Local dev: Use direct Postgres
+          const { insertOne } = await import('../db/postgres');
+          await insertOne('socratic_validator_events', eventData);
+        }
+      } catch (dbError) {
+        console.error(`❌ [Socratic Validator ${processingPath}] Database logging failed:`, dbError);
+      }
+    })();
+
+    return { response: finalResponse, validation, regenerated: wasRegenerated };
+  } catch (error) {
+    console.error(`❌ [Socratic Validator ${processingPath}] Validation failed:`, error);
+    return { response: draftResponse, validation: null, regenerated: false };
+  }
+}
 
 /**
  * FAST Path: Simple responses using single model call with MAIA runtime prompt
@@ -127,7 +233,17 @@ Current context: Simple conversation turn - respond naturally and warmly.`,
     }
   });
 
-  return response;
+  // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
+  const { response: validatedResponse } = await validateAndRepairResponse(
+    sessionId,
+    input,
+    response,
+    meta,
+    'FAST'
+    // No regeneration function - FAST path prioritizes speed
+  );
+
+  return validatedResponse;
 }
 
 /**
@@ -183,7 +299,32 @@ async function corePathResponse(
     }
   });
 
-  return response;
+  // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
+  const { response: validatedResponse } = await validateAndRepairResponse(
+    sessionId,
+    input,
+    response,
+    meta,
+    'CORE',
+    // Regeneration function for CORE path
+    async (repairPrompt: string) => {
+      const repairedContext = { ...context };
+      const repairedPrompt = adaptivePrompt + '\n\n' + repairPrompt;
+
+      return await generateText({
+        systemPrompt: repairedPrompt,
+        userInput: input,
+        meta: {
+          ...meta,
+          coreProcessing: true,
+          regeneration: true,
+          conversationProfile: conversationContext.profile
+        }
+      });
+    }
+  );
+
+  return validatedResponse;
 }
 
 /**
@@ -251,12 +392,31 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   };
 
   // STEP 1: MAIA generates initial response using local consciousness processing
-  const consciousnessResponse = await consciousnessWrapper.processConsciousnessEvolution(input, consciousnessContext);
-  const maiaInitialResponse = consciousnessResponse.response;
+  // ⚡ Fail-fast wrapper: if deepseek is slow/unavailable, proceed to Opus without blocking
+  let consciousnessResponse: any = null;
+  let maiaInitialResponse: string;
 
-  console.log(`🎯 MAIA initial consciousness processing complete:`);
-  console.log(`   Layers activated: ${consciousnessResponse.layersActivated.join(', ')}`);
-  console.log(`   Depth achieved: ${consciousnessResponse.depth}`);
+  try {
+    consciousnessResponse = await Promise.race([
+      consciousnessWrapper.processConsciousnessEvolution(input, consciousnessContext),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('consciousness-stage-timeout')), 4500)
+      )
+    ]);
+
+    maiaInitialResponse = consciousnessResponse.response;
+
+    console.log(`🎯 MAIA initial consciousness processing complete:`);
+    console.log(`   Layers activated: ${consciousnessResponse.layersActivated.join(', ')}`);
+    console.log(`   Depth achieved: ${consciousnessResponse.depth}`);
+  } catch (err: any) {
+    console.warn(`⚠️ [DEEP] Skipping local consciousness stage (slow/unavailable): ${err?.message || err}`);
+
+    // Fallback: generate simple attunement response for Opus to enhance
+    maiaInitialResponse = `I'm here with you. Let's explore what you're bringing.`;
+
+    console.log(`🎯 Using fallback initial response → proceeding to Opus consultation`);
+  }
 
   // STEP 2: Determine consultation type based on conversation context
   const consultationType: ConsultationType = determineConsultationType(input, conversationContext, meta);
@@ -321,8 +481,42 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     }
   }
 
+  // 🛡️ SOCRATIC VALIDATOR: Validate with full regeneration capability
+  const { response: validatedResponse, validation } = await validateAndRepairResponse(
+    sessionId,
+    input,
+    finalResponse,
+    meta,
+    'DEEP',
+    // Regeneration function for DEEP path - re-run consciousness orchestration
+    async (repairPrompt: string) => {
+      console.log('🔧 [DEEP] Re-running consciousness orchestration with repair guidance...');
+
+      // Rebuild context with repair guidance
+      const repairedContext: MaiaContext = {
+        ...context,
+        repairGuidance: repairPrompt
+      };
+
+      const repairedPrompt = buildMaiaComprehensivePrompt(repairedContext, input, conversationHistory);
+
+      return await generateText({
+        systemPrompt: repairedPrompt + '\n\n' + repairPrompt,
+        userInput: input,
+        meta: {
+          ...meta,
+          deepProcessing: true,
+          regeneration: true,
+          conversationProfile: conversationContext.profile,
+          consciousnessDepth: 'full'
+        }
+      });
+    }
+  );
+
   return {
-    response: finalResponse,
+    response: validatedResponse,
+    socraticValidation: validation,
     consciousnessData: {
       layersActivated: consciousnessResponse.layersActivated,
       depth: consciousnessResponse.depth,
@@ -469,7 +663,6 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       // 🗃️ PHASE 1: POSTGRES PERSISTENCE - Log cognitive turn event
       // Fire-and-forget: never blocks MAIA response
-      const userId = (meta as any).userId;
       if (userId) {
         logCognitiveTurn({
           userId,
@@ -591,7 +784,6 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     // 🎯 CONTENT-BASED PROCESSING ROUTER using sophisticated MaiaConversationRouter
     // Phase 2: Now with cognitive profile awareness
-    const userId = (meta as any).userId;
     const routerResult = await maiaConversationRouter.chooseProcessingProfile({
       message: input,
       turnCount,
