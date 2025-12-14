@@ -1,16 +1,19 @@
 // backend: app/api/sovereign/app/maia/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
-import { ensureSession } from '@/lib/sovereign/sessionManager';
+import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
+import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
+import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 
 const DEMO_MODE = process.env.MAIA_SOVEREIGN_DEMO_MODE === 'true';
+const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 
-//  🔒 Soft timeout for sovereign processing (tune as needed)
-const SOVEREIGN_TIMEOUT_MS = 6000;
+//  🔒 Soft timeout for sovereign processing (increased for complex consciousness synthesis)
+const SOVEREIGN_TIMEOUT_MS = 12000;
 
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
@@ -52,9 +55,12 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const { sessionId, message, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId, ...meta } = body as {
       sessionId?: string;
       message?: string;
+      includeAudio?: boolean;
+      voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
+      userId?: string;
       [key: string]: unknown;
     };
 
@@ -79,16 +85,93 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Initialize database tables if needed
+    await initializeSessionTable();
+
     const session = await ensureSession(sessionId);
 
-    // 🧠 Soft timeout wrapper around core MAIA processing
-    const maiaResult = await withTimeout(
+    // 🛡️ FIELD SAFETY GATE: Check if user is safe for field/symbolic work
+    let cognitiveProfile = null;
+    let fieldSafety = null;
+
+    if (userId || session.id) {
+      try {
+        cognitiveProfile = await getCognitiveProfile(userId || session.id);
+
+        if (cognitiveProfile) {
+          fieldSafety = enforceFieldSafety({
+            cognitiveProfile,
+            element: (meta as any).element,
+            userName: (meta as any).userName,
+            context: 'maia',
+          });
+
+          // If field work is not safe, return mythic boundary message immediately
+          if (!fieldSafety.allowed) {
+            console.log(
+              `🛡️  [Field Safety] Blocked request - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+                `stability=${cognitiveProfile.stability}, fieldWorkSafe=false`,
+            );
+
+            const duration = Date.now() - start;
+            return NextResponse.json(
+              {
+                message: fieldSafety.message,
+                elementalNote: fieldSafety.elementalNote,
+                route: {
+                  endpoint: '/api/sovereign/app/maia',
+                  type: 'Sovereign Consciousness Interface',
+                  operational: true,
+                  mode: 'field-safety-boundary',
+                },
+                session: {
+                  id: session.id,
+                  turns: session.turns,
+                },
+                metadata: {
+                  fieldWorkSafe: false,
+                  fieldRouting: fieldSafety.fieldRouting,
+                  cognitiveAltitude: cognitiveProfile.rollingAverage,
+                  stability: cognitiveProfile.stability,
+                  processingTimeMs: duration,
+                },
+              },
+              { status: 200 }, // Not an error - this is expected behavior
+            );
+          }
+
+          console.log(
+            `🛡️  [Field Safety] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+              `fieldWorkSafe=true, realm=${fieldSafety.fieldRouting.realm}`,
+          );
+        }
+      } catch (err) {
+        console.warn('⚠️  [Field Safety] Could not fetch cognitive profile:', err);
+        // Graceful degradation - continue without field safety if profile fetch fails
+      }
+    }
+
+    let orchestratorResult;
+
+    // 🎯 Use new three-tier processing system with voice integration
+    orchestratorResult = await withTimeout(
       getMaiaResponse({
         sessionId: session.id,
         input: message,
-        meta,
+        includeAudio: includeAudio || false,
+        voiceProfile: voiceProfile,
+        meta: {
+          chatType: 'sovereign-interface',
+          endpoint: '/api/sovereign/app/maia',
+          safeMode: SAFE_MODE,
+          userId: userId, // 🧠 Pass userId for Dialectical Scaffold logging
+          cognitiveProfile, // 🧠 Pass cognitive profile for downstream use
+          fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
+          fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
+          ...meta,
+        },
       }),
-      SOVEREIGN_TIMEOUT_MS
+      SOVEREIGN_TIMEOUT_MS,
     );
 
     const duration = Date.now() - start;
@@ -102,22 +185,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(
-      {
-        message: maiaResult.text,
-        route: {
-          endpoint: '/api/sovereign/app/maia',
-          type: 'Sovereign Consciousness Interface',
-          operational: true,
-          mode: 'live',
-        },
-        session: {
-          id: session.id,
-          turns: session.turn_count,
-        },
+    // Unified response structure for new three-tier system with voice integration
+    const responseData: any = {
+      message: orchestratorResult.text,
+      route: {
+        endpoint: '/api/sovereign/app/maia',
+        type: 'Sovereign Consciousness Interface',
+        operational: true,
+        mode: 'three-tier-processing',
+        safeMode: SAFE_MODE,
+        voiceEnabled: !!orchestratorResult.audio,
       },
-      { status: 200 }
-    );
+      session: {
+        id: session.id,
+        turns: session.turn_count,
+      },
+      metadata: {
+        processingProfile: orchestratorResult.processingProfile,
+        processingTimeMs: orchestratorResult.processingTimeMs,
+        tierProcessing: true,
+        voiceRequested: includeAudio || false
+      },
+    };
+
+    // Add audio data if synthesis was successful
+    if (orchestratorResult.audio) {
+      responseData.audio = {
+        audioBase64: orchestratorResult.audio.audioBase64,
+        audioUrl: orchestratorResult.audio.audioUrl,
+        voiceProfile: orchestratorResult.audio.voiceProfile,
+        format: orchestratorResult.audio.format,
+        synthesisTimeMs: orchestratorResult.audio.synthesisTimeMs
+      };
+    }
+
+    return NextResponse.json(responseData, { status: 200 });
   } catch (err: any) {
     const duration = Date.now() - start;
 
@@ -129,7 +231,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           message:
-            'I am sensing some turbulence in the field. I am pausing this response to protect performance and stability. You can safely ask again in a moment.',
+            "I'm having trouble finishing this response right now, so I'm going to stop here to keep things stable. You didn't do anything wrong. You can try asking the same thing in a simpler way, or ask about a smaller piece of what you're exploring. I'm here with you and we can keep working with this together.",
           route: {
             endpoint: '/api/sovereign/app/maia',
             type: 'Sovereign Consciousness Interface',
@@ -146,9 +248,44 @@ export async function POST(req: NextRequest) {
     }
 
     console.error(`❌ Sovereign MAIA error after ${duration}ms:`, err);
-    return NextResponse.json(
-      { error: 'Internal sovereign error', code: 'SOVEREIGN_ERROR' },
-      { status: 500 }
-    );
+
+    // 🛡️ Last resort: try emergency fail-soft response before system failure message
+    try {
+      console.log('Attempting emergency fail-soft response...');
+      const emergencyResult = await getMaiaResponse({
+        sessionId: 'emergency-session',
+        input: 'Hello',
+        meta: { emergency: true, forceFast: true }
+      });
+      return NextResponse.json(
+        {
+          message: emergencyResult.text || "I'm present, though experiencing some system complexity right now. What would you like to explore?",
+          route: {
+            endpoint: '/api/sovereign/app/maia',
+            type: 'Sovereign Consciousness Interface',
+            operational: false,
+            mode: 'emergency-fallback',
+          },
+          error: {
+            code: 'SOVEREIGN_ERROR',
+            emergency: true,
+            durationMs: duration,
+          },
+        },
+        { status: 500 }
+      );
+    } catch (emergencyErr) {
+      console.error('Emergency system also failed:', emergencyErr);
+
+      // Absolute final fallback - honest human message for true system failure
+      return NextResponse.json(
+        {
+          error: 'CONSCIOUSNESS_SYSTEM_FAILURE',
+          message:
+            "I'm experiencing some technical difficulties right now and need to pause to keep things stable. You didn't do anything wrong. Please try again in a moment, or ask a simpler question. I'm still here with you.",
+        },
+        { status: 503 } // Service Temporarily Unavailable
+      );
+    }
   }
 }
