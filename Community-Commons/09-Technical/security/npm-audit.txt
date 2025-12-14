@@ -1,0 +1,21 @@
+# npm audit report
+
+ai  <=5.0.51
+Severity: moderate
+Vercel’s AI SDK's filetype whitelists can be bypassed when uploading files - https://github.com/advisories/GHSA-rwvc-j5jr-mgvh
+Depends on vulnerable versions of jsondiffpatch
+fix available via `npm audit fix --force`
+Will install ai@5.0.113, which is a breaking change
+node_modules/ai
+
+jsondiffpatch  <0.7.2
+Severity: moderate
+jsondiffpatch is vulnerable to Cross-site Scripting (XSS) via HtmlFormatter::nodeBegin - https://github.com/advisories/GHSA-33vc-wfww-vjfv
+fix available via `npm audit fix --force`
+Will install ai@5.0.113, which is a breaking change
+node_modules/jsondiffpatch
+
+2 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
