@@ -37,6 +37,10 @@ import { validateSocraticResponse, serializeValidationResult, type SocraticValid
  */
 
 export async function POST(request: NextRequest) {
+  // Always-in-scope defaults (catch-safe)
+  let conversationDepth = 0;
+  let trustLevel = 0;
+
   try {
     const body = await request.json();
     const { message, userId, sessionId } = body;
@@ -58,8 +62,8 @@ export async function POST(request: NextRequest) {
       : [];
 
     // Calculate conversation depth and trust level (needed throughout the request)
-    const conversationDepth = conversationHistory.length;
-    const trustLevel = Math.min(conversationDepth / 10, 1);
+    conversationDepth = conversationHistory.length;
+    trustLevel = Math.min(conversationDepth / 10, 1);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
     let cognitiveProfile = null;
@@ -283,13 +287,7 @@ export async function POST(request: NextRequest) {
       // Log validator event to database (non-blocking)
       (async () => {
         try {
-          const { createClient } = await import('@supabase/supabase-js');
-          const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL!,
-            process.env.SUPABASE_SERVICE_ROLE_KEY!
-          );
-
-          await supabase.from('socratic_validator_events').insert({
+          const eventData = {
             user_id: userId,
             session_id: sessionId,
             route: 'oracle',
@@ -309,7 +307,22 @@ export async function POST(request: NextRequest) {
             regenerated: regenerationAttempt > 0,
             regeneration_attempt: regenerationAttempt,
             summary: validationResult!.summary,
-          });
+          };
+
+          // Try Supabase first (production), fall back to local Postgres (dev)
+          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+          if (supabaseUrl && supabaseKey && !supabaseUrl.includes('disabled')) {
+            // Production: Use Supabase
+            const { createClient } = await import('@supabase/supabase-js');
+            const supabase = createClient(supabaseUrl, supabaseKey);
+            await supabase.from('socratic_validator_events').insert(eventData);
+          } else {
+            // Local dev: Use direct Postgres
+            const { insertOne } = await import('@/lib/db/postgres');
+            await insertOne('socratic_validator_events', eventData);
+          }
         } catch (dbError) {
           console.error('❌ [Socratic Validator] Database logging failed (non-critical):', dbError);
         }
