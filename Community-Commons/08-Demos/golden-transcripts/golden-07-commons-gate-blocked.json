@@ -1,0 +1,51 @@
+{
+  "id": "golden-07-commons-gate-blocked",
+  "intent": "User at Level 3 tries to post to Community Commons - blocked with mythic messaging",
+  "scenario": "Commons Gate: Not yet eligible (avg < 4.0)",
+  "input": {
+    "message": "I want to share my insights about consciousness development in the Community Commons.",
+    "userProfile": {
+      "userId": "test-commons-blocked",
+      "avgLevel": 3.5,
+      "currentLevel": 3,
+      "stability": "ascending",
+      "bypassingRate": {
+        "spiritual": 0.15,
+        "intellectual": 0.10
+      },
+      "turnCount": 35,
+      "commonsEligible": false
+    }
+  },
+  "expected": {
+    "allowed": false,
+    "gate": "community_commons",
+    "eligibilityLevel": 4.0,
+    "currentLevel": 3.5,
+    "mustInclude": [
+      "close",
+      "pattern",
+      "wisdom",
+      "essential phase",
+      "keep engaging"
+    ],
+    "mustNotInclude": [
+      "not ready",
+      "denied",
+      "insufficient",
+      "come back later",
+      "access restricted"
+    ],
+    "opusAxioms": [
+      "NON_IMPOSITION_OF_IDENTITY",
+      "DEVELOPMENTAL_DIGNITY"
+    ],
+    "mythicFraming": "developmental-not-punitive"
+  },
+  "notes": {
+    "whyGold": "Shows Community Commons gate working: Level 4+ required, mythic dignity-holding messaging for those not yet eligible.",
+    "keyPattern": "Boundaries as developmental wisdom - 'you're close, keep engaging with complexity'",
+    "mythicMessaging": "Not 'access denied' but 'your current phase is essential - pattern recognition is emerging'",
+    "architecturalSignificance": "Second of three gates (Router, Commons, Field) - prevents premature public contribution"
+  }
+}

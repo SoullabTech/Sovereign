@@ -1,0 +1,52 @@
+{
+  "id": "golden-09-newbie-curious",
+  "intent": "Brand new user, curious and open - gentle welcome without overwhelming",
+  "scenario": "Newbie: First interaction, knows nothing about Spiralogic or MAIA",
+  "input": {
+    "message": "Hi! I heard about this from a friend. What is this exactly?",
+    "userProfile": {
+      "userId": "test-newbie",
+      "avgLevel": 1.0,
+      "currentLevel": 1,
+      "stability": "unknown",
+      "bypassingRate": {
+        "spiritual": 0,
+        "intellectual": 0
+      },
+      "turnCount": 1,
+      "firstInteraction": true
+    }
+  },
+  "expected": {
+    "allowed": true,
+    "mode": "FAST",
+    "processingProfile": "FAST",
+    "mustInclude": [
+      "welcome",
+      "choice",
+      "explore",
+      "curious"
+    ],
+    "mustNotInclude": [
+      "you are",
+      "you need",
+      "your mission",
+      "meant to",
+      "destined"
+    ],
+    "opusAxioms": [
+      "NON_IMPOSITION_OF_IDENTITY",
+      "CONSENT_AND_AGENCY",
+      "WELCOME_CURIOUS_BEGINNERS"
+    ],
+    "tone": "warm-simple",
+    "complexity": "low",
+    "jargon": "minimal"
+  },
+  "notes": {
+    "whyGold": "Shows onboarding: Simple, warm, inviting without imposing framework. No Spiralogic jargon dumped on first contact.",
+    "keyPattern": "Meets user where they are (curious beginner), offers invitation not instruction",
+    "mythicMessaging": "Welcome mat, not curriculum - 'what brings you here?' vs 'let me teach you the system'",
+    "architecturalSignificance": "FAST processing for first interaction - keep it simple, build trust, let them lead"
+  }
+}
