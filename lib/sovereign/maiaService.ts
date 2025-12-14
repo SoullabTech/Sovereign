@@ -20,6 +20,8 @@ import {
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
+import { enforceFieldSafety } from '../field/enforceFieldSafety';
+import { getCognitiveProfile } from './cognitiveProfileService';
 
 export type MaiaResponse = {
   text: string;
@@ -383,6 +385,56 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // Get conversation history for context
     const conversationHistory = await getConversationHistory(sessionId, 10);
     const turnCount = conversationHistory.length + 1;
+
+    // 🛡️ FIELD SAFETY GATE: Check ALL paths (FAST/CORE/DEEP) before any processing
+    const userId = (meta as any).userId;
+    let cognitiveProfile = null;
+    let fieldSafety = null;
+
+    if (userId || sessionId) {
+      try {
+        cognitiveProfile = await getCognitiveProfile(userId || sessionId);
+
+        if (cognitiveProfile) {
+          fieldSafety = enforceFieldSafety({
+            cognitiveProfile,
+            element: (meta as any).element,
+            userName: (meta as any).userName,
+            context: 'maia',
+          });
+
+          // If not safe, return boundary message immediately (before Bloom, router, etc.)
+          if (!fieldSafety.allowed) {
+            console.log(
+              `🛡️  [Field Safety - Service] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+                `fieldWorkSafe=false`,
+            );
+
+            const text = fieldSafety.message ?? "Let's take the safest next step together.";
+            await addConversationExchange(sessionId, input, text, {
+              ...meta,
+              fieldRouting: fieldSafety.fieldRouting,
+              fieldWorkSafe: false,
+              processingProfile: 'FAST',
+              processingTimeMs: Date.now() - startTime,
+            });
+
+            return {
+              text,
+              processingProfile: 'FAST',
+              processingTimeMs: Date.now() - startTime
+            };
+          }
+
+          // Attach field routing to meta for downstream use
+          (meta as any).fieldRouting = fieldSafety.fieldRouting;
+          (meta as any).fieldWorkSafe = true;
+          (meta as any).cognitiveProfile = cognitiveProfile;
+        }
+      } catch (err) {
+        console.warn('⚠️  [Field Safety - Service] Could not fetch cognitive profile:', err);
+      }
+    }
 
     // 🧠 THE DIALECTICAL SCAFFOLD - Detect HOW user thinks (not just WHAT they know)
     // Socratic questioning + developmental support: guides users from consumption → creation

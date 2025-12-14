@@ -2,6 +2,8 @@ import { PersonalOracleAgent } from '../../apps/api/backend/src/agents/PersonalO
 import type { AgentState } from './modules/types';
 import type { Element } from '../types/oracle';
 import { SentimentAnalyzer, type SentimentResult, type ConversationSentiment } from '../analysis/SentimentAnalyzer';
+import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
+import { enforceFieldSafety } from '../field/enforceFieldSafety';
 
 // Collective consciousness state with soulful interaction tracking
 export interface CollectiveField {
@@ -417,6 +419,48 @@ export class MainOracleAgent {
     sentimentAnalysis?: SentimentResult;
     emotionalSupport?: string;
   }> {
+    // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
+    try {
+      const cognitiveProfile = await getCognitiveProfile(userId);
+
+      if (cognitiveProfile) {
+        const fieldSafety = enforceFieldSafety({
+          cognitiveProfile,
+          element: (context as any).element,
+          userName: (context as any).userName,
+          context: 'oracle',
+        });
+
+        // If field work is not safe, return boundary message without processing
+        if (!fieldSafety.allowed) {
+          console.log(
+            `🛡️  [Field Safety - MainOracle] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+              `fieldWorkSafe=false`,
+          );
+
+          return {
+            personalResponse: {
+              text: fieldSafety.message,
+              elementalNote: fieldSafety.elementalNote,
+              metadata: {
+                fieldWorkSafe: false,
+                fieldRouting: fieldSafety.fieldRouting,
+                cognitiveAltitude: cognitiveProfile.rollingAverage,
+              },
+            },
+          };
+        }
+
+        console.log(
+          `🛡️  [Field Safety - MainOracle] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
+            `realm=${fieldSafety.fieldRouting.realm}`,
+        );
+      }
+    } catch (err) {
+      console.warn('⚠️  [Field Safety - MainOracle] Could not fetch cognitive profile:', err);
+      // Graceful degradation - continue without field safety
+    }
+
     // Get or create sentiment analyzer for user
     let sentimentAnalyzer = this.sentimentAnalyzers.get(userId);
     if (!sentimentAnalyzer) {
