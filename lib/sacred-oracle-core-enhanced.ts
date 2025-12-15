@@ -154,6 +154,27 @@ export class SacredOracleCoreEnhanced {
   }
 
   /**
+   * Process input for consciousness orchestrator compatibility
+   */
+  async processInput(input: string, context: any): Promise<any> {
+    const response = await this.generateResponse(
+      input,
+      context.userId || context.sessionId,
+      context
+    );
+
+    // Transform EnhancedOracleResponse to expected format
+    return {
+      message: response.message,
+      mode: response.mode,
+      depth: response.depth,
+      tracking: response.tracking,
+      metadata: response.metadata,
+      wisdomSources: response.wisdomSources
+    };
+  }
+
+  /**
    * Synthesize wisdom from all available layers
    */
   private async synthesizeWisdom(

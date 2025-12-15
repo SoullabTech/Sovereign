@@ -148,6 +148,19 @@ export class ReciprocalLearningEngine extends EventEmitter {
   ): Promise<WisdomContributionAnalysis> {
 
     // Analyze interaction content for wisdom markers
+    // Guard against undefined interaction content
+    if (!interaction?.content || typeof interaction.content !== 'string') {
+      console.warn('detectWisdomContribution called with invalid interaction content:', typeof interaction?.content);
+      return {
+        isWisdomContribution: false,
+        confidence: 0,
+        extractedWisdom: [],
+        culturalFlags: [],
+        recommendedPermission: 'personal-only',
+        integrationComplexity: 'simple'
+      };
+    }
+
     const wisdomMarkers = this.identifyWisdomMarkers(interaction.content);
 
     if (wisdomMarkers.length === 0) {
@@ -337,6 +350,12 @@ export class ReciprocalLearningEngine extends EventEmitter {
   // Private helper methods...
 
   private identifyWisdomMarkers(content: string): string[] {
+    // Guard against undefined or null content
+    if (!content || typeof content !== 'string') {
+      console.warn('identifyWisdomMarkers called with invalid content:', typeof content);
+      return [];
+    }
+
     const wisdomMarkers = [
       'in my tradition', 'my family teaches', 'we practice', 'I learned from',
       'my teacher showed me', 'in our culture', 'this technique', 'what works for me',
@@ -344,9 +363,13 @@ export class ReciprocalLearningEngine extends EventEmitter {
       'grandmother taught', 'elder shared', 'ceremony', 'ritual', 'practice'
     ];
 
-    return wisdomMarkers.filter(marker =>
-      content.toLowerCase().includes(marker.toLowerCase())
-    );
+    return wisdomMarkers.filter(marker => {
+      if (!content || typeof content !== 'string') {
+        console.warn('Content became undefined during filter operation, skipping marker:', marker);
+        return false;
+      }
+      return content.toLowerCase().includes(marker.toLowerCase());
+    });
   }
 
   private async extractWisdomInsights(

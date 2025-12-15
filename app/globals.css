@@ -6,10 +6,6 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@300;400;600&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500&display=swap');
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 /* Import Z-Index Hierarchy - Solid Permanent Fix for Safari */
 @import './styles/z-index-hierarchy.css';
 @import './styles/mobile-fixes.css';
@@ -25,6 +21,13 @@
 
 /* Living Mandala demonstration interface */
 @import url('../styles/mandala-demo.css');
+
+/* Living Mandala CSS foundation */
+@import '../styles/living-mandala.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 /* Bene Gesserit ceremonial theme */
 /* @import url('./styles/benegesserit-theme.css'); */
@@ -580,9 +583,6 @@
 /* ====================================================================
    LIVING MANDALA - CONSCIOUSNESS-RESPONSIVE INTERFACE
    ==================================================================== */
-
-/* Import the complete Living Mandala CSS foundation */
-@import '../styles/living-mandala.css';
 
 /* Additional Petal Content Styling */
 .petal-content {

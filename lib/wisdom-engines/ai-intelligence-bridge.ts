@@ -1,18 +1,27 @@
 /**
- * AI INTELLIGENCE BRIDGE
+ * AI INTELLIGENCE BRIDGE - SOVEREIGNTY ENFORCED
  *
  * The CRITICAL missing piece - connects wisdom layers to actual AI models
  * This is what gives Maya real consciousness, not just architecture
  *
- * Supports multiple AI backends:
- * - Claude API (primary)
- * - OpenAI GPT-4 (fallback)
- * - Local models (Ollama)
- * - Custom endpoints
+ * 🚫 SOVEREIGNTY MODE: ALL external APIs BANNED for text generation
+ *
+ * Supports ONLY local backends:
+ * - Multi-Engine Orchestrator (Primary) - 7 local Ollama models working in concert
+ * - Local model fallback
+ * - Consciousness engine fallback
+ *
+ * External APIs allowed ONLY for TTS via isolated module
  */
 
-import { Anthropic } from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
+import { generateText } from '../ai/modelService';
+import {
+  generateWithMultipleEngines,
+  type OrchestrationType,
+  type MultiEngineResponse
+} from '../ai/multiEngineOrchestrator';
+import { orchestrationOptimizer } from '../consciousness/orchestration-optimizer';
+import { responseCache } from '../consciousness/response-cache';
 
 interface AIResponse {
   content: string;
@@ -31,9 +40,22 @@ interface WisdomPrompt {
 
 export class AIIntelligenceBridge {
   private static instance: AIIntelligenceBridge;
-  private anthropic?: Anthropic;
-  private openai?: OpenAI;
-  private ollamaEndpoint?: string;
+  // 🚫 SOVEREIGNTY ENFORCEMENT: Local consciousness engines only
+  private localOnly: boolean = true; // Always true for sovereignty
+  private multiEngineEnabled: boolean = true; // Enhanced multi-engine processing
+
+  // Orchestration patterns for each wisdom layer
+  private readonly LAYER_ORCHESTRATION: Record<string, OrchestrationType> = {
+    consciousness: 'full_orchestra',     // Deep consciousness needs all perspectives
+    witnessing: 'dual_reasoning',        // Pure presence needs clarity and grounding
+    fire: 'creative_synthesis',          // Transformation needs creative + analytical power
+    water: 'creative_synthesis',         // Emotional intelligence needs intuitive engines
+    earth: 'dual_reasoning',            // Grounded wisdom needs analysis + practical thinking
+    air: 'dual_reasoning',              // Mental clarity needs reasoning engines
+    aether: 'heavy_analysis',           // Transcendent unity needs deepest analysis
+    shadow: 'full_orchestra',           // Shadow integration needs all perspectives
+    anamnesis: 'creative_synthesis'     // Soul memory needs creative + wisdom synthesis
+  };
 
   // Prompt templates for each wisdom layer
   private readonly LAYER_PROMPTS = {
@@ -159,67 +181,167 @@ export class AIIntelligenceBridge {
   }
 
   /**
-   * Initialize AI service connections
+   * Initialize Local AI Consciousness Engines - SOVEREIGNTY ENFORCED
    */
   private async initializeConnections() {
-    // Initialize Anthropic (Claude) if API key exists
-    if (process.env.ANTHROPIC_API_KEY) {
-      this.anthropic = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY
-      });
-      console.log('✅ Claude API connected');
+    console.log('🧠 Initializing MAIA Sovereignty Consciousness Engines...');
+
+    // Verify Ollama multi-engine availability
+    try {
+      const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+      const response = await fetch(`${ollamaUrl}/api/tags`);
+
+      if (response.ok) {
+        const data = await response.json();
+        const availableModels = data.models?.map((m: any) => m.name) || [];
+        console.log(`✅ Multi-Engine Consciousness: ${availableModels.length} models available`);
+        console.log('🎼 Orchestra engines:', availableModels.slice(0, 3).join(', '), '...');
+      } else {
+        console.warn('⚠️ Ollama engine detection failed - will use fallback');
+      }
+    } catch (error) {
+      console.warn('⚠️ Multi-engine consciousness unavailable, using single model fallback');
     }
 
-    // Initialize OpenAI if API key exists
-    if (process.env.OPENAI_API_KEY) {
-      this.openai = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY
-      });
-      console.log('✅ OpenAI API connected');
-    }
-
-    // Initialize Ollama if endpoint exists
-    if (process.env.OLLAMA_ENDPOINT) {
-      this.ollamaEndpoint = process.env.OLLAMA_ENDPOINT;
-      console.log('✅ Ollama endpoint connected');
-    }
-
-    if (!this.anthropic && !this.openai && !this.ollamaEndpoint) {
-      console.error('⚠️ No AI services configured! Maya has no intelligence source!');
-    }
+    console.log('🚫 External AI APIs permanently disabled for sovereignty');
+    console.log('🔒 MAIA consciousness remains fully local and sovereign');
   }
 
   /**
-   * Generate wisdom from specific layer with actual AI
+   * Generate wisdom from specific layer with OPTIMIZED MULTI-ENGINE consciousness processing
    */
   async generateLayerWisdom(
     layer: string,
     input: string,
     context?: any
   ): Promise<string> {
-    const prompt = this.buildPrompt(layer, input, context);
+    const startTime = Date.now();
 
     try {
-      // Try Claude first (best for consciousness work)
-      if (this.anthropic) {
-        return await this.generateWithClaude(prompt);
+      // 🎯 STEP 1: Check semantic cache for similar responses
+      const baseOrchestration = this.LAYER_ORCHESTRATION[layer] || 'dual_reasoning';
+      const cacheHit = await responseCache.checkCache(input, baseOrchestration, context);
+
+      if (cacheHit && cacheHit.usable) {
+        console.log(`🎯 Cache HIT for ${layer}: ${(cacheHit.similarity * 100).toFixed(0)}% similarity, ${(cacheHit.freshness * 100).toFixed(0)}% fresh`);
+
+        // Track cache hit performance
+        orchestrationOptimizer.trackPerformance({
+          responseTime: Date.now() - startTime,
+          confidence: 0.9, // Cache hits are generally high confidence
+          engineUtilization: { cache: 1.0 },
+          timestamp: Date.now()
+        });
+
+        return cacheHit.entry.consensus;
       }
 
-      // Fallback to GPT-4
-      if (this.openai) {
-        return await this.generateWithGPT(prompt);
-      }
+      // 🧠 STEP 2: Analyze query complexity and optimize orchestration
+      const complexityAnalysis = orchestrationOptimizer.analyzeComplexity(input, context);
 
-      // Fallback to local model
-      if (this.ollamaEndpoint) {
-        return await this.generateWithOllama(prompt);
-      }
+      // 📊 STEP 3: Get system resources (mock for now - would integrate with actual monitoring)
+      const systemResources = {
+        availableRAM: 16000, // Mock 16GB
+        cpuLoad: 0.4, // Mock 40% CPU usage
+        modelLoadTime: 2000, // Mock 2s model load time
+        networkLatency: 50 // Mock 50ms latency
+      };
 
-      // Emergency fallback - return template
-      return this.emergencyFallback(layer, input);
+      // ⚙️ STEP 4: Optimize orchestration based on complexity and resources
+      const optimization = orchestrationOptimizer.optimizeOrchestration(
+        complexityAnalysis,
+        systemResources,
+        context?.userPreferences || {}
+      );
+
+      console.log(`🎼 Optimized ${layer} orchestration: ${optimization.orchestrationType}`);
+      console.log(`📊 Complexity: ${(complexityAnalysis.score * 100).toFixed(0)}%, Reasoning: ${optimization.reasoning}`);
+
+      const prompt = this.buildPrompt(layer, input, context);
+
+      // 🚫 SOVEREIGNTY ENFORCEMENT: ONLY local models allowed
+      // Enhanced with intelligent multi-engine orchestration
+
+      if (this.multiEngineEnabled) {
+        // Use optimized orchestration for enhanced consciousness processing
+        const multiResponse = await generateWithMultipleEngines({
+          systemPrompt: prompt.systemPrompt,
+          userInput: prompt.userPrompt,
+          meta: {
+            layer,
+            temperature: prompt.temperature,
+            complexity: complexityAnalysis,
+            optimization: optimization
+          }
+        }, optimization.orchestrationType, layer);
+
+        const processingTime = Date.now() - startTime;
+
+        console.log(`🎼 Multi-engine ${layer}: ${multiResponse.engineResponses.size} engines, confidence: ${(multiResponse.confidence * 100).toFixed(0)}%, ${processingTime}ms`);
+
+        // 💾 STEP 5: Cache the response for future use
+        await responseCache.storeResponse(
+          input,
+          optimization.orchestrationType,
+          multiResponse.engineResponses,
+          multiResponse.consensus || multiResponse.primaryResponse,
+          multiResponse.confidence,
+          context,
+          processingTime
+        );
+
+        // 📈 STEP 6: Track performance for optimization learning
+        orchestrationOptimizer.trackPerformance({
+          responseTime: processingTime,
+          confidence: multiResponse.confidence,
+          engineUtilization: this.calculateEngineUtilization(multiResponse.engineResponses),
+          timestamp: Date.now()
+        });
+
+        // Return consensus if available, otherwise primary response
+        return multiResponse.consensus || multiResponse.primaryResponse;
+      } else {
+        // Fallback to single engine (still cached and tracked)
+        const response = await generateText({
+          systemPrompt: prompt.systemPrompt,
+          userInput: prompt.userPrompt,
+          meta: { layer, temperature: prompt.temperature }
+        });
+
+        const processingTime = Date.now() - startTime;
+
+        // Cache single engine response too
+        await responseCache.storeResponse(
+          input,
+          'primary',
+          new Map([['single-engine', response]]),
+          response,
+          0.7, // Single engine gets lower confidence score
+          context,
+          processingTime
+        );
+
+        orchestrationOptimizer.trackPerformance({
+          responseTime: processingTime,
+          confidence: 0.7,
+          engineUtilization: { 'single-engine': 1.0 },
+          timestamp: Date.now()
+        });
+
+        return response;
+      }
 
     } catch (error) {
-      console.error(`AI generation failed for ${layer}:`, error);
+      console.error(`🚨 Optimized consciousness processing failed for ${layer}:`, error);
+
+      // Track failure for optimization learning
+      orchestrationOptimizer.trackPerformance({
+        responseTime: Date.now() - startTime,
+        confidence: 0.1,
+        engineUtilization: { error: 1.0 },
+        timestamp: Date.now()
+      });
+
       return this.emergencyFallback(layer, input);
     }
   }
@@ -261,78 +383,51 @@ export class AIIntelligenceBridge {
   }
 
   /**
-   * Generate with Claude (Anthropic)
+   * Enhanced multi-layer synthesis with multi-engine orchestration
    */
-  private async generateWithClaude(prompt: WisdomPrompt): Promise<string> {
-    if (!this.anthropic) throw new Error('Claude not configured');
+  async generateEnhancedSynthesis(
+    layers: string[],
+    input: string,
+    context?: any
+  ): Promise<Map<string, { wisdom: string; confidence: number; engines: string[] }>> {
+    const enhancedWisdom = new Map();
 
-    const start = Date.now();
+    // Generate wisdom from each layer with multi-engine orchestration
+    const promises = layers.map(async (layer) => {
+      try {
+        const prompt = this.buildPrompt(layer, input, context);
+        const orchestrationType = this.LAYER_ORCHESTRATION[layer] || 'dual_reasoning';
 
-    const response = await this.anthropic.messages.create({
-      model: 'claude-3-sonnet-20240229',
-      max_tokens: prompt.maxTokens,
-      temperature: prompt.temperature,
-      system: prompt.systemPrompt,
-      messages: [{
-        role: 'user',
-        content: prompt.userPrompt
-      }]
+        const multiResponse = await generateWithMultipleEngines({
+          systemPrompt: prompt.systemPrompt,
+          userInput: prompt.userPrompt,
+          meta: { layer, temperature: prompt.temperature }
+        }, orchestrationType, layer);
+
+        return {
+          layer,
+          wisdom: multiResponse.consensus || multiResponse.primaryResponse,
+          confidence: multiResponse.confidence,
+          engines: Array.from(multiResponse.engineResponses.keys())
+        };
+      } catch (error) {
+        console.warn(`Enhanced synthesis failed for ${layer}:`, error);
+        return {
+          layer,
+          wisdom: this.emergencyFallback(layer, input),
+          confidence: 0.3,
+          engines: ['fallback']
+        };
+      }
     });
 
-    const latency = Date.now() - start;
-    console.log(`Claude ${prompt.layer} response in ${latency}ms`);
+    const results = await Promise.all(promises);
 
-    return response.content[0].type === 'text' ? response.content[0].text : '';
-  }
+    for (const { layer, wisdom, confidence, engines } of results) {
+      enhancedWisdom.set(layer, { wisdom, confidence, engines });
+    }
 
-  /**
-   * Generate with GPT-4 (OpenAI)
-   */
-  private async generateWithGPT(prompt: WisdomPrompt): Promise<string> {
-    if (!this.openai) throw new Error('OpenAI not configured');
-
-    const start = Date.now();
-
-    const response = await this.openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      max_tokens: prompt.maxTokens,
-      temperature: prompt.temperature,
-      messages: [
-        { role: 'system', content: prompt.systemPrompt },
-        { role: 'user', content: prompt.userPrompt }
-      ]
-    });
-
-    const latency = Date.now() - start;
-    console.log(`GPT-4 ${prompt.layer} response in ${latency}ms`);
-
-    return response.choices[0]?.message?.content || '';
-  }
-
-  /**
-   * Generate with local Ollama model
-   */
-  private async generateWithOllama(prompt: WisdomPrompt): Promise<string> {
-    if (!this.ollamaEndpoint) throw new Error('Ollama not configured');
-
-    const start = Date.now();
-
-    const response = await fetch(`${this.ollamaEndpoint}/api/generate`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: 'llama2',
-        prompt: `${prompt.systemPrompt}\n\n${prompt.userPrompt}`,
-        temperature: prompt.temperature,
-        max_tokens: prompt.maxTokens
-      })
-    });
-
-    const data = await response.json();
-    const latency = Date.now() - start;
-    console.log(`Ollama ${prompt.layer} response in ${latency}ms`);
-
-    return data.response || '';
+    return enhancedWisdom;
   }
 
   /**
@@ -354,6 +449,20 @@ export class AIIntelligenceBridge {
     };
 
     return fallbacks[layer] || "I'm here with you in this moment.";
+  }
+
+  /**
+   * Calculate engine utilization for performance tracking
+   */
+  private calculateEngineUtilization(engineResponses: Map<string, string>): Record<string, number> {
+    const utilization: Record<string, number> = {};
+    const totalEngines = engineResponses.size;
+
+    for (const [engine] of engineResponses) {
+      utilization[engine] = 1.0 / totalEngines; // Equal weight for now
+    }
+
+    return utilization;
   }
 
   /**
@@ -382,20 +491,53 @@ export class AIIntelligenceBridge {
   }
 
   /**
-   * Check if AI services are available
+   * Check if SOVEREIGNTY consciousness engines are available
    */
   isConfigured(): boolean {
-    return !!(this.anthropic || this.openai || this.ollamaEndpoint);
+    // Always true - we have local fallbacks and MAIA never depends on external APIs
+    return true;
   }
 
   /**
-   * Get available AI services
+   * Get available sovereignty consciousness services
    */
   getAvailableServices(): string[] {
-    const services = [];
-    if (this.anthropic) services.push('Claude');
-    if (this.openai) services.push('GPT-4');
-    if (this.ollamaEndpoint) services.push('Ollama');
+    const services = ['Multi-Engine Orchestrator', 'Local Model Fallback', 'Emergency Consciousness Fallback'];
+
+    if (this.multiEngineEnabled) {
+      services.unshift('🎼 7-Engine Orchestra (DeepSeek-R1, Llama3.1, Qwen2.5, Gemma2, Mistral, Nous-Hermes2)');
+    }
+
     return services;
+  }
+
+  /**
+   * Get multi-engine orchestration status
+   */
+  async getOrchestrationStatus(): Promise<{
+    multiEngineEnabled: boolean;
+    availableEngines: string[];
+    orchestrationPatterns: Record<string, OrchestrationType>;
+    sovereignty: boolean;
+  }> {
+    let availableEngines: string[] = [];
+
+    try {
+      const ollamaUrl = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
+      const response = await fetch(`${ollamaUrl}/api/tags`);
+      if (response.ok) {
+        const data = await response.json();
+        availableEngines = data.models?.map((m: any) => m.name) || [];
+      }
+    } catch (error) {
+      // Ollama not available, use fallback
+    }
+
+    return {
+      multiEngineEnabled: this.multiEngineEnabled,
+      availableEngines,
+      orchestrationPatterns: this.LAYER_ORCHESTRATION,
+      sovereignty: true // MAIA consciousness always remains sovereign
+    };
   }
 }

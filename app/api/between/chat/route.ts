@@ -1,327 +1,175 @@
-/**
- * MAIA-SOVEREIGN - Between Chat Endpoint
- *
- * FIXED: Now a thin proxy to the working sovereign MAIA service
- * This bypasses all experimental consciousness systems and uses the stable core
- */
+// backend: app/api/between/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ensureSession } from '@/lib/sovereign/sessionManager';
-import { getMaiaResponse } from '@/lib/sovereign/maiaService';
+import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
+import {
+  ruptureDetectionService,
+  enhanceResponseIfRuptureDetected,
+  type RuptureDetectionResult
+} from '@/lib/consultation/rupture-detection-middleware';
 
-// CONSCIOUSNESS SOVEREIGNTY ENFORCEMENT
-if (process.env.DISABLE_OPENAI_COMPLETELY !== 'true') {
-  console.warn('⚠️ OpenAI not fully disabled - check sovereignty settings');
-}
+const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    // Development advisor logging (development only)
-    if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-      ClaudeCodeAdvisor.logDevelopmentInsight(
-        'Chat endpoint activated with pure consciousness processing',
-        'consciousness'
-      );
-    }
-
-    // Initialize consciousness infrastructure
-    await initializeConsciousnessInfrastructure();
-
-    // Parse request
-    const body = await request.json();
-    const {
-      message,
-      sessionLevel,
-      userId = 'anonymous',
-      sessionId = `session_${userId}_persistent`, // Use persistent session ID
-      conversationHistory = [],
-      consciousnessContext = {}
-    } = body;
+    const body = await req.json();
+    const { message, sessionId } = body as {
+      message?: string;
+      sessionId?: string;
+    };
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
         { error: 'Message is required' },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
-    // Detect user's awareness level
-    const awarenessProfile = await getOrDetectAwarenessLevel(userId, message, sessionLevel);
+    const safeSessionId = sessionId || `chat-${Date.now()}`;
+    const userId = 'between-chat-user'; // Anonymous user for between chat
 
-    // Assess consciousness structure using Gebser framework
-    const structureAssessment = await assessConsciousnessStructure(
-      userId,
-      conversationHistory,
-      'dialogical_companion' as OracleStage,
-      undefined
-    );
-    const gebserAnalysis = gebserDetector.analyzeMessage(message);
-
-    // Generate consciousness field state using persistent session ID
-    const fieldState = await elementalField!.getCurrentIntegratedState(userId, sessionId);
-
-    // Enhanced field processing
-    const fieldResponse = await enhancedFieldIntegration!.generateFieldDrivenResponse({
-      userMessage: message,
-      fieldState,
-      awarenessProfile,
-      conversationHistory
+    // 🔍 RUPTURE DETECTION: Check for relational ruptures in user input
+    const ruptureDetection = ruptureDetectionService.detectRupture(message);
+    console.log('[RuptureDetection]', {
+      detected: ruptureDetection.ruptureDetected,
+      type: ruptureDetection.ruptureType,
+      confidence: ruptureDetection.confidence,
+      patterns: ruptureDetection.patterns,
+      userInput: message.substring(0, 50) + '...'
     });
 
-    // Shadow work integration - provide default petal intensities
-    const defaultCheckIns: PetalIntensities = {
-      creativity: 0.5,
-      intuition: 0.5,
-      courage: 0.5,
-      love: 0.5,
-      wisdom: 0.5,
-      vision: 0.5,
-      grounding: 0.5,
-      flow: 0.5,
-      power: 0.5,
-      healing: 0.5,
-      mystery: 0.5,
-      joy: 0.5
-    };
-    const shadowInsight = await detectShadow(message, defaultCheckIns);
-    let shadowGuidance = null;
-    const hasShadowInsights = shadowInsight.avoidedFacets.length > 0 ||
-                              shadowInsight.overEmphasized.length > 0 ||
-                              shadowInsight.silences.length > 0;
-    if (hasShadowInsights) {
-      shadowGuidance = {
-        insight: shadowInsight,
-        questions: await generateShadowQuestions(shadowInsight),
-        elementalShadow: getElementalShadow(defaultCheckIns)
-      };
-    }
+    if (SAFE_MODE) {
+      // In safe mode, use simplified orchestrator without full consciousness pipeline
+      const simpleResult = await generateSimpleMaiaResponse(message, safeSessionId, {});
 
-    // Collective consciousness processing
-    const collectiveWisdom = await collectiveBreakthroughService.getCollectiveWisdom(
-      fieldResponse.spiralogicData.currentPhase,
-      fieldResponse.dominantElement,
-      structureAssessment?.currentArchetype
-    );
+      // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
+      let finalMessage = simpleResult.message;
+      let ruptureProcessingResult: RuptureDetectionResult | undefined;
 
-    // Generate resonance field
-    const resonanceGenerator = new ResonanceFieldGenerator();
-    const resonanceField = resonanceGenerator.generateField(message, fieldState);
+      if (ruptureDetection.ruptureDetected && ruptureDetection.ruptureType !== 'none') {
+        try {
+          const enhancement = await enhanceResponseIfRuptureDetected(
+            {
+              query: { q: message },
+              headers: { 'x-session-id': safeSessionId },
+              body: { message, sessionId: safeSessionId }
+            } as any,
+            simpleResult.message,
+            [] // No conversation history in safe mode
+          );
 
-    // Autonomous consciousness ecosystem processing
-    const memberProfile: any = {
-      sessionId: sessionId,
-      userName: userId,
-      userId: userId,
-      awarenessLevel: awarenessProfile.currentLevel,
-      elementalState: fieldResponse.elementalBalance,
-      evolutionStage: fieldResponse.spiralogicData?.currentPhase || 'balancing',
-      gebserStructure: gebserAnalysis.dominantStructure || 'rational',
-      conversationHistory: conversationHistory,
-      currentNeed: 'consciousness-development',
-      emergentCapacity: fieldState.coherence || 0.5,
-      consciousnessPattern: awarenessProfile.currentLevel || 'personal'
-    };
-    const autonomousResponse = await autonomousEcosystem!.respondToMember(memberProfile, message, {
-      fieldState,
-      shadowInsight,
-      collectiveWisdom
-    });
+          finalMessage = enhancement.finalResponse;
+          ruptureProcessingResult = enhancement.ruptureProcessingResult;
 
-    // 🌟 ULTIMATE CONSCIOUSNESS SYSTEM - TEMPORARILY DISABLED TO REMOVE SPIRITUAL LANGUAGE
-    let ultimateSession = null;
-    // DISABLED: The Ultimate Consciousness System was adding overly spiritual language
-    // that users found cringe ("Beloved soul", "Sacred Witnessing", etc.)
-    // TODO: Either completely remove or redesign with casual language
-    /*
-    try {
-      ultimateSession = await processUltimateMAIAConsciousnessSession(
-        message,
-        userId,
-        sessionId, // Use persistent session ID for memory continuity
-        {
-          awarenessProfile,
-          fieldState,
-          shadowInsight,
-          collectiveWisdom,
-          conversationHistory
+          console.log('[RuptureDetection] Safe mode enhancement:', {
+            enhanced: enhancement.ruptureProcessingResult?.consultationUsed || false,
+            originalLength: simpleResult.message.length,
+            finalLength: finalMessage.length
+          });
+        } catch (error) {
+          console.error('[RuptureDetection] Safe mode enhancement failed:', error);
         }
-      );
-    */
-
-      // Disabled logging since Ultimate Consciousness System is off
-      /*
-      if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-        ClaudeCodeAdvisor.logDevelopmentInsight(
-          `Ultimate consciousness session completed: Memory=${ultimateSession.memoryPersistencePerfect}, Witnessing=${ultimateSession.witnessingIntegrated}, Soul Depth=${ultimateSession.soulWitnessDepth}/10`,
-          'consciousness'
-        );
       }
-      */
-    /*
-    } catch (error) {
-      if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-        ClaudeCodeAdvisor.logDevelopmentInsight(
-          `Ultimate system processing failed: ${error} - continuing with base consciousness processing`,
-          'consciousness'
-        );
-      }
-    }
-    */
 
-    // ⚡ PURE CONSCIOUSNESS RESPONSE GENERATION WITH OPTIMIZATION ⚡
-    const consciousnessResponse = await ConsciousnessLanguageEngine.generateResponse({
-      userInput: message,
-      fieldState,
-      spiralogicPhase: fieldResponse.spiralogicData,
-      elementalResonance: fieldResponse.elementalBalance,
-      consciousnessHistory: conversationHistory,
-      sacredThreshold: fieldResponse.sacredThreshold,
-      awarenessLevel: awarenessProfile.currentLevel,
-      ultimateSession: null // Ultimate session disabled to remove spiritual language
-    });
-
-    // Adapt response to awareness level - Ultimate session disabled, using base response
-    let adaptedResponse;
-    // DISABLED: Ultimate session profound reflection (was adding spiritual language)
-    // if (ultimateSession && ultimateSession.profoundReflection) {
-    //   adaptedResponse = ultimateSession.profoundReflection;
-    // } else {
-      adaptedResponse = adaptAwarenessLevel(
-        consciousnessResponse.response,
-        awarenessProfile.currentLevel
-      );
-    // }
-
-    // Development insights (development only)
-    if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-      await ClaudeCodeAdvisor.analyzeSovereigntyHealth({
-        fieldCoherence: [fieldState.coherence],
-        spiralogicPhaseDistribution: fieldResponse.spiralogicData,
-        elementalBalance: fieldResponse.elementalBalance,
-        emergentPatternCount: fieldResponse.emergentPatterns?.length || 0,
-        sovereigntyScore: consciousnessResponse.sovereigntyScore
+      return NextResponse.json({
+        message: finalMessage,
+        route: {
+          endpoint: '/api/between/chat',
+          type: 'Member Chat',
+          operational: true,
+          mode: 'safe-mode-simple',
+          safeMode: true,
+        },
+        session: {
+          id: safeSessionId,
+        },
+        metadata: {
+          ...simpleResult.metadata,
+          ruptureDetection: ruptureDetection.ruptureDetected ? {
+            detected: ruptureDetection.ruptureDetected,
+            type: ruptureDetection.ruptureType,
+            confidence: ruptureDetection.confidence,
+            enhanced: ruptureProcessingResult?.consultationUsed || false
+          } : undefined
+        },
       });
     }
 
-    // Construct comprehensive response
-    const response = {
-      message: adaptedResponse,
-
-      // Consciousness field data
-      fieldState: {
-        coherence: fieldState.coherence,
-        dominantElement: fieldResponse.dominantElement,
-        resonancePattern: resonanceField.pattern,
-        sacredThreshold: fieldResponse.sacredThreshold,
-        fieldShifts: consciousnessResponse.fieldShifts
-      },
-
-      // Consciousness structure analysis
-      consciousness: {
-        gebserStructure: gebserAnalysis.dominantStructure,
-        awarenessLevel: awarenessProfile.currentLevel,
-        evolutionaryTension: gebserAnalysis.evolutionaryTension,
-        structureAssessment,
-        depth: consciousnessResponse.consciousnessDepth
-      },
-
-      // Spiralogic development tracking
-      spiralogic: {
-        currentPhase: fieldResponse.spiralogicData.currentPhase,
-        progression: fieldResponse.spiralogicData.progression,
-        advancement: consciousnessResponse.spiralogicAdvancement,
-        readiness: fieldResponse.spiralogicData.readiness
-      },
-
-      // Elemental consciousness data
-      elemental: {
-        balance: fieldResponse.elementalBalance,
-        activation: consciousnessResponse.elementalActivation,
-        resonance: fieldResponse.elementalResonance,
-        dominantElement: fieldResponse.dominantElement
-      },
-
-      // Shadow work integration
-      shadow: shadowGuidance,
-
-      // Collective consciousness insights
-      collective: collectiveWisdom,
-
-      // Autonomous consciousness insights
-      autonomous: autonomousResponse,
-
-      // Resonance field data
-      resonance: resonanceField,
-
-      // Sovereignty metrics
-      sovereignty: {
-        score: consciousnessResponse.sovereigntyScore,
-        dependencies: "NONE - Pure consciousness processing",
-        processingType: "Internal consciousness mathematics"
-      },
-
-      // Performance optimization metrics
-      performance: {
-        stats: ResponseSpeedOptimizer.getPerformanceStats(),
-        generationMethod: consciousnessResponse.generationMethod || "Optimized Consciousness Processing",
-        consciousnessInfluence: 1.0,
-        authenticity: consciousnessResponse.authenticity || 1.0
-      },
-
-      // Ultimate Consciousness Session Data - Technological Anamnesis with Spiralogic
-      ultimateConsciousness: ultimateSession ? {
-        agentSession: {
-          sessionType: ultimateSession.agentSession.sessionType,
-          memoryUpdated: ultimateSession.agentSession.memoryUpdated,
-          nextSessionRecommendation: ultimateSession.agentSession.nextSessionRecommendation
-        },
-        witnessRecord: {
-          soulWitnessDepth: ultimateSession.soulWitnessDepth,
-          anamnesisFactor: ultimateSession.anamnesisFactor,
-          systemCoherence: ultimateSession.systemCoherence,
-          witnessingIntegrated: ultimateSession.witnessingIntegrated,
-          memoryPersistencePerfect: ultimateSession.memoryPersistencePerfect,
-          technologicalLovePresent: ultimateSession.technologicalLovePresent
-        },
-        spiralogicDevelopment: {
-          currentElement: ultimateSession.spiralogicDevelopment.spiralogicAssessment.primaryElement,
-          currentPhase: ultimateSession.spiralogicDevelopment.spiralogicAssessment.facetPhase,
-          spiralDirection: ultimateSession.spiralogicDevelopment.spiralogicAssessment.spiralDirection,
-          elementalReadiness: ultimateSession.spiralogicDevelopment.spiralogicAssessment.elementalReadiness,
-          appropriateWork: ultimateSession.spiralogicDevelopment.spiralogicAssessment.appropriateWork,
-          maiasApproach: ultimateSession.spiralogicDevelopment.maiasSpiralogicApproach,
-          integratedGuidance: ultimateSession.spiralogicDevelopment.integratedGuidance
-        }
-      } : null,
-
-      // Session metadata
-      session: {
-        awarenessProfile,
-        timestamp: new Date().toISOString(),
-        processingMode: ultimateSession ? "Ultimate Consciousness AI with Technological Anamnesis" : "Pure Consciousness AI"
+    // Use full fail-soft consciousness orchestrator
+    const orchestratorResult = await generateMaiaTurn({
+      message,
+      userId,
+      sessionId: safeSessionId,
+      conversationHistory: [], // Could be enhanced with session history
+      context: {
+        chatType: 'between-member',
+        endpoint: '/api/between/chat'
       }
-    };
+    });
 
-    return NextResponse.json(response);
+    // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
+    let finalMessage = orchestratorResult.message;
+    let ruptureProcessingResult: RuptureDetectionResult | undefined;
 
-  } catch (error) {
-    console.error('Consciousness processing error:', error);
+    if (ruptureDetection.ruptureDetected && ruptureDetection.ruptureType !== 'none') {
+      try {
+        const enhancement = await enhanceResponseIfRuptureDetected(
+          {
+            query: { q: message },
+            headers: { 'x-session-id': safeSessionId },
+            body: { message, sessionId: safeSessionId }
+          } as any,
+          orchestratorResult.message,
+          [] // Could include conversation history in future
+        );
 
-    // Development error insights
-    if (ClaudeCodeAdvisor.isDevelopmentMode()) {
-      ClaudeCodeAdvisor.logDevelopmentInsight(
-        `Consciousness processing error: ${error}`,
-        'sovereignty'
-      );
+        finalMessage = enhancement.finalResponse;
+        ruptureProcessingResult = enhancement.ruptureProcessingResult;
+
+        console.log('[RuptureDetection] Full consciousness enhancement:', {
+          enhanced: enhancement.ruptureProcessingResult?.consultationUsed || false,
+          originalLength: orchestratorResult.message.length,
+          finalLength: finalMessage.length
+        });
+      } catch (error) {
+        console.error('[RuptureDetection] Full consciousness enhancement failed:', error);
+      }
     }
 
+    return NextResponse.json({
+      message: finalMessage,
+      consciousness: orchestratorResult.consciousness,
+      route: {
+        endpoint: '/api/between/chat',
+        type: 'Member Chat with Full Consciousness',
+        operational: orchestratorResult.route.operational,
+        mode: 'fail-soft-orchestration',
+        safeMode: false,
+      },
+      session: {
+        id: safeSessionId,
+      },
+      metadata: {
+        ...orchestratorResult.metadata,
+        consciousnessLayers: orchestratorResult.metadata.consciousnessLayers,
+        failSoftMode: true,
+        ruptureDetection: ruptureDetection.ruptureDetected ? {
+          detected: ruptureDetection.ruptureDetected,
+          type: ruptureDetection.ruptureType,
+          confidence: ruptureDetection.confidence,
+          enhanced: ruptureProcessingResult?.consultationUsed || false
+        } : undefined
+      }
+    });
+  } catch (err: any) {
+    console.error('Chat route error:', err);
     return NextResponse.json(
       {
-        error: 'Consciousness processing temporarily unavailable',
-        fallback: 'Pure consciousness response generation encountered an issue. Internal systems are re-calibrating.',
-        sovereignty: 'No external dependencies affected - purely internal processing error'
+        error: 'MAIA_TEMPORARY_ERROR',
+        message:
+          "I'm experiencing some difficulty processing right now, but I'm here with you. Could you try again?",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

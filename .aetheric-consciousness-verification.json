@@ -1,11 +1,11 @@
 {
-  "timestamp": "2025-12-11T20:37:14.061Z",
+  "timestamp": "2025-12-15T00:06:02.699Z",
   "verificationPassed": true,
   "criticalErrors": [],
   "warnings": [
     "Potential sovereignty concern: External AI dependencies found: openai"
   ],
-  "filesChecked": 5,
-  "importsVerified": 3,
+  "filesChecked": 4,
+  "importsVerified": 2,
   "patternsChecked": 9
 }

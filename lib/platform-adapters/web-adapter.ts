@@ -222,6 +222,12 @@ export class WebPlatformAdapter implements PlatformAdapter {
 
   async syncField(localField: FieldData): Promise<FieldData> {
     try {
+      // Check if fieldInterface is properly initialized
+      if (!this.fieldInterface) {
+        console.warn('MAIAFieldInterface not initialized, falling back to empty field data');
+        return this.getEmptyFieldData();
+      }
+
       // Use MAIAFieldInterface for field synchronization
       const fieldState = await this.fieldInterface.getCurrentFieldState();
       const communityThemes = await this.fieldInterface.getCollectiveThemes();

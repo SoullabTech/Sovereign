@@ -290,7 +290,7 @@ const ConsciousnessComputingResultCard: React.FC<{
                   <div className="bg-blue-50 rounded-lg p-3">
                     <h5 className="font-medium text-blue-800 mb-2">Consciousness Analysis</h5>
                     <div className="text-sm text-blue-700 space-y-1">
-                      <div>Awareness Level: {result.consciousnessState.awarenessLevel.level}/5 ({result.consciousnessState.awarenessLevel.confidence * 100:.0f}% confidence)</div>
+                      <div>Awareness Level: {result.consciousnessState.awarenessLevel.level}/5 ({(result.consciousnessState.awarenessLevel.confidence * 100).toFixed(0)}% confidence)</div>
                       <div>Emotional Valence: {(result.consciousnessState.emotionalProfile.valence * 100).toFixed(0)}%</div>
                       <div>Attention Coherence: {(result.consciousnessState.attentionCoherence * 100).toFixed(0)}%</div>
                       <div>Stress Indicators: {result.consciousnessState.stressIndicators.length}</div>

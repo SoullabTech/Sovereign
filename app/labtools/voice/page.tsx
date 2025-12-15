@@ -50,6 +50,56 @@ export default function VoiceLabPage() {
     console.log('🎤 Voice configuration saved:', config);
   };
 
+  // Pitch shifting function using Web Audio API
+  const playAudioWithPitchShift = async (audioBlob: Blob, pitchFactor: number, volume: number) => {
+    try {
+      // Create audio context
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+      // Convert blob to array buffer
+      const arrayBuffer = await audioBlob.arrayBuffer();
+
+      // Decode audio data
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+      // Create source and gain nodes
+      const source = audioContext.createBufferSource();
+      const gainNode = audioContext.createGain();
+
+      // Set audio buffer
+      source.buffer = audioBuffer;
+
+      // Apply pitch shift by changing playback rate
+      source.playbackRate.setValueAtTime(pitchFactor, audioContext.currentTime);
+
+      // Set volume
+      gainNode.gain.setValueAtTime(volume, audioContext.currentTime);
+
+      // Connect audio graph: source -> gain -> destination
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      // Play the audio
+      source.start(0);
+
+      // Return a promise that resolves when audio ends
+      return new Promise<void>((resolve) => {
+        source.onended = () => {
+          audioContext.close();
+          resolve();
+        };
+      });
+    } catch (error) {
+      console.error('❌ Pitch shifting failed:', error);
+      // Fallback to simple audio playback without pitch shifting
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      audio.volume = volume;
+      await audio.play();
+      audio.onended = () => URL.revokeObjectURL(audioUrl);
+    }
+  };
+
   const testVoice = async (text: string) => {
     setIsTestingVoice(true);
     const startTime = Date.now();
@@ -72,17 +122,10 @@ export default function VoiceLabPage() {
       const duration = endTime - startTime;
 
       if (response.ok) {
-        // If we get audio data, play it
+        // If we get audio data, play it with pitch modification
         if (response.headers.get('content-type')?.includes('audio')) {
           const audioBlob = await response.blob();
-          const audioUrl = URL.createObjectURL(audioBlob);
-          const audio = new Audio(audioUrl);
-          await audio.play();
-
-          // Clean up object URL after playing
-          audio.addEventListener('ended', () => {
-            URL.revokeObjectURL(audioUrl);
-          });
+          await playAudioWithPitchShift(audioBlob, voiceConfig.pitch, voiceConfig.volume);
         }
 
         setTestResults(prev => [...prev, {

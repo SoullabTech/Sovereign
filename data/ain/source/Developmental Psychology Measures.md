@@ -1,0 +1,75 @@
+- Adaptive Behavior Assessment System
+- Adaptive Behavior Evaluation Scale
+- Adaptive Behavior Inventory
+- [Baroda Development Screening Test](https://psychology.fandom.com/wiki/Baroda_Development_Screening_Test "Baroda Development Screening Test")
+- Battelle Developmental Inventory (BDI)
+- [Bayley Scales of Infant Development](https://psychology.fandom.com/wiki/Bayley_Scales_of_Infant_Development "Bayley Scales of Infant Development") (BSID-II)
+- [Bender-Gestalt Test](https://psychology.fandom.com/wiki/Bender-Gestalt_Test "Bender-Gestalt Test")
+- BRIGANCE Diagnostic Inventory of Early Development
+- Checklist of Functional School Skills
+- Child Development Inventory
+- Comprehensive Evaluation in Recreational Therapy
+- [Denver Developmental Screening Test](https://psychology.fandom.com/wiki/Denver_Developmental_Screening_Test "Denver Developmental Screening Test") (DDST)
+- Developmental Activities Screening Inventory
+- Developmental Assessment of Young Children
+- Developmental Indicators for the Assessment of Learning
+- Developmental Observation Checklist System
+- Developmental Profile - II
+- Dial Behavior Rating Scale
+- Early Learning Accomplishment Profile
+- [Frostig Developmental Test of Visual Perception](https://psychology.fandom.com/wiki/Frostig_Developmental_Test_of_Visual_Perception "Frostig Developmental Test of Visual Perception")
+- [Functional Assessment of Characteristics for Therapeutic Recreation](https://psychology.fandom.com/wiki/Functional_Assessment_of_Characteristics_for_Therapeutic_Recreation "Functional Assessment of Characteristics for Therapeutic Recreation")
+- Functional Communication Profile
+- General Recreation Screening Tool
+- [Gesell Developmental Schedules](https://psychology.fandom.com/wiki/Gesell_Developmental_Schedules "Gesell Developmental Schedules")
+- Hawaii Early Learning Profile
+- Infant-Toddler Developmental Assessment
+- Inventory for Client and Agency Planning
+- Kindergarten Readiness Test
+- Learning Accomplishment Profile
+- Learning and Study Strategies Inventory
+- Lincoln-Oseretsky Motor Development Scale
+- Merrill-Palmer-Revised-Scales of Development
+- Miller Assessment for Preschoolers
+- Normative Adaptive Behavior Checklist
+- Oral-Motor/Feeding Rating Scale
+- Pediatric Evaluation of Disability Inventory
+- Perceptual Form Test
+- Preschool Language Scale
+- Primary Visual Motor Test
+- Psychoeducational Profile -Third Edition
+- [Purdue Perceptual Motor Survey](https://psychology.fandom.com/wiki/Purdue_Perceptual_Motor_Survey "Purdue Perceptual Motor Survey")
+- [Sally–Anne test](https://psychology.fandom.com/wiki/Sally%E2%80%93Anne_test "Sally–Anne test")
+- Scales of Independent Behavior-Revised
+- [Schedule of Growing Skills](https://psychology.fandom.com/wiki/Schedule_of_Growing_Skills "Schedule of Growing Skills")
+- Screening Test for Educational Prerequisite Skills
+- Sensory Motor History Questionnaire
+- Social Communication Questionnaire [Form: Current]
+- Social Communication Questionnaire [Form: Lifetime]
+- Social Responsiveness Scale
+- [Southern California Ordinal Scales of Development](https://psychology.fandom.com/wiki/Southern_California_Ordinal_Scales_of_Development "Southern California Ordinal Scales of Development")
+- Street Survival Skills Questionnaire
+- [Stycar Chart of Developmental Sequences](https://psychology.fandom.com/wiki/Stycar_Chart_of_Developmental_Sequences "Stycar Chart of Developmental Sequences")
+- Stycar Hearing Test
+- Stycar Language Test
+- Stycar Vision Test
+- Survey of Functional Adaptive Behaviors
+- [Tanner stages](https://psychology.fandom.com/wiki/Tanner_stages "Tanner stages")
+- Transdisciplinary Play Based Assessment
+- Trivandrum Developmental Screening Chart
+- Vineland Social-Emotional Early Childhood Scales
+- [Vineland Adaptive Behavior Scales](https://psychology.fandom.com/wiki/Vineland_Adaptive_Behavior_Scales "Vineland Adaptive Behavior Scales")
+
+## Contents
+
+- [1Cognitive development measures](https://psychology.fandom.com/wiki/Developmental_measures#Cognitive_development_measures)
+- [2Physical development measures](https://psychology.fandom.com/wiki/Developmental_measures#Physical_development_measures)
+- [3See also](https://psychology.fandom.com/wiki/Developmental_measures#See_also)
+- [4References & Bibliography](https://psychology.fandom.com/wiki/Developmental_measures#References_&_Bibliography)
+- [5Key texts](https://psychology.fandom.com/wiki/Developmental_measures#Key_texts)
+    - [5.1Books](https://psychology.fandom.com/wiki/Developmental_measures#Books)
+    - [5.2Papers](https://psychology.fandom.com/wiki/Developmental_measures#Papers)
+- [6Additional material](https://psychology.fandom.com/wiki/Developmental_measures#Additional_material)
+    - [6.1Books](https://psychology.fandom.com/wiki/Developmental_measures#Books_2)
+    - [6.2Papers](https://psychology.fandom.com/wiki/Developmental_measures#Papers_2)
+- [7External links](https://psychology.fandom.com/wiki/Developmental_measures#External_links)

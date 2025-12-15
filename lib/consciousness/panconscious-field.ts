@@ -158,9 +158,12 @@ export class PanconsciousFieldService {
     ];
 
     const hasStagnation = conversation.some(message =>
-      stagnationIndicators.some(indicator =>
-        message.toLowerCase().includes(indicator)
-      )
+      stagnationIndicators.some(indicator => {
+        // Safely get text content from message object or string
+        const messageText = typeof message === 'string' ? message :
+                           message?.text || message?.content || message?.userMessage || '';
+        return messageText.toLowerCase().includes(indicator);
+      })
     );
 
     if (hasStagnation) {

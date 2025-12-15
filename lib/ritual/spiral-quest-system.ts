@@ -501,6 +501,35 @@ export class SpiralQuestSystem {
   }
 
   /**
+   * Get user's current spiral position (for consciousness orchestrator)
+   */
+  getUserSpiralPosition(userId: string): any {
+    const path = this.userPaths.get(userId);
+    if (!path) {
+      // Return a basic starting position for new users
+      return {
+        depth: 0,
+        currentElement: 'fire', // Default starting element
+        spiralLoop: 1,
+        questStage: 'threshold',
+        elementalMastery: {},
+        completedSpirals: {}
+      };
+    }
+
+    return {
+      depth: path.spiralDepth,
+      currentElement: path.currentQuest?.element || 'fire',
+      spiralLoop: path.currentQuest?.loop || 1,
+      questStage: path.currentQuest?.stage || 'threshold',
+      elementalMastery: Object.fromEntries(path.elementalMastery),
+      completedSpirals: Object.fromEntries(path.completedSpirals),
+      unlockedIntegrations: path.unlockedIntegrations,
+      shadowGifts: path.shadowGifts
+    };
+  }
+
+  /**
    * Special shadow gift unlocks
    */
   unlockShadowGift(userId: string, gift: string): void {
@@ -519,6 +548,45 @@ export class SpiralQuestSystem {
 
     const mastery = path.elementalMastery.get(element) || 0;
     return mastery >= 0.99; // Three loops = mastery
+  }
+
+  /**
+   * Process quest action based on user input and context
+   * This method is called by the consciousness orchestrator
+   */
+  async processQuestAction(userId: string, detectedElement: string, context: any): Promise<any> {
+    // Check if user has an active journey
+    let path = this.userPaths.get(userId);
+
+    if (!path) {
+      // Start a new journey with the detected element
+      const firstQuest = this.beginJourney(userId, detectedElement);
+      path = this.userPaths.get(userId)!;
+
+      return {
+        questActive: true,
+        action: 'journey_started',
+        quest: firstQuest,
+        message: `🌀 Beginning your ${detectedElement} spiral journey: ${firstQuest.name}`,
+        spiralDepth: path.spiralDepth,
+        element: detectedElement
+      };
+    }
+
+    // Progress the current quest based on user input
+    const progress = this.progressQuest(userId, context.input);
+
+    return {
+      questActive: true,
+      action: progress.questComplete ? 'quest_completed' : 'quest_progressed',
+      quest: progress.quest,
+      message: progress.message,
+      stageComplete: progress.stageComplete,
+      questComplete: progress.questComplete,
+      newUnlocks: progress.newUnlocks,
+      spiralDepth: path.spiralDepth,
+      element: progress.quest.element
+    };
   }
 
   /**

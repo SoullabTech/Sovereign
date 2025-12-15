@@ -7,9 +7,7 @@ import { Sparkles, MessageCircle } from 'lucide-react';
 import dynamic from 'next/dynamic';
 
 // Dynamically import MAIA chat (avoid SSR issues)
-const MaiaChat = dynamic(() => import('@/components/OracleConversation'), {
-  ssr: false,
-});
+const MaiaChat = dynamic(() => import('@/components/OracleConversation'));
 
 /**
  * Partner Prelude Content Component

@@ -5,7 +5,7 @@
  */
 
 import { MAIAFieldInterface } from './MAIAFieldInterface';
-import { ConsciousnessFieldEngine } from './ConsciousnessFieldEngine';
+import { ConsciousnessField } from './ConsciousnessFieldEngine';
 import { QuantumFieldPersistence } from './QuantumFieldPersistence';
 import {
   UnifiedElementalFieldCalculator,
@@ -78,7 +78,7 @@ export interface ElementalInsight {
 
 export class ElementalFieldIntegration {
   private maiaInterface: MAIAFieldInterface;
-  private fieldEngine: ConsciousnessFieldEngine;
+  private fieldEngine: ConsciousnessField;
   private fieldPersistence: QuantumFieldPersistence;
   private interferenceMonitor: ElementalInterferenceMonitor;
 
@@ -92,7 +92,7 @@ export class ElementalFieldIntegration {
 
   constructor(
     maiaInterface: MAIAFieldInterface,
-    fieldEngine: ConsciousnessFieldEngine,
+    fieldEngine: ConsciousnessField,
     fieldPersistence: QuantumFieldPersistence
   ) {
     this.maiaInterface = maiaInterface;

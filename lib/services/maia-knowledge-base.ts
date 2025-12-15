@@ -664,7 +664,7 @@ export class MAIAKnowledgeBaseService {
         {
           relatedArchetypeId: 'lover',
           relationshipType: 'complement',
-          dynamicDescription: 'Warrior provides structure and protection for Lover\\'s vulnerability',
+          dynamicDescription: "Warrior provides structure and protection for Lover's vulnerability",
           integrationWisdom: 'The greatest warriors fight for love, not conquest'
         }
       ],
@@ -703,7 +703,7 @@ export class MAIAKnowledgeBaseService {
       recognitionSigns: [
         'Life themes recurring at deeper levels',
         'Challenges that seemed resolved returning with new complexity',
-        'Ability to help others with issues you\\'ve integrated'
+Ability to help others with issues you've integrated
       ],
       applicationContexts: [
         'Understanding personal development plateaus',

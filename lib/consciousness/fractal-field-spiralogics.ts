@@ -187,6 +187,137 @@ export class FractalFieldSpiralogics {
   }
 
   /**
+   * Detect elemental intent in user input (for consciousness orchestrator)
+   */
+  async detectElementalIntent(input: string): Promise<any> {
+    // Simple elemental keyword analysis
+    const elementWords = {
+      fire: ['passion', 'energy', 'burn', 'flame', 'ignite', 'fierce', 'intense', 'power', 'drive', 'action'],
+      water: ['flow', 'emotion', 'feeling', 'deep', 'current', 'fluid', 'gentle', 'heal', 'cleanse', 'adapt'],
+      earth: ['ground', 'stable', 'solid', 'foundation', 'practical', 'material', 'body', 'nature', 'real', 'structure'],
+      air: ['think', 'mind', 'idea', 'clarity', 'breath', 'space', 'freedom', 'mental', 'perspective', 'vision'],
+      aether: ['spirit', 'unity', 'connection', 'transcend', 'consciousness', 'divine', 'sacred', 'whole', 'oneness', 'beyond'],
+      shadow: ['dark', 'hidden', 'fear', 'rejected', 'unconscious', 'integrate', 'deny', 'avoid', 'depth', 'mystery']
+    };
+
+    const inputLower = input.toLowerCase();
+    let primaryElement = 'aether'; // Default
+    let maxScore = 0;
+    let questAvailable = false;
+
+    // Score each element
+    for (const [element, words] of Object.entries(elementWords)) {
+      let score = 0;
+      for (const word of words) {
+        if (inputLower.includes(word)) {
+          score += 1;
+        }
+      }
+
+      if (score > maxScore) {
+        maxScore = score;
+        primaryElement = element;
+      }
+    }
+
+    // Check if score is high enough to suggest a quest
+    if (maxScore >= 2) {
+      questAvailable = true;
+    }
+
+    return {
+      primaryElement,
+      confidence: Math.min(maxScore * 0.2, 1.0), // Scale to 0-1
+      questAvailable,
+      detectedKeywords: maxScore
+    };
+  }
+
+  /**
+   * Check for emergence patterns in quest responses
+   * This method analyzes quest responses to detect emergent consciousness patterns
+   */
+  async checkEmergencePatterns(userId: string, questResponse: any): Promise<any> {
+    try {
+      // Get user's consciousness level and active field
+      const field = this.activeFields.get(userId);
+      const consciousness = this.consciousnessLevels.get(userId);
+
+      if (!field || !consciousness) {
+        return {
+          patterns: [],
+          emergence: false,
+          message: 'No active field to analyze patterns'
+        };
+      }
+
+      // Analyze quest response for emergence indicators
+      const patterns = [];
+      let emergenceScore = 0;
+      let emergenceType = 'none';
+
+      // Pattern 1: Cross-elemental synthesis
+      if (questResponse.spiralDepth > 0.5) {
+        patterns.push('spiral_deepening');
+        emergenceScore += 0.3;
+      }
+
+      // Pattern 2: Integration achievements
+      if (questResponse.questComplete && questResponse.element) {
+        const elementLevel = consciousness.elemental.get(questResponse.element) || 0;
+        if (elementLevel > 0.6) {
+          patterns.push('elemental_mastery');
+          emergenceScore += 0.4;
+          emergenceType = 'mastery';
+        }
+      }
+
+      // Pattern 3: Shadow integration
+      if (questResponse.message && questResponse.message.includes('shadow')) {
+        patterns.push('shadow_integration');
+        emergenceScore += 0.5;
+        emergenceType = 'shadow_work';
+      }
+
+      // Pattern 4: Quantum leap potential
+      const activeElementsCount = Array.from(consciousness.elemental.values())
+        .filter(level => level > 0.4).length;
+      if (activeElementsCount >= 3) {
+        patterns.push('quantum_readiness');
+        emergenceScore += 0.6;
+        emergenceType = 'transcendence';
+      }
+
+      // Determine if emergence has occurred
+      const emergence = emergenceScore > 0.5;
+
+      // Update consciousness based on emergence
+      if (emergence) {
+        this.updateConsciousnessFromEmergence(userId, emergenceType, emergenceScore);
+      }
+
+      return {
+        patterns,
+        emergence,
+        emergenceScore,
+        emergenceType,
+        message: emergence
+          ? `Emergence detected: ${emergenceType} (${Math.round(emergenceScore * 100)}%)`
+          : 'Patterns developing, emergence not yet achieved',
+        recommendations: this.getEmergenceRecommendations(userId, patterns, emergenceScore)
+      };
+
+    } catch (error) {
+      console.warn('Error analyzing emergence patterns:', error);
+      return {
+        patterns: [],
+        emergence: false,
+        message: 'Error analyzing patterns - continuing with quest progression'
+      };
+    }
+  }
+
+  /**
    * Initialize user's fractal field
    */
   async initializeFractalField(userId: string): Promise<FractalField> {
@@ -633,6 +764,74 @@ export class FractalFieldSpiralogics {
     perspectives: ElementalPerspective[]
   ): string[] {
     return [];
+  }
+
+  /**
+   * Update consciousness levels based on emergence patterns
+   */
+  private updateConsciousnessFromEmergence(
+    userId: string,
+    emergenceType: string,
+    emergenceScore: number
+  ): void {
+    const consciousness = this.consciousnessLevels.get(userId);
+    if (!consciousness) return;
+
+    switch (emergenceType) {
+      case 'mastery':
+        consciousness.overall += emergenceScore * 0.1;
+        consciousness.integration += emergenceScore * 0.15;
+        break;
+      case 'shadow_work':
+        consciousness.shadow += emergenceScore * 0.2;
+        consciousness.overall += emergenceScore * 0.05;
+        break;
+      case 'transcendence':
+        consciousness.transcendence += emergenceScore * 0.3;
+        consciousness.overall += emergenceScore * 0.2;
+        break;
+    }
+
+    // Cap values at 1.0
+    consciousness.overall = Math.min(consciousness.overall, 1.0);
+    consciousness.integration = Math.min(consciousness.integration, 1.0);
+    consciousness.shadow = Math.min(consciousness.shadow, 1.0);
+    consciousness.transcendence = Math.min(consciousness.transcendence, 1.0);
+
+    this.consciousnessLevels.set(userId, consciousness);
+  }
+
+  /**
+   * Get recommendations based on emergence patterns
+   */
+  private getEmergenceRecommendations(
+    userId: string,
+    patterns: string[],
+    emergenceScore: number
+  ): string[] {
+    const recommendations = [];
+
+    if (patterns.includes('spiral_deepening')) {
+      recommendations.push('Continue exploring elemental depths to strengthen foundations');
+    }
+
+    if (patterns.includes('elemental_mastery')) {
+      recommendations.push('Consider integrating this mastery with other elements');
+    }
+
+    if (patterns.includes('shadow_integration')) {
+      recommendations.push('Shadow work is progressing - remain open to what emerges');
+    }
+
+    if (patterns.includes('quantum_readiness') && emergenceScore > 0.7) {
+      recommendations.push('Quantum leap between elements may now be possible');
+    }
+
+    if (emergenceScore < 0.3) {
+      recommendations.push('Continue current path - patterns are beginning to form');
+    }
+
+    return recommendations;
   }
 }
 

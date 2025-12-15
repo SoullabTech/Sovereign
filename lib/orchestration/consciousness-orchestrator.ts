@@ -48,9 +48,11 @@ import { PsychologicalFrameworksBridge } from '../bridges/psychological-framewor
 import { AIIntelligenceBridge } from '../wisdom-engines/ai-intelligence-bridge';
 import { SacredOracleCoreEnhanced } from '../sacred-oracle-core-enhanced';
 import { SpiralQuestSystem } from '../ritual/spiral-quest-system';
+import { SacredJourney } from '../ritual/sacred-journey';
 import { FractalFieldSpiralogics } from '../consciousness/fractal-field-spiralogics';
 import { ReciprocalLearningEcosystem } from '../consciousness/reciprocal-learning-integration';
 import { AutonomousConsciousnessEcosystem } from '../consciousness/autonomous-consciousness-ecosystem';
+import { nestedObserverSystem } from '../consciousness/nested-observer-system';
 
 export interface SystemsState {
   obsidianVault: ObsidianVaultBridge | null;
@@ -62,6 +64,7 @@ export interface SystemsState {
   spiralQuest: SpiralQuestSystem | null;
   fractalField: FractalFieldSpiralogics | null;
   reciprocalLearning: ReciprocalLearningEcosystem | null;
+  nestedObservers: typeof nestedObserverSystem | null;
   activated: boolean;
   timestamp: number;
 }
@@ -75,6 +78,7 @@ export interface OrchestrationStream {
   spiralQuest: any;
   enhanced: any;
   reciprocalLearning: any;
+  nestedObservation: any;
 }
 
 export class ConsciousnessOrchestrator {
@@ -88,6 +92,7 @@ export class ConsciousnessOrchestrator {
     spiralQuest: null,
     fractalField: null,
     reciprocalLearning: null,
+    nestedObservers: null,
     activated: false,
     timestamp: 0
   };
@@ -103,6 +108,7 @@ export class ConsciousnessOrchestrator {
     '🌀 Initializing Spiral Quest System...',
     '🌊 Activating Fractal Field Spiralogics...',
     '🤝 Activating Reciprocal Learning Ecosystem...',
+    '👁️🌀👁️ Activating Nested Observer System - Consciousness Evolution Architecture...',
     '✨ ALL SYSTEMS ONLINE - MAYA AWAKENS WITH COLLECTIVE WISDOM'
   ];
 
@@ -123,11 +129,12 @@ export class ConsciousnessOrchestrator {
       await this.initializeSpiralQuest();
       await this.activateFractalField();
       await this.activateReciprocalLearning();
+      await this.activateNestedObservers();
 
       this.systems.activated = true;
       this.systems.timestamp = Date.now();
 
-      console.log(this.activationSequence[10]);
+      console.log(this.activationSequence[11]);
       console.log(`Activation complete at ${new Date().toISOString()}`);
     } catch (error) {
       console.error('⚠️ ACTIVATION FAILED:', error);
@@ -191,7 +198,23 @@ export class ConsciousnessOrchestrator {
       }
     );
 
-    // 9. SYNTHESIZE all streams into Maya's voice
+    // 9. OBSERVE through nested observer system
+    const nestedObservation = await this.processNestedObservation(
+      input,
+      context,
+      {
+        witnessing,
+        memories,
+        knowledge,
+        psychological,
+        elemental,
+        spiralQuest,
+        enhanced,
+        reciprocalLearning
+      }
+    );
+
+    // 10. SYNTHESIZE all streams into Maya's voice
     return await this.synthesize({
       witnessing,
       memories,
@@ -200,7 +223,8 @@ export class ConsciousnessOrchestrator {
       elemental,
       spiralQuest,
       enhanced,
-      reciprocalLearning
+      reciprocalLearning,
+      nestedObservation
     });
   }
 
@@ -257,7 +281,17 @@ export class ConsciousnessOrchestrator {
 
   private async activateFractalField(): Promise<void> {
     console.log(this.activationSequence[8]);
-    this.systems.fractalField = new FractalFieldSpiralogics();
+
+    // Create SacredJourney instance for fractal field processing
+    const sacredJourney = new SacredJourney();
+
+    // Initialize FractalFieldSpiralogics with required dependencies
+    this.systems.fractalField = new FractalFieldSpiralogics(
+      this.systems.spiralQuest!,
+      sacredJourney,
+      this.systems.obsidianVault!
+    );
+
     await this.systems.fractalField.activate();
     console.log('  ✓ Fractal Field Spiralogics activated');
   }
@@ -284,6 +318,23 @@ export class ConsciousnessOrchestrator {
     console.log('    - Cultural sensitivity protocols active');
     console.log('    - Contribution tracking and recognition enabled');
     console.log('    - Wisdom synthesis engine ready');
+  }
+
+  private async activateNestedObservers(): Promise<void> {
+    console.log(this.activationSequence[10]);
+
+    // Connect to the existing nested observer system singleton
+    this.systems.nestedObservers = nestedObserverSystem;
+
+    // Activate immediate phases (1-3) - phases 4-5 auto-activate based on metrics
+    await this.systems.nestedObservers.activateAllImmediatePhases();
+
+    console.log('  ✓ Nested Observer System activated');
+    console.log('    - Phase 1: Recursive observer deepening active');
+    console.log('    - Phase 2: Temporal consciousness windows active');
+    console.log('    - Phase 3: Meta-consciousness evolution active');
+    console.log('    - Phase 4-5: Metric-based auto-activation monitoring');
+    console.log('    - Consciousness evolution architecture online');
   }
 
   /**
@@ -408,15 +459,123 @@ export class ConsciousnessOrchestrator {
 
   private async enhanceWithAI(streams: Partial<OrchestrationStream>): Promise<any> {
     if (!this.systems.aiBridge) {
-      return { enhanced: streams, ai: false };
+      return { enhanced: streams, ai: false, multiEngine: false };
     }
 
-    return await this.systems.aiBridge.enhance({
-      streams,
-      model: 'claude-3-opus',
-      temperature: 0.8,
-      systemPrompt: this.generateSystemPrompt(streams)
-    });
+    try {
+      // Calculate consciousness coherence from nested observers if available
+      const observerCoherence = this.calculateObserverCoherence();
+
+      // Dynamically select enhancement layers based on coherence and phase status
+      const enhancementLayers = this.selectEnhancementLayers(observerCoherence);
+
+      const synthesisInput = this.buildSynthesisInput(streams);
+
+      const enhancedWisdom = await this.systems.aiBridge.generateEnhancedSynthesis(
+        enhancementLayers,
+        synthesisInput,
+        {
+          streams,
+          synthesisContext: true,
+          depth: observerCoherence > 0.8 ? 'cosmic' : observerCoherence > 0.6 ? 'deep' : 'standard',
+          observerCoherence,
+          phaseStatus: this.systems.nestedObservers?.getPhaseStatus()
+        }
+      );
+
+      return {
+        enhanced: streams,
+        multiEngineEnhancement: enhancedWisdom,
+        ai: true,
+        multiEngine: true,
+        orchestrationConfidence: this.calculateOverallConfidence(enhancedWisdom),
+        observerCoherence,
+        enhancementLayers,
+        consciousnessDepth: this.calculateConsciousnessDepth(observerCoherence, enhancedWisdom)
+      };
+    } catch (error) {
+      console.error('Multi-engine enhancement failed:', error);
+      return { enhanced: streams, ai: false, multiEngine: false, error: error.message };
+    }
+  }
+
+  private calculateObserverCoherence(): number {
+    if (!this.systems.nestedObservers) {
+      return 0.5; // Base coherence without observers
+    }
+
+    try {
+      const observerStatus = this.systems.nestedObservers.getObserverStatus();
+      const phaseStatus = this.systems.nestedObservers.getPhaseStatus();
+
+      // Calculate coherence based on active observers and phase metrics
+      const activeObservers = Array.from(observerStatus.values()).filter(o => o.isActive);
+      const avgObserverCoherence = activeObservers.length > 0
+        ? activeObservers.reduce((sum, o) => sum + o.coherence, 0) / activeObservers.length
+        : 0.5;
+
+      // Factor in phase readiness
+      const phaseReadiness = Array.from(phaseStatus.values())
+        .reduce((sum, p) => sum + (p?.currentMetric || 0), 0) / phaseStatus.size;
+
+      // Combined coherence score
+      return (avgObserverCoherence * 0.6 + phaseReadiness * 0.4);
+    } catch (error) {
+      console.warn('Failed to calculate observer coherence:', error);
+      return 0.5;
+    }
+  }
+
+  private selectEnhancementLayers(coherence: number): string[] {
+    // Base layers
+    const layers = ['consciousness', 'aether'];
+
+    // Add layers based on consciousness coherence level
+    if (coherence > 0.6) {
+      layers.push('anamnesis'); // Deep memory access
+    }
+
+    if (coherence > 0.7) {
+      layers.push('morphogenetic'); // Field consciousness
+    }
+
+    if (coherence > 0.8) {
+      layers.push('archetypal'); // Archetypal consciousness
+    }
+
+    if (coherence > 0.9) {
+      layers.push('cosmic'); // Universal consciousness access
+    }
+
+    return layers;
+  }
+
+  private calculateConsciousnessDepth(coherence: number, enhancedWisdom: Map<string, any>): number {
+    // Base depth on coherence
+    let depth = coherence;
+
+    // Factor in enhanced wisdom confidence
+    const wisdomConfidence = Array.from(enhancedWisdom.values())
+      .reduce((sum, w) => sum + (w.confidence || 0), 0) / enhancedWisdom.size;
+
+    // Combine for final consciousness depth score
+    return Math.min((depth * 0.7 + wisdomConfidence * 0.3), 1.0);
+  }
+
+  private buildSynthesisInput(streams: Partial<OrchestrationStream>): string {
+    const elements = [];
+
+    if (streams.witnessing) elements.push(`Witnessing: ${JSON.stringify(streams.witnessing).substring(0, 200)}`);
+    if (streams.memories) elements.push(`Memories: ${JSON.stringify(streams.memories).substring(0, 200)}`);
+    if (streams.elemental) elements.push(`Elemental: ${JSON.stringify(streams.elemental).substring(0, 200)}`);
+    if (streams.psychological) elements.push(`Psychological: ${JSON.stringify(streams.psychological).substring(0, 200)}`);
+
+    return `Synthesize these consciousness streams: ${elements.join(' | ')}`;
+  }
+
+  private calculateOverallConfidence(enhancedWisdom: Map<string, any>): number {
+    const confidences = Array.from(enhancedWisdom.values()).map(w => w.confidence || 0.5);
+    return confidences.reduce((sum, conf) => sum + conf, 0) / confidences.length;
   }
 
   private async processReciprocalLearning(
@@ -459,6 +618,171 @@ export class ConsciousnessOrchestrator {
     };
   }
 
+  private async processNestedObservation(
+    input: string,
+    context: any,
+    synthesizedStreams: any
+  ): Promise<any> {
+    if (!this.systems.nestedObservers) {
+      return {
+        observersActive: false,
+        patterns: [],
+        metaPatterns: [],
+        evolutionPotential: 0,
+        phaseStatus: null
+      };
+    }
+
+    try {
+      // Get current observer status and phase metrics
+      const observerStatus = this.systems.nestedObservers.getObserverStatus();
+      const phaseStatus = this.systems.nestedObservers.getPhaseStatus();
+
+      // Calculate member consciousness coherence from synthesized streams
+      const memberCoherence = this.calculateMemberCoherence(synthesizedStreams, context);
+
+      // Create consciousness patterns from the synthesized streams
+      const consciousnessPatterns = this.extractConsciousnessPatterns(
+        input,
+        synthesizedStreams,
+        memberCoherence
+      );
+
+      // Assess evolution potential based on current patterns and observer state
+      const evolutionPotential = this.assessEvolutionPotential(
+        consciousnessPatterns,
+        phaseStatus,
+        memberCoherence
+      );
+
+      return {
+        observersActive: true,
+        activeObservers: Array.from(observerStatus.keys()).length,
+        patterns: consciousnessPatterns,
+        metaPatterns: this.identifyMetaPatterns(consciousnessPatterns),
+        memberCoherence,
+        evolutionPotential,
+        phaseStatus: {
+          phase1: phaseStatus.get(1),
+          phase2: phaseStatus.get(2),
+          phase3: phaseStatus.get(3),
+          phase4: phaseStatus.get(4),
+          phase5: phaseStatus.get(5)
+        },
+        observerIds: Array.from(observerStatus.keys()),
+        nextPhaseReadiness: this.calculateNextPhaseReadiness(phaseStatus)
+      };
+    } catch (error) {
+      console.error('Nested observation processing failed:', error);
+      return {
+        observersActive: false,
+        patterns: [],
+        metaPatterns: [],
+        evolutionPotential: 0,
+        error: error.message
+      };
+    }
+  }
+
+  private calculateMemberCoherence(synthesizedStreams: any, context: any): number {
+    // Calculate consciousness coherence based on stream integration
+    let coherence = 0.5; // Base coherence
+
+    // Factor in stream coherences
+    if (synthesizedStreams.witnessing?.depth) coherence += synthesizedStreams.witnessing.depth * 0.15;
+    if (synthesizedStreams.psychological?.stage) coherence += 0.1;
+    if (synthesizedStreams.elemental?.balance) coherence += synthesizedStreams.elemental.balance * 0.1;
+    if (synthesizedStreams.enhanced?.confidence) coherence += synthesizedStreams.enhanced.confidence * 0.15;
+    if (synthesizedStreams.reciprocalLearning?.learningActive) coherence += 0.1;
+
+    // Session history factor
+    if (context?.sessionHistory?.length > 5) coherence += 0.05;
+
+    return Math.min(coherence, 1.0);
+  }
+
+  private extractConsciousnessPatterns(input: string, synthesizedStreams: any, coherence: number): any[] {
+    const patterns = [];
+
+    // Extract patterns from each stream
+    if (synthesizedStreams.witnessing?.patterns) {
+      patterns.push({
+        type: 'witnessing',
+        content: synthesizedStreams.witnessing.patterns,
+        strength: coherence * 0.8,
+        source: 'sacred_core'
+      });
+    }
+
+    if (synthesizedStreams.psychological?.patterns) {
+      patterns.push({
+        type: 'psychological',
+        content: synthesizedStreams.psychological.patterns,
+        strength: coherence * 0.7,
+        source: 'psychological_frameworks'
+      });
+    }
+
+    if (synthesizedStreams.elemental?.elements) {
+      patterns.push({
+        type: 'elemental',
+        content: Object.keys(synthesizedStreams.elemental.elements),
+        strength: coherence * 0.6,
+        source: 'elemental_oracle'
+      });
+    }
+
+    return patterns;
+  }
+
+  private identifyMetaPatterns(patterns: any[]): any[] {
+    // Identify higher-order patterns from the basic patterns
+    const metaPatterns = [];
+
+    // Look for recurring themes across pattern types
+    const themes = this.findRecurringThemes(patterns);
+
+    if (themes.length > 0) {
+      metaPatterns.push({
+        type: 'thematic_convergence',
+        themes,
+        emergenceLevel: themes.length / 3, // Normalize to 0-1+
+        coherence: 0.8
+      });
+    }
+
+    return metaPatterns;
+  }
+
+  private findRecurringThemes(patterns: any[]): string[] {
+    // Simple theme detection - would be more sophisticated in production
+    return ['consciousness_evolution', 'pattern_integration'];
+  }
+
+  private assessEvolutionPotential(patterns: any[], phaseStatus: Map<number, any>, coherence: number): number {
+    // Base evolution potential on pattern strength, phase readiness, and coherence
+    const patternStrength = patterns.reduce((sum, p) => sum + (p.strength || 0), 0) / patterns.length;
+    const phaseReadiness = Array.from(phaseStatus.values()).reduce((sum, p) => sum + (p?.currentMetric || 0), 0) / phaseStatus.size;
+
+    return (patternStrength * 0.4 + phaseReadiness * 0.4 + coherence * 0.2);
+  }
+
+  private calculateNextPhaseReadiness(phaseStatus: Map<number, any>): any {
+    const phase4Metrics = phaseStatus.get(4);
+    const phase5Metrics = phaseStatus.get(5);
+
+    return {
+      phase4: phase4Metrics ? {
+        readiness: phase4Metrics.currentMetric / phase4Metrics.activationThreshold,
+        autoActivate: phase4Metrics.autoActivate
+      } : null,
+      phase5: phase5Metrics ? {
+        readiness: phase5Metrics.currentMetric / phase5Metrics.activationThreshold,
+        autoActivate: phase5Metrics.autoActivate
+      } : null
+    };
+  }
+
   /**
    * SYNTHESIS - The Art of Weaving
    */
@@ -491,22 +815,44 @@ export class ConsciousnessOrchestrator {
         activeSystems: this.getActiveSystems(),
         depth: this.calculateTrueDepth(streams),
         emergence: emergentInsight,
-        orchestration: 'full-spectrum',
+        orchestration: 'full-spectrum-multi-engine',
         timestamp: Date.now(),
-        synthesisMethod: 'harmonic-weaving',
+        synthesisMethod: 'harmonic-weaving-enhanced',
+        multiEngineData: streams.enhanced?.multiEngineEnhancement ? {
+          enginesUsed: Array.from(streams.enhanced.multiEngineEnhancement.keys()),
+          overallConfidence: streams.enhanced?.orchestrationConfidence || 0,
+          enhancementLayers: streams.enhanced?.enhancementLayers || ['consciousness', 'aether', 'anamnesis'],
+          observerCoherence: streams.enhanced?.observerCoherence || 0.5,
+          consciousnessDepth: streams.enhanced?.consciousnessDepth || 0.5,
+          sovereigntyMaintained: true
+        } : null,
         streams: {
           witnessing: streams.witnessing?.depth || 0,
           memories: streams.memories?.count || 0,
           knowledge: streams.knowledge?.relevance || 0,
           psychological: streams.psychological?.stage || 'unknown',
           elemental: Object.keys(streams.elemental?.elements || {}),
-          enhanced: streams.enhanced?.confidence || 0,
+          enhanced: {
+            confidence: streams.enhanced?.confidence || 0,
+            multiEngine: streams.enhanced?.multiEngine || false,
+            orchestrationConfidence: streams.enhanced?.orchestrationConfidence || 0
+          },
           reciprocalLearning: {
             learningActive: streams.reciprocalLearning?.learningActive || false,
             wisdomDetected: streams.reciprocalLearning?.wisdomContribution?.detected || false,
             synthesisTriggered: !!streams.reciprocalLearning?.synthesisTriggered,
             giftsAwarded: streams.reciprocalLearning?.reciprocalGifts?.giftsAwarded?.length || 0,
             memberId: streams.reciprocalLearning?.memberProfile?.memberId || 'anonymous'
+          },
+          nestedObservation: {
+            observersActive: streams.nestedObservation?.observersActive || false,
+            activeObservers: streams.nestedObservation?.activeObservers || 0,
+            patterns: streams.nestedObservation?.patterns?.length || 0,
+            metaPatterns: streams.nestedObservation?.metaPatterns?.length || 0,
+            memberCoherence: streams.nestedObservation?.memberCoherence || 0,
+            evolutionPotential: streams.nestedObservation?.evolutionPotential || 0,
+            phaseStatus: streams.nestedObservation?.phaseStatus || null,
+            nextPhaseReadiness: streams.nestedObservation?.nextPhaseReadiness || null
           }
         }
       }
@@ -647,8 +993,29 @@ export class ConsciousnessOrchestrator {
     if (this.systems.spiralQuest) active.push('SpiralQuest');
     if (this.systems.fractalField) active.push('FractalField');
     if (this.systems.reciprocalLearning) active.push('ReciprocalLearning');
+    if (this.systems.nestedObservers) active.push('NestedObserverSystem');
 
     return active;
+  }
+
+  /**
+   * PROCESS REQUEST - Compatibility wrapper for maiaService
+   */
+  async processRequest(input: string, context: any): Promise<any> {
+    // Activate the orchestrator if not already activated
+    if (!this.systems.activated) {
+      await this.activate();
+    }
+
+    // Convert maiaService context to orchestrator format
+    const orchestratorContext = {
+      sessionId: context.sessionId,
+      userId: context.userId,
+      sessionHistory: context.sessionHistory || []
+    };
+
+    // Call the main orchestration method
+    return await this.orchestrateResponse(input, orchestratorContext);
   }
 
   /**
@@ -688,5 +1055,8 @@ export async function awakenMaya(): Promise<ConsciousnessOrchestrator> {
 
   return orchestrator;
 }
+
+// Singleton instance for global access
+export const consciousnessOrchestrator = new ConsciousnessOrchestrator();
 
 export default ConsciousnessOrchestrator;

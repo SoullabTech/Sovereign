@@ -1,0 +1,2981 @@
+Architecture
+and
+Empathy
+Juhani Pallasmaa
+Harry Francis Mallgrave
+Sarah Robinson
+Vittorio Gallese
+A Tapio Wirkkala-Rut Bryk Design Reader
+
+Architecture and
+Empathy
+a Tapio Wirkkala - Rut Bryk Design Reader
+
+with contributions from
+Juhani Pallasmaa
+Harry Francis Mallgrave
+Sarah Robinson
+and Vittorio Gallese
+
+edited by Philip Tidwell
+
+published by the Tapio Wirkkala-Rut Bryk Foundation
+
+ISBN:
+978-0-692-53919-4
+
+Contents
+
+Copyright:
+
+Copyright 2015 Tapio Wirkkala—Rut Bryk Foundation, all rights reserved.
+All material is compiled from sources believed to be reliable, but published
+without responsibility for errors or omissions. We have attempted to contact
+all copyright holders, but this has not been possible in all circumstances. We
+apologize for any omissions and, if noted, will amend in any future editions.
+
+Contact:
+
+office@wirkkalabryk.fi
+www.wirkkalabryk.fi
+Tapio Wirkkala Rut Bryk Foundation
+Ahertajankuja 4 B
+FI-02100 Espoo
+Finland
+
+Series Designed by:
+Philip Tidwell
+
+Typography:
+
+‘Palatino’ by Hermann Zapf and ‘Verb’ by Yellow Design Studio
+
+Printing:
+
+Printed in Finland by Oy Nord Print Ab
+www.nordprint.fi
+
+Empathic and Embodied Imagination: 4
+Intuiting Experience and Life in Architecture
+Juhani Pallasmaa
+
+Enculturation, Sociality, and 20
+the Built Environment
+Harry Francis Mallgrave
+
+Boundaries of Skin: John Dewey, 42
+Didier Anzieu and Architectural Possibility
+Sarah Robinson
+
+Architectural Space from Within: 64
+The Body, Space and the Brain
+Vittorio Gallese
+
+A Conversation on Empathy 78
+Juhani Pallasmaa, Harry Francis Mallgrave,
+Sarah Robinson and Vittorio Gallese
+Contributor Biographies
+About the TWRB Foundation
+
+87
+88
+
+Juhani Pallasmaa
+Empathic and Embodied Imagination:
+Intuiting Experience and Life in Architecture
+
+Why is it that architecture and architects, unlike film and
+filmmakers, are so little interested in people during the
+design process? Why are they so theoretical, so distant
+from life in general?
+[Jan Vrijman, Dutch filmaker]1
+
+Architecture and Images of Life
+Contemporary architecture has often been accused of emotional
+coldness, restrictive aesthetics and a distance from life. This criticism
+suggests that we architects have adopted formalist attitudes, instead of
+tuning our buildings with realities of life and the human mind. In all
+honesty, don’t we usually design our houses on the basis of functional
+and aesthetic criteria, rather than imagining them as resonant settings
+and backgrounds for situations of lived life? “Let us assume a wall:
+what takes place behind it?” the French poet Jean Tardieu asks provocatively.2 But do we architects have the same curiosity for life?
+The weak sense of life in our buildings may not only result from a
+deliberate emotive distance or formalist rejection of life’s complexities
+and nuances, it may simply be that geometric configurations are easier
+to imagine than the shapeless and dynamic acts of life and the ephemeral feelings evoked by architecture. Joseph Brodsky, the poet, makes a
+blunt suggestion to this effect: “[The city of memory] is empty because
+for an imagination it is easier to conjure architecture than human beings.”3
+No doubt, Modernism at large—its theory, education as well as practice—has focused more on form and aesthetic criteria, than the interacAbove: Hieronymus Bosch, The Garden of Earthly Delights, 1490-1510. Central panel
+“Imaginary Paradise”. Museo del Prado, Madrid.
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+4
+5
+
+tion between built form and life, especially mental life. Le Corbusier’s
+famous credo, “Architecture is the masterly, correct and magnificent
+play of masses brought together in light,”4 turned architecture into a
+visually autonomous art form. Regardless of his formalist credo, Le
+Corbusier’s works project forceful emotional experiences; here the poet
+and artist in the architect’s complex character take over the theorist and
+polemicist. Yet, architectural form is humanly meaningful only when
+it is experienced in resonance with life—real, remembered or imagined. The minimalist style of the recent decades has tended to distance
+architecture even further from events of life. Again, I need to add that I
+believe in the value of reduction myself, but this reduction must aim toward the essentials, not away from them. Constantin Brancusi forcefully
+reminds us of this requirement in his statement, “The work must give
+immediately, at once, the shock of life, the sensation of breathing.”5
+I am calling for an architectural thinking that incorporates life in all
+its practical and mental implications, one that goes beyond the Vitruvian
+trinity of “utilitas, firmitas, venustas.”6 The reductive attitude toward life
+denies its essential spontaneity and messiness, which tends to turn life
+itself into a formal and predictable behavior. As John Ruskin concludes:
+Imperfection is in some way essential to all that we know
+of life. It is a sign of life in a mortal body, that is to say, of
+a state of process and change. Nothing that lives is, or
+can be, rigidly perfect; part of it is decaying, part nascent
+[…] And in all things that live there are certain irregularities and deficiences, which are not only signs of life but
+sources of beauty.7
+
+as much as in the world of matter and physical construction. I dare
+to make this statement as science has established that environments
+change our brains, and those changes in turn alter our behavior.9 The
+connections between the mind and the physical setting is much more
+fundamental than we have believed.
+Already in the 1960s psychologists observed that the behavior of an
+individual varied more in different settings than the behavior of other
+subjects in the same setting. The notion of “situational personality” was
+introduced to describe this condition.10 Today we know that environments give rise to permanent structural changes in our brain and
+neural systems. In his book Survival Through Design, Richard Neutra
+already professed, “Today design may exert a far-reaching influence
+on the nervous make-up of generations.”11 Architectural spaces are
+not just lifeless stages for our activities. They guide, choreograph, and
+stimulate actions, interests and moods, or in the negative case, stifle
+and prohibit them. Even more importantly, they give our everyday
+experiences of being specific perceptual frames and horizons of understanding. Every space, place and situation is tuned in a specific way,
+and it projects atmospheres that promote distinct moods and feelings.
+We live in resonance with our world and architecture mediates and
+maintains that very resonance.
+
+Images of Form and Experience
+As I began my studies in architecture at the Helsinki University of
+Technology in the late 1950s, professor Aulis Blomstedt, the ideological
+counterpole to Alvar Aalto in the Finnish postwar architectural scene,
+taught us, “The talent of imagining human situations is more important for an architect than the gift of fantasizing spaces.”8 Indeed, qualities of physical space, behavior and mental tuning are interrelated.
+When designing physical spaces, we are also designing, or implicitly
+specifying distinct experiences, emotions and mental states. In fact, as
+architects, we are operating in the human brain and nervous system
+
+Two Imaginations
+Buildings are products of imagination; every human structure has first
+existed as an intentional mental image. Isn’t it depressing to realize
+that all the ugliness in our surroundings is a consequence of human
+intentionality and thought? In my view, there are two qualitative
+levels of imagination; one projects formal and geometric images while
+another one simulates the actual sensory, emotive and mental encounter with the projected entity. The first category of imagination projects
+the material object in isolation, the second presents it as a lived and
+experienced reality in our life world. In the first case, the imaginatively
+projected object remains as an external image outside of the experiencing and sensing self. In the latter case, it becomes part of our existential
+experience, as in the encounter with material reality. The neurological
+affinity between what is perceived and what is imagined, has been well
+established in scientific studies, so I will not say more about this issue.12
+The formal imagination is primarily engaged with topological or geo-
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+6
+7
+
+metric facts, whereas the emphatic imagination evokes embodied and
+emotive experiences, qualities, and moods. Maurice Merleau-Ponty
+introduced the evocative notion of “the flesh of the world,” to denote
+the lived reality in which we dwell. The empathic imagination evokes
+multi-sensory, integrated and lived experiences of this very flesh.13
+Creative Imagination
+Henry Moore, the master sculptor, gives a vivid description of the
+simultaneous embodied internalization and imaginative externalizing
+power of artistic imagination:
+This is what the sculptor must do. He must strive
+continually to think of, and use form in its full spatial
+completeness. He gets the solid shape, as it were, inside
+his head—he thinks of it, whatever its size, as if holding it completely enclosed in the hollow of his hand. He
+mentally visualizes a complex form from all round itself;
+he knows while he looks at one side what the other side
+is like; he identifies himself with its center of gravity, its
+mass, its weight; he realizes its volume, and the space
+that the shape displaces in the air.14
+
+This precise account of a great artist suggests that the act of imagining
+spaces and objects, is not solely a matter of visual projection; it is a process of embodiment, identification and feeling the entity as an imaginary extension of one’s self, through embodied simulation. The artist’s
+body becomes the work, and simultaneously, the work becomes an
+extension of his body. Every creative person works unconsciously with
+herself, as much as with materials, forms, sounds, or words. Einstein’s
+famous confession of the visual and muscular thinking in his work on
+mathematical and physical problems is an authoritative suggestion that
+all thinking has an embodied component.15 Imagination is not a quasivisual projection; we imagine through our entire embodied existence
+and through imagination we expand our realm of being. Thinking is
+actually a way of molding one’s world as if it were sculptor’s clay, and
+in fact Martin Heidegger compared thinking with cabinet making. To
+this line of thinking Henry Moore added a crucial comment on the role
+of the conscious intellect: “The artist works with a concentration of his
+
+Above: Henry Moore carving in his studio in the late 1970s.
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+8
+9
+
+whole personality, and the conscious part of it resolves conflicts, organizes memories, and prevents him from trying to walk in two directions at the same time.”16 The intellect provides the ground and control
+for the process, but the poetic image does not arise from reason alone.
+Creative Imagination
+I wish to argue firmly that true qualities of architecture are not formal
+or geometric, intellectual or even aesthetic. They are existential and
+poetic, embodied and emotive experiences, which connect us with the
+deep human historicity of occupying space. They arise from our existential encounter with the work, rather than merely through vision. Artistic images are not “pure” formal configurations; they are images that
+are embedded in the soil of human historicity, memory and imagination. True architectural images are always unconsciously reaching back
+to our biological historicity. Alvar Aalto suggested that architecture and
+its details derive in some way from biology.17 No wonder Semir Zeki,
+the neurobiologist, suggests the possibility of a theory of aesthetics that
+is biologically based.18 Poetic images are always new and ancient at the
+same time. Architectural images evoke recollections, feelings and associations. Existentially meaningful architectural images cannot be mere
+formal fabrications or inventions, as they are bound to echo our mental
+world, and artistic experiences are thus essentially exchanges; we experience them as part of our life world and give them their meanings.
+Architectural qualities are constituted in the act of experiencing the
+work, as philosopher John Dewey argued of works of art in general.
+By common consent, the Parthenon is a great work of
+art. Yet it has aesthetic standing only as the work becomes an experience for a human being (…) Art is always
+the product in experience of an interaction of human
+beings with their environment”19
+
+realm. Sculpture is similarly, a piece of stone and a mental image, and
+a building is likewise a utilitarian structure and a mental suggestion—a
+spatial metaphor of human existence. This dual essence and double focus is fundamental to the mental impact of art. Experiencing an artistic
+image seems to create a momentary short circuit between our cognitive
+and emotive orientations. We do not usually recognize that we actually
+dwell in architectural metaphors, poeticized images that provide specific frames and horizons for experiencing and understanding our own
+life situation. Besides, works of art and architecture alter our perceptions of the world. As Merleau-Ponty suggests, “We come not to see the
+work of art, but the world according to the work.”20
+As Alvar Aalto testified, architectural ideas are not usually born
+as clear and final forms; they arise as diffuse images, often as formless bodily feelings. They are eventually developed and concretized
+in successive sketches and models, refined and specified in working
+drawings, turned into material existence through numerous hands and
+machines, and finally, experienced as purposeful utilitarian structures
+in the context of life. Yet, even the art of poetry is engaged with the
+material world and the body, as the poet Charles Tomlinson points out:
+Painting awakes up the hand, draws in your sense of
+muscular coordination, your sense of the body, if you like.
+Poetry, also, as it pivots on its stresses, as it rides forward over the line-endings, or comes to rest at pauses in
+the line, poetry also brings the whole man into play and
+his bodily sense of himself.21
+
+The British painter and essayist Adrian Stokes makes the ultimate
+argument, “In a way, all art originates in the body.”22
+
+The value of artistic works is that they are experientially and emotively
+real. Artistic works are not symbols or metaphors of something else,
+they are an authentic experiential reality themselves. All art, in fact, exists simultaneously in two realms, that of physical matter and execution
+as well as that of mental imagery. A painting is paint on canvas, but at
+the same time, it is an image and narrative in the imaginative mental
+
+Imaginative Construction and Dwelling
+What I have said so far, raises an essential question: How can architectural ideas and aspirations (particularly emotive qualities) emerge
+as immaterial feelings of the designer and be translated into the actual
+building before finally being experienced by the person inhabiting it?
+And how can such vague and weakly formalized feelings be communicated? Firstly, it seems crucial that the designer master the entire
+process in order to mediate and materialize his/her intentions. A
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+10
+11
+
+talented architect constructs the entire edifice in his/her imagination;
+every great building has been built twice, first in the immaterial realm
+of imagination and then in the material world under laws of physics.
+In fact, we must say that every great building has been erected several
+times, since even a master hardly ever realizes his/her first idea. And
+every profound building has been imaginatively inhabited by its designer. Paul Valéry poetically points out the extreme subtlety required
+of the architect in transmitting experiential intentions:
+
+capable of doing so herself. In unspecialized indigenous cultures everyone was capable of giving this architectural gift, by building one’s own
+dwelling, and all animals can still do it. As buildings are extentions of
+our bodily and mental faculties, the metaphor of giving birth even has
+an extended meaning. Profound architecture is a gift in still another
+sense; it transcends its given conditions and conscious intentions. A
+creative work is always more than could be rationally deducted or foreseen, otherwise it would not qualify as a creative act.
+
+He gave a like care to all the sensitive points of the building. You would have thought that it was his own body he
+was tending […] But all these delicate devices were as
+nothing compared to those which he employed when he
+elaborated the emotions and vibrations of the soul of the
+future beholder of his work.23
+
+Architecture as a Gift
+It is usually understood, that a sensitive designer imagines the acts,
+experiences and feelings of the user of the space, but I do not believe
+human empathic imagination works that way. The designer places
+him/herself in the role of the future dweller, and tests the validity of
+the ideas through this imaginative exchange of roles and personalities.
+Thus, the architect is bound to conceive the design essentially for him/
+herself as the momentary surrogate of the actual occupant. Without
+usually being aware of it, the designer turns into a silent actor on the
+imaginary stage of each project. At the end of the design process, the
+architect offers the building to the user as a gift. It is a gift in the sense
+that the designer has given birth to the other’s home as a surrogate
+mother gives birth to the child of someone who is not biologically
+
+Creative Team Work?
+The idea of projecting one’s self in the process of emphatic imagination
+evokes another crucial question: how does the mental projection take
+place in collective work, such as team work in a large design office?
+In fact, all architectural projects today are bound to be some kind of
+collaboration. In my view, it requires the sensitivity and fused identity
+of a well rehearsed musical ensemble to succeed in the demanding and
+seemingly impossible task of collective imagination. It also requires a
+shared atmosphere and a charismatic conductor. However, team work
+rarely achieves the intensity and integrity of a work conceived by a
+single creator. Group work tends to strengthen the rational, stylistic,
+and conscious aspects of design as a result of the need of communication. Isn’t it impossible to think how a deeply emotive and subconscious work, such as Alvar Aalto’s Villa Mairea or Säynätsalo Town
+Hall, Le Corbusier’s Chapel at Ronchamp, the late churches of Sigurd
+Lewerentz or Luis Barragan’s Chapel for the Capuchinas Sacramentarias del Purísimo Corazon de María could arise from team work? They
+have to be a result of a singular emotive, synthesizing and empathic
+imagination. These ideas have evidently been incubated in a singular
+personality.
+I am also concerned with the disappearance of a sense of life in
+todays’ design processes through the increasing uncritical use of the
+computer, which tends to distance the object of design from the natural
+and internal link with the human psyche and body, a link which is
+provided by the eye-hand-body-mind connection of drawing combined
+with an empathic imagination. My second concern in relation to excessive computerization is, that architectural and artistic meanings are
+always existential meanings, not ideational propositions. That is, art
+articulates our experiences of the world directly in their existential di-
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+This is Phaedrus describing the care by which Eupalinos, the architect
+in the poet’s dialogue Eupalinos, or The Architect, proceeded in his design process. “My temple must move men as they are moved by their
+beloved,” the poet adds.24 I also wish to add in passing that there is a
+distinct sensual and erotic quality in meaningful spatial and architectural experiences, as they are essentially sensuous embraces. Every
+great architectural space is the architect’s embrace; but an architectural
+space is also simultaneously the mother’s and the lover’s embrace.25
+
+12
+13
+
+mension. The fundamental message of art is always ‘this is how it feels
+to be a human being in this world.’ How could a basically mechanized
+process, however delicate and subtle, bring about such meanings? Instead of being authentic reflections of life—the foundational reality of
+architecture—the human figures depicted in computerized renderings
+appear as mere decorations, like flowers in a vase.
+The design process is a vague and emotive process that alternates
+between internalization and projection, thinking and feeling, embodiment and conceptualization, association and rejection, trial and error.
+Eventually it becomes increasingly concrete and precise. The projected
+reality is internalized, or “introjected” to use a psychoanalytic term,
+and the self is simultaneously projected out into the space. A gifted
+architect feels and imagines the building, its countless relationships
+and details as if it were an extension of his/her own body, as Valéry
+suggested above.
+The geometric and formal dimensions of architecture can usually
+be rather precisely identified and imagined through formal imagination, especially when combined with projective technical aids, such as
+axonometric and perspectival drawings, physical models, or computer
+simulations. The lived characteristics—the building as a setting for
+activities and interactions—call for a multi-sensory and empathic
+imagination. Significantly, the designer does not project the building
+into his/her current reality of life; he imagines the reality of the building and places himself there. The fact that computer renderings usually
+appear lifeless and emotionless arises from the fact that the process
+itself does not contain an emotive and empathic component. It is the
+result of cold projective mechanics in mathematicized space.
+Syncretic Imagination
+An extraordinary imaginative capacity is revealed by Mozart describing the feeling of gradual disintegration of temporal succession in his
+creative process:
+I spread it [the composition] out broader and clearer, and
+at last it gets almost finished in my head, even when it is
+a long piece, so that I can see the whole of it at a single
+glance in my mind, as if it were a beautiful painting or a
+handsome human being; in which way I do not hear it in
+
+Left: Sigurd Lewerentz, St. Peter’s Church, 1966, Klippan, Sweden.
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+14
+15
+
+my imagination at all as a succession—that way it must
+come later—but all at once, as it were […] the best of all is
+the hearing of it all at once.26
+
+No doubt, a building can also be similarly sensed ‘all at once’ as a
+singular sensation, a kind of ‘universal substance’ by a genius of spatial
+imagination. It is not surprising that musical and spatial intelligences
+have been suggested among the dozen categories of human intelligence
+beyond the intelligence measured by the standard IQ test.27
+Yet another quality of our perceptual and emotive system was
+evoked by Heinrich Wölfflin in his dissertation in 1886. “How is it
+possible that architectural forms are able to invoke an emotion or a
+mood.”28 Indeed, how does Michelangelo’s architecture and sculpture
+evoke such deep feelings of melancholy and Mozart’s music so delightfully energetic and optimistic moods? Michelangelo himself argued
+that everything in art and architecture arises from the human body,
+and indeed, his buildings and sculptures are bodies and muscles of
+marble that have fallen in deep and poetic melancholia. Michelangelo’s
+every volume, structural member, line and profile seems to be alive,
+like the muscles and tendons of a human body in tension.
+Imagination and Embodied Simulation
+The capacity of works of art, even completely non-representational
+forms and colors such as the Suprematist works of Russian Constructivism, the geometric compositions of Dutch De Stijl, or the color fields
+of American Abstract Expressionism, to evoke emotional reactions in
+the perceiver has remained a mystery ever since this non-representational art form emerged a century ago. Psychoanalytic theories attempted to explain such mysterious mental and emotional experiences
+through the idea of unconscious projection of self, or fragments of self,
+on the perceived object. The recent discovery of mirror neurons and
+theoretical suggestions arising from this discovery, have opened new
+interpretations to this enigma. Neuroscience explains this mental phenomenon by means of our inherent neural systems that are specialized
+for this subconscious imitation, or embodied simulation. As already
+Aristotle saw the significance of mimesis as the ground of all learning,
+we are not dealing with any novel discovery.
+I will not attempt to say more about mirror neurons and mirror sys-
+
+Above: Michelangelo, Tomb of Giuliano di Lorenzo de’ Medici with Night and Day, 16th
+century, Basilica of San Lorenzo, Florence.
+
+Architecture and Empathy
+
+Juhani Pallasmaa
+
+16
+17
+
+tems today as we have one of the discoverers of these phenomena, Dr.
+Vittorio Gallese as our contributor. Equally, I will not go into the philosophical evolution of ideas on empathy, Einfühlung, “inner imitation”,
+or “corporeal resonance” as this line of thinking will be addressed by
+Harry Mallgrave in his contribution. He deserves much appreciation for
+recovering this line of inquiry that was developed German scholars and
+thinkers of the 19th century since Robert Vischer but has been rather
+forgotten in the philosophy of modernity and modern art.
+According to Joseph Brodsky, the inherent suggestion of every poem
+is “Be like me,” and here the great poet seems to anticipate the hidden
+workings of our mirror neurons before neuroscience had identified this
+neural activity.29 Brodsky also refers to the ethical lessons of great literary works. All great works of art speak convincingly for the capacity
+of human empathic imagination , intuition and compassion. But what
+else could true artistic ingenuity be other than the capacity to imagine
+something that no one has yet perceived or experienced, and to bring
+that vague sensation into physical and lived reality?
+Imagination is not a singular phenomenon as the writings of
+Jean-Paul Sartre, Edward S. Casey, Richard Kearney and many other
+philosophers have shown. In his book on poetic imagery, Water and
+Dreams, Gaston Bachelard divides imagination into two categories:
+images of form and images of matter. He argues that the latter are more
+poetic and deeper of the two.30 I wish to add a third category to the philosopher’s pair of imaginative realms: images of life. I venture to argue
+that these images of growth, movement, change, action and becoming
+are the least understood of images. In my view, profound architectural
+images are not substantives, they are verbs. They serve as invitations
+for action and at the same time, promises. In the arts as well, these are
+the images that give rise to a sense of life.
+
+Notes
+1	
+
+Jan Vrijman, ”Filmmakers Spacemakers”, The Berlage Papers 11 (January,
+1994].
+2	 Jean Tardieu, as quoted in Georges
+Perec, Tiloja, avaruuksia [Espéces
+d’espaces] (Helsinki: Loki-Kirjat,
+1992), 50.
+3	 Joseph Brodsky, On Grief and Reason: Essays (New York: Farrar, Straus
+
+Architecture and Empathy
+
+and Giroux, 1997), 43.
+4	 Le Corbusier, Towards a New Architecture (London: The Architectural
+Press, 1959), 31.
+5	 Constantin Brancusi, as quoted in
+Eric Shanes, Brancusi (New York: Abbeville Press, 1989) 67.
+6	Vitruvius, The Ten Books on Architecture [De Architectura Libri Decem]
+(New York: Dover Publications, 1960).
+7	 John Ruskin, as quoted in Gary J.
+
+Coates, Erik Asmussen, Architect,
+(Stockholm, Byggförlaget, 1997), 230.
+8	 Aulis Blomstedt, as quoted by the
+author from Blomstedt’s lectures at
+the Helsinki University of Technology
+in the early 1960s.
+9	 See for instance Fred Gage, “Architecture and Neuroscience” (keynote
+lecture at the AIA National Convention, San Diego, California, May 8-10,
+2003).
+10	 See for instance Walter Mischel, Personality and Assessment (London:
+Wiley, 1968).
+11	 Richard Neutra, Survival through Design (Oxford: Oxford University Press,
+1954), 7.
+12	 I referring to research carried out
+under the supervision of Dr. Stephen
+Rosslyn at the Harvard University
+in the mid 1990s as reported in Ilpo
+Kojo, “Mielikuvat ovat aivoille todellisia [Images are real for the brain]
+Helsingin Sanomat, March 26, 1996.
+13	 Merleau-Ponty discusses the notion
+of the flesh in his essay ”The Intertwining – The Chiasm,” in The Visible
+and Invisible, Claude Lefort, ed.,
+(Evanston: Northwestern University
+Press, 1964), 9.
+14	 Henry Moore, “The Sculptor Speaks,”
+in Henry Moore on Sculpture, ed.
+Philip James (London: MacDonald,
+1966), 62-64.
+15	 Albert Einstein, “Letter to Jacques
+Hadamar,” in The Psychology of
+Invention in the Mathematical Field,
+Jacques Hadamar (Princeton: Princeton University Press, 1945), 142-143.
+16	James, Henry Moore, 62.
+17	 See for instance Alvar Aalto, “The
+Humanizing of Architecture” (1940),
+in ed. Göran Schildt, Alvar Aalto In
+His Own Words (New York: Rizzoli,
+1998).
+18	 Semir Zeki discusses the notion at
+length in his book Inner Vision: An
+Exploration of Art and the Brain (Oxford: Oxford University Press, 2000).
+
+Juhani Pallasmaa
+
+19	 John Dewey, Art As Experience (New
+York: Putnam, 1934). 4, 231.
+20	 Maurice Merleau-Ponty, as quoted in
+Iain McGilchrist, The Master and HIs
+Emissary: The Divided Brain and the
+Making of the Western World (New
+Haven: Yale Univ. Press, 2009) 409.
+21	 Charles Tomlinson, “The Poet as
+Painter,” in Poets on Painters, ed.
+J.D.McClatchy, (Berkeley: University of
+California Press, 1990), 280.
+22	 Adrian Stokes, The Image in Form:
+Selected writings of Adrian Stokes,
+ed. Richard Wollheim, (New York:
+Harper & Row, 1972), 122.
+23	 Paul Valéry, Dialogues (New York:
+Pantheon Books, 1956), 74-75.
+24	 Ibid., 75.
+25	 I discuss this notion further in depth
+in my essay “The Eroticism of Space,”
+in Encounters 2: Architectural Essays,
+ed. Peter MacKeith (Helsinki: Rakennustieto, 2012), 59-65.
+26	 Wolfgang Amadeus Mozart as
+quoted in Anton Ehrenzweig, The
+Psychonalysis of Artistic Vision and
+Hearing: An Introduction to a Theory
+of Unconscious Perception (London:
+Sheldon Press, 1975), 107-8.
+27	 Howard Gardner, Intelligence Reframed: Multiple Intelligences for the
+21st Century (New York: Basic Books,
+1999). 41-43.
+28	 Heinrich Wölfflin, “Prolegomena to a
+Psychology of Architecture,” in Harry
+Francis Mallgrave and Eleftherios
+Ikonomou, eds. and trans., Empathy,
+Form, and Space: Problems in German Aesthetics, 1873-1893 (Santa
+Monica: Getty Center for the History
+of Art and the Humanities, 1994), 149.
+29	 Joseph Brodsky, ”An Immodest Proposal,” in On Grief and Reason (New
+York: Farrar, Straus and Giroux, 1997),
+206.
+30	 Gaston Bachelard, Water and
+Dreams: An Essay on the Imagination
+of Matter (Dallas: Dallas Institute,
+1983), 1.
+
+18
+19
+
+Harry Francis Mallgrave
+Enculturation, Sociality, and
+the Built Environment
+
+The history of architecture is not a history of buildings or their styles. It
+is a history of ideas and how they have shaped the way we think about
+ourselves and our built environments. These ideas, in turn, are quite
+naturally directed by larger cultural forces. Yet what is most interesting about this connection between culture and the practice of design is
+that those periods in which the arts have been profoundly shaped by
+stylistic change have generally been those periods in which architectural theory has been more emphatically influenced by cultural ideas.
+A historian could cite countless examples of this relationship—from
+the mosques and cathedrals of the Middle East and Western Europe
+to the secular culture of modernity at the turn of the 20th century—
+but the point can be readily conceded. Even something as seemingly
+mundane as the cultural wars of the 1960s had a significant impact on
+architectural practice. The ideological divide separating the collectivist
+typologies of Aldo Rossi from the populist polemics of Robert Venturi
+resulted in a stylistic change in the following decades that was equally
+deep-felt and poignant.
+Around the time this process began to play itself out, however, the
+terms of the architectural debate shifted in one significant regard. The
+advance of poststructural theory with its inherent “incredulity toward
+metanarratives” was acutely hostile to the notion of any unified theory,
+cultural or otherwise, and traditional approaches to design with their
+grounding in the humanities soon found themselves out of step with
+the decentered abstractions under which architecture now labored on
+the one hand, or with the new formalism that software-based technologies promised on the other hand.1 Even something as benign as the
+“green movement” of the 1990s—severed from any connection to a
+broader theory—followed in the tracks of the new technological deterAbove: Cast of footprints in Laetoli, Tanzania, 3.6 millions years ago, Australopithecus
+afarensis (“Lucy”), in the Museum of Natural History, Washington D.C.
+Photo by Tim Evanson, Creative Commons.
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+20
+21
+
+minism, and one need not wonder why the contradiction between the
+thermostat settings of a room and the R-values of the glass walls that
+encased it was invisible to many designers. Now precluded from making any cultural statement about the world, many architects surrendered their sketch pencils to the parametric logic of the machine. A new
+age was proclaimed, one that altogether excluded consideration of the
+human occupant from the designed “object.” In the two decades since
+the fall of the poststructural semiotic, architectural theory—its adherence to the word—has come to a standstill and virtually ceased to exist.
+Let me begin with a very basic question: Can architectural theory
+ever again reconcile itself with a broader humanistic or cultural theory?
+I know this question might still be viewed as impolite in some
+academic circles, particularly to that generation raised on the “traces”
+of the past, but then again I think part of the problem is terminological. Can an architect today make a statement about human culture and
+how might this be possible? One critical observation needs to be made
+at the start. The cultural theory of the second decade of the new millennium is vastly different from the cultural theory that collapsed under
+its speculative approaches of a half-century ago. Today we are much
+better informed about our own biology.
+Of course cultural theory is largely an invention of the 20th century
+and the early pioneers in the fields of sociology and anthropology. The
+positivist Emile Durkheim, for instance, saw the “science” of sociology
+as the impersonal investigation of “social facts,” the shared morality
+and emotional life of a particular society. Max Weber perceived a link
+between individual behaviors and the religious and political institutions in which they were bred. Franz Boas viewed culture as a system
+of habits, dispositions, and beliefs trans-culturally crafted from the
+materials at hand. Many of these approaches, however, fell out of favor
+in the middle decades of the 20th century. The anthropologist Clifford
+Geertz, for instance, viewed culture less through specific behavioral
+patterns and more as a provisional set of recipes or social rules interpreted through the domain of cultural symbols and their meanings.
+The underlying premise to all such systems was that humans were
+born into the world as biological entities, but then mostly shaped
+by larger cultural forces. The perennial question of “nature versus
+nurture” (biology versus culture) was generally decided in favor of the
+latter; humans, after all, come into the world with a “blank slate.”
+
+It was only in the late-1960s—as architectural design was embarking on its meander into the stylistic past—that this view began to be
+challenged, and then initially from disciplines circling the outer orbit of
+mainstream academic thought. The German ethologist Konrad Lorenz,
+for instance, drew upon his study of animal behaviors to suggest
+that many behavioral patterns of species were in fact innate, and that
+specific cultural propensities of humans, such as aggression, might be
+a result of genetic adaptations. The zoologist Desmond Morris, in his
+book The Naked Ape (1967), pointed out that many human behaviors
+were little different from those of the great apes, a somewhat startling
+admission to many. Sociology came under more direct assault in the
+next decade with the publication of Edward O. Wilson’s book, Sociobiology: The New Synthesis (1975), which challenged the legitimacy of any
+cultural theory without a more basic biological underpinning. Over the
+first twenty-six chapters of the book, the Harvard biologist meticulously studied the behavioral patterns of various species in terms of their
+genes and behavior, and then in the twenty-seventh chapter he turned
+his attention to humans—insisting that genes do indeed influence
+such things as gender behaviors, social bonding, and human culture.
+In a follow-up study co-authored with Charles Lumsden, Genes, Mind
+and Culture (1981), Wilson proposed the hypothesis of gene-culture
+co-evolution. His views initially encountered intense opposition within
+the traditional departments of academe.
+By the turn of the present century, however, the corner had been
+turned. Not only did theories of gene-culture coevolution win the day,
+but they did so with a level of sophistication (gained from such knowledge as the sequencing of DNA) that was impossible only a few years
+earlier. In the ensuing years virtually every (formerly autonomous)
+field of the sciences and humanities has undergone a significant transformation and become interdisciplinary. One realm of biological theory
+known as niche construction, for instance, postulates that just as we
+alter our physical and cultural environments, so do these changed environments alter the genetic structures and behavioral patterns of who
+we are. Our brains, bodies, and environments (material and cultural)
+are no longer seen as entities to be independently investigated, but as
+highly dynamic and interacting systems connected with each other
+biologically, ecologically, and socially. The philosophical and cultural
+implications of such a perspective are enormous. This is no less so for
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+22
+23
+
+Evolutionary Timeline in Millions of Years
+architectural theory, which guides us in the practice of physically altering our living environments. Only now, however, are a few architects
+beginning to take note of this vast and growing body of research and
+its many design implications.
+Human Evolution
+Although biological breakthroughs have led the way in fashioning the
+new models of human nature and cultural behavior, a number of other
+fields have also supplied important pieces of the puzzle. Only a few
+decades ago it was the consensus of many paleoanthropologists that
+Homo sapiens underwent a major cognitive breakthrough around 50,000
+years ago, resulting in such things as the cave paintings of southern
+Europe, complex language, and other symbolic forms of cultural transmission. Today we take a much longer view of our past and with good
+reason. For if we broaden the timeline of our lineage out to several
+million years, we gain a quite different perspective of who we are and
+from where we came. Already with the genus Australopithecus afarensis—the discovery of “Lucy” in 1973, dating to 3.6 million years ago—
+we meet a semi-erect primate who had moved away from the tropical
+forests of our great ape cousins and began to forage in the savannahs of
+East Africa. Another set of major adaptations are found with the beginning of the Homo genus around 2.4 million years ago, and particularly
+with the species Homo erectus, a bipedal species with a physical stature
+and body proportions similar to our own. Against this backdrop, the
+appearance of Homo sapiens a mere 200,000 years ago is little more than
+a footnote to a much lengthier evolutionary timeline.
+If we examine the growth of cranial capacity over the same time
+period, two things stand out. The first is that up until the species Homo
+habilis, the so-called “handy man,” the brains of our ancestors had not
+enlarged much beyond our primate cousins. The cranial brain size of
+Lucy, for instance, barely outstripped that of a modern-day chimpanzee. The second is the massive jump in brain sizes with three species in
+particular: Homo erectus (a term that I will use in a broad sense), Homo
+heidelbergensis (a species that emerged in East Africa between 800,000
+and 600,000 years ago, to which I will refer simply as the Heidelbergs),
+and Homo sapiens. Yet brain sizes in themselves do not tell the whole story, and, in restricting ourselves to these last three species, we can learn
+much by also taking into account their social and cultural behaviors.
+
+Architecture and Empathy
+
+Ardipithecus
+ramidus
+(Ardi)
+
+Australopithecus
+afarensis
+(Lucy)
+
+Homo
+habilis
+
+Homo
+erectus
+
+Homo
+heidelbergensis
+
+Homo
+sapiens
+
+‘Ardi’
+
+‘Lucy’
+
+Homo habilis
+
+Homo erectus
+
+Homo heidelbergensis
+
+Homo sapiens
+
+5
+
+4
+
+3
+
+2
+
+1
+
+0
+
+Million
+Years Ago
+
+Million
+Years Ago
+
+Million
+Years Ago
+
+Million
+Years Ago
+
+Million
+Years Ago
+
+Present Day
+
+Harry Francis Mallgrave
+
+24
+25
+
+Brain Size
+
+Cultural Timeline
+
+Volume in Cubic Centimeters
+
+1500
+
+1000
+
+Homo
+heidelbergensis
+
+Homo
+sapiens
+
+Homo
+erectus
+Homo
+habilis
+
+500
+
+Modern Chimpanzee
+‘Lucy’
+0
+
+Homo erectus
+
+Homo heidelbergensis
+
+Large brain increase, joint
+intentionality, hunting skills,
+greater range, gesturing,
+proto-language, cooked meat,
+laughter, mimetic culture
+
+50% brain increase, larger
+groups, division of labor,
+communal hearths, mentalizing
+likely music, dancing, use of
+ochre, practice of architecture
+
+Homo sapiens
+Collective intentionality
+syntactical language, burials,
+symbolism, art, writing,
+agriculture, jewelry, cumulative
+cultural evolution
+
+‘Ardi’
+2 million
+years ago
+
+700,000
+years ago
+
+200,000
+years ago
+
+Homo erectus not only enjoyed a brain almost double in size to that
+of pre-Homo species, but his Acheulean tool kit (1.8 to 1 million years
+ago) was obviously not the driving factor in its enlargement; in fact,
+it remained little changed over much of his lengthy timeline. Yet the
+social behavior of Homo erectus was strikingly different from that of
+earlier species. He hunted in larger groups at greater distances in time
+and space, which demanded enhanced communication and group-coordination skills much beyond those of apes. With his much enlarged
+body and brain size, he also needed greater nutrition, which eventually
+necessitated the introduction of meat into the diet and the invention of
+cooking to make these high-protein foods more efficient for digestion.
+There may well have been other social behaviors associated with this
+species, such as imitation, laughter, and other aspects of what Merlin
+Donald has called mimetic culture.2
+If we turn to the African Heidelbergs, we find another large increase
+in brain size and more complex behavioral patterns, in fact behaviors
+not far removed from those of our own species. Again we find an
+increase in group activities and the size of social communities. Trade
+comes into play, and anatomical changes in the vocal cord and ear
+canal announce the rudiments of more sophisticated speech. The use of
+
+ochre also offers the possibility of body ornamentation. And when we
+combine these behaviors with the mastery of fire, for which we have
+solid evidence beginning around 500,000 years ago, we have other implications as well, such as the likely appearance of music, song, dance,
+and architecture—to which I will return shortly.
+The appearance of modern humans in Africa around 200,000 years
+ago, again with larger brains, no doubt drew much from these earlier
+cultures and social behaviors. Our closest cousins, the Neanderthals,
+likely also emerged from the lineage of the Heidelbergs only slightly
+earlier than humans and they died out around 40,000 years ago. And
+the more we learn of the Neanderthals (who indeed had larger brains
+than humans), the more similar are the behaviors of the two species.
+In any case, those things that we hold up today as unique to human
+behavior, such as symbolism, complex language, and artistic representation, were really little more than icing on the cake, as it were, an
+evolutionary cake that had been baking for millions of years. Therefore the foremost question of many paleoanthropologists today is not
+what drove our evolutionary changes over the last 50,000 years, but
+what took place over the last two million years to create the particular
+behaviors that we today possess.
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+26
+27
+
+Another researcher to make a similar case but from a different perspective is the Oxford professor and evolutionary psychologist Robin
+Dunbar. He too first put forward his ideas in the 1990s by raising the
+question of what evolutionary factors could have led to the enlargement of an organ—the brain—that consumes twenty percent of the
+body’s energy production while possessing only two percent of the
+body’s mass.5 Darwinian principles of Natural Selection do not provide
+an adequate explanation. His answer effectively turned conventional
+evolutionary theory on its head because he argued that we are by
+nature social animals, and it was the cultural complexity of our ever
+expanding social networks (our families, friends, enemies, clans, and
+larger social alliances) that necessitated the expansion of our cognitive powers in order to cope with this social reality. In the two decades
+since Dunbar first put forward his “social brain hypothesis” a growing
+body of research has been amassing to support his contention.6 Today
+the importance of social cognition in sculpting our unique evolutionary
+trajectory is scarcely contested.
+
+The Social Brain Hypothesis
+The consensus that has been emerging in the last two decades is that
+the single most important factor driving anatomical changes and cognitive development in early human primates was the increasing complexity of their social life. This is a major departure from the tool-based
+measuring rod of just a few decades ago, and it is one that has in the
+last few years become supported with a gathering body of evidence
+gained from the increasingly more refined analysis of early hominin
+remains. We not only know our lineage much better, but we also have a
+much enhanced picture of aspects of our cognitive development.
+One of the first cognitive theorists in this regard was Michael
+Tomasello, currently the co-director of the Max Planck Institute for
+Evolutionary Anthropology in Leipzig. His research is different from
+others in that it is focused both on the cognition of great apes and the
+social development of children. And where many primatologists in
+the past have emphasized how similar we are to great apes in many of
+our emotional and behavioral patterns, Tomasello—by broadening the
+concept of cognition to include the social sphere—makes a strong case
+that we are quite unique within the primate world.
+His thesis is that early in our evolutionary history we initiated the
+process of cumulative cultural evolution, or the ability to take creative
+inventions and pass them down to succeeding generations for modification and improvement. The reason that we were able to create this
+cultural “ratchet effect,” as it were, was because we developed one
+social skill that the great apes did not, which was the ability to see
+other members of our species as intentional beings with mental lives
+similar to our own.3 This unique form of social cognition becomes
+evident in children around nine months of age, and by two years
+children already outstrip mature primates in their ability to commune
+with others in a process of joint intentionality and cooperation. In a
+more recent study he argues that this skill was likely first cultivated
+with the beginning of the Homo genus, but with the Heidelbergs came
+more sophisticated communicational tools, such as pantomime, simple
+representation, self-monitoring, inference, and a willingness to bind
+and conform with others in social groups.4 His argument is essentially
+a variation on niche construction. Just as we change the aspects of our
+cultural context, so does our ever-changing culture alter our cognitive
+structures.
+
+An Architectural Model of Cultural Development
+Both of these cases made on behalf of our fundamentally social natures
+were important developments within the context of the cognitive
+theories of the 1990s, but neither seeks to explain the neurological
+means by which early hominins pursued this particular social turn.
+No doubt there were a host of instrumental variables involved with
+sociality, such as the importance of bipedalism (face-to-face contact)
+and the new demands of collective foraging in the more exposed
+savannahs of East Africa, but the neurological maps and components
+for this social behavior had to be in place as well. Our interest at the
+present, however, is in incorporating this social turn into a more
+general cultural theory, one that can provide some insight into
+architectural design. Some interesting and recent philosophical models
+provide us with a means to do this.
+We are, as the phenomenologist Edmund Husserl noted many years
+ago, “animate organisms” sensorially and emotionally attuned to our
+surroundings. Yet the predominant interest of philosophy throughout
+the 20th century was its almost exclusive focus on the rational aspects
+of consciousness. Cognition, within philosophical literature in fact, has
+often been reduced to this single capacity: the exercise of the Cartesian
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+28
+29
+
+cogito. Theories of embodiment—the recognition that we are human
+beings whose minds, bodies, environment, and culture are interconnected at sundry levels—first appeared as a way to correct this bias.
+The first red thread connecting early embodied approaches, such as
+those of John Dewey and Maurice Merleau-Ponty, was the emphasis
+placed on the affective or emotional dimension to our cognition, which,
+save for a philosopher or two, has traditionally been much understated. The second has been the recognition that the perceiving body
+is not just a convenient biological housing for our mental engines, but
+the body, in the most fundamental ways, shapes our very thinking.
+This explanation, predicated on the discovery of mirror mechanisms in
+humans, has sometimes been called a sensorimotor or embodied model
+of cognition. As Vittorio Gallese and George Lakoff have discussed it in
+relation to language, we code or traduce environmental stimuli into action potentials—that is, we conceptualize objects not through a process
+of abstraction but through the perceptual act of simulating how they
+are to be responded to, handled, or manipulated. Language likely came
+about not through some new mental process of symbolic cognition, but
+through our real-life encounters with the environmental field—that is,
+our ability to interpret gestures and later translate them into sound.7
+The idea of embodied cognition has also been emphasized by many
+present-day phenomenologists.8 Because the brain, body, physical and
+cultural environments are dynamically integrated with each other on
+multiple levels, the developmental process of human life reconstructs
+itself with each new generation in response to the ever-changing genetic, cellular, social, and cultural factors. The brain, the body, and the
+environment are in effect codetermining of each other and therefore coevolving. These ever-changing dynamic fields, as Evan Thompson and
+Francisco Varela have characterized them, take place on three levels or
+cycles of operation: 1) the organismic regulation of the body through
+homeostasis; 2) the sensorimotor and affective coupling between the
+organism and environment; and 3) the intersubjective or socio-cultural
+interactions with others, again mediated by our sensorimotor and affective systems.9 Collectively, these three cycles provide a theoretical
+model for architectural design.
+Homeostasis is eased by built environments that are moderate
+or conducive to the limits of our biological systems: healthful and
+designed with respect to our sensory needs and comfort. Of course this
+
+has been a long-standing baseline of good design, but when we come
+to the second cycle, the sensorimotor and affective coupling between
+the organism and the environment, we see this problem in an entirely
+new light. How do we, as animate organisms, respond to certain architectural materials, spaces, lighting conditions, scales, degrees of detailing or ornamentation, tactile and auditory stimuli? This is a fecund
+area for both psychological and neuroscientific research, and with the
+new neuroimaging technologies available we will no doubt see many
+breakthroughs in our understanding of these matters in the near future. The objective is not to provide norms or guidelines for design but
+rather to understand the human experience of the built environment in
+order to align the design better with our biological natures.
+My interest today, however, is with the third of these cycles, our intersubjective or socio-cultural interactions with others. Here again, as with
+theories of embodiment, the same two developments of the 1990s—a
+new emphasis on emotion and the discovery of mirror mechanisms—
+have paved the way toward a much better understanding of our social
+and cultural needs. Our transformational understanding of human emotion, in large part owed to the pioneering efforts of Jaak Panksepp and
+Antonio Damasio, has already had a momentous effect on the human
+sciences.10 Today emotion is no longer viewed as a psychological state of
+mind in opposition to logical reasoning, but as reason’s very biological
+foundation. Emotions are simply “affect” or electrical/chemical programs
+that shape or shortcut the way in which we perceive the world, basically as pleasurable or non-pleasurable events. In its simplest definition,
+emotion is the pre-reflective response of an organism to a stimulus, and
+translated into architectural terms it can be described the pre-reflective
+response of the human organism to the built environment. All architectural design is emotional—both on the level of our coupling with the
+built environment (whether we like the design or not) and in how our
+design mediates or fosters our socio-cultural interactions with others.
+The discovery of mirror mechanisms has similarly provided a new
+insight into how we perceptually engage with the world. They were
+first discovered in macaque monkeys in a lab at the University of Parma in the early 1990s, and within a few years humans were also shown
+to possess them, although in a more complex way.11 Mirror mechanisms are sensorimotor circuits that fire not just when we perform an
+action, but when we see or hear someone else performing an action,
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+30
+31
+
+such as playing the piano or lifting a tea cup. Effectively, parts of our
+sensorimotor circuits respond as if we were performing the action, excluding those motor circuits by which we would actually perform the
+action. The process has been called one of “embodied simulation” and
+it is the reason why we enjoy watching an athlete or a ballet dancer. In
+the last regard, we in our own minds become the dancers on the stage.
+Around the turn of this century the issue was raised of whether
+mirror mechanisms might also explain how or why we are so facile
+at reading or sharing the emotions of others. Our eyes may well with
+tears in watching a sad movie, and a happy person entering a room
+quickly brightens the mood of others. If we see a friend, we seem to
+know immediately their state of mind, as if we share an empathic accord with them. A series of neuroimaging studies were undertaken to
+probe the basis of human empathy, and in one notable experiment, in
+which subjects watched actors displaying emotions of “disgust” after
+inhaling the contents of a vial, scientists found the activation of circuits
+in two areas of the brain (anterior insula and anterior cingulate cortex)
+in which we process and monitor our own feelings of disgust.12 It
+seems that through certain mirror mechanisms we internalize neurologically the emotions of others.
+The way in which these mirror mechanisms operate with regard
+to emotions is still being debated today, in large part because of the
+complexity of the problem. Human empathy possesses deep evolutionary, biochemical, and neurological underpinnings, which activate the
+cortical and limbic areas, brainstem, autonomic nervous and endocrine
+systems. Nevertheless, these mirror circuits do underscore just how
+basic empathy or sociality is to our human natures. We do not become
+social through cultural training; we are born social. In one recent study
+utilizing four-dimensional ultrasonography, twins in the womb were
+shown to be responsive to one another as early as fourteen weeks after
+conception.13
+What has emerged from this new perspective of ourselves is also
+a very tidy explanation of how we have distinguished ourselves from
+our primate ancestors. We took the mirror mechanisms already present
+in our primate ancestors and—over the course of two-million years—
+bridged the cognitive, sensorimotor, and somato-visceral dimensions
+of our evolution. At the same time we cultivated a new and more complex social cognition, allowing us as well a unique sense of self.
+Above Left and Right: “Disgust,” from Charles Darwin, The Expression of Emotion in Man and
+Animals (1872).
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+32
+33
+
+Aesthetic Attunement
+Our essential social natures carry with them a host of architectural implications of which architects have long been familiar, such as the extent
+to which our environments promote or inhibit social behavior. Again, I
+do not believe a cultural theory can provide any firm guidelines in this
+regard, but it can provide important insights into the aesthetic dimensions of our being. One implication of sociality on which I want to focus
+today is what I will refer to as aesthetic attunement. The word attunement carries with it a revealing musical connotation, but it also can imply an affective sense of mood or atmosphere. The word is reminiscent
+of the advice that Aldo van Eyck repeatedly offered designers, which is
+to think of architecture not in abstract terms such as space and time, but
+rather in more social terms as “place” and “occasion.”14 The anthropological point he was making was how deeply rooted in our human
+natures is this impulse for social and communal aesthetic expression.
+Earlier in my cultural timeline with regard to the Heidelbergs, I made
+reference to music, dance, and the practice of architecture appearing
+as early as 500,000 years ago. Let us take the case of architecture first.
+In the 1960s a Paleolithic settlement was unearthed under the present
+city of Nice, France, where the outlines of a number of timber huts with
+center posts were found, some huts over twelve meters in length and
+each had a hearth inside. The Mediterranean community was occupied
+by the Heidelbergs and was dated to 380,000-400,000 years ago, or twice
+the vintage of Homo sapiens.15
+Over the last thirty years, excavations have unearthed a lakeside
+settlement in central Germany, revealing the footprints of what seem
+to be three round living structures with hearths outside their doors.
+Archaeologists also uncovered several workshop areas and a large
+circular paved area approximately ten meters in diameter, in which
+ritualistic events had taken place. The occupants of this village were
+not the Heidelbergs but later members of Homo erectus, who dwelt there
+around 370,000 years ago.16
+In a cave approximately forty-five kilometers west of Barcelona,
+extensive diggings have uncovered a rich collection of artifacts. On
+one level archaeologists found the imprints of timber posts, presumed
+to be part of a lean-to structure built against the rear of the cave wall.
+Inside the outlines of the structure were five hearths, a little over a
+
+Above: Gottfried Semper, 1878. Courtesy of the GTA, ETH-Hönggerberg.
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+34
+35
+
+meter apart, around which four to six family members likely gathered.
+Vegetal deposits seem to be remnants of grass beds, suggesting a cozy
+cave community inhabited around 55,000 years ago. The inhabitants of
+this cave were Neanderthals.17 	
+My point in these three examples is not to quell our sense of human
+pride, but rather to demonstrate that many if not most of our human
+behaviors, including that of building habitats, are older and more
+widespread than our particular species. And the common denominator in all three examples is the hearth, which the 19th-century architect Gottfried Semper called the “social motive” for architecture. His
+premise, first articulated in 1851, was that there were four primordial
+motives underlying design: the hearth, mound, roof, and the textile
+motive of enclosure.18 The hearth was the social motive because it was
+around the fire that the first human gathered after the chase to enjoy
+a meal and engage with each other socially. The other three motives
+arose to protect this “moral” element. The mound or platform raised
+the fire off of the damp earth, a structural framework allowed a roof
+overhead, and vertically hung mats shielded it from the wind. Yet if
+people gathered around a hearth to keep warm or enjoy a meal, what
+else did they do?
+No one will ever know when the first member of Homo erectus fell
+into a dance, but we know that he had an erect frame, good musculature, and the physical endurance well suited to dance, and it is highly
+likely that he danced. Similarly, no one will ever know when a human
+ancestor employed a bone to make a rhythmic beat on a tree trunk or
+hollowed log, but it was undoubtedly far in the past. The mere exercise
+of walking upright on two legs cultivates a sense of rhythm, something
+deeply rooted in our actions and leisure sporting activities. Once again,
+no one will ever know when a mother first hummed a quieting song to
+a newborn infant, but no one seriously disputes the universal affiliative
+interactions between mothers and infants. They are evident in every
+species, and it is likely that the first hominin lullaby was hummed very
+long ago in our evolutionary past.
+We have evidence of the first hominin cultivation of fire 1.6 million years ago, and we have widespread evidence of large communal
+hearths beginning around a half-million years ago. So again I raise the
+question: What did human ancestors do around the fire? How did they
+socially engage with one another? I do not think it is much of a stretch
+
+to suggest that they likely devised the rudiments of the ritual, temporal, narrative arts.
+Neuroimaging today is revealing that the circuits for processing
+music and language overlap and are intertwined, suggesting that
+music and language likely arose as two related forms of human vocal
+activity. The anatomical changes allowing nuanced vocal expression—
+the drop of the larynx, the development of the hyoid bone and hypoglossal canal, the rounding of the ribcage and the thoracic respiratory
+muscles allowing extended expiration—all were on the road to their
+human formation around 1.5 million years ago, although they were not
+fully developed until 100,000 years ago. This in itself suggests the long
+and progressive development of the artistic instinct.
+Much discussion of human empathy has centered on just how attuned we are to each other emotionally, how being around another
+person can awaken a mood within us, how a simple event around a
+campfire can instill in us a powerful and unforgettable memory. Many
+writers have attributed the same power to architecture—that is, how
+a good architect informs a built environment with a range of potential
+moods and creative sensibilities. In their writings Juhani Pallasmaa and
+Peter Zumthor have repeatedly invoked the term “atmosphere” in relation to architecture, in relating how the setting of a room or a view into
+a plaza informs the behavior of those experiencing it. From a social and
+cultural perspective, then, architecture can be defined as the creation of
+mood, the making of a place for social rituals, the modest interchange
+of ideas, or even a good night’s sleep. Yet this empathic attunement
+with others seems increasingly difficult to maintain as a priority in
+today’s design process. The software programs of the digital age will
+certainly not promote it, and university courses related to humanist
+themes have over the years been removed from the architect’s education. How do we regain this sense of culture? How do we cultivate
+aesthetic sensibilities in sympathy with our new understanding of who
+we really are?
+As a historian I am drawn to historical examples. Some years ago
+I did an abundance of research on the ideas of Gottfried Semper. In
+re-reading him recently I was struck by how his style theory was in so
+many ways a cultural theory applied to architecture. On a pragmatic
+level, his Style in the Technical and Tectonic Arts (1860-63) was a stylistic
+interpretation of every known culture of his day—everything from the
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+36
+37
+
+design of Assyrian warrior helmets to Maori tattoos and Scandinavian
+stave churches. On another level, however, it was an exposition of
+aesthetic attunement, how architecture and music have their mutual
+origin in rhythmic space and time movements, a string of pearls, the
+beat of an oar, and social dances.19 Of his four motives for architecture,
+there was one that was particularly dear to Semper, which was the
+textile or walling motive. It was the centerpiece of his cultural theory
+because it was inherently aesthetic in the very act of its making, already
+artful when the first human strung two branches into a wreath or wove
+two different colored grasses into a mat.
+His fascination with this motive also led him to his principle of
+Bekleidung, or the act of “dressing” a work with aesthetic sensibilities,
+which for him achieved a particularly brilliant apotheosis in Hellenic
+culture. In his lengthy elaboration of this theme, he opens with a commentary on Hellenic clothing, once again underscoring the cultural
+perspective. He cites a fragmented passage from Democritus, who
+commented on the “violet-blue, purple, and saffron-yellow patterns”
+displayed in the undergarments of Ephesian women, which Semper
+follows with a detailed description of the beauty of the draped peplos
+and Doric chiton.20 Such observations on clothing might seem remote
+from the practice of architecture, but his point is precisely the opposite. If the jewelry and draped clothing of the Ephesians had attained
+
+such exquisite refinement in their lines, materials, and color during
+this period of art, the lines, materials, and polychrome dressings of
+their monuments must have been similarly inspired. In short, Greek
+garments and Greek monumental architecture arose from one and the
+same artistic culture, and therefore exhibited the same expression of
+aesthetic consciousness. Thus the Greek temple, and its improvised
+predecessor, was a less a religious edifice than a social or celebratory
+building dedicated to its cultural foundation. In his words,
+
+Above: Caryatids, South Porch of the Erechtheum, Athens.
+Photo by Thermos, Creative Commons.
+
+Above: Gottfried Semper, Reconstruction of the Acropolis in Athens, around 1833
+(watercolour, 18.6 x 34 cm, mounted on a paper of 26.9 x 41.1cm),
+Courtesy of the GTA, ETH-Hönggerberg.
+
+Architecture and Empathy
+
+Harry Francis Mallgrave
+
+The festival apparatus—the improvised scaffold with all
+its splendor and frills that specifically marks the occasion for celebrating, enhances, decorates, and adorns
+the glorification of the feast, and is hung with tapestries, dressed with festoons and garland, and decorated
+with fluttering bands and trophies—is the motive for the
+permanent monument, which is intended to proclaim to
+future generations the solemn act or event celebrated.21	
+
+It is at this point that Semper inserts his very telling footnote on the
+“the dressing and the mask,” an aesthetic and humanistic motive that
+was for him as old as humanity. Architecture, similarly, was nothing
+less than the quintessential expression of human culture, the art of
+masking social form in a way that reveals the universality of human
+
+38
+39
+
+artistic impulses. It is an art, moreover, enshrined in every genuine
+cultural event, from the allegorical sculptures of Phidias to the bardic
+observations of Shakespeare:
+I think that the dressing and the mask are as old as human civilization and that the joy in both is identical to the
+joy in those things that led men to be sculptors, painters,
+architects, poets, musicians, dramatists—in short, artists.
+Every artistic creation, every artistic pleasure, presumes
+a certain carnival spirit, or to express it in a modern way,
+the haze of carnival candles is the true atmosphere of
+art. The destruction of reality, of the material, is necessary if form is to emerge as a meaningful symbol, as an
+autonomous human creation.22
+
+There is a fear in some academic circles that drawing upon the knowledge now being gained in the new interdisciplinary fields will somehow lead architecture into the creative dead end of determinism and
+cold repression. I could not disagree more strongly with such a view
+and in fact believe the opposite to be the case. The point Semper makes
+in these cited passages is precisely the point that we should bring into
+our discussions of cultural theory and architectural practice today. If
+indeed our early human ancestors engaged in laughing, singing, and
+dancing around a fire as early as a million years ago, we should at last
+recognize ourselves for the singers, dancers, and masked personas we
+really are. “Who in the world am I?” Lewis Carroll once asked. We are,
+for the first time in human history, beginning to identify crucial pieces
+of this great puzzle. And this new “humanist” knowledge, far from being reductive, will actually allow us to reclaim the multiple dimensions
+of our ever more distant humanity.
+
+Notes
+1	
+
+2	
+
+3	
+
+4	
+
+5	
+
+6	
+
+7	
+
+8	
+
+9	
+
+10	
+
+11	
+
+Architecture and Empathy
+
+Jean-François Lyotard, The Postmodern Condition: Report on Knowledge,
+trans. Geoff Bennington and Brain
+Massumi (Minneapolis: University of
+Minnesota Press, 1979), xxiv.
+Merlin Donald, A Mind So Rare: The
+Evolution of Human Consciousness
+(New York: W. W. Norton & Co., 2001).
+Michael Tomasello, The Cultural Origins of Human Cognition (Cambridge,
+MA: Harvard University, 1999), 5.
+Michael Tomasello, A Natural History
+of Human Thinking (Cambridge, MA:
+Harvard University Press, 2014), 48-66.
+Robin I. M. Dunbar, “The Social Brain
+Hypothesis,” Evolutionary Anthropology 6 (1998).
+See Clive Gamble, John Gowlett, &
+Robin Dunbar, Thinking Big: How
+the Evolution of Social Life Shaped
+the Human Mind (London: Thames &
+Hudson, 2014).
+Vittorio Gallese & George Lakoff, “The
+Brain’s Concepts: The Role of the
+Sensory-Motor System in Conceptual
+Knowledge,” Cognitive Neuropsychology 22:3/4 (2005), 455-79.
+See Evan Thompson, Mind in Life:
+Biology, Phenomenology, and the
+Sciences of the Mind (Cambridge, MA:
+Harvard University Press, 2007).
+Evan Thompson & Francisco Varela,
+“Radical embodiment: neural dynamics and consciousness,” Trends in
+Cognitive Sciences 5:10 (February
+2001), 424.
+See Jaak Panksepp, Affective Neuroscience: The Foundations of Human
+and Animal Emotions (Oxford: Oxford
+University Press, 1998); Antonio
+Damasio, Descartes’ Error: Emotion,
+Reason, and the Human Brain (New
+York: G. P. Putnam’sSons, 1994).
+See Giacomo Rizzolatti & Corrado
+Sinigaglia, Mirrors in the Brain: How
+Our Minds Share Actions and Emo-
+
+Harry Francis Mallgrave
+
+tions (Oxford: Oxford University
+Press, 2008).
+12	 Bruno Wicker et al., “Both of Us
+Disgusted in My Insula: The Common
+Neural Basis of Seeing and Feeling
+Disgust,” Neuron 40 (October 30,
+2003), 655-64.
+13	 Umberto Castiello et al., “Wired to
+Be Social: The Ontogeny of Human
+Interaction,” Plos One 5:10 (October
+2010), e13199, 1-10.
+14	 Aldo van Eyck, “Kaleidoscope of the
+Mind,” in Miracles of Moderation, Eidgenössische Technische Hochschule
+Zürich (1976).
+15	 Henry de Lumley (sous la direction
+de), Terra Amata: Nice, Alpes-Maritimes, France (Paris: CNRS, 2009).
+16	 Dietrich and Ursula Mania, “The
+natural and socio-cultural environment of Homo erectus at Bilzingsleben, Germany,” in Clive Gamble and
+Martin Porr, The Hominid Individual
+in Context: Archaeological investigations of Lower and Middle Palaeolithic landscapes, locales and artefacts
+(London: Routledge, 2005).
+17	 Vallverdú, Josep et al., “Sleeping
+Activity Area with the Site Structure
+of Archaic Human Groups: Evidence
+from Abric Romaní Level N Combustion Activity Areas.” Current Anthropology 51:1 (February 2010).
+18	 See Gottfried Semper, “The Four Elements of Architecture,” in Gottfried
+Semper: The Four Elements of Architecture and Other Writings, trans. H.
+F. Mallgrave and Wolfgang Hermann
+(New York: Cambridge University,
+1989), 102-03.
+19	 Gottfried Semper, Style in the Technical and Tectonic Arts; or, Practical
+Aesthetics, trans. H. F. Mallgrave and
+Michael Robinson (Los Angeles: Getty
+Publication Programs, 2004), 82.
+20	 Ibid., 237-41.
+21.	 Ibid., 249.
+22	 Ibid., 438-39.
+
+40
+41
+
+Sarah Robinson
+Boundaries of Skin:
+John Dewey, Didier Anzieu and
+Architectural Possibility
+
+Born of the Body
+We are born of the body and we are born incomplete. Human infants
+complete the last half of our gestation outside of the womb.1 The transition from a hunched posture to an upright walking position necessitated a smaller pelvis, which means that the fetus must exit the womb
+before its head grows too large to pass through the birth canal. Human
+gestation thus has an internal and an external phase; the developmental process initiated inside the mother continues in intimate proximity
+with her body after birth. Though vulnerable and utterly dependent,
+the newborn is far from helpless, and arrives fully equipped to elicit
+its own care. The baby’s delivery effects changes in the mother’s body;
+bringing in her milk and flooding her with hormones that reinforce
+bonding and increase pleasure. “When a baby is born a mother is born,
+too,” Ashley Montagu observed.2 This intimate collaboration creates a
+second protective envelope whose integrity and efficacy critically support the baby’s development and help it to flourish.
+Our transition to the upright walking position also coincided with
+the loss of our fur. The difference between human beings and other
+mammals resides not solely in the greater size of our brains, but also
+in the fact that our skin has softened and shed its hairy cloak. Our loss
+of fur was an adaptation that afforded intensified bonding between
+mother and baby. Skin to skin contact creates a thermal, emotional,
+communicative, sensorimotor condition that extends the envelope
+of the original womb. From this protected position, the baby’s world
+gradually extends outward through an entourage of signals to the fam-
+
+Above: Pablo Picasso, A Mother and Child and Four Studies of Her Right Hand, 1904.
+Harvard Art Museums / Fogg Museum, Bequest of Meta and Paul J. Sachs
+© Estate of Pablo Picasso / Artists Rights Society (ARS) / Kuvasto 2015.
+
+Architecture and Empathy
+
+Sarah Robinson
+
+42
+43
+
+ily, the community and the larger environment. Clues about external
+reality come forth in smiles, sounds, gentleness of contact, warmth of
+embrace, solidity of carriage, the rhythms of rocking, the availability of
+feeding, the quality of attention and the presence of others. Basic needs
+like feeding and protection are accompanied by tactile, visual, auditory and olfactory communication. The fulfillment of these vital needs
+in the absence of sensory and affective exchanges is known to cause
+irreparable physical and psychological damage or even death to the
+baby.3 Evidence from the fields of interpersonal neurobiology and developmental psychology unequivocally concur that the biological and
+social consequences of this early matrix of care cannot be overstated.4
+	
+Abandoning the Isolated Self
+The loss of our fur and the consequent exposure of our skin to the
+external world is ripe with biological, psychological, social and architectural implications. Our highly developed social intelligence is one
+outcome of this primeval shift. To understand the full import of this
+tradeoff we must, as the artist Paul Klee recommended, “return to our
+origins”. The embryonic origin of the nervous system comes from what
+were initially ectodermal cells, layers that were destined to become
+our skin. Within our skin, the nervous system is distributed over and
+through our entire body. Our skin is our earliest and most fundamental
+medium of contact with our world, which is one reason that we call
+touch the mother of the senses. We transmigrate from the aqueous
+womb, to the outside world clothed in the same skin. In essence, the
+skin is the surface of our nervous system turned inside out. The origin
+of our neural tissue suggests that its purpose is synonymous with that
+of the skin—both serve to connect our inner and outer worlds.5
+The origin of all of our lives is the transition from the interior of our
+mother’s body into the matrix of relationship in which we become fully
+human. This reality means that the notion of the self as an isolated individual is philosophically erroneous and scientifically obsolete. In place
+of this image it is more accurate to adopt Antoine de St. Exupéry definition of the self as, “a knot into which relationships are tied.”6 We are
+bound to the constraints and affordances of our biological, emotional,
+and socio-cultural milieu. We become individuals through the constant
+interplay and reflexive plasticity of interpersonal and environmental
+forces. The true unit of evolution, then, is not the individual and his im-
+
+mutable genetic repertoire, but the whole dynamic of the organism in its
+environment. This means that we need to shift our preoccupation with
+internal realities outward enough to notice the myriad and subtle ways
+that the external world constantly shapes us. Fully coming to terms with
+this profound interdependence demands that overcome the dualities
+that have long separated mind from body, nature from nurture, culture
+from biology and the built environment from its natural source. Because
+the pragmatist philosopher John Dewey dedicated himself to overcoming such false dichotomies, his work is very helpful in this regard.
+
+Architecture and Empathy
+
+Sarah Robinson
+
+Feelings as Senses
+Dewey’s interpretation of emotion was perhaps the most controversial
+and misunderstood aspect of his philosophy. He did not consider emotions to be internal subjective states but rather objective indications of
+the way experience reveals the world. While some feelings do indeed
+refer to the bodily states and psychic attitudes of the organism, all feelings are felt in relation to the objects they qualify. He argued,
+The object and the feeling cannot be separated; they are
+factors of the same consciousness […] The connection is
+not an external one of the feeling with the object, but an
+internal and intimate one; it is the feeling of the object.
+The feeling loses itself in the object.”7
+
+Feelings belong not strictly to the person, but to the whole situation—
+as Dewey often pointed out, we say that, “The food is agreeable […]
+that landscape is beautiful, or that act is right.”8
+Dewey’s understanding of emotions seems radical because it upsets our inherited epistemological categories, yet he was not alone in
+recognizing the flaws of existing modes of thinking. Gregory Bateson
+similarly wrote,
+The relationship between the self and others, and the
+relationship between self and environment, are, in fact,
+the subject matter of what are called ‘feelings’—love, hate,
+fear, confidence, anxiety, hostility, etc. It is unfortunate
+that these abstractions referring to patterns of relationship have received names, which are usually handled in
+ways that assume that the ‘feelings’ are mainly charac-
+
+44
+45
+
+terized by quantity rather than by precise pattern. This is
+one of the nonsensical contributions of psychology to a
+distorted epistemology.9
+
+To understand emotions in this way replaces the image of the isolated observer, whose feelings are wholly internal, with one of an active
+participant in a sentient and responsive world of qualities that he/she
+makes sense of through individual bodily experiences. Language further corroborates this view. In Italian, the word sentire refers not only
+to feeling, but also to tasting and hearing and general sensing; it is the
+source of the word ‘sense’ and ‘sentiment.’ Similarly, the English word
+feeling encompasses both our emotional state and our sense of touch.
+The word feeling derives from the Greek root meaning ‘to pluck, as in
+to pluck a harp.’ Emotion does indeed set a wave in motion. Dewey understood emotions to be eruptions in the dynamic patterns of relationship—a kind of sensory perception, forming and informing our active
+engagement in the world. As the etymology of language confirms, we
+cannot separate our feelings from our bodily ways of perceiving the
+world or divorce our senses from our feelings. Through our feelings we
+make sense of the whole of the situation in which we find ourselves—
+things begin to ‘make sense’ when grasped in this holistic way.
+
+problematic and ultimately untenable.”12 Emotion and cognition are
+interdependent dimensions of behavior that result from the activity
+of multiple brain regions that are neither intrinsically emotional nor
+cognitive, but contribute to behavior in distinct ways depending on the
+broader neural context in which they participate.13 According to the
+developmental psychologist and neuroscientist Kenneth Dodge,
+All information processing is emotional, in that emotion is
+the energy that drives, organizes, amplifies and attenuates cognitive activity and in turn is the experience and
+expression of this activity.14
+
+The philosopher Giovanna Colombetti characterizes emotions as
+self-organizing dynamic patterns that may be most effectively described
+with the conceptual tools of dynamical systems theory. In her book,
+The Feeling Body, she reclaims a broader and deeper notion of emotion
+similar to the one espoused by Dewey. She understands emotions to
+be sources of meaning that ground the more elaborate modes of sense
+making in complex organisms; arguing that, “The richer and more
+differentiated emotions that one finds in animal and human lives are
+enrichments of the primordial capacity to be sensitive to the world.”15
+
+Dewey was well aware of the integrating role of emotion long before it
+was confirmed by neuroscience. Like all of our senses, emotion is not
+limited to a specific circuit or region of the brain. The limbic region,
+once thought to be the center of emotion, appears to have wide ranging effects on most aspects of mental functioning.11 After extensive
+research on the literature of brain regions traditionally associated with
+emotion and cognition, the neuroscientist Luiz Pessoa concluded that,
+“parceling the brain into cognitive and affective regions is inherently
+
+An Ecology of Empathy
+Like our emotions, empathy is a further expression of our innate sensitivity to the world. Dewey thought that empathy was rooted in our
+imaginative capacity, and he used the terms somewhat interchangeably—calling imagination empathic projection16 and defining empathy
+as “entering by imagination into the situations of others.”17 In his view,
+imagination and empathy are neither over and above our other sense
+faculties, nor the exclusive capacities of the artist. Dewey stressed
+that imagination is as normal and integral to daily life as is muscular
+movement.18 Imagination is another kind of perceptual capacity—one
+that amplifies perception beyond the immediate milieu, temporally
+extending the environment in which we respond. Imagination is the
+capacity to transform the possible into the actual, as Dewey said, “Only
+imaginative vision elicits the possibilities that are interwoven in the
+texture of the actual.”19
+Such an understanding extends far beyond a plea for the domi-
+
+Architecture and Empathy
+
+Sarah Robinson
+
+The Integrative Role of Emotion
+Not only does the direct sense element—and emotion is
+a mode of sense—tend to absorb all ideational matter,
+but apart from a special discipline enforced by physical
+apparatus, it digests and subdues all that is merely intellectual.10
+
+46
+47
+
+nance of the poetic imagination over the logical intellect, and beyond
+the dualities of reason and imagination—faculties that Dewey argued
+can be only distinguished in a heuristic or operational way. All mental
+life is imaginative in so far as it “supplements and deepens observation,” by permitting, “clear insight into the remote, the absent, the
+obscure.”20 Dewey warned against the tendency to equate the imaginative, which is interactively engaged and rooted in actual conditions,
+with the imaginary, which is subjective. Consistent with his interpretation of emotion, neither the imaginary nor the imaginative occur ex
+nihilo, apart from the bio-sociocultural matrix, rather they inhere in the
+organism-environment interaction.
+Whereas imagination extends and amplifies the world temporally—
+pulling the possible into the real—I would suggest that empathy extends
+our world spatially. Where imagination reaches into the future, empathy
+enables us to project ourselves into the inner worlds of the other on the
+basis of our own bodily states. Our bodily states do not overlap with
+the bodily states of others, they are two distinct points of origin that are
+bridged by empathy. This inborn pre-reflective capacity to perceive the
+experience of others through the tissue of our own bodies—regardless
+of whether those others are persons, creatures, places or things—is a
+dynamic pattern of relationship that extends our awareness of the multilayered emotional latency inhering in the situation. Empathy expands
+the domain of the personal to encompass the felt experience of the other,
+enlarging, enriching and informing the basis of our possible actions.
+Profoundly relational and inherently ecological, empathy reveals
+the structure of our interaction with the world. The Czech philosopher
+Jan Patočka said that, “The world is an empathy of a kind.”21 What
+I think he means by this, is that empathy allows us to connect to the
+world through our own bodies and in turn, the world opens itself to
+us as we feel our way into it. As the mutuality of the mother-baby relationship exemplifies, we dwell in a reciprocating circuit. We are built
+to be received into a world to which we must connect, into a world that
+fits us. Empathy is this deep reflexivity at the heart of life.
+If we were to consider empathy as a feature of our sensorimotor perceptual system, we would find its organs distributed widely
+throughout the body-brain, intricately multimodal and amenable to
+education and refinement. This is the case with mirror neurons—they
+respond not only to visual stimulus but also to the sounds associated
+
+with specific actions, suggesting they are organs of a far-reaching,
+deeply rooted empathic sense.22 Indeed, Vittorio Gallese, a contributor
+to this volume and one of the original discoverers of mirror neurons,
+suggests that they are most likely one aspect of the more pervasive
+process of embodied simulation. He describes this process as an
+automatic, unconscious and pre-reflective function of the brain-body
+system that models objects and events initially triggered by perception
+and subsequently modulated in the interplay of contextual, cognitive
+and personal factors.23
+
+Architecture and Empathy
+
+Sarah Robinson
+
+An Architecture of Integration - an Emerging Paradigm
+The discovery of mirror neurons and the interdependence of the human nervous system on the broader ecology to which we belong has
+renewed and reinforced earlier intuitions about human nature. Native
+peoples throughout the world have long celebrated the interconnectedness of all of life. The major world religions all hold compassion, a variation of empathy, as a core teaching. Yet these views have been marginalized in the Western emphasis on individualism, industrialization
+and technological progress at all costs. Unfortunately, this dominant
+paradigm is responsible for much of our contemporary architectural
+landscape. Unresponsive to human vulnerability, far too many of our
+buildings are objects whose insensitivity denies the interdependence
+that makes us human in the first place.
+Our architecture sediments our social, cultural and political values
+and aspirations; it is a means through which we externalize our most
+deeply held beliefs about ourselves and our relationship with the cosmos. And we are finding that many of our most cherished beliefs have
+lost their validity. Our long held segregation of emotion from cognition
+is not just an idea, it has been a guiding tenet in the formation of our
+educational systems and our buildings as well as contributing to the reification of gender inequalities. The notion that reason is cognition bled of
+emotion, and as such the defining feature of our humanity, has been institutionalized at every level of Western society. Affirming that emotion
+is integral to our being in the world, to decision-making and to reason,
+that emotion and imagination are immanent in every mental activity,
+and that empathy is a critical capacity that can either wither or flourish
+depending on environmental factors, necessitates far reaching changes in
+the way we educate our children and the way we design our world.
+
+48
+49
+
+Architecture, because it exists at the intersection between natural and
+human, between biological and cultural worlds, has long relied upon intellectual developments in other disciplines. The rich insights uncovered
+by neuroscience are poised to enrich and inform design and architectural practice, yet we need to recognize that importing knowledge from
+other fields also holds potential dangers. To mitigate potential misapplication or reduction of one field of knowledge to that of the other, we
+need to recognize the limits and intended aims of each discipline.
+The ‘Skin-Ego’
+Here I would like to introduce the work of the French psychoanalyst
+Didier Anzieu, because his struggle to place psychoanalysis on a firm
+biological footing without sacrificing the wealth of its socio-cultural
+and creative insights provides a striking parallel to the situation that
+we architects confront as we assimilate the knowledge offered to us by
+neuroscience.24 While I cannot give Anzieu’s work the detail it deserves
+here, I do want to outline his general motivations and recurring concerns. He worked from the 1950‘s through to the 1990‘s, during a time
+when the physical and biological sciences were achieving considerable
+success by narrowing their field of observation and theoretical interest.
+Anzieu resisted the pressure to impose such a methodology on psychology for fear that it would reduce the living body to the brain and
+behavior to the cerebral functions for which it had been programmed.
+He welcomed the new insights offered by neurophysiology with exemplary sophistication and recognized that while knowledge of the structure and functioning of the nervous system can afford great insight into
+psychic phenomena, it does not, in itself, explain that phenomena.
+Anzieu’s thinking echoed Dewey’s when he wrote,
+Physiology can no more, of itself, give us the what, why,
+and how of psychical life, than the physical geography of
+a country can enable us to construct or explain the history
+of the nation that has dwelt within that country. However
+important, however indispensable the land with all its
+qualities is as a basis for that history, that history itself
+can be ascertained and explained only through historical
+records and historic conditions. And so psychical events
+can be observed only through psychical means, and interpreted and explained by psychical conditions and facts.25
+
+Architecture and Empathy
+
+In order to develop psychical means for understanding psychic phenomena, Anzieu thought it was important for the coming generation of
+psychiatrists to cultivate a facility for thinking in images. An image can
+generate an alternative model that respects the specificity of psychic
+phenomenon in the context of both social and biological realities. A
+theory that did not address these interacting dimensions, he thought,
+was destined to reduce psychology to neurophysiology’s poor cousin.
+Further, Anzieu found the prevailing fashion in the humanities of
+imposing linguistic explanations onto social and cultural phenomena to
+be inadequate. For him, the ego did not resemble a language, as it did
+for Lacan. Instead, Anzieu modeled his notion of the ego on the human
+body. He was able to overcome the dualities of culture and biology by
+introducing the ‘skin-ego’—a metaphor complex enough, and profound enough to contain both levels of reality. By emphasizing the skin
+as a basic datum of an organic and imaginative order, he rooted his
+thinking in the biological ground from which social interaction arises.
+The Necessity of Limits
+Along with his colleagues, Anzieu noticed that the nature of his patients’ suffering had shifted. The majority of his cases had previously
+been straightforward neuroses, but they now consisted of borderline—
+a state that borders neurosis and psychosis and possesses features
+common to both—or narcissistic personalities. He was troubled that
+the modern age was producing psychological disorders that resulted
+from the abolition of boundaries. Whereas Freud developed psychoanalysis in response to the climate of Victorian puritanism, Anzieu’s
+psychoanalysis of limits addressed Western society’s utter lack of them.
+He insisted that,
+We need to set limits: on demographic expansion […]
+on the acceleration of history, on economic growth, on
+insatiable consumption […] on the compulsion endlessly to break records at the cost of over-training and
+drug taking, on the ambition to always go faster and to
+spend more, with all the overcrowding, nervous tension, cardiovascular illness and general discontent that
+results. We need to set limits on the violence wrought on
+nature as well as that perpetrated on human beings. This
+includes the pollution of the earth, sea and atmosphere,
+
+Sarah Robinson
+
+50
+51
+
+the squandering of energy, the need to produce everything of which we are technically capable even when that
+means creating mechanical, architectural, or biological
+monstrosities […] By refusing to set limits anywhere, we
+are headed towards catastrophe.26
+
+His insistence on establishing boundaries and acknowledging limits
+is even more urgently needed today. Marking out inhabitable, livable
+territories for ourselves in physical, psychological and cultural terms
+would counter the leveling and neutralizing forces that are the consequences of industrialization. The psychiatrist Iain McGilchrist says that
+most of his work essentially comes down to a matter of developing and
+negotiating boundaries.27 Such limits need not be rigid or dogmatic, but
+should be flexible and semi-permeable—like the boundaries that exist in
+nature. The walls of cells for example, serve both to individuate and to
+make mutual exchange possible. Boundaries limit and they also allow.
+Another symptom of this pervasive loss of limits is the tendency in
+Western thought to consider the acquisition of knowledge to be a matter of breaking through an outer shell to reach a nucleus or inner core.
+While such an epistemology contributed to obvious successes (as well
+as monstrous disasters) in the physical sciences, biologists who shifted
+their attention from the nucleus to the outer membrane discovered that
+the boundary of the cell functions as a sort of brain that programs ion
+exchanges between inner and outer domains. Our current focus on the
+brain as the center and source of all knowledge derives from a now
+exhausted epistemology. We tend to forget that the brain is the upper
+and expanded part of the central nervous system, whose primary
+function is to relate the organism to its environment. An environment
+that actively shapes thought and behavior, one woven through with
+intelligence, of which our individual nervous system is but a part. The
+word cortex, used to designate the outer layer of neural tissue, is the
+Latin word for bark or shell. Our brain itself is skin, wrapped in skin—
+it is center and periphery at once.
+Interpenetrating Envelopes
+The poet Paul Valéry captured this paradox of the skin when he wrote,
+That which is the most profound in the human being is
+the skin […] the marrow, the brain, all these things we
+Above: Deborah Barlow, Dolice 1, acrylic, oil, galkyd, powdered pigments, substrates
+and minerals on wood panel. Photo courtesy of the artist.
+
+Architecture and Empathy
+
+Sarah Robinson
+
+52
+53
+
+require in order to feel, suffer, think […] to be profound […]
+are inventions of the skin! […] We burrow down in vain,
+doctor, we are […] ectoderm.28
+
+Returning to clues from embryology—the skin, the sensorimotor
+organs and the brain are all formed from the ectoderm. The brain and
+the skin are both surface entities or shells consisting of at least two
+layers; the outer one is protective, and the one beneath serves to gather
+information and filter exchanges. Anzieu’s skin-ego is modeled on this
+organization of the nervous system. “It is this complex structure of
+surfaces, rather than the old image of thought penetrating through into
+a truth core, that can help us understand our physical, psychical and
+intellectual worlds in a different way,” he wrote. 29 He developed the
+skin-ego in response to the question, “What if thought were as much an
+affair of the skin as of the brain and what if the ego had the structure of
+an envelope?”30 He describes the skin-ego as a series of interpenetrating envelopes in which part and whole are interwoven, complementary, nested and subsumed within one another.
+An Epistemology of Relationship: Thinking Through the Skin
+Anzieu’s skin-ego developed out of his clinical experience. Most of the
+chapters in Le Moi-peau are case-studies, detailed narratives of actual
+patients. His metaphor was not merely a linguistic device or a literary
+flourish, it was a pragmatically generated set of operational concepts
+subject to factual verification. The skin-ego provided psychoanalysts
+with new tools for thinking beyond dualism and determinism. We architects have never been more urgently in need of the new approaches
+that a fresh way of thinking can provide. Fed up with the intellectual
+excesses of architectural theory in recent decades, we have been swept
+into the mandate for sustainability without a coherent philosophical
+framework. True sustainability demands more than merely technological solutions—it must be founded on an understanding of human
+nature that recognizes, affirms and supports our nascent vulnerability and interdependence. The tired dichotomies separating mind
+from body and the individual from social and natural worlds must be
+overcome with metaphors that are capable of containing, bridging or
+weaving together opposing sides.
+The body is the nexus between separate worlds. To tap the genera-
+
+Architecture and Empathy
+
+tive potential that exists at this interface, we must shift our attention
+away from the illusive center to the boundary that skirts its edge.
+Dewey’s conception of emotions and empathy reoriented epistemology
+in this very way; the internal private world of the individual shifted to
+the periphery, the site of relationship. Here, at the interface between,
+emotions are antennae that sound out circumstances, and inform our
+possible actions. And, what we pay attention to determines what we
+will find. In our obsession with penetrating the core, we forgot about
+the shell—when in fact the two hold each other, they interdepend—
+“the shell itself is marked by what it shelters,” wrote the psychoanalyst
+Nicholas Abraham.31 The intellectual tendency that reduces all human
+activity to the brain also contributed to our preoccupation with empty
+formal games. One of modernism’s breakthroughs was to find meaning
+in form by restoring its original function. The implications of this ideal
+have only been rarely understood because we persist in thinking of
+form and substance as two completely separate categories. Detaching
+the container from the contained, as if each could withstand a separate existence, is thinking about architecture in the way that Dewey
+described a particular kind of art. He said that, “Insincerity in art has
+an aesthetic, not just a moral source; it is found wherever form and
+substance fall apart.”32 Thinking through the skin, which is periphery
+and center at once, can begin to heal this persistent divide.
+Merleau-Ponty, Anzieu’s contemporary, was similarly convinced
+that the fold—the interface where the outside and the inside meet—is
+the turning point.33 Architecture is quite literally situated at the fold,
+shifting our attention to that juncture forces us to consider the agency
+and meaning of architecture in a new light. This is where neuroscience can fertilize architectural thinking, by revealing the complex and
+intricate functioning of our sensorimotor systems, by deepening our
+understanding of how our nervous system binds us to our world, and
+showing how that world doubles back to shape us.
+The Primacy of Touch
+Neuroscientists, for example, have linked the sense of touch, or somatosensory cortex function to empathic ability.34 Given our furless origins,
+the fact that skin is the largest organ, our earliest site of communication
+and a crucial part of the exterogestation of human infants, the correlation between empathy and touch should come as no great surprise.
+
+54
+55
+
+Indeed, Maine de Biran intuited that touch is the “feeding ground for
+the intellect, furnishing it with its more substantial nourishment.”35
+The wealth of colloquial and scientific terms related to touching and
+the skin make the word ‘touch’ the longest entry in the Oxford English
+dictionary. Juhani Pallasmaa uses the evocative image of the moebius
+strip to illustrate the way that the exterior world slides into our interior.
+The skin is this moebius strip—on the same surface we touch and are
+touched. The skin functions in a paradoxical manner, as an in-between,
+internal and external in all of its functions. Anzieu remarked on the inexhaustibility of skin in its potential associations and poetic evocations:
+The skin is permeable and impermeable. It is superficial
+and profound. It is truthful and deceptive. It regenerates,
+yet is permanently drying out […] It is the seat of wellbeing and seduction. It supplies as much with pain as
+pleasure […] in its thinness and vulnerability it stands for
+our native helplessness, greater than that of other species, but at the same time our evolutionary adaptiveness.
+It separates and unites the various senses.36
+
+The earliest shelters were made of skin and porous materials. For
+Black Elk, the teepee was the nest of nests while Arab tents were woven
+from goat hair and sheep’s wool.37 Houses in Japan were originally
+made of paper, grass, and wood—porous materials that filtered light
+and air. Our walls have necessarily hardened since their humble beginnings, but we have rendered our buildings inert by ignoring that the
+skin, and the boundary it creates, always serve a dual function: that of
+protecting and that of sensing. The best architects are marked by their
+keen awareness of this multifold task.
+Sensitizing Matter
+Alvar Aalto sensitized matter with his meticulous attention to materials
+that touch the body. He wrapped handrails and doors with leather to
+allow contact between skin and skin, our body heat is conserved in the
+transfer. Whereas every time we touch metal, heat conducts away from
+the skin, diminishing some measure of our energy in the exchange. He
+similarly wrapped concrete columns, an otherwise cold material, in rattan at body level; fully aware that in the presence of materials that were
+
+once living—that once breathed themselves—our bodies can loosen
+and relax.
+Steven Holl lined the formwork of the Herning Museum of Art in
+Denmark with fabric sacks in order to evoke the aging and vulnerability of skin. Peter Zumthor wrapped the surfaces of his Serpentine Pavilion in London with burlap coated in black paste.38 He chose the material for its texture, which would permit micro-shadows, deepening the
+darkness of the black. And also because he hoped that the familiarity
+of the material would trigger memories—dignifying the humble and
+capturing the mind of the perceiver in the interchange. Andrew Kudless made his ‘p_wall’ by pouring plaster into fabric that was allowed
+to sag. The result is a wall that evokes the contours of human bodies. It
+is no wonder that the viewers at the San Francisco Museum of Modern
+Art, where it was displayed, could not keep their hands off of it. Later,
+when the work was removed from the museum and left outside, birds
+built their nests within the shelter of its curves.
+
+Above: Andrew Kudless, Wall, 2009. San Francisco Museum of Modern Art. Photo
+courtesy of the artist.
+
+Architecture and Empathy
+
+56
+57
+
+At L’Institute du Monde Arabe, the architect Jean Nouvel was among
+the first to introduce movement into the skin of ubiquitous glass curtain
+wall. In a pattern evocative of Arabic latticework, metal diaphragms
+dilate like eyes in response to light, dramatically altering the interior
+atmosphere while regulating its temperature. Unlike Nouvel, whose
+brise soleil move mechanically (and unfortunately no longer function),
+the architect Doris Kim Sung is experimenting with thermal bi-metals
+that respond to environmental conditions biologically. Her installation
+in Los Angeles entitled Bloom, is a bimetal structure that resembles a
+gigantic orchid. The work is composed of 44,000 tessellated tiles, each
+of which is slightly different in size, shape, and position, allowing the
+whole structure to respond optimally to temperature fluctuations.
+She modeled her design on the skin of a fish. “A brick wall is the same
+shape over and over again,” Sung says, “but if you look at a fish, each
+scale is a unique size and conforms to its specific location.”39 Her early
+training as a biology major is evident in the sophistication of her design.
+The artist Ned Kahn, who trained formally in botany and environmental science, creates Wind Veils that grace the facades of parking garages. More than a strategy to mask the banality of the structure, when
+the veils shiver in the wind they create sound, shelter the interior by
+regulating light and air flow and render invisible air currents visible.
+In his work, Firefly, in San Francisco, the wind ennervates an array of
+panels that pivot in the wind, switching on a light within the panels. By
+day the large scale sculpture is a cascade of rippling glass, by night it is
+a field of glowing fireflies. The Nervous Ether installation at the California Institute of the Arts breathes according to atmospheric conditions.
+The architect Philip Beesley’s Radiant Soil project responds not only
+to environmental conditions, but to human factors as well. Plant-like
+arrays of glass, polymers, metal and bags of water move, illuminate
+and emit odors in response to human movement and touch. The installation resonates with and envelopes those who draw near it, turning
+the spectator into a genuine participant and transforming the museum
+space where it resides into a living, breathing, feeling organism.
+These projects offer a glimpse of the possibilities of applying the
+wealth of our scientific knowledge—in practical, poetic and metaphoric terms. They admirably apply technologies and materials that
+we already possess in novel ways. We must also not forget that the way
+forward requires more than novel solutions. Responsibly orienting
+Right: Andrew Kudless, Wall, 2009. Detail. San Francisco Museum of Modern Art.
+Photo courtesy of the artist.
+
+Architecture and Empathy
+
+58
+59
+
+ourselves to the future, means being firmly grounded in the past. The
+work left by the architects who have pulled us forward—Alvar Aalto,
+Frank Lloyd Wright and Louis Kahn, for example—was rooted in a
+deep understanding of human nature and longing. The work that endures has this Janus face, facing forward and facing back, it is situated
+at the boundary between. The root of the word innovation suggests
+this dialectic—it really means to renew, to restore. Our technology has
+outpaced our epistemology. We are applying new materials and technologies with outmoded ways of thinking. Too often, our renewals rely
+on high-tech add-ons; we fail to recognize that no amount of mechanization can resuscitate what is already dead. Buildings have only been
+rendered thus because their ties, and mutual obligations to the natural
+and human worlds have been sundered. The line between the animate
+and the inanimate is not so cleanly drawn. Until we come to terms with
+our utter interdependence with our environment and with each other,
+our technological solutions will be only be half-measures.
+Technology is necessary but not sufficient—reordering our world,
+involves reorienting our thinking. To an epistemology of duality, this
+Mayan pyramid appears to be impressive pile of stone. When in fact,
+we now know that the Mayans of ancient Mexico may have built their
+pyramids to function as gigantic musical instruments.40 The temples
+were considered to be sacred mountains where clouds gathered and
+condensed rain. The sound of footsteps on the massive stairs that surround pyramids such as Chichen Itza sound curiously like echoing
+raindrops. Research suggests that the pyramids could have been built
+deliberately for the purpose of playing rain music.41
+The pyramids are designed with varying configurations of stairs
+and landings, some are even, while some are punctuated with platforms. When acoustic engineers compared the frequency of sounds
+produced by people walking up El Castillo, a hollow pyramid in
+the Yucatan, with those generated at the solid, unevenly distributed
+staircase of the Moon Pyramid at Teotihuacan in central Mexico, they
+discovered a striking similarity between the sound frequency at both
+sites, suggesting that the rain music resulted from the sound waves
+that propagate along the stairs.
+Propitiation of the gods occurred through bodily participation with
+the medium of the temple. The temples were not objects, but instruments brought to life by the bodily movements of the supplicants. The
+
+music of skin on stone delivered the quenching rain. The skin of the
+foot and the ear not only functioned in harmony with each other—the
+design of the temple enlisted them in unison to effect changes in the
+larger environment. John Dewey said that, “In itself, the ear is the emotional sense.”42 He meant by this that unlike vision, sound is emotional,
+sound reverberates through our being, moving us directly. These
+temples were built with a profound sense of the interconnectedness of
+the whole of natural, human and spiritual realms and a respect for the
+imperatives of the body. It must also be recognized that the configuration of the temples between each other was considered in acoustic
+and physiological terms. On some level, their builders were aware of
+human perceptual sensitivities that the methods of science are finally
+allowing us to rediscover.
+These temples illustrate too, that when we consider the edges, we
+refine design. We now know, for example, that the foot is a very sensitive organ—each square centimeter has almost 1,000 nerve endings.43
+Above: Stone remembers every footstep. Paving at the Hagia Sophia. Photograph by the author.
+
+Architecture and Empathy
+
+Sarah Robinson
+
+60
+61
+
+We orient ourselves in the world not only through our brain, but also
+through the mind of our feet. Each step we take sends an electrochemical symphony through our body, and the signature of the piece depends on the nature of surface with which the foot makes contact. Every step we take in some way alters our body as it alters the path—even
+though the consequences of our actions may not be readily apparent.
+Ancient places, such as the floor of the Hagia Sophia, extend our horizon of time and remind us that stone also has a memory. What looks
+like cold stone could be an inchoate instrument waiting to be brought
+to life. A building can give and receive, change and be changed, and
+allow us to experience the world as an empathy of a kind.44
+
+Notes
+1	
+
+Ashley Montagu, Touching: The Human Significance of the Skin (New
+York: Harper Collins, 1986). Montagu
+coined the term exterogestation and
+introduced the notion of a fourth trimester of gestation. Some researchers have suggested that this period
+of exterogestation is completed
+when the infant begins to crawl on
+all fours, a time which interestingly
+enough lasts for 266 1/2 days, the
+exact amount of time that newborns
+gestate inside the womb.
+
+Architecture and Empathy
+
+2	 Ibid., 32.
+3	 Harry Harlow’s experiments with
+monkeys in 1958, 1959 and 1961 at
+the University of Wisconsin - Madison, had profound implications for
+attachment theory and subsequent
+research.
+4	 Daniel Seigel, The Developing Mind,
+Second edition (New York: The Guilford Press, 2012).
+5	 Ibid., 15.
+6	 Antoine de Saint-Exupéry, Flight to
+Arras, translated by Lewis Galantière (New York: Reynal & Hitchcock,
+1942), 23.
+
+7	 John Dewey, The Early Works, Vol. 2,
+edited by Jo Ann Boydston (Carbondale: southern Illinois Press, 1967),
+239 (emphasis added).
+8	Ibid.
+9	 Gregory Bateson, Steps to an Ecology of Mind: Collected Essays in Anthropology, Psychiatry, Evolution and
+Epistemology, (Chicago: University of
+Chicago Press, 1972, 1999),113.
+10	 John Dewey, Art as Experience (New
+York: Perigee, 1980), 30.
+11	Seigel, The Developing Mind, 147.
+12	 Giovanna Colombetti, The Feeling
+Body (Cambridge: MIT Press, 2014), 98.
+13	 Ibid., 99.
+14	 As cited in Daniel J. Siegel, The Developing Mind, Second Edition (New
+York, The Guilford Press, 2012) 147-8.
+15	 Colombetti, 19.
+16	 As cited in Steven Fesmire, Dewey
+and the Moral Imagination (Abington:
+Routledge, 2015), 65.
+17	 Ibid., 133.
+18	Dewey, Art as Experience, 359.
+19	 Dewey, Art as Experience, 359.
+20	 As cited in Fesmire, Dewey and the
+Moral Imagination, 19.
+21	 Jan Patočka, Body, Community, Language, World, translated by Erazim
+Kohák (Chicago: Carus, 1998), 133.
+22	 Vittorio Gallese and Sjoerd Ebisch,
+“Embodied simulation and touch: The
+sense of touch in social cognition,”
+Phenomenology & Mind (2013), 274.
+23	 Gallese and Ebisch, 275.
+24	 I owe thanks to Vittorio Gallese for
+introducing me to Didier Anzieu, Le
+Moi-peau (Paris: Dunod, 1985).
+25	 John Dewey, “The New Psychology,”
+Andover Review (1896), 2, 278-289.
+26	 Didier Anzieu, Le Moi-peau (Paris:
+Dunod). 1985).
+27	 Author’s conversation with Iain McGilchrist.
+
+Sarah Robinson
+
+28	 Paul Valéry, Oeuvres Complètes
+(Paris: Gallimard,1957), II. 215-16.
+29	 Naomi Segal, Consensuality: Didier
+Anzieu, Gender and the Sense of Touch
+(Amsterdam: Rodopi, 2009), 44.
+30	Anzieu, Le Moi-peau, 9.
+31	 Ibid., 81.
+32	Dewey, Art as Experience, 127.
+33	 Maurice Merleau-Ponty, The Visible
+and the Invisible (Evanston: Northwestern, 1964), 264. Merleau-Ponty
+described the fold as the, “the application of the outside to the inside,
+the turning point.”
+34	 Jamil Zaki et. al., “The Neural Basis of
+Aesthetic Accuracy,” Proceedings of
+the National Academy of Sciences,
+vol. 106 no. 27, 11382–11387, 2009.
+35	 As quoted in Gallese and Ebisch, 270.
+36	Anzieu, Le Moi-peau, 39.
+37	 John G. Neihardt, Black Elk Speaks,
+(New York: William Morrow & Company, 1932), 121.
+38	 Peter Zumthor used a combination of
+black idenden—a polymer emulsion
+often used as a vapor barrier coating
+for pipework and rolls of hessian
+scrim for the entire pavilion.
+39	 “Doris Kim Sung ’86: Breathable
+Buildings,” Princeton Alumni Journal,
+March 2014.
+40	 Linda Geddes, “New Scientist,” September 22, 2009.
+41	 Philip Ball, “Mystery of ‘chirping’ pyramid decoded,” Nature 12
+(2004):, accessed August 24, 2015,
+doi:10.1038/news041213-5.
+42	Dewey, Art as Experience, 237.
+43	 As cited in Tim Ingold, Being Alive:
+Essays on Movement, Knowledge
+and Description (Abington: Routledge, 2011), 246.
+44	Patočka, Body, Community, Language, World, 133.
+
+62
+63
+
+Vittorio Gallese
+Architectural Space from Within:
+The Body, Space and the Brain
+
+Good afternoon. It’s a real pleasure to be here in Helsinki for a short
+time, in the company of people who are not only friends, but also
+colleagues that have inspired me a great deal. I don’t say that only to
+reciprocate the kind words of Professor Pallasmaa, I absolutely mean
+it. What I learned about empathy in the first place came mostly from
+the famous anthology published by Professor Mallgrave, together with
+Eleftherios Ikonomou in the early 1990’s, and the writings of Sarah
+Robinson and Juhani Pallasmaa were important in convincing me that
+architecture could be a field of mutual interest—a place for cross fertilization and eventually a subject for empirical research.
+I’d like to start by framing my approach with respect to the notions
+of art and aesthetics as they can be addressed empirically, from the
+point of view of a cognitive neuroscientist. Then, I will briefly discuss
+the notion of empathy and the role that it plays in aesthetic experience.
+Next, I will move on to challenge what has been so far accepted as
+common wisdom in cognitive neuroscience—and not only in cognitive
+neuroscience. Namely, I would like to challenge the idea that everything we see has to do specifically with the working of the visual part
+of our brain—the visual system. Unfortunately, this view falls short
+of capturing the real essence of our vision, which is a multi-modal enterprise. Then I will quickly review some of our research dealing with
+the way in which we perceive space, objects and the actions of other
+individuals in order to reach some tentative conclusions.
+To begin, it is a highly debated issue whether or not we, as neurobiologists, are entitled to talk about art and aesthetic experience.
+
+Architecture and Empathy
+
+Vittorio Gallese
+
+64
+65
+
+According to most people who identify with the cultural approach, the
+answer is no. These opponents insist that we should stay away from
+this area, because these subjects are culture ‘all the way down’. From
+this point of view we could not have anything interesting to say about
+them. However, there is an alternative to this rather narrow view, and
+we could loosely define this alternative perspective as a bio-cultural
+approach. Basically, this bio-cultural approach recognizes that human nature is at the center of art, aesthetics, language and anything
+that distinguishes us from other living creatures. This is because these
+activities involve perceptual and emotional bases that are shared across
+cultures. Hans Ulrich Gumbrecht, the German scholar who has been
+at Stanford University for many years, presents a rather balanced view
+of this issue in his book Production of Presence: What Meaning Cannot
+Convey. He writes, “Every human contact with the things of the world
+contains both a meaning and presence component … The situation of
+aesthetic experience is specific inasmuch as it allows us to live both of
+these components in their tension.”1 This view seems to acknowledge
+that there is room, perhaps, for a naturalization of aesthetic experience.
+But what about Art? I must admit that I am becoming reluctant to
+use this notion at all. Tim Ingold, a British anthropologist who is very
+well known here in Finland since he did much of his fieldwork in Lapland, writes in his book The Perception of the Environment:
+We can see how, by adopting a dwelling perspective—that
+is by taking the animal-in-its-environment rather than the
+self-contained individual as our point of departure—it is
+possible to dissolve the orthodox dichotomies between
+evolution and history, and between biology and culture.2
+
+I think this moves us forward even a bit further than the position we
+reached with (John) Dewey in some of the last slides shown by Sarah
+Robinson. He goes on to add,
+Hunters and gatherers of the past were painting and
+carving, but they were not producing art. We must cease
+thinking of painting and carving as modalities of the production of art, and view art instead as one rather peculiar
+and historically specific objectification of the activities of
+painting and carving.3
+
+Architecture and Empathy
+
+I like this quote very much because I am a cognitive neuroscience who
+started working in this field by exploring the functional organization
+of the motor system. So anyone in the humanities who even remotely
+brings up the performative qualities of cultural life contributes to the
+effort to bring together the work of people in the humanities and in
+neurobiology.
+Another interesting perspective is offered by Ellen Dissanayake,
+who argues that “A comprehensive scientific understanding of art
+must include each manifestation in all human culture.”4 A big limitation of cognitive neuroscience is the fact that we practically presume to
+give a picture of the human brain—and the relationship between the
+human brain and human mind—mainly by focusing on the brains of
+our volunteers, who in 99% of cases are undergraduate students of the
+first, western world. This probably falls short of being a comprehensive
+account of what a human being, as such, is all about. But a further element of interest from Dissanayake’s contribution to this discussion is
+her comment that “This forces us to consider the arts as behaviors that
+may have no necessary connection with beauty.”5 Most of the efforts of
+cognitive neuroscience to address art and aesthetics have been focused
+on the search for a house in the brain that would contain our sense of
+beauty. But our sense of beauty is incredibly determined by culture, so
+if we would like to reach some universal conclusions about our sense
+of beauty in the brain, we should promote this sort of investigation
+well beyond the limits of the first, western world.
+I don’t doubt that this is an interesting enterprise, but my take on
+this issue is rather different. I am more interested in unpacking the notion of experience, and in particular the experience of specific objects of
+perception that we refer to as objects of design, architecture, visual artworks, film and the like. So I don’t speak of ‘neuroaesthetics’, but this
+not because I disagree with Semir Zeki, the pioneer and first promoter
+of neuroaesthetics. In fact I think Zeki is one of the best neuroscientists
+of vision that we have. Much of what we know about the visual part of
+the brain comes from his research, perhaps even more than from the
+contributions of David H. Hubel and Torsten Wiesel. Semir Zeki decided to study aesthetics in that particular sense, but I have started with a
+definition of aesthetics taken mainly from its etymological relation to
+the Greek aisthesthai, which relates it to the sensitivity of our body. I am
+referring to the sensory, motor and affective features of our experience
+
+Vittorio Gallese
+
+66
+67
+
+Physical form possess a character only because we
+ourselves possess a body. If we were purely visual beings
+we would always be denied an aesthetic judgement of
+the physical world, but as human beings with a body that
+teaches us the nature of gravity, contraction, strength
+and so on, we gather the experience that enables us to
+identify with the conditions of other forms.7
+
+of these perceptual objects. My goal, along with my colleagues is to
+use cognitive neuroscience to study the functional relation between the
+brain-body system and aesthetic experience. Why am I not happy to
+say only the brain? I believe that if we consider the brain in isolation
+from the body, we start with false assumptions. I am a medical doctor
+and I am a trained neurologist, and I think that this background forces
+me to empirically address the investigation of the brain from a different point of view than someone with another background. For me, the
+brain and the body should never be torn apart.
+We can look at the aesthetic-symbolic dimension of human existence
+not only from the hermeneutic or semiotic perspectives, but also from
+the perspective of bodily processes. And here today we have some of
+the pioneers in that investigation applied to architecture. The contribution of the cognitive neuroscience is meant to be complimentary to the
+humanistic approach, by enriching our perspective with a new level of
+description. To be very clear, I think that whenever we want to better
+understand who we are, to shed new light on human culture, a level of
+description of the brain-body interaction is a necessary, but not sufficient condition. I don’t think we can say anything interesting if what we
+say contradicts what we know about the function of the brain. But the
+brain, in itself, falls short of accounting for our diverse range of social
+and cultural activities. So we need to carry out this work in close collaboration with people who are experts in philosophy, aesthetics, architecture, film theory and so on. This is what I have been doing over the
+last twenty years and I can say it is very rewarding not only because it
+helps you in framing new empirical approaches, but also because even
+if you are not investigating art and aesthetics it enormously enriches
+your perspective when confronting more trivial matters such as how the
+hand knows how to reach a glass in order to have a sip of beer or vodka.
+The level of description provided by cognitive neuroscience can
+help in analyzing and revising several concepts that we use all the
+time in referring to intersubjectivity, aesthetics, art and architecture, as
+well as the experience that we make of these. From Harry Mallgrave,
+I learned of a famous question that comes from Heinrich Wölfflin’s
+doctoral dissertation in 1886. Wölfflin asks, “How is it possible that
+architectural forms are able to express an emotion or a mood?”6 The
+answer that comes from Wölfflin sounds incredibly modern to me in
+light of what we now know about the brain.
+
+This was written one-hundred years before George Lakoff and Mark
+Johnson published their most influential book, Metaphors We Live By,
+in which they started a theoretical investigation into the relationship
+between the body and the most abstract uses of language.
+My approach to experimental aesthetics in a few words is this: the
+notion of empathy recently explored by cognitive neuroscience can
+reframe the problem of how works of art and architecture are experienced, revitalizing and eventually empirically validating old intuitions
+about the relationship between body, empathy and aesthetic experience. Empathy is an almost unusable word now, because it has become
+polysemic. Some colleagues of mine, Frederic De Vignemont and Tania
+Singer published a review in 2006 in which they wrote that there are
+probably as many definitions of empathy as there are people using the
+concept.8 These are only some of the concepts that people refer to when
+using the word empathy: theory of mind, perspective taking, cognitive
+empathy, true empathy, emotional contagion (which has nothing to
+do with empathy at all), identification and one could continue on and
+on. But if we go to the root of the word we come to the German word
+einfühlung, which was later translated by Edward B. Titchener as empathy. The use of the notion of empathy in psychology occurred much
+later, and it was mainly Robert Vischer who applied this notion to
+social relationships. Here we are dealing with what happens when we
+stand in front of a three dimensional object such as a painting, a face or
+a sculpture. Of this condition Vischer wrote,
+
+Architecture and Empathy
+
+Vittorio Gallese
+
+I transpose myself into the inner being of the object and
+then explore its formal character from within as it were.
+This kind of transposition can take a motor or sensitive
+form even when it is concerned with lifeless and motionless forms.9
+
+68
+69
+
+Edmund Husserl’s pupil, Edith Stein, wrote her own dissertation on
+the problem of empathy and tried to challenge a common misconception. People normally tend to confuse empathy with sympathy, but
+it is important to keep the two separate. One cannot be sympathetic
+without being empathetic, but one can be empathetic without being
+sympathetic. To be empathic is to feel with someone, to be sympathetic
+is to feel for someone, each deals with different aspects of our sociality.
+Another interesting element of Edith Stein’s take on empathy is the
+notion that empathy is by no means confined to emotion and feelings,
+but also incorporates action. The other is experienced as another human
+being, like us, through the perception of a similarity relation, and Stein
+systematically refers to action as a way of establishing that similarity.
+We find a similar observation from the Vienesse psychoanalyst Otto
+Fenichel, who concluded from Freud’s analysis of narcissism that “[…]
+it is only by empathy that we know of the existence of psychic life other
+than our own.”10
+So why should someone like me, a reductionist who has mostly
+dealt with intersubjectivity for the last 10 to 15 years, be interested in
+investigating aesthetic experience? Because we can consider aesthetic
+experience as a mediated form of intersubjectivity. The Norwegian
+writer Siri Hustvedt, a novelist and also an excellent essayist, writes
+in her beautiful book on painting, Mysteries of the Rectangle, “In art, the
+meeting between viewer and thing implies intersubjectivity. [...] The
+intersubjectivity inherent in looking at art means that it is a personal,
+not an impersonal act.”11 Thus we can consider aesthetic experience as
+a mediated form of intersubjectivity.
+So let me get quickly to the brain. I have earlier discussed “visual
+brain imperialism” so I would like to explain what I mean by that. Observing the world of others implies a multi-nodal notion of vision and
+cannot be reduced to the mere activation of the so-called “visual brain”.
+Observing the world encompasses the activation of motor, somatosensory and emotion-related components within the larger frame of the
+intrinsic intention or pragmatic nature of our relation with the world.
+When I first became interested in the brain as an undergraduate
+student in medicine, there was no image of this kind. Back then the cortical motor system was considered to be mainly composed by M1 (the
+primary motor cortex) and—in front of it—by an homogeneous grey
+area called Brodmann area 6, which was considered to be a mere exten-
+
+sion of the primary motor cortex, responsible for controlling the less
+interesting (from a cognitive point of view) muscles of our body—the
+axial and proximal muscles—not the mouth or hand. But this picture
+changed, mostly thanks to the work done at our department under the
+guidance of Giacomo Rizzolatti. The motor cortex is no longer understood as a uniform field, but is considered now as a mosaic of functionally specific areas. Each of these premotor areas is reciprocally connected with a corresponding region in the parietal cortex and the premotor
+cortex is therefore a series of parallel functioning networks. What is
+even more interesting from a functional point of view, is that cortical
+motor areas are not purely motor, but are also endowed with sensory
+properties. They contain motor neurons (motor because their activation
+produces movement) and if we micro-stimulate those neurons using
+electricity we can evoke movement, but we now know that they also
+respond to visual, tactile and auditory stimuli. On the other hand, posterior parietal areas that are reciprocally connected with these premotor areas traditionally considered to be associative areas, in charge of
+associating within a more coherent perceptual frame, the data coming
+from the individual sensory modalities, we now know that these play a
+major role in motor control.
+Above: The Brodmann areas of the human brain. Lateral view of the left hemisphere.
+
+Architecture and Empathy
+
+Vittorio Gallese
+
+70
+71
+
+So let me quickly go through some of the properties of these premotor neurons. Premotor area F4 contains neurons controlling arm reaching and orienting or avoiding movements of the hand. But interestingly
+enough, the very same neurons that control the reaching movement of
+the macaque monkey also respond to tactile stimuli applied to the same
+arm. They also respond to visual stimuli provided that they are presented within the space surrounding that same body part. When the neuron
+fires, it produces a reaching movement but when the monkey is still, if
+you touch the arm or if you move something toward the arm you still
+see a response in the very same neuron. So how do these neurons work
+perceptually? My interpretation is that they do it by means of embodied
+motor simulation. A group at Yale University lead by Charlie Gross and
+Michael Graziano demonstrated that even in the dark, auditory stimuli
+can provoke the discharge of the very same F4 neurons, provided that
+they come from portions of the peri-personal space anchored to the
+body part whose movement is controlled by the same neurons. Seeing
+or hearing an object or an event at a given location within peri-personal
+space evokes the motor simulation of the most appropriate acts towards
+that very same spatial location. In a way, we are selling an old wine in a
+new bottle, but I’ll tell you why in a minute.
+This is not just monkey business, we have the very same neurons in
+our brain. Indeed it has been demonstrated that a similar network linking parietal (VIP and S2) and premotor areas responding to auditory,
+tactile and visual stimuli that occur in the area of the body that these
+neurons are responsible for the movement of.
+Why did I say an old wine in a new bottle? In 1945 Maurice MerleauPonty writing in Phenomenology of Perception already observed that space
+
+This is a way of thinking about the brain-body system and the way that
+we map the space around us in pragmatic motor terms.
+If we move forward a little we find another premotor area, area F5,
+in which there are neurons—canonical neurons—that are selective for
+
+a particular kind of grasping. Interestingly enough, when the monkey
+is explicitly instructed not to move, but to simply look at the object, still
+its mere sight activates the very same neuron that controls the grasping of that object. So how do F5 canonical neurons work perceptually?
+Again we can say, by means of embodied simulation. Seeing a manipulable object evokes the motor simulation of grasping—or of whatever
+action that specific object affords. In a way, we are dealing here with
+the neurological correlate of the notion of ‘affordance’, which was already proposed in 1977 by the psychologist James J. Gibson. Seeing the
+object invokes an object-related motor potentiality. Finally in the very
+same premotor area F5, while studying canonical neurons, we discovered ‘mirror’ neurons. From a motor point of view these are identical
+to canonical neurons, but the perceptual stimulus that leads these neurons to fire is not the observation of an object, it is the observation of an
+action. That is to say that the observation of an action that is similar to
+the one controlled by the neuron when executed will lead it to fire.
+A more recent experiment demonstrates the social relevance of the
+mirror mechanism. My colleagues were interested to test whether and
+how the distance between the observer (the monkey) and the agent
+(the experimenter) modulates the discharge of mirror neurons. So they
+evaluated this by first having the monkey perform the grasp—to be
+sure that they were looking at motor neurons—and then by having the
+monkey observe the experimenter performing the action either within
+or outside of the monkey’s own peri-personal space. Does the distance
+between observer and agent make a difference? For 50% of the neurons
+tested it does not, but for the remaining 50% it does. Of these neurons,
+half respond only when the action is performed away from the monkey
+while the other half respond when the action is performed close to
+the monkey. What is interesting about this is that the neurons do not
+map the distance between the observer and the agent. Half of them
+fire when the action is near, and half of them fire when the action is
+farther away. However, if a transparent barrier is inserted between the
+observer and the agent so that the action occurs in close proximity but
+the possibility for the monkey to interact with the experimenter is foreclosed, then only the neurons associated with the distant observation
+are activated. These neurons do not seem to track physical distance so
+much as they chart the possibility of interaction between the agent and
+the observer.
+
+Architecture and Empathy
+
+Vittorio Gallese
+
+[...] is not a sort of ether in which all things float. [...] The
+points in space do not stand out as objective positions in
+relation to the objective position occupied by our body;
+they mark, in our vicinity, the varying range of our aims
+and our gestures.12
+
+72
+73
+
+Mirror neurons for action are modulated by proxemics. The potential for interaction between the observer and the agent—measured
+by the distance separating them—does affect the intensity of neural
+discharges in the mirror neurons of the observer’s brain. Frontal and
+parietal motor areas are neurally integrated not only to control action,
+but also to serve the function of building an integrated, bodily-formatted representation of the body and of its interactions with the world.
+We are dealing here with a type of representation that does not require
+the use of language: one that consists of locations to which actions are
+directed, objects being acted upon or the actions of others.
+Also the human brain contains frontal and parietal motor areas
+activated when a subject performs or observes the performance of
+object directed actions, communicative actions or body movements. I
+don’t have time now to address the differences between the macaque
+and the human brain but if you are interested I can discuss it during
+the question time.
+The prolonged activation of the neural representation of motor content in the absence of movement likely defines the experiential backbone of what we perceive or imagine ourselves to perceive. This allows
+a direct apprehension of the relational quality linking space, objects
+and others actions to our body. The primordial quality turning space,
+objects and behavior into intentional objects, that is, into the objects
+of our perceptions and thoughts, is their constitution as the potential
+targets of the motor potentialities that our body expresses.
+I did not want to deal too much with touch, since I assumed that
+Sarah Robinson would have covered that subject, but I would like to
+present you the first two experiments that we did with Bruno Wicker,
+Christian Keysers, Leonardo Fogassi and others on emotion and sensation. The first experiment demonstrated for the first time that the region of your brain which is activated when you subjectively experience
+an emotion such as disgust, is also activated by observing that emotion
+in the facial expression of another person. This region is the anterior
+insula. In 2004 we published a study addressing visuo-tactile mirroring, which demonstrated that one tactile area of the brain, the second
+somatosensory area, buried within the operculur part of the parietal
+cortex, is activated not only when our body is touched, but also when
+we see someone’s body being touched.
+So I don’t speak anymore of ‘mirror neurons’, because speaking
+
+of mirror neurons induces people to think of these neurons as special cells or some sort of magic cells. In fact what is special is not the
+neurons themselves. They don’t look smarter, or bigger, or stronger, or
+more colorful than other neurons. What distinguishes these neurons
+from all other neurons is the mechanism that they instantiate. That
+mechanism is in turn the outcome of the specific connectivity that
+they entertain. No man is an island and no neuron is an island. The
+property of each neuron is the outcome of the integration that specific
+neuron performs based on all the input that it receives. So I prefer to
+speak of a mechanism. This mechanism maps the sensory representation of the action, emotion or sensation of another onto the perceiver’s
+own motor, viscero-motor or somatosensory bodily formatted representation of that action, emotion or sensation. This mapping enables
+one to perceive the action, emotion or sensation of another in a certain
+sense—the distinction here is pretty complex—as if she were performing that action or experiencing that emotion or sensation herself, up to
+a certain limit of course.
+So what do we want to explain with this model? We want to explain
+not only the mirror mechanism but also related phenomena such as F4
+neurons, canonical neurons, manipulable object vision, mental imagery, the representation of peripersonal space and various aspects of
+language that I won’t deal with here for the sake of concision. Embodied simulation is also triggered during the experience of spatiality
+around our body and during the contemplation of objects. The functional architecture of embodied simulation seems to constitute a basic
+characteristic of our brain, making possible our rich and diversified
+experiences of space, objects and other individuals, which are the basis
+of our capacity to empathize with them. Embodied simulation not only
+connects us to others, it connects us to our world—a world inhabited
+by natural and manmade objects (with or without symbolic nature) as
+well as other individuals. Most of the time, if things go smoothly, we
+feel at home in this world, though not necessarily.
+The experience of architecture, from the contemplative observation
+of decoration on a Greek temple to the physical experience of living
+and working within a specific architectonic space can be unpacked or
+deconstructed into its bodily-grounded elements, or at least that is our
+hope. The constant weighting of architectonic and peri-personal space
+is mainly processed by premotor neurons which map visual space on
+
+Architecture and Empathy
+
+Vittorio Gallese
+
+74
+75
+
+potential action or motor schemata. Cognitive neuroscience can investigate what the sense of presence of a building is made of. This approach
+can also contribute a fresher empirical take on the evolution of architectonic style and its cultural diversity, viewing it as a particular case of
+symbolic expression.
+Again, people have had similar ideas before. Adolf von Hildebrand,
+not a very good sculptor in my humble opinion but a great theoretician,
+proposed that our response to art directly relates space to movement.
+According to him, to understand an artistic image means to intrinsically
+grasp its creative process. Space does not constitute an a priori experience, as suggested by Kant, but is itself a product of that experience.
+Artistic images are effectual, which means they are the outcome of both
+the artist’s creative production and the effects that images produce on
+beholders. We have demonstrated this empirically using the Lucio Fontana’s cuts on canvas and Franz Klein’s brushstrokes, but perhaps I do
+not have space here to discuss those experiments in depth.
+Through movement, the available elements in space can be connected. Objects can be carved out of their background and perceived as
+such. Through movement, representations and meaning can be formed
+and articulated. We can provide an empirical backup to this theoretical
+statement by looking at the function of the brain. The role of embodied
+simulation in architectural experience becomes even more interesting if
+one considers emotions and sensations, colors for example or the haptic
+quality of materials.
+As I am running out of time I will try to end with a few conclusions.
+Embodied simulation can shed light on human symbolic expression,
+both from the point of few of its making and of its experience. In so
+doing, it reveals the intersubjective nature of any creative act, leaving
+behind any idea of a solipsistic, cogitating mind. More relevant than
+cogito—and here phenomenology got it exactly right—more relevant
+than I think is I can. The physical object, the outcome of symbolic expression, becomes the mediator of an intersubjective relationship between
+creator and beholder. Embodied simulation generates the peculiar quality of the body seen as a significant part of aesthetic experience. That is
+my hypothesis. It is therefore one important ingredient of our appreciation of human symbolic expression, in all its multifarious declinations.
+I’ll end by quoting August Schmarsow, who reminded us that, “Every
+spatial creation is first and foremost the enclosing of a subject.”13 In order
+to understand that subject, we cannot leave the body out of the picture.
+
+Architecture and Empathy
+
+NOTES
+1	
+
+2	
+
+3	
+4	
+
+5	
+6	
+
+7	
+8	
+
+9	
+
+10	
+
+11	
+
+Hans Ulrich Gumbrecht, The Production of Presence (Stanford: Stanford
+University Press, 2004), 109.
+Tim Ingold, The Perception of the
+Environment: Essays on Livelihood,
+Dwelling and Skill (London: Routledge, 2000), 186.
+Ibid., 131.
+Steven Brown and Ellen Dissanayake,
+“The Arts are More than Aesthetics:
+Neuroaesthetics as Narrow Aesthetics,” in Neuroaesthetics, ed. Martin
+Skov and Oshin Vartanian (Amityville,
+NY: Baywood, 2009), 47.
+Ibid., 47.
+Heinrich Wölfflin, “Prolegomena zu
+einer Psychologie der Architektur”
+(Ph.D. diss., Universität München,
+1886); translated as “Prolegomena
+to a Psychology of Architecture,” in
+Harry Francis Mallgrave and Eleftherios Ikonomou, eds. and trans., Empathy, Form, and Space: Problems in
+German Aesthetics, 1873-1893 (Santa
+Monica: Getty Center for the History
+of Art and the Humanities, 1994),
+149-87.
+Ibid., 149-87.
+Frédérique de Vignemont and Tania
+Singer, “The empathic brain: how,
+when and why?” Trends in Cognitive
+Science 10 (October, 2006), 435-41.
+Robert Vischer, “The Aesthetic Act
+and Pure Form,” in Charles Harrison,
+Paul J. Wood and Jason Gaiger, Art in
+Theory, 1815-1900 (Oxford: WileyBlackwell, 1998), 692.
+Otto Fenichel, The Collected Papers
+of Otto Fenichel, eds. Hanna Fenichel
+and David Rapaport (New York, Norton, 1953), 104.
+Siri Hustvedt. Mysteries of the Rectangle: Essays on Painting (New York:
+Princeton Arch. Press, 2007), xix.
+
+Vittorio Gallese
+
+12	 Maurice Merleau-Ponty, Phenomenology of Perception (London:
+Routledge, 1958), 166.
+13	 August Schmarsow, “Das Wesen
+der architektonischen Schöpfung”
+(Universität Leipzig, 1893) translated
+as “The Essence of Architectural
+Creation,” in Harry Francis Mallgrave
+and Eleftherios Ikonomou, eds. and
+trans., Empathy, Form, and Space:
+Problems in German Aesthetics,
+1873-1893 (Santa Monica: Getty
+Center for the History of Art and the
+Humanities, 1994), 288.
+
+76
+77
+
+Juhani Pallasmaa, Harry Francis Mallgrave,
+Sarah Robinson and Vittorio Gallese
+A Conversation on Empathy
+
+Pallasmaa - Edward O. Wilson, the promoter of ‘biofilia’ (the love of
+life) as a new approach to nature and to the world once wrote, “The
+greatest problems of man arise from the fact that we do not know who
+we are and we do not agree on what we want to be.” That is a stunning
+suggestion indeed. The subject that we have been discussing today
+seems to somehow unwrap—or begins to unwrap—the question of who
+we are. I am interested in the fact that we have lived the entire last century in a state of utopian optimism, with a belief that human rationality
+could resolve everything, but during that century we have forgotten
+both what we are and what we want to become. Today there is more
+and more interest in understanding our evolutionary past and in coming to terms with the fact that we are fundamentally animals that exist
+as part of the biological world. My first question to the panelists then is
+what is your take on this turn in perspective from the future to the past?
+As has been suggested by some writers, our position with respect to
+time seems to have changed, by which I mean our bodily position. The
+greeks were looking toward the past, with the future at their back. Modern man clearly faces the future with time receding at his back. What
+is your take on this rather unexpected turn toward the past—not only
+the recent past, but also the origins of man, as seems to be suggested by
+Vittorio’s studies of monkeys?
+Gallese - As you were asking your question, I was thinking about
+the way that I looked at the future when I was ten years old. A few
+years ago, I was sitting in the car with the kids and we were listening
+
+Architecture and Empathy
+
+Pallasmaa, Mallgrave, Robinson and Gallese
+
+78
+79
+
+to a song that I remembered listening to as a child, “Nel duemila chissà
+come saremo,” (who knows what we will be like in 2000). I remembered
+listening to the song in 1969, because it was the year that my father
+chose to return early from our summer holiday in order to be at home
+in front of the television when men landed on the moon. There was this
+idea that we would colonize the universe, which for a child was very
+exciting. I remember calculating how old I would be when we finally
+reached this threshold of 2000. Looking back at that memory I began to
+think about how my kids look at the future, and although I would not
+like to fuel some sense of continual progress, I do think that we should
+be looking as much to the future as to the past. I don’t see it as entirely
+positive that we turn our back to the future. I think that we must continue in our consideration of the future. This can happen on a different
+level of course, but it is consubstantial to the human dimension.
+I am totally with the homo faber perspective. I never understood the
+mountain speech saying, ‘blessed are those who do not ask anything
+and are happy to accept.’ That doesn’t portray what is essential of our
+species. It is the more Promethean aspect which fascinates me, otherwise I would not be a scientist.
+To respond to your question in a less existential way, I think that
+this turn to the past is very well deserved. Giuseppe Verdi once wrote
+a letter to the director of the conservatory of music in Naples because
+the school was reforming its curriculum and abandoning the study of
+polyphony and palestrina music amongst many others. Verdi wrote
+“Tornate all’antico e sarà un progresso” which translates as, “Let us turn
+back to the past and progress will ensue.” Unframed and understood
+generally, this notion can be dangerous, but I believe it can also be useful. In our case, to turn back to the past means to look at this huge tradition of thought, which we know to a great extent because of the work
+of Harry Malgrave. These people got it right from the very beginning!
+They were focusing on the bodily dimension of culture and on the
+bodily dimension of the human mind. Now, after almost a century of
+conceptualizing a logo-centric study of every aspect of human nature, I
+think that we should start to ask the body questions once more.
+
+in the late 1800’s so many things were seen in precisely the same terms
+that we them see today with the support of new science, but then seem
+to have been forgotten for a century? I am thinking not only of the 19th
+century German scholars, but also of figures like William James and of
+course John Dewey, who is a later writer on a different continent but
+who still wrote his most important books before I was born. What happened to human thinking?
+Mallgrave - Well, it’s not a particularly happy explanation, but I think
+that what happened was 1914. It’s incredible when you look at all of
+this material that begins in the 1860’s, it almost ends overnight in 1914
+with the beginning of World War I. Of course there was the collapse
+of German academic culture, but it was not only in Germany, it was
+everywhere, and Europe never truly recovered before it entered the
+processes that lead to the Second World War.
+I am always somewhat pessimistic when I look at this history and
+see what was initiated by a few simple events that could quite plausibly happen again today if we are not careful. At the same time, I see
+in the neurological and biological sciences so much potential for us
+to realize, for the first time with a solid scientific foundation, who we
+are and what we could be again. Maybe that would lead to a sort of
+homo faber situation in which a younger generation picks up Vittorio’s
+research and moves forward with it.
+Juhani, I would follow up by posing a question back to you. Taking
+something like an architectural curriculum, how would you change it
+to address some of the work that Vittorio is doing? How would you
+arrange the studies if you were a Dean again today?
+
+Pallasmaa - You mentioned Harry’s work, and particularly his studies and translations of 19th century research, so I would like to direct
+the next question to him. Harry, do you have any explanation for why
+
+Pallasmaa - I have talked about that a number of times in various
+schools, and I must say first that there has been a catastrophic decline
+in the general understanding of European culture and the history of
+culture in general. As I see it, if there is no shared understanding of
+the history of our culture it could be the end of university education
+altogether. I don’t mean only political, economic and social history,
+but also history of the various realms of art. Today students in most
+countries do not know who Dostoyevsky was! For me it is impossible
+to be a human being without having read Crime and Punishment. So I
+would radically alter the curriculum to re-establish this foundation for
+
+Architecture and Empathy
+
+Pallasmaa, Mallgrave, Robinson and Gallese
+
+80
+81
+
+higher learning. Universities are not institutions for the dissemination
+of information, they are institutions where pieces of information can be
+newly connected, so that new ideas and new visions can emerge. That
+would be the core of my curriculum. But I would add that bodily engagement—physical engagement with the materials—is fundamental.
+Drawing is fundamental. I think that the prevailing curricula should be
+turned upside-down entirely.
+Audience - As a member of a university currently working in the area
+of neuro-cinematics, I am particularly interested in this discussion of
+curriculum. I would like to ask if you would also add, as Sergei Eisenstein did in the 1930’s at the film school in Moscow, brain research and
+psycho-physiological studies in addition to the cultural, historical and
+art studies that you mentioned?
+Pallasmaa - I would absolutely require studies in the arts, literature,
+poetry and music from everyone, but I would not say that neuroscience
+and the specialized sciences are necessary to a curriculum in architecture. I believe very strongly in the culture of architecture, or for that
+matter in the culture of any discipline or art. It’s very good that there
+are individual architects who study philosophy for instance, and to
+have a few philosophically oriented architects in the culture of architecture. It might also be good now to have a few architects that are interested in mirror neurons, and the neurological dimensions of architecture. I don’t believe in overloading a curriculum, but I do believe that it
+is good to allow individuals to specialize because that specialization in
+turn contributes to the culture of the discipline.
+Maybe this question could be taken up by some of the other panelists. Sarah, you have been chair at the Frank Lloyd Wright School of
+Architecture, what do you say to this question of curriculum?
+Robinson - I’m inspired to learn more about the Bauhaus, where
+sensory perception was a part of the agenda, sensitizing artists to
+tactile experiences. Recently in Berlin, there was an exhibition of
+Moholy-Nagy’s work and I was fascinated by his experiment in which
+a person could be blindfolded and then run their hands over a pattern
+of textures, as a sort of symphony of touch. I think that what neuroscience can offer to architecture is a way of moving deeper into those
+
+Architecture and Empathy
+
+sensitivities and the ways in which they are interconnected. We are all
+here trying to dismantle the hegemony of vision, but if we accept that
+vision is isolated from the other senses then it becomes harder to make
+the case against it. In fact it is not isolated, vision is deeply interwoven
+with our other sensory modalities. So I would try and integrate an
+approach to neuroscience that is practical, applied and experiential.
+That would require going back to other experiments like those done
+at the Bauhaus or at Taliesin to reinvent architectural education via
+craft. Because without those sensitivities how could we ever be good
+designers, artists or even thinkers?
+Pallasmaa - Harry, as a historian, can I ask you about the role of history in your idea of architectural curricula? We know that the Bauhaus
+for instance did not teach history, which is a rather surprising choice.
+Mallgrave - I’ve always looked at history really as a history of theory.
+As a teacher I had certain requirements in terms of periods or phases,
+but I’ve always tried to teach a history of ideas and to show how those
+ideas were formed and what products they informed. Today history
+is also disappearing from curricula. A generation ago a student would
+take four or five courses in history. Now that is down to around two
+required courses in most universities, which focus primarily on the 20th
+century.
+However, it’s not just about history in and of itself. To really know
+the experience of the Chartres Cathedral for instance, one must go and
+walk through it, and I think that we have actually replaced what used to
+be coursework and lectures with things like summers abroad in which
+students get out and physically see the work. I think this is the best way
+to learn, and an easy way to learn. So I would place the emphasis more
+on theory than on history, which seems already through travel to be
+part of the normal understanding of what an architect should be.
+Audience - Someone today mentioned that we are currently striving
+for sustainability without a coherent philosophical framework. I think
+that is where the combination of architecture and neuroscience can
+provide a framework which significantly empowers architecture as a
+solver of social problems as well as an enabler of intellectual development. Could you maybe elaborate on that point?
+
+Pallasmaa, Mallgrave, Robinson and Gallese
+
+82
+83
+
+Robinson - Certainly there is a vacuum left by the intellectual excesses of the last three decades, and I agree with you about neuroscience.
+But it is a tricky proposition because there aren’t enough neuroscientists like Vittorio Gallese. There are some neuroscientists still locked
+into the mechanistic world view. Vittorio, maybe you could talk more
+about that?
+Gallese - Recently at a meeting that I attended, someone used the
+term neurohubris. This might be what you are referring to, but I would
+say that it depends very much on your topic of investigation. I started
+studying the brain in order to acquire a better understanding of how
+we map spatial relationships between our body and the body of
+someone else, or between our body and objects. So I was dealing with
+the relationship between space and body, and quite soon I discovered
+that reading Merleau-Ponty’s Phenomenology of Perception could be
+enormously enriching for our perspective. So I didn’t use neuroscience
+to prove that phenomenology was right but the other way around.
+If anything my first readings and the philosophy affecting my work
+were definitely in the analytical camp. One of the earliest books that I
+read on this subject was Neurophilosophy: Toward a Unified Science of the
+Mind-Brain by Patricia Churchland and that led me to Daniel Dennett’s
+work as well. Dealing with space and coming closer and closer to the
+idea that the mapping of space was heavily dependent on the motor capabilities of the individual, I discovered that these things were
+pretty well discussed within this tradition of thought. But for many
+years my colleagues were blaming these philosophical readings and
+when people in your field start calling you a ‘dead philosopher’ it’s not
+exactly a compliment. They think you are diluting your scientific credibility with some blah, blah. So it can be dangerous, but it depends in
+part on the topic that you’re dealing with. It’s better to do one job, than
+to do two jobs at the same time because you have to study and become
+acquainted with the different literature, attend a different set of meetings and so on. It’s like leading a double life, which is interesting but
+also brings up problems.
+So what you say is true. Too much cognitive neuroscience is deterministic. Too much cognitive neuroscience is still—unknowingly
+or knowingly—based on a model of cognition that empirical data has
+disproved or at least greatly reduced in heuristic value. So I think we
+
+Architecture and Empathy
+
+need to build more opportunities for people—particularly for young
+people—to become mutually acquainted with the approaches and
+the problems. This begins by selecting people who are interested in
+the first place, and believe me there are more and more people in my
+field who are interested in investigating what makes us human. Until
+recently it was only language. Now people have discovered that before
+language, you can recognize other activities that are uniquely human including art and architecture. Duke University for instance, has
+launched a program in ‘neurohumanities’ which is chaired jointly by a
+neuroscientist and a scholar in French philology. At the Salk Institute
+they have initiated an Academy of Neuroscience for Architecture. The
+problem I think is that when you want to do research you must fund
+it, and in order to fund your research you must apply for grants. Most
+of the grants in Europe today ask you to invent some novel machine
+that will allow paralyzed people to fly or something of that sort. There
+is less and less money for basic research. That is a big drawback, and
+we need to convince our politicians that while betting one billion euros
+in ten years to reproduce the human mind on a computer is ok, they
+should also give money (much less money, but still some money) to
+people like us who are interested in learning more about basic questions. Before reproducing the human mind on a computer, I am interested in figuring out what the human mind is all about! It seems that
+this should be the strategy to start, but many people believe they know
+this already and that is the problem.
+Pallasmaa - Vittorio mentioned this dual attention or dual position.
+Sarah, since I introduced you as both a philosopher and an architect,
+how do you address that interaction? I know that we have many
+pragmatic colleagues here and elsewhere who think philosophy has
+nothing to offer to architecture.
+Robinson - I think that each person’s mind works the way that
+it works and there is no getting around that. You do what comes
+naturally to you, and I naturally drifted into philosophy because
+that’s what I was interested in. Then I became frustrated with how
+ungrounded it was, and I thought architecture might be a compliment
+to that. I am person that needs to do more than one thing and that is a
+limitation, but it’s also not a choice. You are who you are.
+
+Pallasmaa, Mallgrave, Robinson and Gallese
+
+84
+85
+
+I want to go back to something you said earlier. You opened with
+Edward O. Wilson, and in his recent book The Social Conquest of Earth
+he says that when the nest—in his terms a human nest is created by
+gathering around a fire and building a shelter, as Harry described—
+came into existence, the size of the human brain skyrocketed. I think
+that in this world of connectivity that we live in, where disciplines start
+to grow together, what we have to realize is that we are coextensive
+with our environment. Our nest, all our many nests, are fundamental in
+shaping our experience and I think this is what you all said in various
+ways. Having a philosophy of the nest seems to be a necessary thing.
+
+Contributor Biographies
+Juhani Pallasmaa
+Finnish architect, educator, and critic Juhani Pallasmaa, SAFA, Hon.
+FAIA, Int FRIBA, is a leading international figure in contemporary
+architecture, design, and art culture. His numerous books include
+Encounters 1 and 2 (2006 and 2012), Understanding Architecture (2012, in
+collaboration with Robert McCarter), The Embodied Image (2011), and
+The Thinking Hand (2009) and many others. From 2008 to 2013 he served
+on the jury for the Pritzker Prize for Architecture.
+Harry Francis Mallgrave
+For more than 30 years Harry Francis Mallgrave has worked as an
+architect, editor, translator, teacher, and historian. In the last capacity
+he has authored more than a dozen books, and his current one, in the
+final stages of completion, is entitled Theory and Design in the Age of
+Biology: Reflections on the ‘Art’ of Building. Currently he is a professor
+of history and theory at Illinois Institute of Technology, at which he is
+also the director of International Center for Sustainable New Cities.
+Sarah Robinson
+Sarah Robinson is a practicing architect who studied Philosophy at the
+University of Wisconsin-Madison and the University of Fribourg in
+Switzerland before attending the Frank Lloyd Wright School of Architecture, where she earned her M.Arch and later served as the founding
+chair of the Board of Governors. She is the author of Nesting: Body,
+Dwelling, Mind and Mind in Architecture: Neuroscience, Embodiment and
+the Future of Design, with Juhani Pallasmaa, (MIT press 2015), as well as
+numerous literary and academic essays. She lives in Pavia, Italy.
+Vittorio Gallese
+Vittorio Gallese, MD, PhD, is a Professor of Physiology at the
+Department of Neuroscience at the University of Parma, Italy. His
+research interests focus on the cognitive role of the motor system
+and on an embodied account of social cognition. Among his most
+important contributions to the field is his identification, together with
+his colleagues at Parma, of mirror neurons and the elaboration of a
+theoretical model of social cognition—embodied simulation theory.
+
+Architecture and Empathy
+
+Pallasmaa, Mallgrave, Robinson and Gallese
+
+86
+87
+
+About the TWRB Foundation
+The Tapio Wirkkala – Rut Bryk Foundation was established in 2003 to
+carry on the legacy of the artist-designer couple Tapio Wirkkala and
+Rut Bryk. Both were enthusiastic designers and tireless experimenters
+who embraced new developments in technology and craft. Working
+across disciplines, they expanded the range of design possibilities
+through material and technical innovation.
+Today the TWRB Foundation maintains the Wirkkala-Bryk archive
+to support research on the work of the designers, and maintains their
+spirit and passionate commitment to design education. In collaboration
+with universities and educational institutions around the world the
+foundation supports discussions, seminars, conferences, master classes
+and scholarly projects as well as publications, awards and scholarships
+related to design. In addition, it collaborates with museums and other
+institutions to produce exhibitions and publications on the work of
+Tapio Wirkkala and Rut Bryk.
+As part of the centennial celebration of the couple, the TWRB foundation
+hosts a series of public events that consider design across a range of
+disciplinary boundaries. The Design Reader series documents these
+events and the ideas that they generate.
+Current Members of the TWRB Foundation Board
+Mikko Heikkinen
+Esa Laaksonen
+Juhani Pallasmaa
+Laura Sarvilinna
+Petra Wirkkala-Vaarne
+Maaria Wirkkala
+Markku Valkonen
+
+Architecture and Empathy
+
+The Tapio Wirkkala - Rut Bryk Design Reader
+series documents seminars, symposia and
+other public events that consider design
+across a range of disciplinary boundaries.
+
+ISBN-10
+
+9
+
+780692
+
+0692539194
+
+539194
+
+

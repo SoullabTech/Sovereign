@@ -145,6 +145,26 @@ export class SacredOracleCore {
   }
 
   /**
+   * Process input for consciousness orchestrator compatibility
+   */
+  async processInput(input: string, context: any): Promise<any> {
+    const response = await this.generateResponse(
+      input,
+      context.userId || context.sessionId,
+      context
+    );
+
+    // Transform SacredOracleResponse to expected format
+    return {
+      message: response.message,
+      mode: response.mode,
+      depth: response.depth,
+      tracking: response.tracking,
+      metadata: response.metadata
+    };
+  }
+
+  /**
    * Generate witnessing response (default mode)
    */
   private async generateWitnessingResponse(input: string, presence: any): Promise<SacredOracleResponse> {

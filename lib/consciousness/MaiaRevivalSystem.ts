@@ -40,9 +40,10 @@ interface CachedRevival {
 const sessionCache = new Map<string, CachedRevival>();
 
 /**
- * Book path constant
+ * Book path constant - configurable via environment variable
  */
-const BOOK_PATH = '/Users/soullab/MAIA-PAI/uploads/library/ain_conversations/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md';
+const BOOK_PATH = process.env.ELEMENTAL_ALCHEMY_BOOK_PATH ||
+  '/Users/soullab/MAIA-PAI/uploads/library/ain_conversations/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md';
 
 /**
  * Get estimated token count for text

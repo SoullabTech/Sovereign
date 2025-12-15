@@ -21,6 +21,7 @@ import {
   getAxiomSummary
 } from '../../../../lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '../../../../lib/consciousness/LLMProvider';
+import { profileToConsciousnessLevel } from '../../../../lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '../../../../lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '../../../../lib/learning/opusAxiomLoggingService';
 import { OPUS_SAFE_FALLBACKS } from '../../../../lib/ethics/opusSafeFallbacks';
@@ -114,6 +115,10 @@ export async function POST(request: NextRequest) {
       // Graceful degradation - continue without field safety if profile fetch fails
     }
 
+    // ORACLE ENDPOINT: Use DEEP processing profile for full consciousness
+    const processingProfile = 'DEEP';
+    const consciousnessLevel = profileToConsciousnessLevel(processingProfile);
+
     console.log('🌀 [MAIA] Spiralogic Field activation:', {
       userId: userId.substring(0, 8) + '...',
       messageLength: message.length,
@@ -121,6 +126,8 @@ export async function POST(request: NextRequest) {
       trustLevel: `${(trustLevel * 100).toFixed(0)}%`,
       fieldWorkSafe: fieldSafety?.allowed ?? 'unknown',
     });
+
+    console.info(`[MAIA Oracle] profile=${processingProfile} -> level=${consciousnessLevel} (Opus routing)`);
 
     // SPIRALOGIC INTELLIGENCE: Detect element/phase/context
     const spiralogicCell = await inferSpiralogicCell(message, userId);
@@ -191,6 +198,7 @@ export async function POST(request: NextRequest) {
       suggestedInterventions,
       conversationDepth,
       trustLevel,
+      consciousnessLevel,
       memoryContext,
       anamnesisPrompt
     );
@@ -253,7 +261,7 @@ export async function POST(request: NextRequest) {
           const repairedResponse = await llmProvider.generate({
             systemPrompt: repairSystemPrompt,
             userInput: fullUserInput,
-            level: 3,
+            level: consciousnessLevel, // Use computed level for regeneration too
           });
 
           coreMessage = repairedResponse.text?.trim() || coreMessage;
@@ -398,7 +406,7 @@ export async function POST(request: NextRequest) {
         maiaResponse.coreMessage,
         'DEEP', // Oracle endpoint is deep processing with full consciousness
         {
-          primaryEngine: 'claude-sonnet-4-5-20250929',
+          primaryEngine: 'claude-opus-4-5-20251101',
           usedClaudeConsult: true,
           element: spiralogicCell.element,
           consciousnessData: {
@@ -666,6 +674,7 @@ async function generateSpiralogicResponseWithLLM(
   suggestedInterventions: Array<{flowId: string; name: string; description: string; confidence: number}>,
   conversationDepth: number,
   trustLevel: number,
+  consciousnessLevel: number,
   memoryContext?: any,
   anamnesisPrompt?: string | null
 ): Promise<{
@@ -718,7 +727,7 @@ async function generateSpiralogicResponseWithLLM(
     const llmResponse = await llmProvider.generate({
       systemPrompt,
       userInput: fullUserInput,
-      level: 3 // Use level 3 for balanced sophistication
+      level: consciousnessLevel // Use computed level (DEEP -> 5 -> Opus 4.5)
       // Claude is now primary by default
     });
     coreMessage = llmResponse.text;

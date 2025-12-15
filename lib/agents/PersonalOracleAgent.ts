@@ -950,7 +950,7 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
         console.log('🧠 [REVIVAL] Using revival prompt system...');
 
         // Generate session ID from conversation (or use existing if passed)
-        const sessionId = context?.sessionId || `session-${userId}-${Date.now()}`;
+        const sessionId = context?.sessionId || `session-${this.userId}-${Date.now()}`;
 
         // Select appropriate tier based on conversation context
         const tier = selectRevivalTier({
@@ -972,7 +972,7 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
         }
 
         // Get revival prompt (cached per session)
-        const revival = await getMaiaRevivalPrompt(sessionId, userId, tier, userContextStr);
+        const revival = await getMaiaRevivalPrompt(sessionId, this.userId, tier, userContextStr);
         systemPrompt = revival.prompt;
 
         console.log(`✨ [REVIVAL] Loaded ${tier} tier (${revival.tokens.toLocaleString()} tokens)`);

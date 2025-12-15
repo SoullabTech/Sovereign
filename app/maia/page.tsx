@@ -21,6 +21,7 @@ import { WisdomJourneyDashboard } from '@/components/maya/WisdomJourneyDashboard
 import { WeavingVisualization } from '@/components/maya/WeavingVisualization';
 // BetaOnboarding removed - direct access only
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { useFeatureAccess } from '@/hooks/useSubscription';
@@ -123,6 +124,7 @@ export default function MAIAPage() {
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [showLabDrawer, setShowLabDrawer] = useState(false);
+  const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
 
   const hasCheckedAuth = useRef(false);
 
@@ -182,6 +184,16 @@ export default function MAIAPage() {
       const welcomeSeen = localStorage.getItem('maia_welcome_seen');
       setShowWelcome(!welcomeSeen);
 
+      // Check Week 0 onboarding completion
+      const week0Complete = localStorage.getItem('week0_onboarding_complete');
+      if (!week0Complete && initialData.name !== 'Explorer') {
+        // Show onboarding for new users (but not for guest/default users)
+        setShowWeekZeroOnboarding(true);
+        console.log('🌱 [MAIA] Week 0 onboarding required for:', initialData.name);
+      } else {
+        console.log('✅ [MAIA] Week 0 onboarding already completed or guest user');
+      }
+
       // Load saved voice preference
       const savedVoice = localStorage.getItem('selected_voice') as 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
       if (savedVoice) {
@@ -207,6 +219,23 @@ export default function MAIAPage() {
     localStorage.removeItem('betaUserId');
     localStorage.removeItem('explorerName');
     router.push('/');
+  };
+
+  const handleWeekZeroComplete = (onboardingData: any) => {
+    console.log('🌸 [MAIA] Week 0 onboarding completed:', onboardingData);
+    setShowWeekZeroOnboarding(false);
+
+    // Hide welcome message since onboarding is more comprehensive
+    localStorage.setItem('maia_welcome_seen', 'true');
+    setShowWelcome(false);
+
+    // Log the completion for analytics/learning
+    console.log('📊 [MAIA] Onboarding data collected for learning system');
+  };
+
+  const handleWeekZeroSkip = () => {
+    console.log('⏭️ [MAIA] Week 0 onboarding skipped');
+    setShowWeekZeroOnboarding(false);
   };
 
   useEffect(() => {
@@ -278,26 +307,34 @@ export default function MAIAPage() {
         <div className="h-screen relative overflow-hidden bg-gradient-to-br from-stone-950 via-stone-900 to-stone-950 flex flex-col">
         {/* Atmospheric Particles - Floating dust/sand */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-          {[...Array(30)].map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-[#D4B896]/20 rounded-full"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                opacity: [0.2, 0.5, 0.2],
-                scale: [1, 1.5, 1],
-              }}
-              transition={{
-                duration: 3 + Math.random() * 4,
-                repeat: Infinity,
-                delay: Math.random() * 2,
-              }}
-            />
-          ))}
+          {[...Array(30)].map((_, i) => {
+            // Create deterministic "random" values based on index for hydration consistency
+            const seededX = (i * 17.3) % 100;
+            const seededY = (i * 23.7) % 100;
+            const seededDuration = 3 + ((i * 7.1) % 4);
+            const seededDelay = (i * 11.3) % 2;
+
+            return (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-[#D4B896]/20 rounded-full"
+                style={{
+                  left: `${seededX}%`,
+                  top: `${seededY}%`,
+                }}
+                animate={{
+                  y: [0, -30, 0],
+                  opacity: [0.2, 0.5, 0.2],
+                  scale: [1, 1.5, 1],
+                }}
+                transition={{
+                  duration: seededDuration,
+                  repeat: Infinity,
+                  delay: seededDelay,
+                }}
+              />
+            );
+          })}
         </div>
 
         {/* Atmospheric Glow - Warm light from below */}
@@ -346,18 +383,7 @@ export default function MAIAPage() {
             {/* Mobile: Horizontal scrollable container */}
             <div className="md:hidden mobile-carousel scrollbar-hide">
               <div className="flex items-center gap-3 min-w-max px-3 py-2">
-                {/* Left: SOULLAB Logo with Holoflower */}
-                <div className="flex items-center gap-2 carousel-item">
-                  <img
-                    src="/holoflower-amber.png"
-                    alt="Holoflower"
-                    className="w-5 h-5 opacity-100 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
-                    style={{ filter: 'brightness(1.2)' }}
-                  />
-                  <h1 className="text-sm font-light text-amber-300/90 tracking-wider">
-                    SOULLAB
-                  </h1>
-                </div>
+                {/* Logo removed - now in bottom center */}
 
                 {/* Voice/Text Toggle - Mobile optimized */}
                 <button
@@ -506,18 +532,8 @@ export default function MAIAPage() {
 
             {/* Desktop: Traditional layout */}
             <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-4">
-              {/* Left: SOULLAB Logo with Holoflower */}
-              <div className="flex items-center gap-2">
-                <img
-                  src="/holoflower-amber.png"
-                  alt="Holoflower"
-                  className="w-6 h-6 opacity-100 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
-                  style={{ filter: 'brightness(1.2)' }}
-                />
-                <h1 className="text-lg font-light text-amber-300/90 tracking-wider">
-                  SOULLAB
-                </h1>
-              </div>
+              {/* Left: Logo removed - now in bottom center */}
+              <div></div>
 
               {/* Center: Voice/Text toggle + Mode selector */}
               <div className="flex items-center gap-3">
@@ -812,8 +828,18 @@ export default function MAIAPage() {
           </AnimatePresence>
         </div>
 
+        {/* Week Zero Onboarding */}
+        {isMounted && showWeekZeroOnboarding && (
+          <WeekZeroOnboarding
+            userId={explorerId}
+            userName={explorerName}
+            onComplete={handleWeekZeroComplete}
+            onSkip={handleWeekZeroSkip}
+          />
+        )}
+
         {/* Welcome Message for First-Time Users */}
-        {isMounted && showWelcome && (
+        {isMounted && showWelcome && !showWeekZeroOnboarding && (
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
@@ -840,6 +866,26 @@ export default function MAIAPage() {
             </div>
           </motion.div>
         )}
+
+        {/* SOULLAB Logo - Bottom Center */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1, duration: 0.8 }}
+          className="absolute bottom-2 left-0 right-0 flex justify-center z-50"
+        >
+          <div className="flex items-center gap-3 px-4 py-2 bg-black/40 backdrop-blur-md border border-amber-500/20 rounded-full">
+            <img
+              src="/holoflower-amber.png"
+              alt="Holoflower"
+              className="w-6 h-6 opacity-100 drop-shadow-[0_0_8px_rgba(251,146,60,0.6)]"
+              style={{ filter: 'brightness(1.2)' }}
+            />
+            <h1 className="text-lg font-light text-amber-300/90 tracking-wider">
+              SOULLAB
+            </h1>
+          </div>
+        </motion.div>
 
         {/* Sacred Lab Drawer */}
         <SacredLabDrawer

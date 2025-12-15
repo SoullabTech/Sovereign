@@ -254,3 +254,20 @@ library/**/*.pdf
 **/torch/
 **/pytorch/
 **/tensorflow/
+# Environment files
+.env*
+!.env.example
+
+# Mobile build artifacts
+# iOS
+ios/App/*.xcarchive
+ios/App/build/
+ios/DerivedData/
+ios/build/
+*.ipa
+
+# Android
+android/app/build/
+android/build/
+*.apk
+*.aab

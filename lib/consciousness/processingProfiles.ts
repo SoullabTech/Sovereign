@@ -10,8 +10,19 @@
  */
 
 import { getCognitiveProfile, type CognitiveProfile } from './cognitiveProfileService';
+import { ConsciousnessLevel } from './ConsciousnessLevelDetector';
 
 export type ProcessingProfile = 'FAST' | 'CORE' | 'DEEP';
+
+/**
+ * Canonical mapping from processing profiles to consciousness levels
+ * for LLM model selection (Sonnet 4.5 vs Opus 4.5)
+ */
+export function profileToConsciousnessLevel(profile: ProcessingProfile): ConsciousnessLevel {
+  if (profile === 'FAST') return 1;
+  if (profile === 'DEEP') return 5;
+  return 3; // CORE default
+}
 
 export interface ProcessingProfileResult {
   profile: ProcessingProfile;

@@ -10,9 +10,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import { getServerSession, createClient } from '@/lib/supabase/server';
 import LearningSystemOrchestrator from '@/lib/learning/learningSystemOrchestrator';
-import { createClient } from '@/lib/database/supabase/server';
 
 export async function POST(req: NextRequest) {
   try {

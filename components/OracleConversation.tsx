@@ -20,6 +20,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 // import { VoiceActivatedMaia as SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/VoiceActivatedMaiaFixed'; // File doesn't exist
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
+import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
 import { QuickSettingsSheet } from './QuickSettingsSheet';
@@ -97,6 +98,8 @@ interface OracleConversationProps {
   userBirthDate?: string; // Birth date for age calculation and teen support
   userAge?: number; // Pre-calculated age (optional, will calculate from birthDate if not provided)
   sessionId: string;
+  apiEndpoint?: string; // API endpoint to use for conversation (defaults to /api/between/chat)
+  consciousnessType?: string; // Type of consciousness processing to use
   initialCheckIns?: Record<string, number>;
   showAnalytics?: boolean;
   voiceEnabled?: boolean;
@@ -122,6 +125,18 @@ interface ConversationMessage {
   motionState?: MotionState;
   coherenceLevel?: number;
   source?: 'user' | 'maia' | 'system';
+  opusAxioms?: {
+    isGold: boolean;
+    passed: number;
+    warnings: number;
+    violations: number;
+    evaluations?: Array<{
+      axiom: string;
+      status: 'pass' | 'warning' | 'violation';
+      notes?: string;
+    }>;
+  };
+  turnId?: number;
 }
 
 // Component to clean messages by removing stage directions
@@ -152,6 +167,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   userBirthDate,
   userAge: propUserAge,
   sessionId,
+  apiEndpoint = '/api/between/chat', // Default to current behavior
+  consciousnessType = 'maia', // Default consciousness type
   initialCheckIns = {},
   showAnalytics = false,
   voiceEnabled = true,
@@ -1709,8 +1726,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         ? getTeenSystemPrompt(teenProfile, lastSafetyCheck || undefined)
         : undefined;
 
-      // MAIA speaks FROM THE BETWEEN - all consciousness systems integrated
-      const response = await fetch('/api/between/chat/', {
+      // MAIA speaks through sovereign API - working consciousness system
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1765,6 +1782,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       let responseText: string;
       let responseData: any = {};
       let element = 'aether'; // Default element, will be updated from metadata if available
+      let opusAxioms: any = undefined; // Opus Axioms evaluation results
+      let turnId: number | undefined = undefined; // Turn ID for feedback tracking
 
       if (isStreaming) {
         // Handle streaming response (voice mode - fastest)
@@ -1940,7 +1959,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
-        responseText = cleanMessage(responseData.message || 'I\'m here. What wants your attention?');
+        responseText = cleanMessage(responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+
+        // Extract opusAxioms and turnId for Gold Seal feature
+        opusAxioms = responseData.opusAxioms;
+        turnId = responseData.turnId;
+        if (opusAxioms) {
+          console.log(`🜔 Opus Axioms received: ${opusAxioms.isGold ? 'GOLD' : 'Standard'} | ${opusAxioms.passed}/8 passed`);
+        }
       }
 
       const apiTime = Date.now() - startTime;
@@ -2019,7 +2045,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         facetId: element,
         motionState: 'responding',
         coherenceLevel: responseData.metadata?.confidence || 0.85,
-        source: 'maia'
+        source: 'maia',
+        opusAxioms,
+        turnId
       };
 
       // Store MAIA's response for echo detection
@@ -3523,6 +3551,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           message.text
                         )}
                       </div>
+
+                      {/* MAIA Feedback Widget with Opus Gold Seal - only for MAIA responses */}
+                      {message.role === 'oracle' && message.turnId && (
+                        <div className="mt-3">
+                          <MaiaFeedbackWidget
+                            turnId={message.turnId}
+                            opusAxioms={message.opusAxioms}
+                            compact={false}
+                          />
+                        </div>
+                      )}
                     </motion.div>
                     );
                   })}

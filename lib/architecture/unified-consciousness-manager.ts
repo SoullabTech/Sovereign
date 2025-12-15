@@ -78,7 +78,10 @@ export class UnifiedConsciousnessStateManager implements SevenLayerArchitecture 
         throw new Error(`No adapter found for platform: ${this.activePlatform}`);
       }
 
-      // Generate initial snapshot from active platform
+      // Mark as initialized BEFORE generating snapshot to prevent circular dependency
+      this.isInitialized = true;
+
+      // Generate initial snapshot from active platform (now that initialization is marked complete)
       this.currentSnapshot = await this.generateSnapshot();
 
       // Setup real-time synchronization
@@ -87,9 +90,10 @@ export class UnifiedConsciousnessStateManager implements SevenLayerArchitecture 
       // Setup cross-platform listeners
       this.setupCrossPlatformListeners();
 
-      this.isInitialized = true;
       console.log(`🧠🌀 Unified Consciousness Manager initialized for ${this.activePlatform}`);
     } catch (error) {
+      // Reset initialization status if initialization fails
+      this.isInitialized = false;
       console.error('Failed to initialize Unified Consciousness Manager:', error);
       throw error;
     }

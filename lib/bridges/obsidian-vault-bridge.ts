@@ -367,6 +367,9 @@ export class ObsidianVaultBridge {
    * Semantic search using embeddings
    */
   private async semanticSearch(query: string, maxResults: number): Promise<NoteContent[]> {
+    if (!query || typeof query !== 'string') {
+      return [];
+    }
     // In production, this would use actual vector embeddings
     // For now, fall back to keyword search with relevance scoring
 
@@ -387,6 +390,9 @@ export class ObsidianVaultBridge {
    * Keyword search
    */
   private async keywordSearch(query: string, maxResults: number): Promise<NoteContent[]> {
+    if (!query || typeof query !== 'string') {
+      return [];
+    }
     const queryTerms = query.toLowerCase().split(/\s+/);
     const results: NoteContent[] = [];
 

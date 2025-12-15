@@ -266,19 +266,32 @@ button {
 }
 
 /* Voice and Dialogue buttons - amber styling */
-button:has(span:contains("Voice")),
-button:has(:contains("Voice")),
-button:has(span:contains("Dialogue")),
-button:has(:contains("Dialogue")) {
+/* Using attribute-based selectors instead of invalid :contains() */
+button[data-action="voice"],
+button[aria-label*="Voice"],
+button[aria-label*="voice"],
+button[title*="Voice"],
+button[title*="voice"],
+button[data-action="dialogue"],
+button[aria-label*="Dialogue"],
+button[aria-label*="dialogue"],
+button[title*="Dialogue"],
+button[title*="dialogue"] {
   background: #f59e0b !important; /* Amber-500 */
   color: #ffffff !important;
   border: 1px solid #d97706 !important; /* Amber-600 border */
 }
 
-button:has(span:contains("Voice")):hover,
-button:has(:contains("Voice")):hover,
-button:has(span:contains("Dialogue")):hover,
-button:has(:contains("Dialogue")):hover {
+button[data-action="voice"]:hover,
+button[aria-label*="Voice"]:hover,
+button[aria-label*="voice"]:hover,
+button[title*="Voice"]:hover,
+button[title*="voice"]:hover,
+button[data-action="dialogue"]:hover,
+button[aria-label*="Dialogue"]:hover,
+button[aria-label*="dialogue"]:hover,
+button[title*="Dialogue"]:hover,
+button[title*="dialogue"]:hover {
   background: #d97706 !important; /* Amber-600 on hover */
   color: #ffffff !important;
 }

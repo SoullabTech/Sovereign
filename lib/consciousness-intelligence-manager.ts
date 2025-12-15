@@ -81,7 +81,13 @@ class ConsciousnessIntelligenceManager {
       
       // Handle local endpoints differently
       const isLocal = endpoint.type === 'local' || endpoint.url.startsWith('/');
-      const fullUrl = isLocal ? endpoint.url : endpoint.url;
+      const baseUrl = process.env.NODE_ENV === 'production'
+        ? 'https://localhost'
+        : 'http://localhost';
+      const port = process.env.PORT || '3000';
+      const fullUrl = isLocal
+        ? `${baseUrl}:${port}${endpoint.url}`
+        : endpoint.url;
 
       const response = await fetch(fullUrl, {
         method: 'POST',

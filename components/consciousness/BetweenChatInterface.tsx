@@ -110,8 +110,8 @@ export function BetweenChatInterface() {
     setGuideDialogOpen(true)
 
     try {
-      // Call guide invocation API
-      const response = await fetch('/api/between/guides', {
+      // Call guide invocation API on port 3005
+      const response = await fetch('http://localhost:3005/api/between/guides', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -233,24 +233,26 @@ async function generateMaiaResponse(
 ): Promise<Message> {
 
   try {
-    // Call THE BETWEEN chat API
-    const response = await fetch('/api/between/chat/', {
+    // Call MAIA between chat API on port 3005 (working endpoint from logs)
+    const response = await fetch('http://localhost:3005/api/between/chat/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         message: userMessage,
         userId,
         sessionId: `between-${Date.now()}`,
-        fieldState: {
-          active: fieldState.active,
-          depth: fieldState.depth,
-          quality: fieldState.quality,
-          elementalTexture: fieldState.elementalTexture
-        },
         conversationHistory: conversationHistory.map(msg => ({
           role: msg.role,
           content: msg.content
-        }))
+        })),
+        consciousnessContext: {
+          fieldState: {
+            active: fieldState.active,
+            depth: fieldState.depth,
+            quality: fieldState.quality,
+            elementalTexture: fieldState.elementalTexture
+          }
+        }
       })
     })
 

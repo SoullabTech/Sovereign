@@ -3,16 +3,15 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // ESLint configuration moved to .eslintrc.json - no longer supported in Next.js 16
+  // eslint config removed per Next.js 16 requirements
   images: {
     unoptimized: true,
   },
   // Allow mobile app to access dev server resources
   allowedDevOrigins: ['192.168.4.210:3005', '192.168.4.210', 'localhost'],
   // PWA Configuration
-  trailingSlash: true,
+  trailingSlash: false,
   output: process.env.CAPACITOR_BUILD ? 'export' : 'standalone',
   distDir: process.env.CAPACITOR_BUILD ? 'out' : '.next',
   assetPrefix: process.env.CAPACITOR_BUILD ? '' : undefined,
@@ -63,6 +62,10 @@ const nextConfig = {
         util: false,
         url: false,
         zlib: false,
+        // Add missing packages that should only run on server
+        '@qdrant/js-client-rest': false,
+        'better-sqlite3': false,
+        'luxon': false,
       };
     }
 
@@ -157,6 +160,11 @@ const nextConfig = {
     };
 
     return config;
+  },
+
+  // Turbopack configuration (Next.js 16 default bundler)
+  turbopack: {
+    // Empty config to silence the error - most webpack configs work fine in Turbopack
   },
 
   // Experimental features to ensure critical components load first

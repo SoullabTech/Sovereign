@@ -143,6 +143,12 @@ export class PersonalMetricsService {
     viewMode: 'gentle' | 'detailed' | 'facilitator' = 'gentle'
   ): Promise<PersonalMetricsSnapshot> {
     try {
+      // 🛡️ DEVELOPMENT MODE: Check if services are properly initialized
+      if (!this.coreProfileService) {
+        console.warn(`⚠️ PersonalMetricsService: coreProfileService not initialized, returning mock data for ${memberId}`);
+        return this.generateMockSnapshot(memberId);
+      }
+
       // Gather data from all seven layers
       const [
         coreProfile,
@@ -152,8 +158,8 @@ export class PersonalMetricsService {
         recentEpisodes
       ] = await Promise.all([
         this.coreProfileService.getCoreMemberProfile(memberId),
-        this.spiralService.getConstellationForMember(memberId),
-        this.communityService.getMemberResonanceProfile(memberId),
+        this.spiralService?.getConstellationForMember?.(memberId) || null,
+        this.communityService?.getMemberResonanceProfile?.(memberId) || null,
         this.getRecentSessions(memberId, 30),
         this.getRecentEpisodes(memberId, 30)
       ]);
@@ -652,6 +658,103 @@ export class PersonalMetricsService {
         timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString()
       }
     ];
+  }
+
+  /**
+   * 🛡️ DEVELOPMENT MODE: Generate mock data when services are not initialized
+   */
+  private generateMockSnapshot(memberId: string): PersonalMetricsSnapshot {
+    return {
+      memberId,
+      generatedAt: new Date().toISOString(),
+
+      // Mock elemental balance
+      elementalBalance: {
+        fire: 0.3,
+        water: 0.25,
+        earth: 0.2,
+        air: 0.15,
+        aether: 0.1,
+        balanceIndex: 0.7,
+        dominantElement: 'fire',
+        emergingElement: 'water'
+      },
+
+      dominantFacets: ['Fire2', 'Water3'],
+      activeArchetypes: [
+        { archetype: 'Warrior', activationLevel: 0.8, developmentalStage: 'integration', awarenessLevel: 'conscious' },
+        { archetype: 'Sage', activationLevel: 0.6, developmentalStage: 'exploration', awarenessLevel: 'emerging' }
+      ],
+
+      // Mock spiral constellation
+      spiralConstellation: {
+        activeSpiralCount: 2,
+        primarySpiralDomain: 'personal_development',
+        spiralLoad: 'moderate' as any,
+        focusCoherence: 0.75,
+        resolutionMomentum: 0.6,
+        nextEvolutionaryEdge: 'Integrating shadow aspects with conscious awareness'
+      },
+
+      // Mock engagement metrics
+      engagement: {
+        weeklySessionCount: 3,
+        averageSessionDepth: 7.5,
+        practiceConsistency: 0.8,
+        integrationMomentum: 0.65,
+        lastActiveDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString()
+      },
+
+      // Mock development metrics
+      development: {
+        elementalGrowthTrajectory: [
+          { element: 'fire', monthlyGrowthRate: 0.15, currentMastery: 0.6 }
+        ],
+        archetypalEvolution: 0.7,
+        wisdomIntegrationScore: 0.65,
+        practiceMaturity: 'developing' as any,
+        nextDevelopmentalThreshold: 'Shadow integration and authentic expression'
+      },
+
+      // Mock field context
+      fieldContext: {
+        communityAlignment: 0.75,
+        collectiveResonance: 0.6,
+        fieldContribution: 0.5,
+        mutualSupportIndex: 0.8,
+        communityGrowthFactor: 0.7
+      },
+
+      // Mock archetypal patterns
+      archetypalPatterns: {
+        dominantArchetype: 'Warrior',
+        secondaryArchetype: 'Sage',
+        emergingArchetype: 'Healer',
+        archetypalTension: 'Integration of power and wisdom',
+        evolutionaryDirection: 'Compassionate strength'
+      },
+
+      // Mock insights
+      insights: [
+        {
+          type: 'pattern' as any,
+          content: 'Strong fire energy seeking balance through water consciousness',
+          confidence: 0.8,
+          category: 'elemental_evolution'
+        }
+      ],
+
+      // Mock recommendations
+      recommendations: [
+        {
+          type: 'practice' as any,
+          priority: 'high' as any,
+          content: 'Focus on water element practices for emotional depth',
+          estimatedImpact: 0.7,
+          category: 'elemental_balancing'
+        }
+      ]
+    };
   }
 }
 

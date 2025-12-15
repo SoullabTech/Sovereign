@@ -7,9 +7,11 @@
 
 import fs from 'fs';
 import path from 'path';
+import { detectElementsAll, getRecommendedChapters } from './SemanticChapterDetector';
 
-// Book location
-const BOOK_PATH = '/Users/soullab/MAIA-PAI/uploads/library/ain_conversations/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md';
+// Book location - configurable via environment variable
+const BOOK_PATH = process.env.ELEMENTAL_ALCHEMY_BOOK_PATH ||
+  '/Users/soullab/MAIA-PAI/uploads/library/ain_conversations/Elemental Alchemy_ The Ancient Art of Living a Phenomenal Life.md';
 
 // Chapter line numbers (exact locations from book)
 const CHAPTER_LOCATIONS = {
@@ -84,57 +86,30 @@ export async function loadElementChapter(element: 'fire' | 'water' | 'earth' | '
 
 /**
  * Load book sections based on conversation context
- * Detects which elements are being discussed and loads relevant chapters
+ * Uses semantic detection to understand elemental themes beyond keywords
  */
 export async function loadRelevantTeachings(userMessage: string, conversationContext?: any): Promise<string> {
-  const message = userMessage.toLowerCase();
+  // Use semantic detection to find elemental themes
+  const detectedThemes = detectElementsAll(userMessage);
+  const recommendedChapters = getRecommendedChapters(detectedThemes);
 
-  // Detect which elements are being discussed
-  const elementsToLoad: Array<'fire' | 'water' | 'earth' | 'air' | 'aether' | 'spiralogic'> = [];
-
-  // Fire keywords
-  if (message.match(/fire|vision|spiritual|creativity|intuition|fire1|fire2|fire3/i)) {
-    elementsToLoad.push('fire');
-  }
-
-  // Water keywords
-  if (message.match(/water|emotion|feeling|depth|shadow|water1|water2|water3/i)) {
-    elementsToLoad.push('water');
-  }
-
-  // Earth keywords
-  if (message.match(/earth|ground|body|manifest|practical|earth1|earth2|earth3/i)) {
-    elementsToLoad.push('earth');
-  }
-
-  // Air keywords
-  if (message.match(/air|mind|thought|communication|clarity|air1|air2|air3/i)) {
-    elementsToLoad.push('air');
-  }
-
-  // Aether keywords
-  if (message.match(/aether|integration|wholeness|unity|transcendent/i)) {
-    elementsToLoad.push('aether');
-  }
-
-  // Spiralogic keywords
-  if (message.match(/spiral|spiralogic|regression|progression|phase|cycle/i)) {
-    elementsToLoad.push('spiralogic');
-  }
-
-  // If no specific elements detected, don't load anything (keep context light)
-  if (elementsToLoad.length === 0) {
+  // If no strong themes detected, don't load anything (keep context light)
+  if (recommendedChapters.length === 0) {
+    console.log('📖 [BOOK] No strong elemental themes detected, skipping book loading');
     return '';
   }
 
-  // Load the first detected element (to keep context manageable)
-  // In future, could load multiple but that increases token cost
-  const primaryElement = elementsToLoad[0];
+  // Load the primary element (highest confidence)
+  const primaryElement = recommendedChapters[0];
   const section = await loadElementChapter(primaryElement);
 
   if (!section) {
     return '';
   }
+
+  // Log detection details
+  console.log(`📖 [BOOK] Detected themes:`, detectedThemes.map(t => `${t.element}(${(t.confidence * 100).toFixed(0)}%)`).join(', '));
+  console.log(`📖 [BOOK] Loading primary chapter: ${primaryElement}`);
 
   // Format for MAIA's context
   return `
@@ -142,6 +117,8 @@ export async function loadRelevantTeachings(userMessage: string, conversationCon
 
 The following is from Kelly Nezat's book "Elemental Alchemy: The Ancient Art of Living a Phenomenal Life."
 This is provided for you to SYNTHESIZE FROM, not to quote or cite. Speak from the understanding these teachings give you.
+
+**Detected Themes**: ${detectedThemes.slice(0, 3).map(t => `${t.element} (${(t.confidence * 100).toFixed(0)}% confidence)`).join(', ')}
 
 ---
 

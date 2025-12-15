@@ -13,12 +13,12 @@
  */
 
 import { EventEmitter } from 'events';
-import { AutonomousConsciousnessEcosystem } from './autonomous-consciousness-ecosystem.js';
-import { ReciprocalLearningEngine, type MemberInteraction } from './reciprocal-learning-engine.js';
-import { CulturalSensitivityValidator } from './cultural-sensitivity-validator.js';
-import { MemberContributionTracker } from './member-contribution-tracker.js';
-import { WisdomSynthesisEngine, type SynthesisOpportunity } from './wisdom-synthesis-engine.js';
-import { ElderCouncilService } from './ElderCouncilService.js';
+import { AutonomousConsciousnessEcosystem } from './autonomous-consciousness-ecosystem';
+import { ReciprocalLearningEngine, type MemberInteraction } from './reciprocal-learning-engine';
+import { CulturalSensitivityValidator } from './cultural-sensitivity-validator';
+import { MemberContributionTracker } from './member-contribution-tracker';
+import { WisdomSynthesisEngine, type SynthesisOpportunity } from './wisdom-synthesis-engine';
+import { ElderCouncilService } from './ElderCouncilService';
 
 export interface ReciprocalLearningConfig {
   enableWisdomDetection: boolean;
@@ -244,7 +244,7 @@ export class ReciprocalLearningEcosystem extends EventEmitter {
    * Check for synthesis opportunities when new wisdom is contributed
    */
   private async checkSynthesisOpportunities(memberId: string) {
-    const opportunities = await this.synthesisEngine.identifySynthesisOpportunities();
+    const opportunities = await this.synthesisEngine.detectSynthesisOpportunities([]);
 
     for (const opportunity of opportunities) {
       if (opportunity.contributionIds.length >= this.config.synthesisThreshold) {
@@ -376,7 +376,7 @@ export class ReciprocalLearningEcosystem extends EventEmitter {
     // Periodic synthesis opportunity detection (every 30 minutes)
     setInterval(async () => {
       try {
-        const opportunities = await this.synthesisEngine.identifySynthesisOpportunities();
+        const opportunities = await this.synthesisEngine.detectSynthesisOpportunities([]);
 
         for (const opportunity of opportunities) {
           if (opportunity.readinessScore > 0.8) {
