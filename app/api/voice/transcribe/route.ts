@@ -7,9 +7,13 @@ import { llamaService } from "../../backend/src/services/memory/LlamaService";
 import { logger } from "../../backend/src/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 
-const openai = new OpenAI({
+// Check if OpenAI API key is valid
+const USE_OPENAI_WHISPER = process.env.OPENAI_API_KEY &&
+                           !process.env.OPENAI_API_KEY.includes('placeholder');
+
+const openai = USE_OPENAI_WHISPER ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+}) : null;
 
 // Ensure upload directory exists
 const ensureUploadDir = async () => {
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     if (!file || !userId) {
       return NextResponse.json(
-        { success: false, error: "Missing file or userId" }, 
+        { success: false, error: "Missing file or userId" },
         { status: 400 }
       );
     }
@@ -36,6 +40,19 @@ export async function POST(req: NextRequest) {
       fileName: file.name,
       fileSize: file.size
     });
+
+    // Check if OpenAI Whisper is available
+    if (!USE_OPENAI_WHISPER) {
+      logger.warn("OpenAI Whisper API not available - placeholder API key detected");
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Voice transcription requires valid OpenAI API key",
+          details: "Set OPENAI_API_KEY in .env.local to enable voice input. Web Speech API is used as fallback on supported browsers."
+        },
+        { status: 503 }
+      );
+    }
 
     // Validate file size (max 25MB for Whisper API)
     if (file.size > 25 * 1024 * 1024) {
@@ -50,7 +67,7 @@ export async function POST(req: NextRequest) {
     const uploadDir = await ensureUploadDir();
     const fileName = `${Date.now()}-${uuidv4()}-${file.name}`;
     const filePath = path.join(uploadDir, fileName);
-    
+
     await fs.writeFile(filePath, buffer);
 
     try {
@@ -66,8 +83,8 @@ export async function POST(req: NextRequest) {
       // Whisper transcription
       const fileStream = await fs.readFile(filePath);
       const transcriptionFile = new File([fileStream], file.name, { type: file.type });
-      
-      const transcription = await openai.audio.transcriptions.create({
+
+      const transcription = await openai!.audio.transcriptions.create({
         file: transcriptionFile,
         model: "whisper-1",
         language: "en", // Optional: specify language for better accuracy

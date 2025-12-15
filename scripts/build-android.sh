@@ -23,31 +23,55 @@ echo "🔄 Syncing Capacitor..."
 npx cap sync android
 
 # Build the Android app
-if [ "$BUILD_TYPE" == "release" ]; then
+if [ "$BUILD_TYPE" == "bundle" ]; then
+    echo "📦 Building App Bundle (AAB) for Google Play Store..."
+    cd android
+    ./gradlew bundleRelease
+    BUNDLE_PATH="app/build/outputs/bundle/release/app-release.aab"
+    OUTPUT_TYPE="bundle"
+elif [ "$BUILD_TYPE" == "release" ]; then
     echo "🏗️ Building release APK..."
     cd android
     ./gradlew assembleRelease
     APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+    OUTPUT_TYPE="apk"
 else
     echo "🔨 Building debug APK..."
     cd android
     ./gradlew assembleDebug
     APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+    OUTPUT_TYPE="apk"
 fi
 
-# Check if APK was created
-if [ -f "$APK_PATH" ]; then
-    APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
-    echo "✅ Android APK built successfully!"
-    echo "📁 Location: $(pwd)/$APK_PATH"
-    echo "📏 Size: $APK_SIZE"
+# Check if build output was created
+if [ "$OUTPUT_TYPE" == "bundle" ]; then
+    if [ -f "$BUNDLE_PATH" ]; then
+        BUNDLE_SIZE=$(du -h "$BUNDLE_PATH" | cut -f1)
+        echo "✅ Android App Bundle built successfully!"
+        echo "📁 Location: $(pwd)/$BUNDLE_PATH"
+        echo "📏 Size: $BUNDLE_SIZE"
 
-    # Copy to root directory for easy access
-    cp "$APK_PATH" "../maia-android-${BUILD_TYPE}.apk"
-    echo "📋 Copied to: ../maia-android-${BUILD_TYPE}.apk"
+        # Copy to root directory for easy access
+        cp "$BUNDLE_PATH" "../maia-android-bundle.aab"
+        echo "📋 Copied to: ../maia-android-bundle.aab"
+    else
+        echo "❌ Android App Bundle build failed!"
+        exit 1
+    fi
 else
-    echo "❌ Android APK build failed!"
-    exit 1
+    if [ -f "$APK_PATH" ]; then
+        APK_SIZE=$(du -h "$APK_PATH" | cut -f1)
+        echo "✅ Android APK built successfully!"
+        echo "📁 Location: $(pwd)/$APK_PATH"
+        echo "📏 Size: $APK_SIZE"
+
+        # Copy to root directory for easy access
+        cp "$APK_PATH" "../maia-android-${BUILD_TYPE}.apk"
+        echo "📋 Copied to: ../maia-android-${BUILD_TYPE}.apk"
+    else
+        echo "❌ Android APK build failed!"
+        exit 1
+    fi
 fi
 
 echo ""

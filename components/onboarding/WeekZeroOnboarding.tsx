@@ -206,10 +206,10 @@ export default function WeekZeroOnboarding({ userId, userName, onComplete, onSki
               <Progress value={getStepProgress()} className="mb-4" />
 
               <CardTitle className="text-xl text-white">{getStepTitle()}</CardTitle>
-              {onSkip && currentStep === 'welcome' && (
+              {onSkip && (
                 <button
                   onClick={onSkip}
-                  className="absolute top-4 right-4 text-stone-400 hover:text-stone-300 text-sm"
+                  className="absolute top-4 right-4 text-stone-400 hover:text-stone-300 text-sm underline"
                 >
                   Skip
                 </button>
@@ -414,13 +414,22 @@ export default function WeekZeroOnboarding({ userId, userName, onComplete, onSki
 
                   <div className="flex gap-3">
                     {!maiaWitnessing ? (
-                      <Button
-                        onClick={handleJournaling}
-                        disabled={!journalText.trim() || isLoading}
-                        className="bg-amber-500 hover:bg-amber-600 text-white"
-                      >
-                        {isLoading ? 'MAIA is witnessing...' : 'Receive Reflection'}
-                      </Button>
+                      <>
+                        <Button
+                          onClick={handleJournaling}
+                          disabled={!journalText.trim() || isLoading}
+                          className="bg-amber-500 hover:bg-amber-600 text-white"
+                        >
+                          {isLoading ? 'MAIA is witnessing...' : 'Receive Reflection'}
+                        </Button>
+                        <Button
+                          onClick={() => setCurrentStep('expectations')}
+                          variant="outline"
+                          className="border-stone-600 text-stone-300 hover:bg-stone-800"
+                        >
+                          Skip
+                        </Button>
+                      </>
                     ) : (
                       <Button
                         onClick={() => setCurrentStep('expectations')}

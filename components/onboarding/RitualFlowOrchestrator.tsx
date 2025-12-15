@@ -44,6 +44,7 @@ export default function RitualFlowOrchestrator({ onComplete }: RitualFlowOrchest
         id: explorerId,
         username: userData.username,
         name: userData.name,
+        password: userData.password, // Include password for future sign-ins
         onboarded: true,
         createdAt: new Date().toISOString()
       };
@@ -69,7 +70,7 @@ export default function RitualFlowOrchestrator({ onComplete }: RitualFlowOrchest
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-y-auto">
       {/* Sacred background that flows throughout all phases */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#334155]" />
 

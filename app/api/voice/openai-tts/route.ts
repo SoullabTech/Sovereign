@@ -1,8 +1,11 @@
 /**
- * OpenAI TTS Route - Re-enabled for interim use until custom voice system
+ * TTS Route - OpenAI with macOS fallback for local development
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import { synthesizeSpeechMacOS } from '@/lib/tts/macosTts';
+
+const USE_MACOS_FALLBACK = !process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('placeholder');
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,38 +19,39 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if OpenAI API key is configured
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
-    }
-
     console.log(`🎤 TTS Request: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
 
-    // Generate speech using OpenAI TTS
-    const audioResponse = await synthesizeSpeech({
-      text,
-      voice: voice || 'alloy',
-      format: format || 'mp3',
-      speed: speed || 1.0
-    });
+    let buffer: Buffer;
+    let contentType: string;
 
-    // Convert response to buffer
-    const buffer = Buffer.from(await audioResponse.arrayBuffer());
+    // Use macOS fallback if no valid OpenAI key
+    if (USE_MACOS_FALLBACK) {
+      console.log('🍎 Using macOS TTS fallback (Samantha voice)');
+      buffer = await synthesizeSpeechMacOS(text);
+      contentType = 'audio/x-aiff';
+    } else {
+      // Generate speech using OpenAI TTS
+      const audioResponse = await synthesizeSpeech({
+        text,
+        voice: voice || 'alloy',
+        format: format || 'mp3',
+        speed: speed || 1.0
+      });
+      buffer = Buffer.from(await audioResponse.arrayBuffer());
+      contentType = 'audio/mpeg';
+    }
 
     // Return audio with proper headers
     return new NextResponse(buffer, {
       status: 200,
       headers: {
-        'Content-Type': 'audio/mpeg',
+        'Content-Type': contentType,
         'Content-Length': buffer.length.toString(),
       }
     });
 
   } catch (error: any) {
-    console.error('❌ OpenAI TTS error:', error);
+    console.error('❌ TTS error:', error);
 
     return NextResponse.json(
       {

@@ -258,8 +258,14 @@ export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelc
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 px-8 py-3 bg-gradient-to-r from-[#A7D8D1] via-[#80CBC4] to-[#4DB6AC] hover:from-[#8ECBC4] hover:via-[#6BB6AC] hover:to-[#4DB6AC] text-white rounded-xl font-medium hover:shadow-lg hover:shadow-teal-500/25 transition-all flex items-center justify-center gap-2"
-          style={{ fontFamily: 'Georgia, "Times New Roman", Times, serif' }}
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          className="mt-20 px-8 py-3 bg-gradient-to-r from-[#A7D8D1] via-[#80CBC4] to-[#4DB6AC] hover:from-[#8ECBC4] hover:via-[#6BB6AC] hover:to-[#4DB6AC] text-white rounded-xl font-medium transition-all flex items-center justify-center gap-2"
+          style={{
+            fontFamily: 'Georgia, "Times New Roman", Times, serif',
+            textShadow: '1px 1px 2px rgba(0, 0, 0, 0.3)',
+            boxShadow: '0 6px 30px rgba(110, 231, 183, 0.5), 0 12px 60px rgba(77, 182, 172, 0.4), 0 0 80px rgba(167, 216, 209, 0.2), inset 0 2px 0 rgba(255, 255, 255, 0.4), inset 0 -2px 0 rgba(0, 0, 0, 0.15)'
+          }}
         >
           Let's begin
           <ArrowRight className="w-4 h-4" />

@@ -237,14 +237,14 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] relative overflow-hidden">
-      <div className="relative z-20 min-h-screen flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] relative overflow-y-auto">
+      <div className="relative z-20 min-h-screen flex flex-col pb-safe">
         {/* Soullab Logo at top - starts immediately visible */}
         <div className="pt-8 pb-6 text-center z-30">
           <h1 className="text-white text-3xl sm:text-4xl md:text-6xl font-extralight tracking-[0.3em] uppercase">Soullab</h1>
         </div>
 
-        <div className="flex-1 flex items-center justify-center px-6">
+        <div className="flex-1 flex items-start justify-center px-6 pt-8">
           <div className="max-w-lg w-full">
           <AnimatePresence mode="wait">
 
@@ -526,7 +526,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         <input
                           type="text"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                           placeholder="USERNAME"
                           className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
                           style={{
@@ -693,7 +693,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         <input
                           type="text"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
+                          onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                           placeholder="USERNAME"
                           className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
                           style={{

@@ -128,8 +128,8 @@ test_oracle_sonnet_path() {
     fi
 }
 
-test_sovereign_deep_path() {
-    print_test_header "Sovereign/DEEP Path" "Test /api/sovereign/app/maia with DEEP trigger"
+test_deep_path_via_between() {
+    print_test_header "DEEP Path Detection" "Test emotional triggers via /api/between/chat"
 
     local start_time=$(date +%s)
     local payload='{
@@ -138,7 +138,7 @@ test_sovereign_deep_path() {
     }'
 
     local response=$(curl -s --max-time $TIMEOUT \
-        -X POST "http://localhost:${DEFAULT_PORT}/api/sovereign/app/maia" \
+        -X POST "http://localhost:${DEFAULT_PORT}/api/between/chat" \
         -H "Content-Type: application/json" \
         -d "$payload" 2>/dev/null || echo "CURL_FAILED")
 
@@ -146,7 +146,7 @@ test_sovereign_deep_path() {
     local response_time=$((end_time - start_time))
 
     if [ "$response" = "CURL_FAILED" ]; then
-        record_result "Sovereign/DEEP" "FAIL" "Request timeout or connection error" "$response_time"
+        record_result "DEEP Detection" "FAIL" "Request timeout or connection error" "${response_time}s"
         return 1
     fi
 
@@ -154,21 +154,22 @@ test_sovereign_deep_path() {
     if echo "$response" | jq -e '.message' > /dev/null 2>&1; then
         local message_length=$(echo "$response" | jq -r '.message | length')
         # Check for DEEP indicators in metadata
-        local has_deep_metadata=$(echo "$response" | jq -e '.metadata.maiaPaiKernel.conversationDepth // .metadata.processing.deepMode' > /dev/null 2>&1 && echo "true" || echo "false")
+        local conversation_depth=$(echo "$response" | jq -r '.metadata.maiaPaiKernel.conversationDepth // "unknown"')
+        local consciousness_level=$(echo "$response" | jq -r '.metadata.maiaPaiKernel.consciousnessLevel // "unknown"')
 
-        if [ "$message_length" -gt 50 ]; then
-            if [ "$has_deep_metadata" = "true" ]; then
-                record_result "Sovereign/DEEP" "PASS" "DEEP path activated with metadata (${message_length} chars)" "$response_time"
+        if [ "$message_length" -gt 100 ]; then
+            if [ "$conversation_depth" != "unknown" ] && [ "$conversation_depth" != "null" ]; then
+                record_result "DEEP Detection" "PASS" "DEEP trigger activated, depth: ${conversation_depth} (${message_length} chars)" "${response_time}s"
             else
-                record_result "Sovereign/DEEP" "PASS" "Response received, DEEP metadata unclear (${message_length} chars)" "$response_time"
+                record_result "DEEP Detection" "PASS" "Emotional response generated (${message_length} chars)" "${response_time}s"
             fi
             return 0
         else
-            record_result "Sovereign/DEEP" "FAIL" "Response too short for DEEP activation" "$response_time"
+            record_result "DEEP Detection" "FAIL" "Response too brief for deep engagement (${message_length} chars)" "${response_time}s"
             return 1
         fi
     else
-        record_result "Sovereign/DEEP" "FAIL" "Invalid JSON response or missing message field" "$response_time"
+        record_result "DEEP Detection" "FAIL" "Invalid JSON response or missing message field" "${response_time}s"
         return 1
     fi
 }
@@ -331,7 +332,7 @@ main() {
     }
 
     test_oracle_sonnet_path
-    test_sovereign_deep_path
+    test_deep_path_via_between
     test_ain_companion_toc
     test_ain_section_endpoint
 

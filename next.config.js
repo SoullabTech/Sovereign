@@ -25,29 +25,31 @@ const nextConfig = {
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
 
-  // PWA Headers
-  async headers() {
-    return [
-      {
-        source: '/sw.js',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate'
-          }
-        ]
-      },
-      {
-        source: '/manifest.json',
-        headers: [
-          {
-            key: 'Content-Type',
-            value: 'application/manifest+json'
-          }
-        ]
-      }
-    ];
-  },
+  // PWA Headers - only for web builds (not compatible with static export for Capacitor)
+  ...(process.env.CAPACITOR_BUILD ? {} : {
+    async headers() {
+      return [
+        {
+          source: '/sw.js',
+          headers: [
+            {
+              key: 'Cache-Control',
+              value: 'no-cache, no-store, must-revalidate'
+            }
+          ]
+        },
+        {
+          source: '/manifest.json',
+          headers: [
+            {
+              key: 'Content-Type',
+              value: 'application/manifest+json'
+            }
+          ]
+        }
+      ];
+    }
+  }),
 
   // Handle external packages
   webpack: (config, { isServer }) => {

@@ -31,6 +31,18 @@ function WelcomeBackContent() {
     // Expected case: signed-out user needs to sign in
     setIsAuthenticated(false);
 
+    // Ensure user identity markers are set (in case old code deleted them)
+    const explorerId = localStorage.getItem('explorerId');
+    const explorerName = localStorage.getItem('explorerName');
+
+    if (!explorerId || !explorerName) {
+      // No markers found - this user came from root page but has no identity
+      // Set default markers so they don't loop back to onboarding
+      localStorage.setItem('explorerId', 'returning_user');
+      localStorage.setItem('explorerName', 'Returning User');
+      localStorage.setItem('betaOnboardingComplete', 'true');
+    }
+
     // Try to get stored name for personalization (privacy-safe)
     try {
       const betaUser = localStorage.getItem('beta_user');
@@ -39,6 +51,8 @@ function WelcomeBackContent() {
         if (userData.name) {
           setUserName(userData.name);
         }
+      } else if (explorerName) {
+        setUserName(explorerName);
       }
     } catch (e) {
       // Ignore parsing errors

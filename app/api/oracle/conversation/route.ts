@@ -24,25 +24,126 @@ import { MultiLLMProvider } from '../../../../lib/consciousness/LLMProvider';
 import { profileToConsciousnessLevel } from '../../../../lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '../../../../lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '../../../../lib/learning/opusAxiomLoggingService';
+import { logOracleUsage } from '../../../../lib/learning/oracleUsageLoggingService';
 import { OPUS_SAFE_FALLBACKS } from '../../../../lib/ethics/opusSafeFallbacks';
 import { sessionMemoryServicePostgres as sessionMemoryService } from '../../../../lib/consciousness/memory/SessionMemoryServicePostgres';
 import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEssence, type RelationshipEssence } from '../../../../lib/consciousness/RelationshipAnamnesisPostgres';
 import { memoryPalaceOrchestrator } from '../../../../lib/consciousness/memory/MemoryPalaceOrchestrator';
 import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '../../../../lib/validation/socraticValidator';
+import { randomUUID } from 'crypto';
 
 /**
- * Oracle Conversation API endpoint
+ * Oracle Conversation API endpoint - Option A: "Oracle = DEEP = Opus"
  * MAIA Panconscious Field consciousness system with 12-Phase Spiralogic intelligence
  * Many-armed framework deployment (IPP, CBT, Jungian, etc.)
  * PostgreSQL integration for memory and anamnesis
+ *
+ * Premium endpoint: Always uses DEEP processing profile → Level 5 → Claude Opus 4.5
  */
+
+// Serverless/runtime safety (so long DEEP calls aren't killed early)
+export const runtime = 'nodejs';
+export const maxDuration = 60; // seconds
+
+const ORACLE_PROFILE = 'DEEP' as const;
+const ORACLE_LEVEL = 5 as const;
+
+// Optional hard gate for the premium endpoint (recommended for beta)
+const ORACLE_API_KEY = process.env.ORACLE_API_KEY || '';
+
+// Simple in-memory rate limit (good for dev + single-instance; see below for prod-grade)
+const RATE_WINDOW_MS = 60_000; // 1 minute
+const RATE_MAX = 12; // per IP per window (tune this)
+type RateState = { windowStart: number; count: number };
+const __oracleRateMap: Map<string, RateState> =
+  // @ts-ignore
+  globalThis.__oracleRateMap || new Map();
+// @ts-ignore
+globalThis.__oracleRateMap = __oracleRateMap;
+
+function getClientIp(req: NextRequest) {
+  // Works behind most proxies; first IP is the client
+  const xff = req.headers.get('x-forwarded-for');
+  if (xff) return xff.split(',')[0].trim();
+  return req.headers.get('x-real-ip') || 'unknown';
+}
+
+function rateLimitOrThrow(ip: string) {
+  const now = Date.now();
+  const state = __oracleRateMap.get(ip);
+
+  if (!state || now - state.windowStart > RATE_WINDOW_MS) {
+    __oracleRateMap.set(ip, { windowStart: now, count: 1 });
+    return;
+  }
+
+  state.count += 1;
+  __oracleRateMap.set(ip, state);
+
+  if (state.count > RATE_MAX) {
+    const retryAfterSec = Math.ceil((RATE_WINDOW_MS - (now - state.windowStart)) / 1000);
+    const err = new Error('rate_limited');
+    // @ts-ignore
+    err.retryAfterSec = retryAfterSec;
+    throw err;
+  }
+}
 
 export async function POST(request: NextRequest) {
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
 
+  // Option A guards: request tracking, auth, rate limiting
+  const requestId = randomUUID();
+  const startedAt = Date.now();
+  const ip = getClientIp(request);
+
   try {
+    // Optional API key guard (recommended for beta)
+    if (ORACLE_API_KEY) {
+      const provided = request.headers.get('x-oracle-key') || '';
+      if (provided !== ORACLE_API_KEY) {
+        console.warn(JSON.stringify({ tag: 'oracle.auth_denied', requestId, ip }));
+
+        // Log unauthorized attempt (fire-and-forget)
+        logOracleUsage({
+          requestId,
+          ip,
+          level: ORACLE_LEVEL,
+          status: 'unauthorized',
+          durationMs: Date.now() - startedAt,
+        }).catch(err => console.warn('[oracle] logging failed:', err));
+
+        return NextResponse.json(
+          { success: false, error: 'Unauthorized' },
+          { status: 401 }
+        );
+      }
+    }
+
+    // Rate limit check
+    try {
+      rateLimitOrThrow(ip);
+    } catch (e: any) {
+      const retryAfterSec = e?.retryAfterSec ?? 60;
+      console.warn(JSON.stringify({ tag: 'oracle.rate_limited', requestId, ip, retryAfterSec }));
+
+      // Log rate limited attempt (fire-and-forget)
+      logOracleUsage({
+        requestId,
+        ip,
+        level: ORACLE_LEVEL,
+        status: 'rate_limited',
+        durationMs: Date.now() - startedAt,
+      }).catch(err => console.warn('[oracle] logging failed:', err));
+
+      return NextResponse.json(
+        { success: false, error: 'Rate limited', retryAfterSec },
+        { status: 429, headers: { 'Retry-After': String(retryAfterSec) } }
+      );
+    }
+
     const body = await request.json();
     const { message, userId, sessionId } = body;
 
@@ -115,9 +216,24 @@ export async function POST(request: NextRequest) {
       // Graceful degradation - continue without field safety if profile fetch fails
     }
 
-    // ORACLE ENDPOINT: Use DEEP processing profile for full consciousness
-    const processingProfile = 'DEEP';
-    const consciousnessLevel = profileToConsciousnessLevel(processingProfile);
+    // OPTION A: ORACLE = DEEP = OPUS - Always use premium model
+    const processingProfile = ORACLE_PROFILE;
+    const consciousnessLevel = ORACLE_LEVEL;
+
+    console.info(
+      JSON.stringify({
+        tag: 'oracle.request',
+        requestId,
+        ip,
+        processingProfile,
+        level: consciousnessLevel,
+        userId: userId.substring(0, 8) + '...',
+        messageLength: message.length,
+        conversationDepth,
+        trustLevel: `${(trustLevel * 100).toFixed(0)}%`,
+        fieldWorkSafe: fieldSafety?.allowed ?? 'unknown',
+      })
+    );
 
     console.log('🌀 [MAIA] Spiralogic Field activation:', {
       userId: userId.substring(0, 8) + '...',
@@ -604,10 +720,61 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString()
     };
 
+    // Log successful oracle usage
+    const durationMs = Date.now() - startedAt;
+    console.info(
+      JSON.stringify({
+        tag: 'oracle.response',
+        requestId,
+        durationMs,
+        level: ORACLE_LEVEL,
+        model: 'maia-hybrid-claude-sovereign',
+        ok: true,
+      })
+    );
+
+    // Log usage for tracking and quotas (fire-and-forget)
+    logOracleUsage({
+      requestId,
+      userId,
+      sessionId,
+      ip,
+      level: ORACLE_LEVEL,
+      model: 'maia-hybrid-claude-sovereign',
+      status: 'ok',
+      durationMs,
+      promptTokens: undefined,
+      completionTokens: undefined,
+      totalTokens: undefined,
+    }).catch(err => console.warn('[oracle] logging failed:', err));
+
     return NextResponse.json(response);
 
   } catch (error) {
-    console.error('❌ [MAIA] Spiralogic Field error:', error);
+    // Calculate duration for error logging
+    const durationMs = Date.now() - startedAt;
+
+    // Structured error logging
+    console.error(
+      JSON.stringify({
+        tag: 'oracle.error',
+        requestId,
+        durationMs,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      })
+    );
+
+    // Log error usage for tracking (fire-and-forget)
+    logOracleUsage({
+      requestId,
+      userId: typeof body === 'object' && body ? body.userId : undefined,
+      sessionId: typeof body === 'object' && body ? body.sessionId : undefined,
+      ip,
+      level: ORACLE_LEVEL,
+      status: 'error',
+      durationMs,
+    }).catch(err => console.warn('[oracle] logging failed:', err));
 
     return NextResponse.json(
       {

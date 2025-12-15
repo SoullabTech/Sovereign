@@ -6,6 +6,9 @@ const config: CapacitorConfig = {
   webDir: 'out',
   bundledWebRuntime: false,
   server: {
+    // For simulator testing - connect to dev server
+    url: 'http://192.168.4.210:3000',
+    cleartext: true,
     androidScheme: 'https'
   },
   plugins: {

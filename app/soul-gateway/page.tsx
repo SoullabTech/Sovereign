@@ -12,7 +12,7 @@ export default function SoulGatewayPage() {
   };
 
   return (
-    <div className="w-full h-screen">
+    <div className="w-full min-h-screen overflow-y-auto">
       <RitualFlowOrchestrator onComplete={handleComplete} />
     </div>
   );
