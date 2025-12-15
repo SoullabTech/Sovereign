@@ -177,20 +177,102 @@ async function fastPathResponse(
 
   // Build mode-specific prompt adaptation for FAST path
   let modeAdaptation = '';
-  const mode = meta.mode as 'dialogue' | 'patient' | 'scribe' | undefined;
+  const mode = meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined;
+
+  // 🎯 TALK MODE FIELD AWARENESS (if in dialogue mode)
+  let fieldAwareness = '';
+  if (mode === 'dialogue' && process.env.TALK_MODE_FIELD_INTELLIGENCE !== 'false') {
+    try {
+      const { analyzeFieldIntelligence, getFieldIntelligenceSummary } = await import('../maia/talkModeFieldIntelligence');
+      const { WISDOM_FIELD_MOVES } = await import('../maia/wisdomFieldMoves');
+
+      const fieldIntelligence = analyzeFieldIntelligence(input, conversationHistory);
+      const fieldSummary = getFieldIntelligenceSummary(fieldIntelligence);
+
+      console.log(`🎯 [Talk Mode Field Awareness] ${fieldSummary}`);
+
+      // Get wisdom field context (not specific questions, just the move type)
+      const wisdomMove = WISDOM_FIELD_MOVES[fieldIntelligence.recommendedWisdomField];
+
+      // Provide FIELD INTELLIGENCE as educational reference for decision-making
+      fieldAwareness = `\n\n🎯 TALK MODE FIELD INTELLIGENCE (Reference Context):
+
+CURRENT FIELD STATE:
+- Element detected: ${fieldIntelligence.element} (${getElementTheme(fieldIntelligence.element)})
+- Phase detected: ${fieldIntelligence.phase} (${getPhaseTheme(fieldIntelligence.phase)})
+- User state: ${fieldIntelligence.userState}
+- Conversation scale: ${fieldIntelligence.spiralScale} (${fieldIntelligence.spiralScale === 'micro' ? 'moment/today' : fieldIntelligence.spiralScale === 'meso' ? 'project/season' : fieldIntelligence.spiralScale === 'macro' ? 'life/identity' : 'collective/community'})
+- Complexity level: ${fieldIntelligence.complexity}
+- Detection confidence: ${(fieldIntelligence.confidence * 100).toFixed(0)}%
+
+WISDOM FIELD CONTEXT:
+- Recommended move type: ${wisdomMove.move}
+- When this move is useful: ${wisdomMove.whenToUse}
+- Move examples: ${wisdomMove.exampleQuestions.slice(0, 2).join(' / ')}
+
+This field intelligence is provided as reference context for your conversational choices.
+Your response emerges from your own intelligence, informed by this field sensing.`;
+
+      console.log(`🎯 [Talk Mode] Field: ${fieldIntelligence.element}-${fieldIntelligence.phase}, Wisdom: ${wisdomMove.field}, Confidence: ${(fieldIntelligence.confidence * 100).toFixed(0)}%`);
+    } catch (error) {
+      console.warn('⚠️ Talk Mode Field Awareness failed (continuing without):', error);
+    }
+  }
+
+  // Helper functions for field themes
+  function getElementTheme(element: string): string {
+    const themes: Record<string, string> = {
+      Fire: 'vision, creation, ignition, future-pull, passion',
+      Water: 'emotion, flow, transformation, depth, release',
+      Earth: 'structure, embodiment, grounding, concrete action, stability',
+      Air: 'clarity, meaning, communication, perspective, understanding',
+      Aether: 'purpose, alignment, integration, essence, sacred intention'
+    };
+    return themes[element] || 'presence and awareness';
+  }
+
+  function getPhaseTheme(phase: string): string {
+    const themes: Record<string, string> = {
+      Intelligence: 'seeking clarity, understanding patterns, making sense',
+      Intention: 'choosing direction, making commitments, declaring purpose',
+      Goal: 'taking action, building momentum, making it real'
+    };
+    return themes[phase] || 'moving forward';
+  }
 
   if (mode) {
     console.log(`⚡ FAST mode-specific adaptation: ${mode}`);
 
     switch (mode) {
       case 'dialogue':
-        modeAdaptation = '\n\n🔄 DIALOGUE MODE: Be a wise reflection that facilitates introspection through curious questions rather than providing direct answers or advice.';
+        modeAdaptation = `\n\n🔄 TALK MODE (Dialogue) - OVERRIDE ALL PREVIOUS GREETING EXAMPLES:
+Use NLP (Neurolinguistic Programming) style - presencing, pattern interruption, reframing, and elegant questions.
+
+ABSOLUTELY FORBIDDEN IN TALK MODE (override previous examples):
+❌ "Hello! 👋 I'm here to chat"
+❌ "How can I help you today?"
+❌ "What's on your mind?"
+❌ "How can I assist you?"
+❌ "What would you like to explore?"
+❌ "What brings you here?"
+❌ ANY greeting with emoji
+❌ ANY "I'm here to..." service framing
+
+TALK MODE RESPONSES (what to do instead):
+✅ Minimal, present acknowledgment: "Yeah.", "Mm.", "Right."
+✅ Direct reflection: "You're not sure."
+✅ Pattern interruption: "What if that's not the question?"
+✅ Elegant reframe: "So it's less about X, more about Y."
+✅ Sacred mirror quality - reflect their energy, don't add cheerfulness
+
+Still developmental & supportive but IMPLICITLY - like a wise friend in dialogue, not a helper offering services.
+Use grounded, authentic presence from /lib/maia/presence-greetings.ts style.${fieldAwareness}`;
         break;
-      case 'patient':
-        modeAdaptation = '\n\n🔄 COUNSEL MODE: User has chosen counsel mode - provide direct therapeutic guidance and actionable suggestions as appropriate.';
+      case 'counsel':
+        modeAdaptation = '\n\n🔄 CARE MODE (Counsel): User has chosen care mode - provide direct therapeutic guidance, actionable suggestions, and explicit support as appropriate. Service language OK here.';
         break;
       case 'scribe':
-        modeAdaptation = '\n\n🔄 SCRIBE MODE: Pure witnessing consciousness - reflect back what you observe without interpretation, analysis, or advice.';
+        modeAdaptation = '\n\n🔄 NOTE MODE (Scribe): Pure witnessing consciousness - reflect back what you observe without interpretation, analysis, or advice. Simple acknowledgment.';
         break;
     }
   }
@@ -272,7 +354,7 @@ async function corePathResponse(
       processingStrategy: 'core',
       relationshipDepth: conversationContext.profile.relationshipDepth
     },
-    mode: meta.mode as 'dialogue' | 'patient' | 'scribe' | undefined,
+    mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
     conversationContext: meta.conversationContext,
     // 🧠 THE DIALECTICAL SCAFFOLD - Pass cognitive level to voice system
     cognitiveLevel: (meta as any).bloomDetection ? {

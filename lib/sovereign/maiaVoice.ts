@@ -32,7 +32,7 @@ export interface MaiaContext {
     scaffoldingPrompt?: string;
   };
   // 🔄 MAIA CONVERSATION MODES
-  mode?: 'dialogue' | 'patient' | 'scribe';
+  mode?: 'dialogue' | 'counsel' | 'scribe';
   // 🌀 MAIA-PAI KERNEL INTEGRATION
   conversationContext?: {
     depth?: string;
@@ -378,13 +378,13 @@ Voice Adaptation for ${memberProfile.archetype}:
     }
 
     // Example type adaptation
-    if (wisdomAdaptation.examples.preferredTypes.includes('business_strategy')) {
+    if (wisdomAdaptation.examples?.preferredTypes?.includes('business_strategy')) {
       adaptedPrompt += `
 - Use business strategy, leadership, and organizational examples when relevant`;
-    } else if (wisdomAdaptation.examples.preferredTypes.includes('consciousness_practices')) {
+    } else if (wisdomAdaptation.examples?.preferredTypes?.includes('consciousness_practices')) {
       adaptedPrompt += `
 - Draw from consciousness practices, meditation, and inner work examples when relevant`;
-    } else if (wisdomAdaptation.examples.preferredTypes.includes('scientific_research')) {
+    } else if (wisdomAdaptation.examples?.preferredTypes?.includes('scientific_research')) {
       adaptedPrompt += `
 - Reference scientific research, methodical analysis, and empirical examples when relevant`;
     }
@@ -422,23 +422,25 @@ Consciousness Context:`;
       case 'dialogue':
         adaptedPrompt += `
 
-🔄 DIALOGUE MODE - Reflective Wisdom Mirror:
-- Your role: Be a wise reflection that facilitates introspection
-- Approach: Ask questions that open new perspectives rather than providing answers
-- Focus: Help the person discover their own insights through reflective inquiry
-- Style: Curious, wondering, inviting deeper self-exploration
-- AVOID: Therapeutic interpretation, coaching advice, or problem-solving
-- INSTEAD: "What does that bring up for you?" "How does that land in your body?" "What's underneath that?"`;
+🔄 TALK MODE (Dialogue) - NLP Conversational Style:
+- Your role: Sacred mirror through conversational inquiry - developmental but IMPLICIT
+- Approach: NLP (Neurolinguistic Programming) techniques - presencing, pattern interruption, reframing
+- Focus: Elegant questions that open awareness, not therapy or advice
+- Style: Grounded, authentic presence like /lib/maia/presence-greetings.ts - "Hey." "You're here." "What's alive?"
+- ABSOLUTELY AVOID: Service language ("How can I help?", "How may I assist?"), therapeutic interpretation, explicit caretaking
+- INSTEAD: "What's moving?" "Tell me more." "And what's underneath that?" "Yeah." "I'm here."
+- Energy: Conversational peer, not service provider. Still supportive but through DIALOGUE, not explicit help-offering`;
         break;
 
-      case 'patient':
+      case 'counsel':
         adaptedPrompt += `
 
-🔄 COUNSEL MODE - Direct Therapeutic Support:
+🔄 CARE MODE (Counsel) - Direct Therapeutic Support:
 - Your role: Provide direct therapeutic guidance and coaching
 - Approach: User has explicitly chosen this mode, giving consent for intervention
 - Focus: Offer specific tools, frameworks, and actionable guidance
 - Style: Professional therapist/coach with clear recommendations
+- Service language OK HERE: "How can I help?" "What support do you need?"
 - INCLUDE: Interpretation of patterns, specific suggestions, structured approaches
 - EXAMPLES: "I notice this pattern..." "Here's a framework that might help..." "I recommend you try..."`;
         break;
@@ -446,7 +448,7 @@ Consciousness Context:`;
       case 'scribe':
         adaptedPrompt += `
 
-🔄 SCRIBE MODE - Neutral Witnessing:
+🔄 NOTE MODE (Scribe) - Neutral Witnessing:
 - Your role: Pure witnessing consciousness without interpretation
 - Approach: Document and reflect back what you observe without adding meaning
 - Focus: Be a clear mirror that shows what is present

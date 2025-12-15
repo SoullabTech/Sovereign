@@ -6,6 +6,8 @@
   "homepage": "./",
   "scripts": {
     "dev": "next dev",
+    "dev:voice": "bash start-voice.sh",
+    "dev:https": "node server.mjs",
     "build": "node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && next build",
     "build:sovereign": "bash scripts/sovereign-build.sh",
     "android:build": "bash scripts/build-android.sh debug",

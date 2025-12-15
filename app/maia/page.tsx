@@ -45,6 +45,8 @@ async function getInitialUserData() {
     console.log('🌟 [MAIA] Kelly recognized from userId/name:', storedUserId);
     localStorage.setItem('explorerName', 'Kelly');
     localStorage.setItem('explorerId', 'kelly-nezat');
+    localStorage.setItem('betaOnboardingComplete', 'true');
+    localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
     return { id: 'kelly-nezat', name: 'Kelly' };
   }
 
@@ -65,6 +67,8 @@ async function getInitialUserData() {
         localStorage.setItem('explorerName', data.user.name);
         localStorage.setItem('explorerId', data.user.id);
         localStorage.setItem('betaOnboardingComplete', 'true');
+        // PERMANENT marker that NEVER gets removed, even on signout
+        localStorage.setItem('maiaPermanentUser', 'true');
 
         return { id: data.user.id, name: data.user.name };
       }
@@ -119,7 +123,7 @@ export default function MAIAPage() {
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
-  const [selectedVoice, setSelectedVoice] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('shimmer');  // Default to shimmer - MAIA's natural voice
+  const [selectedVoice, setSelectedVoice] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('alloy');  // Default to alloy - MAIA's OpenAI TTS voice
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
@@ -212,12 +216,14 @@ export default function MAIAPage() {
   };
 
   const handleSignOut = () => {
+    // Remove ONLY active session token, keep user identity
     localStorage.removeItem('beta_user');
-    localStorage.removeItem('beta_users');
-    localStorage.removeItem('betaOnboardingComplete');
-    localStorage.removeItem('explorerId');
-    localStorage.removeItem('betaUserId');
-    localStorage.removeItem('explorerName');
+
+    // ✅ KEEP these - they identify a returning user:
+    // - betaOnboardingComplete
+    // - explorerId (used by root page to detect returning user)
+    // - explorerName (preserves personalization)
+
     router.push('/');
   };
 
@@ -266,6 +272,7 @@ export default function MAIAPage() {
         localStorage.setItem('explorerName', newName);
         localStorage.setItem('explorerId', newId);
         localStorage.setItem('betaOnboardingComplete', 'true');
+        localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
 
         if (explorerId !== newId) setExplorerId(newId);
         if (explorerName !== newName) setExplorerName(newName);
@@ -293,6 +300,7 @@ export default function MAIAPage() {
     localStorage.setItem('explorerId', guestId);
     localStorage.setItem('explorerName', 'Explorer');
     localStorage.setItem('betaOnboardingComplete', 'true');
+    localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
     setExplorerId(guestId);
     setExplorerName('Explorer');
     console.log('✅ [MAIA] Created guest session');
@@ -379,7 +387,7 @@ export default function MAIAPage() {
             }}
           />
 
-          <div className="relative w-full px-2 py-1.5">
+          <div className="relative w-full px-2 py-1.5" style={{paddingTop: 'max(env(safe-area-inset-top), 3rem)'}}>
             {/* Mobile: Horizontal scrollable container */}
             <div className="md:hidden mobile-carousel scrollbar-hide">
               <div className="flex items-center gap-3 min-w-max px-3 py-2">
@@ -708,7 +716,7 @@ export default function MAIAPage() {
               voiceEnabled={voiceEnabled}
               initialMode={maiaMode}
               onModeChange={setMaiaMode}
-              apiEndpoint="/api/oracle/conversation"
+              apiEndpoint="/api/sovereign/app/maia"
               consciousnessType="maia"
               initialShowChatInterface={showChatInterface}
               onShowChatInterfaceChange={setShowChatInterface}
@@ -843,7 +851,7 @@ export default function MAIAPage() {
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            className="absolute bottom-20 left-1/2 -translate-x-1/2 max-w-md w-full mx-4 bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl"
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-[calc(100%-2rem)] bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl"
           >
             <div className="text-center">
               <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />

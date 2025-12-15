@@ -888,6 +888,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           isFirstVisit,
           daysSinceLastVisit,
           daysActive: daysSinceLastVisit > 0 ? 7 : 1,
+          mode: realtimeMode, // 🎯 Pass mode for Talk/Care/Note aware greetings
           onboardingContext, // Pass onboarding metadata for first contact
           returningContext, // Pass returning session metadata
         });
@@ -3634,7 +3635,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               </div>
 
               {/* Voice toggle for chat mode - HIDDEN on mobile, visible on desktop */}
-              <div className="hidden md:block fixed top-20 right-20 z-below-nav">
+              <div className="hidden md:block fixed right-4 md:right-20 z-below-nav" style={{top: 'max(env(safe-area-inset-top, 0px) + 2rem, 7rem)'}}>
                 <button
                   onClick={() => {
                     const newValue = !enableVoiceInChat;

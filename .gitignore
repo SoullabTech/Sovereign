@@ -277,3 +277,4 @@ android-release.keystore
 .env.android
 *.jks
 *.keystore
+certs/

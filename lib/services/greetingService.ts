@@ -1,5 +1,6 @@
 import { progressiveRevelation, type ContentLevel } from './progressiveRevelation';
 import { type RelationshipEssence, loadRelationshipEssence, getRelationshipAnamnesis } from '../consciousness/RelationshipAnamnesis';
+import { PresenceGreeting } from '../maia/presence-greetings';
 
 interface GreetingContext {
   userName: string;
@@ -17,6 +18,7 @@ interface GreetingContext {
   contentLevel?: ContentLevel;
   daysActive?: number;
   relationshipEssence?: RelationshipEssence; // Soul-level recognition
+  mode?: 'dialogue' | 'counsel' | 'scribe'; // Talk/Care/Note mode
   onboardingContext?: { // First contact metadata
     isFirstContact: boolean;
     reason: string;
@@ -42,6 +44,14 @@ interface OnboardingGreetingContext {
 
 export class GreetingService {
   static generate(context: GreetingContext): string {
+    console.log('🎯 [GREETING] Mode detected:', context.mode);
+
+    // 🎯 TALK MODE (dialogue): Use NLP-style presence greetings - no service language
+    if (context.mode === 'dialogue') {
+      console.log('🎯 [GREETING] Using Talk mode presence greeting');
+      return this.getTalkModeGreeting(context);
+    }
+
     // Check for first contact from onboarding flow
     if (context.onboardingContext?.isFirstContact) {
       return this.getFirstContactGreeting(context);
@@ -63,6 +73,38 @@ export class GreetingService {
 
     const greetings = this.getGreetingPool(context);
     return this.selectGreeting(greetings, context);
+  }
+
+  /**
+   * TALK MODE GREETINGS
+   * Uses NLP-style presence greetings - no service language
+   * "Hey." "You're here." Not "How can I help?"
+   */
+  private static getTalkModeGreeting(context: GreetingContext): string {
+    const { userName, daysSinceLastVisit, dominantElement, relationshipEssence } = context;
+
+    // Map our timeOfDay to presence greeting format
+    let presenceTimeOfDay: string | undefined;
+    const hour = new Date().getHours();
+    if (hour >= 0 && hour < 5) {
+      presenceTimeOfDay = 'veryLate';
+    } else if (hour >= 5 && hour < 7) {
+      presenceTimeOfDay = 'veryEarly';
+    } else if (hour >= 11 && hour < 15) {
+      presenceTimeOfDay = 'midday';
+    }
+
+    // Use presence greetings from presence-greetings.ts
+    const greeting = PresenceGreeting.greet({
+      userName: userName && userName !== 'friend' ? userName : undefined,
+      timeOfDay: presenceTimeOfDay,
+      returnVisit: daysSinceLastVisit > 0,
+      lastVisitHours: daysSinceLastVisit * 24,
+      sensedElement: dominantElement,
+      // Don't pass emotionalWeight - let presence be minimal
+    });
+
+    return greeting;
   }
 
   /**
@@ -578,7 +620,10 @@ export async function generateGreeting(context: Partial<GreetingContext>): Promi
     alchemicalPhase: context.alchemicalPhase,
     contentLevel,
     daysActive: context.daysActive,
-    relationshipEssence // Soul-level memory
+    relationshipEssence, // Soul-level memory
+    mode: context.mode, // Talk/Care/Note mode
+    onboardingContext: context.onboardingContext,
+    returningContext: context.returningContext
   };
 
   const greeting = GreetingService.generate(fullContext);
