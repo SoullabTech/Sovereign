@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-20T17:11:38.138Z",
-  "totalErrors": 6351,
-  "totalFiles": 950,
+  "timestamp": "2025-12-20T17:13:43.124Z",
+  "totalErrors": 6343,
+  "totalFiles": 948,
   "modules": [
     {
       "module": "beta-deployment",
@@ -19,9 +19,9 @@
     },
     {
       "module": "lib",
-      "errorCount": 3028,
-      "lineCount": 185665,
-      "density": 1.6308943527320712,
+      "errorCount": 3020,
+      "lineCount": 185170,
+      "density": 1.6309337365663985,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -377,9 +377,7 @@
         "lib/knowledge/ElementalAlchemyBookLoader.ts",
         "lib/knowledge/SemanticChapterDetector.ts",
         "lib/langchain/DecentralizedMayaChains.ts",
-        "lib/layered-sacred-oracle.ts",
-        "lib/learning/claude-teacher-service.ts",
-        "lib/learning/conversationTurnService.ts"
+        "lib/layered-sacred-oracle.ts"
       ]
     },
     {
@@ -1029,7 +1027,7 @@
   "topErrorCodes": [
     {
       "code": "TS2339",
-      "count": 1987,
+      "count": 1980,
       "description": "Property does not exist"
     },
     {
