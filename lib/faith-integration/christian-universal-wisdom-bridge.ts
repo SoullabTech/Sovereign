@@ -9,6 +9,8 @@
  * - Missionary/evangelistic preparation through understanding common ground
  */
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 export interface UniversalWisdomContext {
   // User's engagement preferences
   interfaithDialogueOpenness: boolean;

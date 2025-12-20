@@ -7,6 +7,8 @@
 
 import { MemoryIntegration } from './actr-memory';
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 interface EmotionalState {
   primaryEmotion: PrimaryEmotion;
   intensity: number;

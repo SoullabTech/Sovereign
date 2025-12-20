@@ -7,6 +7,8 @@
 
 import { AttentionState } from './lida-workspace';
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 interface WisdomGoal {
   type: 'healing' | 'breakthrough' | 'integration' | 'transcendence' | 'grounding' | 'clarity';
   priority: number;

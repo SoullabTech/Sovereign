@@ -4,6 +4,8 @@
  * Integrates Spiralogic Elemental Framework with Multi-Faith Wisdom
  */
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 export interface PromptingContext {
   userProfile: SpiritualProfile;
   conversationHistory: ConversationTurn[];

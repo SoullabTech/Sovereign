@@ -4,6 +4,8 @@
  * Creates authentic rituals by combining intention + element + tradition + action
  */
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 interface RitualComponent {
   type: 'invocation' | 'preparation' | 'action' | 'reflection' | 'closing';
   element?: ElementalFramework;

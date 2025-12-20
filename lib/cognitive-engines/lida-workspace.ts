@@ -5,6 +5,8 @@
  * Integrates with Spiralogic consciousness framework
  */
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 interface PerceptualCue {
   content: string;
   type: 'spiritual' | 'emotional' | 'cognitive' | 'somatic' | 'archetypal';

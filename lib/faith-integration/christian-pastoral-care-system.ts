@@ -9,6 +9,8 @@
  * - Integrates with consciousness awareness for trauma-informed care
  */
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 export interface PastoralCrisisContext {
   // Crisis type identification
   crisisType: 'spiritual_emergency' | 'faith_crisis' | 'moral_failure' | 'grief_loss' |

@@ -12,6 +12,8 @@
  * Respectful handling: Load based on user's openness and denominational comfort
  */
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 export interface ExpandedChristianWisdomContext extends ChristianFaithContext {
   // User's openness to non-canonical wisdom
   canonicalOnly: boolean; // Stick strictly to 66/73 book canon

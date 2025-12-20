@@ -7,6 +7,8 @@
 
 import { WisdomPlan } from './soar-planner';
 
+import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
+
 interface DeclarativeMemory {
   id: string;
   type: 'spiritual_insight' | 'emotional_pattern' | 'archetypal_wisdom' | 'elemental_knowledge' | 'consciousness_marker';

@@ -112,3 +112,22 @@ export type {
   UserQuota,
   UsageLogEntry,
 } from './bardic-memory';
+
+// ============================================================================
+// CONSCIOUSNESS & SPIRITUAL TYPES (Phase 4.2B Step 5)
+// ============================================================================
+
+/**
+ * Cognitive layer - Consciousness state modeling
+ */
+export * from './cognitive';
+
+/**
+ * Spiritual layer - Multi-tradition faith context integration
+ */
+export * from './spiritual';
+
+/**
+ * Elemental layer - Elemental framework and alchemical processing
+ */
+export * from './elemental';
