@@ -127,7 +127,8 @@ fi
 # artifact integrity verification
 echo "--- Artifact Integrity ---"
 if [[ -f scripts/verify-artifact-integrity.ts ]]; then
-  npx tsx scripts/verify-artifact-integrity.ts || EXIT_CODE=1
+  echo "Updating artifact integrity manifest..."
+  npx tsx scripts/verify-artifact-integrity.ts --update || EXIT_CODE=1
 else
   echo "⚠️  scripts/verify-artifact-integrity.ts not found (skipping)"
   EXIT_CODE=1

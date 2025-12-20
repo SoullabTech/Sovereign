@@ -5,7 +5,9 @@
  * Generates artifacts/.manifest.json with timestamps & version signatures.
  *
  * Usage:
- *   npx tsx scripts/verify-artifact-integrity.ts
+ *   npx tsx scripts/verify-artifact-integrity.ts           # Verify existing manifest
+ *   npx tsx scripts/verify-artifact-integrity.ts --update  # Update manifest with new artifacts
+ *   npx tsx scripts/verify-artifact-integrity.ts --check   # CI mode: fail on mismatch
  *
  * Environment Variables:
  *   ARTIFACT_VERBOSE=1   # Show detailed hash computation logs
@@ -43,11 +45,34 @@ function sha256(filePath: string): string {
 }
 
 /**
+ * Load existing manifest
+ */
+function loadManifest(): any | null {
+  if (!fs.existsSync(MANIFEST_PATH)) {
+    return null;
+  }
+  try {
+    const content = fs.readFileSync(MANIFEST_PATH, "utf8");
+    return JSON.parse(content);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Main execution
  */
 function main() {
+  const args = process.argv.slice(2);
+  const mode = args.includes("--update")
+    ? "UPDATE"
+    : args.includes("--check")
+      ? "CHECK"
+      : "VERIFY";
+
   log("🔐 MAIA Artifact Integrity Verification");
   log(`Version: ${VERSION}`);
+  log(`Mode: ${mode}`);
   log("");
 
   // Ensure artifacts directory exists
@@ -116,31 +141,93 @@ function main() {
     },
   };
 
-  // Write manifest
-  fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), "utf8");
+  // Handle different modes
+  if (mode === "UPDATE") {
+    // Write manifest
+    fs.writeFileSync(MANIFEST_PATH, JSON.stringify(manifest, null, 2), "utf8");
 
-  log("✅ Integrity verification complete");
-  log("");
-  log("Manifest Summary:");
-  log(`  File: ${MANIFEST_FILE}`);
-  log(`  Artifacts verified: ${entries.length}`);
-  log(`  Algorithm: SHA-256`);
-  log("");
+    log("✅ Integrity verification complete");
+    log("");
+    log("Manifest Summary:");
+    log(`  File: ${MANIFEST_FILE}`);
+    log(`  Artifacts verified: ${entries.length}`);
+    log(`  Algorithm: SHA-256`);
+    log("");
 
-  entries.forEach((entry) => {
-    log(`  ${entry.artifact}`);
-    log(`    SHA-256: ${entry.sha256}`);
-    log(`    Size: ${entry.sizeBytes} bytes`);
-    log(`    Modified: ${entry.timestamp}`);
-  });
+    entries.forEach((entry) => {
+      log(`  ${entry.artifact}`);
+      log(`    SHA-256: ${entry.sha256}`);
+      log(`    Size: ${entry.sizeBytes} bytes`);
+      log(`    Modified: ${entry.timestamp}`);
+    });
+
+    log("");
+    log(`📜 Integrity manifest written → ${MANIFEST_FILE}`);
+  } else {
+    // VERIFY or CHECK mode
+    const existingManifest = loadManifest();
+
+    if (!existingManifest) {
+      log("❌ No manifest found. Run with --update to create one.");
+      process.exit(mode === "CHECK" ? 1 : 0);
+    }
+
+    log("Verifying artifacts against manifest...");
+    log("");
+
+    let hasChanges = false;
+    const existingMap = new Map(
+      existingManifest.entries.map((e: any) => [e.artifact, e])
+    );
+
+    for (const entry of entries) {
+      const existing = existingMap.get(entry.artifact);
+
+      if (!existing) {
+        log(`🆕 NEW: ${entry.artifact}`);
+        hasChanges = true;
+      } else if (existing.sha256 !== entry.sha256) {
+        log(`⚠️  MODIFIED: ${entry.artifact}`);
+        log(`   Expected: ${existing.sha256}`);
+        log(`   Current:  ${entry.sha256}`);
+        hasChanges = true;
+      } else {
+        log(`✅ VERIFIED: ${entry.artifact}`);
+      }
+    }
+
+    // Check for missing artifacts
+    for (const [filename, existing] of existingMap) {
+      if (!entries.find((e) => e.artifact === filename)) {
+        log(`❌ MISSING: ${filename}`);
+        hasChanges = true;
+      }
+    }
+
+    log("");
+
+    if (hasChanges) {
+      if (mode === "CHECK") {
+        log("❌ INTEGRITY CHECK FAILED");
+        log("   Artifacts have been modified or are missing.");
+        log("   Run with --update to accept changes.");
+        process.exit(1);
+      } else {
+        log("⚠️  INTEGRITY ISSUES DETECTED");
+        log("   Some artifacts have changed since last verification.");
+        log("   Run with --update to update the manifest.");
+      }
+    } else {
+      log("✅ ALL ARTIFACTS VERIFIED");
+      log("   No changes detected.");
+    }
+  }
 
   log("");
-  log(`📜 Integrity manifest written → ${MANIFEST_FILE}`);
-  log("");
-  log("To verify artifact integrity later:");
-  log(`  1. Re-run: npx tsx scripts/verify-artifact-integrity.ts`);
-  log(`  2. Compare: git diff ${path.join("artifacts", MANIFEST_FILE)}`);
-  log(`  3. Any hash change indicates artifact modification`);
+  log("To verify artifact integrity:");
+  log(`  npx tsx scripts/verify-artifact-integrity.ts           # Verify`);
+  log(`  npx tsx scripts/verify-artifact-integrity.ts --update  # Update`);
+  log(`  npx tsx scripts/verify-artifact-integrity.ts --check   # CI mode`);
 }
 
 main();

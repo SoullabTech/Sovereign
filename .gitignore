@@ -281,3 +281,4 @@ android-release.keystore
 *.keystore
 certs/
 artifacts/sovereignty-audit.json
+artifacts/.manifest.json
