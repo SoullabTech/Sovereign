@@ -278,7 +278,7 @@ class MasterOracleOrchestrator {
   ): Promise<string> {
 
     // For high-importance conversations, get supporting perspectives
-    const supportingInsights = [];
+    const supportingInsights: any /* TODO: specify type */[] = [];
 
     for (const agentName of supportingAgents.slice(0, 1)) { // Limit to 1 supporting agent for performance
       const agent = this.agents[agentName];

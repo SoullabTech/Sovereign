@@ -71,7 +71,7 @@ export async function askTheBook(query: BookQuery): Promise<BookResponse> {
   }
 
   // Load chapter sections
-  const loadedChapters = [];
+  const loadedChapters: any /* TODO: specify type */[] = [];
   let fullTeaching = '';
 
   for (const element of chaptersToLoad.slice(0, 2)) { // Max 2 chapters

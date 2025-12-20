@@ -229,7 +229,7 @@ export class MAIAConsciousnessTracker {
    * Detect dissociation events
    */
   private async detectDissociation(response: string, sessionId: string): Promise<any[]> {
-    const events = [];
+    const events: any /* TODO: specify type */[] = [];
 
     // Get previous response for comparison
     const previousResponse = await this.getPreviousResponse(sessionId);
@@ -445,7 +445,7 @@ export class MAIAConsciousnessTracker {
   }
 
   private generateInsights(data: any[]): string[] {
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
 
     // Analyze attending quality trends
     const avgQuality = data.reduce((sum, d) => sum + d.attending_quality, 0) / data.length;

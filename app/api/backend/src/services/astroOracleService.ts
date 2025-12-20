@@ -282,7 +282,7 @@ function generatePlanetaryInfluences(): Array<{
   const planets = Object.keys(PLANETARY_ORACLES);
   const numInfluences = Math.floor(Math.random() * 3) + 2; // 2-4 influences
 
-  const influences = [];
+  const influences: any /* TODO: specify type */[] = [];
   for (let i = 0; i < numInfluences; i++) {
     const planet = planets[Math.floor(Math.random() * planets.length)];
     const planetData =

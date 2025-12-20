@@ -169,7 +169,7 @@ export class ConversationElementalTracker {
     // 🧠 MEMBER ARCHETYPE-AWARE ENGINE SELECTION
     let recommendedEngines = interactionType.suggestedEngines;
     let strategy = interactionType.strategy;
-    let reasoningParts = [];
+    let reasoningParts: any /* TODO: specify type */[] = [];
 
     // Base engine selection from elemental nature
     const elementalEngines = this.getElementalEngines(profile.dominantElement);

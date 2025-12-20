@@ -283,7 +283,7 @@ export class EmergenceEngine {
    * ✨ Generate emergent traits for new archetype
    */
   private generateEmergentTraits(wisdomGap: WisdomGap, memberAnalysis: MemberAnalysis): string[] {
-    const emergentTraits = [];
+    const emergentTraits: any /* TODO: specify type */[] = [];
 
     // Based on member's development phase
     if (memberAnalysis.developmentPhase?.includes('digital') || memberAnalysis.developmentPhase?.includes('consciousness')) {

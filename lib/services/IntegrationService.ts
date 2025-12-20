@@ -447,7 +447,7 @@ export class IntegrationService {
   }
 
   private generateRecommendations(session: IntegrationSession): string[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     switch (session.integrationLevel) {
       case 'surface':
@@ -483,7 +483,7 @@ export class IntegrationService {
   }
 
   private generatePlanRecommendations(plan: IntegrationPlan): string[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (plan.progress.completedSessions < 5) {
       recommendations.push('Build consistency with regular integration sessions');
@@ -502,7 +502,7 @@ export class IntegrationService {
   }
 
   private getPlanNextSteps(plan: IntegrationPlan): string[] {
-    const nextSteps = [];
+    const nextSteps: any /* TODO: specify type */[] = [];
 
     const upcomingMilestone = plan.milestones.find(m => !m.completed);
     if (upcomingMilestone) {

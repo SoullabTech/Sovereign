@@ -331,7 +331,7 @@ export class MasterMemberArchetypeIntelligence {
     strategies: string[];
   } {
 
-    const strategies = [];
+    const strategies: any /* TODO: specify type */[] = [];
 
     // Archetype-specific wisdom approaches
     switch (profile.primaryArchetype) {

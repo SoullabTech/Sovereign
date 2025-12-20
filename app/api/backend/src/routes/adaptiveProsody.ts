@@ -143,7 +143,7 @@ export function createAdaptiveProsodyRoutes(logger: Logger) {
         }
       ];
       
-      const results = [];
+      const results: any[] = [];
       
       for (const test of testCases) {
         const analysis = await prosodyEngine.analyzeUserTone(test.input);

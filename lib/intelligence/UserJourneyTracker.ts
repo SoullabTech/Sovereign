@@ -427,7 +427,7 @@ class UserJourneyTrackerEngine {
     if (snapshots.length < 2) return { detected: false };
 
     const recent = snapshots.slice(-3); // Look at last 3 snapshots
-    const coherenceDrops = [];
+    const coherenceDrops: any /* TODO: specify type */[] = [];
 
     for (let i = 1; i < recent.length; i++) {
       const drop = recent[i].coherence - recent[i - 1].coherence;

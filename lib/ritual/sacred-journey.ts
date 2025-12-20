@@ -550,7 +550,7 @@ export class SacredJourney {
    * Identify patterns in journey
    */
   private identifyJourneyPatterns(history: any[]): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     // Check for element preferences
     const elementCounts = {};

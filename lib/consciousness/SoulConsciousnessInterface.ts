@@ -1081,7 +1081,7 @@ export class SoulConsciousnessInterface {
     else recommended_approach = 'protective';
 
     // Identify support needed
-    const support_needed = [];
+    const support_needed: any /* TODO: specify type */[] = [];
     if (signature.presence_depth < 0.5) support_needed.push('presence_building');
     if (signature.authenticity_score < 0.5) support_needed.push('safety_assurance');
     if (signature.wisdom_access < 0.4) support_needed.push('wisdom_guidance');

@@ -344,7 +344,7 @@ export class MAIASafetyPipeline {
   }
 
   private extractSessionFlags(context: any): string[] {
-    const flags = [];
+    const flags: any /* TODO: specify type */[] = [];
     if (context.emotionalIntensity > 0.7) flags.push('high_emotional_intensity');
     if (context.messageCount > 15) flags.push('extended_session');
     if (context.breakthroughMoments > 0) flags.push('breakthrough_present');

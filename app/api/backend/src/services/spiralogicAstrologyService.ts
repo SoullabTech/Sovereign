@@ -419,7 +419,7 @@ class SpiralogicAstrologyService {
   }
 
   private calculateAspects(planets: Map<string, any>): any[] {
-    const aspects = [];
+    const aspects: any /* TODO: specify type */[] = [];
     const aspectTypes = [
       { angle: 0, name: "Conjunction", orb: 8 },
       { angle: 60, name: "Sextile", orb: 6 },
@@ -470,7 +470,7 @@ class SpiralogicAstrologyService {
     planets: Map<string, any>,
     aspects: any[],
   ): any[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     // Look for Grand Trines
     const trines = aspects.filter((a) => a.type === "Trine");

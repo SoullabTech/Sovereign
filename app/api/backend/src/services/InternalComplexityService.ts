@@ -172,7 +172,7 @@ export class InternalComplexityService {
    * Identify internal tensions without personification
    */
   private identifyInternalTensions(userInput: string, patterns: any): any {
-    const tensions = [];
+    const tensions: any /* TODO: specify type */[] = [];
     
     // Look for conflicting desires or needs
     if (this.hasConflictingDesires(userInput)) {

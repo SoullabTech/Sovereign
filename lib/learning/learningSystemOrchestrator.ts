@@ -575,7 +575,7 @@ export class LearningSystemOrchestrator {
         [loopA.status, loopB.status, loopC.status].includes('degraded') ? 'degraded' :
         'healthy';
 
-      const recommendations = [];
+      const recommendations: any /* TODO: specify type */[] = [];
       if (loopA.status === 'degraded') recommendations.push('Increase user feedback collection');
       if (loopB.status === 'degraded') recommendations.push('Generate more gold responses');
       if (loopC.status === 'degraded') recommendations.push('Activate shadow engine comparisons');

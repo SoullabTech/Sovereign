@@ -486,7 +486,7 @@ export class PortalRoutingEngine {
     culturalFit: number,
     developmentFit: number
   ): string[] {
-    const reasons = [];
+    const reasons: any /* TODO: specify type */[] = [];
 
     if (culturalFit > 0.7) {
       reasons.push(`Strong cultural alignment with ${portal} approach`);
@@ -500,7 +500,7 @@ export class PortalRoutingEngine {
   }
 
   private identifyPortalWarnings(context: UserContext, portal: PopulationPortal): string[] {
-    const warnings = [];
+    const warnings: string[] = [];
 
     // Add logic for identifying potential mismatches or risks
 

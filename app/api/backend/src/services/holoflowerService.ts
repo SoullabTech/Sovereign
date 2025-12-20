@@ -197,7 +197,7 @@ export class HoloflowerService {
     const userState = await this.getUserState(userId);
     const state = userState.holoflower.getState();
 
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     const elementIntensities = new Map<ElementType, number>();
     state.houses.forEach((house) => {
@@ -356,7 +356,7 @@ export class HoloflowerService {
   }
 
   private identifyEmergentQualities(state: HoloflowerState): string[] {
-    const qualities = [];
+    const qualities: any /* TODO: specify type */[] = [];
 
     if (state.overallBalance > 0.8) {
       qualities.push("Collective Harmony");

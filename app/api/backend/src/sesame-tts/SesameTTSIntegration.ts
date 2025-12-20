@@ -334,7 +334,7 @@ export class SesameTTSIntegration {
     // For production, use FFmpeg or Web Audio API to combine
     // For now, return playlist format
 
-    const playlist = [];
+    const playlist: any /* TODO: specify type */[] = [];
 
     for (let i = 0; i < audioChunks.length; i++) {
       playlist.push({

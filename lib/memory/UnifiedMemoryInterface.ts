@@ -297,7 +297,7 @@ export class UnifiedMemoryInterface {
     fieldContext?: FieldRecordContext;
   }> {
     // Get semantic matches from vector memory (if available)
-    const semanticMatches = []; // await this.semanticMemory.findSimilar(currentContext);
+    const semanticMatches: any /* TODO: specify type */[] = []; // await this.semanticMemory.findSimilar(currentContext);
 
     // Get Field Records context for the user
     const fieldContext = await fieldRecordsService.getFieldRecordContext(userId);

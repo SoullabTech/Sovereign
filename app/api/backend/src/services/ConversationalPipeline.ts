@@ -2834,7 +2834,7 @@ Respond as Maya with appropriate depth and memory integration.`;
    * Format memory context for LLM prompt injection
    */
   private formatMemoryForPrompt(memoryContext: any, enhancedMemories: any): string {
-    const sections = [];
+    const sections: any /* TODO: specify type */[] = [];
     
     // Session conversation history
     if (memoryContext.conversationHistory?.length > 0) {

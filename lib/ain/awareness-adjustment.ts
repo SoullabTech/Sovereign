@@ -488,7 +488,7 @@ function calculateAdjustmentCoherence(input: {
  * Generate natural language description of adjustment
  */
 export function describeAwarenessAdjustment(adjustment: AwarenessAdjustment): string {
-  const descriptions = [];
+  const descriptions: any /* TODO: specify type */[] = [];
 
   descriptions.push(`Operating in ${adjustment.presenceMode} presence mode`);
   descriptions.push(`responding from ${adjustment.responseDepth} levels`);
@@ -557,7 +557,7 @@ export function createAdjustmentFeedback(
 
   const effectiveness = (adjustment.confidence + avgOutcome) / 2;
 
-  const improvements = [];
+  const improvements: any /* TODO: specify type */[] = [];
   if (responseOutcome.engagement && responseOutcome.engagement < 0.6) {
     improvements.push('Increase curiosity and presence engagement');
   }

@@ -387,7 +387,7 @@ export class MAIAMemoryPalace {
 
   private async mapSpiralMovements(chaosAnalysis: any, memberId: string): Promise<string[]> {
     // Map chaos to spiral phase transitions
-    const movements = [];
+    const movements: any /* TODO: specify type */[] = [];
 
     if (chaosAnalysis.life_areas_mentioned.includes('creative')) {
       movements.push('Creative spiral: Phase 4 blocked');
@@ -461,7 +461,7 @@ export class MAIAMemoryPalace {
   }
 
   private generateElementalRebalancing(elementalState: any): string[] {
-    const rebalancing = [];
+    const rebalancing: any /* TODO: specify type */[] = [];
 
     if (elementalState.deficient.includes('fire')) {
       rebalancing.push('Kindle fire: daily creative practice, passionate movement');
@@ -527,7 +527,7 @@ export class MAIAMemoryPalace {
   }
 
   private describeElementalImbalances(elementalState: any): string[] {
-    const descriptions = [];
+    const descriptions: any /* TODO: specify type */[] = [];
 
     if (elementalState.deficient.length > 0) {
       descriptions.push(`${elementalState.deficient.join(' and ')} deficient`);
@@ -571,7 +571,7 @@ export class MAIAMemoryPalace {
 
   private findRelatedExperiences(memberId: string, patterns: MemoryPattern[]): string[] {
     // This would pull from conversation history to find related experiences
-    const experiences = [];
+    const experiences: any /* TODO: specify type */[] = [];
 
     patterns.forEach(pattern => {
       experiences.push(`When you experienced ${pattern.pattern_signature}`);
@@ -582,7 +582,7 @@ export class MAIAMemoryPalace {
 
   private findTimingCorrelations(patterns: MemoryPattern[]): string[] {
     // Look for seasonal, cyclical, or timing patterns
-    const correlations = [];
+    const correlations: any /* TODO: specify type */[] = [];
 
     patterns.forEach(pattern => {
       const month = pattern.last_appearance.getMonth();
@@ -601,7 +601,7 @@ export class MAIAMemoryPalace {
 
   private mapElementalConnections(patterns: MemoryPattern[]): string[] {
     // Map how elements played out in similar past patterns
-    const connections = [];
+    const connections: any /* TODO: specify type */[] = [];
 
     patterns.forEach(pattern => {
       pattern.spiral_signatures.elements_involved.forEach(element => {
@@ -613,7 +613,7 @@ export class MAIAMemoryPalace {
   }
 
   private identifyIntegrationOpportunities(patterns: MemoryPattern[], currentExperience: string): string[] {
-    const opportunities = [];
+    const opportunities: any /* TODO: specify type */[] = [];
 
     patterns.forEach(pattern => {
       pattern.resolution_paths.forEach(path => {

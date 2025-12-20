@@ -432,7 +432,7 @@ export class ElementalAlchemyService {
     const state = userState.holoflower.getState();
     const visualData = userState.holoflower.exportVisualizationData();
 
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
 
     // Analyze dominant element
     const dominantQuadrant = state.quadrants.reduce((prev, current) =>
@@ -639,7 +639,7 @@ export class ElementalAlchemyService {
   }
 
   private identifyEmergentWisdom(state: HoloflowerState): string[] {
-    const wisdom = [];
+    const wisdom: any /* TODO: specify type */[] = [];
 
     if (state.overallBalance > 0.85) {
       wisdom.push("Collective Harmony Achieved - Group is in sacred balance");

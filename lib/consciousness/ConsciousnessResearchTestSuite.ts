@@ -369,7 +369,7 @@ export class ConsciousnessResearchTestSuite {
   async testConsciousnessEvolution(participantId: string, sessionCount: number = 5): Promise<any> {
     console.log(`\n🌱 Testing consciousness evolution for participant: ${participantId}`);
 
-    const evolutionData = [];
+    const evolutionData: any[] = [];
 
     for (let i = 0; i < sessionCount; i++) {
       const sessionData = await this.simulateConsciousnessSession(participantId, i);

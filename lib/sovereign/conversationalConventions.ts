@@ -498,7 +498,7 @@ Conversational Needs: ${awarenessProfile.conversationalNeeds.structurePreference
   // Helper methods for detection and analysis...
 
   private detectLanguageStyle(input: string): { style: string; patterns: string[] } {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     if (/\b(analyze|systematic|logical|framework)\b/i.test(input)) {
       patterns.push('analytical');
@@ -564,7 +564,7 @@ Conversational Needs: ${awarenessProfile.conversationalNeeds.structurePreference
   }
 
   private determineFocusAreas(profile: MultiDimensionalAwarenessProfile): string[] {
-    const areas = [];
+    const areas: any /* TODO: specify type */[] = [];
     if (profile.intelligenceDimensions.analytical > 60) areas.push('clear frameworks');
     if (profile.intelligenceDimensions.emotional > 60) areas.push('emotional attunement');
     if (profile.intelligenceDimensions.intuitive > 60) areas.push('pattern recognition');

@@ -72,7 +72,7 @@ export class BreathDetector {
     if (this.breathPattern.length < 2) return 12; // Default 12 breaths/min
     
     const recent = this.breathPattern.slice(-5);
-    const intervals = [];
+    const intervals: any /* TODO: specify type */[] = [];
     
     for (let i = 1; i < recent.length; i++) {
       intervals.push(recent[i] - recent[i-1]);

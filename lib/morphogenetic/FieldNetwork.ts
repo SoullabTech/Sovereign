@@ -281,7 +281,7 @@ export class FieldNetwork {
    * Create holographic shards where each contains the whole
    */
   private createHolographicShards(data: any): any[] {
-    const shards = [];
+    const shards: any /* TODO: specify type */[] = [];
     const dataStr = JSON.stringify(data);
 
     // Each shard contains:

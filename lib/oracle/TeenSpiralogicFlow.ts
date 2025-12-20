@@ -281,7 +281,7 @@ export class TeenSpiralogicFlow {
   }
 
   private extractThemes(input: string): string[] {
-    const themes = [];
+    const themes: any /* TODO: specify type */[] = [];
     const themePatterns = {
       identity: /who am i|identity|self/i,
       relationship: /dating|crush|love|boyfriend|girlfriend|partner/i,

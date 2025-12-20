@@ -401,7 +401,7 @@ export class SessionPersistence {
   }
 
   private async extractContinuityMarkers(userId: string, interactions: any[]): Promise<string[]> {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
 
     // Look for patterns that suggest ongoing work
     const patterns = interactions

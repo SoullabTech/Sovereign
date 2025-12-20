@@ -1015,7 +1015,7 @@ Respond like a real friend would:`;
    * DBT Helper Methods
    */
   private extractEmotions(input: string): string[] {
-    const emotions = [];
+    const emotions: any /* TODO: specify type */[] = [];
     const lower = input.toLowerCase();
 
     // Crisis emotions

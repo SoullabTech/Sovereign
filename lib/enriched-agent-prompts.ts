@@ -97,7 +97,7 @@ function getPromptGuidance(promptType: string, context: AgentContext): string {
   let guidance = baseGuidance[promptType as keyof typeof baseGuidance] || baseGuidance.reflection;
   
   // Add context-specific guidance
-  const contextGuidance = [];
+  const contextGuidance: any /* TODO: specify type */[] = [];
   
   if (context.coherenceIndex < 0.3) {
     contextGuidance.push("- Slow down, reflect their words back more");

@@ -229,7 +229,7 @@ export class BetaExperienceOrchestrator {
   }
 
   private analyzeElementalFlow(journey: any[]): any {
-    const transitions = [];
+    const transitions: any /* TODO: specify type */[] = [];
     for (let i = 1; i < journey.length; i++) {
       transitions.push({
         from: journey[i-1].element,
@@ -281,7 +281,7 @@ export class BetaExperienceOrchestrator {
   }
 
   private generateJourneyInsights(flow: any, phase: string): string[] {
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
 
     // Phase-specific insights
     const phaseInsights = {

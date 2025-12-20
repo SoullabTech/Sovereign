@@ -130,7 +130,7 @@ export class LocalVectorDB {
       const chunks = this.splitIntoChunks(source.content);
 
       // Generate embeddings for each chunk
-      const points = [];
+      const points: any /* TODO: specify type */[] = [];
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];

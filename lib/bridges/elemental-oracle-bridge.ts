@@ -381,7 +381,7 @@ export class ElementalOracleBridge {
     }
 
     // Harmonic weaving synthesis
-    const synthesis = [];
+    const synthesis: any /* TODO: specify type */[] = [];
 
     // Start with dominant element
     const dominant = this.findDominantElement(elements);

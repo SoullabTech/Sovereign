@@ -1124,7 +1124,7 @@ export class PostRetreatService {
     analysis: TransformationAnalysis,
   ): Promise<any> {
     // In production, this would use the PersonalOracleAgent
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
 
     if (analysis.growthTrajectory === "accelerating") {
       insights.push(

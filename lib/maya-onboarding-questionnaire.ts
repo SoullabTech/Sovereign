@@ -357,7 +357,7 @@ export class OnboardingOrchestrator {
   private buildSystemPrompt(profile: UserProfile): string {
     const base = `Maya: Pure witnessing presence. Non-directive. Mirror, not guide.`;
 
-    const adaptations = [];
+    const adaptations: any /* TODO: specify type */[] = [];
 
     if (profile.depthPreference === 'surface') {
       adaptations.push('Keep responses brief and light.');

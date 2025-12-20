@@ -447,7 +447,7 @@ export class CognitiveVoiceProcessor {
 
   // Pattern extraction methods
   private getFirePatterns(transcript: string, metrics: VoiceMetrics): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     if (metrics.energyLevel === 'breakthrough') patterns.push('breakthrough energy');
     if (metrics.speechRate > 160) patterns.push('rapid expression');
     if (transcript.toLowerCase().includes('create')) patterns.push('creative impulse');
@@ -456,7 +456,7 @@ export class CognitiveVoiceProcessor {
   }
 
   private getWaterPatterns(transcript: string, metrics: VoiceMetrics): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     if (metrics.emotionalIntensity > 0.4) patterns.push('emotional awareness');
     if (metrics.pauseDensity < 8) patterns.push('flowing expression');
     if (transcript.toLowerCase().includes('feel')) patterns.push('feeling-centered');
@@ -464,7 +464,7 @@ export class CognitiveVoiceProcessor {
   }
 
   private getEarthPatterns(transcript: string, metrics: VoiceMetrics): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     if (metrics.breathPattern === 'deep') patterns.push('grounded breathing');
     if (metrics.coherence > 0.7) patterns.push('stable presence');
     if (metrics.speechRate >= 100 && metrics.speechRate <= 140) patterns.push('steady rhythm');
@@ -472,7 +472,7 @@ export class CognitiveVoiceProcessor {
   }
 
   private getAirPatterns(transcript: string, metrics: VoiceMetrics): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     if (metrics.coherence > 0.6) patterns.push('clear communication');
     if (metrics.speechRate < 120) patterns.push('thoughtful pacing');
     if (transcript.toLowerCase().includes('understand')) patterns.push('analytical thinking');
@@ -480,7 +480,7 @@ export class CognitiveVoiceProcessor {
   }
 
   private getAetherPatterns(transcript: string, metrics: VoiceMetrics): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     if (metrics.coherence > 0.7 && metrics.emotionalIntensity > 0.3 && metrics.emotionalIntensity < 0.7) {
       patterns.push('integrated awareness');
     }
@@ -525,7 +525,7 @@ export class CognitiveVoiceProcessor {
 
   private analyzePauseEmotions(words: Array<{ word: string; start: number; end: number }>): any {
     // Analyze emotional patterns in pauses
-    const pauses = [];
+    const pauses: any /* TODO: specify type */[] = [];
     for (let i = 1; i < words.length; i++) {
       const pauseLength = words[i].start - words[i - 1].end;
       if (pauseLength > 0.5) {

@@ -215,7 +215,7 @@ class SignaturePredictionEngineClass {
     const recentHistory = journey.coherenceHistory.slice(-3);
     if (recentHistory.length < 2) return 0.3;
 
-    const changes = [];
+    const changes: any /* TODO: specify type */[] = [];
     for (let i = 1; i < recentHistory.length; i++) {
       changes.push(Math.abs(recentHistory[i] - recentHistory[i - 1]));
     }

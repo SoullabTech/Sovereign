@@ -320,7 +320,7 @@ export class ShamanicBridge {
    * Gather sacred items for journey
    */
   private async gatherSacredItems(purpose: string): Promise<any[]> {
-    const items = [];
+    const items: any[] = [];
 
     // Always carry core pattern
     items.push({

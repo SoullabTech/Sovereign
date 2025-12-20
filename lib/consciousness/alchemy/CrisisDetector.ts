@@ -539,7 +539,7 @@ export class AlchemicalCrisisDetector {
     alchemicalResult: any
   ): string[] {
 
-    const aspects = [];
+    const aspects: any /* TODO: specify type */[] = [];
     const text = userInput + ' ' + conversationHistory.join(' ');
 
     // Look for what's trying to emerge

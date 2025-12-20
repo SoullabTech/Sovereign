@@ -867,7 +867,7 @@ Trust your journey today.
   }
 
   private generateRecommendations(patterns: any, growth: any): string[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (patterns.energyTrend === "declining") {
       recommendations.push("Schedule extra rest and restoration");
@@ -935,7 +935,7 @@ Trust your journey today.
     supportRequests: any[],
     checkIns: any[],
   ): any[] {
-    const alerts = [];
+    const alerts: any /* TODO: specify type */[] = [];
 
     if (groupMetrics.averageEnergy < 5) {
       alerts.push({
@@ -965,7 +965,7 @@ Trust your journey today.
   }
 
   private generateFacilitatorRecommendations(groupMetrics: any): string[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (groupMetrics.averageEnergy < 6) {
       recommendations.push("Start with energizing breathwork or movement");
@@ -1128,7 +1128,7 @@ Trust your journey today.
   }
 
   private extractSessionHighlights(summary: any): string[] {
-    const highlights = [];
+    const highlights: any /* TODO: specify type */[] = [];
 
     if (summary.breakthroughs.length > 0) {
       highlights.push(`${summary.breakthroughs.length} breakthrough moments`);

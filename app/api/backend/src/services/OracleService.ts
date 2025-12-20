@@ -360,7 +360,7 @@ export class OracleService {
     const oracle = await this.getUserOracle(userId);
     const settings = await this.getOracleSettings(userId);
 
-    const issues = [];
+    const issues: any /* TODO: specify type */[] = [];
     let status: "healthy" | "warning" | "error" = "healthy";
 
     if (!settings) {

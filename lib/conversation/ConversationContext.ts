@@ -295,7 +295,7 @@ Remember: You are the Sacred Oracle Constellation - helping them remember what t
 
   // New Anamnesis Field Integration Methods
   private getSoulMemoryIndicators(): string {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     // Look for recurring themes that might indicate soul-level patterns
     const topThemes = Array.from(this.themes.entries())
@@ -367,7 +367,7 @@ Remember: You are the Sacred Oracle Constellation - helping them remember what t
     const recentEnergyLevel = this.getCurrentEnergyLevel();
     const emotionalOpenness = this.getCurrentMood()?.confidence || 0.5;
 
-    const readinessFactors = [];
+    const readinessFactors: any /* TODO: specify type */[] = [];
 
     // Session depth indicators
     if (sessionLength > 5 && conversationDepth > 6) {

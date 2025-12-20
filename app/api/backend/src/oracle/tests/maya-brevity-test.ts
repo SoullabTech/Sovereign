@@ -28,7 +28,7 @@ export class MayaBrevityTest {
       { input: "I'm exhausted from work", maxWords: 15 }
     ];
 
-    const results = [];
+    const results: any[] = [];
 
     for (const test of testCases) {
       const response = await this.orchestrator.speak(test.input, 'test-user');

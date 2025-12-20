@@ -440,7 +440,7 @@ export class iOSPlatformAdapter implements PlatformAdapter {
   }
 
   private async collectBiometricEpisodes() {
-    const episodes = [];
+    const episodes: any /* TODO: specify type */[] = [];
 
     try {
       // Collect HRV data
@@ -531,7 +531,7 @@ export class iOSPlatformAdapter implements PlatformAdapter {
     const hrv = await this.healthKit.getHeartRateVariability(24 * 7);
     const stress = await this.healthKit.getStressMarkers(24 * 7);
 
-    let eeg = [];
+    let eeg: any /* TODO: specify type */[] = [];
     try {
       eeg = await this.openBCI.getEEGData(60 * 24 * 7);
     } catch (error) {

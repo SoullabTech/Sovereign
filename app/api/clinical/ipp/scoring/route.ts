@@ -362,7 +362,7 @@ async function validateResponses(responses: AssessmentResponse[]) {
   }
 
   // Check for missing responses
-  const missingQuestions = [];
+  const missingQuestions: any /* TODO: specify type */[] = [];
   for (let i = 1; i <= 40; i++) {
     if (!responses.find(r => r.questionId === i)) {
       missingQuestions.push(i);

@@ -492,7 +492,7 @@ class ContextAnalyzer {
     };
 
     const scores = {};
-    const spiralogicResonance = [];
+    const spiralogicResonance: any /* TODO: specify type */[] = [];
 
     for (const [domain, keywords] of Object.entries(themes)) {
       scores[domain] = keywords.filter(keyword => text.includes(keyword)).length;

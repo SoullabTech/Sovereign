@@ -297,7 +297,7 @@ export class IntegratedSafetySystem {
     // Simplified semantic extraction
     // In production, this would use proper NLP embeddings
 
-    const features = [];
+    const features: any /* TODO: specify type */[] = [];
 
     // Emotional valence
     const positiveWords = ['good', 'happy', 'hope', 'love', 'peaceful'];
@@ -369,7 +369,7 @@ export class IntegratedSafetySystem {
   }
 
   private detectEmotions(message: string): string[] {
-    const emotions = [];
+    const emotions: any /* TODO: specify type */[] = [];
     const emotionMap = {
       'sad': /\b(sad|depressed|down|blue|unhappy)\b/i,
       'angry': /\b(angry|mad|furious|pissed|rage)\b/i,
@@ -388,7 +388,7 @@ export class IntegratedSafetySystem {
   }
 
   private detectRedFlags(message: string): string[] {
-    const flags = [];
+    const flags: any /* TODO: specify type */[] = [];
     if (/\b(kill|die|death|suicide)\b/i.test(message)) flags.push('mortality_language');
     if (/\b(nobody|no one|alone)\b/i.test(message)) flags.push('isolation');
     if (/\b(hate|destroy|revenge)\b/i.test(message)) flags.push('hostility');
@@ -397,7 +397,7 @@ export class IntegratedSafetySystem {
   }
 
   private detectSomatic(message: string): string[] {
-    const somatic = [];
+    const somatic: any /* TODO: specify type */[] = [];
     if (/\b(chest|heart|breathing)\b/i.test(message)) somatic.push('chest');
     if (/\b(stomach|gut|belly)\b/i.test(message)) somatic.push('gut');
     if (/\b(head|mind|thoughts)\b/i.test(message)) somatic.push('head');

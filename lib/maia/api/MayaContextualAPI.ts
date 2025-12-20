@@ -228,7 +228,7 @@ Current Context:
   }
 
   private getAppliedConstraints(constraints: any): string[] {
-    const applied = [];
+    const applied: any /* TODO: specify type */[] = [];
     if (constraints.holdSpace) applied.push('holding-space');
     if (constraints.mirrorOnly) applied.push('mirroring');
     if (constraints.offerDoorway) applied.push('offering-transition');

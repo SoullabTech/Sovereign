@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
     const isHealthy = healthResponse.ok;
 
     // Get recent Navigator decisions for this user (if beta server is healthy)
-    let recentSessions = [];
+    let recentSessions: any /* TODO: specify type */[] = [];
     if (isHealthy) {
       try {
         const sessionsResponse = await fetch(`${BETA_SERVER_URL}/navigator-admin/api/recent-sessions?userId=${userId}&limit=10`);

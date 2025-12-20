@@ -80,7 +80,7 @@ export class JourneyVisualization {
     const maxVisits = Math.max(...Object.values(elementVisits), 1);
 
     // Create petals based on visit frequency
-    const petals = [];
+    const petals: any /* TODO: specify type */[] = [];
 
     Object.entries(elementVisits).forEach(([element, visits]) => {
       const intensity = visits / maxVisits;

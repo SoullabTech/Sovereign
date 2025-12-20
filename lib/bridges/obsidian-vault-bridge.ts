@@ -746,7 +746,7 @@ export class ObsidianVaultBridge {
   async findSynthesisOpportunities(): Promise<any[]> {
     const frameworks = await this.getFrameworks();
     const integrations = await this.getIntegrations();
-    const opportunities = [];
+    const opportunities: any /* TODO: specify type */[] = [];
 
     // Find framework pairs without integrations
     for (let i = 0; i < frameworks.length; i++) {

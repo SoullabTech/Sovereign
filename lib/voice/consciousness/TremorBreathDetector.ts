@@ -492,7 +492,7 @@ class TremorBreathDetector {
   private detectSpeechSegments(audioData: Float32Array): any[] {
     const frameSize = 1024;
     const hopSize = 512;
-    const segments = [];
+    const segments: any /* TODO: specify type */[] = [];
 
     let inSpeech = false;
     let segmentStart = 0;
@@ -525,7 +525,7 @@ class TremorBreathDetector {
    * Analyze pause patterns between speech segments
    */
   private analyzePausePatterns(speechSegments: any[]): any {
-    const pauses = [];
+    const pauses: any /* TODO: specify type */[] = [];
 
     for (let i = 1; i < speechSegments.length; i++) {
       const pauseDuration = speechSegments[i].start - speechSegments[i - 1].end;

@@ -223,7 +223,7 @@ export class AirAgent {
     airActivation: AirProcessingState['airActivation']
   ): Promise<string[]> {
     
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     
     if (airActivation.mentalClarity > 0.8) {
       patterns.push("Clear, focused thinking with strong discrimination");

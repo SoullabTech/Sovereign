@@ -220,7 +220,7 @@ export class CollectiveIntelligenceMemory {
    * Get therapeutic priorities based on current field state
    */
   private getTopTherapeuticPriorities(): string[] {
-    const priorities = [];
+    const priorities: any /* TODO: specify type */[] = [];
 
     if (this.memory.fieldCoherence.overallCoherence < 0.6) {
       priorities.push("coherence restoration");

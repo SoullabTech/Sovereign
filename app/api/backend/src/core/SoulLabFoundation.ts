@@ -186,7 +186,7 @@ export class SoulLabFoundation {
    * Transform analysis into questions and invitations
    */
   private translateToCuriosity(insights: any): string[] {
-    const questions = [];
+    const questions: any /* TODO: specify type */[] = [];
     
     if (insights.elemental_insights) {
       questions.push(...this.elementsToQuestions(insights.elemental_insights));

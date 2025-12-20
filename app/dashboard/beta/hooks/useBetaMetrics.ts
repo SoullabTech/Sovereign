@@ -196,7 +196,7 @@ function generateMockMetrics(): BetaMetrics {
 }
 
 function generateMockVoiceEvents(): VoiceEvent[] {
-  const events = [];
+  const events: any /* TODO: specify type */[] = [];
   const types: Array<'success' | 'error' | 'warning'> = ['success', 'error', 'warning'];
   const messages = {
     success: ['Voice recognition completed', 'TTS generation successful', 'Audio processing complete'],
@@ -221,7 +221,7 @@ function generateMockVoiceEvents(): VoiceEvent[] {
 }
 
 function generateMockHistory(type: string): PerformanceDataPoint[] {
-  const points = [];
+  const points: any /* TODO: specify type */[] = [];
   const baseValue = type === 'voice' ? 90 : type === 'memory' ? 85 : 75;
   
   for (let i = 23; i >= 0; i--) {

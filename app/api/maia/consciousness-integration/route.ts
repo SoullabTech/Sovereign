@@ -105,7 +105,7 @@ function analyzeConsciousnessState(message: string, userId: string): any {
 }
 
 function generateMeditationSuggestions(analysis: any, currentSession?: any): string[] {
-  const suggestions = [];
+  const suggestions: any /* TODO: specify type */[] = [];
 
   if (analysis.analysis.stress > 0.3) {
     suggestions.push("Consider starting with gentle breathing meditation to calm your nervous system");

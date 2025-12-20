@@ -321,7 +321,7 @@ export class RealTimeAdaptation {
     const profile = this.adaptationProfiles.get(userId);
     if (!profile) return '';
 
-    const instructions = [];
+    const instructions: any /* TODO: specify type */[] = [];
 
     // Response preferences
     const prefs = profile.learningMetrics.responsePreferences;
@@ -438,7 +438,7 @@ export class RealTimeAdaptation {
   }
 
   private async extractTriggers(userInput: string): Promise<string[]> {
-    const triggers = [];
+    const triggers: any /* TODO: specify type */[] = [];
     const lower = userInput.toLowerCase();
 
     if (lower.includes('anxiety') || lower.includes('worry')) triggers.push('anxiety');

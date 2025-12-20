@@ -537,7 +537,7 @@ function identifyImprovementAreas(analyses: any[]) {
   if (analyses.length === 0) return [];
 
   const latestAnalysis = analyses[0];
-  const areas = [];
+  const areas: any /* TODO: specify type */[] = [];
 
   if (latestAnalysis.rhythmQuality < 0.7) areas.push('rhythm_quality');
   if (latestAnalysis.misalignmentSeverity !== 'none') areas.push('circadian_alignment');

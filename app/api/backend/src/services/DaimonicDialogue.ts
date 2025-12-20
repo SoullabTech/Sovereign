@@ -358,7 +358,7 @@ export class DaimonicDialogueService {
    * Identify what emerges that neither self nor Other could create alone
    */
   private identifyEmergentQualities(experience: any, alterity: AlterityMarkers): string {
-    const emergent_possibilities = [];
+    const emergent_possibilities: any /* TODO: specify type */[] = [];
     
     if (alterity.irreducibility > 0.6 && alterity.resistance > 0.6) {
       emergent_possibilities.push('New possibility born from creative tension');

@@ -299,7 +299,7 @@ export class ConsciousnessDetector {
   }
 
   private generateReasoning(matrix: ConsciousnessMatrix, safetyLevel: string): string {
-    const concerns = [];
+    const concerns: any /* TODO: specify type */[] = [];
 
     if (safetyLevel === 'red') {
       concerns.push(`Edge state detected: ${matrix.edge}`);
@@ -356,7 +356,7 @@ export function getProtocolRecommendation(
     safetyLevel === 'red' ? 'basic' :
     safetyLevel === 'yellow' ? 'medium' : 'full';
 
-  const specialCare = [];
+  const specialCare: any /* TODO: specify type */[] = [];
   if (matrix.edge !== 'clear') specialCare.push('trauma_aware');
   if (matrix.systemic === 'precarious' || matrix.systemic === 'overwhelmed') {
     specialCare.push('material_conditions_aware');

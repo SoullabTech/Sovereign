@@ -333,7 +333,7 @@ export class ResponseConstraintsEngine {
    * Generate constraint summary for logging
    */
   summarizeConstraints(constraints: ResponseConstraints): string {
-    const active = [];
+    const active: any /* TODO: specify type */[] = [];
 
     if (constraints.holdSpace) active.push('hold-space');
     if (constraints.mirrorOnly) active.push('mirror-only');

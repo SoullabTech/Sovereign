@@ -429,7 +429,7 @@ export class ComponentArchitectureIntegration {
   static getArchitectureDashboardWidgets(snapshot: SevenLayerSnapshot | null) {
     if (!snapshot) return [];
 
-    const widgets = [];
+    const widgets: any /* TODO: specify type */[] = [];
 
     // Architecture health widget
     if ((snapshot.architectureHealth?.layerIntegration || 0) > 0.3) {

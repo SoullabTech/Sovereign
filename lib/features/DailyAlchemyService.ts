@@ -461,7 +461,7 @@ export async function getWeeklyAlchemyPlan(
   midday: string;
   evening: string;
 }>> {
-  const plan = [];
+  const plan: any /* TODO: specify type */[] = [];
   const today = new Date();
 
   for (let i = 0; i < 7; i++) {

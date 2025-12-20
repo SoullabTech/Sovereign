@@ -242,7 +242,7 @@ export class ConversationFlowManager {
    */
 
   private detectSelfKnowledgeOpportunity(userInput: string): string[] {
-    const indicators = [];
+    const indicators: any /* TODO: specify type */[] = [];
     const selfKnowledgeMarkers = [
       'who am i', 'what am i', 'my purpose', 'my truth', 'myself',
       'identity', 'authentic self', 'true self', 'real me',
@@ -266,7 +266,7 @@ export class ConversationFlowManager {
   }
 
   private detectAuthenticityOpportunity(userInput: string): string[] {
-    const indicators = [];
+    const indicators: any /* TODO: specify type */[] = [];
     const authenticityMarkers = [
       'authentic', 'real', 'true', 'genuine', 'honest',
       'mask', 'pretend', 'fake', 'hiding', 'showing up',
@@ -384,7 +384,7 @@ export class ConversationFlowManager {
   }
 
   private detectAnamnesisMarkers(content: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     
     // Recognition markers
     const recognitionMarkers = [

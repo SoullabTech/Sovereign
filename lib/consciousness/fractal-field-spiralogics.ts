@@ -252,7 +252,7 @@ export class FractalFieldSpiralogics {
       }
 
       // Analyze quest response for emergence indicators
-      const patterns = [];
+      const patterns: any /* TODO: specify type */[] = [];
       let emergenceScore = 0;
       let emergenceType = 'none';
 
@@ -809,7 +809,7 @@ export class FractalFieldSpiralogics {
     patterns: string[],
     emergenceScore: number
   ): string[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (patterns.includes('spiral_deepening')) {
       recommendations.push('Continue exploring elemental depths to strengthen foundations');

@@ -440,7 +440,7 @@ export class ConsciousnessMetricsFramework {
   }
 
   private generateTopInsights(impact: ConsciousnessImpactAnalysis): string[] {
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
 
     if (impact.engagementLift > 2) {
       insights.push(`🚀 Engagement increased ${impact.engagementLift.toFixed(1)}x with consciousness enhancement`);
@@ -462,7 +462,7 @@ export class ConsciousnessMetricsFramework {
   }
 
   private generateRecommendations(impact: ConsciousnessImpactAnalysis): string[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (impact.engagementLift > 3) {
       recommendations.push("Consider upgrading to PERSONALITY_DYNAMICS tier for even deeper engagement");

@@ -169,7 +169,7 @@ export class MAIATrainingOptimizer {
   }> {
 
     const currentMetrics = this.analyzeCurrentMetrics();
-    const scenarios = [];
+    const scenarios: any /* TODO: specify type */[] = [];
 
     // Generate scenarios based on current weaknesses
     if (currentMetrics.averageCoherence < 0.7) {

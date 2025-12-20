@@ -120,8 +120,8 @@ export class UnifiedMemoryInterface extends EventEmitter {
       MemoryLayer.SEMANTIC
     ];
     
-    const allMemories = [];
-    const insights = [];
+    const allMemories: any /* TODO: specify type */[] = [];
+    const insights: any /* TODO: specify type */[] = [];
     const patterns = {
       personal: [],
       collective: [],
@@ -337,7 +337,7 @@ export class UnifiedMemoryInterface extends EventEmitter {
    * Extract personal patterns
    */
   private async extractPersonalPatterns(userId: string, memories: any[]): Promise<string[]> {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     
     // Analyze memories for patterns
     const themes = this.extractThemes(memories);
@@ -352,7 +352,7 @@ export class UnifiedMemoryInterface extends EventEmitter {
    * Extract collective patterns
    */
   private async extractCollectivePatterns(memories: any[]): Promise<string[]> {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     
     // Find patterns that appear across multiple users
     const crossUserPatterns = this.findCrossUserPatterns(memories);
@@ -366,7 +366,7 @@ export class UnifiedMemoryInterface extends EventEmitter {
    * Extract archetypal patterns
    */
   private async extractArchetypalPatterns(memories: any[]): Promise<string[]> {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     
     // Identify universal themes
     const universalThemes = this.findUniversalThemes(memories);
@@ -380,7 +380,7 @@ export class UnifiedMemoryInterface extends EventEmitter {
    * Generate insights from memories and patterns
    */
   private async generateInsights(memories: any[], patterns: any): Promise<string[]> {
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
     
     // Personal insights
     if (patterns.personal.length > 3) {
@@ -456,7 +456,7 @@ export class UnifiedMemoryInterface extends EventEmitter {
   }
   
   private findSynchronicityConnections(sync: any): string[] {
-    const connected = [];
+    const connected: any /* TODO: specify type */[] = [];
     
     for (const [userId, agent] of this.personalAgents) {
       const profile = agent.getUserProfile();
@@ -520,7 +520,7 @@ export class UnifiedMemoryInterface extends EventEmitter {
       'death', 'rebirth', 'love', 'fear', 'wisdom'
     ];
     
-    const found = [];
+    const found: any /* TODO: specify type */[] = [];
     
     const allText = memories.map(m => m.content).join(' ').toLowerCase();
     

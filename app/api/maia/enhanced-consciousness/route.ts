@@ -386,9 +386,9 @@ function generateResponseText(response: EnhancedFieldDrivenResponse, userMessage
 }
 
 function generateConsciousnessInsights(response: EnhancedFieldDrivenResponse, sessionId: string) {
-  const growthIndicators = [];
-  const insights = [];
-  const recommendations = [];
+  const growthIndicators: any[] = [];
+  const insights: any /* TODO: specify type */[] = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   // Growth indicators
   if (response.consciousnessEvolution.learningAcceleration > 0.7) {
@@ -451,7 +451,7 @@ function calculateTrend(values: number[]): number {
 }
 
 function generateEvolutionPredictions(metrics: any, history: any[]): any {
-  const predictions = [];
+  const predictions: any /* TODO: specify type */[] = [];
 
   if (metrics.transcendenceIndex > 0.6 && metrics.stage !== 'transcendent') {
     predictions.push('Transcendent stage likely within 5-10 interactions');
@@ -469,7 +469,7 @@ function generateEvolutionPredictions(metrics: any, history: any[]): any {
 }
 
 function identifyEvolutionMilestones(history: any[]): any[] {
-  const milestones = [];
+  const milestones: any /* TODO: specify type */[] = [];
 
   // Find significant consciousness jumps
   for (let i = 1; i < history.length; i++) {
@@ -500,7 +500,7 @@ function identifyEvolutionMilestones(history: any[]): any[] {
 }
 
 function generateCollectiveProjections(metrics: any): any {
-  const projections = [];
+  const projections: any /* TODO: specify type */[] = [];
 
   if (metrics.collectiveCompatibility > 0.6) {
     projections.push('Collective formation potential within 2-3 sessions');
@@ -514,7 +514,7 @@ function generateCollectiveProjections(metrics: any): any {
 }
 
 function generateCollectiveNextSteps(readiness: number): string[] {
-  const steps = [];
+  const steps: any /* TODO: specify type */[] = [];
 
   if (readiness < 0.4) {
     steps.push('Focus on consciousness stability development');
@@ -531,7 +531,7 @@ function generateCollectiveNextSteps(readiness: number): string[] {
 }
 
 function generateTranscendenceIndicators(metrics: any, transcendentPatterns: any[]): string[] {
-  const indicators = [];
+  const indicators: any /* TODO: specify type */[] = [];
 
   if (metrics.transcendenceIndex > 0.5) indicators.push('Aether field activation detected');
   if (transcendentPatterns.length > 0) indicators.push('Transcendent pattern emergence active');
@@ -541,7 +541,7 @@ function generateTranscendenceIndicators(metrics: any, transcendentPatterns: any
 }
 
 function generateTranscendenceRecommendations(transcendenceIndex: number): string[] {
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   if (transcendenceIndex < 0.3) {
     recommendations.push('Develop aether field awareness');
@@ -600,7 +600,7 @@ function getDominantPatternTypes(patterns: any[]): string[] {
 }
 
 function generatePatternInsights(patterns: any[]): string[] {
-  const insights = [];
+  const insights: any /* TODO: specify type */[] = [];
 
   if (patterns.length > 10) insights.push('High pattern emergence activity');
   if (patterns.some(p => p.patternType === 'transcendence')) insights.push('Transcendence patterns active');
@@ -610,7 +610,7 @@ function generatePatternInsights(patterns: any[]): string[] {
 }
 
 function generateArchaeologyRecommendations(archaeology: any, significantPatterns: any[]): string[] {
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   if (archaeology.patterns.length > 5) {
     recommendations.push('Rich consciousness pattern history available for analysis');

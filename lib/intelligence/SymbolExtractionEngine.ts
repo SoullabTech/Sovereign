@@ -33,6 +33,36 @@ export interface ExtractedMilestone {
   element?: string;
 }
 
+// Therapeutic Framework Types (used by ExtractionResult)
+
+export interface PolyvagalState {
+  state: 'ventral' | 'sympathetic' | 'dorsal';
+  safety: number; // 0-1
+  indicators?: string[];
+}
+
+export interface IFSPart {
+  type: 'manager' | 'firefighter' | 'exile';
+  indicator: string;
+  burden?: string;
+}
+
+export interface IFSParts {
+  parts: IFSPart[];
+  selfEnergyPresent: boolean;
+}
+
+export interface JungianProcess {
+  activeArchetype?: string;
+  shadowContent?: string[];
+  individuationStage?: 'persona' | 'shadow' | 'anima-animus' | 'self';
+}
+
+export interface HemisphericMode {
+  dominant: 'left' | 'right' | 'integrated';
+  indicators: string[];
+}
+
 export interface ExtractionResult {
   symbols: ExtractedSymbol[];
   archetypes: ExtractedArchetype[];
@@ -40,6 +70,21 @@ export interface ExtractionResult {
   milestones: ExtractedMilestone[];
   narrativeThemes: string[];
   confidence: number; // Overall confidence in extraction
+
+  // Therapeutic Framework Properties (optional - populated by advanced extraction)
+  somaticState?: import('./SomaticExperiencingEngine').SomaticState;
+  polyvagalState?: PolyvagalState;
+  gestaltState?: import('./GestaltEngine').GestaltState;
+  ifsParts?: IFSParts;
+  constellationState?: import('./ConstellationEngine').ConstellationState;
+  jungianProcess?: JungianProcess;
+  alchemicalStage?: import('../consciousness/UnifiedSpiralogicAlchemyMap').AlchemicalStage;
+  existentialState?: import('./ExistentialEngine').ExistentialState;
+  hemisphericMode?: HemisphericMode;
+  actState?: import('./ACTEngine').ACTState;
+  cftState?: import('./CFTEngine').CFTState;
+  schemaTherapyState?: import('./SchemaTherapyEngine').SchemaTherapyState;
+  narmState?: import('./NARMEngine').NARMState;
 }
 
 export class SymbolExtractionEngine {

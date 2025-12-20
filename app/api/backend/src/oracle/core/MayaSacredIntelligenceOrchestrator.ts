@@ -479,7 +479,7 @@ export class MayaSacredIntelligenceOrchestrator {
   }
 
   private identifyNeeds(input: string): string[] {
-    const needs = [];
+    const needs: any /* TODO: specify type */[] = [];
 
     if (/help|support|guide/i.test(input)) needs.push('support');
     if (/understand|clarity|confus/i.test(input)) needs.push('clarity');

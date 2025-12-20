@@ -512,7 +512,7 @@ export class OracleSettingsService {
     proposedPhase: string,
   ): string[] {
     // Define potential risks of moving between phases
-    const risks = [];
+    const risks: any /* TODO: specify type */[] = [];
 
     if (currentPhase === "initiation" && proposedPhase === "transcendence") {
       risks.push("Skipping important foundational work");

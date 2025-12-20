@@ -324,7 +324,7 @@ export class CoherenceFieldService {
     deficiency: string[],
     excess: string[]
   ): any[] {
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (excess.includes('fire')) {
       recommendations.push({

@@ -268,7 +268,7 @@ export class AINClient {
       currentFocus = 'Refining mastery and preparing to serve.';
     }
 
-    const nextSteps = [];
+    const nextSteps: any /* TODO: specify type */[] = [];
     if (shadowWorkCount < 3) {
       nextSteps.push('Explore what you\'re avoiding or denying');
     }

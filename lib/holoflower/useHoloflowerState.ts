@@ -186,7 +186,7 @@ export function useHoloflowerState(config: HoloflowerConfig = {}): HoloflowerHoo
   // Get current flow description
   const getCurrentFlow = useCallback(() => {
     const state = currentState;
-    const flow = [];
+    const flow: any /* TODO: specify type */[] = [];
 
     flow.push(`Mode: ${state.mode}`);
     flow.push(`Element: ${state.element}`);

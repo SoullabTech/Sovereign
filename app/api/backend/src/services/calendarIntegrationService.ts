@@ -376,7 +376,7 @@ export class CalendarIntegrationService {
   }
 
   private calculateReminderTimes(event: CalendarEvent, settings: any) {
-    const reminders = [];
+    const reminders: any /* TODO: specify type */[] = [];
     const sessionTime = event.start.getTime();
 
     // 24 hours before

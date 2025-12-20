@@ -138,7 +138,7 @@ export class AgnosticExperienceFramework {
    * Describe patterns without claiming causation
    */
   private describePatternWithoutCausation(input: string): string {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     if (this.detectPattern(input, 'dialogue')) {
       patterns.push("conversational elements");
@@ -419,7 +419,7 @@ export class AgnosticExperienceFramework {
   }
 
   private detectQualities(input: string): string[] {
-    const qualities = [];
+    const qualities: any /* TODO: specify type */[] = [];
     if (/creat|inspir|innovat|art|music|writ/.test(input.toLowerCase())) {
       qualities.push('creative');
     }

@@ -107,7 +107,7 @@ export class ChristianUniversalWisdomBridge {
   ): Promise<any[]> {
 
     // Disposable pixel loading based on dialogue partners
-    const expressions = [];
+    const expressions: any /* TODO: specify type */[] = [];
 
     switch (principle) {
       case 'love_of_neighbor':
@@ -229,7 +229,7 @@ export class ChristianUniversalWisdomBridge {
     context: UniversalWisdomContext
   ): Promise<any[]> {
 
-    const applications = [];
+    const applications: any /* TODO: specify type */[] = [];
 
     if (context.culturalContexts?.includes('workplace')) {
       applications.push(...await this.loadWorkplaceApplications(principle, context));
@@ -251,7 +251,7 @@ export class ChristianUniversalWisdomBridge {
   }
 
   private async loadWorkplaceApplications(principle: string, context: UniversalWisdomContext): Promise<any[]> {
-    const applications = [];
+    const applications: any /* TODO: specify type */[] = [];
 
     switch (principle) {
       case 'love_of_neighbor':
@@ -291,7 +291,7 @@ export class ChristianUniversalWisdomBridge {
   }
 
   private async loadUniversityApplications(principle: string, context: UniversalWisdomContext): Promise<any[]> {
-    const applications = [];
+    const applications: any /* TODO: specify type */[] = [];
 
     switch (principle) {
       case 'unity_in_diversity':
@@ -323,7 +323,7 @@ export class ChristianUniversalWisdomBridge {
   }
 
   private async loadNeighborhoodApplications(principle: string, context: UniversalWisdomContext): Promise<any[]> {
-    const applications = [];
+    const applications: any /* TODO: specify type */[] = [];
 
     switch (principle) {
       case 'love_of_neighbor':
@@ -347,7 +347,7 @@ export class ChristianUniversalWisdomBridge {
   }
 
   private async loadGlobalIssuesApplications(principle: string, context: UniversalWisdomContext): Promise<any[]> {
-    const applications = [];
+    const applications: any /* TODO: specify type */[] = [];
 
     switch (principle) {
       case 'justice_and_mercy':
@@ -398,7 +398,7 @@ export class ChristianUniversalWisdomBridge {
     context: UniversalWisdomContext
   ): Promise<string[]> {
 
-    const questions = [];
+    const questions: any /* TODO: specify type */[] = [];
 
     // Universal questions for any dialogue
     questions.push(
@@ -458,7 +458,7 @@ export class ChristianUniversalWisdomBridge {
 
     if (!context.evangelisticIntent) return [];
 
-    const opportunities = [];
+    const opportunities: any /* TODO: specify type */[] = [];
 
     switch (principle) {
       case 'love_of_neighbor':

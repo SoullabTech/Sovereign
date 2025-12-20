@@ -228,13 +228,13 @@ export class SafetyPredictor {
     const dt = 1; // Assume 1 second between snapshots
 
     // First derivative (velocity)
-    const velocities = [];
+    const velocities: any /* TODO: specify type */[] = [];
     for (let i = 1; i < counts.length; i++) {
       velocities.push((counts[i] - counts[i - 1]) / dt);
     }
 
     // Second derivative (acceleration)
-    const accelerations = [];
+    const accelerations: any /* TODO: specify type */[] = [];
     for (let i = 1; i < velocities.length; i++) {
       accelerations.push((velocities[i] - velocities[i - 1]) / dt);
     }

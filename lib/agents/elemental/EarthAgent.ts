@@ -385,7 +385,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractEarthSymbols(content: string): string[] {
-    const earthSymbols = [];
+    const earthSymbols: string[] = [];
     if (
       content.includes("tree") ||
       content.includes("oak") ||
@@ -416,7 +416,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractEarthReflections(content: string): string[] {
-    const reflections = [];
+    const reflections: string[] = [];
     if (content.includes("foundation") || content.includes("build")) {
       reflections.push("What foundation does your vision need?");
     }

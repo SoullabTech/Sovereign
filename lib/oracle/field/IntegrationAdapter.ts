@@ -229,7 +229,7 @@ export class FISIntegrationAdapter {
   }
 
   private generateGameActions(response: EmergentResponse, fieldState: FieldState): any[] {
-    const actions = [];
+    const actions: any /* TODO: specify type */[] = [];
 
     if (response.interventionType === 'celebration') {
       actions.push({ type: 'animation', name: 'celebrate' });
@@ -248,7 +248,7 @@ export class FISIntegrationAdapter {
   }
 
   private generateTherapeuticActions(response: EmergentResponse, fieldState: FieldState): any[] {
-    const actions = [];
+    const actions: any /* TODO: specify type */[] = [];
 
     if (fieldState.somaticIntelligence.nervous_system_state === 'sympathetic') {
       actions.push({ type: 'suggest_technique', name: 'breathing_exercise' });
@@ -266,7 +266,7 @@ export class FISIntegrationAdapter {
   }
 
   private generateCreativeActions(response: EmergentResponse, fieldState: FieldState): any[] {
-    const actions = [];
+    const actions: any /* TODO: specify type */[] = [];
 
     if (fieldState.semanticLandscape.meaning_emergence === 'forming') {
       actions.push({ type: 'creative_prompt', style: 'exploratory' });

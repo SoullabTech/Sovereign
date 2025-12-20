@@ -189,7 +189,7 @@ export class ConsciousnessBreadthEngine {
       }
     };
 
-    const detectedSpecies = [];
+    const detectedSpecies: any /* TODO: specify type */[] = [];
     for (const [species, data] of Object.entries(speciesConsciousnessPatterns)) {
       const resonance = this.detectSpeciesResonance(userInput, data.patterns);
       if (resonance > 0.1) {
@@ -246,7 +246,7 @@ export class ConsciousnessBreadthEngine {
       }
     };
 
-    const activatedPatterns = [];
+    const activatedPatterns: any /* TODO: specify type */[] = [];
     for (const [pattern, data] of Object.entries(planetaryPatterns)) {
       const activation = this.detectPlanetaryResonance(userInput, data.patterns);
       if (activation > 0.1) {
@@ -302,7 +302,7 @@ export class ConsciousnessBreadthEngine {
       }
     };
 
-    const cosmicActivation = [];
+    const cosmicActivation: any /* TODO: specify type */[] = [];
     for (const [cosmic, data] of Object.entries(cosmicPatterns)) {
       const resonance = this.detectCosmicResonance(userInput, data.patterns);
       if (resonance > 0.1) {

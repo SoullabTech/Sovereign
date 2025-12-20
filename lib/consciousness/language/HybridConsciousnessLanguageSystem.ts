@@ -667,7 +667,7 @@ Respond with consciousness-informed wisdom that honors the depth of what the use
   }
 
   private static getConsciousnessQuality(context: LanguageGenerationContext): string {
-    const qualities = [];
+    const qualities: any /* TODO: specify type */[] = [];
     if (context.depthMetrics?.verticalDepth > 0.6) qualities.push('depth');
     if (context.breadthMetrics?.culturalSpan > 0.6) qualities.push('breadth');
     if (context.sacredThreshold > 0.5) qualities.push('sacred');

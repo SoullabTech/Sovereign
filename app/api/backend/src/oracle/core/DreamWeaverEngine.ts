@@ -323,7 +323,7 @@ export class DreamWeaverEngine {
 
     // BODY activation detected - ask about it!
     if (signals.bodyActivation.throat || signals.bodyActivation.chest || signals.bodyActivation.crown) {
-      const bodyParts = [];
+      const bodyParts: any /* TODO: specify type */[] = [];
       if (signals.bodyActivation.throat) bodyParts.push('throat');
       if (signals.bodyActivation.chest) bodyParts.push('chest');
       if (signals.bodyActivation.crown) bodyParts.push('crown');

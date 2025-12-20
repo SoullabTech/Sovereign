@@ -159,7 +159,7 @@ export class EnergeticAttunement {
    * Suggest response style based on energy
    */
   static getResponseGuidance(userEnergy: EnergeticSignature, responseEnergy: EnergeticSignature): string[] {
-    const guidance = [];
+    const guidance: any /* TODO: specify type */[] = [];
     
     // Pace guidance
     if (responseEnergy.pace < 0.3) {

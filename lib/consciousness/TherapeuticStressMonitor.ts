@@ -372,7 +372,7 @@ export class TherapeuticStressMonitor {
   private describeEnergeticState(energetic: any): string {
     const { activation, coherence, receptivity, vitality } = energetic;
 
-    let state = [];
+    let state: any /* TODO: specify type */[] = [];
     if (activation > 0.7) state.push("highly activated");
     else if (activation < 0.3) state.push("calm/grounded");
 

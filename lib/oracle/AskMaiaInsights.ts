@@ -380,7 +380,7 @@ export class AskMayaInsights {
   }
 
   private assessIntersectionalFactors(pattern: string, context: Partial<LifeContext>): string[] {
-    const factors = [];
+    const factors: any /* TODO: specify type */[] = [];
 
     // Economic factors
     if (context.financialStress === 'high') {

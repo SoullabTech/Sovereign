@@ -477,7 +477,7 @@ export class ConsciousnessSessionAnalytics {
   }
 
   private detectBreakthroughMoments(turns: any[]): any[] {
-    const breakthroughs = [];
+    const breakthroughs: any /* TODO: specify type */[] = [];
     for (let i = 1; i < turns.length; i++) {
       const prev = turns[i - 1].consciousnessMetrics.currentConsciousnessLevel;
       const curr = turns[i].consciousnessMetrics.currentConsciousnessLevel;
@@ -539,7 +539,7 @@ export class ConsciousnessSessionAnalytics {
   }
 
   private identifyUniquePatterns(turns: any[]): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     // Check for specific patterns
     const hasRapidEmergence = turns.some((turn, i) =>
@@ -607,7 +607,7 @@ export class ConsciousnessSessionAnalytics {
   private calculateTrend(values: number[]): number[] {
     // Simple moving average trend
     const windowSize = 3;
-    const trend = [];
+    const trend: any /* TODO: specify type */[] = [];
 
     for (let i = windowSize - 1; i < values.length; i++) {
       const window = values.slice(i - windowSize + 1, i + 1);

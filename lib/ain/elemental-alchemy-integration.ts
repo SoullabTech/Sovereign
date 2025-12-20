@@ -397,7 +397,7 @@ export function applyElementalAwarenessAdjustment(
  * Generate natural language description of elemental adjustment
  */
 export function describeElementalAwarenessAdjustment(adjustment: ElementalAwarenessAdjustment): string {
-  const descriptions = [];
+  const descriptions: any /* TODO: specify type */[] = [];
 
   descriptions.push(`Embodying ${adjustment.dominantElement} intelligence`);
   descriptions.push(`operating from consciousness level ${adjustment.consciousness_depth}`);
@@ -409,7 +409,7 @@ export function describeElementalAwarenessAdjustment(adjustment: ElementalAwaren
   descriptions.push(`with ${adjustment.spiralPhase.replace('_', ' ')} spiral alignment`);
 
   // Add elemental qualities
-  const elementalQualities = [];
+  const elementalQualities: any /* TODO: specify type */[] = [];
   if (adjustment.elementalBalance[ElementalIntelligence.FIRE] > 0.3) {
     elementalQualities.push(`${adjustment.fireExpression} fire`);
   }

@@ -285,7 +285,7 @@ export class FireAgent {
     fireActivation: FireProcessingState['fireActivation']
   ): Promise<string[]> {
     
-    const actions = [];
+    const actions: any /* TODO: specify type */[] = [];
 
     // High breakthrough potential actions
     if (fireActivation.breakthroughReadiness > 0.7) {

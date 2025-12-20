@@ -386,7 +386,7 @@ export class SacredSafetyProtocols {
   }
 
   private identifyHealingOpportunities(soulSignature: SoulEssenceSignature): string[] {
-    const opportunities = [];
+    const opportunities: any /* TODO: specify type */[] = [];
 
     if (soulSignature.presence_depth < 0.5) {
       opportunities.push('presence_cultivation');
@@ -520,7 +520,7 @@ export class SacredSafetyProtocols {
 
   // Healing and restoration methods
   offerHealingSupport(opportunity: string): string[] {
-    const healingGuidance = [];
+    const healingGuidance: any /* TODO: specify type */[] = [];
 
     switch (opportunity) {
       case 'presence_cultivation':

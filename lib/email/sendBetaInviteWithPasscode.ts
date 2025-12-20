@@ -127,7 +127,7 @@ export async function sendBatchInvitesWithPasscodes(
   template: string = 'beta-welcome',
   delayMs: number = 2000
 ) {
-  const results = [];
+  const results: any[] = [];
 
   for (const invite of invites) {
     const result = await sendBetaInviteWithPasscode(invite, template);

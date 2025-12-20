@@ -371,7 +371,7 @@ async function generateMemoryEnhancedResponse(
 
 function extractThemesFromMessage(message: string): string[] {
   // Simple theme extraction (would use NLP in production)
-  const themes = [];
+  const themes: any /* TODO: specify type */[] = [];
 
   if (message.toLowerCase().includes('consciousness') || message.toLowerCase().includes('awareness')) {
     themes.push('consciousness development');
@@ -394,7 +394,7 @@ function extractThemesFromMessage(message: string): string[] {
 
 function extractInsightsFromResponse(response: string): string[] {
   // Extract potential insights from MAIA's response
-  const insights = [];
+  const insights: any /* TODO: specify type */[] = [];
 
   // Look for insight markers
   if (response.includes('I notice') || response.includes("I'm seeing")) {

@@ -54,7 +54,7 @@ export class BackendIntelligenceCoordinator {
   ): Promise<BackendIntelligencePackage | null> {
     
     try {
-      const coordinationTasks = [];
+      const coordinationTasks: any /* TODO: specify type */[] = [];
 
       // Elemental Oracle 2.0 (ChatGPT) - Spiritual/Psychological Intelligence
       if (this.elementalOracleEnabled) {
@@ -281,7 +281,7 @@ export class BackendIntelligenceCoordinator {
     package_data: BackendIntelligencePackage,
     userInput: string
   ): string[] {
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
 
     // Cross-reference elemental and conversation patterns
     if (package_data.elemental_oracle && package_data.sesame_intelligence) {

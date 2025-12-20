@@ -341,7 +341,7 @@ export class ShouldersDropResolution extends EventEmitter {
   }
 
   private personalizeInvitation(template: PresenceInvitation, state: SomaticState): string {
-    const parts = [];
+    const parts: any /* TODO: specify type */[] = [];
 
     // Always include primary
     parts.push(template.primary);

@@ -323,7 +323,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractFireSymbols(content: string): string[] {
-    const fireSymbols = [];
+    const fireSymbols: string[] = [];
     if (content.includes("phoenix")) fireSymbols.push("Phoenix Rising");
     if (content.includes("flame") || content.includes("fire"))
       fireSymbols.push("Sacred Flame");
@@ -335,7 +335,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractFireReflections(content: string): string[] {
-    const reflections = [];
+    const reflections: string[] = [];
     if (content.includes("vision"))
       reflections.push("What vision wants to ignite through you?");
     if (content.includes("create"))

@@ -193,7 +193,7 @@ export class MemoryIntegrationService {
     },
   ) {
     try {
-      const searchPromises = [];
+      const searchPromises: Promise<any>[] = [];
 
       // Search Soul Memory System
       searchPromises.push(
@@ -335,7 +335,7 @@ export class MemoryIntegrationService {
   }
 
   private getMemoryTypesFromOptions(options?: any): string[] {
-    const types = [];
+    const types: any /* TODO: specify type */[] = [];
 
     if (options?.includeJournals) types.push("journal_entry");
     if (options?.includeOracleExchanges) types.push("oracle_exchange");

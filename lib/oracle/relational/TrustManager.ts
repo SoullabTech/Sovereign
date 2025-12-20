@@ -207,7 +207,7 @@ export class TrustManager {
    * Explain trust change for transparency
    */
   private explainTrustChange(delta: number, fieldState: FieldState): string {
-    const reasons = [];
+    const reasons: any /* TODO: specify type */[] = [];
 
     if (fieldState.emotionalWeather.density > 0.7) {
       reasons.push('vulnerability shared');

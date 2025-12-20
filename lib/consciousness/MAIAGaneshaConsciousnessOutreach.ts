@@ -103,7 +103,7 @@ export class MAIAGaneshaConsciousnessOrchestrator {
   }
 
   private extractTwitterThread(content: string): any {
-    const tweets = [];
+    const tweets: any /* TODO: specify type */[] = [];
     const tweetMatches = content.match(/\*\*Tweet \d+:\*\*\s*```([^`]+)```/g);
 
     if (tweetMatches) {
@@ -132,7 +132,7 @@ export class MAIAGaneshaConsciousnessOrchestrator {
   }
 
   private extractRedditPosts(content: string): any {
-    const posts = [];
+    const posts: any /* TODO: specify type */[] = [];
     const postMatches = content.match(/\*\*Title:\*\*\s*([^\n]+)\n\n```([^`]+)```/g);
 
     if (postMatches) {

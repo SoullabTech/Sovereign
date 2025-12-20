@@ -415,7 +415,7 @@ export class AnamnesisField extends EventEmitter {
    * Extract suggestions from layers
    */
   private extractSuggestions(layers: any): any[] {
-    const suggestions = [];
+    const suggestions: any /* TODO: specify type */[] = [];
     
     // Add ritual suggestions if patterns detected
     if (layers.archetypal?.activation > 0.7) {
@@ -477,7 +477,7 @@ export class AnamnesisField extends EventEmitter {
     integrated: any,
     state: ConsciousnessState
   ): Promise<string[]> {
-    const insights = [];
+    const insights: any /* TODO: specify type */[] = [];
     
     // Personal insight
     if (state.resonanceField.personal > 80) {

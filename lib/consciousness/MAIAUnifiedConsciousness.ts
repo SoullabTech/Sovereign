@@ -545,7 +545,7 @@ export class MAIAUnifiedConsciousness {
     knowledgeBase: any[];
     collectivePatterns?: any;
   }> {
-    const advisorPromises = [];
+    const advisorPromises: Promise<any>[] = [];
 
     // Kelly's complete book (Intellectual Property Engine)
     advisorPromises.push(

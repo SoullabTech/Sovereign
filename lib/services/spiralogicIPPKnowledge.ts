@@ -428,7 +428,7 @@ export class SpiralogicIPPKnowledgeService {
   }
 
   private generateSuggestions(entry: SpiralogicIPPEntry, userContext?: any): string[] {
-    const suggestions = [];
+    const suggestions: any /* TODO: specify type */[] = [];
 
     if (entry.type === 'assessment') {
       suggestions.push("Would you like to take the complete Spiralogic-IPP assessment?");

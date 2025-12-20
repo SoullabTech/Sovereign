@@ -315,7 +315,7 @@ export class ConversationElementalIntelligence {
    * Utility methods for elemental analysis
    */
   private static detectElementalCues(message: string): string[] {
-    const cues = [];
+    const cues: any /* TODO: specify type */[] = [];
     const lowerMessage = message.toLowerCase();
 
     // Fire cues

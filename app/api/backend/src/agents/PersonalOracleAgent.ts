@@ -259,8 +259,8 @@ class ElementalAlchemyAssessment {
   }
 
   private extractIdealMarkers(userInput: string, history: any[]): FourFocalPoints['ideal'] {
-    const explicit = [];
-    const implicit = [];
+    const explicit: any /* TODO: specify type */[] = [];
+    const implicit: any /* TODO: specify type */[] = [];
 
     // Explicit markers: "I want", "I hope", "I'm trying to"
     const explicitPatterns = /(?:want|hope|trying to|working toward|aiming for)\s+(.+?)(?:\.|$)/gi;
@@ -280,9 +280,9 @@ class ElementalAlchemyAssessment {
   }
 
   private detectShadowPatterns(userInput: string, history: any[]): FourFocalPoints['shadow'] {
-    const perceived = [];
-    const unconscious = [];
-    const resistance = [];
+    const perceived: any /* TODO: specify type */[] = [];
+    const unconscious: any /* TODO: specify type */[] = [];
+    const resistance: any /* TODO: specify type */[] = [];
 
     // Perceived challenges: direct statements of difficulty
     const challengePatterns = /(?:struggling with|difficult|hard|challenging|problem with|issue with)\s+(.+?)(?:\.|$)/gi;
@@ -305,10 +305,10 @@ class ElementalAlchemyAssessment {
   }
 
   private mapResources(userInput: string, history: any[], elementalDetection: any): FourFocalPoints['resources'] {
-    const existing = [];
-    const elemental = [];
-    const missing = [];
-    const emergent = [];
+    const existing: any /* TODO: specify type */[] = [];
+    const elemental: any /* TODO: specify type */[] = [];
+    const missing: any /* TODO: specify type */[] = [];
+    const emergent: any /* TODO: specify type */[] = [];
 
     // Existing resources: "I can", "I have", "I'm good at"
     const resourcePatterns = /(?:can|have|good at|able to|know how to)\s+(.+?)(?:\.|$)/gi;
@@ -334,7 +334,7 @@ class ElementalAlchemyAssessment {
 
   private discernOutcomes(userInput: string, history: any[]): FourFocalPoints['outcome'] {
     let magical = "";
-    const practical = [];
+    const practical: any /* TODO: specify type */[] = [];
     let service = "";
 
     // Magical outcome: deepest transformation desire

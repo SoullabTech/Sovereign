@@ -415,7 +415,7 @@ export class WisdomVaultIngestion {
   }
 
   private extractConcepts(content: string): string[] {
-    const concepts = [];
+    const concepts: any /* TODO: specify type */[] = [];
 
     if (content.includes('Hero')) concepts.push('Hero Archetype');
     if (content.includes('Healer')) concepts.push('Healer Archetype');
@@ -428,7 +428,7 @@ export class WisdomVaultIngestion {
   }
 
   private extractPractices(content: string): string[] {
-    const practices = [];
+    const practices: any /* TODO: specify type */[] = [];
 
     if (content.includes('meditation')) practices.push('Meditation');
     if (content.includes('visualization')) practices.push('Visualization');

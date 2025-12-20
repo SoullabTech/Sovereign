@@ -537,7 +537,7 @@ export class ElementalDialogueService {
   
   // Emergent quality identification
   private identifyEmergentQuality(others: ElementalOtherness[], profile: any): string {
-    const qualities = [];
+    const qualities: any /* TODO: specify type */[] = [];
     
     if (others.some(o => o.element === 'fire' && o.autonomyLevel > 0.7)) {
       qualities.push("visionary fire");

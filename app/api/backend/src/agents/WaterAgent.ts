@@ -382,7 +382,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractWaterSymbols(content: string): string[] {
-    const waterSymbols = [];
+    const waterSymbols: string[] = [];
     if (content.includes("river") || content.includes("flow"))
       waterSymbols.push("Sacred River");
     if (content.includes("ocean") || content.includes("deep"))
@@ -399,7 +399,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractWaterReflections(content: string): string[] {
-    const reflections = [];
+    const reflections: string[] = [];
     if (content.includes("feel") || content.includes("emotion")) {
       reflections.push("What is this emotion trying to teach you?");
     }

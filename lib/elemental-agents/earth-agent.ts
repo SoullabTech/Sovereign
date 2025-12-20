@@ -287,7 +287,7 @@ export class EarthAgent {
     earthActivation: EarthProcessingState['earthActivation']
   ): Promise<string[]> {
     
-    const resources = [];
+    const resources: any /* TODO: specify type */[] = [];
     
     if (earthActivation.groundingPower > 0.6) {
       resources.push("Strong energetic foundation for sustained effort");
@@ -320,7 +320,7 @@ export class EarthAgent {
     resourceMapping: string[]
   ): Promise<string[]> {
     
-    const actions = [];
+    const actions: any /* TODO: specify type */[] = [];
     
     // High manifestation capacity actions
     if (earthActivation.manifestationCapacity > 0.7) {

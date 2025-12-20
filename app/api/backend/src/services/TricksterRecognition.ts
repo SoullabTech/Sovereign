@@ -367,7 +367,7 @@ export class TricksterRecognition {
     patterns: DisruptionPattern[],
     risk_level: number
   ): string[] {
-    const reasons = [];
+    const reasons: any /* TODO: specify type */[] = [];
 
     if (markers.timing_precision > 0.7) {
       reasons.push('Uncannily precise timing suggests trickster activity');
@@ -638,7 +638,7 @@ export class TricksterRecognition {
     const history = this.getTricksterHistory(userId);
     
     // Check for stagnation indicators
-    const stuck_indicators = [];
+    const stuck_indicators: any /* TODO: specify type */[] = [];
     const recent_disruptions = history.filter(p => 
       // Assuming patterns have timestamps in a real implementation
       true // Placeholder

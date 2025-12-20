@@ -329,7 +329,7 @@ ${this.extractKeyPassages(doc.content, topics).slice(0, 500)}...
    * Get Maya's core philosophical foundation
    */
   async getCorePhilosophy(): Promise<string> {
-    const philosophyDocs = [];
+    const philosophyDocs: any /* TODO: specify type */[] = [];
 
     // Load core philosophy documents
     for (const docName of this.coreKnowledge) {

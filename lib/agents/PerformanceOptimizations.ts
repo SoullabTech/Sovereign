@@ -364,7 +364,7 @@ export class PerformanceMonitor {
   }
 
   private getPerformanceWarnings(): string[] {
-    const warnings = [];
+    const warnings: string[] = [];
 
     if (this.average(this.metrics.responseTime) > 500) {
       warnings.push('Average response time exceeds 500ms');

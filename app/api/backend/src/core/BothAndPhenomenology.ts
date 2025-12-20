@@ -191,7 +191,7 @@ export class BothAndPhenomenologyService {
 
   // Material marker detection methods
   private findPhysicalTraces(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const trace_indicators = [
       'marks', 'traces', 'evidence', 'footprints', 'residue', 'damage',
       'burn marks', 'indentations', 'scratches', 'physical evidence'
@@ -207,7 +207,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findSensoryData(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const sensory_indicators = [
       'saw', 'heard', 'felt', 'touched', 'smelled', 'tasted',
       'temperature', 'pressure', 'vibration', 'sound', 'light',
@@ -224,7 +224,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findDocumentedEvidence(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const documentation_indicators = [
       'photo', 'recording', 'video', 'measured', 'documented', 'report',
       'official record', 'medical report', 'police report', 'written down',
@@ -241,7 +241,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findMultipleWitnesses(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const witness_indicators = [
       'others saw', 'we all', 'everyone noticed', 'witnesses', 'group saw',
       'my friend also', 'family saw', 'coworkers saw', 'neighbors saw',
@@ -258,7 +258,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findTemporalSpecificity(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     // Look for specific times, durations
     const time_patterns = [
       /at exactly \d+:\d+/gi,
@@ -279,7 +279,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findSpatialSpecificity(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const spatial_indicators = [
       'exactly', 'precisely', 'measured', 'distance', 'location',
       'coordinates', 'address', 'specific place', 'exact spot'
@@ -296,7 +296,7 @@ export class BothAndPhenomenologyService {
 
   // Imaginal marker detection methods
   private findSymbolicContent(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const symbolic_indicators = [
       'reminded me of', 'like a', 'symbolized', 'represented', 'archetypal',
       'mythic', 'ancient', 'timeless', 'universal', 'sacred geometry',
@@ -314,7 +314,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findSynchronisticElements(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const sync_indicators = [
       'perfect timing', 'exactly when', 'just as', 'coincidence', 
       'meaningful coincidence', 'synchronicity', 'right moment',
@@ -331,7 +331,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findEmotionalResonance(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const emotional_indicators = [
       'numinous', 'sacred', 'holy', 'overwhelming', 'profound',
       'life-changing', 'deeply moved', 'tears', 'awe', 'wonder',
@@ -348,7 +348,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findMythicParallels(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const mythic_indicators = [
       'like in the Bible', 'ancient story', 'myth', 'legend', 'fairy tale',
       'hero\'s journey', 'initiation', 'quest', 'vision quest', 'prophecy',
@@ -365,7 +365,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findTransformativeImpact(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const transformation_indicators = [
       'changed my life', 'never the same', 'transformed me', 'awakening',
       'realization', 'breakthrough', 'revelation', 'life-altering',
@@ -382,7 +382,7 @@ export class BothAndPhenomenologyService {
   }
 
   private findDreamLikeQualities(text: string): string[] {
-    const markers = [];
+    const markers: any /* TODO: specify type */[] = [];
     const dream_indicators = [
       'dream-like', 'surreal', 'impossible', 'defied physics', 
       'couldn\'t be real', 'like a dream', 'otherworldly', 'magical',
@@ -447,7 +447,7 @@ export class BothAndPhenomenologyService {
 
   private findResolutionAttempts(experience: any): string[] {
     const text = this.extractText(experience);
-    const attempts = [];
+    const attempts: any /* TODO: specify type */[] = [];
     
     const resolution_patterns = [
       'it must be', 'probably just', 'likely explanation', 'rational explanation',

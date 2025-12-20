@@ -578,7 +578,7 @@ export const useUnifiedConsciousness = create<UnifiedConsciousnessState & Unifie
           'Honor sacred technology protection protocols',
         ];
 
-        const celebrations = [];
+        const celebrations: any /* TODO: specify type */[] = [];
         if (state.user.breakthrough_indicators.sustained_presence) celebrations.push('🎉 Sustained presence achieved!');
         if (state.convergence.overall_integration_score > 0.8) celebrations.push('🎉 Excellent convergence integration!');
         if (state.sacred_tech.sacred_separator_integrity > 0.9) celebrations.push('🎉 Sacred separator mastery!');

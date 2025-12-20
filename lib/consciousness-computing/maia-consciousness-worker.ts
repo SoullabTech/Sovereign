@@ -203,7 +203,7 @@ export class MAIAConsciousnessWorker {
 
     console.log('🧪 [MAIA Worker] Testing progress against goal criteria...');
 
-    const testResults = [];
+    const testResults: any[] = [];
 
     for (const criterion of goal.testCriteria) {
       if (criterion.includes('Matrix V2') && criterion.includes('expansive')) {

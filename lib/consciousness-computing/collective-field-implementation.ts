@@ -333,9 +333,9 @@ export class CollectiveFieldDetector {
     const element = latestData.spiralogicField.dominantElement;
     const capacity = latestData.fieldIndicators.averageMatrixCapacity;
 
-    const practices = [];
+    const practices: any /* TODO: specify type */[] = [];
     let elementalFocus = '';
-    const needs = [];
+    const needs: any /* TODO: specify type */[] = [];
 
     switch (element) {
       case 'water':
@@ -383,9 +383,9 @@ export class CollectiveFieldDetector {
   private generateNavigatorTuning(weeklyData: DailyFieldData[]) {
     const latestData = weeklyData[weeklyData.length - 1];
 
-    const emphasisAdjustments = [];
-    const responsePatterns = [];
-    const fieldSensitivity = [];
+    const emphasisAdjustments: any /* TODO: specify type */[] = [];
+    const responsePatterns: any /* TODO: specify type */[] = [];
+    const fieldSensitivity: any /* TODO: specify type */[] = [];
 
     // Based on dominant archetype
     switch (latestData.archetypalField.dominantArchetype) {
@@ -495,7 +495,7 @@ export class CollectiveFieldDetector {
   private identifyEmergentPatterns(weeklyData: DailyFieldData[]): string[] {
     // Identify emerging patterns across the week
     const latestData = weeklyData[weeklyData.length - 1];
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     if (latestData.archetypalField.movementTrend === 'evolving') {
       patterns.push('Community in growth phase');

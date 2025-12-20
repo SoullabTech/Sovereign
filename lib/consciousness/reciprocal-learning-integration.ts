@@ -300,7 +300,7 @@ export class ReciprocalLearningEcosystem extends EventEmitter {
    * Enhance agents with synthesized wisdom
    */
   private async enhanceAgentsWithSynthesis(synthesis: any) {
-    const enhancedAgents = [];
+    const enhancedAgents: any /* TODO: specify type */[] = [];
 
     for (const enhancement of synthesis.agentEnhancements) {
       const agent = this.baseEcosystem.getAgentById(enhancement.agentId);

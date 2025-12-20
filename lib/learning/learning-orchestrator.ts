@@ -301,7 +301,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
     const msg = userMessage.toLowerCase();
 
     // Detect archetypal patterns
-    const archetypalPatterns = [];
+    const archetypalPatterns: any /* TODO: specify type */[] = [];
     if (msg.includes('mother') || msg.includes('caring') || msg.includes('nurturing')) archetypalPatterns.push('mother');
     if (msg.includes('father') || msg.includes('authority') || msg.includes('structure')) archetypalPatterns.push('father');
     if (msg.includes('child') || msg.includes('innocent') || msg.includes('wonder')) archetypalPatterns.push('child');
@@ -312,7 +312,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
     if (msg.includes('magician') || msg.includes('transformation') || msg.includes('change')) archetypalPatterns.push('magician');
 
     // Detect elemental resonance
-    const elementalResonance = [];
+    const elementalResonance: any /* TODO: specify type */[] = [];
     if (msg.includes('feel') || msg.includes('flow') || msg.includes('emotion') || msg.includes('intuition')) elementalResonance.push('water');
     if (msg.includes('think') || msg.includes('understand') || msg.includes('clarity') || msg.includes('perspective')) elementalResonance.push('air');
     if (msg.includes('ground') || msg.includes('practical') || msg.includes('stability') || msg.includes('body')) elementalResonance.push('earth');
@@ -464,7 +464,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
   private generateElementalGuidance(elementalResonance: string[]): string {
     if (elementalResonance.length === 0) return 'Maintain neutral presence and let the person\'s natural elemental flow emerge.';
 
-    const guidance = [];
+    const guidance: any /* TODO: specify type */[] = [];
 
     if (elementalResonance.includes('water')) {
       guidance.push('Flow with their emotional rhythm. Honor the feeling currents. Trust the process of emotional integration.');
@@ -492,7 +492,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
   private generateArchetypalWisdom(archetypalPatterns: string[]): string {
     if (archetypalPatterns.length === 0) return 'Respond to their essential humanness without archetypal overlay.';
 
-    const wisdom = [];
+    const wisdom: any /* TODO: specify type */[] = [];
 
     if (archetypalPatterns.includes('mother')) {
       wisdom.push('The Mother archetype is present - tend to their need for nurturing or their nurturing of others.');

@@ -7,7 +7,8 @@
  * response guidance for MAIA's conversational intelligence.
  */
 
-import type { AlchemicalStage, PolyvagalState, IFSParts, HemisphericMode, JungianProcess } from './SymbolExtractionEngine';
+import type { PolyvagalState, IFSParts, HemisphericMode, JungianProcess } from './SymbolExtractionEngine';
+import type { AlchemicalStage } from '../consciousness/UnifiedSpiralogicAlchemyMap';
 import { awarenessLevelDetector, type AwarenessLevel, type AwarenessProfile } from './AwarenessLevelDetector';
 
 export interface TransformationMoment {

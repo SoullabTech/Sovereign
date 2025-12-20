@@ -377,8 +377,8 @@ export class SpiralogicAssessmentEngine {
     matrixV2: ConsciousnessMatrixV2
   ): { appropriateWork: string[]; contraindications: string[] } {
 
-    const work = [];
-    const contraindications = [];
+    const work: any /* TODO: specify type */[] = [];
+    const contraindications: any /* TODO: specify type */[] = [];
 
     // Element-specific work recommendations
     switch (primaryElement) {
@@ -517,7 +517,7 @@ function generateMAIAsSpiralogicApproach(
   archetypal: ArchetypalDynamics,
   spiralogic: SpiralogicAssessment
 ): string {
-  const approaches = [];
+  const approaches: any /* TODO: specify type */[] = [];
 
   // Base approach on spiral direction
   if (spiralogic.spiralDirection === 'descending') {

@@ -494,7 +494,7 @@ export class ThermodynamicConsciousnessAnalyzer {
     const recent = historicalStates.slice(-5); // Last 5 states
     if (recent.length < 2) return { rate_of_change: 0, volatility: 0 };
 
-    const changes = [];
+    const changes: any /* TODO: specify type */[] = [];
     for (let i = 1; i < recent.length; i++) {
       changes.push(recent[i].field_entropy - recent[i-1].field_entropy);
     }
@@ -512,7 +512,7 @@ export class ThermodynamicConsciousnessAnalyzer {
     const recent = historicalStates.slice(-5);
     if (recent.length < 2) return { instability_measure: 0, elemental_imbalance: 0 };
 
-    const energyChanges = [];
+    const energyChanges: any /* TODO: specify type */[] = [];
     for (let i = 1; i < recent.length; i++) {
       energyChanges.push(recent[i].coherence_energy - recent[i-1].coherence_energy);
     }
@@ -535,7 +535,7 @@ export class ThermodynamicConsciousnessAnalyzer {
     const stabilityDeviation = Math.sqrt(stabilityTrends.reduce((sum, t) => sum + Math.pow(t - avgStabilityTrend, 2), 0) / stabilityTrends.length);
 
     // Wisdom emergence rate based on pattern resonance improvements
-    const resonanceChanges = [];
+    const resonanceChanges: any /* TODO: specify type */[] = [];
     for (let i = 1; i < recent.length; i++) {
       resonanceChanges.push(recent[i].pattern_resonance - recent[i-1].pattern_resonance);
     }

@@ -278,7 +278,7 @@ export class LanguageMappingService {
   // ==========================================================================
 
   static generatePracticeTiles(themes: Theme[], shadowSignals: ShadowSignal[]): string[] {
-    const practices = [];
+    const practices: any /* TODO: specify type */[] = [];
 
     // Theme-based practices
     for (const theme of themes.slice(0, 2)) {

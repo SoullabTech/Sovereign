@@ -243,7 +243,7 @@ export class ProgressiveFeedbackSystem {
     action: string;
     preview: string;
   }> {
-    const adjustments = [];
+    const adjustments: any /* TODO: specify type */[] = [];
 
     // Based on current features active
     if (currentConversation.features?.includes('looping_protocol')) {
@@ -333,7 +333,7 @@ export class ProgressiveFeedbackSystem {
   }
 
   private extractIssues(metrics: FeedbackMetrics): string[] {
-    const issues = [];
+    const issues: any /* TODO: specify type */[] = [];
     if (metrics.pacingFeedback !== 'just-right') issues.push(`pacing-${metrics.pacingFeedback}`);
     if (metrics.depthFeedback !== 'just-right') issues.push(`depth-${metrics.depthFeedback}`);
     if (metrics.loopingFeedback === 'annoying') issues.push('looping-annoying');

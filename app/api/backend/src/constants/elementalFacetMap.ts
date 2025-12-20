@@ -161,7 +161,7 @@ export function getFacetById(id: string) {
 }
 
 export function getFacetsByPhase(phase: string) {
-  const matches = [];
+  const matches: any /* TODO: specify type */[] = [];
   for (const element of Object.values(elementalFacetMap)) {
     matches.push(...element.facets.filter((f) => f.phase === phase));
   }

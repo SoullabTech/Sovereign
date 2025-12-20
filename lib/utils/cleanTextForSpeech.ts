@@ -63,7 +63,7 @@ export function extractSpokenText(text: string): string {
 
   // Split by line to process each separately
   const lines = text.split('\n');
-  const spokenLines = [];
+  const spokenLines: any /* TODO: specify type */[] = [];
 
   for (const line of lines) {
     // Skip lines that are entirely stage directions

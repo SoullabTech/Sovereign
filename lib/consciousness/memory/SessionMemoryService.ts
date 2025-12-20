@@ -348,7 +348,7 @@ export class SessionMemoryService {
     sessions: any[],
     insights: any[]
   ): Promise<any[]> {
-    const connections = [];
+    const connections: any /* TODO: specify type */[] = [];
 
     // Temporal pattern connections
     if (sessions.length > 1) {

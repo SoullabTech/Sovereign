@@ -178,7 +178,7 @@ export class AntiSolipsisticValidator {
    */
   private checkForSubtleSolipsism(encounter: any, checks: OthernessChecks): ValidationResult {
     // Sophisticated self-mirroring patterns
-    const solipsismWarnings = [];
+    const solipsismWarnings: string[] = [];
 
     // Pattern 1: "Convenient" otherness that only challenges in comfortable ways
     if (checks.contradictsSelfImage && !checks.bringsUnwantedGifts) {
@@ -292,7 +292,7 @@ export class AntiSolipsisticValidator {
   private generateGuidanceForFalsification(checks: OthernessChecks): string {
     const failedChecks = Object.entries(checks).filter(([_, value]) => !value);
     
-    const guidance = [];
+    const guidance: any /* TODO: specify type */[] = [];
     
     if (!checks.contradictsSelfImage) {
       guidance.push("Look for what challenges your self-concept");
@@ -426,7 +426,7 @@ export class AntiSolipsisticValidator {
     gapValidations: ValidationResult[],
     emergenceValidations: ValidationResult[]
   ): string[] {
-    const warnings = [];
+    const warnings: string[] = [];
     
     const allValidations = [
       ...manifestationValidations,

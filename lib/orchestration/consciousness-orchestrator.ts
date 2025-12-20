@@ -563,7 +563,7 @@ export class ConsciousnessOrchestrator {
   }
 
   private buildSynthesisInput(streams: Partial<OrchestrationStream>): string {
-    const elements = [];
+    const elements: any /* TODO: specify type */[] = [];
 
     if (streams.witnessing) elements.push(`Witnessing: ${JSON.stringify(streams.witnessing).substring(0, 200)}`);
     if (streams.memories) elements.push(`Memories: ${JSON.stringify(streams.memories).substring(0, 200)}`);
@@ -702,7 +702,7 @@ export class ConsciousnessOrchestrator {
   }
 
   private extractConsciousnessPatterns(input: string, synthesizedStreams: any, coherence: number): any[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
 
     // Extract patterns from each stream
     if (synthesizedStreams.witnessing?.patterns) {
@@ -737,7 +737,7 @@ export class ConsciousnessOrchestrator {
 
   private identifyMetaPatterns(patterns: any[]): any[] {
     // Identify higher-order patterns from the basic patterns
-    const metaPatterns = [];
+    const metaPatterns: any /* TODO: specify type */[] = [];
 
     // Look for recurring themes across pattern types
     const themes = this.findRecurringThemes(patterns);
@@ -881,7 +881,7 @@ export class ConsciousnessOrchestrator {
 
   private findSupportingThreads(streams: OrchestrationStream, primaryTheme: any): any[] {
     // Find elements from each stream that support the primary theme
-    const threads = [];
+    const threads: any /* TODO: specify type */[] = [];
 
     if (streams.elemental?.elements) {
       // Extract elemental support
@@ -982,7 +982,7 @@ export class ConsciousnessOrchestrator {
   }
 
   private getActiveSystems(): string[] {
-    const active = [];
+    const active: any /* TODO: specify type */[] = [];
 
     if (this.systems.obsidianVault) active.push('ObsidianVault');
     if (this.systems.elementalOracle) active.push('ElementalOracle2.0');

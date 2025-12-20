@@ -164,7 +164,7 @@ export async function POST(request: NextRequest) {
 function extractArchetypalRecommendations(analysis: any) {
   const { dominantArchetype, integrationLevel } = analysis.archetypalState;
 
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   if (integrationLevel < 0.5) {
     recommendations.push(`Deepen integration of ${dominantArchetype} archetype`);
@@ -184,7 +184,7 @@ function extractArchetypalRecommendations(analysis: any) {
 }
 
 function extractElementalRecommendations(balance: any) {
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   if (balance.deficientElement === 'earth') {
     recommendations.push('Practice grounding and embodiment');
@@ -210,7 +210,7 @@ function extractElementalRecommendations(balance: any) {
 function extractSpiralRecommendations(spiralDynamics: any) {
   const { currentStage, emergingStage, transitionProbability } = spiralDynamics;
 
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   if (transitionProbability > 0.6) {
     recommendations.push(`Prepare for transition to ${emergingStage} consciousness`);
@@ -296,7 +296,7 @@ function calculateEvolutionaryTension(analysis: any) {
 }
 
 function generateFieldRecommendations(fieldResonance: any) {
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   if (fieldResonance?.individualFieldAlignment < 0.5) {
     recommendations.push('Strengthen personal field coherence');

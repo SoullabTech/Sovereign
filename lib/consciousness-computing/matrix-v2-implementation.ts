@@ -333,7 +333,7 @@ export class ConsciousnessMatrixV2Sensor {
   }
 
   private generateRefinedGuidance(matrix: ConsciousnessMatrixV2): string {
-    const guidance = [];
+    const guidance: any /* TODO: specify type */[] = [];
 
     // Agency adjustments
     if (matrix.agency === 'helpless') {

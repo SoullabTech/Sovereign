@@ -283,7 +283,7 @@ function analyzeCognitiveEvolution(voiceEntries: JournalEntry[]) {
 }
 
 function detectWisdomPatterns(entries: JournalEntry[]): string[] {
-  const patterns = [];
+  const patterns: any /* TODO: specify type */[] = [];
 
   // Check for breakthrough patterns
   const breakthroughCount = entries.filter(entry =>

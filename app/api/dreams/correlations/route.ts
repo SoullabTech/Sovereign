@@ -255,7 +255,7 @@ function analyzeArchetypeProgression(dreams: any[]) {
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   // Detect archetypal phases and transitions
-  const phases = [];
+  const phases: any /* TODO: specify type */[] = [];
   let currentPhase = null;
 
   archetypeTimeline.forEach(entry => {
@@ -343,7 +343,7 @@ function analyzeTemporalCorrelations(dreams: any[]) {
 
 // Analyze cross-domain correlations between dreams and waking consciousness
 function analyzeCrossDomainCorrelations(dreams: any[]) {
-  const crossDomainStrengths = [];
+  const crossDomainStrengths: any /* TODO: specify type */[] = [];
   const correlationTypes = { elemental_state: 0, maia_memory: 0, sleep_session: 0 };
 
   dreams.forEach(dream => {

@@ -393,7 +393,7 @@ export class DriftDetectionEngine {
 
     if (history.length < 3) return 'steady';
 
-    const velocities = [];
+    const velocities: any /* TODO: specify type */[] = [];
     for (let i = 1; i < history.length; i++) {
       velocities.push(this.calculateVelocity(history.slice(i-1, i+1), type));
     }

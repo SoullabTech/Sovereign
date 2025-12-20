@@ -504,12 +504,12 @@ export class PersonalMetricsService {
       "Integration of shadow material would accelerate growth" :
       "Consistent practice to stabilize current insights";
 
-    const supportNeeded = [];
+    const supportNeeded: any /* TODO: specify type */[] = [];
     if (development.integrationIndex < 0.6) supportNeeded.push("Integration practices");
     if (development.shadowEngagementIndex < 0.5) supportNeeded.push("Shadow work support");
     if (constellation?.overallHarmonicCoherence < 0.7) supportNeeded.push("Cross-pattern integration");
 
-    const celebrationWorthy = [];
+    const celebrationWorthy: any /* TODO: specify type */[] = [];
     if (development.integrationIndex > 0.8) celebrationWorthy.push("Strong integration of insights into action");
     if (constellation?.overallHarmonicCoherence > 0.8) celebrationWorthy.push("Beautiful harmonic coherence across life spirals");
     if (development.shadowEngagementIndex > 0.7) celebrationWorthy.push("Courageous engagement with challenging material");

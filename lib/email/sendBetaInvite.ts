@@ -80,7 +80,7 @@ export async function sendBatchInvites(invites: BetaInvite[], template: string =
   }
 
   const resend = getResendClient();
-  const results = [];
+  const results: any[] = [];
 
   // Use Resend's batch API (send all at once, up to 100 per batch)
   try {

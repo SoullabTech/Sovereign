@@ -1,7 +1,7 @@
 {
   "version": "v0.9.4-artifact-integrity",
-  "createdAt": "2025-12-20T18:07:16.339Z",
-  "artifactCount": 10,
+  "createdAt": "2025-12-20T18:15:25.995Z",
+  "artifactCount": 13,
   "entries": [
     {
       "artifact": "identifier-rename-log.json",
@@ -10,6 +10,14 @@
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
       "sizeBytes": 12553602
+    },
+    {
+      "artifact": "implicit-never-analysis.json",
+      "timestamp": "2025-12-20T18:13:27.118Z",
+      "sha256": "d8b9676970ea0448da2a650289d9362253a362eee731cbaae18a17764584319a",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 960893
     },
     {
       "artifact": "import-fixes.json",
@@ -44,6 +52,14 @@
       "sizeBytes": 90657
     },
     {
+      "artifact": "never-locations.json",
+      "timestamp": "2025-12-20T18:12:41.462Z",
+      "sha256": "62927c47e027ba834e09f651dcdafdfe2cad42fe3ecd835f10aebcde8971ec00",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 4957
+    },
+    {
       "artifact": "sovereignty-audit.json",
       "timestamp": "2025-12-20T17:17:40.174Z",
       "sha256": "a01e7ef27bbb9c9edb5da3ddf2350469546dc4f82b8770a0dbbdf5c631be322a",
@@ -61,11 +77,11 @@
     },
     {
       "artifact": "typehealth-audit.json",
-      "timestamp": "2025-12-20T18:03:41.440Z",
-      "sha256": "4b6b299aec2e670e9efc96cadf03f9366cdbb3655af224cba15eee68b13e56ac",
+      "timestamp": "2025-12-20T18:13:56.708Z",
+      "sha256": "000de49ffdad87b963191e2ae3e1ac7ec0cfccbbb01eaf316562c8232bb7047b",
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
-      "sizeBytes": 53447
+      "sizeBytes": 55081
     },
     {
       "artifact": "typehealth-baseline.json",
@@ -82,6 +98,14 @@
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
       "sizeBytes": 215384
+    },
+    {
+      "artifact": "untyped-array-fixes.json",
+      "timestamp": "2025-12-20T18:15:09.525Z",
+      "sha256": "53f5ef0597e94ebba9d4867f57c06b2a4ce7ccd2505afe852640b9fd15bd0a3c",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 79807
     }
   ],
   "verification": {

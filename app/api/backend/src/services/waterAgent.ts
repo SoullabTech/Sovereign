@@ -182,7 +182,7 @@ class FlowStateDetector {
     );
 
     // Common flow blockers
-    const blockers = [];
+    const blockers: any /* TODO: specify type */[] = [];
     if (
       lowerInput.includes("overthinking") ||
       lowerInput.includes("analyzing too much")
@@ -203,7 +203,7 @@ class FlowStateDetector {
     }
 
     // Flow activators
-    const activators = [];
+    const activators: any /* TODO: specify type */[] = [];
     if (lowerInput.includes("breath") || lowerInput.includes("breathing")) {
       activators.push("breath_awareness");
     }

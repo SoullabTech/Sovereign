@@ -140,7 +140,7 @@ export const detectElementalKeywords = (transcript: string): string => {
 
 // Detect shadow themes from what's NOT said
 export const detectShadowThemes = (transcript: string): string[] => {
-  const shadows = [];
+  const shadows: any /* TODO: specify type */[] = [];
   const lower = transcript.toLowerCase();
   
   // Avoidance patterns

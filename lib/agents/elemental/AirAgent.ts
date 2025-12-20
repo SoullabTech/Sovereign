@@ -395,7 +395,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractAirSymbols(content: string): string[] {
-    const airSymbols = [];
+    const airSymbols: string[] = [];
     if (content.includes("wind") || content.includes("breeze")) {
       airSymbols.push("Sacred Wind");
     }
@@ -426,7 +426,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractAirReflections(content: string): string[] {
-    const reflections = [];
+    const reflections: string[] = [];
     if (content.includes("perspective") || content.includes("view")) {
       reflections.push("What new perspective wants to emerge?");
     }

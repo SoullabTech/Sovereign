@@ -375,7 +375,7 @@ export class ClaudeDevOrchestration {
     elementalMatch: string,
     complexity: string
   ): string {
-    const reasons = [];
+    const reasons: any /* TODO: specify type */[] = [];
 
     if (elementalMatch === 'misaligned') {
       reasons.push('Elemental layer mismatch detected');

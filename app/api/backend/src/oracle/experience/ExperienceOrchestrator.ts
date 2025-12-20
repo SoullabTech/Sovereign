@@ -488,7 +488,7 @@ Respond as the optimal archetype with perfect experience generation:`;
   }
 
   private getActiveCathedralLayers(cathedral: any): string[] {
-    const layers = [];
+    const layers: any /* TODO: specify type */[] = [];
     if (cathedral.foundation.safetyLevel > 0.5) layers.push('foundation');
     if (cathedral.structure.resonanceLevel > 0.5) layers.push('structure');
     if (cathedral.walls.selfDiscoveryPotential > 0.5) layers.push('walls');

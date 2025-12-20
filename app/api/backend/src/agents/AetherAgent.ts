@@ -475,7 +475,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractAetherSymbols(content: string): string[] {
-    const aetherSymbols = [];
+    const aetherSymbols: string[] = [];
     if (
       content.includes("web") ||
       content.includes("network") ||
@@ -509,7 +509,7 @@ ${enhancedResponse.content}`;
   }
 
   private extractAetherReflections(content: string): string[] {
-    const reflections = [];
+    const reflections: string[] = [];
     if (content.includes("integrate") || content.includes("together")) {
       reflections.push(
         "How do all aspects of your being want to work together?",

@@ -391,7 +391,7 @@ export class SunsetController {
     const totalSentences = Math.max(rfsSentences.length, sesameSentences.length);
     const rfsCount = Math.floor(totalSentences * ratio);
 
-    const blended = [];
+    const blended: any /* TODO: specify type */[] = [];
     for (let i = 0; i < totalSentences; i++) {
       if (i < rfsCount && rfsSentences[i]) {
         blended.push(rfsSentences[i]);

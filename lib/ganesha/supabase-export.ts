@@ -89,7 +89,7 @@ export function convertToGaneshaContact(betaTester: SupabaseBetaTester, index: n
   const fullName = `${betaTester.first_name} ${betaTester.last_name}`;
 
   // Determine contribution based on their data
-  const contributions = [];
+  const contributions: any /* TODO: specify type */[] = [];
   if (betaTester.tech_background) contributions.push('Technical insights');
   if (betaTester.has_microphone) contributions.push('Voice journaling');
   if (betaTester.has_webcam) contributions.push('Video feedback');

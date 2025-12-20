@@ -197,7 +197,7 @@ export class WaterAgent {
   ): Promise<WaterHealing['flow']> {
     
     // Identify emotional blockages based on activation patterns
-    const blockages = [];
+    const blockages: any /* TODO: specify type */[] = [];
     
     if (waterActivation.emotionalDepth > 0.7 && waterActivation.flowState < 0.4) {
       blockages.push("Deep emotions are present but not flowing freely");
@@ -335,7 +335,7 @@ export class WaterAgent {
     flow: WaterHealing['flow']
   ): Promise<string[]> {
     
-    const validations = [];
+    const validations: any /* TODO: specify type */[] = [];
     
     if (waterActivation.emotionalDepth > 0.6) {
       validations.push("Your emotional depth is a gift, not a burden");

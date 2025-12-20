@@ -299,7 +299,7 @@ export class EnhancedAirAgent {
    * Extract communication structure
    */
   private extractCommunicationStructure(response: string): string[] {
-    const structure = [];
+    const structure: any /* TODO: specify type */[] = [];
     
     if (response.includes('First')) structure.push('Sequential organization');
     if (response.includes('However')) structure.push('Contrasting viewpoints');
@@ -337,7 +337,7 @@ export class EnhancedAirAgent {
    * Identify emphasis points in text
    */
   private identifyEmphasisPoints(text: string): string[] {
-    const emphasisWords = [];
+    const emphasisWords: any /* TODO: specify type */[] = [];
     
     // Words in quotes
     const quoted = text.match(/"([^"]+)"/g);
@@ -362,7 +362,7 @@ export class EnhancedAirAgent {
    * Identify natural pause points
    */
   private identifyPausePoints(text: string): number[] {
-    const pauseIndices = [];
+    const pauseIndices: any /* TODO: specify type */[] = [];
     
     // After punctuation
     ['. ', ', ', ': ', '; ', '? ', '! '].forEach(punct => {

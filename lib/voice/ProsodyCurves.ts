@@ -318,7 +318,7 @@ export class CurveToSSML {
   }> {
     // Split utterance into segments (could be syllables, words, or characters)
     const segments = this.splitUtterance(utterance);
-    const results = [];
+    const results: any[] = [];
 
     for (let i = 0; i < segments.length; i++) {
       const t = i / (segments.length - 1);

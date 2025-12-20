@@ -195,7 +195,7 @@ export class DualVoiceOrchestrator {
    * Helper: Detect elemental imbalance patterns
    */
   private detectElementalImbalance(text: string): string[] {
-    const patterns = [];
+    const patterns: any /* TODO: specify type */[] = [];
     const lower = text.toLowerCase();
     
     if (lower.match(/can't stop thinking|racing thoughts|overthinking/)) {

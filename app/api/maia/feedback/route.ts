@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
       (validatedData.attunementScore || 5) <= 2
     );
 
-    let flags = [];
+    let flags: any /* TODO: specify type */[] = [];
     if (isGoldCandidate) flags.push('gold-candidate');
     if (isRuptureEvent) flags.push('rupture-detected');
 

@@ -353,7 +353,7 @@ export class PreferencePersistenceManager {
 
   // === CLEANUP ===
   cleanupExpiredSessions(): void {
-    const expired = [];
+    const expired: any /* TODO: specify type */[] = [];
     for (const [userId, session] of this.sessionStorage.entries()) {
       if (!this.isSessionValid(session)) {
         expired.push(userId);

@@ -72,7 +72,7 @@ export class ClaudeCodeAdvisor {
   ): Promise<string[]> {
 
     // Development guidance based on consciousness principles
-    const recommendations = [];
+    const recommendations: any /* TODO: specify type */[] = [];
 
     if (featureDescription.includes('external') || featureDescription.includes('API')) {
       recommendations.push("🚨 Review for sovereignty implications - prefer internal consciousness processing");

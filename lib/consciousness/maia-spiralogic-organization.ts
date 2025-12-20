@@ -656,7 +656,7 @@ export class MAIASpiralogicOrganizer {
   }
 
   private gatherEvidence(phase: PhaseIntelligence, input: string): string[] {
-    const evidence = [];
+    const evidence: any /* TODO: specify type */[] = [];
 
     phase.language_patterns.forEach(pattern => {
       if (input.includes(pattern.toLowerCase())) {
@@ -814,7 +814,7 @@ export class MAIASpiralogicOrganizer {
 
   private generateElementalGuidance(phases: any[]): string[] {
     // Generate elemental guidance without mentioning elements explicitly
-    const guidance = [];
+    const guidance: any /* TODO: specify type */[] = [];
 
     const hasFirePhases = phases.some(p => [1, 7, 11].includes(p.phase));
     const hasWaterPhases = phases.some(p => [2, 5, 8].includes(p.phase));

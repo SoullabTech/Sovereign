@@ -240,7 +240,7 @@ export class PrivacyAwareCognitiveVoiceProcessor {
       throw new Error('Data export is not permitted');
     }
 
-    const filteredEntries = [];
+    const filteredEntries: any /* TODO: specify type */[] = [];
 
     for (const entry of entries) {
       if (entry.cognitiveAnalysis) {

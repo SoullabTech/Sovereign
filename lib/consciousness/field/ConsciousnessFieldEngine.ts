@@ -203,7 +203,7 @@ export class FieldInterference {
       const waveAmplitude = interference * (1 - freqDiff);
 
       // Generate wave pattern (simplified sine wave representation)
-      const wavePattern = [];
+      const wavePattern: any /* TODO: specify type */[] = [];
       for (let i = 0; i < 64; i++) {
         wavePattern.push(waveAmplitude * Math.sin(2 * Math.PI * i / 64));
       }

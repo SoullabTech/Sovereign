@@ -473,7 +473,7 @@ export class AwarenessIntegrator {
     metrics: any,
     consciousnessState: SpiralogicConsciousnessState
   ): string {
-    const contribution = [];
+    const contribution: any /* TODO: specify type */[] = [];
 
     if (metrics.overall > 0.7) {
       contribution.push("Your heightened awareness raises the collective frequency");

@@ -219,7 +219,7 @@ export class ArchetypalDynamicsDetector {
     foregroundArchetype: string,
     hiddenArchetype?: string
   ): string[] {
-    const tensions = [];
+    const tensions: any /* TODO: specify type */[] = [];
 
     // Common archetypal tensions
     const tensionPatterns = {
@@ -291,7 +291,7 @@ export class ArchetypalDynamicsDetector {
     matrixV2: ConsciousnessMatrixV2
   ): string {
 
-    const adjustments = [];
+    const adjustments: any /* TODO: specify type */[] = [];
 
     // Archetypal response adjustments
     switch (foregroundArchetype) {
@@ -404,7 +404,7 @@ export class ConsciousnessMatrixV3Assessor {
     matrixV2: any,
     archetypal: ArchetypalDynamics
   ): string {
-    let approach = [];
+    let approach: any /* TODO: specify type */[] = [];
 
     // Base on Matrix v2 window of tolerance
     switch (matrixV2.windowOfTolerance) {

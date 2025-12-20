@@ -510,7 +510,7 @@ export class CollectiveConsciousnessBridge extends EventEmitter {
       .map(([elem]) => elem as Element);
     
     // Find strong resonances
-    const strongResonances = [];
+    const strongResonances: any /* TODO: specify type */[] = [];
     for (const [user1, resonanceMap] of this.state.resonanceMap) {
       for (const [user2, strength] of resonanceMap) {
         if (strength > this.SYNC_THRESHOLD) {

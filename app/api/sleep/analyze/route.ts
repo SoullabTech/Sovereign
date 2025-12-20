@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
 // Store sleep sessions in database
 async function storeSleepSessions(userId: string, sleepSessions: any[]) {
-  const storedSessions = [];
+  const storedSessions: any /* TODO: specify type */[] = [];
 
   for (const session of sleepSessions.slice(0, 30)) { // Last 30 sessions
     try {
@@ -138,7 +138,7 @@ async function analyzeSleepDreamCorrelations(
   dreams: any[],
   analysisType: string
 ) {
-  const correlations = [];
+  const correlations: any /* TODO: specify type */[] = [];
   const patterns = {
     sleepQualityDreamDepth: [],
     remStageDreamContent: [],
@@ -249,7 +249,7 @@ function calculateCorrelationStrength(sleepQuality: number, dreamDepth: number, 
 
 // Generate insights from sleep-dream patterns
 function generateSleepDreamInsights(patterns: any, correlations: any[]): string[] {
-  const insights = [];
+  const insights: any /* TODO: specify type */[] = [];
 
   // Sleep quality insights
   const avgCorrelation = correlations.length > 0 ?
@@ -298,7 +298,7 @@ function generateSleepDreamInsights(patterns: any, correlations: any[]): string[
 
 // Generate sleep optimization recommendations
 function generateSleepOptimization(patterns: any, healthData: ParsedHealthData): any[] {
-  const recommendations = [];
+  const recommendations: any /* TODO: specify type */[] = [];
 
   // Sleep timing optimization
   if (healthData.sleep.length > 0) {
@@ -423,7 +423,7 @@ function analyzeCircadianAlignment(patterns: any, healthData: ParsedHealthData):
 
 // Generate sleep recommendations
 function generateSleepRecommendations(analysis: any, healthData: ParsedHealthData): any[] {
-  const recs = [];
+  const recs: any /* TODO: specify type */[] = [];
 
   // Add sleep optimization recommendations
   recs.push(...analysis.sleepOptimization);

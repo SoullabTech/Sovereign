@@ -323,7 +323,7 @@ class ConversationRouter {
     analysis: ContextAnalysis,
     pattern: string
   ): string[] {
-    const supporting = [];
+    const supporting: any /* TODO: specify type */[] = [];
     const patternSupports = this.routingRules[pattern]?.supportingAgents || [];
 
     // Add pattern-suggested supporting agents
