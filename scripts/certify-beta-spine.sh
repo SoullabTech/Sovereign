@@ -124,6 +124,16 @@ if [[ -n "${SERVER_PID:-}" ]]; then
   echo ""
 fi
 
+# artifact integrity verification
+echo "--- Artifact Integrity ---"
+if [[ -f scripts/verify-artifact-integrity.ts ]]; then
+  npx tsx scripts/verify-artifact-integrity.ts || EXIT_CODE=1
+else
+  echo "⚠️  scripts/verify-artifact-integrity.ts not found (skipping)"
+  EXIT_CODE=1
+fi
+echo ""
+
 echo "=========================================="
 if [[ $EXIT_CODE -eq 0 ]]; then
   echo "✅ All certification tests passed"

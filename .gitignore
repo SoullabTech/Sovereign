@@ -213,6 +213,7 @@ personal_insights/
 test_results/
 *.test.cache
 artifacts/*.json
+!artifacts/.manifest.json
 
 # Sacred geometry calculations cache
 geometry_cache/
