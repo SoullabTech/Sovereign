@@ -1,4 +1,4 @@
-import { supabase } from "./dbClient";
+import { supabase } from "@/lib/db/postgres";
 
 interface OracleMemoryInput {
   userId: string;

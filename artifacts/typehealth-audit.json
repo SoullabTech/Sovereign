@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-20T17:27:42.608Z",
-  "totalErrors": 6370,
+  "timestamp": "2025-12-20T17:39:29.362Z",
+  "totalErrors": 6369,
   "totalFiles": 898,
   "modules": [
     {
@@ -374,9 +374,9 @@
     },
     {
       "module": "app",
-      "errorCount": 2814,
+      "errorCount": 2813,
       "lineCount": 176955,
-      "density": 1.5902348054590147,
+      "density": 1.5896696900341893,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -1002,7 +1002,7 @@
     },
     {
       "code": "TS2307",
-      "count": 233,
+      "count": 230,
       "description": "Cannot find module"
     },
     {
