@@ -1,13 +1,13 @@
 {
-  "timestamp": "2025-12-20T17:27:10.263Z",
-  "totalErrors": 6372,
-  "totalFiles": 902,
+  "timestamp": "2025-12-20T17:27:42.608Z",
+  "totalErrors": 6370,
+  "totalFiles": 898,
   "modules": [
     {
       "module": "lib",
-      "errorCount": 3147,
+      "errorCount": 3148,
       "lineCount": 187878,
-      "density": 1.675023153322901,
+      "density": 1.6755554136194766,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -373,24 +373,10 @@
       ]
     },
     {
-      "module": "beta-deployment",
-      "errorCount": 36,
-      "lineCount": 2271,
-      "density": 1.5852047556142668,
-      "topErrors": {},
-      "files": [
-        "beta-deployment/components/admin/RitualIntelligenceDashboard.tsx",
-        "beta-deployment/consciousness-computing-demo-framework.ts",
-        "beta-deployment/consciousness-engine.ts",
-        "beta-deployment/lib/consciousness/navigator/logger.ts",
-        "beta-deployment/server.ts"
-      ]
-    },
-    {
       "module": "app",
-      "errorCount": 2817,
-      "lineCount": 178549,
-      "density": 1.5777181614010718,
+      "errorCount": 2814,
+      "lineCount": 176955,
+      "density": 1.5902348054590147,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -524,7 +510,6 @@
         "app/api/backend/src/oracle/tests/maya-brevity-test.ts",
         "app/api/backend/src/orchestration/collectClaims.ts",
         "app/api/backend/src/orchestration/index.ts",
-        "app/api/backend/src/orchestration/OracleOrchestrator.ts",
         "app/api/backend/src/orchestration/UnifiedPresenceOrchestrator.ts",
         "app/api/backend/src/orchestrators/EmergenceSynapticStream.ts",
         "app/api/backend/src/orchestrators/EncounterEngine.ts",
@@ -534,13 +519,10 @@
         "app/api/backend/src/protocols/__tests__/LoopingTestHarness.ts",
         "app/api/backend/src/protocols/__tests__/LoopingTestRunner.ts",
         "app/api/backend/src/protocols/CatastrophicFailureGuard.ts",
-        "app/api/backend/src/protocols/ConvergenceTracker.ts",
         "app/api/backend/src/protocols/ElementalResonance.ts",
         "app/api/backend/src/protocols/index.ts",
         "app/api/backend/src/protocols/IntegratedLoopingFlow.ts",
-        "app/api/backend/src/protocols/LoopingDeploymentConfig.ts",
         "app/api/backend/src/protocols/LoopingDialogueTemplates.ts",
-        "app/api/backend/src/protocols/LoopingMonitor.ts",
         "app/api/backend/src/protocols/LoopingProtocol.ts",
         "app/api/backend/src/protocols/LoopingProtocolIntegration.ts",
         "app/api/backend/src/protocols/SacredInterruptSystem.ts",
@@ -836,6 +818,20 @@
       ]
     },
     {
+      "module": "beta-deployment",
+      "errorCount": 36,
+      "lineCount": 2271,
+      "density": 1.5852047556142668,
+      "topErrors": {},
+      "files": [
+        "beta-deployment/components/admin/RitualIntelligenceDashboard.tsx",
+        "beta-deployment/consciousness-computing-demo-framework.ts",
+        "beta-deployment/consciousness-engine.ts",
+        "beta-deployment/lib/consciousness/navigator/logger.ts",
+        "beta-deployment/server.ts"
+      ]
+    },
+    {
       "module": "e2e",
       "errorCount": 1,
       "lineCount": 66,
@@ -981,12 +977,12 @@
   "topErrorCodes": [
     {
       "code": "TS2339",
-      "count": 2012,
+      "count": 2025,
       "description": "Property does not exist"
     },
     {
       "code": "TS2345",
-      "count": 1053,
+      "count": 1054,
       "description": "Argument type mismatch"
     },
     {
@@ -1000,14 +996,14 @@
       "description": "Type not assignable"
     },
     {
-      "code": "TS2307",
-      "count": 253,
-      "description": "Cannot find module"
+      "code": "TS2353",
+      "count": 242,
+      "description": "Unknown error"
     },
     {
-      "code": "TS2353",
-      "count": 238,
-      "description": "Unknown error"
+      "code": "TS2307",
+      "count": 233,
+      "description": "Cannot find module"
     },
     {
       "code": "TS2305",
