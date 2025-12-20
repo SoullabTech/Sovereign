@@ -3,10 +3,10 @@
  * Simple authentication setup for Field Protocol
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(dbUrl, supabaseAnonKey);
 
 /**
  * Sign up a new user

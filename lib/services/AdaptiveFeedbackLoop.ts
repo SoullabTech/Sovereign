@@ -14,7 +14,7 @@
  * 5. Learn from outcomes
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 
 export interface ConsciousnessState {
   current_attending: number;

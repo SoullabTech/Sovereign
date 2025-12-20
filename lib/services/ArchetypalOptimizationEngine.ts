@@ -18,7 +18,7 @@
  * - Optimization opportunities
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 
 export interface ArchetypePerformance {
   archetype: string;

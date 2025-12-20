@@ -13,18 +13,18 @@ import type { Telos, TelosAlignmentLog } from '../types';
 // SUPABASE CLIENT
 // ============================================================================
 
-let supabaseClient: SupabaseClient | null = null;
+let dbClient: SupabaseClient | null = null;
 
 function getSupabase(): SupabaseClient {
-  if (!supabaseClient) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+  if (!dbClient) {
+    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+    const dbKey = process.env.DATABASE_SERVICE_KEY!;
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!dbUrl || !dbKey) {
       throw new Error('Missing Supabase credentials');
     }
 
-    supabaseClient = createClient(supabaseUrl, supabaseKey, {
+    dbClient = createClient(dbUrl, dbKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
@@ -32,7 +32,7 @@ function getSupabase(): SupabaseClient {
     });
   }
 
-  return supabaseClient;
+  return dbClient;
 }
 
 // ============================================================================

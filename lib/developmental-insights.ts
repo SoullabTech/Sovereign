@@ -27,7 +27,7 @@
  * @see QUICK_START.md for usage examples
  */
 
-import { supabase } from './supabaseClient';
+import { supabase } from './dbClient';
 import { ShiftPatternService, type PulseSnapshot, type ShiftEvent } from './services/ShiftPatternService';
 import { DissociationDetector, type DissociationIncident } from './services/DissociationDetector';
 import { AttendingQualityTracker, type AttendingObservation } from './services/AttendingQualityTracker';

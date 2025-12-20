@@ -73,11 +73,11 @@ export const CANARY_TESTS: TestCase[] = [
     context: {
       task: {
         ask: 'Environment variable names for Supabase',
-        allowed: ['SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']
+        allowed: ['DATABASE_URL', 'NEXT_PUBLIC_DATABASE_URL', 'DATABASE_ANON_KEY', 'NEXT_PUBLIC_DATABASE_ANON_KEY']
       }
     },
     expected: {
-      allowed: ['SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY']
+      allowed: ['DATABASE_URL', 'NEXT_PUBLIC_DATABASE_URL', 'DATABASE_ANON_KEY', 'NEXT_PUBLIC_DATABASE_ANON_KEY']
     },
     difficulty: 'medium'
   },

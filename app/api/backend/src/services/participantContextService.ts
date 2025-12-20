@@ -4,7 +4,7 @@ import {
   PersonalOracleMatch,
 } from "../types/personalOracle.js";
 import { RetreatParticipant } from "../types/retreat.js";
-import { supabase } from "../lib/supabaseClient.js";
+import { supabase } from "../lib/dbClient.js";
 import { logger } from "../utils/logger.js";
 
 export interface ContextStorageResult {

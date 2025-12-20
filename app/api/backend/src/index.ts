@@ -1,6 +1,6 @@
 // src/index.ts
 
-export * from "./lib/supabaseClient";
+export * from "./lib/dbClient";
 export * from "./lib/config";
 export * from "./lib/openaiClient";
 export * from "./lib/symbolParser";

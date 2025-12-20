@@ -21,8 +21,8 @@ interface PromptUsageStats {
 export class PromptLoggingService {
   private supabase;
 
-  constructor(supabaseUrl: string, supabaseKey: string) {
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+  constructor(dbUrl: string, dbKey: string) {
+    this.supabase = createClient(dbUrl, dbKey);
   }
 
   /**

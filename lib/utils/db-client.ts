@@ -3,9 +3,9 @@
  * Returns null if no proper configuration is available
  */
 export function getSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || 
-              process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 
+  const url = process.env.NEXT_PUBLIC_DATABASE_URL || 'https://placeholder.supabase.co';
+  const key = process.env.DATABASE_SERVICE_KEY || 
+              process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || 
               'placeholder-key';
   
   // Return null if no proper configuration
@@ -27,8 +27,8 @@ export function getSupabaseClient() {
  * Get Supabase client for browser/client-side usage
  */
 export function getSupabaseClientBrowser() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+  const url = process.env.NEXT_PUBLIC_DATABASE_URL || 'https://placeholder.supabase.co';
+  const anonKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || 'placeholder-key';
   
   // Return null if no proper configuration
   if (url === 'https://placeholder.supabase.co' || 

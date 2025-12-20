@@ -96,16 +96,16 @@ console.log('');
 // Check environment requirements
 console.log('🔧 Checking environment requirements...\n');
 
-if (process.env.SUPABASE_URL) {
-  console.log('✅ SUPABASE_URL is configured');
+if (process.env.DATABASE_URL) {
+  console.log('✅ DATABASE_URL is configured');
 } else {
-  console.log('⚠️  SUPABASE_URL not configured (expected for dev)');
+  console.log('⚠️  DATABASE_URL not configured (expected for dev)');
 }
 
-if (process.env.SUPABASE_SERVICE_ROLE_KEY) {
-  console.log('✅ SUPABASE_SERVICE_ROLE_KEY is configured');
+if (process.env.DATABASE_SERVICE_KEY) {
+  console.log('✅ DATABASE_SERVICE_KEY is configured');
 } else {
-  console.log('⚠️  SUPABASE_SERVICE_ROLE_KEY not configured (expected for dev)');
+  console.log('⚠️  DATABASE_SERVICE_KEY not configured (expected for dev)');
 }
 
 console.log('');

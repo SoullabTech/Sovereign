@@ -9,8 +9,8 @@
  * Vision: "Something's moving through the field right now - others are feeling this shift too."
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
 
 // ============== Types ==============
 
@@ -73,7 +73,7 @@ export interface CollectiveWisdom {
 // ============== Service ==============
 
 export class CollectiveBreakthroughService {
-  private supabase = createClient(supabaseUrl, supabaseKey);
+  private supabase = createClient(dbUrl, dbKey);
 
   /**
    * Contribute a breakthrough to the collective field (anonymized)

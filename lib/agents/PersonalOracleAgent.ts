@@ -571,10 +571,10 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
 
     // Initialize Supabase client for memory retrieval
     // Using service role key as fallback if anon key is not available
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || process.env.DATABASE_SERVICE_KEY || '';
     this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      supabaseKey
+      process.env.NEXT_PUBLIC_DATABASE_URL || '',
+      dbKey
     );
 
     // 🛡️ Initialize safety pipeline for crisis detection
@@ -2101,8 +2101,8 @@ This is the soul-level truth you're helping them see, not reference material to 
       console.error('🔍 Environment diagnostics:', {
         hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
         hasOpenAIKey: !!process.env.OPENAI_API_KEY,
-        hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-        hasSupabaseServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        hasSupabaseUrl: !!process.env.NEXT_PUBLIC_DATABASE_URL,
+        hasSupabaseServiceKey: !!process.env.DATABASE_SERVICE_KEY,
         nodeEnv: process.env.NODE_ENV
       });
 

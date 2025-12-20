@@ -21,7 +21,7 @@ const REWRITES: Rewrite[] = [
   { from: /from\s+['"]@\/lib\/supabase\/sacred-oracle-db['"]/g, to: `from "@/lib/db/legacy/supabase/sacred-oracle-db"` },
   { from: /from\s+['"]@\/lib\/supabase\/soullab-queries['"]/g, to: `from "@/lib/db/legacy/supabase/soullab-queries"` },
 
-  { from: /from\s+['"]@\/lib\/supabaseClient['"]/g, to: `from "@/lib/db/legacy/supabaseClient"` },
+  { from: /from\s+['"]@\/lib\/dbClient['"]/g, to: `from "@/lib/db/legacy/dbClient"` },
   { from: /from\s+['"]@\/lib\/supabaseBrowserClient['"]/g, to: `from "@/lib/db/legacy/supabaseBrowserClient"` },
   { from: /from\s+['"]@\/lib\/supabaseAdminClient['"]/g, to: `from "@/lib/db/legacy/supabaseAdminClient"` },
   { from: /from\s+['"]@\/lib\/supabase-hooks['"]/g, to: `from "@/lib/db/legacy/supabase-hooks"` },
@@ -47,9 +47,9 @@ const REWRITES: Rewrite[] = [
     const levels = (match.match(/\.\.\//g) || []).length;
     return `from "${'../'.repeat(levels)}lib/db/legacy/supabase"`;
   } },
-  { from: /from\s+['"](\.\.\/)+lib\/supabaseClient['"]/g, to: (match) => {
+  { from: /from\s+['"](\.\.\/)+lib\/dbClient['"]/g, to: (match) => {
     const levels = (match.match(/\.\.\//g) || []).length;
-    return `from "${'../'.repeat(levels)}lib/db/legacy/supabaseClient"`;
+    return `from "${'../'.repeat(levels)}lib/db/legacy/dbClient"`;
   } },
   { from: /from\s+['"](\.\.\/)+config\/supabase['"]/g, to: (match) => {
     const levels = (match.match(/\.\.\//g) || []).length;

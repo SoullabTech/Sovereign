@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-20T17:13:43.124Z",
-  "totalErrors": 6343,
-  "totalFiles": 948,
+  "timestamp": "2025-12-20T17:17:45.563Z",
+  "totalErrors": 6349,
+  "totalFiles": 949,
   "modules": [
     {
       "module": "beta-deployment",
@@ -19,9 +19,9 @@
     },
     {
       "module": "lib",
-      "errorCount": 3020,
-      "lineCount": 185170,
-      "density": 1.6309337365663985,
+      "errorCount": 3021,
+      "lineCount": 185396,
+      "density": 1.629484994282509,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -377,14 +377,15 @@
         "lib/knowledge/ElementalAlchemyBookLoader.ts",
         "lib/knowledge/SemanticChapterDetector.ts",
         "lib/langchain/DecentralizedMayaChains.ts",
-        "lib/layered-sacred-oracle.ts"
+        "lib/layered-sacred-oracle.ts",
+        "lib/learning/claude-teacher-service.ts"
       ]
     },
     {
       "module": "app",
-      "errorCount": 2895,
+      "errorCount": 2900,
       "lineCount": 184630,
-      "density": 1.568000866598061,
+      "density": 1.570708985538645,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -1027,17 +1028,17 @@
   "topErrorCodes": [
     {
       "code": "TS2339",
-      "count": 1980,
+      "count": 1982,
       "description": "Property does not exist"
     },
     {
       "code": "TS2304",
-      "count": 1050,
+      "count": 1047,
       "description": "Cannot find name/module"
     },
     {
       "code": "TS2345",
-      "count": 1024,
+      "count": 1022,
       "description": "Argument type mismatch"
     },
     {
@@ -1047,7 +1048,7 @@
     },
     {
       "code": "TS2307",
-      "count": 407,
+      "count": 415,
       "description": "Cannot find module"
     },
     {
@@ -1057,12 +1058,12 @@
     },
     {
       "code": "TS2305",
-      "count": 176,
+      "count": 172,
       "description": "Unknown error"
     },
     {
       "code": "TS18048",
-      "count": 135,
+      "count": 138,
       "description": "Possibly undefined"
     },
     {

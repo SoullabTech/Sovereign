@@ -1,5 +1,5 @@
 import memoryModule from "../../core/utils/memoryModule";
-jest.mock("../../lib/supabaseClient");
+jest.mock("../../lib/dbClient");
 
 const mockSupabase = supabase as jest.Mocked<typeof supabase>;
 

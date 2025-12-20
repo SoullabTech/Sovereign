@@ -269,9 +269,9 @@ function generateDeploymentChecklist() {
   console.log("   [ ] Configure CORS for file uploads");
 
   console.log("\n✅ Environment Variables:");
-  console.log("   [ ] SUPABASE_URL");
-  console.log("   [ ] SUPABASE_ANON_KEY");
-  console.log("   [ ] SUPABASE_SERVICE_ROLE_KEY");
+  console.log("   [ ] DATABASE_URL");
+  console.log("   [ ] DATABASE_ANON_KEY");
+  console.log("   [ ] DATABASE_SERVICE_KEY");
   console.log("   [ ] JWT_SECRET");
   console.log("   [ ] MAPBOX_TOKEN (for location search)");
 

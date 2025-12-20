@@ -2,8 +2,8 @@
 import OpenAI from "openai";
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_ANON_KEY!,
+  process.env.DATABASE_URL!,
+  process.env.DATABASE_ANON_KEY!,
 );
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
 

@@ -12,17 +12,17 @@ import { join } from 'path';
 
 async function applyMigration() {
   // Get Supabase credentials from environment
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+  const dbServiceKey = process.env.DATABASE_SERVICE_KEY;
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!dbUrl || !dbServiceKey) {
     console.error('❌ Missing Supabase credentials in environment variables');
-    console.error('Required: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY');
+    console.error('Required: NEXT_PUBLIC_DATABASE_URL, DATABASE_SERVICE_KEY');
     process.exit(1);
   }
 
   console.log('🔧 Connecting to Supabase...');
-  const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+  const supabase = createClient(dbUrl, dbServiceKey, {
     auth: {
       autoRefreshToken: false,
       persistSession: false

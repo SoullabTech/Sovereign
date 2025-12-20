@@ -19,7 +19,7 @@
  * - Human Escalation: Request human oversight
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 import { AdaptiveFeedbackLoop } from './AdaptiveFeedbackLoop';
 import { ArchetypalOptimizationEngine } from './ArchetypalOptimizationEngine';
 

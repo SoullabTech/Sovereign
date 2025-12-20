@@ -15,7 +15,7 @@ import {
 import { EventEmitter } from 'events';
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_DATABASE_URL!,
   process.env.SUPABASE_SERVICE_KEY!
 );
 

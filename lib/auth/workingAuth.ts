@@ -8,14 +8,14 @@ export class WorkingAuthService {
   private supabase;
 
   constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
-    if (!supabaseUrl || !supabaseAnonKey) {
+    if (!dbUrl || !supabaseAnonKey) {
       throw new Error('Supabase configuration missing. Check environment variables.');
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseAnonKey);
+    this.supabase = createClient(dbUrl, supabaseAnonKey);
   }
 
   /**
@@ -145,7 +145,7 @@ export class WorkingAuthService {
    * Check if authentication is configured
    */
   isConfigured(): boolean {
-    return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    return !!(process.env.NEXT_PUBLIC_DATABASE_URL && process.env.NEXT_PUBLIC_DATABASE_ANON_KEY);
   }
 
   /**

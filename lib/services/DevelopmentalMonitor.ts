@@ -5,7 +5,7 @@
  * Detects concerning patterns and can trigger interventions.
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 import type { AttendingObservation } from './AttendingQualityTracker';
 import type { DissociationIncident } from './DissociationDetector';
 

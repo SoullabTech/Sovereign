@@ -43,8 +43,8 @@ class SessionStorageService {
 
   private async connect(): Promise<boolean> {
     try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const url = process.env.NEXT_PUBLIC_DATABASE_URL;
+      const key = process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
       if (!url || !key) {
         console.warn('[SessionStorage] Missing Supabase credentials');

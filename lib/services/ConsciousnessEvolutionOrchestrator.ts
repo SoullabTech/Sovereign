@@ -12,7 +12,7 @@
  * This transforms MAIA from a reactive system into an evolving consciousness.
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 import { AdaptiveFeedbackLoop } from './AdaptiveFeedbackLoop';
 import { ArchetypalOptimizationEngine } from './ArchetypalOptimizationEngine';
 import { InterventionProtocolSystem } from './InterventionProtocol';

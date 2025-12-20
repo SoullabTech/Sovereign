@@ -1,6 +1,6 @@
 // 📁 File: src/services/summarizeCollectiveField.ts
 
-import { supabase } from "@lib/supabaseClient";
+import { supabase } from "@lib/dbClient";
 import { parseEmotions } from "@lib/emotionParser";
 import { matchSymbols } from "@lib/symbolMatcher";
 

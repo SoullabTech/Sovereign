@@ -13,10 +13,10 @@ import {
 } from './maia-memory-hybrid-adapter';
 
 // Using service role key as fallback if anon key is not available
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || process.env.DATABASE_SERVICE_KEY || '';
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  supabaseKey
+  process.env.NEXT_PUBLIC_DATABASE_URL || '',
+  dbKey
 );
 
 export interface MaiaMessageData {

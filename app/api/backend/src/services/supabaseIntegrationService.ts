@@ -55,14 +55,14 @@ export class SupabaseIntegrationService {
   private supabase: SupabaseClient;
 
   constructor() {
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const dbUrl = process.env.DATABASE_URL;
+    const dbServiceKey = process.env.DATABASE_SERVICE_KEY;
 
-    if (!supabaseUrl || !supabaseServiceKey) {
+    if (!dbUrl || !dbServiceKey) {
       throw new Error("Missing Supabase configuration");
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseServiceKey);
+    this.supabase = createClient(dbUrl, dbServiceKey);
   }
 
   // User Profile Management

@@ -577,14 +577,14 @@ export class IntellectualPropertyEngine {
     try {
       const { createClient } = await import('@supabase/supabase-js');
 
-      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      if (!process.env.NEXT_PUBLIC_DATABASE_URL || !process.env.DATABASE_SERVICE_KEY) {
         console.warn('[IPEngine] Supabase not configured - knowledge base will be empty');
         return;
       }
 
       const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL,
-        process.env.SUPABASE_SERVICE_ROLE_KEY
+        process.env.NEXT_PUBLIC_DATABASE_URL,
+        process.env.DATABASE_SERVICE_KEY
       );
 
       // Load all file chunks (your book content, teachings, etc.)

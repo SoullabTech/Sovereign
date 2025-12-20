@@ -16,8 +16,8 @@ import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrolo
 import { getSpiralogicFacet } from '@/lib/astrology/spiralogicMapping';
 import { synthesizeAspect, findRelevantAspect, extractAspectsFromChart, type AspectType } from '@/lib/astrology/aspectSynthesis';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
 
 export interface BirthChartContext {
   hasChart: boolean;
@@ -93,7 +93,7 @@ export async function getRawBirthChartData(userId: string): Promise<any | null> 
       return null;
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(dbUrl, dbKey);
 
     const { data: profile, error } = await supabase
       .from('oracle_user_profiles')
@@ -138,7 +138,7 @@ export async function getRawBirthChartData(userId: string): Promise<any | null> 
  */
 export async function getBirthChartContext(userId: string): Promise<BirthChartContext | null> {
   try {
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(dbUrl, dbKey);
 
     // Check if user has birth chart data
     const { data: profile, error } = await supabase

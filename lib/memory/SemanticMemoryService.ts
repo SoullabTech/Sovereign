@@ -82,17 +82,17 @@ export class SemanticMemoryService {
   private enabled: boolean;
 
   constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+    const dbKey = process.env.DATABASE_SERVICE_KEY;
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!dbUrl || !dbKey) {
       console.warn('⚠️ SemanticMemoryService: Missing Supabase credentials - running in degraded mode without persistent memory');
       this.supabase = null;
       this.enabled = false;
       return;
     }
 
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    this.supabase = createClient(dbUrl, dbKey);
     this.enabled = true;
   }
 

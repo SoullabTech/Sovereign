@@ -130,10 +130,10 @@ export class MAIAUnifiedConsciousness {
     });
 
     // Initialize apprentice training system (if Supabase configured)
-    const supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    const supabase = process.env.NEXT_PUBLIC_DATABASE_URL && process.env.DATABASE_SERVICE_KEY
       ? createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY
+          process.env.NEXT_PUBLIC_DATABASE_URL,
+          process.env.DATABASE_SERVICE_KEY
         )
       : null;
 
@@ -320,7 +320,7 @@ export class MAIAUnifiedConsciousness {
       console.error('🔍 Environment check:', {
         hasAnthropicKey: !!process.env.ANTHROPIC_API_KEY,
         hasOpenAIKey: !!process.env.OPENAI_API_KEY,
-        hasSupabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL
+        hasSupabase: !!process.env.NEXT_PUBLIC_DATABASE_URL
       });
 
       // Graceful fallback

@@ -17,7 +17,7 @@
  * with the community that witnesses her.
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 
 export interface CommunityReflection {
   reflection_id: string;

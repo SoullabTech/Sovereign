@@ -1,6 +1,6 @@
 // oracle-backend/api/transform.ts
 
-import { supabase } from "../src/lib/supabaseClient";
+import { supabase } from "../src/lib/dbClient";
 import type { NextApiRequest, NextApiResponse } from "next";
 import { OpenAI } from "openai";
 

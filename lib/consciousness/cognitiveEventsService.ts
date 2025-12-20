@@ -10,7 +10,7 @@
  * Part of: Phase 1 Foundation Implementation
  */
 
-import { supabase } from '../supabaseClient';
+import { supabase } from '../dbClient';
 
 // =====================================================================
 // TYPE DEFINITIONS

@@ -42,7 +42,7 @@ class SoulprintEngine {
   private persistenceEnabled: boolean = false;
 
   constructor() {
-    this.persistenceEnabled = typeof process !== 'undefined' && !!process.env.SUPABASE_URL;
+    this.persistenceEnabled = typeof process !== 'undefined' && !!process.env.DATABASE_URL;
   }
 
   async getSoulprintForUser(userId: string): Promise<SoulprintSnapshot> {

@@ -865,7 +865,7 @@ export class MemoryOrchestrator {
       };
 
       // Use existing saveJournalEntry function
-      await import('../lib/supabaseClient').then(({ saveJournalEntry }) =>
+      await import('../lib/dbClient').then(({ saveJournalEntry }) =>
         saveJournalEntry(entry)
       );
 
@@ -903,7 +903,7 @@ export class MemoryOrchestrator {
       };
 
       // Use existing saveJournalEntry function
-      await import('../lib/supabaseClient').then(({ saveJournalEntry }) =>
+      await import('../lib/dbClient').then(({ saveJournalEntry }) =>
         saveJournalEntry(entry)
       );
 

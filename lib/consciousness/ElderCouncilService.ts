@@ -954,8 +954,8 @@ export class ElderCouncilService {
    */
   private initializeSupabase(): void {
     try {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      const url = process.env.NEXT_PUBLIC_DATABASE_URL;
+      const key = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
       if (url && key) {
         this.supabase = createClient(url, key);

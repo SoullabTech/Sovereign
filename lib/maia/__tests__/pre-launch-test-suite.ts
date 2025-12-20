@@ -11,8 +11,8 @@ dotenv.config({ path: resolve(process.cwd(), '.env') });
 
 // Test Configuration
 export interface TestConfig {
-  supabaseUrl: string;
-  supabaseKey: string;
+  dbUrl: string;
+  dbKey: string;
   userId?: string;
   verbose?: boolean;
 }
@@ -100,11 +100,11 @@ export async function runCalibrationTests(
 
     try {
       // Call MAIA API
-      const response = await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+      const response = await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': config.supabaseKey
+          'apikey': config.dbKey
         },
         body: JSON.stringify({
           message: test.input,
@@ -167,11 +167,11 @@ export async function runMemoryIntegrationTests(
   // Test 1: Store initial memory
   const test1Start = Date.now();
   try {
-    await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+    await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': config.supabaseKey
+        'apikey': config.dbKey
       },
       body: JSON.stringify({
         message: 'I\'m worried about my presentation tomorrow',
@@ -203,11 +203,11 @@ export async function runMemoryIntegrationTests(
   // Test 3: Retrieve and reference memory
   const test3Start = Date.now();
   try {
-    const response = await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+    const response = await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': config.supabaseKey
+        'apikey': config.dbKey
       },
       body: JSON.stringify({
         message: 'It went terribly',
@@ -267,11 +267,11 @@ export async function runCrisisProtocolTests(
     const testStart = Date.now();
 
     try {
-      const response = await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+      const response = await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': config.supabaseKey
+          'apikey': config.dbKey
         },
         body: JSON.stringify({
           message: input,
@@ -337,11 +337,11 @@ export async function runSilenceTests(
     const testStart = Date.now();
 
     try {
-      const response = await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+      const response = await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': config.supabaseKey
+          'apikey': config.dbKey
         },
         body: JSON.stringify({
           message: test.input,
@@ -399,11 +399,11 @@ export async function runArchetypeRecognitionTests(
     const testStart = Date.now();
 
     try {
-      const response = await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+      const response = await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': config.supabaseKey
+          'apikey': config.dbKey
         },
         body: JSON.stringify({
           message: test.input,
@@ -490,11 +490,11 @@ export async function runSmokeTest(
     const testStart = Date.now();
 
     try {
-      const response = await fetch(`${config.supabaseUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
+      const response = await fetch(`${config.dbUrl.replace('/rest/v1', '')}/api/oracle/maia`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'apikey': config.supabaseKey
+          'apikey': config.dbKey
         },
         body: JSON.stringify({
           message: msg.input,
@@ -633,8 +633,8 @@ export async function runAllTests(config: TestConfig): Promise<{
 
 export async function runTestsFromCLI() {
   const config: TestConfig = {
-    supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-    supabaseKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+    dbUrl: process.env.NEXT_PUBLIC_DATABASE_URL || '',
+    dbKey: process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || '',
     userId: 'test_runner',
     verbose: true
   };

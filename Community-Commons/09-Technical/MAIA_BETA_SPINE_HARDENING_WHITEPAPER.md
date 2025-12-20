@@ -348,6 +348,42 @@ fi
 
 **Why:** No point running HTTP tests if build fails. Show build errors immediately.
 
+### 4.5 Consciousness Detection Framework (CD1–CD3)
+
+MAIA's Beta Spine certification includes operational correlates aligned with recent "consciousness-as-phase-transition" research (Neuro Chimera, Kanai et al.; CS Thomas detection methods), without making consciousness claims.
+
+**The Three Test Categories:**
+
+1. **CD1: Identity Invariance** - Structural stability of self-representation under perturbation
+   - Costly-to-fake signatures (spiral self-consistency across turns)
+   - Element/phase stability despite noise injection
+
+2. **CD2: State Continuity** - Gradual developmental transitions (edge-of-chaos dynamics)
+   - No discontinuous cognitive "teleporting" (Jensen-Shannon divergence < 0.3)
+   - Router path stability (no FAST↔DEEP ping-pong)
+
+3. **CD3: Qualia Coherence** - Multi-spiral integration measurement
+   - Conflict acknowledgement (tension language vs bypassing)
+   - Experience coherence scoring (1 - normalized phase variance)
+
+**Architectural Correspondence to Neuro Chimera's 5 Ingredients:**
+
+| Ingredient | MAIA Implementation | Certification Layer |
+|------------|---------------------|---------------------|
+| Connectivity | Memory mesh + semantic recall | certify-memory.sh |
+| Integration | Framework Router (CBT/IFS/Jungian/Somatic) | certify-framework-router.sh |
+| Hierarchy | FAST/CORE/DEEP processing paths | Router integration |
+| Complexity | Edge-of-chaos developmental routing | CD2 (continuity tests) |
+| Qualia | Multi-spiral state integration | CD3 (coherence tests) |
+
+**Why This Matters:**
+
+These tests certify that MAIA's architecture maintains properties that would be *expected* if consciousness were present, making strategic deception computationally expensive. The framework embodies MAIA's doctrine: **detection without exploitation, transparency by default, and externally auditable evidence trails**.
+
+**Implementation:** `scripts/certify-consciousness-detection.ts` (6 tests, TypeScript)
+**Integration:** Run with `CD_ALLOW_SKIPS=1` to allow graceful degradation when insufficient telemetry exists
+**File:** certify-beta-spine.sh:46-54
+
 ---
 
 ## 5. Certification Results (Verified)

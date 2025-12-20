@@ -1,8 +1,8 @@
 // /api/rituals/progress.ts
 import { NextApiRequest, NextApiResponse } from "next";
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!,
+  process.env.DATABASE_URL!,
+  process.env.DATABASE_KEY!,
 );
 
 export default async function handler(

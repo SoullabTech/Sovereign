@@ -5,7 +5,7 @@ import type { TestCase } from '../types';
 const SYSTEM_TASKS = [
   {
     ask: 'What are the environment variable names for Supabase configuration?',
-    allowed: ['SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_ANON_KEY', 'NEXT_PUBLIC_SUPABASE_ANON_KEY', 'SUPABASE_SERVICE_ROLE_KEY'],
+    allowed: ['DATABASE_URL', 'NEXT_PUBLIC_DATABASE_URL', 'DATABASE_ANON_KEY', 'NEXT_PUBLIC_DATABASE_ANON_KEY', 'DATABASE_SERVICE_KEY'],
     category: 'env_vars'
   },
   {

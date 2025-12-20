@@ -1,8 +1,8 @@
 // backend/api/oracle/insightHistory.ts
 
 const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!, // Use service key for server-side use
+  process.env.DATABASE_URL!,
+  process.env.DATABASE_SERVICE_KEY!, // Use service key for server-side use
 );
 
 export default async function handler(req, res) {

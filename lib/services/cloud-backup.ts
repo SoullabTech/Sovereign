@@ -30,15 +30,15 @@ export interface BackupMetadata {
 
 export class CloudBackupService {
   private static instance: CloudBackupService;
-  private supabaseClient: any;
+  private dbClient: any;
 
   constructor() {
     // Initialize Supabase client only if enabled
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+    const dbKey = process.env.DATABASE_SERVICE_KEY;
 
-    if (supabaseUrl && supabaseKey && !supabaseUrl.includes('disabled')) {
-      this.supabaseClient = createClient(supabaseUrl, supabaseKey);
+    if (dbUrl && dbKey && !dbUrl.includes('disabled')) {
+      this.dbClient = createClient(dbUrl, dbKey);
     }
   }
 
@@ -385,13 +385,13 @@ export class CloudBackupService {
   }
 
   private async uploadToSupabase(userId: string, backupId: string, data: string): Promise<string> {
-    if (!this.supabaseClient) {
+    if (!this.dbClient) {
       throw new Error('Supabase not configured');
     }
 
     const fileName = `backups/${userId}/${backupId}.dat`;
 
-    const { data: uploadData, error } = await this.supabaseClient.storage
+    const { data: uploadData, error } = await this.dbClient.storage
       .from('consciousness-backups')
       .upload(fileName, data, {
         contentType: 'application/octet-stream',
@@ -433,11 +433,11 @@ export class CloudBackupService {
   private async downloadFromCloud(provider: string, location: string): Promise<string> {
     switch (provider) {
       case 'supabase':
-        if (!this.supabaseClient) {
+        if (!this.dbClient) {
           throw new Error('Supabase not configured');
         }
 
-        const { data, error } = await this.supabaseClient.storage
+        const { data, error } = await this.dbClient.storage
           .from('consciousness-backups')
           .download(location);
 
@@ -462,8 +462,8 @@ export class CloudBackupService {
   private async deleteFromCloud(provider: string, location: string): Promise<void> {
     switch (provider) {
       case 'supabase':
-        if (this.supabaseClient) {
-          await this.supabaseClient.storage
+        if (this.dbClient) {
+          await this.dbClient.storage
             .from('consciousness-backups')
             .remove([location]);
         }

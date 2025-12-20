@@ -23,8 +23,8 @@ export class UserActivityTracker {
     // Initialize Supabase client if available
     try {
       this.supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_DATABASE_URL!,
+        process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!
       );
     } catch (error) {
       console.log('UserActivityTracker: Running without database, using in-memory storage');

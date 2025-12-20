@@ -1,7 +1,7 @@
 // tests/mainoracleagent.integration.test.ts
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { MainOracleAgent } from "../src/core/agents/mainOracleAgent";
-import { supabase } from "../src/lib/supabaseClient";
+import { supabase } from "../src/lib/dbClient";
 import {
   storeMemoryItem,
   getRelevantMemories,

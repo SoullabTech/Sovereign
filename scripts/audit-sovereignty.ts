@@ -108,8 +108,8 @@ function loadConfig(): AuditConfig {
       'OPENAI_API_KEY',
       'ANTHROPIC_API_KEY',
       'GOOGLE_API_KEY',
-      'SUPABASE_URL',
-      'SUPABASE_ANON_KEY',
+      'DATABASE_URL',
+      'DATABASE_ANON_KEY',
       'VERCEL_TOKEN'
     ],
     remoteEndpoints: [

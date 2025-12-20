@@ -5,20 +5,20 @@
  */
 
 // Lazy-load Supabase client to ensure env vars are available
-let supabaseClient: ReturnType<typeof createClient> | null = null;
+let dbClient: ReturnType<typeof createClient> | null = null;
 
 function getSupabase() {
-  if (!supabaseClient) {
-    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!dbClient) {
+    const url = process.env.NEXT_PUBLIC_DATABASE_URL;
+    const key = process.env.DATABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
     if (!url || !key) {
       throw new Error(`Supabase config missing: url=${!!url}, key=${!!key}`);
     }
 
-    supabaseClient = createClient(url, key);
+    dbClient = createClient(url, key);
   }
-  return supabaseClient;
+  return dbClient;
 }
 
 export interface MemoryCapture {

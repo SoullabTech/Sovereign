@@ -7,7 +7,7 @@ import { PersonalOracleAgent, AgentState } from '../agents/PersonalOracleAgent';
 import { ConversationContextManager } from '../conversation/ConversationContext';
 
 // Mock dependencies
-jest.mock('@/lib/supabaseClient', () => ({
+jest.mock('@/lib/dbClient', () => ({
   supabase: null
 }));
 

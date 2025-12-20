@@ -1,4 +1,4 @@
-// oracle-backend/src/services/supabaseClient.ts
+// oracle-backend/src/services/dbClient.ts
 
 import { config } from "../config";
 

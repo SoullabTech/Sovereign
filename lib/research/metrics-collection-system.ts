@@ -102,8 +102,8 @@ export class MetricsCollectionSystem {
   private buffer: EmergenceDecision[] = [];
   private batchSize = 10;
 
-  constructor(supabaseUrl: string, supabaseKey: string) {
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+  constructor(dbUrl: string, dbKey: string) {
+    this.supabase = createClient(dbUrl, dbKey);
   }
 
   /**
@@ -480,8 +480,8 @@ export class ResearchAnalytics {
  * Export singleton instance
  */
 export const metricsCollector = new MetricsCollectionSystem(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_KEY!
+  process.env.DATABASE_URL!,
+  process.env.DATABASE_KEY!
 );
 
 export const researchAnalytics = new ResearchAnalytics();

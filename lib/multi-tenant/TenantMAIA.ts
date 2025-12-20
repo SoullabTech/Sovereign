@@ -8,8 +8,8 @@ import { PersonalOracleAgent } from '@/lib/agents/PersonalOracleAgent';
 import { TenantKnowledgeBase } from './TenantKnowledgeBase';
 import { WisdomIntegrationSystem } from '@/lib/knowledge/WisdomIntegrationSystem';
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_DATABASE_URL!,
+  process.env.DATABASE_SERVICE_KEY!
 );
 
 export interface TenantConfig {

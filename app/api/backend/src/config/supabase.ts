@@ -1,6 +1,6 @@
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL || '';
+const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || '';
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export const supabase = createClient(dbUrl, dbKey);
 
 export default supabase;

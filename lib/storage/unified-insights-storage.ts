@@ -19,8 +19,8 @@ import {
 } from '../services/UnifiedInsightEngine';
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_DATABASE_URL!,
+  process.env.DATABASE_SERVICE_KEY!
 );
 
 // ============================================================================

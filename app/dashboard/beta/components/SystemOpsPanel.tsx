@@ -11,7 +11,7 @@ interface SystemOpsMetrics {
   avg_processing_time: number;
   p95_processing_time: number;
   error_rate: number;
-  supabase_failures: number;
+  db_failures: number;
   tts_failures: number;
   uptime_percent: number;
 }
@@ -260,7 +260,7 @@ export default function SystemOpsPanel({ opsMetrics }: SystemOpsPanelProps) {
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-medium text-gray-300">Live Error Stream</h4>
             <div className="text-xs text-gray-400">
-              {opsMetrics.supabase_failures + opsMetrics.tts_failures} Recent Failures
+              {opsMetrics.db_failures + opsMetrics.tts_failures} Recent Failures
             </div>
           </div>
           <div className="bg-gray-800/30 rounded-lg p-3 max-h-32 overflow-y-auto">
@@ -295,9 +295,9 @@ export default function SystemOpsPanel({ opsMetrics }: SystemOpsPanelProps) {
         <div className="grid grid-cols-3 gap-3 pt-4 border-t border-gray-700/50">
           <div className="text-center">
             <div className={`text-lg font-semibold ${
-              opsMetrics.supabase_failures <= 2 ? 'text-green-400' : 'text-red-400'
+              opsMetrics.db_failures <= 2 ? 'text-green-400' : 'text-red-400'
             }`}>
-              {opsMetrics.supabase_failures}
+              {opsMetrics.db_failures}
             </div>
             <div className="text-xs text-gray-400">DB Failures</div>
           </div>

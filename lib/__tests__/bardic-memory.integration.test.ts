@@ -38,14 +38,14 @@ describe('Bardic Memory Integration Tests', () => {
 
   beforeAll(() => {
     // Initialize Supabase client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+    const dbKey = process.env.DATABASE_SERVICE_KEY!;
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!dbUrl || !dbKey) {
       throw new Error('Missing Supabase credentials in environment');
     }
 
-    supabase = createClient(supabaseUrl, supabaseKey, {
+    supabase = createClient(dbUrl, dbKey, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,

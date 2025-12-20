@@ -73,10 +73,10 @@ export class BrainTrustOrchestrator extends EventEmitter {
     this.parallelProcessor = new ParallelFieldProcessor();
 
     // Initialize Supabase for apprentice
-    this.supabase = process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    this.supabase = process.env.NEXT_PUBLIC_DATABASE_URL && process.env.DATABASE_SERVICE_KEY
       ? createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.SUPABASE_SERVICE_ROLE_KEY!
+          process.env.NEXT_PUBLIC_DATABASE_URL!,
+          process.env.DATABASE_SERVICE_KEY!
         )
       : null;
 

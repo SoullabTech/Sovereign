@@ -59,8 +59,8 @@ export class CrossDeviceSyncService {
   private constructor() {
     // Initialize Supabase client
     this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_DATABASE_URL!,
+      process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!
     );
 
     // Generate or retrieve device ID

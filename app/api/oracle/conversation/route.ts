@@ -434,13 +434,13 @@ export async function POST(request: NextRequest) {
           };
 
           // Try Supabase first (production), fall back to local Postgres (dev)
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-          const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+          const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+          const dbKey = process.env.DATABASE_SERVICE_KEY;
 
-          if (supabaseUrl && supabaseKey && !supabaseUrl.includes('disabled')) {
+          if (dbUrl && dbKey && !dbUrl.includes('disabled')) {
             // Production: Use Supabase
             const { createClient } = await import('@supabase/supabase-js');
-            const supabase = createClient(supabaseUrl, supabaseKey);
+            const supabase = createClient(dbUrl, dbKey);
             await supabase.from('socratic_validator_events').insert(eventData);
           } else {
             // Local dev: Use direct Postgres

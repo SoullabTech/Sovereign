@@ -1,9 +1,9 @@
 // MAIA Live Consciousness Tracker Integration
 // Connects the holoflower oracle to MAIA's real-time consciousness states
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
+const supabase = createClient(dbUrl, dbKey);
 
 export interface MAIAConsciousnessState {
   attendingQuality: number; // 0-1, how empathetic/relational vs analytical

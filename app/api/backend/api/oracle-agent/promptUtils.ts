@@ -19,9 +19,9 @@ export class PromptManager {
   private cacheExpiry = 5 * 60 * 1000; // 5 minutes
   private lastCacheUpdate = 0;
 
-  constructor(supabaseUrl: string, supabaseKey: string) {
-    this.supabase = createClient(supabaseUrl, supabaseKey);
-    this.loggingService = new PromptLoggingService(supabaseUrl, supabaseKey);
+  constructor(dbUrl: string, dbKey: string) {
+    this.supabase = createClient(dbUrl, dbKey);
+    this.loggingService = new PromptLoggingService(dbUrl, dbKey);
   }
 
   /**

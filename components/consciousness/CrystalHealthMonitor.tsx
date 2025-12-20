@@ -48,10 +48,10 @@ export default function CrystalHealthMonitor() {
 
   // Initialize connection
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+    if (process.env.NEXT_PUBLIC_DATABASE_URL) {
       supabase.current = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_DATABASE_URL!,
+        process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!
       );
       subscribeToHealth();
     } else {

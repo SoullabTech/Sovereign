@@ -9,9 +9,9 @@ import { UnifiedDataAccessService } from './UnifiedDataAccessService';
 import { formatGreeting, suggestPoetic } from './poeticModes';
 import { buildFromTemplates } from './greetingTemplates';
 
-const supabaseUrl = process.env.SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey, {
+const dbUrl = process.env.DATABASE_URL!;
+const dbKey = process.env.DATABASE_SERVICE_KEY!;
+const supabase = createClient(dbUrl, dbKey, {
   auth: { persistSession: false },
 });
 

@@ -17,10 +17,10 @@ export class BetaAuth {
   private supabase: ReturnType<typeof createClient>;
 
   constructor() {
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const dbKey = process.env.DATABASE_SERVICE_KEY || '';
     this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-      supabaseKey
+      process.env.NEXT_PUBLIC_DATABASE_URL || '',
+      dbKey
     );
   }
 

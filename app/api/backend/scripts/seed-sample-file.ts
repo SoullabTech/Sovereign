@@ -6,15 +6,15 @@ import path from 'path';
 // Load environment variables
 config({ path: path.join(__dirname, '../.env') });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+const dbServiceKey = process.env.DATABASE_SERVICE_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
+if (!dbUrl || !dbServiceKey) {
   console.error('❌ Missing Supabase environment variables');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const supabase = createClient(dbUrl, dbServiceKey);
 
 const SAMPLE_DOCUMENTS = [
   {

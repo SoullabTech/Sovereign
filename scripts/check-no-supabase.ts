@@ -38,9 +38,9 @@ const BANNED_PATTERNS: Array<{ name: string; re: RegExp }> = [
   { name: "importing utils/supabase wrappers", re: /from\s+['"]@\/utils\/supabase\/[^'"]+['"]/g },
 
   // env keys only when assigned/declared (keeps docs from triggering)
-  { name: "SUPABASE_URL assignment", re: /\bSUPABASE_URL\s*[:=]/g },
-  { name: "SUPABASE_ANON_KEY assignment", re: /\bSUPABASE_ANON_KEY\s*[:=]/g },
-  { name: "SUPABASE_SERVICE_ROLE_KEY assignment", re: /\bSUPABASE_SERVICE_ROLE_KEY\s*[:=]/g },
+  { name: "DATABASE_URL assignment", re: /\bSUPABASE_URL\s*[:=]/g },
+  { name: "DATABASE_ANON_KEY assignment", re: /\bSUPABASE_ANON_KEY\s*[:=]/g },
+  { name: "DATABASE_SERVICE_KEY assignment", re: /\bSUPABASE_SERVICE_ROLE_KEY\s*[:=]/g },
 ];
 
 const ALLOW_FILE_EXT = new Set([

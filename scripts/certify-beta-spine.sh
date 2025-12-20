@@ -43,6 +43,16 @@ else
 fi
 echo ""
 
+# consciousness detection (CD1-CD3)
+echo "--- Consciousness Detection (CD1–CD3) ---"
+if [[ -f scripts/certify-consciousness-detection.ts ]]; then
+  CD_ALLOW_SKIPS=1 CD_EXPORT_JSON=1 npx tsx scripts/certify-consciousness-detection.ts || EXIT_CODE=1
+else
+  echo "❌ scripts/certify-consciousness-detection.ts not found"
+  EXIT_CODE=1
+fi
+echo ""
+
 # Boot server for HTTP-based certifications (Sacred Mirror + Framework Router)
 echo "=========================================="
 echo "Building production server for HTTP certifications"

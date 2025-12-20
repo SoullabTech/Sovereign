@@ -4,11 +4,11 @@
  * Run this periodically (e.g., every 5 minutes via cron or serverless function)
  */
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const dbServiceKey = process.env.DATABASE_SERVICE_KEY!;
 
 export class FieldStateCalculator {
-  private supabase = createClient(supabaseUrl, supabaseServiceKey);
+  private supabase = createClient(dbUrl, dbServiceKey);
 
   /**
    * Calculate and update field state for all channels

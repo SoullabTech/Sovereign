@@ -15,14 +15,14 @@ console.log("🔍 Environment Check:");
 console.log(process.env.OPENAI_API_KEY ? "✅ OpenAI loaded" : "❌ Missing OPENAI_API_KEY");
 console.log(process.env.ANTHROPIC_API_KEY ? "✅ Anthropic loaded" : "❌ Missing ANTHROPIC_API_KEY");
 console.log(process.env.ELEVENLABS_API_KEY ? "✅ ElevenLabs loaded" : "❌ Missing ELEVENLABS_API_KEY");
-console.log(process.env.SUPABASE_URL ? "✅ Supabase loaded" : "❌ Missing SUPABASE_URL");
+console.log(process.env.DATABASE_URL ? "✅ Supabase loaded" : "❌ Missing DATABASE_URL");
 console.log(process.env.USE_SESAME ? "✅ Sesame enabled" : "❌ Sesame disabled");
 
 // Validate required environment variables
 validateEnvironmentVariables([
   "JWT_SECRET",
-  "SUPABASE_URL",
-  "SUPABASE_ANON_KEY",
+  "DATABASE_URL",
+  "DATABASE_ANON_KEY",
 ]);
 
 const PREFERRED_PORT = parseInt(process.env.PORT || "3002", 10);

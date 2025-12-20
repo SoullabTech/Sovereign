@@ -7,10 +7,10 @@
 
 import type { RelationshipEssence } from './RelationshipAnamnesis';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
+const dbServiceKey = process.env.DATABASE_SERVICE_KEY!;
 
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+const supabaseAdmin = createClient(dbUrl, dbServiceKey, {
   auth: {
     autoRefreshToken: false,
     persistSession: false
@@ -23,7 +23,7 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 export async function saveRelationshipEssenceDirect(essence: RelationshipEssence): Promise<void> {
   console.log('🔵 [ANAMNESIS-DIRECT] saveRelationshipEssenceDirect called!');
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!dbUrl || !dbServiceKey) {
     console.warn('⚠️ [ANAMNESIS-DIRECT] Supabase not configured');
     return;
   }
@@ -103,7 +103,7 @@ export async function saveRelationshipEssenceDirect(essence: RelationshipEssence
 export async function loadRelationshipEssenceDirect(soulSignature: string): Promise<RelationshipEssence | null> {
   console.log('🔵 [ANAMNESIS-DIRECT] loadRelationshipEssenceDirect called!');
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!dbUrl || !dbServiceKey) {
     console.warn('⚠️ [ANAMNESIS-DIRECT] Supabase not configured');
     return null;
   }

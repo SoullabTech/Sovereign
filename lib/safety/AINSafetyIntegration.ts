@@ -50,13 +50,13 @@ export class AINSafetyIntegration extends SafetyPipeline {
   private elementalMapping: ElementalSafetyMapping;
 
   constructor(
-    supabaseUrl: string,
-    supabaseKey: string,
+    dbUrl: string,
+    dbKey: string,
     obsidianVaultPath: string,
     consciousnessAPI: ConsciousnessAPI,
     therapistConfig?: any
   ) {
-    super(supabaseUrl, supabaseKey, therapistConfig);
+    super(dbUrl, dbKey, therapistConfig);
 
     this.obsidianIntegration = new ObsidianKnowledgeIntegration(obsidianVaultPath);
     this.consciousnessAPI = consciousnessAPI;

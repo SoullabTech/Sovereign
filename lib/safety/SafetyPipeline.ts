@@ -212,14 +212,14 @@ export class SafetyPipeline {
   private supabase: any;
 
   constructor(
-    supabaseUrl: string,
-    supabaseKey: string,
+    dbUrl: string,
+    dbKey: string,
     therapistConfig?: TherapistAPIConfig
   ) {
     this.detector = new CrisisDetector();
     this.assessmentManager = new AssessmentManager();
     this.therapistAPI = therapistConfig ? new TherapistAPI(therapistConfig) : null;
-    this.supabase = createClient(supabaseUrl, supabaseKey);
+    this.supabase = createClient(dbUrl, dbKey);
   }
 
   async processMessage(userId: string, message: string): Promise<{

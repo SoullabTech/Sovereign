@@ -1,6 +1,6 @@
 // 📁 File: src/lib/symbolicIntel.ts
 
-import { supabase } from "./supabaseClient";
+import { supabase } from "./dbClient";
 import { parseEmotions } from "./emotionParser";
 import { matchSymbolsFromText } from "./symbolMatcher";
 

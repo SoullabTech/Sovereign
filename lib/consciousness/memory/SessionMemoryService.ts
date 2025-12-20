@@ -54,11 +54,11 @@ export class SessionMemoryService {
 
   constructor() {
     // Initialize Supabase client
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
+    const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
-    if (supabaseUrl && supabaseKey) {
-      this.supabase = createClient(supabaseUrl, supabaseKey);
+    if (dbUrl && dbKey) {
+      this.supabase = createClient(dbUrl, dbKey);
       this.isInitialized = true;
     } else {
       console.warn('⚠️ SessionMemoryService: Supabase not configured, memory will be simulated');

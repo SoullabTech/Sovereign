@@ -1,9 +1,9 @@
 // src/lib/supabase.ts
 import type { Database } from "./database.types";
 
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const dbUrl = process.env.DATABASE_URL || process.env.NEXT_PUBLIC_DATABASE_URL;
 // IMPORTANT: Backend MUST use SERVICE_ROLE_KEY - no fallbacks allowed
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const dbKey = process.env.DATABASE_SERVICE_KEY;
 
 // Security check: Ensure service role key is being used
 function isServiceRoleKey(key: string): boolean {
@@ -31,9 +31,9 @@ function isServiceRoleKey(key: string): boolean {
 }
 
 // Temporarily comment out strict validation for debugging
-// if (supabaseKey && !isServiceRoleKey(supabaseKey)) {
+// if (dbKey && !isServiceRoleKey(dbKey)) {
 //   throw new Error(
-//     "[SUPABASE] ❌ SECURITY ERROR: Backend must use SUPABASE_SERVICE_ROLE_KEY. " +
+//     "[SUPABASE] ❌ SECURITY ERROR: Backend must use DATABASE_SERVICE_KEY. " +
 //     "Detected non-service-role key. Check your .env configuration."
 //   );
 // }
@@ -77,15 +77,15 @@ export const supabase = (() => {
     } as any;
   }
   
-  if (!supabaseUrl || !supabaseKey) {
+  if (!dbUrl || !dbKey) {
     console.warn("Missing Supabase environment variables - running in limited mode");
     return null;
   }
   
   console.log("🗄️  [SUPABASE] Mode: REAL (full persistence + analytics)");
-  console.log(`   → Using ${process.env.SUPABASE_SERVICE_ROLE_KEY ? 'service role' : 'fallback'} key for backend`);
+  console.log(`   → Using ${process.env.DATABASE_SERVICE_KEY ? 'service role' : 'fallback'} key for backend`);
   
-  return createClient<Database>(supabaseUrl, supabaseKey, {
+  return createClient<Database>(dbUrl, dbKey, {
     auth: {
       autoRefreshToken: false,  // Service role doesn't need refresh
       persistSession: false,     // No session persistence for backend

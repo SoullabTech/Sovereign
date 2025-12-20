@@ -1,16 +1,16 @@
 import { logger } from '../utils/logger';
 
 // Validate Supabase configuration
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const dbUrl = process.env.DATABASE_URL;
+const dbKey = process.env.DATABASE_SERVICE_KEY;
 
 let supabase: SupabaseClient | null = null;
 
 // Check if Supabase credentials are configured
-if (!supabaseUrl || !supabaseKey) {
+if (!dbUrl || !dbKey) {
   const errorMessage = 'CRITICAL: Supabase credentials not configured. Memory service will not function.';
   logger.error(errorMessage);
-  logger.error('Missing: SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY');
+  logger.error('Missing: DATABASE_URL and/or DATABASE_SERVICE_KEY');
   
   if (process.env.NODE_ENV === 'production') {
     // In production, memory is critical - fail fast
@@ -18,11 +18,11 @@ if (!supabaseUrl || !supabaseKey) {
   } else {
     // In development, warn but continue with null client
     logger.warn('MEMORY SERVICE: Running without database connection');
-    logger.warn('Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in .env to enable memory features');
+    logger.warn('Set DATABASE_URL and DATABASE_SERVICE_KEY in .env to enable memory features');
   }
 } else {
   // Initialize Supabase client only if credentials are available
-  supabase = createClient(supabaseUrl, supabaseKey, {
+  supabase = createClient(dbUrl, dbKey, {
     auth: { persistSession: false },
   });
   logger.info('Memory service initialized with Supabase connection');
