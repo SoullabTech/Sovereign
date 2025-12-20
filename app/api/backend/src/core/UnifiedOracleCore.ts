@@ -12,10 +12,10 @@ import {
   generateRequestId
 } from "../utils/sharedUtilities";
 import type { StandardAPIResponse } from "../utils/sharedUtilities";
-import { memory } from "../../../lib/memory";
+import { memory } from '@/lib/memory';
 import { elementalOracleGPT } from "../services/ElementalOracleGPTService";
 import { DeepSeekService } from "../deepseek/DeepSeekService";
-import { SovereigntyProtocol } from "../../../lib/consciousness/sovereignty-protocol";
+import { SovereigntyProtocol } from '@/lib/consciousness/sovereignty-protocol';
 
 // Elemental configurations for streamlined agent behavior
 interface ElementalConfig {

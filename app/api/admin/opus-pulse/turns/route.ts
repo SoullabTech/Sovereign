@@ -1,7 +1,7 @@
 // backend: app/api/admin/opus-pulse/turns/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPool } from '../../../../../lib/database/postgres';
+import { getPool } from '@/lib/database/postgres';
 
 export async function GET(req: NextRequest) {
   const pool = getPool();

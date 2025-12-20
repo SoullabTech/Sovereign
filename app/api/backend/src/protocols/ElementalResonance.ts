@@ -4,7 +4,7 @@
  * Provides tonal coloring that flows through all responses
  */
 
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 export interface ElementalSignal {
   dominant: ElementalArchetype;

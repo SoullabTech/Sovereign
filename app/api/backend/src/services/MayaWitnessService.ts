@@ -14,7 +14,7 @@ import {
   DepthInference,
   createLoopingProtocol
 } from '../protocols/LoopingProtocol';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { archetypeService, ArchetypeInsight } from './ArchetypeDetectionService';
 import { logger } from '../utils/logger';
 

@@ -24,7 +24,7 @@ import type {
 import { SimpleCache } from '../implementations/SimpleCache';
 import { SimpleAnalytics } from '../implementations/SimpleAnalytics';
 import { ainEventEmitter, EventSubscribers } from '../events/EventEmitter';
-import { createConsciousnessAPI } from '../../api/ConsciousnessAPI';
+import { createConsciousnessAPI } from '@/app/api/ConsciousnessAPI';
 
 // Import existing services (to be gradually migrated)
 import { OracleService } from '../../services/OracleService';

@@ -42,4 +42,4 @@ export {
 } from './UnifiedPresenceOrchestrator';
 
 // Re-export elemental types for convenience
-export { ElementalArchetype } from '../../../web/lib/types/elemental';
+export { ElementalArchetype } from '@/lib/types/elemental';

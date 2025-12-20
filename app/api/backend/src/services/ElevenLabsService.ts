@@ -6,7 +6,7 @@
 import axios from "axios";
 import FormData from "form-data";
 import { logger } from "../utils/logger";
-import { VoicePreprocessor } from "../../../../../lib/voice/VoicePreprocessor";
+import { VoicePreprocessor } from '@/lib/voice/VoicePreprocessor';
 
 export class ElevenLabsService {
   private apiKey: string | undefined;

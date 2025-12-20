@@ -1,7 +1,7 @@
 'use client';
 
 import { SoulConsciousnessConsole } from '../labtools/components/SoulConsciousnessConsole';
-import { SoulAuthenticationResult } from '../../../lib/consciousness/SoulConsciousnessInterface';
+import { SoulAuthenticationResult } from '@/lib/consciousness/SoulConsciousnessInterface';
 
 export default function SoulConsciousnessPage() {
   const handleSoulAuthenticated = (result: SoulAuthenticationResult) => {

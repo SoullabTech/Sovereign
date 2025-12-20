@@ -5,7 +5,7 @@
 
 import { LoopingState, LoopingIntensity } from './LoopingProtocol';
 import { ConvergenceMetrics } from './ConvergenceTracker';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 export interface LoopingMetrics {
   sessionId: string;

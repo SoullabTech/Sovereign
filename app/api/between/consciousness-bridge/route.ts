@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import logger from '../../../../lib/utils/performance-logger';
+import logger from '@/lib/utils/performance-logger';
 
 /**
  * Consciousness Bridge for /api/between/chat - Browser Compatible

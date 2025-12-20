@@ -16,7 +16,7 @@
  */
 
 import { BirthChartContext } from './birthChartContext';
-import { calculateAetherCoherence } from '../../../../../lib/astrology/neuroArchetypalMapping';
+import { calculateAetherCoherence } from '@/lib/astrology/neuroArchetypalMapping';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ATMOSPHERE TYPES

@@ -4,7 +4,7 @@ import { VoiceQueue } from './VoiceQueue';
 import { VoiceGuards } from '../core/guards/VoiceGuards';
 import { VoiceEventBus } from '../core/events/VoiceEventBus';
 import { getPresetForContext } from '../adapters/voice/voicePresets';
-import { VoicePreprocessor } from '../../../../../lib/voice/VoicePreprocessor';
+import { VoicePreprocessor } from '@/lib/voice/VoicePreprocessor';
 
 interface VoiceRequest {
   userId: string;

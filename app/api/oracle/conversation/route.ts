@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PanconsciousFieldService } from '../../../../lib/consciousness/panconscious-field';
+import { PanconsciousFieldService } from '@/lib/consciousness/panconscious-field';
 import {
   inferSpiralogicCell,
   chooseFrameworksForCell,
@@ -9,27 +9,27 @@ import {
   type SpiralogicCell,
   type FieldEvent,
   type MaiaSuggestedAction
-} from '../../../../lib/consciousness/spiralogic-core';
-import { getCognitiveProfile } from '../../../../lib/consciousness/cognitiveProfileService';
-import { enforceFieldSafety } from '../../../../lib/field/enforceFieldSafety';
-import { IPP_PARENTING_REPAIR_FLOW } from '../../../../lib/consciousness/intervention-flows';
+} from '@/lib/consciousness/spiralogic-core';
+import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
+import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
 import { PARENTING_REPAIR_SYSTEM_PROMPT } from '../../../../backend/src/agents/prompts/parentingRepairPrompt';
 import {
   evaluateResponseAgainstAxioms,
   hasOpusRupture,
   hasOpusWarnings,
   getAxiomSummary
-} from '../../../../lib/consciousness/opus-axioms';
-import { MultiLLMProvider } from '../../../../lib/consciousness/LLMProvider';
-import { profileToConsciousnessLevel } from '../../../../lib/consciousness/processingProfiles';
-import { logMaiaTurn } from '../../../../lib/learning/maiaTrainingDataService';
-import { logOpusAxiomsForTurn } from '../../../../lib/learning/opusAxiomLoggingService';
-import { logOracleUsage } from '../../../../lib/learning/oracleUsageLoggingService';
-import { OPUS_SAFE_FALLBACKS } from '../../../../lib/ethics/opusSafeFallbacks';
-import { sessionMemoryServicePostgres as sessionMemoryService } from '../../../../lib/consciousness/memory/SessionMemoryServicePostgres';
-import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEssence, type RelationshipEssence } from '../../../../lib/consciousness/RelationshipAnamnesisPostgres';
-import { memoryPalaceOrchestrator } from '../../../../lib/consciousness/memory/MemoryPalaceOrchestrator';
-import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '../../../../lib/validation/socraticValidator';
+} from '@/lib/consciousness/opus-axioms';
+import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
+import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
+import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
+import { logOracleUsage } from '@/lib/learning/oracleUsageLoggingService';
+import { OPUS_SAFE_FALLBACKS } from '@/lib/ethics/opusSafeFallbacks';
+import { sessionMemoryServicePostgres as sessionMemoryService } from '@/lib/consciousness/memory/SessionMemoryServicePostgres';
+import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEssence, type RelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
+import { memoryPalaceOrchestrator } from '@/lib/consciousness/memory/MemoryPalaceOrchestrator';
+import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { randomUUID } from 'crypto';
 
 /**

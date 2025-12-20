@@ -4,7 +4,7 @@
  * Balances depth-seeking with conversation flow
  */
 
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { LoopingState, LoopingIntensity } from './LoopingProtocol';
 
 export interface ConvergenceMetrics {

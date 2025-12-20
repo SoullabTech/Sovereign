@@ -2,7 +2,7 @@
 // API endpoint for user feedback integration with MAIA's learning system
 
 import { NextRequest, NextResponse } from 'next/server';
-import LearningSystemOrchestrator from '../../../../lib/learning/learningSystemOrchestrator';
+import LearningSystemOrchestrator from '@/lib/learning/learningSystemOrchestrator';
 
 export async function POST(request: NextRequest) {
   try {

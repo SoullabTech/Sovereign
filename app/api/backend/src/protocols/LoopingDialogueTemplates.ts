@@ -4,7 +4,7 @@
  * while deepening understanding through elemental lenses
  */
 
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 export interface DialogueTemplate {
   element: ElementalArchetype;

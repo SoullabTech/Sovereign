@@ -5,7 +5,7 @@
  * Integrates ephemeris calculations with Spiralogic framework
  */
 
-import { prisma } from '../../../../../lib/db/prisma';
+import { prisma } from '@/lib/db/prisma';
 
 export interface BirthChartContext {
   hasBirthChart: boolean;

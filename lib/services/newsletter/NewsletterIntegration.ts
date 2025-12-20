@@ -11,7 +11,7 @@
  * - Analytics tracking
  */
 
-import { GaneshaEmailService } from '@/apps/web/lib/services/emailService';
+import { GaneshaEmailService } from '@/lib/services/emailService';
 import { FieldReportGenerator, type FieldReportData } from './FieldReportGenerator';
 import { AwarenessLevelDetector } from '@/lib/intelligence/AwarenessLevelDetector';
 import fs from 'fs/promises';

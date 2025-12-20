@@ -6,7 +6,7 @@
 
 import { collectClaims, CollectionContext, validateContext, enrichContext } from './collectClaims';
 import { OrchestrationDecision, applyConfidenceGovernor } from './priorityResolver';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { logger } from '../utils/logger';
 
 export interface OracleIdentity {

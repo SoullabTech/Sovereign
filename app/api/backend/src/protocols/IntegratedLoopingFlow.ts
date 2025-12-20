@@ -9,7 +9,7 @@ import { sacredInterrupts, ProtocolConfidence } from './SacredInterruptSystem';
 import { catastrophicGuard } from './CatastrophicFailureGuard';
 import { loopingMonitor } from './LoopingMonitor';
 import { LoopingState, LoopingTriggers } from './LoopingProtocol';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { logger } from '../utils/logger';
 
 /**

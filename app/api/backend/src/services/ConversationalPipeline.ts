@@ -14,7 +14,7 @@ import { MAYA_PROMPT_FULL } from '../prompts/mayaPrompt.full';
 import { sesameTTS } from './SesameTTS';
 import { MemoryOrchestrator } from './MemoryOrchestrator';
 import { ttsOrchestrator } from './TTSOrchestrator';
-// import { FileMemoryIntegration } from '../../../lib/services/FileMemoryIntegration'; // Temporarily disabled
+// import { FileMemoryIntegration } from '@/lib/services/FileMemoryIntegration'; // Temporarily disabled
 import axios from 'axios';
 import fs from 'fs';
 import path from 'path';

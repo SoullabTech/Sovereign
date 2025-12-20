@@ -4,7 +4,7 @@
  */
 
 import { LoopingIntensity } from './LoopingProtocol';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 /**
  * Conservative deployment configuration

@@ -6,7 +6,7 @@
 
 import { PersonalOracleAgent, PersonalOracleQuery, PersonalOracleResponse } from './PersonalOracleAgent';
 import { OracleOrchestrator, createOracleOrchestrator } from '../orchestration/OracleOrchestrator';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { logger } from '../utils/logger';
 
 /**

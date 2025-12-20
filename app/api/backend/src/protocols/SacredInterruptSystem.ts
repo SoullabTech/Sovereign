@@ -4,7 +4,7 @@
  * Integrated safeguards that are part of the ceremony, not bolted on
  */
 
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { logger } from '../utils/logger';
 
 /**

@@ -67,8 +67,8 @@ export { MemoryCompressorService } from '../memory/compression/MemoryCompressor'
 // } from '../memory/integration/MemoryIntegration'; // TODO: Fix broken dependencies
 
 // Maya Systems Integration
-import { MayaMemorySystem } from '../../apps/web/lib/memory/MayaMemorySystem';
-import { MayaReasoningChains } from '../../apps/web/lib/langchain/MayaReasoningChains';
+import { MayaMemorySystem } from '@/lib/memory/MayaMemorySystem';
+import { MayaReasoningChains } from '@/lib/langchain/MayaReasoningChains';
 
 /**
  * Complete Memory System Configuration

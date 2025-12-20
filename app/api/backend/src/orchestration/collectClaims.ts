@@ -12,7 +12,7 @@ import { analyzeUrgency } from '../protocols/UrgencyDetector';
 import { analyzeContemplative } from '../protocols/ContemplativeSpace';
 import { analyzeResonance } from '../protocols/ElementalResonance';
 import { analyzeStory } from '../protocols/StoryWeaver';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 export interface CollectionContext {
   userId: string;

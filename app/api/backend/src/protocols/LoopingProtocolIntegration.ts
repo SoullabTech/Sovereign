@@ -8,7 +8,7 @@ import { MayaWitnessService, WitnessContext, WitnessResponse } from '../services
 import { LoopingIntensity, LoopingState } from './LoopingProtocol';
 import { loopingMonitor } from './LoopingMonitor';
 import { DEPLOYMENT_CONFIG, shouldSkipLooping, getFallbackResponse } from './LoopingDeploymentConfig';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { logger } from '../utils/logger';
 
 /**

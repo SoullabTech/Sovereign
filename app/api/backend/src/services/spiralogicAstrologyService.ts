@@ -10,13 +10,13 @@ import {
   getStrongestDecanInfluence,
   type BirthChartDecans,
   type PlanetaryDecan,
-} from '../../../../../lib/astrology/decanCalculator';
+} from '@/lib/astrology/decanCalculator';
 
 import {
   getDecanByDegree,
   interpretPlanetInDecan,
   type Decan,
-} from '../../../../../lib/astrology/decanSystem';
+} from '@/lib/astrology/decanSystem';
 
 // Mock ComprehensiveBirthChart - TODO: fix import
 interface ComprehensiveBirthChart {

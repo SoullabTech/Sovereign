@@ -8,7 +8,7 @@ import {
   BiometricConsciousnessData,
   VoiceSoulMarkers,
   LanguageSoulPatterns
-} from '../../../../lib/consciousness/SoulConsciousnessInterface';
+} from '@/lib/consciousness/SoulConsciousnessInterface';
 
 interface Props {
   onSoulAuthenticated?: (result: SoulAuthenticationResult) => void;

@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { ConsciousnessMappingService } from '../../../../lib/biometric/consciousness-mapping-service';
+import { ConsciousnessMappingService } from '@/lib/biometric/consciousness-mapping-service';
 
 // Biometric data interface matching mobile service
 interface BiometricData {

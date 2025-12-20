@@ -4,7 +4,7 @@
  * Maintains sacred mirror stance while finding essential meaning
  */
 
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { Archetype } from '../services/ArchetypeDetectionService';
 
 export interface LoopingTriggers {

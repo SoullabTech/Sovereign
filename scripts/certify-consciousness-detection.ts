@@ -701,10 +701,14 @@ async function main() {
     process.exit(1);
   }
 
-  const userId = await detectUserId(db);
-  if (!userId) {
-    fail("CD bootstrap", "Could not detect user id. Set CD_USER_ID (or BETA_SPINE_USER_ID).");
-    process.exit(1);
+  let userId = "seed_fixtures";
+  if (!USE_SEED) {
+    const detectedUserId = await detectUserId(db);
+    if (!detectedUserId) {
+      fail("CD bootstrap", "Could not detect user id. Set CD_USER_ID (or BETA_SPINE_USER_ID), or use CD_SEED=1.");
+      process.exit(1);
+    }
+    userId = detectedUserId;
   }
 
   const snapshots = await loadSnapshots(db, userId, 30);

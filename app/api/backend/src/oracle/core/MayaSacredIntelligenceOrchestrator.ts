@@ -9,7 +9,7 @@
  * which approach to take based on user needs, expressions, and patterns
  */
 
-// import { sacredOracleConstellation } from '../../../../../lib/sacred-oracle-constellation'; // TODO: Re-enable when module exists
+// import { sacredOracleConstellation } from '@/lib/sacred-oracle-constellation'; // TODO: Re-enable when module exists
 import { MayaConsciousnessOrchestrator } from './MayaConsciousnessOrchestrator';
 import { ConsciousnessExplorationEngine } from '../intelligence/ConsciousnessExplorationEngine';
 import { DepthStateTracker } from '../intelligence/DepthStateTracker';

@@ -24,7 +24,7 @@ import {
 } from '@langchain/core/runnables';
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { BaseMessage } from '@langchain/core/messages';
-import { ReasoningMode } from '../../apps/web/lib/langchain/MayaReasoningChains';
+import { ReasoningMode } from '@/lib/langchain/MayaReasoningChains';
 
 /**
  * Decentralized Chain Configuration

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { MAIAEmpowermentOrchestrator } from '../../../../lib/consciousness/MAIAEmpowermentOrchestrator';
-import { ShadowConversationOrchestrator } from '../../../../lib/consciousness/ShadowConversationOrchestrator';
-import { AgentBackchannelingIntegration } from '../../../../lib/consciousness/AgentBackchannelingIntegration';
-import { MAIACriticalQuestioningInterface } from '../../../../lib/consciousness/MAIACriticalQuestioningInterface';
-import { MAIAIdealModelingInterface } from '../../../../lib/consciousness/MAIAIdealModelingInterface';
-import { MAIACapabilityRedemptionInterface } from '../../../../lib/consciousness/MAIACapabilityRedemptionInterface';
-import { AccountabilityResponsibilityProtocols } from '../../../../lib/consciousness/AccountabilityResponsibilityProtocols';
-import { CollectiveIntelligenceProtocols } from '../../../../lib/consciousness/CollectiveIntelligenceProtocols';
+import { MAIAEmpowermentOrchestrator } from '@/lib/consciousness/MAIAEmpowermentOrchestrator';
+import { ShadowConversationOrchestrator } from '@/lib/consciousness/ShadowConversationOrchestrator';
+import { AgentBackchannelingIntegration } from '@/lib/consciousness/AgentBackchannelingIntegration';
+import { MAIACriticalQuestioningInterface } from '@/lib/consciousness/MAIACriticalQuestioningInterface';
+import { MAIAIdealModelingInterface } from '@/lib/consciousness/MAIAIdealModelingInterface';
+import { MAIACapabilityRedemptionInterface } from '@/lib/consciousness/MAIACapabilityRedemptionInterface';
+import { AccountabilityResponsibilityProtocols } from '@/lib/consciousness/AccountabilityResponsibilityProtocols';
+import { CollectiveIntelligenceProtocols } from '@/lib/consciousness/CollectiveIntelligenceProtocols';
 
 // Cache for orchestrator instances to maintain session state
 let empowermentOrchestrator: MAIAEmpowermentOrchestrator | null = null;

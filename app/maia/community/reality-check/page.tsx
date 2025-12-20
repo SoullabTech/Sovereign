@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { IntegrationAuthService } from "../../../../lib/auth/integrationAuth";
+import { IntegrationAuthService } from '@/lib/auth/integrationAuth';
 
 interface CommunityInteraction {
   id: string;

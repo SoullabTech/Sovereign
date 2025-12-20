@@ -17,7 +17,7 @@ import {
   storeMemoryItem,
 } from "../services/memoryService";
 import { logOracleInsight } from "../utils/oracleLogger";
-import { FileMemoryIntegration } from "../../../../../lib/services/FileMemoryIntegration";
+import { FileMemoryIntegration } from '@/lib/services/FileMemoryIntegration';
 import type { StandardAPIResponse } from "../utils/sharedUtilities";
 import { applyMasteryVoiceIfAppropriate, type MasteryVoiceContext, loadMayaCanonicalPrompt, getMayaElementalPrompt } from "../config/mayaPromptLoader";
 import { MayaOrchestrator } from "../oracle/core/MayaOrchestrator";
@@ -26,7 +26,7 @@ import { MayaSacredIntelligenceOrchestrator } from "../oracle/core/MayaSacredInt
 import { archetypeSelector, ArchetypeStyle } from "../oracle/archetypes/ArchetypeSelector";
 import { ExperienceOrchestrator } from "../oracle/experience/ExperienceOrchestrator";
 import { maiaAstrologicalIntelligence } from "../services/maiaAstrologicalIntelligence";
-// import { MayaVoiceSystem } from "../../../../../lib/voice/maya-voice"; // TODO: This is a client-side module, backend should use TTS service instead
+// import { MayaVoiceSystem } from '@/lib/voice/maya-voice'; // TODO: This is a client-side module, backend should use TTS service instead
 import {
   applyConversationalRules,
   getPhaseResponseStyle,

@@ -2,7 +2,7 @@
 // API endpoint for logging conversation turns into MAIA's learning system
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query, transaction } from '../../../../lib/database/postgres';
+import { query, transaction } from '@/lib/database/postgres';
 import { z } from 'zod';
 
 // Zod validation schema for turn logging

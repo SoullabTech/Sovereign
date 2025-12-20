@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getToneFromSoulprint } from "@/apps/web/lib/voice/adaptive-tone-engine";
+import { getToneFromSoulprint } from '@/lib/voice/adaptive-tone-engine';
 import type { SoulprintSnapshot } from "@/lib/memory/soulprint";
 
 export function ToneDebugOverlay() {

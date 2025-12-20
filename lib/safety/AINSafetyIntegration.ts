@@ -1,6 +1,6 @@
 import { SafetyPipeline } from './SafetyPipeline';
 import { ObsidianKnowledgeIntegration } from '../obsidian-knowledge-integration';
-import { ConsciousnessAPI } from '../../apps/api/backend/src/api/ConsciousnessAPI';
+import { ConsciousnessAPI } from '@/app/api/ConsciousnessAPI';
 
 /**
  * AIN-integrated Safety Pipeline

@@ -13,7 +13,7 @@
  */
 
 import { describe, it, expect, beforeAll } from '@jest/globals';
-import { symbolExtractor } from '../../../../../lib/intelligence/SymbolExtractionEngine';
+import { symbolExtractor } from '@/lib/intelligence/SymbolExtractionEngine';
 
 describe('MAIA-Levin Integration: Biological Coherence Architecture', () => {
 

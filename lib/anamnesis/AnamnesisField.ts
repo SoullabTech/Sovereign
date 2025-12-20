@@ -14,7 +14,7 @@ import { SimpleEmbedder } from '../memory/embeddings/SimpleEmbedder';
 import { SimpleCompressor } from '../memory/compression/SimpleCompressor';
 
 // Maya Memory Systems (commented out to fix path issues - to be implemented)
-// import { MayaMemorySystem } from '../../apps/web/lib/memory/MayaMemorySystem';
+// import { MayaMemorySystem } from '@/lib/memory/MayaMemorySystem';
 // Temporary stubs for reasoning chains (to be implemented later)
 interface ReasoningChains {
   [key: string]: any;

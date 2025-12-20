@@ -8,7 +8,7 @@ import { WitnessContext } from '../services/MayaWitnessService';
 import { ContemplativeSpace } from '../systems/ContemplativeSpace';
 import { LoopingProtocolIntegration } from '../protocols/LoopingProtocolIntegration';
 import { CatastrophicFailureGuard } from '../protocols/CatastrophicFailureGuard';
-import { ElementalArchetype } from '../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 import { StoryWeaver } from '../systems/StoryWeaver';
 import { logger } from '../utils/logger';
 
