@@ -2,8 +2,6 @@
 // 🌸 This gives MAIA a place to remember how she's been showing up
 // without forcing any behavior. Her developmental arc becomes wisdom over time.
 
-import { createClient } from '@/lib/supabase/client';
-
 export interface StyleJournalEntryInput {
   userId?: string | null;
   sessionId?: string;

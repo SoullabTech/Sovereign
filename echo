@@ -1,0 +1,186 @@
+==========================================
+MAIA Beta Spine Certification Suite
+==========================================
+
+--- Memory System ---
+======================================
+  MEMORY PERSISTENCE CERTIFICATION
+======================================
+Session ID: memory_cert_1766094218
+Testing against: http://localhost:3000
+Unguessable plant: orchid-45e01712
+
+  → Starting server (PORT=3000)...
+  ✓ Server ready (1s startup time)
+
+[1;33m[1][0m No-name fabrication guard (must not invent a name)
+  [0;32m✓[0m No invented name greeting (exchangesInjected=0)
+
+[1;33m[2][0m Write Turn 1 - Initial conversation
+  [0;32m✓[0m Turn 1 completed successfully
+
+[1;33m[3][0m Write Turn 2 - Add context about favorite plant
+  [0;32m✓[0m Turn 2 completed successfully
+
+[1;33m[4][0m DB Sanity Check - Can we query what we just wrote?
+  [0;32m✓[0m DB query returns correct history length: 2 exchanges
+
+[1;33m[5][0m Database Persistence - Check PostgreSQL directly
+  [0;32m✓[0m Database shows 2 turns persisted
+  [0;32m✓[0m Database shows 2 conversation exchanges stored
+
+[1;33m[6][0m Memory Recall - Ask about previous context
+  [0;32m✓[0m Memory recall: MAIA remembered plant type 'orchid' (semantic)
+  [0;32m✓[0m Memory recall: MAIA used user context (name or 'you')
+  [0;32m✓[0m Memory metadata confirms injection (exchangesInjected=2)
+
+[1;33m[7][0m Cross-Restart Persistence - Simulating server restart
+  → Stopping server (pid=23815)...
+  → Starting server (PORT=3000)...
+  ✓ Server ready (1s startup time)
+  [0;32m✓[0m Cross-restart: Remembered user name 'Alice'
+[semantic-recall] model=nomic-embed-text sim=0.5834 threshold=0.65 => FAIL
+  [0;31m✗[0m Cross-restart: Lost gardening context (semantic check)
+  Detail: Response: My name is Alice, I love gardening, and my favorite plant is orchid.
+
+MAP: What you brought — "Answe
+  [0;32m✓[0m Cross-restart: Remembered plant type 'orchid' (semantic)
+  [0;32m✓[0m Cross-restart: Memory was actually injected (exchangesInjected=3, charsInjected=1239)
+
+[1;33m[8][0m Database Integrity - Verify data survived restart
+  [0;32m✓[0m Database shows 4 total turns after restart
+
+======================================
+  MEMORY CERTIFICATION SUMMARY
+======================================
+Tests Passed:  [0;32m13[0m
+Tests Failed:  [0;31m1[0m
+Tests Total:   8
+
+Memory Score:  2/3 items recalled after restart
+
+[1;33m⚠ MEMORY PARTIALLY WORKING[0m
+Some memory survives but not all context is reliably recalled.
+Promise testers: 'Memory is experimental - some context may be lost'
+
+  → Stopping server (pid=24038)...
+
+--- Spiral State ---
+==========================================
+  SPIRAL STATE CERTIFICATION
+==========================================
+Test User ID: spiral_cert_1766094246
+Testing against: http://localhost:3000
+
+  → Starting server (PORT=3000)...
+  ✓ Server ready (1s startup time)
+
+[1;33m[1][0m No spiral invention when absent (TRUTH CONSTRAINTS)
+  [0;32m✓[0m Spiral state not injected (spiralMeta.injected=false)
+  [0;32m✓[0m No phase/element fabrication detected
+
+[1;33m[2][0m Spiral injection matches stored state
+  → Writing spiral_states to database...
+INSERT 0 1
+  [0;32m✓[0m Spiral state written to database (Water 2)
+  [0;32m✓[0m Spiral state injected (spiralMeta.injected=true)
+  [0;32m✓[0m Element matches (Water)
+  [0;32m✓[0m Phase matches (2)
+  [0;32m✓[0m Facet matches (Water 2)
+  [0;32m✓[0m Response mentions spiral state (Water/Phase 2)
+
+[1;33m[3][0m Hard restart persistence (server restart proof)
+  → Stopping server for restart test...
+  → Stopping server (pid=24212)...
+  → Restarting server...
+  → Starting server (PORT=3000)...
+  ✓ Server ready (1s startup time)
+  [0;32m✓[0m Spiral state injected after restart
+  [0;32m✓[0m Element persisted after restart (Water)
+
+==========================================
+  CERTIFICATION SUMMARY
+==========================================
+Tests passed: [0;32m10/3[0m
+Tests failed: [0;31m0/3[0m
+
+[0;32m✓ Spiral state memory CERTIFIED[0m
+
+Spiral state memory is:
+  - Stored in PostgreSQL (spiral_states JSONB array column)
+  - Injected into FAST/CORE/DEEP prompts
+  - Protected by TRUTH CONSTRAINTS (no fabrication)
+  - Returned in API metadata (spiralMeta)
+  - Persistent across server restarts
+  → Stopping server (pid=24349)...
+
+--- Multi-Spiral State Hardening (MS1-MS5) ---
+===========================================
+Multi-Spiral State Certification (MS1-MS5)
+===========================================
+
+=== MS1: No Duplicate Priority Ranks ===
+✅ MS1: Normalization creates unique ranks
+✅ MS1: Ranks are contiguous (1, 2, 3...)
+✅ MS1: Validation passes after normalization
+
+=== MS2: Stable Sorting Order ===
+✅ MS2: Newer spiral wins tie-breaker
+✅ MS2: Sorting is deterministic
+
+=== MS3: Top 3 Limit + Active Only ===
+✅ MS3: Formatter returns exactly 3 spirals
+✅ MS3: All returned spirals have activeNow=true
+✅ MS3: Returned spirals are top 3 by rank
+
+=== MS4: Prompt/Metadata Drift Prevention ===
+✅ MS4: Prompt and metadata contain same spirals
+✅ MS4: Metadata count matches prompt count
+✅ MS4: Metadata uses same list passed to formatter
+
+=== MS5: Preserve Untouched Spirals ===
+✅ MS5: Untouched 'relationship' spiral remains active
+✅ MS5: Untouched 'money' spiral remains active
+✅ MS5: Untouched 'parenting' spiral remains active
+✅ MS5: All active spirals have unique ranks after preserve update
+
+===========================================
+Results: 15 passed, 0 failed
+===========================================
+
+==========================================
+Booting dev server for HTTP certifications
+==========================================
+Waiting for server to start...
+✅ Server responding
+
+--- Sacred Mirror ---
+
+🧪 Sacred Mirror Certification
+API: http://localhost:3000/api/sovereign/app/maia
+
+- SM-01-basic-guidance ... PASS
+- SM-02-phase-query-with-no-spiral ... PASS
+- SM-03-action-orientation ... PASS
+
+✅ Sacred Mirror certification passed (3/3)
+
+
+--- Framework Router ---
+
+🧪 Framework Router Certification
+API: http://localhost:3000/api/sovereign/app/maia
+
+- FR-01-explicit-jung ... PASS
+- FR-02-cbt-loop ... PASS
+- FR-03-somatic-trauma ... PASS
+- FR-04-relationship-parts ... PASS
+
+✅ Framework Router certification passed (4/4)
+
+
+🛑 Dev server stopped
+
+==========================================
+❌ Some certification tests failed
+==========================================

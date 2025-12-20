@@ -12,7 +12,6 @@ import type {
   SoulLabMetadata
 } from './types/soullab-metadata';
 
-import { conversationQueries } from './supabase/soullab-queries';
 // Note: sweetSpotCalibration import removed as it was unused
 
 export type FlowState = 'opening' | 'building' | 'sustaining' | 'completing' | 'closing';

@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
 import { FEATURE_FLAGS, hasPhase2Access } from "@/config/features";
-import { useUser } from "@/lib/supabase";
-
 /**
  * Hook to check if a feature flag is enabled
  * Handles both static flags and user-specific Phase 2 access

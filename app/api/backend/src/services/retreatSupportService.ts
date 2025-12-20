@@ -1,6 +1,5 @@
 // Retreat Support Service - Real-time participant management
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "../lib/supabaseClient";
 import { logger } from "../utils/logger";
 import { soullabFounderAgent } from "../core/agents/soullabFounderAgent";
 import { PersonalOracleAgent } from "../core/agents/adjusterAgent";

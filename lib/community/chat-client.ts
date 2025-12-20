@@ -3,8 +3,6 @@
  * Supabase interface for threaded discussions with field awareness
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 export interface Channel {
   id: string;
   slug: string;

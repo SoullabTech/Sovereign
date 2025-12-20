@@ -12,7 +12,6 @@
  * - Hero's Journey stages
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
 import { getSpiralogicFacet } from '@/lib/astrology/spiralogicMapping';
 import { synthesizeAspect, findRelevantAspect, extractAspectsFromChart, type AspectType } from '@/lib/astrology/aspectSynthesis';

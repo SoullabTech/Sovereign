@@ -1,5 +1,3 @@
-import { createClientComponentClient } from '@/lib/supabase';
-
 export type ArchetypeId =
   | 'LAB_PARTNER'
   | 'TRUSTED_FRIEND'

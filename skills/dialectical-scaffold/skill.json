@@ -1,0 +1,52 @@
+{
+  "meta": {
+    "id": "dialectical-scaffold",
+    "name": "Dialectical Scaffold",
+    "version": "0.1.0",
+    "description": "Map polarity, hold both poles, invite synthesis without premature collapse.",
+    "tier": "CORE",
+    "category": "foundational",
+    "kind": "prompt",
+    "tags": ["polarity", "both-and", "synthesis", "dialectic", "paradox"],
+    "triggers": ["both", "either or", "can't choose", "stuck between", "paradox", "conflict"],
+    "elements": ["air", "aether"],
+    "realms": ["MIDDLEWORLD", "UPPERWORLD_SYMBOLIC"]
+  },
+  "eligibility": {
+    "minCognitiveLevel": 3,
+    "maxBypassingScore": 0.5,
+    "allowedNervousSystemStates": ["window"]
+  },
+  "contraindications": {
+    "nervousSystemStates": ["dorsal", "sympathetic"],
+    "whenNotToUse": ["Acute dysregulation", "Crisis state"],
+    "hardRefusalMessageKey": "DIALECTIC_REQUIRES_REGULATION"
+  },
+  "procedure": [
+    {
+      "id": "name_poles",
+      "title": "Name the Poles",
+      "instruction": "Identify the two poles of the polarity they're experiencing (e.g., freedom/structure, action/rest, self/other)."
+    },
+    {
+      "id": "honor_both",
+      "title": "Honor Both",
+      "instruction": "Name the wisdom in EACH pole. What does each one offer? What would be lost without it?"
+    },
+    {
+      "id": "invite_third",
+      "title": "Invite the Third",
+      "instruction": "Ask: What emerges when you hold both without collapsing into either? Don't synthesize FOR them - invite them to sense it."
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Names both poles accurately",
+    "Honors wisdom in each",
+    "Invites synthesis without forcing resolution"
+  ],
+  "nextSkillHints": ["polarity-holding", "both-and-reframing"]
+}

@@ -3,7 +3,6 @@
  * Connects consciousness research system to existing MAIA session management
  */
 
-import { createClient } from '@/lib/supabase/client'
 import type { SessionContext } from '@/lib/session-persistence'
 import { createClient as createPrismaClient } from '@/lib/db'
 

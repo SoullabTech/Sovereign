@@ -5,7 +5,6 @@
 
 import { StoredJournalEntry } from '@/lib/storage/journal-storage';
 import type { SymbolicContext } from '@/lib/memory/soulprint';
-import { createClient } from '@supabase/supabase-js';
 import { MAIASafetyPipeline } from '@/lib/safety-pipeline';
 import { ActiveListeningCore } from '@/lib/oracle/ActiveListeningCore';
 import { ELEMENTAL_ALCHEMY_FRAMEWORK } from '@/lib/knowledge/ElementalAlchemyKnowledge';

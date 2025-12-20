@@ -6,8 +6,6 @@
 
 import { RelationalMemory, Interaction } from '@/lib/oracle/relational/RelationalMemory';
 import { IndividualFieldMemory } from '@/lib/oracle/memory/IndividualFieldMemory';
-import { createClient } from '@supabase/supabase-js';
-
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!

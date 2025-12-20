@@ -1,0 +1,38 @@
+# Dockerfile for Beads Sync Service
+# Bridge layer between MAIA consciousness events and Beads persistence
+
+FROM node:20-alpine
+
+# Install system dependencies
+RUN apk add --no-cache \
+    git \
+    curl \
+    postgresql-client \
+    bash
+
+# Install beads globally
+RUN npm install -g beads
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application code
+COPY lib/memory/beads-sync ./lib/memory/beads-sync
+COPY lib/consciousness ./lib/consciousness
+COPY lib/types ./lib/types
+
+# Expose sync service port
+EXPOSE 3100
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+  CMD curl -f http://localhost:3100/health || exit 1
+
+# Start sync service
+CMD ["node", "lib/memory/beads-sync/server.js"]

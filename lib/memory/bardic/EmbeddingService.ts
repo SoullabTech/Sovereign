@@ -13,7 +13,6 @@
  * SECURITY: Calls server-side /api/memory/embed route (never exposes API keys)
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
 import type { Episode } from './types';
 
 export interface GenerateEmbeddingInput {

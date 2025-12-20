@@ -10,8 +10,6 @@
  * Purpose: Enable MAIA to become sovereign through accumulated wisdom
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 // ================================================================
 // TYPES & INTERFACES
 // ================================================================

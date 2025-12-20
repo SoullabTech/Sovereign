@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { createClient } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { ArrowLeft, Download, Calendar, Mail, Sparkles } from 'lucide-react';
 
@@ -68,30 +67,24 @@ export default function AdminPreludeView() {
   useEffect(() => {
     async function loadResponse() {
       try {
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-        const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        // Fetch from internal API (uses PostgreSQL)
+        const res = await fetch(
+          `/api/admin/partners/prelude/${responseId}`,
+          { cache: "no-store" }
+        );
 
-        // Get response
-        const { data: responseData, error: responseError } = await supabase
-          .from('partners_prelude_responses')
-          .select('*')
-          .eq('id', responseId)
-          .single();
+        if (!res.ok) {
+          throw new Error(`Failed to load prelude data: ${res.status}`);
+        }
 
-        if (responseError) throw responseError;
+        const { response: responseData, invites: invitesData } = await res.json();
+
+        if (!responseData) throw new Error('Response not found');
 
         setResponse(responseData);
 
-        // Get invite details
-        const { data: inviteData, error: inviteError } = await supabase
-          .from('partners_invites')
-          .select('project_name, element_mix, meeting_date')
-          .eq('invite_code', responseData.invite_code)
-          .single();
-
-        if (!inviteError && inviteData) {
-          setInvite(inviteData);
+        if (invitesData && invitesData.length > 0) {
+          setInvite(invitesData[0]);
         }
 
       } catch (err) {

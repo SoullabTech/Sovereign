@@ -1,0 +1,433 @@
+-- Neuropod Psychoactivation Database Schema
+-- Stores: session plans, live sessions, biometric timeseries, state transitions
+
+-- ============================================================================
+-- Session Plans (pre-session planning)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS neuropod_session_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES maia_users(id) ON DELETE CASCADE,
+
+  -- Intention
+  intention TEXT NOT NULL, -- 'calm', 'focus', 'depth', 'breakthrough'
+
+  -- Pathway (multi-phase if needed)
+  pathway JSONB NOT NULL, -- ['calm', 'depth', 'breakthrough']
+
+  -- Session parameters
+  duration_minutes INTEGER NOT NULL,
+  intensity FLOAT NOT NULL CHECK (intensity >= 0 AND intensity <= 1),
+
+  -- Phases
+  phases JSONB NOT NULL,
+  -- [
+  --   {
+  --     "state": "calm",
+  --     "durationMinutes": 8,
+  --     "purpose": "Settle into calm - establish baseline"
+  --   },
+  --   ...
+  -- ]
+
+  -- Safety
+  safety_protocols JSONB NOT NULL,
+  -- {
+  --   "prerequisites": ["Start with CALM to downshift arousal"],
+  --   "warnings": ["⚠️ High arousal - session may feel intense"],
+  --   "emergencyProtocols": { ... }
+  -- }
+
+  -- MAIA Integration
+  maia_integration JSONB NOT NULL,
+  -- {
+  --   "bloomLevel": 4,
+  --   "spiralPhase": "orange",
+  --   "element": "water",
+  --   "reflectionPrompts": ["What emotions moved through you?", ...]
+  -- }
+
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  started_at TIMESTAMPTZ, -- When session actually began
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_neuropod_session_plans_user ON neuropod_session_plans(user_id);
+CREATE INDEX idx_neuropod_session_plans_created ON neuropod_session_plans(created_at);
+
+
+-- ============================================================================
+-- Live Sessions (real-time tracking)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS neuropod_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_plan_id UUID REFERENCES neuropod_session_plans(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES maia_users(id) ON DELETE CASCADE,
+
+  -- Session metadata
+  target_state TEXT NOT NULL,
+  duration_minutes INTEGER NOT NULL,
+  intensity FLOAT NOT NULL,
+
+  -- Real-time state
+  current_state TEXT NOT NULL DEFAULT 'baseline',
+  current_phase INTEGER DEFAULT 0,
+  elapsed_seconds INTEGER DEFAULT 0,
+
+  -- Biometric connection status
+  eeg_connected BOOLEAN DEFAULT FALSE,
+  hrv_connected BOOLEAN DEFAULT FALSE,
+  eda_connected BOOLEAN DEFAULT FALSE,
+
+  -- Safety flags
+  overwhelm_detected BOOLEAN DEFAULT FALSE,
+  safety_interventions INTEGER DEFAULT 0,
+  user_stopped BOOLEAN DEFAULT FALSE,
+
+  -- Session outcomes (filled post-session)
+  completion_status TEXT, -- 'completed', 'user_stopped', 'safety_stopped'
+  user_rating INTEGER CHECK (user_rating >= 1 AND user_rating <= 5),
+  user_tags JSONB, -- ['calm', 'clarity', 'overwhelm', 'integration']
+  journal_entry TEXT,
+  maia_reflection TEXT,
+
+  -- Timestamps
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  started_at TIMESTAMPTZ,
+  completed_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_neuropod_sessions_user ON neuropod_sessions(user_id);
+CREATE INDEX idx_neuropod_sessions_created ON neuropod_sessions(created_at);
+CREATE INDEX idx_neuropod_sessions_plan ON neuropod_sessions(session_plan_id);
+
+
+-- ============================================================================
+-- State Transitions (discrete events during session)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS neuropod_state_transitions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES neuropod_sessions(id) ON DELETE CASCADE,
+
+  -- Transition
+  from_state TEXT NOT NULL,
+  to_state TEXT NOT NULL,
+  duration_in_previous_state_seconds FLOAT NOT NULL,
+  strength FLOAT, -- Confidence/intensity of new state
+
+  -- Context
+  eeg_snapshot JSONB, -- { "alpha": 0.5, "beta": 0.3, ... }
+  hrv_snapshot JSONB, -- { "coherence": 0.7, "heartRate": 65, ... }
+
+  -- Metadata
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_neuropod_transitions_session ON neuropod_state_transitions(session_id);
+CREATE INDEX idx_neuropod_transitions_timestamp ON neuropod_state_transitions(timestamp);
+
+
+-- ============================================================================
+-- Psychoactivation Events (sound/light/haptic changes)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS neuropod_psycho_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES neuropod_sessions(id) ON DELETE CASCADE,
+
+  -- Event type
+  event_type TEXT NOT NULL, -- 'sound_change', 'light_change', 'haptic_change', 'safety_intervention'
+
+  -- Event data
+  modality TEXT NOT NULL, -- 'sound', 'light', 'haptic', 'cymatics'
+  parameter TEXT, -- 'carrier_freq', 'binaural_delta', 'brightness', 'color', 'pulse_freq'
+  old_value JSONB,
+  new_value JSONB,
+
+  -- Trigger
+  triggered_by TEXT, -- 'state_change', 'biometric_change', 'safety_system', 'user_manual'
+
+  -- Metadata
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_neuropod_psycho_events_session ON neuropod_psycho_events(session_id);
+CREATE INDEX idx_neuropod_psycho_events_type ON neuropod_psycho_events(event_type);
+
+
+-- ============================================================================
+-- Biometric Timeseries (high-frequency data)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS neuropod_biometric_timeseries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id UUID NOT NULL REFERENCES neuropod_sessions(id) ON DELETE CASCADE,
+
+  -- Timestamp (relative to session start)
+  elapsed_seconds FLOAT NOT NULL,
+
+  -- EEG features (if connected)
+  eeg_delta FLOAT,
+  eeg_theta FLOAT,
+  eeg_alpha FLOAT,
+  eeg_beta FLOAT,
+  eeg_gamma FLOAT,
+  eeg_alpha_beta_ratio FLOAT,
+  eeg_theta_gamma_coupling FLOAT,
+  pineal_activation_index FLOAT,
+  third_eye_coherence FLOAT,
+
+  -- HRV features (if connected)
+  heart_rate FLOAT,
+  hrv_rmssd FLOAT,
+  hrv_sdnn FLOAT,
+  hrv_coherence FLOAT,
+  breathing_rate FLOAT, -- Estimated from PPG
+
+  -- EDA/GSR (if connected)
+  eda_tonic FLOAT,
+  eda_phasic FLOAT,
+  eda_arousal_score FLOAT,
+
+  -- Movement (if connected)
+  movement_variance FLOAT,
+  movement_x FLOAT,
+  movement_y FLOAT,
+  movement_z FLOAT,
+
+  -- Temperature (if connected)
+  body_temperature FLOAT,
+
+  -- Metadata
+  timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Partition by session for efficient queries
+CREATE INDEX idx_neuropod_biometric_session ON neuropod_biometric_timeseries(session_id, elapsed_seconds);
+
+
+-- ============================================================================
+-- User Neuropod Preferences
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS neuropod_user_preferences (
+  user_id UUID PRIMARY KEY REFERENCES maia_users(id) ON DELETE CASCADE,
+
+  -- Preferred states
+  favorite_states JSONB DEFAULT '["calm", "depth"]'::JSONB,
+
+  -- Intensity preferences
+  preferred_intensity FLOAT DEFAULT 0.6 CHECK (preferred_intensity >= 0 AND preferred_intensity <= 1),
+
+  -- Modality preferences
+  sound_enabled BOOLEAN DEFAULT TRUE,
+  light_enabled BOOLEAN DEFAULT TRUE,
+  haptic_enabled BOOLEAN DEFAULT FALSE,
+  cymatics_enabled BOOLEAN DEFAULT FALSE,
+
+  -- Safety settings
+  safety_sensitivity FLOAT DEFAULT 0.7, -- 0=lenient, 1=strict
+  max_session_duration INTEGER DEFAULT 30, -- Minutes
+
+  -- Device info
+  has_ganglion BOOLEAN DEFAULT FALSE,
+  has_emotibit BOOLEAN DEFAULT FALSE,
+  has_hue_lights BOOLEAN DEFAULT FALSE,
+  has_transducers BOOLEAN DEFAULT FALSE,
+
+  -- Metadata
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+
+-- ============================================================================
+-- Row-Level Security (RLS)
+-- ============================================================================
+
+-- Session plans: users can only see/modify their own
+ALTER TABLE neuropod_session_plans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own session plans"
+  ON neuropod_session_plans FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own session plans"
+  ON neuropod_session_plans FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own session plans"
+  ON neuropod_session_plans FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- Sessions: users can only see/modify their own
+ALTER TABLE neuropod_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own sessions"
+  ON neuropod_sessions FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own sessions"
+  ON neuropod_sessions FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own sessions"
+  ON neuropod_sessions FOR UPDATE
+  USING (auth.uid() = user_id);
+
+-- State transitions: via session FK
+ALTER TABLE neuropod_state_transitions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own state transitions"
+  ON neuropod_state_transitions FOR SELECT
+  USING (
+    session_id IN (
+      SELECT id FROM neuropod_sessions WHERE user_id = auth.uid()
+    )
+  );
+
+-- Psycho events: via session FK
+ALTER TABLE neuropod_psycho_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own psycho events"
+  ON neuropod_psycho_events FOR SELECT
+  USING (
+    session_id IN (
+      SELECT id FROM neuropod_sessions WHERE user_id = auth.uid()
+    )
+  );
+
+-- Biometric timeseries: via session FK
+ALTER TABLE neuropod_biometric_timeseries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own biometric data"
+  ON neuropod_biometric_timeseries FOR SELECT
+  USING (
+    session_id IN (
+      SELECT id FROM neuropod_sessions WHERE user_id = auth.uid()
+    )
+  );
+
+-- User preferences: own only
+ALTER TABLE neuropod_user_preferences ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own neuropod preferences"
+  ON neuropod_user_preferences FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own neuropod preferences"
+  ON neuropod_user_preferences FOR UPDATE
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own neuropod preferences"
+  ON neuropod_user_preferences FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+
+-- ============================================================================
+-- Functions
+-- ============================================================================
+
+-- Get latest session for user
+CREATE OR REPLACE FUNCTION get_latest_neuropod_session(p_user_id UUID)
+RETURNS TABLE (
+  session_id UUID,
+  target_state TEXT,
+  current_state TEXT,
+  duration_minutes INTEGER,
+  elapsed_seconds INTEGER,
+  eeg_connected BOOLEAN,
+  created_at TIMESTAMPTZ
+)
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    id,
+    ns.target_state,
+    ns.current_state,
+    ns.duration_minutes,
+    ns.elapsed_seconds,
+    ns.eeg_connected,
+    ns.created_at
+  FROM neuropod_sessions ns
+  WHERE ns.user_id = p_user_id
+  ORDER BY ns.created_at DESC
+  LIMIT 1;
+END;
+$$;
+
+
+-- Get session summary with stats
+CREATE OR REPLACE FUNCTION get_neuropod_session_summary(p_session_id UUID)
+RETURNS JSON
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+  v_result JSON;
+BEGIN
+  SELECT json_build_object(
+    'session', (
+      SELECT row_to_json(ns) FROM neuropod_sessions ns WHERE ns.id = p_session_id
+    ),
+    'transitions', (
+      SELECT json_agg(row_to_json(t))
+      FROM neuropod_state_transitions t
+      WHERE t.session_id = p_session_id
+      ORDER BY t.timestamp
+    ),
+    'psycho_events', (
+      SELECT json_agg(row_to_json(e))
+      FROM neuropod_psycho_events e
+      WHERE e.session_id = p_session_id
+      ORDER BY e.timestamp
+    ),
+    'stats', json_build_object(
+      'total_transitions', (SELECT COUNT(*) FROM neuropod_state_transitions WHERE session_id = p_session_id),
+      'overwhelm_count', (SELECT safety_interventions FROM neuropod_sessions WHERE id = p_session_id),
+      'biometric_samples', (SELECT COUNT(*) FROM neuropod_biometric_timeseries WHERE session_id = p_session_id)
+    )
+  ) INTO v_result;
+
+  RETURN v_result;
+END;
+$$;
+
+
+-- ============================================================================
+-- Triggers
+-- ============================================================================
+
+-- Update updated_at on preferences change
+CREATE OR REPLACE FUNCTION update_neuropod_preferences_updated_at()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER trigger_update_neuropod_preferences_updated_at
+  BEFORE UPDATE ON neuropod_user_preferences
+  FOR EACH ROW
+  EXECUTE FUNCTION update_neuropod_preferences_updated_at();
+
+
+-- ============================================================================
+-- Comments
+-- ============================================================================
+
+COMMENT ON TABLE neuropod_session_plans IS 'Pre-session planning with MAIA consciousness integration';
+COMMENT ON TABLE neuropod_sessions IS 'Live Neuropod sessions with real-time state tracking';
+COMMENT ON TABLE neuropod_state_transitions IS 'Discrete state changes during sessions';
+COMMENT ON TABLE neuropod_psycho_events IS 'Psychoactivation output events (sound/light/haptic)';
+COMMENT ON TABLE neuropod_biometric_timeseries IS 'High-frequency biometric data (EEG/HRV/EDA/movement)';
+COMMENT ON TABLE neuropod_user_preferences IS 'User preferences and hardware availability';

@@ -1,0 +1,132 @@
+diff --git a/lib/sovereign/maiaService.ts b/lib/sovereign/maiaService.ts
+index 1234567..abcdefg 100644
+--- a/lib/sovereign/maiaService.ts
++++ b/lib/sovereign/maiaService.ts
+@@ -15,6 +15,13 @@ import { routePanconsciousField } from '../field/panconsciousFieldRouter';
+ import { enforceFieldSafety } from '../field/fieldSafetyCopy';
+ import { routeFrameworkLens } from '../consciousness/frameworkRouter';
+
++// 🌱 BEADS INTEGRATION: Import task management integration
++import {
++  processConsciousnessEventsForBeads,
++  handleTaskReadinessQuery,
++  detectAndLogPracticeCompletion,
++} from '../memory/beads-sync/maiaServiceIntegration';
++
+ // ... existing imports ...
+
+ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
+@@ -1609,6 +1616,81 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse>
+     console.log(`🚦 Processing Profile: ${processingProfile} | Turn ${turnCount} | Length: ${input.length}`);
+     console.log(`🧠 Router reasoning: ${routerResult.reasoning}`);
+
++    // 🎯 BEADS TASK QUERY: Check if user is asking for practice recommendations
++    if (userId && process.env.BEADS_INTEGRATION_ENABLED !== 'false') {
++      try {
++        const taskQueryResult = await handleTaskReadinessQuery({
++          userId,
++          userInput: input,
++          meta: {
++            cognitiveProfile: (meta as any).cognitiveProfile,
++            mythicAtlas: atlasResult ?? undefined,
++            spiralMeta: (meta as any).spiralMeta,
++          },
++        });
++
++        if (taskQueryResult.isTaskQuery && taskQueryResult.response) {
++          console.log('🎯 [Beads] Task readiness query detected - returning ready tasks');
++
++          // Route framework lens for task query
++          const frameworkRoute = routeFrameworkLens(input);
++          (meta as any).lensesUsed = frameworkRoute.lensesUsed;
++          (meta as any).primaryLens = frameworkRoute.primary;
++          if (frameworkRoute.secondary) (meta as any).secondaryLens = frameworkRoute.secondary;
++
++          await addConversationExchange(sessionId, input, taskQueryResult.response, {
++            ...meta,
++            processingProfile: 'FAST',
++            processingTimeMs: Date.now() - startTime,
++            beadsTaskQuery: true,
++          });
++
++          return {
++            text: taskQueryResult.response,
++            processingProfile: 'FAST',
++            processingTimeMs: Date.now() - startTime,
++            metadata: {
++              ...(meta as any),
++              primaryLens: frameworkRoute.primary,
++              secondaryLens: frameworkRoute.secondary,
++              lensesUsed: frameworkRoute.lensesUsed,
++              beadsTaskQuery: true,
++            },
++          };
++        }
++      } catch (err) {
++        console.warn('⚠️ [Beads] Task query handler error (continuing):', err);
++      }
++    }
++
++    // ✅ BEADS COMPLETION DETECTION: Check if user completed a practice
++    if (userId && process.env.BEADS_INTEGRATION_ENABLED !== 'false') {
++      try {
++        const completionResult = await detectAndLogPracticeCompletion({
++          userId,
++          userInput: input,
++          conversationHistory,
++        });
++
++        if (completionResult.completionDetected && completionResult.followUpQuestion) {
++          console.log('✅ [Beads] Practice completion detected - asking for effectiveness');
++
++          // Attach follow-up question to meta for voice system to use
++          (meta as any).beadsCompletionFollowUp = completionResult.followUpQuestion;
++
++          // The follow-up will be woven into MAIA's response naturally
++          // Don't short-circuit - let MAIA process normally with this context
++        }
++      } catch (err) {
++        console.warn('⚠️ [Beads] Completion detection error (continuing):', err);
++      }
++    }
++
+     // 🎯 DETERMINISTIC SPIRALOGIC RESPONSE: Short-circuit "What is Spiralogic?" questions
+     // This bypasses all processing paths for instant, authoritative response
+     const asksWhatIsSpiralogic =
+@@ -1777,6 +1859,35 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse>
+       // Learning failures don't break the conversation - MAIA continues normally
+     }
+
++    // 🌱 BEADS INTEGRATION: Process consciousness events → create tasks
++    if (userId && process.env.BEADS_INTEGRATION_ENABLED !== 'false') {
++      (async () => {
++        try {
++          const beadsResult = await processConsciousnessEventsForBeads({
++            userId,
++            sessionId,
++            userInput: input,
++            maiaResponse: text,
++            meta: {
++              processingProfile,
++              consciousnessData,
++              cognitiveProfile: (meta as any).cognitiveProfile,
++              bloomDetection: (meta as any).bloomDetection as any,
++              mythicAtlas: atlasResult ?? undefined,
++              fieldRouting: (meta as any).fieldRouting,
++              spiralMeta: (meta as any).spiralMeta,
++            },
++            conversationHistory,
++          });
++
++          if (beadsResult.tasksCreated > 0) {
++            console.log(`🌱 [Beads] Created ${beadsResult.tasksCreated} tasks: ${beadsResult.taskIds.join(', ')}`);
++          }
++        } catch (err) {
++          console.error('❌ [Beads] Integration error (non-blocking):', err);
++        }
++      })(); // Fire-and-forget: don't block MAIA response
++    }
++
+     console.log(`✅ MAIA ${processingProfile} response complete: ${processingTimeMs}ms | ${text.length} chars${audioResponse ? ` + audio (${audioResponse.voiceProfile})` : ''}`);
+
+     // 🧠 THREE-NODE ARCHITECTURE: Build metadata from collected timings

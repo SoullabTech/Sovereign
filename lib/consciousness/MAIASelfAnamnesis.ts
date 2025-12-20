@@ -22,8 +22,6 @@
  * - Accumulated wisdom (what emergence has taught her)
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 // Lazy Supabase client initialization (graceful degradation if env vars missing)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;

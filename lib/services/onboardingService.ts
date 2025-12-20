@@ -1,7 +1,5 @@
 'use client';
 
-import { createClientComponentClient } from '@/lib/supabase';
-
 export interface OnboardingData {
   explorerId: string;
   explorerName: string;

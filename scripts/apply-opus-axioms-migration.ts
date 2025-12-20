@@ -7,7 +7,6 @@
  * Usage: npx tsx scripts/apply-opus-axioms-migration.ts
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { join } from 'path';
 

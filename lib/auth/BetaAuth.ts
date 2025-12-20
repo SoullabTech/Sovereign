@@ -4,8 +4,6 @@
  * Maps beta codes to explorer IDs
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 export interface BetaTester {
   explorerId: string;
   name: string;

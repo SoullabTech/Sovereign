@@ -1,7 +1,6 @@
 // src/controllers/survey.controller.ts
 
 import type { Response } from "express";
-import { supabase } from "../lib/supabaseClient";
 import { elementalProfileSchema } from "../lib/schemas/elemental";
 import { surveySubmissionSchema, type SurveySubmission } from "../types/survey";
 import type { AuthenticatedRequest } from "../types";

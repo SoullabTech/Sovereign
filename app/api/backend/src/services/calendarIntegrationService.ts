@@ -5,7 +5,6 @@
  */
 
 import axios from "axios";
-import { supabase } from "../lib/supabaseClient";
 import { facilitatorDashboardService } from "./facilitatorDashboardService";
 
 interface CalendarEvent {

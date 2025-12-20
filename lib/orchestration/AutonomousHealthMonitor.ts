@@ -6,7 +6,6 @@
  * DeploymentOrchestrator but can act independently for emergency situations.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { EventEmitter } from 'events';
 
 const supabase = createClient(

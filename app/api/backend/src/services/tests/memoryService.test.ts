@@ -1,6 +1,4 @@
 import { memoryService } from "../memoryService";
-import { supabase } from "../../lib/supabase";
-
 jest.mock("../../lib/supabase");
 
 describe("memoryService", () => {

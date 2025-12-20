@@ -3,7 +3,6 @@
  * Service for managing Holoflower offering sessions with Supabase
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
 import { 
   OfferingSession, 
   OfferingTimelineItem, 

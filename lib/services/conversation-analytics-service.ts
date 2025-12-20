@@ -3,8 +3,6 @@
  * Saves conversations with full voice and model analytics metadata to Supabase
  */
 
-import { createClient } from '@/lib/supabase';
-
 interface ConversationAnalytics {
   // Core conversation data
   userId: string;

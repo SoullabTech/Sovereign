@@ -691,6 +691,4 @@ export function setupFacilitatorDashboardWebSocket(server: Server) {
 }
 
 // Import supabase
-import { supabase } from "../lib/supabaseClient";
-
 export { facilitatorDashboardRouter };

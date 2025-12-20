@@ -13,7 +13,6 @@
 
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabaseClient';
 import { safetyService } from './SafetyModerationService';
 import { SafetyScreeningService } from './SafetyScreeningService';
 

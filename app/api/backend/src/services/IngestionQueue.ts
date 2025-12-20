@@ -1,7 +1,6 @@
 import { OpenAI } from 'openai';
 import * as pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';
-import { createClient } from '@supabase/supabase-js';
 import sharp from 'sharp';
 import Tesseract from 'tesseract.js';
 const openai = new OpenAI({

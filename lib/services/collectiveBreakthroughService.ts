@@ -9,8 +9,6 @@
  * Vision: "Something's moving through the field right now - others are feeling this shift too."
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 

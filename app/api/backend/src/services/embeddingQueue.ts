@@ -1,7 +1,5 @@
 import { OpenAI } from 'openai';
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabase';
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });

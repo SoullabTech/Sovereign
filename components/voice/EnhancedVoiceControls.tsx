@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Mic, MicOff, Settings, Volume2, Activity } from 'lucide-react';
-import { Analytics } from '@/lib/analytics/supabaseAnalytics';
+import { Analytics } from "@/lib/analytics/dbAnalytics";
 
 interface VoiceSettings {
   provider: 'elevenlabs' | 'openai' | 'browser';

@@ -1,6 +1,5 @@
 // Wisdom Keeper Service - Permanent sacred knowledge repository
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "../lib/supabaseClient";
 import { logger } from "../utils/logger";
 
 interface WisdomEntry {

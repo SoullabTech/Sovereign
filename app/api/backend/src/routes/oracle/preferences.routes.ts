@@ -1,7 +1,6 @@
 // backend/src/routes/oracle/preferences.routes.ts
 
 import express from "express";
-import { supabase } from "../../lib/supabase";
 import { authMiddleware, AuthenticatedRequest } from "../../middleware/auth";
 import { asyncHandler, createError } from "../../middleware/errorHandler";
 import { logger } from "../../utils/logger";

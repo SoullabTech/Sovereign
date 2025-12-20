@@ -9,7 +9,6 @@
  * but mostly unspoken. It shapes how you meet them, not what you say.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type { RelationshipEssence } from './RelationshipAnamnesis';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

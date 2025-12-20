@@ -5,7 +5,6 @@ import {
   PlanetaryTransit,
   NatalPlacement,
 } from "../core/AstrologicalHoloflower";
-import { supabase } from "../lib/supabaseClient";
 import axios from "axios";
 import { GenerateReportFlow } from "../flows/generateReportFlow";
 import {

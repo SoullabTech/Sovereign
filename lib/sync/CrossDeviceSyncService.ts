@@ -1,11 +1,10 @@
 /**
  * Cross-Device Synchronization Service
  * Syncs personalization, emotional states, and Sacred Oracle insights across devices
- * Uses Supabase realtime subscriptions for instant updates
+ * NOTE: Needs migration to PostgreSQL realtime (pg_notify/WebSocket)
  */
 
-import { createClient } from '@/lib/supabase';
-import type { SupabaseClient, RealtimeChannel } from '@supabase/supabase-js';
+import type { DBClient, RealtimeChannel } from '@/lib/types/dbPlaceholders';
 import { PersonalizationSettings } from '../context/OraclePersonalizationContext';
 import { UnifiedEmotionalSignature } from '../voice/IntegratedEmotionalResonance';
 

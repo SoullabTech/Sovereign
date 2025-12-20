@@ -18,7 +18,6 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   Telos,
   TelosAlignment,

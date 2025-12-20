@@ -1,5 +1,4 @@
 import { IMemory, Session, Turn } from "../../core/interfaces/IMemory";
-import { supabase } from "../../lib/supabase";
 import { logger } from "../../utils/logger";
 
 export class SupabaseMemory implements IMemory {

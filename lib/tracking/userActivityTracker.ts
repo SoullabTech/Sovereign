@@ -3,8 +3,6 @@
  * Records actual user sessions for the beta monitor
  */
 
-import { createClient } from '@/lib/supabase';
-
 // In-memory store for quick access (fallback when DB is unavailable)
 const activeUsers = new Map<string, {
   userId: string;

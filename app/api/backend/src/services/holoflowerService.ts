@@ -3,7 +3,6 @@ import {
   HoloflowerState,
   HoloflowerHouse,
 } from "../core/SacredHoloflower";
-import { supabase } from "../lib/supabaseClient";
 import { WebSocketServer } from "ws";
 import { ElementType, PhaseType } from "../types";
 

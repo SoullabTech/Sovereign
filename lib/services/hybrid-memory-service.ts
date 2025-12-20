@@ -11,7 +11,6 @@
  * - Feature flag to enable/disable mem0
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { MemoryClient } from 'mem0ai';
 
 const supabase = createClient(

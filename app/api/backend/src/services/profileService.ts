@@ -1,5 +1,3 @@
-import { supabase } from "../lib/supabaseClient";
-
 export interface UserProfile {
   personal_guide_name: string;
   guide_gender: string;

@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "id": "elemental-checkin",
+    "name": "Elemental Check-In",
+    "version": "0.1.0",
+    "description": "FAST attunement + regulation-first next step.",
+    "tier": "FAST",
+    "category": "foundational",
+    "kind": "prompt",
+    "tags": ["checkin", "regulation", "elemental"],
+    "triggers": ["check in", "how am i", "state", "overwhelmed", "feeling"],
+    "elements": ["water", "earth", "air", "fire", "aether"],
+    "realms": ["MIDDLEWORLD"]
+  },
+  "eligibility": {
+    "allowedNervousSystemStates": ["window", "sympathetic"]
+  },
+  "contraindications": {
+    "nervousSystemStates": ["dorsal"],
+    "whenNotToUse": ["Acute crisis requiring referral"],
+    "hardRefusalMessageKey": "FAST_DORSAL_REFUSAL"
+  },
+  "procedure": [
+    {
+      "id": "attune",
+      "title": "Attune",
+      "instruction": "Reflect sensations/emotions/thoughts briefly; name likely element; invite one grounding breath."
+    },
+    {
+      "id": "regulate",
+      "title": "Regulate",
+      "instruction": "Offer 1 regulation step appropriate to state (orienting / breath / contact / micro-movement)."
+    },
+    {
+      "id": "next",
+      "title": "Next Step",
+      "instruction": "Offer one small action + one question for the next check-in."
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Names present state without escalation",
+    "Gives one doable regulation step",
+    "Ends with a single next question"
+  ],
+  "nextSkillHints": ["window-of-tolerance"]
+}

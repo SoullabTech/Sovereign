@@ -3,7 +3,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { createClientComponentClient } from '@/lib/supabase';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 // import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';

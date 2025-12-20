@@ -1,8 +1,6 @@
 // Real Swiss Ephemeris for accurate astronomical calculations
 import swisseph from 'swisseph';
 
-import { supabase } from "../lib/supabaseClient";
-
 // 36 Faces Decan System Integration
 import {
   calculateBirthChartDecans,

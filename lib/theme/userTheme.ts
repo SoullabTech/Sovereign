@@ -1,5 +1,3 @@
-import { createClientComponentClient } from '@/lib/supabase'
-
 export type ThemePreference = 'light' | 'dark' | 'system'
 
 /**

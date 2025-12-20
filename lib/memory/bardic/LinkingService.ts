@@ -11,7 +11,6 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   Episode,
   EpisodeRelation,

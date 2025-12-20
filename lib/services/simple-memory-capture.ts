@@ -4,8 +4,6 @@
  * Stores memories and calculates metrics on the fly
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 // Lazy-load Supabase client to ensure env vars are available
 let supabaseClient: ReturnType<typeof createClient> | null = null;
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClientComponentClient } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
 interface UserData {

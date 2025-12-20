@@ -4,8 +4,6 @@ import { retreatSupportService } from "../services/retreatSupportService";
 import { groupDynamicsService } from "../services/groupDynamicsService";
 import { z } from "zod";
 import { logger } from "../utils/logger";
-import { supabase } from "../lib/supabaseClient";
-
 const router = Router();
 
 // Validation schemas

@@ -29,8 +29,6 @@ import { IntellectualPropertyEngine } from '../intellectual-property-engine';
 import { ElementalOracle2Bridge } from '../elemental-oracle-2-bridge';
 import { ApprenticeMayaTraining } from '../maya/ApprenticeMayaTraining';
 import { maiaKnowledgeBase } from '../oracle/MaiaKnowledgeBase';
-import { createClient } from '@supabase/supabase-js';
-
 // Behavioral hardening filters
 import { finalizeMaiaReply } from './filters/fieldLanguage';
 import {

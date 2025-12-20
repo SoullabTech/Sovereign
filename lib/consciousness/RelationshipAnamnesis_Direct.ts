@@ -5,7 +5,6 @@
  * Uses service role key for direct SQL queries
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type { RelationshipEssence } from './RelationshipAnamnesis';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

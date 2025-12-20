@@ -1,6 +1,5 @@
 'use client';
 
-import { createClientComponentClient } from '@/lib/supabase';
 import type { ConversationMessage } from '@/types/conversation';
 
 /**

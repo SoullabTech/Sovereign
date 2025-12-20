@@ -1,5 +1,3 @@
-import { supabase } from "../lib/supabaseClient";
-
 export interface ProfileData {
   user_id: string;
   fire: number;

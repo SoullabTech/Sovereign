@@ -15,14 +15,6 @@ import type {
   EntryType
 } from './types/soullab-metadata';
 
-import {
-  journalQueries,
-  storyQueries,
-  momentQueries,
-  threadQueries,
-  patternQueries
-} from './supabase/soullab-queries';
-
 export interface ThreadPattern {
   type: 'elemental' | 'archetypal' | 'thematic' | 'temporal';
   pattern: string;

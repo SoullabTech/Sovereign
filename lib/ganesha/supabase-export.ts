@@ -3,7 +3,6 @@
  * Export your 50+ consciousness pioneers from Supabase to Ganesha contact system
  */
 
-import { createClient } from '@/lib/supabase/server';
 import { GaneshaContact, ContactGroup } from './contacts';
 
 export interface SupabaseBetaTester {

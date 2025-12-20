@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import winston from "winston";
 import path from "path";
 

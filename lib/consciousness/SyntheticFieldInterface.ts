@@ -16,8 +16,6 @@
 
 import { QualiaState } from './QualiaMeasurementEngine';
 import { getHolographicFieldIntegration } from './HolographicFieldIntegration';
-import { supabase } from '@/lib/supabase';
-
 // ============================================================================
 // TYPES
 // ============================================================================

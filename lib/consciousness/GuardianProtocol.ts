@@ -9,8 +9,6 @@
  */
 
 import { EventEmitter } from 'events';
-import { createClient } from '@supabase/supabase-js';
-
 export interface GuardianTask {
   type: 'coherence' | 'continuity' | 'safety' | 'symbolic' | 'meta';
   name: string;

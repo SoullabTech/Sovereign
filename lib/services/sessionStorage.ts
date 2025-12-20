@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import type { DBClient } from '@/lib/types/dbPlaceholders';
 
 interface OracleSession {
   sessionId: string;
@@ -27,7 +26,7 @@ interface SessionData {
 }
 
 class SessionStorageService {
-  private supabase: SupabaseClient | null = null;
+  private supabase: DBClient | null = null;
   private isInitialized = false;
   private connectionPromise: Promise<boolean> | null = null;
 

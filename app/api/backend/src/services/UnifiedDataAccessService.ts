@@ -8,8 +8,6 @@
  */
 
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabaseClient';
-
 export interface UserDataContext {
   userId: string;
   sessions: any[];

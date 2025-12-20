@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import { OpenAI } from 'openai';
 import { parsePDF } from '../pdf-parse-wrapper';
 import * as mammoth from 'mammoth';

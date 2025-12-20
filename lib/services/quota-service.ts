@@ -7,7 +7,6 @@
  * @module lib/services/quota-service
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type {
   UserQuota,
   UsageLogEntry,

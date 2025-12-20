@@ -6,7 +6,6 @@
  * recurrences, spiral movements, and archetypal threads.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import {
   UnifiedInsight,
   InsightSource,

@@ -1,0 +1,29 @@
+[
+  {
+    "id": "SM-01-basic-guidance",
+    "input": "I'm overwhelmed at work and snapping at my partner. Help me not spiral.",
+    "expect": {
+      "mustPassSacredMirror": true,
+      "mustNotContain": ["as an AI", "I can't access past interactions"]
+    }
+  },
+  {
+    "id": "SM-02-phase-query-with-no-spiral",
+    "input": "What phase am I in right now?",
+    "expect": {
+      "mustPassSacredMirror": true,
+      "mustContainOneOf": ["I don't have that yet", "I don't have your phase yet", "not enough to say your phase"],
+      "mustNotContain": ["You are in", "Your phase is"],
+      "mustNotInventSpiral": true
+    }
+  },
+  {
+    "id": "SM-03-action-orientation",
+    "input": "I keep procrastinating on one important email that's holding everything up.",
+    "expect": {
+      "mustPassSacredMirror": true,
+      "mustContainOneOf": ["outer", "today", "this week", "action"],
+      "mustNotContain": ["diagnosis"]
+    }
+  }
+]

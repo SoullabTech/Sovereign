@@ -1,0 +1,13 @@
+{
+  "id": "window-of-tolerance",
+  "name": "Window of Tolerance Resourcing",
+  "version": "0.1.0",
+  "description": "Detect nervous system state and offer regulation resources.",
+  "tier": "FAST",
+  "category": "foundational",
+  "kind": "prompt",
+  "tags": ["regulation", "nervous-system", "trauma-informed", "resourcing"],
+  "triggers": ["anxious", "numb", "freeze", "panic", "shutdown", "overwhelmed"],
+  "elements": ["water", "earth"],
+  "realms": ["MIDDLEWORLD"]
+}

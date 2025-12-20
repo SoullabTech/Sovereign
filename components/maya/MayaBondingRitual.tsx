@@ -6,8 +6,6 @@ import { Sparkles, Heart, Brain, Eye, Mic, Volume2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { PersonalOracleAgent } from '@/lib/agents/PersonalOracleAgent';
 import { PetalVoicePreview } from '@/components/voice/PetalVoicePreview';
-import { supabase } from '@/lib/supabaseClient';
-
 interface BondingStep {
   id: string;
   type: 'introduction' | 'resonance' | 'calibration' | 'blessing';

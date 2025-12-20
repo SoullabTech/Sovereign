@@ -15,7 +15,6 @@
  * "It is about us" - Kelly
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { OpenAI } from 'openai';
 
 const supabase = createClient(

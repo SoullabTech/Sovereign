@@ -13,8 +13,6 @@ import { ComprehensiveSafetyResult } from '../../services/ComprehensiveSafetySer
 import { AgentRegistry, AgentProfile } from './AgentRegistry';
 import { FlowMemory } from './FlowMemory';
 import { logger } from '../../utils/logger';
-import { supabase } from '../../lib/supabaseClient';
-
 export interface OrchestrationRequest {
   userId: string;
   sessionId: string;

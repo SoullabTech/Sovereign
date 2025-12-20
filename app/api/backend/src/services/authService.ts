@@ -1,6 +1,5 @@
 // oracle-backend/src/services/authService.ts
 
-import { supabase } from "../lib/supabaseClient";
 import type { AuthRequest, AuthResponse } from "../types/auth";
 
 /**

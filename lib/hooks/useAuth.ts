@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, User } from '@/lib/types/dbPlaceholders';
 
 interface OracleAgent {
   id: string;

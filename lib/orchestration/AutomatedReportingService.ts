@@ -5,7 +5,6 @@
  * Provides summaries at key intervals and decision points
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { EventEmitter } from 'events';
 
 const supabase = createClient(

@@ -1,5 +1,4 @@
 // 📁 BACKEND: /supabase/functions/oracle-ritual-response.ts
-import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 
 const supabase = createClient(

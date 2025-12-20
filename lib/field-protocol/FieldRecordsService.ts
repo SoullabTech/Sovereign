@@ -6,7 +6,6 @@
  * for consciousness observation.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type {
   FieldRecord,
   ElementType,

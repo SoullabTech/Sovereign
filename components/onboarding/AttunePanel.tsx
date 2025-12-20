@@ -4,7 +4,6 @@ import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import ToneStyleSelector from '@/components/onboarding/ToneStyleSelector'
 import ThemeToggle from '@/components/settings/ThemeToggle'
-import { createClientComponentClient } from '@/lib/supabase'
 import { soullabColors } from '@/lib/theme/soullabColors'
 import { soullabGradients, toneGradients } from '@/lib/theme/soullabGradients'
 

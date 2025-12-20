@@ -1,0 +1,13 @@
+{
+  "id": "dialectical-scaffold",
+  "name": "Dialectical Scaffold",
+  "version": "0.1.0",
+  "description": "Map polarity, hold both poles, invite synthesis without premature collapse.",
+  "tier": "CORE",
+  "category": "foundational",
+  "kind": "prompt",
+  "tags": ["polarity", "both-and", "synthesis", "dialectic", "paradox"],
+  "triggers": ["both", "either or", "can't choose", "stuck between", "paradox", "conflict"],
+  "elements": ["air", "aether"],
+  "realms": ["MIDDLEWORLD", "UPPERWORLD_SYMBOLIC"]
+}

@@ -4,7 +4,6 @@
  */
 
 import { UserMemoryService } from './UserMemoryService';
-import { createClient } from '@supabase/supabase-js';
 import { UnifiedSymbolProcessor } from './UnifiedSymbolProcessor';
 import { UnifiedDataAccessService } from './UnifiedDataAccessService';
 import { formatGreeting, suggestPoetic } from './poeticModes';

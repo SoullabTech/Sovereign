@@ -9,7 +9,6 @@
  */
 
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabaseClient';
 import { UnifiedSymbolProcessor } from './UnifiedSymbolProcessor';
 import { UnifiedDataAccessService } from './UnifiedDataAccessService';
 import { BetaSafetyGuards } from './BetaSafetyGuards';

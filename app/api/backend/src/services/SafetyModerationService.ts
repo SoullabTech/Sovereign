@@ -5,8 +5,6 @@
 
 import OpenAI from 'openai';
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabaseClient';
-
 export interface ModerationResult {
   safe: boolean;
   categories: string[];

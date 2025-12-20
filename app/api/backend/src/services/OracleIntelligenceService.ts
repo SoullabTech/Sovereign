@@ -4,7 +4,6 @@
  */
 
 import { logger } from "../utils/logger";
-import { supabase } from "../lib/supabaseClient";
 import { Mem0 } from "@mem0ai/mem0";
 import { ChatOpenAI } from "@langchain/openai";
 import { ConversationChain } from "langchain/chains";

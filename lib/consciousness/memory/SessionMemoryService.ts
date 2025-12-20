@@ -5,8 +5,6 @@
  * Enables MAIA to remember, build patterns, and provide developmental continuity.
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 interface SessionPattern {
   id?: string;
   userId: string;

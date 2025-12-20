@@ -1,7 +1,5 @@
 'use client';
 
-import { createClientComponentClient } from '@/lib/supabase';
-
 export interface ConversationMemory {
   oracleAgentId: string;
   content: string;

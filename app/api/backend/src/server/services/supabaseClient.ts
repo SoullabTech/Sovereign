@@ -1,6 +1,5 @@
 // oracle-backend/src/services/supabaseClient.ts
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import { config } from "../config";
 
 const { url, anonKey, serviceRoleKey } = config.supabase;

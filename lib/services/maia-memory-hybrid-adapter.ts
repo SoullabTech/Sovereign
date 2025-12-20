@@ -6,8 +6,6 @@
  * - If ENABLE_MEM0=true: Adds semantic search via mem0
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 // Feature flag
 const MEM0_ENABLED = process.env.ENABLE_MEM0 === 'true';
 

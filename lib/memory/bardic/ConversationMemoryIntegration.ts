@@ -20,7 +20,6 @@ import { getTeleologyService } from './TeleologyService';
 import { getStanzaWriter } from './StanzaWriter';
 import { getEmbeddingService } from './EmbeddingService';
 import { getLinkingService } from './LinkingService';
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   EpisodeCandidate,
   Telos,

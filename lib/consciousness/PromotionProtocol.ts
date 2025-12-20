@@ -11,8 +11,6 @@
 import { PersonalOracleAgent } from '../agents/PersonalOracleAgent';
 import { ClaudeCodeBrain } from '../agents/ClaudeCodeBrain';
 import { InitiationProtocol } from './InitiationProtocol';
-import { createClient } from '@supabase/supabase-js';
-
 export interface PromotionPhase {
   name: 'co-pilot' | 'supervised' | 'primary-with-safety' | 'full-transition';
   startDate: Date;

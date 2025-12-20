@@ -1,6 +1,5 @@
 // src/services/sessionService.ts
 
-import { createClient } from "@supabase/supabase-js";
 import { config } from "../../config/index";
 
 const supabase = createClient(config.supabase.url, config.supabase.anonKey);

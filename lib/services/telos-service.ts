@@ -7,7 +7,6 @@
  * @module lib/services/telos-service
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Telos, TelosAlignmentLog } from '../types';
 
 // ============================================================================

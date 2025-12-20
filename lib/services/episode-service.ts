@@ -7,7 +7,6 @@
  * @module lib/services/episode-service
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type {
   Episode,
   EpisodeVector,

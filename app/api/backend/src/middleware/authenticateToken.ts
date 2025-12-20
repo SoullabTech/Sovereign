@@ -1,5 +1,4 @@
 import { Response, NextFunction } from "express";
-import { supabase } from "../lib/supabase";
 import { AuthenticationError } from "../utils/errors";
 import type { AuthenticatedRequest } from "../types/index";
 import logger from "../utils/logger";

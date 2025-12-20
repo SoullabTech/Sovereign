@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesis';
-import { getBrowserSupabaseClient } from '@/lib/supabaseBrowserClient';
-
 interface LiveEngagementMetrics {
   // Current session tracking
   currentUser: {

@@ -7,7 +7,6 @@
  * @module lib/services/microact-service
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import type { Microact, MicroactLog } from '../types';
 
 // ============================================================================

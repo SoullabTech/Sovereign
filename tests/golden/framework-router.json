@@ -1,0 +1,22 @@
+[
+  {
+    "id": "FR-01-explicit-jung",
+    "input": "Can you take a Jungian lens on this recurring dream?",
+    "expect": { "primaryLens": "Jung" }
+  },
+  {
+    "id": "FR-02-cbt-loop",
+    "input": "I keep catastrophizing and spiraling in thought loops. Help me reframe.",
+    "expect": { "primaryLens": "CBT" }
+  },
+  {
+    "id": "FR-03-somatic-trauma",
+    "input": "My body freezes when I try to speak up. I go numb. What do I do?",
+    "expect": { "primaryLens": "Somatic" }
+  },
+  {
+    "id": "FR-04-relationship-parts",
+    "input": "My partner and I keep fighting. Part of me wants to leave and part of me panics.",
+    "expect": { "primaryLens": "Relational" }
+  }
+]

@@ -16,7 +16,6 @@
  * - Reconstitution: Present artifacts in way that evokes, not just lists
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   RecallResult,
   Episode,

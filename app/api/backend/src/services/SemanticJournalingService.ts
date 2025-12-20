@@ -6,8 +6,6 @@
 import { logger } from '../utils/logger';
 import { soulMemoryService } from './soulMemoryService';
 import { Memory, MemoryType, ElementalType } from '../memory/SoulMemorySystem';
-import { supabase } from '../lib/supabaseClient';
-
 // LlamaIndex-style interfaces for semantic processing
 export interface SemanticPattern {
   id: string;

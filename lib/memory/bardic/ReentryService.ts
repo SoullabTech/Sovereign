@@ -10,7 +10,6 @@
  * Principle: Memory as RE-ENTRY (ritual reconstitution) not RETRIEVAL (extraction)
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   ReentryResult,
   Episode,

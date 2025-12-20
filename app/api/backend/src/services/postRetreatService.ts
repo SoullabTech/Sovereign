@@ -1,6 +1,5 @@
 // Post-Retreat Service - Long-term transformation support
 import { v4 as uuidv4 } from "uuid";
-import { supabase } from "../lib/supabaseClient";
 import { logger } from "../utils/logger";
 import { soullabFounderAgent } from "../core/agents/soullabFounderAgent";
 import { PersonalOracleAgent } from "../core/agents/adjusterAgent";

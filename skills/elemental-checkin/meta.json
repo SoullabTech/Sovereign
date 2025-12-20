@@ -1,0 +1,13 @@
+{
+  "id": "elemental-checkin",
+  "name": "Elemental Check-In",
+  "version": "0.1.0",
+  "description": "FAST attunement + regulation-first next step.",
+  "tier": "FAST",
+  "category": "foundational",
+  "kind": "prompt",
+  "tags": ["checkin", "regulation", "elemental"],
+  "triggers": ["check in", "how am i", "state", "overwhelmed", "feeling"],
+  "elements": ["water", "earth", "air", "fire", "aether"],
+  "realms": ["MIDDLEWORLD"]
+}

@@ -3,7 +3,6 @@ import {
   HoloflowerState,
   HoloflowerHouse,
 } from "../core/ElementalAlchemyHoloflower";
-import { supabase } from "../lib/supabaseClient";
 import { WebSocketServer } from "ws";
 
 interface UserAlchemyState {

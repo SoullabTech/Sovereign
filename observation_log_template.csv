@@ -1,0 +1,20 @@
+Date,Phase,Dominant Element,Session ID,Environment/Mood,Intent for the Day
+,,,,,
+
+Time,Input/User Statement,Skill Triggered,Outcome,Felt Alignment,Notes/Observations/Felt Shift
+09:14,"Feeling foggy this morning.",elemental-checkin,success,✅,"Grounded me quickly; calm returned"
+10:52,"Can we slow down?",window-of-tolerance,success,✅,"Perfect pacing adjustment"
+13:47,"Too many tabs open!",dialectical-scaffold,soft_fail,⚠,"Prompt didn't quite fit"
+18:10,"Ready to integrate the day.","elemental-checkin + Beads ritual",success,✅,"Strong closure feeling"
+22:03,"I can't settle.",window-of-tolerance,hard_refusal,❌,"Possibly over-protective gate"
+
+Emergent Pattern,Possible Cause,Hypothesis/Next Action
+"Check-ins often pair with tolerance regulation","Shared element = Water","Consider composite Flow Regulation proto-agent"
+"Hard refusals at night","Circadian fatigue","Adjust gating thresholds after 20:00"
+
+End-of-Day Reflection
+Most Alive Skill:
+Skill That Mis-Fired:
+Overall Coherence Level (1-10):
+Surprises/Insights:
+Candidate for New Skill:

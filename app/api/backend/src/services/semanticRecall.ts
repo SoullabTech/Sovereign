@@ -1,4 +1,3 @@
-import { supabase } from "../lib/supabase";
 import OpenAI from "openai";
 
 const client = new OpenAI({

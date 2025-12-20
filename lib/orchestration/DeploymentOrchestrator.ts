@@ -6,7 +6,6 @@
  * without human intervention (unless emergency conditions are met).
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { EventEmitter } from 'events';
 
 const supabase = createClient(

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "🔒 Sovereignty pre-commit check..."
+npm run check:no-supabase
+
+if [ $? -eq 0 ]; then
+  echo "✅ Sovereignty check passed"
+  exit 0
+else
+  echo "❌ Sovereignty check failed - commit blocked"
+  echo "Fix violations or run 'npm run check:no-supabase' for details"
+  exit 1
+fi

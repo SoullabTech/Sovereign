@@ -1,8 +1,6 @@
 import React from 'react';
 import { PersonalOracleAgent } from '@/lib/agents/PersonalOracleAgent';
 import type { Element, Mood, EnergyState } from '@/lib/types/oracle';
-import { supabase } from '@/lib/supabaseClient';
-
 // Ritual types and their properties
 export interface Ritual {
   id: string;

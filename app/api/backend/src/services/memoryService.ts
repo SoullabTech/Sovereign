@@ -1,5 +1,4 @@
 import { extractSymbolicTags } from "./symbolService";
-import { supabase } from "../lib/supabaseClient";
 import { embeddingQueue } from "./embeddingQueue";
 import { logger } from "../utils/logger";
 

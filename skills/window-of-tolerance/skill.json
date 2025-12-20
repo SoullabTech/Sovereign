@@ -1,0 +1,49 @@
+{
+  "meta": {
+    "id": "window-of-tolerance",
+    "name": "Window of Tolerance Resourcing",
+    "version": "0.1.0",
+    "description": "Detect nervous system state and offer regulation resources.",
+    "tier": "FAST",
+    "category": "foundational",
+    "kind": "prompt",
+    "tags": ["regulation", "nervous-system", "trauma-informed", "resourcing"],
+    "triggers": ["anxious", "numb", "freeze", "panic", "shutdown", "overwhelmed"],
+    "elements": ["water", "earth"],
+    "realms": ["MIDDLEWORLD"]
+  },
+  "eligibility": {
+    "allowedNervousSystemStates": ["dorsal", "sympathetic", "window"]
+  },
+  "contraindications": {
+    "whenNotToUse": ["Medical emergency", "Active self-harm intent"],
+    "hardRefusalMessageKey": "SAFETY_CRISIS_REFERRAL"
+  },
+  "procedure": [
+    {
+      "id": "detect",
+      "title": "Detect State",
+      "instruction": "Identify if they're in sympathetic (anxious/activated), dorsal (numb/shutdown), or window (regulated)."
+    },
+    {
+      "id": "resource",
+      "title": "Offer Resource",
+      "instruction": "Provide one nervous-system-appropriate regulation resource (grounding for sympathetic, gentle activation for dorsal, sustaining for window)."
+    },
+    {
+      "id": "next",
+      "title": "Check-In",
+      "instruction": "Invite them to notice any shift and ask one question about what they need next."
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Accurately names nervous system state",
+    "Offers state-appropriate regulation",
+    "Invites somatic noticing"
+  ],
+  "nextSkillHints": ["somatic-anchoring", "elemental-checkin"]
+}

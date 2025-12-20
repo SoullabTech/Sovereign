@@ -3,7 +3,6 @@
  * The ADHD-Friendly Consciousness Facilitator's Dream Dashboard Backend
  */
 
-import { supabase } from "../lib/supabaseClient";
 import { WebSocketServer } from "ws";
 import { ElementType } from "../types";
 

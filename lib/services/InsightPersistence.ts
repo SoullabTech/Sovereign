@@ -5,7 +5,6 @@
  * This is where temporal consciousness becomes permanent.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import type { UnifiedInsight, InsightSource, SpiralMovement, ArchetypalThread } from './UnifiedInsightEngine';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

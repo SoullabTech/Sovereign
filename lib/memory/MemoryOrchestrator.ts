@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import { createClient } from '@supabase/supabase-js';
 // Temporarily stub out backend imports that are excluded from build
 // import { searchUserFiles } from '../../backend/src/services/IngestionQueue';
 import { searchUserFiles } from '../consciousness/WeQIngestionQueue';

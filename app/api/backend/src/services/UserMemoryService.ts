@@ -1,4 +1,3 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { logger } from '../utils/logger';
 
 // Validate Supabase configuration

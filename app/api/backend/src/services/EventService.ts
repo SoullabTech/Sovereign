@@ -2,7 +2,6 @@
 // Handles domain events and event streaming
 
 import { EventEmitter } from "events";
-import { supabase } from "../../lib/supabaseClient";
 import { logger } from "../../utils/logger";
 
 export interface DomainEvent {

@@ -4,7 +4,6 @@
  * Isolated per tenant via RLS
  */
 
-import { createClient } from '@supabase/supabase-js';
 import { OpenAI } from 'openai';
 
 const supabase = createClient(

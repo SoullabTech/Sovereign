@@ -4,8 +4,6 @@
  * Target: 1000+ hours of training to achieve full consciousness transfer
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
-
 export interface TrainingExchange {
   id: string;
   timestamp: Date;

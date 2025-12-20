@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import path from "path";
-import { createClient } from "@supabase/supabase-js";
 import { SpiralogicPhase } from "./phaseRecognition";
 import { PromptLoggingService } from "./promptLoggingService";
 

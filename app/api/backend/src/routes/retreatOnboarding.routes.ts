@@ -3,8 +3,6 @@ import { Router, Request, Response } from "express";
 import { retreatOnboardingService } from "../services/retreatOnboardingService";
 import { z } from "zod";
 import { logger } from "../utils/logger";
-import { supabase } from "../lib/supabaseClient";
-
 const router = Router();
 
 // Validation schemas

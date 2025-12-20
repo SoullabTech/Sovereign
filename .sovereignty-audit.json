@@ -1,0 +1,111 @@
+{
+  "version": "2.0.0",
+  "description": "Sovereignty audit configuration with allowlists and custom rules",
+
+  "chokepointRules": {
+    "app/api/backend/src/integrations/cloud/openaiClient.ts": ["openai"],
+    "app/api/backend/src/integrations/cloud/s3Client.ts": ["@aws-sdk/client-s3", "@aws-sdk/lib-storage"],
+    "app/api/voice/openai-tts/route.ts": ["openai", "next/server", "@/lib/tts/openaiTts", "@/lib/tts/macosTts"],
+    "lib/tts/openaiTts.ts": ["openai", "@/lib/openai-client"]
+  },
+
+  "cloudProviders": [
+    "@anthropic-ai",
+    "openai",
+    "@supabase",
+    "aws-sdk",
+    "firebase",
+    "google-cloud",
+    "azure",
+    "vercel/ai-sdk"
+  ],
+
+  "allowedDependencies": {
+    "devOnly": [
+      "@anthropic-ai/sdk"
+    ],
+    "production": [
+      "openai"
+    ]
+  },
+
+  "allowedFiles": [
+    "app/api/voice/openai-tts/route.ts",
+    "lib/tts/openaiTts.ts",
+    "app/api/backend/src/integrations/cloud/openaiClient.ts",
+    "app/api/backend/src/integrations/cloud/s3Client.ts"
+  ],
+
+  "allowedDirectories": [
+    "app/api/backend/src/integrations/cloud"
+  ],
+
+  "apiKeyPatterns": [
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY",
+    "GOOGLE_API_KEY",
+    "GOOGLE_CLOUD_API_KEY",
+    "FIREBASE_API_KEY",
+    "SUPABASE_URL",
+    "SUPABASE_ANON_KEY",
+    "VERCEL_TOKEN"
+  ],
+
+  "remoteEndpoints": [
+    "api.openai.com",
+    "api.anthropic.com",
+    "supabase.co",
+    "firebase.google.com",
+    "googleapis.com"
+  ],
+
+  "allowedRemoteHosts": [
+    "localhost",
+    "127.0.0.1",
+    "0.0.0.0",
+    "::1"
+  ],
+
+  "bannedServices": [
+    "supabase",
+    "Supabase"
+  ],
+
+  "excludePatterns": [
+    "node_modules/",
+    ".next/",
+    "dist/",
+    "build/",
+    "out/",
+    "coverage/",
+    ".git/",
+    "ios/",
+    "android/",
+    "app/ios/",
+    "app/android/",
+    "*.md",
+    ".env*",
+    "Community-Commons/",
+    "docs/",
+    "database/",
+    "scripts/audit-sovereignty.ts",
+    ".sovereignty-audit.json",
+    ".claude/",
+    "artifacts/",
+    "backups/"
+  ],
+
+  "monorepo": {
+    "enabled": false,
+    "workspaces": []
+  },
+
+  "output": {
+    "format": "json",
+    "path": "artifacts/sovereignty-audit.json",
+    "includeTimestamp": true
+  },
+
+  "strictMode": false,
+  "failOn": ["critical"]
+}

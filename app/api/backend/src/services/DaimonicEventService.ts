@@ -6,7 +6,7 @@
  * and contribution to the larger field.
  */
 
-import { supabase } from '../config/supabase';
+import { supabase } from "../config/db";
 import { logger } from '../utils/logger';
 import { DaimonicOtherness } from './DaimonicDialogue';
 import { ElementalDialogue } from './ElementalDialogue';

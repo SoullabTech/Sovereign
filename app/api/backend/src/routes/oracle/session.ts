@@ -1,5 +1,4 @@
 import express from "express";
-import { supabase } from "../../lib/supabaseClient";
 const router = express.Router();
 
 router.post("/", async (req, res) => {

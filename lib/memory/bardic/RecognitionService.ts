@@ -9,7 +9,6 @@
  * - Affect resonance
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   RecognitionInput,
   EpisodeCandidate,

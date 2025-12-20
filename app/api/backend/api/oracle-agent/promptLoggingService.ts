@@ -1,4 +1,3 @@
-import { createClient } from "@supabase/supabase-js";
 import { SpiralogicPhase } from "./phaseRecognition";
 
 interface PromptLogEntry {

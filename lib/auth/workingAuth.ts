@@ -1,8 +1,5 @@
 "use client";
 
-import { createClient } from '@supabase/supabase-js';
-import { User, AuthError } from "@supabase/supabase-js";
-
 /**
  * Working Authentication Service
  * Provides actual Supabase authentication with OAuth support

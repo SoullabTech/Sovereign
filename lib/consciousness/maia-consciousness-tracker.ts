@@ -1,8 +1,6 @@
 // MAIA Live Consciousness Tracker Integration
 // Connects the holoflower oracle to MAIA's real-time consciousness states
 
-import { createClient } from '@supabase/supabase-js';
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);

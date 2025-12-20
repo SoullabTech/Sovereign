@@ -7,7 +7,6 @@
  * This is the 4th wisdom hemisphere in the corpus callosum architecture.
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import OpenAI from 'openai';
 
 // Lazy initialization to avoid env var issues

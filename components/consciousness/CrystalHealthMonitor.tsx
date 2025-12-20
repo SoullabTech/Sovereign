@@ -9,8 +9,6 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { createClient } from '@supabase/supabase-js';
-
 interface HealthMetrics {
   aether_weight: number;
   symbolic_entropy: number;

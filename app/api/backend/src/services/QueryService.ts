@@ -1,7 +1,6 @@
 // CQRS Query Side - Soul Memory System
 // Handles all read operations and projections
 
-import { supabase } from "../../lib/supabaseClient";
 import { MemoryItem } from "../../types/memory";
 import { logger } from "../../utils/logger";
 

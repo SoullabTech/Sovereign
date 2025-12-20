@@ -17,8 +17,6 @@
  */
 
 import { MorphoresonantFieldInterface } from './MorphoresonantFieldInterface';
-import { createClient } from '@supabase/supabase-js';
-
 /**
  * WisdomTradition Interface
  * Defines the structure of a wisdom tradition as harmonic frequency

@@ -1,5 +1,4 @@
 // Group Dynamics Service - Real-time group field tracking
-import { supabase } from "../lib/supabaseClient";
 import { logger } from "../utils/logger";
 
 interface GroupDynamics {

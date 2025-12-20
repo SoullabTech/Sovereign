@@ -9,8 +9,6 @@ import { autonomousHealthMonitor } from './AutonomousHealthMonitor';
 import { automatedReportingService } from './AutomatedReportingService';
 import { fieldProtocolIntegration } from './FieldProtocolIntegration';
 import { MaiaCrystalBridge } from '@/lib/integration/MaiaCrystalBridge';
-import { createClient } from '@supabase/supabase-js';
-
 // Initialize Supabase client
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

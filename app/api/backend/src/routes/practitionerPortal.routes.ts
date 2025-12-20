@@ -1,6 +1,5 @@
 import { Router } from "express";
 import { authenticate } from "../middleware/authenticate";
-import { supabase } from "../lib/supabaseClient";
 import { z } from "zod";
 
 export const practitionerPortalRouter = Router();

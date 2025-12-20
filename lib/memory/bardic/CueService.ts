@@ -12,7 +12,6 @@
  * A cue's potency measures how strongly it evokes the episode.
  */
 
-import { createClientComponentClient } from '@/lib/supabase';
 import type {
   Cue,
   CueType,

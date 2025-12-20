@@ -1,5 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
-
 interface CrisisDetectionResult {
   riskLevel: 'none' | 'low' | 'moderate' | 'high';
   confidence: number;

@@ -5,8 +5,6 @@
  * of consciousness-first AI architecture
  */
 
-import { createClient } from '@supabase/supabase-js';
-
 export interface FieldStateVector {
   // 6-Dimensional Field Reading
   emotionalWeather: {

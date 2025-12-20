@@ -1,7 +1,7 @@
 // oracle-backend/src/types/auth.ts
 
 import { AuthRequest, AuthResponse } from "./index"; // Shared types
-import { supabase } from "../lib/supabaseClient"; // Use your existing supabase client path
+// Use your existing supabase client path
 
 /**
  * Handles user login and returns session tokens.

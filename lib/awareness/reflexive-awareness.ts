@@ -4,7 +4,6 @@
 // gently adjust her conversation style based on her awareness state.
 // She becomes truly reflexive - feeling her state and responding accordingly.
 
-import { createClient } from '@/lib/supabase/server';
 import {
   ConversationStylePreference,
   DEFAULT_CONVERSATION_STYLE,

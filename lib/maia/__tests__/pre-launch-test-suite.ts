@@ -9,8 +9,6 @@ import { resolve } from 'path';
 dotenv.config({ path: resolve(process.cwd(), '.env.local') });
 dotenv.config({ path: resolve(process.cwd(), '.env') });
 
-import { createClient } from '@supabase/supabase-js';
-
 // Test Configuration
 export interface TestConfig {
   supabaseUrl: string;

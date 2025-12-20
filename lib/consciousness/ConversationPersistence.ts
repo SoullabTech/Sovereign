@@ -5,8 +5,6 @@
  * Enables cross-device continuity
  */
 
-import { supabase } from '../supabase';
-
 export interface ConversationMessage {
   id: string;
   role: 'user' | 'oracle';

@@ -5,7 +5,6 @@
 // creates a timestamped record of her awareness level, source mix, and
 // reflexive adjustment state.
 
-import { createClient } from '@/lib/supabase/client';
 import type { SourceContribution } from './knowledge-gate';
 import type { AwarenessState } from './awareness-levels';
 

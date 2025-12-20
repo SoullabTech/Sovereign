@@ -13,7 +13,6 @@
  * @module lib/__tests__/bardic-memory.integration
  */
 
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { config } from 'dotenv';
 import { join } from 'path';
 import {

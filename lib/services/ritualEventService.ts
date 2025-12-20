@@ -3,7 +3,6 @@
 
 "use strict";
 
-import { createClient } from '@/lib/supabase';
 import { firstTruthAnalyzer } from './firstTruthAnalyzer';
 import { elementalResonanceTracker } from './elementalResonanceTracker';
 

@@ -1,6 +1,4 @@
 import { Router } from "express";
-import { supabase } from "../lib/supabaseClient";
-
 const router = Router();
 
 router.get("/profile", async (req, res) => {

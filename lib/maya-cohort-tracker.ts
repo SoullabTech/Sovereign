@@ -1,5 +1,3 @@
-import { supabase } from './supabase/client';
-
 export type CohortType = 
   | 'contemplative-practitioners'
   | 'ai-curious'

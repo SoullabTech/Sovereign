@@ -6,7 +6,6 @@
  * field dynamics and elemental resonance.
  */
 
-import { createClient } from '@supabase/supabase-js';
 import {
   FieldRecord,
   Element,

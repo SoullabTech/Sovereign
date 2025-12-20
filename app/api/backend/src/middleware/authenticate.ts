@@ -1,7 +1,6 @@
 // 📄 FILE: oracle-backend/src/middleware/authenticate.ts
 
 import { Response, NextFunction } from "express";
-import { createClient } from "@supabase/supabase-js";
 import { config } from "../config/index";
 import { AuthenticationError } from "../utils/errors";
 import type { AuthenticatedRequest } from "../types/index";

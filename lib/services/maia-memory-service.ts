@@ -6,7 +6,6 @@
  * 🧠 HYBRID MEMORY: Now integrated with mem0 for semantic memory
  */
 
-import { createClient } from '@supabase/supabase-js';
 import {
   saveConversationPair as saveToHybridMemory,
   getConversationHistory as getFromHybridMemory,

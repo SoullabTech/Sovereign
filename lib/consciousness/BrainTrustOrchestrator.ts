@@ -18,8 +18,6 @@ import { ClaudeCodeBrain } from '../agents/ClaudeCodeBrain';
 import { PersonalOracleAgent } from '../agents/PersonalOracleAgent';
 import { ParallelFieldProcessor } from '../fieldProtocol/ParallelFieldProcessor';
 import { EventEmitter } from 'events';
-import { createClient } from '@supabase/supabase-js';
-
 export interface BrainTrustConfiguration {
   // Current roles
   primary: 'standard-claude' | 'claude-code';

@@ -4,8 +4,6 @@ import { Router } from "express";
 import { z } from "zod";
 import { authenticateToken } from "../middleware/authenticateToken";
 import type { AuthenticatedRequest } from "../types";
-import { supabase } from "../lib/supabaseClient";
-
 const router = Router();
 
 // Zod schema for settings

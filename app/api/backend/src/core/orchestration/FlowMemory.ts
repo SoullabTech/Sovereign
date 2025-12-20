@@ -4,7 +4,6 @@
  */
 
 import { FlowType, FlowRecord } from './OrchestrationEngine';
-import { supabase } from '../../lib/supabaseClient';
 import { logger } from '../../utils/logger';
 
 export interface FlowPattern {

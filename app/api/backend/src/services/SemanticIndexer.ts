@@ -15,7 +15,6 @@
  */
 
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabase';
 import { embeddingQueue } from './embeddingQueue';
 import { OpenAI } from 'openai';
 

@@ -1,6 +1,4 @@
 import type { Element } from '@/lib/types/oracle';
-import { supabase } from '@/lib/supabaseClient';
-
 // Voice profiles mapped to archetypes and elements
 export interface VoiceProfile {
   id: string;

@@ -1,7 +1,6 @@
 // Health Check and Observability Endpoints
 import { Router, Request, Response } from "express";
 import { redis } from "../config/redis";
-import { supabase } from "../lib/supabaseClient";
 import { logger } from "../utils/logger";
 
 const router = Router();

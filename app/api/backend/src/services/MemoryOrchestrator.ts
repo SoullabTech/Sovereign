@@ -15,8 +15,6 @@
  */
 
 import { logger } from '../utils/logger';
-import { supabase } from '../lib/supabaseClient';
-import { semanticSearch, getJournalEntries, getSymbolThreads } from '../lib/supabaseClient';
 import { getRelevantMemories } from './semanticRecall';
 
 // Core memory interfaces

@@ -6,7 +6,6 @@ import {
   PlanetaryTransit,
   NatalPlacement,
 } from "../core/AstrologicalHoloflower";
-import { supabase } from "../lib/supabaseClient";
 import { WebSocketServer } from "ws";
 
 interface ComprehensiveBirthChart {
