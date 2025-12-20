@@ -1,260 +1,330 @@
 #!/usr/bin/env tsx
-/**
- * TYPE HEALTH AUDIT
- *
- * Analyzes TypeScript compilation errors to provide:
- * - Error count by file (ranked)
- * - Error count by type (TS2307, TS2339, etc.)
- * - Missing module dependencies
- * - Progress tracking over time
- *
- * Usage:
- *   npm run typecheck -- --pretty false > artifacts/typecheck-full.log 2>&1
- *   tsx scripts/audit-typehealth.ts
- *
- * Or combined:
- *   npm run audit:typehealth
- */
+// scripts/audit-typehealth.ts
+// Type health analyzer - ranks modules by TypeScript error density
+// Helps prioritize type cleanup by identifying "hot spots"
 
-import fs from 'fs';
-import path from 'path';
+import { execSync } from 'child_process';
+import * as path from 'path';
+import * as fs from 'fs';
 
-interface ErrorCount {
+interface TypeErrorLocation {
   file: string;
-  count: number;
-  errors: Record<string, number>;
+  line: number;
+  column: number;
+  code: string;
+  message: string;
+}
+
+interface ModuleHealth {
+  module: string;
+  errorCount: number;
+  lineCount: number;
+  density: number; // errors per 100 lines
+  topErrors: Map<string, number>; // error code → count
+  files: string[];
 }
 
 interface TypeHealthReport {
+  timestamp: string;
   totalErrors: number;
   totalFiles: number;
-  errorsByFile: ErrorCount[];
-  errorsByType: Record<string, number>;
-  missingModules: string[];
-  topOffenders: ErrorCount[];
-  baseline?: {
-    date: string;
-    totalErrors: number;
-  };
-  delta?: number;
+  modules: ModuleHealth[];
+  topErrorCodes: Array<{ code: string; count: number; description: string }>;
+  recommendations: string[];
 }
 
-const ERROR_DESCRIPTIONS: Record<string, string> = {
-  'TS2307': 'Cannot find module',
-  'TS2339': 'Property does not exist on type',
-  'TS2741': 'Missing properties in type',
-  'TS2304': 'Cannot find name',
-  'TS2322': 'Type not assignable',
+const ERROR_CODE_DESCRIPTIONS: Record<string, string> = {
+  'TS2304': 'Cannot find name/module',
+  'TS2339': 'Property does not exist',
   'TS2345': 'Argument type mismatch',
-  'TS2740': 'Missing properties in object literal',
-  'TS7006': 'Implicit any parameter',
-  'TS18048': 'Possibly undefined',
+  'TS2740': 'Type missing required properties',
+  'TS2741': 'Property is missing in type',
+  'TS2322': 'Type not assignable',
+  'TS2307': 'Cannot find module',
   'TS2769': 'No overload matches call',
+  'TS2393': 'Duplicate function implementation',
+  'TS18048': 'Possibly undefined',
+  'TS7006': 'Implicit any type',
+  'TS1005': 'Expected comma/token (syntax)',
+  'TS1435': 'Unknown keyword (syntax)'
 };
 
-function parseTypecheckLog(logPath: string): TypeHealthReport {
-  const content = fs.readFileSync(logPath, 'utf-8');
-  const lines = content.split('\n');
-
-  const errorsByFile = new Map<string, Record<string, number>>();
-  const errorsByType: Record<string, number> = {};
-  const missingModules = new Set<string>();
-  let totalErrors = 0;
-
-  for (const line of lines) {
-    // Match: file.ts(line,col): error TSxxxx: message
-    const match = line.match(/^(.+?)\(\d+,\d+\): error (TS\d+): (.+)$/);
-    if (!match) continue;
-
-    const [, filePath, errorCode, message] = match;
-    totalErrors++;
-
-    // Track by file
-    if (!errorsByFile.has(filePath)) {
-      errorsByFile.set(filePath, {});
-    }
-    const fileErrors = errorsByFile.get(filePath)!;
-    fileErrors[errorCode] = (fileErrors[errorCode] || 0) + 1;
-
-    // Track by type
-    errorsByType[errorCode] = (errorsByType[errorCode] || 0) + 1;
-
-    // Track missing modules
-    if (errorCode === 'TS2307') {
-      const moduleMatch = message.match(/Cannot find module '([^']+)'/);
-      if (moduleMatch) {
-        missingModules.add(moduleMatch[1]);
-      }
-    }
-  }
-
-  // Convert to sorted array
-  const errorsByFileArray: ErrorCount[] = Array.from(errorsByFile.entries())
-    .map(([file, errors]) => ({
-      file,
-      count: Object.values(errors).reduce((a, b) => a + b, 0),
-      errors,
-    }))
-    .sort((a, b) => b.count - a.count);
-
-  const topOffenders = errorsByFileArray.slice(0, 20);
-
-  return {
-    totalErrors,
-    totalFiles: errorsByFile.size,
-    errorsByFile: errorsByFileArray,
-    errorsByType,
-    missingModules: Array.from(missingModules).sort(),
-    topOffenders,
-  };
-}
-
-function loadBaseline(): TypeHealthReport['baseline'] | null {
-  const baselinePath = path.join(process.cwd(), 'artifacts', 'typehealth-baseline.json');
-  if (!fs.existsSync(baselinePath)) return null;
+/**
+ * Run TypeScript compiler and capture errors
+ */
+function runTypeCheck(): TypeErrorLocation[] {
+  console.log('🔍 Running TypeScript compiler...\n');
 
   try {
-    const data = JSON.parse(fs.readFileSync(baselinePath, 'utf-8'));
-    return data.baseline;
+    execSync('npx tsc --noEmit --pretty false', {
+      cwd: process.cwd(),
+      encoding: 'utf-8',
+      stdio: 'pipe'
+    });
+    console.log('✅ No type errors found!\n');
+    return [];
+  } catch (error: any) {
+    const output = error.stdout || '';
+    return parseTypeScriptErrors(output);
+  }
+}
+
+/**
+ * Parse tsc output into structured errors
+ */
+function parseTypeScriptErrors(output: string): TypeErrorLocation[] {
+  const errors: TypeErrorLocation[] = [];
+  const lines = output.split('\n');
+
+  for (const line of lines) {
+    // Match: path/to/file.ts(123,45): error TS2304: Cannot find name 'Foo'.
+    const match = line.match(/^(.+?)\((\d+),(\d+)\):\s*error\s+(TS\d+):\s*(.+)$/);
+    if (match) {
+      const [, file, lineStr, colStr, code, message] = match;
+      errors.push({
+        file: file.trim(),
+        line: parseInt(lineStr, 10),
+        column: parseInt(colStr, 10),
+        code,
+        message: message.trim()
+      });
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * Group errors by module/directory
+ */
+function groupByModule(errors: TypeErrorLocation[]): Map<string, TypeErrorLocation[]> {
+  const modules = new Map<string, TypeErrorLocation[]>();
+
+  for (const error of errors) {
+    // Extract top-level module directory (lib/, app/, components/, etc.)
+    const parts = error.file.split(path.sep);
+    const module = parts[0] || 'root';
+
+    if (!modules.has(module)) {
+      modules.set(module, []);
+    }
+    modules.get(module)!.push(error);
+  }
+
+  return modules;
+}
+
+/**
+ * Count lines in a file
+ */
+function countLines(filePath: string): number {
+  try {
+    const content = fs.readFileSync(filePath, 'utf-8');
+    return content.split('\n').length;
   } catch {
-    return null;
+    return 0;
   }
 }
 
-function saveBaseline(report: TypeHealthReport) {
-  const baselinePath = path.join(process.cwd(), 'artifacts', 'typehealth-baseline.json');
-  const baseline = {
-    date: new Date().toISOString(),
-    totalErrors: report.totalErrors,
+/**
+ * Get total line count for a module
+ */
+function getModuleLineCount(files: string[]): number {
+  let total = 0;
+  for (const file of files) {
+    total += countLines(file);
+  }
+  return total;
+}
+
+/**
+ * Calculate module health metrics
+ */
+function analyzeModuleHealth(
+  module: string,
+  errors: TypeErrorLocation[]
+): ModuleHealth {
+  // Get unique files
+  const files = Array.from(new Set(errors.map(e => e.file)));
+
+  // Count lines
+  const lineCount = getModuleLineCount(files);
+
+  // Top error codes
+  const errorCodes = new Map<string, number>();
+  for (const error of errors) {
+    errorCodes.set(error.code, (errorCodes.get(error.code) || 0) + 1);
+  }
+
+  return {
+    module,
+    errorCount: errors.length,
+    lineCount,
+    density: lineCount > 0 ? (errors.length / lineCount) * 100 : 0,
+    topErrors: errorCodes,
+    files
   };
-
-  fs.writeFileSync(
-    baselinePath,
-    JSON.stringify({ baseline, timestamp: baseline.date }, null, 2)
-  );
 }
 
-function printReport(report: TypeHealthReport) {
-  console.log('\n📊 TYPE HEALTH AUDIT REPORT');
-  console.log('='.repeat(60));
+/**
+ * Generate recommendations based on error patterns
+ */
+function generateRecommendations(modules: ModuleHealth[]): string[] {
+  const recommendations: string[] = [];
 
-  // Summary
-  console.log(`\n📈 Summary`);
-  console.log(`   Total errors: ${report.totalErrors.toLocaleString()}`);
-  console.log(`   Files affected: ${report.totalFiles}`);
-
-  if (report.baseline) {
-    const delta = report.totalErrors - report.baseline.totalErrors;
-    const direction = delta > 0 ? '📈' : delta < 0 ? '📉' : '➡️';
-    const sign = delta > 0 ? '+' : '';
-    console.log(`   Since baseline (${report.baseline.date.split('T')[0]}): ${direction} ${sign}${delta}`);
+  // Find high-density modules
+  const highDensity = modules.filter(m => m.density > 5).slice(0, 3);
+  if (highDensity.length > 0) {
+    recommendations.push(
+      `🎯 Focus on high-density modules first: ${highDensity.map(m => m.module).join(', ')}`
+    );
   }
 
-  // Error types
-  console.log(`\n🔍 Error Types`);
-  const sortedTypes = Object.entries(report.errorsByType)
-    .sort(([, a], [, b]) => b - a)
+  // Find modules with many TS2304 errors (missing imports)
+  const missingImports = modules.filter(m =>
+    (m.topErrors.get('TS2304') || 0) > m.errorCount * 0.3
+  );
+  if (missingImports.length > 0) {
+    recommendations.push(
+      `📦 Check missing imports/dependencies in: ${missingImports.map(m => m.module).join(', ')}`
+    );
+  }
+
+  // Find modules with many TS2339 errors (missing properties)
+  const missingProps = modules.filter(m =>
+    (m.topErrors.get('TS2339') || 0) > m.errorCount * 0.3
+  );
+  if (missingProps.length > 0) {
+    recommendations.push(
+      `🔧 Update interface definitions in: ${missingProps.map(m => m.module).join(', ')}`
+    );
+  }
+
+  return recommendations;
+}
+
+/**
+ * Generate and print type health report
+ */
+function generateReport(errors: TypeErrorLocation[]): TypeHealthReport {
+  console.log('📊 MAIA TYPE HEALTH REPORT');
+  console.log('='.repeat(60) + '\n');
+
+  // Group by module
+  const moduleMap = groupByModule(errors);
+  const modules: ModuleHealth[] = [];
+
+  for (const [module, moduleErrors] of moduleMap.entries()) {
+    modules.push(analyzeModuleHealth(module, moduleErrors));
+  }
+
+  // Sort by density (highest first)
+  modules.sort((a, b) => b.density - a.density);
+
+  // Count top error codes globally
+  const globalErrorCodes = new Map<string, number>();
+  for (const error of errors) {
+    globalErrorCodes.set(error.code, (globalErrorCodes.get(error.code) || 0) + 1);
+  }
+
+  const topErrorCodes = Array.from(globalErrorCodes.entries())
+    .map(([code, count]) => ({
+      code,
+      count,
+      description: ERROR_CODE_DESCRIPTIONS[code] || 'Unknown error'
+    }))
+    .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  for (const [code, count] of sortedTypes) {
-    const desc = ERROR_DESCRIPTIONS[code] || 'Unknown';
-    const pct = ((count / report.totalErrors) * 100).toFixed(1);
-    console.log(`   ${code.padEnd(8)} ${count.toString().padStart(5)} (${pct}%) - ${desc}`);
+  // Generate recommendations
+  const recommendations = generateRecommendations(modules);
+
+  const report: TypeHealthReport = {
+    timestamp: new Date().toISOString(),
+    totalErrors: errors.length,
+    totalFiles: new Set(errors.map(e => e.file)).size,
+    modules,
+    topErrorCodes,
+    recommendations
+  };
+
+  // Print summary
+  console.log(`Total errors: ${report.totalErrors}`);
+  console.log(`Files affected: ${report.totalFiles}`);
+  console.log(`Modules analyzed: ${modules.length}\n`);
+
+  // Print top error codes
+  console.log('📋 TOP ERROR CODES\n');
+  console.log('─'.repeat(60));
+  for (const { code, count, description } of topErrorCodes) {
+    const percentage = ((count / errors.length) * 100).toFixed(1);
+    console.log(`${code.padEnd(10)} ${count.toString().padStart(5)} (${percentage}%)  ${description}`);
   }
+  console.log('');
 
-  // Top offenders
-  console.log(`\n🎯 Top 20 Files by Error Count`);
-  for (const { file, count, errors } of report.topOffenders) {
-    const topError = Object.entries(errors).sort(([, a], [, b]) => b - a)[0];
-    console.log(`   ${count.toString().padStart(4)} - ${file}`);
-    console.log(`        ↳ Most common: ${topError[0]} (${topError[1]})`);
+  // Print module health (top 15 by density)
+  console.log('🏥 MODULE HEALTH (by error density)\n');
+  console.log('─'.repeat(60));
+  console.log('Module'.padEnd(30) + 'Errors'.padStart(8) + 'Lines'.padStart(10) + 'Density'.padStart(12));
+  console.log('─'.repeat(60));
+
+  for (const module of modules.slice(0, 15)) {
+    const densityStr = module.density.toFixed(2) + '/100L';
+    console.log(
+      module.module.padEnd(30) +
+      module.errorCount.toString().padStart(8) +
+      module.lineCount.toString().padStart(10) +
+      densityStr.padStart(12)
+    );
   }
+  console.log('');
 
-  // Missing modules
-  if (report.missingModules.length > 0) {
-    console.log(`\n📦 Missing Modules (${report.missingModules.length})`);
-    const external = report.missingModules.filter(m => !m.startsWith('.'));
-    const internal = report.missingModules.filter(m => m.startsWith('.'));
-
-    if (external.length > 0) {
-      console.log(`   External (install @types/* or npm package):`);
-      external.slice(0, 10).forEach(m => console.log(`      - ${m}`));
-      if (external.length > 10) {
-        console.log(`      ... and ${external.length - 10} more`);
-      }
+  // Print recommendations
+  if (recommendations.length > 0) {
+    console.log('💡 RECOMMENDATIONS\n');
+    console.log('─'.repeat(60));
+    for (const rec of recommendations) {
+      console.log(`  ${rec}`);
     }
-
-    if (internal.length > 0) {
-      console.log(`   Internal (fix import paths):`);
-      internal.slice(0, 5).forEach(m => console.log(`      - ${m}`));
-      if (internal.length > 5) {
-        console.log(`      ... and ${internal.length - 5} more`);
-      }
-    }
+    console.log('');
   }
 
-  // Recommendations
-  console.log(`\n💡 Recommendations`);
-
-  const ts2307Count = report.errorsByType['TS2307'] || 0;
-  if (ts2307Count > 100) {
-    console.log(`   1. Install missing @types packages (will fix ~${ts2307Count} errors)`);
-    console.log(`      npm i -D @types/node @types/uuid @types/express`);
-  }
-
-  const ts2339Count = report.errorsByType['TS2339'] || 0;
-  if (ts2339Count > 100) {
-    console.log(`   2. Update interface definitions (${ts2339Count} property errors)`);
-    console.log(`      Focus on: ${report.topOffenders[0]?.file.split('/').pop()}`);
-  }
-
-  const ts2741Count = report.errorsByType['TS2741'] || 0;
-  if (ts2741Count > 50) {
-    console.log(`   3. Add missing object properties (${ts2741Count} errors)`);
-    console.log(`      Consider making properties optional with '?'`);
-  }
-
-  console.log(`\n📝 Next Steps:`);
-  console.log(`   1. Fix external dependencies: npm i -D <missing-packages>`);
-  console.log(`   2. Fix top offender: ${report.topOffenders[0]?.file}`);
-  console.log(`   3. Re-run: npm run audit:typehealth`);
-  console.log(`   4. Set baseline: npm run audit:typehealth -- --set-baseline`);
-
-  console.log('\n' + '='.repeat(60) + '\n');
+  return report;
 }
 
-function main() {
-  const logPath = path.join(process.cwd(), 'artifacts', 'typecheck-full.log');
-
-  if (!fs.existsSync(logPath)) {
-    console.error('❌ typecheck-full.log not found');
-    console.error('Run: npm run typecheck -- --pretty false > artifacts/typecheck-full.log 2>&1');
-    process.exit(1);
+/**
+ * Save report to JSON
+ */
+function saveReport(report: TypeHealthReport) {
+  const artifactsDir = path.join(process.cwd(), 'artifacts');
+  if (!fs.existsSync(artifactsDir)) {
+    fs.mkdirSync(artifactsDir, { recursive: true });
   }
 
-  console.log('📊 Analyzing TypeScript errors...\n');
-
-  const report = parseTypecheckLog(logPath);
-
-  // Load baseline for comparison
-  const baseline = loadBaseline();
-  if (baseline) {
-    report.baseline = baseline;
-    report.delta = report.totalErrors - baseline.totalErrors;
-  }
-
-  printReport(report);
-
-  // Save as new baseline if requested
-  if (process.argv.includes('--set-baseline')) {
-    saveBaseline(report);
-    console.log('✅ Baseline saved to artifacts/typehealth-baseline.json\n');
-  }
-
-  // Write full JSON report
-  const reportPath = path.join(process.cwd(), 'artifacts', 'typehealth-report.json');
-  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
-  console.log(`📄 Full report: ${reportPath}\n`);
+  const outputPath = path.join(artifactsDir, 'typehealth-audit.json');
+  fs.writeFileSync(outputPath, JSON.stringify(report, null, 2), 'utf-8');
+  console.log(`📄 Full report saved to: ${outputPath}\n`);
 }
 
-main();
+/**
+ * Main execution
+ */
+async function main() {
+  const errors = runTypeCheck();
+
+  if (errors.length === 0) {
+    console.log('🎉 Perfect type health! No errors found.\n');
+    process.exit(0);
+  }
+
+  const report = generateReport(errors);
+  saveReport(report);
+
+  console.log('✅ Type health audit complete.\n');
+  process.exit(0);
+}
+
+main().catch(err => {
+  console.error('❌ Audit failed:', err);
+  process.exit(1);
+});
