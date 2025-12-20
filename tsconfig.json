@@ -50,9 +50,12 @@
     "**/temp/**/*",
     "**/legacy/**/*",
     "app/api/backend/src/lib/supabase.ts",
+    "app/api/backend/src/lib/supabaseClient.ts",
     "app/api/backend/src/config/supabase.ts",
     "app/api/backend/src/utils/supabase.ts",
     "app/api/backend/src/server/services/supabaseClient.ts",
-    "app/api/backend/supabase/**/*"
+    "app/api/backend/src/services/supabaseIntegrationService.ts",
+    "app/api/backend/supabase/**/*",
+    "lib/ganesha/supabase-export.ts"
   ]
 }
