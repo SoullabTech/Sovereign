@@ -1,0 +1,7 @@
+{
+  "replacements": [
+    { "pattern": "dbClient", "to": "@/lib/db/postgres" }
+  ],
+  "stubThreshold": 3,
+  "errorTolerance": 0.05
+}
