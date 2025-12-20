@@ -212,6 +212,7 @@ personal_insights/
 # Test artifacts
 test_results/
 *.test.cache
+artifacts/*.json
 
 # Sacred geometry calculations cache
 geometry_cache/
@@ -278,3 +279,4 @@ android-release.keystore
 *.jks
 *.keystore
 certs/
+artifacts/sovereignty-audit.json
