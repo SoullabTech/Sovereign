@@ -1,0 +1,50 @@
+{
+  "version": "v0.9.5-interface-consistency",
+  "stage": "4",
+  "description": "Interface Consistency - TS2339 & TS2345 Error Resolution",
+  "targets": {
+    "errorCodes": ["TS2339", "TS2345"],
+    "description": {
+      "TS2339": "Property does not exist on type",
+      "TS2345": "Argument type mismatch"
+    }
+  },
+  "thresholds": {
+    "errorTolerance": 0.05,
+    "applyThreshold": 3,
+    "minConfidence": 0.7
+  },
+  "safety": {
+    "autoConfirm": false,
+    "requireCleanGit": true,
+    "dryRunDefault": true,
+    "backupBeforeApply": true
+  },
+  "clustering": {
+    "groupByInterface": true,
+    "groupByModule": true,
+    "minClusterSize": 2
+  },
+  "output": {
+    "interfaceMap": "artifacts/interface-map.json",
+    "fixReport": "artifacts/interface-fixes.json",
+    "verificationReport": "artifacts/phase-4-results.md"
+  },
+  "expectedImpact": {
+    "TS2339": {
+      "before": 2025,
+      "targetAfter": 1000,
+      "reductionPercent": 50
+    },
+    "TS2345": {
+      "before": 1054,
+      "targetAfter": 600,
+      "reductionPercent": 43
+    },
+    "totalErrors": {
+      "before": 6369,
+      "targetAfter": 4500,
+      "reductionPercent": 29
+    }
+  }
+}

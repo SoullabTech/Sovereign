@@ -1,0 +1,7 @@
+{
+  "targetInterfaces": ["auto-detect"],
+  "errorTolerance": 0.10,
+  "autoAddProperties": true,
+  "requireManualReview": true,
+  "minReferenceCount": 3
+}
