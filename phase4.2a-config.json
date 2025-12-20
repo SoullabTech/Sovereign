@@ -1,0 +1,76 @@
+{
+  "version": "v0.9.5-type-guard-synthesis",
+  "stage": "4.2a",
+  "description": "Type-Guard Synthesis - Runtime Safety for TS2339 & TS2345",
+  "targets": {
+    "errorCodes": ["TS2339", "TS2345"],
+    "patterns": {
+      "unsafePropertyAccess": "Property '.*' does not exist on type 'never'",
+      "argumentTypeMismatch": "Argument of type .* is not assignable",
+      "nullableAccess": "Object is possibly 'null' or 'undefined'"
+    },
+    "description": {
+      "TS2339": "Property does not exist on type (requires runtime guard)",
+      "TS2345": "Argument type mismatch (requires type assertion)"
+    }
+  },
+  "thresholds": {
+    "errorReductionTarget": 0.10,
+    "minClusterSize": 2,
+    "minGuardConfidence": 0.8,
+    "applyThreshold": 3
+  },
+  "safety": {
+    "autoConfirm": false,
+    "requireCleanGit": true,
+    "dryRunDefault": true,
+    "backupBeforeApply": true,
+    "maxGuardsPerFile": 5
+  },
+  "guardGeneration": {
+    "templates": {
+      "propertyCheck": "function has{Property}(obj: unknown): obj is {{ {property}: unknown }} {{ return typeof obj === 'object' && obj !== null && '{property}' in obj; }}",
+      "typeAssertion": "function is{Type}(value: unknown): value is {Type} {{ return value !== null && typeof value === 'object'; }}",
+      "arrayGuard": "function is{Type}Array(value: unknown): value is {Type}[] {{ return Array.isArray(value); }}"
+    },
+    "namingConvention": {
+      "propertyGuards": "has{PropertyName}",
+      "typeGuards": "is{TypeName}",
+      "arrayGuards": "is{TypeName}Array"
+    },
+    "outputLocation": "lib/utils/type-guards.ts"
+  },
+  "clustering": {
+    "groupByModule": true,
+    "groupByInterface": true,
+    "groupByFunction": true,
+    "minOccurrences": 2
+  },
+  "output": {
+    "typeGuardMap": "artifacts/type-guard-map.json",
+    "guardTemplates": "artifacts/type-guard-templates.json",
+    "verificationReport": "artifacts/phase-4.2a-results.md"
+  },
+  "expectedImpact": {
+    "TS2339": {
+      "before": 2025,
+      "targetAfter": 1800,
+      "reductionPercent": 11
+    },
+    "TS2345": {
+      "before": 1054,
+      "targetAfter": 950,
+      "reductionPercent": 10
+    },
+    "totalErrors": {
+      "before": 6369,
+      "targetAfter": 5730,
+      "reductionPercent": 10
+    }
+  },
+  "provenance": {
+    "includeInManifest": true,
+    "verifyIntegrity": true,
+    "manifestPath": "artifacts/.manifest.json"
+  }
+}
