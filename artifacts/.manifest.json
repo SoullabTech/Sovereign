@@ -1,8 +1,16 @@
 {
   "version": "v0.9.4-artifact-integrity",
-  "createdAt": "2025-12-20T19:13:05.888Z",
-  "artifactCount": 15,
+  "createdAt": "2025-12-20T19:23:08.836Z",
+  "artifactCount": 17,
   "entries": [
+    {
+      "artifact": "error-landscape.json",
+      "timestamp": "2025-12-20T19:14:40.808Z",
+      "sha256": "f32a710c86ff918ef84627d8527b2bb776844d100ab3cc44591f2f6fb4d23827",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 197420
+    },
     {
       "artifact": "identifier-rename-log.json",
       "timestamp": "2025-12-20T17:17:18.195Z",
@@ -68,6 +76,14 @@
       "sizeBytes": 638449
     },
     {
+      "artifact": "supabase-cleanup-report.json",
+      "timestamp": "2025-12-20T19:22:40.403Z",
+      "sha256": "9f28a71e6c441ff43e386672e659681b242601b405c6143d6833f4dea9aa2e4a",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 69915
+    },
+    {
       "artifact": "type-fix-report.json",
       "timestamp": "2025-12-20T17:22:10.728Z",
       "sha256": "2e3cdf6e7ea1e119a9e8211d8f742a4b43d236b6a41d255057eeba5bc7b10fc2",
@@ -77,27 +93,27 @@
     },
     {
       "artifact": "type-guard-map.json",
-      "timestamp": "2025-12-20T18:19:27.575Z",
-      "sha256": "19e7f66ef6e3d61e91cdfc79dffd3f24149ecf84cbcdb25598bdfddcae727d65",
+      "timestamp": "2025-12-20T19:16:58.312Z",
+      "sha256": "0babee157ff0025b952970162238258f7c8c90f90d50b44d38761aa82f774800",
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
       "sizeBytes": 17436
     },
     {
       "artifact": "type-guard-templates.json",
-      "timestamp": "2025-12-20T18:20:10.925Z",
-      "sha256": "5648f9d9ad5a2e9ca2b4b37da9a079f217ab1c9d164fe8f841ae43014bdbe7d9",
+      "timestamp": "2025-12-20T19:16:58.920Z",
+      "sha256": "f8fa3652526f0a71e26cfde3f5a430a3f69ef8566a48457fea90a98effdd6165",
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
-      "sizeBytes": 636
+      "sizeBytes": 637
     },
     {
       "artifact": "typehealth-audit.json",
-      "timestamp": "2025-12-20T18:20:25.113Z",
-      "sha256": "4cd90824df30a99c26edeb4b7e1e95ec7c4d3d2836b507069cb88741fddc627e",
+      "timestamp": "2025-12-20T19:21:41.763Z",
+      "sha256": "0546ce48e01417262056c8d8374d7f01db7458d6098e2eb5d52993c50f812ed3",
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
-      "sizeBytes": 58619
+      "sizeBytes": 58576
     },
     {
       "artifact": "typehealth-baseline.json",

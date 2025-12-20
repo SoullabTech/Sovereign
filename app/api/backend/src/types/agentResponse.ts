@@ -3,6 +3,9 @@
  * Standard response formats for all agent interactions
  */
 
+import type { ExtractionResult } from '../../../../lib/intelligence/SymbolExtractionEngine';
+import type { IPersonalOracleAgent } from '../../../../lib/oracle/PersonalOracleAgent';
+
 export interface AgentResponse {
   // Core fields
   content: string;              // primary field
@@ -33,7 +36,26 @@ export interface AgentResponse {
     phase: string;
     lesson?: string;
   };
-  
+
+  // Phenomenological markers (Phase 4.2c)
+  consciousState?: 'regulated' | 'dysregulated' | 'integrated';
+  presenceDepth?: number; // 0-1: degree of attunement/embodiment
+  coherenceLevel?: number; // 0-1: semantic and affective coherence
+
+  // Dialogical dynamics (Phase 4.2c)
+  dialogicalField?: {
+    selfTone: string;
+    otherTone: string;
+    mutuality: number; // 0-1: relational resonance
+  };
+  empathicTone?: 'neutral' | 'compassionate' | 'curious' | 'direct';
+  mirroringPhase?: 'mirror' | 'bridge' | 'approximate' | 'arrival';
+
+  // Integration bridges (Phase 4.2c)
+  oracleContext?: IPersonalOracleAgent;
+  extractionSnapshot?: ExtractionResult;
+  timestamp?: string; // ISO 8601 temporal coherence marker
+
   // Additional data
   suggestions?: string[];
   resources?: any[];

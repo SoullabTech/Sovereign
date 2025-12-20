@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-20T18:20:25.111Z",
-  "totalErrors": 6512,
-  "totalFiles": 1015,
+  "timestamp": "2025-12-20T19:21:41.759Z",
+  "totalErrors": 6510,
+  "totalFiles": 1014,
   "modules": [
     {
       "module": "beta-deployment",
@@ -29,9 +29,9 @@
     },
     {
       "module": "lib",
-      "errorCount": 3660,
-      "lineCount": 248887,
-      "density": 1.4705468746861026,
+      "errorCount": 3656,
+      "lineCount": 247796,
+      "density": 1.475407189785146,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -528,16 +528,14 @@
         "lib/services/consciousness-file-bridge.ts",
         "lib/services/ConsciousnessEvolutionOrchestrator.ts",
         "lib/services/conversation-analytics-service.ts",
-        "lib/services/conversationStorageService.ts",
-        "lib/services/core-member-profile.ts",
-        "lib/services/CrossNarrativeService.ts"
+        "lib/services/conversationStorageService.ts"
       ]
     },
     {
       "module": "app",
-      "errorCount": 2444,
-      "lineCount": 167034,
-      "density": 1.4631751619430775,
+      "errorCount": 2446,
+      "lineCount": 167107,
+      "density": 1.4637328178951212,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -858,6 +856,7 @@
         "app/api/backend/src/tools/standaloneFirstContact.ts",
         "app/api/backend/src/tracking/FocalPointPatternRecognition.ts",
         "app/api/backend/src/types/agent.ts",
+        "app/api/backend/src/types/agentResponse.ts",
         "app/api/backend/src/types/auth.ts",
         "app/api/backend/src/types/ceremonyIntelligence.ts",
         "app/api/backend/src/types/index.ts",
@@ -1109,7 +1108,7 @@
     },
     {
       "code": "TS2307",
-      "count": 269,
+      "count": 271,
       "description": "Cannot find module"
     },
     {
@@ -1124,7 +1123,7 @@
     },
     {
       "code": "TS2305",
-      "count": 181,
+      "count": 179,
       "description": "Unknown error"
     },
     {
