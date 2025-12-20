@@ -47,6 +47,12 @@
     "**/dist/**/*",
     "**/build/**/*",
     "**/tmp/**/*",
-    "**/temp/**/*"
+    "**/temp/**/*",
+    "**/legacy/**/*",
+    "app/api/backend/src/lib/supabase.ts",
+    "app/api/backend/src/config/supabase.ts",
+    "app/api/backend/src/utils/supabase.ts",
+    "app/api/backend/src/server/services/supabaseClient.ts",
+    "app/api/backend/supabase/**/*"
   ]
 }
