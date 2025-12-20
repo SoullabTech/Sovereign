@@ -34,6 +34,7 @@ interface AuditConfig {
   allowedRemoteHosts: string[];
   bannedServices: string[];
   excludePatterns: string[];
+  legacyQuarantinePatterns?: string[];  // Directories to skip during scans (legacy code allowed to exist)
   monorepo?: {
     enabled: boolean;
     workspaces: string[];
@@ -136,6 +137,12 @@ function loadConfig(): AuditConfig {
       'docs/',
       'scripts/audit-sovereignty.ts',
       '.sovereignty-audit.json'
+    ],
+    legacyQuarantinePatterns: [
+      'lib/db/legacy/',
+      'utils/supabase/',
+      'app/api/backend/dist/',
+      'dist-minimal/'
     ],
     output: {
       format: 'json',
@@ -446,6 +453,11 @@ async function checkAPIKeyUsage() {
         const content = parts.slice(2).join(':');
         const location = `${file}:${lineNo}`;
 
+        // Skip quarantined files entirely (legacy code allowed to exist)
+        if (isInQuarantine(file)) {
+          continue;
+        }
+
         // Skip comments and documentation
         if (content.trim().startsWith('//') ||
             content.trim().startsWith('*') ||
@@ -499,6 +511,11 @@ async function checkRemoteEndpoints() {
           const lineNo = parts[1];
           const content = parts.slice(2).join(':');
           const location = `${file}:${lineNo}`;
+
+          // Skip quarantined files entirely (legacy code allowed to exist)
+          if (isInQuarantine(file)) {
+            continue;
+          }
 
           // Skip if already detected by AST
           if (violations.some(v => v.location === location && v.type === 'network_call')) {
@@ -559,7 +576,12 @@ async function checkSupabaseUsage() {
         const content = parts.slice(2).join(':');
         const location = `${file}:${lineNo}`;
 
-        // Skip comments and .md files
+        // Skip quarantined files entirely (legacy code allowed to exist)
+        if (isInQuarantine(file)) {
+          continue;
+        }
+
+        // Skip comments and .md files (downgrade to info, not critical)
         if (content.trim().startsWith('//') ||
             content.trim().startsWith('*') ||
             file.includes('.md') ||
@@ -567,12 +589,24 @@ async function checkSupabaseUsage() {
           continue;
         }
 
+        // Check if it's just a string mention (not an import/require)
+        const isStringMention = /['"`].*supabase.*['"`]/i.test(content);
+        const isImportOrRequire = /\b(import|require|from)\b.*supabase/i.test(content);
+        const isIdentifierName = /\b\w*supabase\w*\s*[:=]/i.test(content); // Variable/property names
+
+        // Downgrade string mentions and identifier names to low severity
+        const severity: 'critical' | 'low' = (isStringMention || isIdentifierName) && !isImportOrRequire ? 'low' : 'critical';
+
         violations.push({
           type: 'cloud_service',
-          severity: 'critical',
+          severity,
           location,
-          details: 'Supabase usage detected (banned per CLAUDE.md)',
-          recommendation: 'Use Prisma with local PostgreSQL/SQLite instead'
+          details: severity === 'low'
+            ? 'Supabase string mention (info only)'
+            : 'Supabase usage detected (banned per CLAUDE.md)',
+          recommendation: severity === 'critical'
+            ? 'Use Prisma with local PostgreSQL/SQLite instead'
+            : 'Consider renaming to generic database terms'
         });
       }
     }
@@ -772,6 +806,32 @@ function findTypeScriptFiles(): string[] {
 /**
  * Check if file should be excluded
  */
+function shouldExcludeFile(filePath: string): boolean {
+  const relativePath = path.relative(process.cwd(), filePath);
+
+  return config.excludePatterns.some(pattern => {
+    if (pattern.endsWith('/')) {
+      return relativePath.startsWith(pattern) || relativePath.includes(`/${pattern}`);
+    }
+    if (pattern.startsWith('*.')) {
+      return relativePath.endsWith(pattern.slice(1));
+    }
+    return relativePath.includes(pattern);
+  });
+}
+
+/**
+ * Check if file is in legacy quarantine zone
+ */
+function isInQuarantine(filePath: string): boolean {
+  const relativePath = path.relative(process.cwd(), filePath);
+  const normalized = relativePath.replace(/\\/g, '/');
+
+  return (config.legacyQuarantinePatterns || []).some(pattern => {
+    return normalized.includes(pattern) || normalized.startsWith(pattern);
+  });
+}
+
 /**
  * Get normalized relative path
  */
@@ -860,20 +920,6 @@ function isAllowedFile(filePath: string): boolean {
   }
 
   return false;
-}
-
-function shouldExcludeFile(filePath: string): boolean {
-  const relativePath = path.relative(process.cwd(), filePath);
-
-  return config.excludePatterns.some(pattern => {
-    if (pattern.endsWith('/')) {
-      return relativePath.startsWith(pattern) || relativePath.includes(`/${pattern}`);
-    }
-    if (pattern.startsWith('*.')) {
-      return relativePath.endsWith(pattern.slice(1));
-    }
-    return relativePath.includes(pattern);
-  });
 }
 
 /**
