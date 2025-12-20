@@ -1,7 +1,7 @@
 {
   "version": "v0.9.4-artifact-integrity",
-  "createdAt": "2025-12-20T17:31:22.740Z",
-  "artifactCount": 7,
+  "createdAt": "2025-12-20T18:07:16.339Z",
+  "artifactCount": 10,
   "entries": [
     {
       "artifact": "identifier-rename-log.json",
@@ -18,6 +18,30 @@
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
       "sizeBytes": 21870
+    },
+    {
+      "artifact": "interface-fixes.json",
+      "timestamp": "2025-12-20T18:06:07.591Z",
+      "sha256": "91643be0fece2fad371c45e48e2ea004393610666b8d053c519d638e7b9f4453",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 62
+    },
+    {
+      "artifact": "interface-map-pre-phase4.2.json",
+      "timestamp": "2025-12-20T18:03:56.366Z",
+      "sha256": "980c2dc4fe03314152a0750ead250c8e8b6a1309d0536a13dcb6edc0f83dfd71",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 90657
+    },
+    {
+      "artifact": "interface-map.json",
+      "timestamp": "2025-12-20T18:06:07.277Z",
+      "sha256": "536ac2f51e7ad92cee900b234603a3bcfc6db5e85fae286e93e371c703f31d1b",
+      "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+      "integrity": "verified",
+      "sizeBytes": 90657
     },
     {
       "artifact": "sovereignty-audit.json",
@@ -37,8 +61,8 @@
     },
     {
       "artifact": "typehealth-audit.json",
-      "timestamp": "2025-12-20T17:27:42.610Z",
-      "sha256": "8e9c87132729f6bee1dac3c01d15979d2d7f8b7e4a879c4aadc4cc5e7f068be3",
+      "timestamp": "2025-12-20T18:03:41.440Z",
+      "sha256": "4b6b299aec2e670e9efc96cadf03f9366cdbb3655af224cba15eee68b13e56ac",
       "signature": "maia-sovereign-v0.9.4-artifact-integrity",
       "integrity": "verified",
       "sizeBytes": 53447
