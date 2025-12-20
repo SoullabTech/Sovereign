@@ -30,7 +30,7 @@
     "validate:critical": "node scripts/validate-critical-files.js",
     "verify:claude": "bash scripts/verify-claude-project.sh",
     "claude:env": "bash scripts/claude-env-setup.sh",
-    "audit:sovereignty": "tsx scripts/forensic-sovereignty-audit.ts",
+    "audit:sovereignty": "tsx scripts/audit-sovereignty.ts",
     "verify:aetheric": "node scripts/verify-aetheric-consciousness.js",
     "consciousness:check": "node scripts/verify-aetheric-consciousness.js",
     "consciousness:dev": "npm run verify:aetheric && npm run dev",
