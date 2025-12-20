@@ -267,7 +267,7 @@ export class SemanticMemoryService {
   /**
    * Get concepts being learned (mastery level 1-3)
    */
-  async getLearnin gConcepts(userId: string): Promise<SemanticMemory[]> {
+  async getLearningConcepts(userId: string): Promise<SemanticMemory[]> {
     try {
       const results = await query<any>(
         `SELECT * FROM semantic_memories

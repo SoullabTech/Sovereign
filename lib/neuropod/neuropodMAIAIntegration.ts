@@ -315,7 +315,7 @@ export class MAIAProfileService {
         sessionId: s.session_id,
         state: s.target_state as ConsciousnessState,
         duration: s.duration_minutes,
-        overwhe lmDetected: s.overwhelm_detected || false,
+        overwhelmDetected: s.overwhelm_detected || false,
         timestamp: s.created_at,
       })) || []
     );
@@ -401,7 +401,7 @@ export class NeuropodNavigationService {
       session_history: profile.sessionHistory.map((s) => ({
         state: s.state,
         duration: s.duration,
-        overwhelm_detected: s.overwhe lmDetected,
+        overwhelm_detected: s.overwhelmDetected,
       })),
     };
   }

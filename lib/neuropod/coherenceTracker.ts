@@ -430,7 +430,7 @@ export class CoherenceTracker {
 
     // Free energy (Friston's variational free energy)
     // F = Energy - Temperature · Entropy
-    const consciousness Temperature = this.estimateConsciousnessTemperature(eegData);
+    const consciousnessTemperature = this.estimateConsciousnessTemperature(eegData);
     const freeEnergyEstimate = eegSpectralEntropy - consciousnessTemperature * eegSpectralEntropy;
 
     // Attractor strength (how pulled toward target state)
