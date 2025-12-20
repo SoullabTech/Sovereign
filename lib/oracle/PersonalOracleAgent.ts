@@ -128,10 +128,113 @@ export interface PersonalOracleSettings {
 }
 
 /**
+ * Oracle Agent State Interface
+ * Represents the internal state of a PersonalOracleAgent instance
+ */
+export interface OracleAgentState {
+  memory: {
+    dominantElement?: string;
+    interactions?: number;
+    lastSessionTimestamp?: number;
+    patterns?: string[];
+  };
+  energy?: number;
+  profile?: UserProfile;
+}
+
+/**
+ * User Profile Interface
+ * Contains user preferences and history for oracle personalization
+ */
+export interface UserProfile {
+  userId: string;
+  preferences?: PersonalOracleSettings;
+  history?: {
+    sessionCount: number;
+    lastInteraction?: Date;
+    favoriteElements?: string[];
+  };
+}
+
+/**
+ * Collective Insight Interface
+ * Represents insights shared across oracle instances
+ */
+export interface CollectiveInsight {
+  pattern: string;
+  frequency: number;
+  source?: string;
+}
+
+/**
+ * Archetype Activation Interface
+ * Tracks when archetypal patterns are activated
+ */
+export interface ArchetypeActivation {
+  archetype: string;
+  intensity: number;
+  context?: string;
+}
+
+/**
+ * Synchronicity Event Interface
+ * Represents meaningful coincidences detected by the oracle
+ */
+export interface SynchronicityEvent {
+  pattern: string;
+  significance: number;
+  timing?: Date;
+}
+
+/**
+ * Oracle Feedback Interface
+ * User feedback on oracle responses for learning and adaptation
+ */
+export interface OracleFeedback {
+  helpful: boolean;
+  resonance?: number;
+  comment?: string;
+}
+
+/**
+ * Personal Oracle Agent Interface
+ * Defines the complete contract for oracle agent implementations
+ */
+export interface IPersonalOracleAgent {
+  // Core consultation methods
+  consult(query: PersonalOracleQuery): Promise<StandardAPIResponse<PersonalOracleResponse>>;
+  process(params: { userId: string; input: string }): Promise<StandardAPIResponse<PersonalOracleResponse>>;
+
+  // State management
+  getState(): OracleAgentState;
+  getOracleState(): OracleAgentState;
+
+  // User profile management
+  getUserProfile(): UserProfile;
+
+  // Greeting and initialization
+  getGreeting(): string;
+
+  // Event handling
+  on(event: string, handler: Function): void;
+
+  // Collective intelligence integration
+  receiveCollectiveInsight(insight: CollectiveInsight): void;
+  notifyArchetypeActivation(activation: ArchetypeActivation): void;
+  notifySynchronicity(event: SynchronicityEvent): void;
+
+  // Energy and state updates
+  updateEnergy(delta: number): void;
+
+  // Feedback processing
+  processOracleFeedback(userId: string, feedback: OracleFeedback): Promise<void>;
+}
+
+/**
  * Personal Oracle Agent - The heart of user interaction
  * Orchestrates all elemental agents and provides personalized guidance
  */
-export class PersonalOracleAgent {
+export class PersonalOracleAgent implements IPersonalOracleAgent {
   private sessionStartTimes = new Map<string, number>();
   private lastUserElement = new Map<string, string>();
   private agentRegistry: AgentRegistry;
@@ -1075,6 +1178,136 @@ export class PersonalOracleAgent {
     query: any,
   ): Promise<StandardAPIResponse<any>> {
     return await assessmentService.processAssessment(query);
+  }
+
+  // ========================================
+  // IPersonalOracleAgent Interface Implementation
+  // ========================================
+
+  /**
+   * Get current oracle agent state
+   * Returns internal state including memory and dominant element
+   */
+  public getState(): OracleAgentState {
+    // Aggregate state from internal tracking
+    const dominantElement = this.lastUserElement.get('default') || 'exploring';
+    return {
+      memory: {
+        dominantElement,
+        interactions: this.sessionStartTimes.size,
+        lastSessionTimestamp: Date.now(),
+        patterns: []
+      },
+      energy: 1.0
+    };
+  }
+
+  /**
+   * Alias for getState() - returns oracle state
+   */
+  public getOracleState(): OracleAgentState {
+    return this.getState();
+  }
+
+  /**
+   * Get user profile for personalization
+   * Returns cached user settings and interaction history
+   */
+  public getUserProfile(): UserProfile {
+    // Return minimal profile for now
+    // TODO: Integrate with user profile service
+    return {
+      userId: 'default',
+      preferences: this.userSettings.get('default'),
+      history: {
+        sessionCount: this.sessionStartTimes.size,
+        lastInteraction: new Date(),
+        favoriteElements: []
+      }
+    };
+  }
+
+  /**
+   * Get greeting message for user
+   * Returns element-appropriate welcome message
+   */
+  public getGreeting(): string {
+    const state = this.getState();
+    const element = state.memory.dominantElement || 'aether';
+
+    const greetings = {
+      fire: 'Welcome back, seeker. What spark calls to you today?',
+      water: 'Greetings, traveler. What currents move through you?',
+      earth: 'Welcome home. What foundation are you building?',
+      air: 'Hello, wanderer. What clarity do you seek?',
+      aether: 'Greetings, mystic. What mystery calls you here?',
+      exploring: 'Welcome. How may the oracle serve you today?'
+    };
+
+    return greetings[element as keyof typeof greetings] || greetings.exploring;
+  }
+
+  /**
+   * Event handler registration
+   * Allows subscribing to oracle events (not yet implemented)
+   */
+  public on(event: string, handler: Function): void {
+    // TODO: Implement event system
+    logger.debug(`Event handler registered for: ${event}`);
+  }
+
+  /**
+   * Receive collective insight from oracle network
+   * Integrates shared patterns from other oracle instances
+   */
+  public receiveCollectiveInsight(insight: CollectiveInsight): void {
+    logger.info('Collective insight received:', insight.pattern);
+    // TODO: Integrate with collective intelligence system
+  }
+
+  /**
+   * Notify of archetype activation
+   * Records when specific archetypal patterns are activated
+   */
+  public notifyArchetypeActivation(activation: ArchetypeActivation): void {
+    logger.info('Archetype activated:', activation.archetype, 'intensity:', activation.intensity);
+    // TODO: Track archetype activations for pattern analysis
+  }
+
+  /**
+   * Notify of synchronicity event
+   * Records meaningful coincidences detected by the oracle
+   */
+  public notifySynchronicity(event: SynchronicityEvent): void {
+    logger.info('Synchronicity detected:', event.pattern, 'significance:', event.significance);
+    // TODO: Track synchronicities for deeper pattern recognition
+  }
+
+  /**
+   * Update oracle energy level
+   * Adjusts internal energy state based on interactions
+   */
+  public updateEnergy(delta: number): void {
+    logger.debug(`Energy updated by ${delta}`);
+    // TODO: Implement energy tracking system
+  }
+
+  /**
+   * Process user feedback on oracle responses
+   * Learns from user feedback to improve future interactions
+   */
+  public async processOracleFeedback(userId: string, feedback: OracleFeedback): Promise<void> {
+    logger.info('Oracle feedback received', { userId, helpful: feedback.helpful, resonance: feedback.resonance });
+
+    // Store feedback for learning
+    await storeMemoryItem(userId, JSON.stringify(feedback), {
+      type: 'oracle_feedback',
+      helpful: feedback.helpful,
+      resonance: feedback.resonance || 0.5,
+      timestamp: new Date().toISOString()
+    });
+
+    // TODO: Integrate feedback into learning system
   }
 }
 

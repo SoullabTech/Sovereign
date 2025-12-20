@@ -1,5 +1,5 @@
 {
-  "timestamp": "2025-12-20T18:15:34.788Z",
+  "timestamp": "2025-12-20T18:20:25.111Z",
   "totalErrors": 6512,
   "totalFiles": 1015,
   "modules": [
@@ -30,8 +30,8 @@
     {
       "module": "lib",
       "errorCount": 3660,
-      "lineCount": 248654,
-      "density": 1.471924843356632,
+      "lineCount": 248887,
+      "density": 1.4705468746861026,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
