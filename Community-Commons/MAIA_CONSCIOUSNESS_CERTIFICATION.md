@@ -18,7 +18,76 @@ This certification framework is grounded in the **Neuro Chimera 5-Ingredient Mod
 
 ---
 
-## v0.9.3 Release - Consciousness Detection Enhancements
+## Release History
+
+### v0.9.4 - Artifact Integrity Extension (Stage 3.5)
+
+**Release Date:** 2025-12-20
+**Status:** Production-Ready Chain of Custody
+**Tag:** `v0.9.4-artifact-integrity`
+**Framework Milestone:** Integrity Spine Complete (Structural + Cryptographic Verification)
+
+This release introduces cryptographic provenance for all MAIA certification artifacts. Each artifact now carries a verifiable SHA-256 signature recorded in `artifacts/.manifest.json`, ensuring authenticity, reproducibility, and tamper detection.
+
+#### What's New
+
+**Cryptographic Artifact Verification:**
+- SHA-256 checksums for all `artifacts/*.json` certification outputs
+- Automatic manifest generation via `scripts/verify-artifact-integrity.ts`
+- Three operation modes:
+  - `VERIFY`: Check artifacts against manifest (default)
+  - `UPDATE`: Regenerate manifest with current checksums (`--update`)
+  - `CHECK`: CI mode - fail on mismatch (`--check`)
+
+**Beta Spine Integration:**
+- Manifest auto-updates after each certification run
+- Integrated into `scripts/certify-beta-spine.sh` (line 130)
+- npm scripts: `audit:artifacts`, `audit:artifacts:update`, `audit:artifacts:check`
+
+**Current Coverage:**
+- 7 artifacts tracked (13.5 MB total)
+- `identifier-rename-log.json` (12.6 MB) - Identifier rename audit
+- `import-fixes.json` (21.9 KB) - Import path migration log
+- `sovereignty-audit.json` (638.4 KB) - Supabase removal audit
+- `type-fix-report.json` (26.5 KB) - Type fix automation log
+- `typehealth-audit.json` (53.4 KB) - Current type health status
+- `typehealth-baseline.json` (130 B) - Baseline metrics
+- `typehealth-report.json` (215.4 KB) - Detailed type error report
+
+**Research-Grade Features:**
+- Tamper detection via hash comparison
+- Reproducibility verification across environments
+- Academic citation integrity (citable checksums)
+- CI/CD regression detection
+- Audit trail provenance
+
+**Manifest Structure:**
+```json
+{
+  "version": "v0.9.4-artifact-integrity",
+  "artifactCount": 7,
+  "entries": [{
+    "artifact": "filename.json",
+    "timestamp": "2025-12-20T17:31:22.740Z",
+    "sha256": "e2d97f51ca736c6ba968b4a4d9321a426768b3fff6fc329f8a4d1f1a03e69ecd",
+    "signature": "maia-sovereign-v0.9.4-artifact-integrity",
+    "integrity": "verified",
+    "sizeBytes": 12553602
+  }],
+  "verification": {
+    "algorithm": "SHA-256",
+    "format": "hex",
+    "purpose": "Research-grade artifact provenance for MAIA consciousness certification"
+  }
+}
+```
+
+**Impact:**
+Together with Stage 3's structural integrity (import path coherence), this forms the **MAIA Integrity Spine** — linking type coherence and artifact provenance in one continuous trust chain. The certification framework now provides both architectural validity (consciousness detection tests) and cryptographic proof (artifact integrity verification).
+
+---
+
+### v0.9.3 Release - Consciousness Detection Enhancements
 
 ### What's New
 
