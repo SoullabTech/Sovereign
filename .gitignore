@@ -280,5 +280,9 @@ android-release.keystore
 *.jks
 *.keystore
 certs/
-artifacts/sovereignty-audit.json
+# Never commit sovereignty audit outputs (can contain secret-shaped strings)
+artifacts/sovereignty-audit*.json
+artifacts/*sovereignty*audit*.json
+
+# Keep manifest but not sovereignty audits
 artifacts/.manifest.json
