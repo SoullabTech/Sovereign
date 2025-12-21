@@ -2,7 +2,7 @@
 // API endpoint for conversational interrogation of completed sessions
 
 import { NextRequest, NextResponse } from 'next/server';
-import Anthropic from '@anthropic-ai/sdk';
+import { getLLM } from '@/lib/ai/providerRouter';
 import { buildSessionReviewPrompt } from '@/lib/scribe/sessionReviewMode';
 
 export const runtime = 'nodejs';
@@ -10,6 +10,14 @@ export const maxDuration = 60; // Allow up to 60 seconds for complex queries
 
 export async function POST(req: NextRequest) {
   try {
+    // SOVEREIGNTY ENFORCEMENT: Block this route in sovereign mode
+    if (process.env.SOVEREIGN_MODE === 'true') {
+      return NextResponse.json(
+        { error: 'Session review route disabled in SOVEREIGN_MODE' },
+        { status: 403 }
+      );
+    }
+
     const {
       reviewedSessionId,
       currentSessionId,
@@ -37,25 +45,13 @@ export async function POST(req: NextRequest) {
       question
     );
 
-    // Call Claude for response
-    const anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
+    // Use providerRouter (respects sovereignty flags)
+    const llm = getLLM('chat');
 
-    const message = await anthropic.messages.create({
-      model: 'claude-3-5-sonnet-20241022',
-      max_tokens: 2000,
-      temperature: 0.7,
-      messages: [
-        {
-          role: 'user',
-          content: prompt,
-        },
-      ],
+    const responseText = await llm.generateText(prompt, {
+      maxTokens: 2000,
+      temperature: 0.7
     });
-
-    const responseText =
-      message.content[0].type === 'text' ? message.content[0].text : '';
 
     console.log(`✅ Session review response generated (${responseText.length} chars)`);
 

@@ -22,6 +22,25 @@
 - **No secrets in repo**: Never paste API keys/tokens into code, docs, commits
 - **No surprise external dependencies**: Avoid adding cloud services without explicit user intent
 
+### LLM Provider Routing (ENFORCED)
+- **ALWAYS use `lib/ai/providerRouter.ts`** for LLM calls
+- **NEVER instantiate Anthropic directly** with `new Anthropic()`
+- Channel-based routing:
+  - `getLLM('chat')` → Claude allowed (MAIA's "mouth"), respects `ALLOW_ANTHROPIC_CHAT`
+  - `getLLM('consciousness')` → Always local (MAIA's "mind"), never Claude
+- Pre-commit hook blocks direct Anthropic usage (except in providerRouter.ts itself)
+- Example replacement:
+  ```typescript
+  // ❌ WRONG - bypasses sovereignty
+  const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  await anthropic.messages.create({...});
+
+  // ✅ CORRECT - respects sovereignty flags
+  import { getLLM } from '@/lib/ai/providerRouter';
+  const llm = getLLM('chat');
+  await llm.generateText(prompt, { system, maxTokens });
+  ```
+
 ### Privacy & Security
 - Preserve privacy: do not introduce telemetry or third-party tracking
 - No automatic data sharing or analytics
