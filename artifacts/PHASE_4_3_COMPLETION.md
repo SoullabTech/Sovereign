@@ -202,12 +202,17 @@ database/migrations/
 ## Integration Status
 
 - ✅ Backend modules implemented
-- ✅ Database migration ready
+- ✅ Database migration applied to local PostgreSQL
 - ✅ Unit tests passing
 - ✅ Integration guide provided
-- ⏳ Pending: MainOracleAgent integration
-- ⏳ Pending: Database migration application
+- ✅ **MainOracleAgent integration complete** (commit: `bacfcfd74`)
+  - Trace lifecycle integrated into `processInteraction` method
+  - Facts built from sentiment analysis + biomarkers + context
+  - Symbolic router evaluates rules and selects routing
+  - Traces persisted to `consciousness_traces` table
+  - Response enhanced with symbolic practices and inference
 - ⏳ Pending: Production testing with live requests
+- ⏳ Pending: Analytics dashboard for trace exploration
 
 ---
 
@@ -275,6 +280,13 @@ database/migrations/
   - Amended commit after sovereignty fix
   - Merged to clean-main-no-secrets
   - All Supabase references removed
+- `23d5b6f5e` - docs(phase4.3): add Phase 4.3 Symbolic Router completion summary
+- `bbb3a12c4` - fix(phase4.3): restore migration to database/migrations and update docs
+- `bacfcfd74` - **feat(phase4.3): integrate Symbolic Router into MainOracleAgent**
+  - Trace lifecycle in processInteraction
+  - Symbolic routing with sentiment + biomarkers
+  - Practices and inference in response
+  - PostgreSQL trace persistence
 
 ---
 
@@ -304,5 +316,82 @@ npm test backend/src/lib/sexpr/__tests__/ruleEngine.test.ts
 
 Phase 4.3 establishes a **symbolic consciousness routing foundation** for MAIA, enabling transparent, declarative agent selection based on biomarkers, symbolic cues, and contextual facts. The system is **fully sovereignty-compliant**, uses **local PostgreSQL**, and provides **complete execution tracing** for debugging and analysis.
 
-**Status**: ✅ **COMPLETE AND MERGED**
-**Ready for**: Integration into MainOracleAgent and production testing
+**Status**: ✅ **COMPLETE, INTEGRATED, AND DEPLOYED**
+**Ready for**: Production testing and analytics dashboard development
+
+---
+
+## Integration Details (MainOracleAgent.ts)
+
+### What Was Integrated
+
+The symbolic router is now fully operational in the main request processing pipeline:
+
+1. **Trace Initialization** (line 470-478)
+   - Creates trace skeleton at request start
+   - Records userId, sessionId, requestId, model
+   - Captures input text
+
+2. **Sentiment-Based Fact Building** (line 492-517)
+   - Extracts biomarkers from sentiment analysis (score, energy, clarity, emotion)
+   - Builds symbolic facts (theme, needs, tone)
+   - Constructs context (element, support needs)
+
+3. **Symbolic Router Execution** (line 520)
+   - Evaluates all enabled rules against facts
+   - Returns routing decision, practices, inference, tags, flags
+
+4. **Inference Application** (line 523-530)
+   - Sets facet, mode, confidence from routing
+   - Records rationale (flags) in trace
+
+5. **Practice Integration** (line 533-537)
+   - Adds recommended practices to trace plan
+   - Practices returned in response for frontend display
+
+6. **Context Enhancement** (line 549-558)
+   - Passes symbolic practices to PersonalOracleAgent
+   - Includes inference and tags for agent awareness
+
+7. **Trace Finalization** (line 604-615)
+   - Calculates latency metrics
+   - Persists to PostgreSQL (non-blocking)
+   - Handles errors gracefully
+
+8. **Response Enhancement** (line 617-628)
+   - Returns symbolicPractices for frontend
+   - Returns symbolicInference for debugging
+   - Returns traceId for trace lookup
+
+### Example Flow
+
+```typescript
+User: "I feel stuck and betrayed"
+
+→ Sentiment Analysis: { emotion: "overwhelmed", score: -0.6, energy: "low" }
+→ Facts: {
+    biomarkers: { sentiment_score: -0.6, emotion: "overwhelmed" },
+    symbolic: { theme: "overwhelmed", needs: ["validation", "grounding"] },
+    input: { text: "I feel stuck and betrayed" }
+  }
+→ Rule Match: water2-shadow-gate (priority 50)
+  - Condition: contains "stuck", theme "betrayal", low energy
+  - Inference: { facet: "water2", mode: "shadow", confidence: 0.2 }
+  - Practice: "Containment + titration: name the feeling, locate it in body"
+  - Route: ShadowAgent
+
+→ Response includes:
+  - personalResponse: (from ShadowAgent)
+  - symbolicPractices: ["Containment + titration..."]
+  - symbolicInference: { facet: "water2", mode: "shadow", confidence: 0.2 }
+  - traceId: "uuid-here"
+
+→ Trace persisted to consciousness_traces table for analytics
+```
+
+---
+
+**Next Phase Recommendations**:
+- **Phase 4.4**: Analytics dashboard for exploring consciousness traces
+- **Phase 4.5**: Custom rule authoring UI for consciousness rules table
+- **Phase 4.6**: Biomarker extraction from voice/HRV/movement data
