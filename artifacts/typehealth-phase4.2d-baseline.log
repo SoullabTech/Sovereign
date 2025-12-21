@@ -1,0 +1,51 @@
+
+> spiralogic-oracle-system@0.1.0 audit:typehealth
+> npm run typecheck -- --pretty false > artifacts/typecheck-full.log 2>&1 || true && tsx scripts/audit-typehealth.ts
+
+🔍 Running TypeScript compiler...
+
+📊 MAIA TYPE HEALTH REPORT
+============================================================
+
+Total errors: 6424
+Files affected: 1042
+Modules analyzed: 8
+
+📋 TOP ERROR CODES
+
+────────────────────────────────────────────────────────────
+TS2339      2182 (34.0%)  Property does not exist
+TS2304      1227 (19.1%)  Cannot find name/module
+TS2322       563 (8.8%)  Type not assignable
+TS2353       285 (4.4%)  Unknown error
+TS2345       269 (4.2%)  Argument type mismatch
+TS2307       265 (4.1%)  Cannot find module
+TS2305       216 (3.4%)  Unknown error
+TS18048      145 (2.3%)  Possibly undefined
+TS2551       130 (2.0%)  Unknown error
+TS2709        93 (1.4%)  Unknown error
+
+🏥 MODULE HEALTH (by error density)
+
+────────────────────────────────────────────────────────────
+Module                          Errors     Lines     Density
+────────────────────────────────────────────────────────────
+beta-deployment                     36      2271   1.59/100L
+e2e                                  1        66   1.52/100L
+app                               2342    162614   1.44/100L
+lib                               3674    271215   1.35/100L
+api                                 19      1552   1.22/100L
+components                         343     40560   0.85/100L
+hooks                                8      1235   0.65/100L
+community-pages-temp                 1       318   0.31/100L
+
+💡 RECOMMENDATIONS
+
+────────────────────────────────────────────────────────────
+  📦 Check missing imports/dependencies in: api
+  🔧 Update interface definitions in: app, lib, components
+
+📄 Full report saved to: /Users/soullab/MAIA-SOVEREIGN/artifacts/typehealth-audit.json
+
+✅ Type health audit complete.
+
