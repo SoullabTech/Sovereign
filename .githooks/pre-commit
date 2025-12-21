@@ -1,14 +1,73 @@
-#!/usr/bin/env bash
-set -euo pipefail
+#!/bin/bash
+#
+# MAIA SOVEREIGNTY PRE-COMMIT HOOK
+#
+# This hook prevents:
+# 1. Supabase code from being committed
+# 2. Commits to non-approved branches
+#
+# Enforces the invariant: "We do NOT use Supabase"
+#
 
-echo "🔒 Sovereignty pre-commit check..."
-npm run check:no-supabase
+# ========================================
+# 1. Branch Guard Check
+# ========================================
+BRANCH="$(git branch --show-current)"
+ALLOW_DEPLOY="phase4.6-reflective-agentics"
 
-if [ $? -eq 0 ]; then
-  echo "✅ Sovereignty check passed"
-  exit 0
-else
-  echo "❌ Sovereignty check failed - commit blocked"
-  echo "Fix violations or run 'npm run check:no-supabase' for details"
+if [[ "$BRANCH" != "$ALLOW_DEPLOY" && "$BRANCH" != feature/* && "$BRANCH" != fix/* && "$BRANCH" != chore/* ]]; then
+  echo ""
+  echo "🚫 COMMIT BLOCKED: You are on branch '$BRANCH'"
+  echo ""
+  echo "Allowed branches:"
+  echo "   - $ALLOW_DEPLOY (deploy branch)"
+  echo "   - feature/* (feature branches)"
+  echo "   - fix/* (fix branches)"
+  echo "   - chore/* (chore branches)"
+  echo ""
+  echo "Run 'git reality' to see your current state"
+  echo ""
   exit 1
 fi
+
+echo "✅ Branch guard: committing to '$BRANCH' (allowed)"
+
+# ========================================
+# 2. Supabase Check
+# ========================================
+echo "🔍 Checking for Supabase violations..."
+
+# Check staged files for Supabase imports
+VIOLATIONS=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' | xargs grep -l "@supabase" 2>/dev/null || true)
+
+if [ -n "$VIOLATIONS" ]; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: Supabase violations detected"
+  echo ""
+  echo "The following files contain @supabase imports:"
+  echo "$VIOLATIONS" | sed 's/^/   /'
+  echo ""
+  echo "MAIA uses local PostgreSQL, not Supabase."
+  echo "See CLAUDE.md: 'We do NOT use Supabase'"
+  echo ""
+  echo "Fix:"
+  echo "   1. Use lib/db/postgres.ts for database operations"
+  echo "   2. Run: npm run audit:sovereignty"
+  echo "   3. Remove Supabase imports and try again"
+  echo ""
+  exit 1
+fi
+
+# Check package.json for Supabase dependencies
+if git diff --cached package.json | grep -q "@supabase"; then
+  echo ""
+  echo "❌ COMMIT BLOCKED: Attempting to add Supabase to package.json"
+  echo ""
+  echo "MAIA uses local PostgreSQL, not Supabase."
+  echo "See CLAUDE.md: 'We do NOT use Supabase'"
+  echo ""
+  exit 1
+fi
+
+echo "✅ No Supabase violations detected"
+exit 0
