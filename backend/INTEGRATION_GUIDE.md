@@ -7,8 +7,8 @@ This document provides step-by-step instructions for integrating the Consciousne
 ## Prerequisites
 
 - Phase 4.3 backend modules installed
-- Database migration `20251221_create_consciousness_traces_and_rules.sql` applied
-- Supabase client available in agent context
+- Database migration `20251221_consciousness_traces_rules` applied
+- Local PostgreSQL database configured (`lib/db/postgres.ts`)
 
 ---
 
@@ -88,7 +88,7 @@ Right before you return the final response to the user:
 finalizeTrace(trace);
 
 try {
-  await persistTrace({ supabase, trace });
+  await persistTrace({ trace });
 } catch (e) {
   // Never block the response on trace persistence failure
   pushTraceEvent(trace, { kind: "error", label: "persistTrace_failed", data: { message: (e as Error)?.message } });
@@ -107,7 +107,36 @@ try {
 - [ ] Agent selection updated based on routing.route
 - [ ] Trace finalized before response
 - [ ] Trace persisted to database (with error handling)
-- [ ] Database migration applied to Supabase
+- [ ] Database migration applied to local PostgreSQL
+
+---
+
+## Database Setup
+
+Apply the migration to your local PostgreSQL database:
+
+```bash
+# Option 1: Using Prisma migrate (recommended)
+npm run db:migrate
+
+# Option 2: Direct SQL execution
+psql -U soullab -d maia_consciousness -f prisma/migrations/20251221_consciousness_traces_rules/migration.sql
+```
+
+Verify tables were created:
+
+```bash
+psql -U soullab -d maia_consciousness -c "\dt consciousness_*"
+```
+
+Expected output:
+```
+                     List of relations
+ Schema |         Name          | Type  |   Owner
+--------+-----------------------+-------+-----------
+ public | consciousness_rules   | table | soullab
+ public | consciousness_traces  | table | soullab
+```
 
 ---
 
@@ -123,8 +152,18 @@ npm test backend/src/lib/sexpr/__tests__/ruleEngine.test.ts
 
 ## Next Steps
 
-1. Apply database migration via Supabase CLI or dashboard
+1. Apply database migration to local PostgreSQL (see Database Setup above)
 2. Integrate trace lifecycle into MainOracleAgent following steps above
 3. Test with sample inputs matching rule conditions
 4. Monitor `consciousness_traces` table for persisted data
 5. Add custom rules to `consciousness_rules` table or update `DEFAULT_CONSCIOUSNESS_RULES`
+
+---
+
+## Architecture Notes
+
+**Local-First Sovereignty:**
+- All data stored in local PostgreSQL (`postgresql://soullab@localhost:5432/maia_consciousness`)
+- No cloud dependencies (Supabase removed)
+- Uses `lib/db/postgres.ts` for all database operations
+- No RLS policies (local-only access control)

@@ -1,7 +1,7 @@
 // backend
 
 import crypto from "crypto";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { query } from "../../../lib/db/postgres";
 import type { ConsciousnessTrace, SafetyLevel, TraceEvent } from "../types/consciousnessTrace";
 
 function isoNow() {
@@ -66,11 +66,8 @@ export function finalizeTrace(trace: ConsciousnessTrace) {
   };
 }
 
-export async function persistTrace(args: {
-  supabase: SupabaseClient;
-  trace: ConsciousnessTrace;
-}) {
-  const { supabase, trace } = args;
+export async function persistTrace(args: { trace: ConsciousnessTrace }): Promise<void> {
+  const { trace } = args;
 
   const facet = trace.inference?.facet ?? null;
   const mode = trace.inference?.mode ?? null;
@@ -80,22 +77,28 @@ export async function persistTrace(args: {
 
   const memory_ids = trace.memory?.referencedIds?.length ? trace.memory.referencedIds : null;
 
-  const row = {
-    id: trace.id,
-    user_id: trace.userId,
-    session_id: trace.sessionId ?? null,
-    request_id: trace.requestId ?? null,
-    agent: trace.agent ?? null,
-    model: trace.model ?? null,
+  const sql = `
+    INSERT INTO consciousness_traces (
+      id, user_id, session_id, request_id, agent, model,
+      facet, mode, confidence, safety_level, latency_ms,
+      memory_ids, trace
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+  `;
+
+  await query(sql, [
+    trace.id,
+    trace.userId,
+    trace.sessionId ?? null,
+    trace.requestId ?? null,
+    trace.agent ?? null,
+    trace.model ?? null,
     facet,
     mode,
     confidence,
     safety_level,
     latency_ms,
     memory_ids,
-    trace,
-  };
-
-  const { error } = await supabase.from("consciousness_traces").insert(row);
-  if (error) throw error;
+    JSON.stringify(trace),
+  ]);
 }
