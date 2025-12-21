@@ -3,7 +3,7 @@
  * Provides easy web access to real-time consciousness monitoring
  */
 
-import BiometricConsciousnessDashboard from '../../../components/dashboard/BiometricConsciousnessDashboard';
+import BiometricConsciousnessDashboard from '@/components/dashboard/BiometricConsciousnessDashboard';
 
 export default function BiometricDashboardPage() {
   return <BiometricConsciousnessDashboard />;

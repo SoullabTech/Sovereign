@@ -1,9 +1,9 @@
 // frontend: app/admin/opus-pulse/page.tsx
 
-import GlobalOpusPulse from '../../../components/admin/opus-pulse/GlobalOpusPulse';
-import AxiomHeatmap from '../../../components/admin/opus-pulse/AxiomHeatmap';
-import FacetElementGrid from '../../../components/admin/opus-pulse/FacetElementGrid';
-import OpusTimeline from '../../../components/admin/opus-pulse/OpusTimeline';
+import GlobalOpusPulse from '@/components/admin/opus-pulse/GlobalOpusPulse';
+import AxiomHeatmap from '@/components/admin/opus-pulse/AxiomHeatmap';
+import FacetElementGrid from '@/components/admin/opus-pulse/FacetElementGrid';
+import OpusTimeline from '@/components/admin/opus-pulse/OpusTimeline';
 
 export default function OpusPulsePage() {
   return (

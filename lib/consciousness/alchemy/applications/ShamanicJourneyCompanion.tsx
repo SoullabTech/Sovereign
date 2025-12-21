@@ -23,7 +23,7 @@ import {
 import { AlchemicalStateDetector } from '../AlchemicalStateDetector';
 import { MercuryIntelligence } from '../MercuryIntelligence';
 import { CrisisDetector } from '../CrisisDetector';
-import { AlchemicalContainer } from '../components/AdaptiveInterface';
+import { AlchemicalContainer } from '@/components/AdaptiveInterface';
 
 // Core Types for Shamanic Application
 export type ShamanicWorld = 'middle' | 'upper' | 'lower';

@@ -11,7 +11,7 @@ import type {
   SpiralPhase,
   CollectiveResonance,
   VisualizationData
-} from '../components/visualization/SacredVisualizationLayer';
+} from '@/components/visualization/SacredVisualizationLayer';
 
 // Field Learning Algorithm data structures
 export interface FieldLearningData {

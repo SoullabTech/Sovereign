@@ -4,7 +4,7 @@
  * No authentication required
  */
 
-import BiometricConsciousnessDashboard from '../../../components/dashboard/BiometricConsciousnessDashboard';
+import BiometricConsciousnessDashboard from '@/components/dashboard/BiometricConsciousnessDashboard';
 
 export default function BiometricDemoPage() {
   return (
