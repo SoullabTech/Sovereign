@@ -246,20 +246,56 @@
 
 ## 5  Module C — Component Cleanup
 
-**Objective:** Resolve design mockup component issues and React import normalization.
+**Objective:** Normalize React component imports, resolve design mockup conflicts, and validate component type references.
 
-**Target:** −100 ± 20 diagnostics
-**Effort Estimate:** 2–3 hours
+**Scope:** React Component Cleanup & Prop-Type Normalization (Design System Alignment deferred)
+
+**Target:** −24 ± 20 diagnostics (qualitative consistency primary goal)
+**Effort Estimate:** ~180 minutes (~3 hours)
+
+**Status:** 📦 Launch Package Ready
+
+**Launch Package Files:**
+- `artifacts/PHASE_4_2C_MODULE_C_EXECUTION_PLAN.md` - Complete 5-phase workflow (550+ lines)
+- `artifacts/MODULE_C_LAUNCH_CHECKLIST.md` - Step-by-step execution guide (~300 lines)
+- `artifacts/MODULE_C_BRIEFING.md` - Mission brief with context and automation scripts (~350 lines)
+
+**Baseline Captured:** 2025-12-21
+**Baseline Source:** `artifacts/typehealth-phase4.2c-B1.log`
+**Baseline Metrics:** 6,424 diagnostics, 1,042 files affected
 
 ### 5.1  Actions Completed
 
 _[To be filled during execution]_
 
-- [ ] Review `MobileFirstDesign.tsx` and similar design mockup files
-- [ ] Extract valid reusable components OR exclude mockup files
-- [ ] Normalize React imports (useState, useEffect, etc.)
-- [ ] Clean up non-existent component references
-- [ ] Capture checkpoint metrics
+**Planned Actions:**
+- [ ] **Phase 1**: React Import Analysis (30 min)
+  - [ ] Create `scripts/analyze-react-imports.ts` automation script
+  - [ ] Generate `artifacts/react-import-analysis.json` report
+  - [ ] Identify 5-20 files requiring normalization
+
+- [ ] **Phase 2**: React Import Normalization (60 min)
+  - [ ] Normalize component imports to `@/components` and `@/lib/ui` patterns
+  - [ ] Checkpoint every 5 files with incremental commits
+  - [ ] Tag: `phase4.2c-C1-imports-normalized`
+
+- [ ] **Phase 3**: Design Mockup Resolution (40 min)
+  - [ ] Create `scripts/find-design-mockups.ts` automation script
+  - [ ] Generate `artifacts/design-mockup-report.json`
+  - [ ] Resolve mockups (delete/refactor/document)
+  - [ ] Tag: `phase4.2c-C1-mockups-resolved`
+
+- [ ] **Phase 4**: Component Reference Validation (30 min)
+  - [ ] Create `scripts/validate-component-refs.ts` automation script
+  - [ ] Generate `artifacts/component-validation-report.json`
+  - [ ] Fix component type conflicts
+  - [ ] Tag: `phase4.2c-C1-refs-validated`
+
+- [ ] **Phase 5**: Final Verification & Documentation (10 min)
+  - [ ] Capture final metrics in `artifacts/typehealth-phase4.2c-C1.log`
+  - [ ] Update this section (5.1-5.4) with completion details
+  - [ ] Create `artifacts/MODULE_C_COMPLETION_SUMMARY.md`
+  - [ ] Tag: `phase4.2c-C1-complete`
 
 ### 5.2  Checkpoint Metrics
 
