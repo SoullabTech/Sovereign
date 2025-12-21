@@ -7,8 +7,8 @@ This document provides step-by-step instructions for integrating the Consciousne
 ## Prerequisites
 
 - Phase 4.3 backend modules installed
-- Database migration `20251221_create_consciousness_traces_and_rules.sql` applied
-- Supabase client available in agent context
+- Database migration `20251221_create_consciousness_traces_and_rules.sql` applied to local PostgreSQL
+- Local PostgreSQL connection configured (`lib/db/postgres.ts`)
 
 ---
 
@@ -88,7 +88,7 @@ Right before you return the final response to the user:
 finalizeTrace(trace);
 
 try {
-  await persistTrace({ supabase, trace });
+  await persistTrace({ trace });
 } catch (e) {
   // Never block the response on trace persistence failure
   pushTraceEvent(trace, { kind: "error", label: "persistTrace_failed", data: { message: (e as Error)?.message } });
@@ -107,7 +107,7 @@ try {
 - [ ] Agent selection updated based on routing.route
 - [ ] Trace finalized before response
 - [ ] Trace persisted to database (with error handling)
-- [ ] Database migration applied to Supabase
+- [ ] Database migration applied to local PostgreSQL
 
 ---
 
@@ -123,8 +123,14 @@ npm test backend/src/lib/sexpr/__tests__/ruleEngine.test.ts
 
 ## Next Steps
 
-1. Apply database migration via Supabase CLI or dashboard
+1. Apply database migration to local PostgreSQL:
+   ```bash
+   psql $DATABASE_URL -f supabase/migrations/20251221_create_consciousness_traces_and_rules.sql
+   ```
 2. Integrate trace lifecycle into MainOracleAgent following steps above
 3. Test with sample inputs matching rule conditions
-4. Monitor `consciousness_traces` table for persisted data
+4. Monitor `consciousness_traces` table for persisted data:
+   ```bash
+   psql $DATABASE_URL -c "SELECT * FROM consciousness_traces ORDER BY created_at DESC LIMIT 5;"
+   ```
 5. Add custom rules to `consciousness_rules` table or update `DEFAULT_CONSCIOUSNESS_RULES`

@@ -1,17 +1,18 @@
 // backend
 
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { query } from "../../../lib/db/postgres";
 
-export async function fetchEnabledRulesSexpr(args: { supabase: SupabaseClient }): Promise<string | null> {
-  const { supabase } = args;
-  const { data, error } = await supabase
-    .from("consciousness_rules")
-    .select("sexpr, priority, name")
-    .eq("enabled", true)
-    .order("priority", { ascending: false });
+export async function fetchEnabledRulesSexpr(): Promise<string | null> {
+  const sql = `
+    SELECT sexpr, priority, name
+    FROM consciousness_rules
+    WHERE enabled = true
+    ORDER BY priority DESC, updated_at DESC
+  `;
 
-  if (error) throw error;
-  if (!data?.length) return null;
+  const result = await query<{ sexpr: string; priority: number; name: string }>(sql);
 
-  return data.map((r: any) => r.sexpr).join("\n\n");
+  if (!result.rows.length) return null;
+
+  return result.rows.map((r) => r.sexpr).join("\n\n");
 }
