@@ -2,6 +2,9 @@
 -- Migrated from Supabase to local Postgres
 -- Date: 2025-12-21
 
+-- Enable UUID generation
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Table: consciousness_traces
 -- Stores full trace objects for consciousness routing and debugging
 CREATE TABLE IF NOT EXISTS consciousness_traces (

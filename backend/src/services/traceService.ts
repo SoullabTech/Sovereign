@@ -83,7 +83,7 @@ export async function persistTrace(args: { trace: ConsciousnessTrace }): Promise
       facet, mode, confidence, safety_level, latency_ms,
       memory_ids, trace
     )
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13::jsonb)
   `;
 
   await query(sql, [
