@@ -2,6 +2,12 @@
 
 import { query } from "../../../lib/db/postgres";
 
+interface ConsciousnessRule {
+  sexpr: string;
+  priority: number;
+  name: string;
+}
+
 export async function fetchEnabledRulesSexpr(): Promise<string | null> {
   const sql = `
     SELECT sexpr, priority, name
@@ -10,7 +16,7 @@ export async function fetchEnabledRulesSexpr(): Promise<string | null> {
     ORDER BY priority DESC, updated_at DESC
   `;
 
-  const result = await query<{ sexpr: string; priority: number; name: string }>(sql);
+  const result = await query<ConsciousnessRule>(sql);
 
   if (!result.rows.length) return null;
 

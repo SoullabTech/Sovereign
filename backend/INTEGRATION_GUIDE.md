@@ -7,8 +7,8 @@ This document provides step-by-step instructions for integrating the Consciousne
 ## Prerequisites
 
 - Phase 4.3 backend modules installed
-- Database migration `20251221_create_consciousness_traces_and_rules.sql` applied to local PostgreSQL
-- Local PostgreSQL connection configured (`lib/db/postgres.ts`)
+- Database migration `20251221_consciousness_traces_rules` applied
+- Local PostgreSQL database configured (`lib/db/postgres.ts`)
 
 ---
 
@@ -111,6 +111,35 @@ try {
 
 ---
 
+## Database Setup
+
+Apply the migration to your local PostgreSQL database:
+
+```bash
+# Option 1: Using Prisma migrate (recommended)
+npm run db:migrate
+
+# Option 2: Direct SQL execution
+psql -U soullab -d maia_consciousness -f prisma/migrations/20251221_consciousness_traces_rules/migration.sql
+```
+
+Verify tables were created:
+
+```bash
+psql -U soullab -d maia_consciousness -c "\dt consciousness_*"
+```
+
+Expected output:
+```
+                     List of relations
+ Schema |         Name          | Type  |   Owner
+--------+-----------------------+-------+-----------
+ public | consciousness_rules   | table | soullab
+ public | consciousness_traces  | table | soullab
+```
+
+---
+
 ## Testing
 
 Run the unit tests to verify the rule engine:
@@ -123,14 +152,18 @@ npm test backend/src/lib/sexpr/__tests__/ruleEngine.test.ts
 
 ## Next Steps
 
-1. Apply database migration to local PostgreSQL:
-   ```bash
-   psql $DATABASE_URL -f supabase/migrations/20251221_create_consciousness_traces_and_rules.sql
-   ```
+1. Apply database migration to local PostgreSQL (see Database Setup above)
 2. Integrate trace lifecycle into MainOracleAgent following steps above
 3. Test with sample inputs matching rule conditions
-4. Monitor `consciousness_traces` table for persisted data:
-   ```bash
-   psql $DATABASE_URL -c "SELECT * FROM consciousness_traces ORDER BY created_at DESC LIMIT 5;"
-   ```
+4. Monitor `consciousness_traces` table for persisted data
 5. Add custom rules to `consciousness_rules` table or update `DEFAULT_CONSCIOUSNESS_RULES`
+
+---
+
+## Architecture Notes
+
+**Local-First Sovereignty:**
+- All data stored in local PostgreSQL (`postgresql://soullab@localhost:5432/maia_consciousness`)
+- No cloud dependencies (Supabase removed)
+- Uses `lib/db/postgres.ts` for all database operations
+- No RLS policies (local-only access control)

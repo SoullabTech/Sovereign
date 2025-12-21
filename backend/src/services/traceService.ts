@@ -66,9 +66,7 @@ export function finalizeTrace(trace: ConsciousnessTrace) {
   };
 }
 
-export async function persistTrace(args: {
-  trace: ConsciousnessTrace;
-}) {
+export async function persistTrace(args: { trace: ConsciousnessTrace }): Promise<void> {
   const { trace } = args;
 
   const facet = trace.inference?.facet ?? null;
@@ -82,8 +80,10 @@ export async function persistTrace(args: {
   const sql = `
     INSERT INTO consciousness_traces (
       id, user_id, session_id, request_id, agent, model,
-      facet, mode, confidence, safety_level, latency_ms, memory_ids, trace
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      facet, mode, confidence, safety_level, latency_ms,
+      memory_ids, trace
+    )
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
   `;
 
   await query(sql, [
