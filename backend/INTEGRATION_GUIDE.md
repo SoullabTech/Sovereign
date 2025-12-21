@@ -116,11 +116,7 @@ try {
 Apply the migration to your local PostgreSQL database:
 
 ```bash
-# Option 1: Using Prisma migrate (recommended)
-npm run db:migrate
-
-# Option 2: Direct SQL execution
-psql -U soullab -d maia_consciousness -f prisma/migrations/20251221_consciousness_traces_rules/migration.sql
+psql -U soullab -d maia_consciousness -f database/migrations/20251221_create_consciousness_traces_and_rules.sql
 ```
 
 Verify tables were created:

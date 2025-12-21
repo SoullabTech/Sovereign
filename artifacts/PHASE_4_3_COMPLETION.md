@@ -97,7 +97,7 @@ if (routing.infer) {
 
 ### 4. Database Schema
 
-**File**: `supabase/migrations/20251221_create_consciousness_traces_and_rules.sql`
+**File**: `database/migrations/20251221_create_consciousness_traces_and_rules.sql`
 
 **Tables**:
 - `consciousness_traces` - Stores full execution traces with fast filters (facet, mode, confidence, safety_level, latency_ms)
@@ -181,7 +181,7 @@ backend/
     └── rules/
         └── consciousnessRules.ts
 
-supabase/migrations/
+database/migrations/
 └── 20251221_create_consciousness_traces_and_rules.sql
 ```
 
@@ -215,8 +215,8 @@ supabase/migrations/
 
 1. **Apply Database Migration**:
    ```bash
-   psql postgresql://soullab@localhost:5432/maia_consciousness \
-     -f supabase/migrations/20251221_create_consciousness_traces_and_rules.sql
+   psql -U soullab -d maia_consciousness \
+     -f database/migrations/20251221_create_consciousness_traces_and_rules.sql
    ```
 
 2. **Integrate into MainOracleAgent**:
