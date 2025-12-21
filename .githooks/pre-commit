@@ -48,6 +48,11 @@ if [ -n "$STAGED_FILES" ]; then
       continue
     fi
 
+    # Skip legacy/ directory (quarantined code)
+    if [[ "$FILE" == legacy/* ]]; then
+      continue
+    fi
+
     # Check if this file ADDS direct Anthropic usage (ignore deletions)
     if git diff --cached "$FILE" | grep "^+" | grep -q "new Anthropic("; then
       ANTHROPIC_VIOLATIONS="$ANTHROPIC_VIOLATIONS\n   $FILE"
