@@ -44,8 +44,8 @@ export type AlchemicalPhase =
 export interface AlchemicalStage {
   currentPhase: AlchemicalPhase;
   element: ElementType;
-  intensity: number; // 0-1
-  completionPercentage: number; // 0-100
+  intensity: number; // 0-1: Intensity of current phase experience
+  completionPercentage: number; // 0-100: Progress through current phase
   nextPhase?: AlchemicalPhase;
 }
 
@@ -245,14 +245,14 @@ export interface SpiralogicPhase {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface TransformationScore {
-  overall: number; // 0-100: Composite score
+  overall: number; // 0-100: Composite transformation score
   dimensions: {
-    cognitive: number; // Mental/belief transformation
-    emotional: number; // Affective transformation
-    somatic: number; // Embodied transformation
-    behavioral: number; // Action/pattern transformation
-    relational: number; // Interpersonal transformation
-    spiritual: number; // Transcendent/meaning transformation
+    cognitive: number; // 0-100: Mental/belief transformation
+    emotional: number; // 0-100: Affective transformation
+    somatic: number; // 0-100: Embodied transformation
+    behavioral: number; // 0-100: Action/pattern transformation
+    relational: number; // 0-100: Interpersonal transformation
+    spiritual: number; // 0-100: Transcendent/meaning transformation
   };
   momentum: 'accelerating' | 'steady' | 'plateauing' | 'regressing';
   breakthroughPotential: number; // 0-1: Likelihood of breakthrough
@@ -324,6 +324,7 @@ export interface BiomarkerSnapshot {
     journalEntryId?: string;
     oracleConsultId?: string;
   };
+  schemaVersion?: string; // For future schema evolution tracking
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -346,4 +347,5 @@ export interface BiomarkerEvolution {
     significance: number; // 0-1: How significant the trend
   }[];
   insights: string[]; // Patterns detected across snapshots
+  schemaVersion?: string; // For future schema evolution tracking
 }
