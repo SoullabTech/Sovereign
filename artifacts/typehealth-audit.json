@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-21T11:24:26.465Z",
+  "timestamp": "2025-12-21T11:52:50.694Z",
   "totalErrors": 6424,
-  "totalFiles": 1043,
+  "totalFiles": 1042,
   "modules": [
     {
       "module": "beta-deployment",
@@ -30,8 +30,8 @@
     {
       "module": "app",
       "errorCount": 2338,
-      "lineCount": 163150,
-      "density": 1.4330370824394727,
+      "lineCount": 162614,
+      "density": 1.4377605864193737,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -161,7 +161,6 @@
         "app/api/backend/src/orchestrators/NarrativeEngine.ts",
         "app/api/backend/src/protocols/__tests__/LoopingBoundaryTests.ts",
         "app/api/backend/src/protocols/__tests__/LoopingEdgeCases.ts",
-        "app/api/backend/src/protocols/__tests__/LoopingTestHarness.ts",
         "app/api/backend/src/protocols/__tests__/LoopingTestRunner.ts",
         "app/api/backend/src/protocols/CatastrophicFailureGuard.ts",
         "app/api/backend/src/protocols/ElementalResonance.ts",
@@ -1147,12 +1146,12 @@
     },
     {
       "code": "TS2307",
-      "count": 266,
+      "count": 260,
       "description": "Cannot find module"
     },
     {
       "code": "TS2305",
-      "count": 210,
+      "count": 216,
       "description": "Unknown error"
     },
     {
