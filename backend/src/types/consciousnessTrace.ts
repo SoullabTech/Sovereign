@@ -1,5 +1,7 @@
 // backend
 
+import type { FacetCode } from "../../../lib/consciousness/spiralogic-facet-mapping";
+
 export type SafetyLevel = "none" | "mild" | "elevated" | "high";
 export type TraceEventKind =
   | "input_received"
@@ -38,12 +40,12 @@ export interface TraceEvidence {
 }
 
 export interface TraceInference {
-  facet?: string;
+  facet?: FacetCode; // Typed facet code (F1-F3, W1-W3, E1-E3, A1-A3, Æ1-Æ3)
   mode?: string;
   arousal?: "low" | "mid" | "high";
   valence?: "negative" | "mixed" | "positive";
   confidence?: number; // 0..1
-  competing?: Array<{ facet: string; mode?: string; confidence?: number }>;
+  competing?: Array<{ facet: FacetCode; mode?: string; confidence?: number }>;
   rationale?: string[];
 }
 
