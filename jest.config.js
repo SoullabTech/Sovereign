@@ -7,6 +7,7 @@ const config = {
   testPathIgnorePatterns: [
     '/node_modules/',
     '<rootDir>/app/api/backend/',  // Backend has separate test setup
+    '<rootDir>/.worktrees/',        // Exclude git worktrees
   ],
   transform: {
     '^.+\\.tsx?$': ['ts-jest', {
