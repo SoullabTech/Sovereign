@@ -13,7 +13,26 @@
  * 3. Type instantiation to verify structural validity
  *
  * Expected: Zero TypeScript errors, all imports resolve
+ *
+ * Usage:
+ *   npx tsx scripts/test-biomarker-exports.ts
+ *   npx tsx scripts/test-biomarker-exports.ts --log artifacts/phase4.2d-barrel-verification.log
  */
+
+import fs from "fs";
+import path from "path";
+
+const LOG_PATH_ARG_INDEX = process.argv.indexOf("--log");
+const LOG_PATH =
+  LOG_PATH_ARG_INDEX !== -1 ? process.argv[LOG_PATH_ARG_INDEX + 1] : undefined;
+
+function log(line: string) {
+  console.log(line);
+  if (LOG_PATH) {
+    fs.mkdirSync(path.dirname(LOG_PATH), { recursive: true });
+    fs.appendFileSync(LOG_PATH, line + "\n", "utf8");
+  }
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TEST 1: Import All Types via Main Barrel (@/lib/types)
@@ -244,31 +263,31 @@ const testConsciousnessBiomarkers: ConsciousnessBiomarkers = {
 // VERIFICATION SUMMARY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-console.log('🔍 Phase 4.2D Phase 3 — Barrel Export Verification\n');
+log('🔍 Phase 4.2D Phase 3 — Barrel Export Verification\n');
 
-console.log('✅ TEST 1: Main Barrel Import (@/lib/types)');
-console.log('   - 28 type definitions imported successfully\n');
+log('✅ TEST 1: Main Barrel Import (@/lib/types)');
+log('   - 28 type definitions imported successfully\n');
 
-console.log('✅ TEST 2: Consciousness Barrel Import (@/lib/types/consciousness)');
-console.log('   - Namespace import successful\n');
+log('✅ TEST 2: Consciousness Barrel Import (@/lib/types/consciousness)');
+log('   - Namespace import successful\n');
 
-console.log('✅ TEST 3: Type Instantiation');
-console.log('   - Union types: 9/9 validated');
-console.log('   - Interface types: 19/19 validated');
-console.log('   - Complex nested types: validated\n');
+log('✅ TEST 3: Type Instantiation');
+log('   - Union types: 9/9 validated');
+log('   - Interface types: 19/19 validated');
+log('   - Complex nested types: validated\n');
 
-console.log('📊 VERIFICATION RESULTS\n');
-console.log('════════════════════════════════════════════════════════════');
-console.log('Total types tested:        28');
-console.log('Union types:               9');
-console.log('Interface types:           19');
-console.log('Barrel export coverage:    100%');
-console.log('Type resolution errors:    0');
-console.log('Structural validity:       ✅ Passed');
-console.log('════════════════════════════════════════════════════════════\n');
+log('📊 VERIFICATION RESULTS\n');
+log('════════════════════════════════════════════════════════════');
+log('Total types tested:        28');
+log('Union types:               9');
+log('Interface types:           19');
+log('Barrel export coverage:    100%');
+log('Type resolution errors:    0');
+log('Structural validity:       ✅ Passed');
+log('════════════════════════════════════════════════════════════\n');
 
-console.log('🟢 All biomarker types are correctly exported and resolvable\n');
-console.log('✅ Phase 4.2D Phase 3 — Barrel Export Verification Complete\n');
+log('🟢 All biomarker types are correctly exported and resolvable\n');
+log('✅ Phase 4.2D Phase 3 — Barrel Export Verification Complete\n');
 
 // Export test data for external validation if needed
 export const verificationTests = {

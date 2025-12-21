@@ -207,7 +207,7 @@ export interface ACTState {
   psychologicalFlexibility: number; // 0-1: Core ACT metric
   presentMomentAwareness: number; // 0-1
   cognitiveDefusion: number; // 0-1: Distance from thoughts
-  acceptanceVsAvoidance: number; // -1 to 1: Avoidance vs acceptance
+  acceptanceVsAvoidance: number; // ratio: -1 to +1 (avoidance vs acceptance)
   selfAsContext: number; // 0-1: Observing self vs conceptualized self
   values: string[]; // Identified core values
   committedActions: number; // 0-1: Acting on values
@@ -235,9 +235,9 @@ export type SpiralogicRefinement = 'emergence' | 'deepening' | 'mastery';
 export interface SpiralogicPhase {
   element: SpiralogicElement;
   refinement: SpiralogicRefinement;
-  phaseNumber: number; // 1-12
+  phaseNumber: number; // index: 1-12 (position in 12-phase cycle)
   elementProgress: number; // 0-100: Progress within current element
-  spiralNumber: number; // Which cycle through the 12 phases
+  spiralNumber: number; // index: Which spiral cycle (1, 2, 3...)
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
