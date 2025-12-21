@@ -449,13 +449,70 @@ phase4.2d-P5-complete        — Metrics validation & documentation complete
 
 ---
 
+## Git History Rewrite Protocol (Phase 6)
+
+### Background
+
+During Phase 4.2D development, `artifacts/sovereignty-audit.json` was committed containing secret-shaped strings that triggered GitHub Push Protection (GH013). The file was purged from all git history using `git filter-repo` to unblock pushing the branch and tags.
+
+### History Rewrite Details
+
+- **Tool Used**: `git-filter-repo` (version 2.47.0)
+- **Operation**: `git filter-repo --path artifacts/sovereignty-audit.json --invert-paths --force`
+- **Commits Rewritten**: 915
+- **Backup Branch**: `backup/phase4.2d-before-secret-purge`
+- **Final Tag**: `phase4.2d-complete` (umbrella tag for entire integration)
+
+### Verification
+
+✅ **Post-Purge Checks:**
+- No history for sovereignty-audit.json (completely removed)
+- No secret patterns found in current tree (only env var name references)
+- GitHub Push Protection: Cleared (push successful)
+- All Phase 4.2D tags pushed successfully (including `phase4.2d-complete`)
+
+### Future Prevention
+
+`.gitignore` updated with comprehensive patterns:
+```gitignore
+# Never commit sovereignty audit outputs (can contain secret-shaped strings)
+artifacts/sovereignty-audit*.json
+artifacts/*sovereignty*audit*.json
+```
+
+### Collaborator Reset Instructions
+
+If you're working on this repo and encounter conflicts after the history rewrite:
+
+```bash
+# Reset main branch
+git fetch --all --prune
+git checkout main
+git reset --hard origin/main
+git clean -fd
+
+# Reset feature branch
+git checkout phase4.2d-biomarkers-init
+git reset --hard origin/phase4.2d-biomarkers-init
+git clean -fd
+```
+
+### Safety Backup
+
+The pre-rewrite history is preserved in:
+- **Branch**: `backup/phase4.2d-before-secret-purge`
+- **Location**: Local only (not pushed to remote)
+- **Purpose**: Recovery if needed during rewrite validation
+
+---
+
 ## Next Steps
 
-### Immediate (Phase 6)
-- Final commit with complete integration documentation
-- Create `phase4.2d-complete` tag
-- Push commits and tags to remote
-- Archive Phase 4.2D artifacts
+### Immediate (Complete) ✅
+- ✅ Final commit with complete integration documentation
+- ✅ Create `phase4.2d-complete` tag
+- ✅ Push commits and tags to remote
+- ✅ Git history cleaned and verified
 
 ### Future Enhancements
 1. **Machine Learning Integration**
