@@ -50,16 +50,16 @@ export interface TimeSeriesPoint {
 export async function getFacetAnalytics(): Promise<FacetAnalytics[]> {
   const sql = `
     SELECT
-      facet_code,
-      element,
-      phase,
-      trace_count,
+      facet as facet_code,
+      'Unknown' as element,
+      NULL::integer as phase,
+      total_traces as trace_count,
       avg_confidence,
       avg_latency_ms,
-      last_trace_at,
-      first_trace_at
-    FROM facet_trace_summary
-    ORDER BY trace_count DESC
+      last_seen as last_trace_at,
+      first_seen as first_trace_at
+    FROM analytics_facet_distribution
+    ORDER BY total_traces DESC
   `;
 
   const result = await query<{
@@ -94,16 +94,16 @@ export async function getFacetAnalyticsByCode(
 ): Promise<FacetAnalytics | null> {
   const sql = `
     SELECT
-      facet_code,
-      element,
-      phase,
-      trace_count,
+      facet as facet_code,
+      'Unknown' as element,
+      NULL::integer as phase,
+      total_traces as trace_count,
       avg_confidence,
       avg_latency_ms,
-      last_trace_at,
-      first_trace_at
-    FROM facet_trace_summary
-    WHERE facet_code = $1
+      last_seen as last_trace_at,
+      first_seen as first_trace_at
+    FROM analytics_facet_distribution
+    WHERE facet = $1
   `;
 
   const result = await query<{
