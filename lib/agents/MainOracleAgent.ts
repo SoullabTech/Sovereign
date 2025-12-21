@@ -5,6 +5,11 @@ import { SentimentAnalyzer, type SentimentResult, type ConversationSentiment } f
 import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '../field/enforceFieldSafety';
 
+// Phase 4.3: Symbolic Router & Consciousness Trace Spine
+import { createTraceSkeleton, finalizeTrace, persistTrace, pushTraceEvent } from '../../backend/src/services/traceService';
+import { buildFacts, runSymbolicRouter } from '../../backend/src/services/symbolicRouter';
+import type { ConsciousnessTrace } from '../../backend/src/types/consciousnessTrace';
+
 // Collective consciousness state with soulful interaction tracking
 export interface CollectiveField {
   activeMembers: number;
@@ -418,6 +423,10 @@ export class MainOracleAgent {
     };
     sentimentAnalysis?: SentimentResult;
     emotionalSupport?: string;
+    // Phase 4.3: Symbolic Router additions
+    symbolicPractices?: string[];
+    symbolicInference?: Record<string, unknown>;
+    traceId?: string;
   }> {
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
     try {
@@ -461,6 +470,17 @@ export class MainOracleAgent {
       // Graceful degradation - continue without field safety
     }
 
+    // Phase 4.3: Initialize Consciousness Trace
+    const trace: ConsciousnessTrace = createTraceSkeleton({
+      userId,
+      sessionId: (context as any)?.sessionId,
+      requestId: (context as any)?.requestId || `req_${Date.now()}`,
+      agent: 'MainOracleAgent',
+      model: (context as any)?.model || 'deepseek',
+      input: { text: input },
+    });
+    pushTraceEvent(trace, { kind: 'input_received', label: 'user_input' });
+
     // Get or create sentiment analyzer for user
     let sentimentAnalyzer = this.sentimentAnalyzers.get(userId);
     if (!sentimentAnalyzer) {
@@ -471,16 +491,74 @@ export class MainOracleAgent {
     // Analyze sentiment of input
     const sentimentResult = sentimentAnalyzer.analyze(input);
     const sentimentInsights = sentimentAnalyzer.getSentimentInsights();
-    
+    pushTraceEvent(trace, { kind: 'cue_extraction', label: 'sentiment_analyzed', data: { emotion: sentimentResult.emotion, score: sentimentResult.score } });
+
+    // Phase 4.3: Build facts for symbolic router
+    const biomarkers = {
+      sentiment_score: sentimentResult.score,
+      energy_level: sentimentResult.energyLevel,
+      emotional_clarity: sentimentResult.clarity,
+      emotion: sentimentResult.emotion,
+      ...((context as any)?.biomarkers || {}),
+    };
+
+    const symbolic = {
+      theme: sentimentResult.emotion,
+      needs: sentimentInsights.emotionalNeeds,
+      tone: sentimentInsights.suggestedTone,
+      ...((context as any)?.symbolic || {}),
+    };
+
+    const facts = buildFacts({
+      inputText: input,
+      biomarkers,
+      symbolic,
+      context: {
+        element: (context as any)?.element,
+        tone: sentimentInsights.suggestedTone,
+        needsSupport: sentimentInsights.needsSupport,
+      },
+    });
+
+    // Phase 4.3: Run symbolic router
+    const routing = runSymbolicRouter({ trace, facts });
+
+    // Apply routing inference to trace
+    if (routing.infer) {
+      trace.inference = {
+        facet: (routing.infer.facet as string) ?? trace.inference?.facet,
+        mode: (routing.infer.mode as string) ?? trace.inference?.mode,
+        confidence: typeof routing.infer.confidence === 'number' ? (routing.infer.confidence as number) : trace.inference?.confidence,
+        rationale: (routing.flags ?? []).map(String),
+      };
+    }
+
+    // Store practices as plan steps
+    if (routing.practices && routing.practices.length > 0) {
+      trace.plan = {
+        steps: routing.practices.map((p) => ({ kind: 'practice' as const, detail: p })),
+      };
+    }
+
+    // Log routing decision
+    if (routing.route) {
+      trace.routing = { route: routing.route, reason: ['symbolic_router'] };
+      console.log(`🧭 [Symbolic Router] Route: ${routing.route}, Practices: ${routing.practices?.length || 0}, Flags: ${routing.flags?.join(', ') || 'none'}`);
+    }
+
     // Get personal oracle
     const personalOracle = await this.getPersonalOracle(userId);
     
-    // Process through personal oracle with sentiment awareness
+    // Process through personal oracle with sentiment awareness + symbolic routing
     const enhancedContext = {
       ...context,
       sentiment: sentimentResult,
       emotionalNeeds: sentimentInsights.emotionalNeeds,
-      suggestedTone: sentimentInsights.suggestedTone
+      suggestedTone: sentimentInsights.suggestedTone,
+      // Phase 4.3: Include routing practices and inference
+      symbolicPractices: routing.practices || [],
+      symbolicInference: routing.infer,
+      symbolicTags: routing.tags || [],
     };
     
     // Use enhanced interaction if available
@@ -523,17 +601,34 @@ export class MainOracleAgent {
     
     // Update collective sentiment
     this.updateCollectiveSentiment(userId, sentimentResult);
-    
+
     // Save sentiment history
     await sentimentAnalyzer.saveSentimentHistory(userId);
-    
+
+    // Phase 4.3: Finalize and persist trace
+    finalizeTrace(trace);
+    pushTraceEvent(trace, { kind: 'output_sent', label: 'response_complete' });
+
+    // Persist trace to database (non-blocking)
+    try {
+      await persistTrace({ trace });
+    } catch (e) {
+      // Never block the response on trace persistence failure
+      pushTraceEvent(trace, { kind: 'error', label: 'persistTrace_failed', data: { message: (e as Error)?.message } });
+      console.error('⚠️  [Trace Persistence] Failed to persist trace:', e);
+    }
+
     return {
       personalResponse,
       collectiveInsight,
       elementalReflection,
       resonanceUpdate,
       sentimentAnalysis: sentimentResult,
-      emotionalSupport
+      emotionalSupport,
+      // Phase 4.3: Include symbolic routing information
+      symbolicPractices: routing.practices || [],
+      symbolicInference: routing.infer,
+      traceId: trace.id,
     };
   }
   

@@ -1,6 +1,6 @@
 // backend
 
-import crypto from "crypto";
+import { randomUUID } from "crypto";
 import { query } from "../../../lib/db/postgres";
 import type { ConsciousnessTrace, SafetyLevel, TraceEvent } from "../types/consciousnessTrace";
 
@@ -10,7 +10,7 @@ function isoNow() {
 
 export function newTraceId(): string {
   // uuid v4 compatible
-  return crypto.randomUUID();
+  return randomUUID();
 }
 
 export function createTraceSkeleton(args: {
