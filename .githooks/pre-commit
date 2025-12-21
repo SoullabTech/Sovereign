@@ -77,6 +77,47 @@ fi
 echo "✅ No direct Anthropic usage detected"
 
 # ========================================
+# 2b. Anthropic SDK Import Check (Routes Only)
+# ========================================
+echo "🔍 Checking for Anthropic SDK imports in routes..."
+
+if [ -n "$STAGED_FILES" ]; then
+  SDK_VIOLATIONS=""
+  for FILE in $STAGED_FILES; do
+    # Only check route files
+    if [[ "$FILE" =~ app/api/.*/route\.(ts|js)$ ]]; then
+      # Skip providerRouter if somehow it's in app/api
+      if [[ "$FILE" == *"providerRouter"* ]]; then
+        continue
+      fi
+
+      # Check if this file ADDS Anthropic SDK import (ignore deletions)
+      if git diff --cached "$FILE" | grep "^+" | grep -q "@anthropic-ai/sdk"; then
+        SDK_VIOLATIONS="$SDK_VIOLATIONS\n   $FILE"
+      fi
+    fi
+  done
+
+  if [ -n "$SDK_VIOLATIONS" ]; then
+    echo ""
+    echo "❌ COMMIT BLOCKED: Anthropic SDK import in route file"
+    echo ""
+    echo "The following route files import @anthropic-ai/sdk:"
+    echo -e "$SDK_VIOLATIONS"
+    echo ""
+    echo "Sovereignty enforcement: Use lib/ai/providerRouter.ts instead"
+    echo ""
+    echo "Fix:"
+    echo "   Replace: import Anthropic from '@anthropic-ai/sdk';"
+    echo "   With:    import { getLLM } from '@/lib/ai/providerRouter';"
+    echo ""
+    exit 1
+  fi
+fi
+
+echo "✅ No Anthropic SDK imports in routes"
+
+# ========================================
 # 3. Supabase Check
 # ========================================
 echo "🔍 Checking for Supabase violations..."

@@ -1,0 +1,145 @@
+name: Sovereignty Enforcement
+
+on:
+  pull_request:
+    branches: [ main, 'phase*' ]
+  push:
+    branches: [ main, 'phase*' ]
+
+jobs:
+  sovereignty-audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for accurate diffs
+
+      - name: Check for direct Anthropic usage in routes
+        run: |
+          echo "🔍 Checking for direct Anthropic usage in API routes..."
+
+          # Find all route files
+          ROUTE_FILES=$(find app/api -name "route.ts" -o -name "route.js" 2>/dev/null || true)
+
+          if [ -z "$ROUTE_FILES" ]; then
+            echo "✅ No route files found to check"
+            exit 0
+          fi
+
+          # Check for new Anthropic() in routes
+          VIOLATIONS=$(echo "$ROUTE_FILES" | xargs grep -l "new Anthropic(" 2>/dev/null || true)
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo ""
+            echo "❌ SOVEREIGNTY VIOLATION: Direct Anthropic usage found in routes"
+            echo ""
+            echo "The following route files contain 'new Anthropic()':"
+            echo "$VIOLATIONS" | sed 's/^/   /'
+            echo ""
+            echo "Fix: Use lib/ai/providerRouter.ts instead"
+            echo "  import { getLLM } from '@/lib/ai/providerRouter';"
+            echo "  const llm = getLLM('chat');"
+            echo ""
+            exit 1
+          fi
+
+          echo "✅ No direct Anthropic usage in routes"
+
+      - name: Check for Anthropic SDK imports in routes
+        run: |
+          echo "🔍 Checking for @anthropic-ai/sdk imports in routes..."
+
+          ROUTE_FILES=$(find app/api -name "route.ts" -o -name "route.js" 2>/dev/null || true)
+
+          if [ -z "$ROUTE_FILES" ]; then
+            echo "✅ No route files found to check"
+            exit 0
+          fi
+
+          # Check for SDK imports (excluding providerRouter)
+          VIOLATIONS=$(echo "$ROUTE_FILES" | xargs grep -l "@anthropic-ai/sdk" 2>/dev/null || true)
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo ""
+            echo "❌ SOVEREIGNTY VIOLATION: Anthropic SDK imported in routes"
+            echo ""
+            echo "The following route files import @anthropic-ai/sdk:"
+            echo "$VIOLATIONS" | sed 's/^/   /'
+            echo ""
+            echo "Fix: Use lib/ai/providerRouter.ts instead"
+            echo "  import { getLLM } from '@/lib/ai/providerRouter';"
+            echo ""
+            exit 1
+          fi
+
+          echo "✅ No Anthropic SDK imports in routes"
+
+      - name: Check for Supabase usage
+        run: |
+          echo "🔍 Checking for Supabase violations..."
+
+          # Check TypeScript/JavaScript files for Supabase imports
+          VIOLATIONS=$(find . -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" \
+            | grep -v node_modules \
+            | grep -v .next \
+            | xargs grep -l "@supabase" 2>/dev/null || true)
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo ""
+            echo "❌ SUPABASE VIOLATION: Supabase imports found"
+            echo ""
+            echo "The following files contain @supabase imports:"
+            echo "$VIOLATIONS" | sed 's/^/   /'
+            echo ""
+            echo "MAIA uses local PostgreSQL, not Supabase."
+            echo "Use lib/db/postgres.ts for database operations"
+            echo ""
+            exit 1
+          fi
+
+          echo "✅ No Supabase violations"
+
+      - name: Verify providerRouter exists
+        run: |
+          echo "🔍 Verifying providerRouter.ts exists..."
+
+          if [ ! -f "lib/ai/providerRouter.ts" ]; then
+            echo ""
+            echo "❌ CRITICAL: lib/ai/providerRouter.ts not found"
+            echo ""
+            echo "The sovereignty enforcement router is missing!"
+            echo ""
+            exit 1
+          fi
+
+          # Verify it exports getLLM
+          if ! grep -q "export function getLLM" lib/ai/providerRouter.ts; then
+            echo ""
+            echo "❌ CRITICAL: providerRouter.ts missing getLLM export"
+            echo ""
+            exit 1
+          fi
+
+          # Verify channel types
+          if ! grep -q "LLMChannel = 'chat' | 'consciousness'" lib/ai/providerRouter.ts; then
+            echo ""
+            echo "⚠️  WARNING: LLMChannel type definition changed"
+            echo ""
+          fi
+
+          echo "✅ providerRouter.ts verified"
+
+      - name: Summary
+        if: success()
+        run: |
+          echo ""
+          echo "✅ All sovereignty checks passed"
+          echo ""
+          echo "Verified:"
+          echo "  - No direct Anthropic usage in routes"
+          echo "  - No Anthropic SDK imports in routes"
+          echo "  - No Supabase usage"
+          echo "  - providerRouter.ts exists and exports getLLM"
+          echo ""
