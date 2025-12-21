@@ -233,9 +233,14 @@
 
 ### 4.4  Commit & Tag
 
-- **Commit:** _[pending]_
+- **Commits:**
+  - `58c1458b3` - Path normalization (Step 1/2)
+  - `7c33e647d` - Documentation and completion (Step 2/2)
 - **Tag:** `phase4.2c-B1-complete`
-- **Message:** `refactor(paths): Phase 4.2C Module B – Path Normalization done`
+- **Message:** `feat(types): Phase 4.2C Module B — Path Normalization complete`
+- **Files Changed:** 14 total (across both commits)
+- **Insertions:** +901
+- **Deletions:** -37
 
 ---
 
