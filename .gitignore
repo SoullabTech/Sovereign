@@ -286,3 +286,9 @@ artifacts/*sovereignty*audit*.json
 
 # Keep manifest but not sovereignty audits
 artifacts/.manifest.json
+
+# local dev/worktrees
+.worktrees/
+**/.worktrees/
+**/.temp/
+*.worktree/
