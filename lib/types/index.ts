@@ -141,3 +141,13 @@ export * from './elemental';
  * Includes: SystemContext, WisdomOracleContext, AstrologyContext, ReflectionContext
  */
 export * from './generated';
+
+// ============================================================================
+// CONSCIOUSNESS BIOMARKERS (Phase 4.2D)
+// ============================================================================
+
+/**
+ * Consciousness biomarker types - 13 therapeutic frameworks
+ * Includes: Alchemical, Somatic, Polyvagal, IFS, Jungian, ACT, Spiralogic, etc.
+ */
+export * from './consciousness';

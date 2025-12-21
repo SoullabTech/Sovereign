@@ -1,0 +1,150 @@
+
+> spiralogic-oracle-system@0.1.0 typecheck
+> tsc --noEmit
+
+api/community/feedback.ts(73,30): error TS18048: 'feedbackData.crisis_indicators.length' is possibly 'undefined'.
+api/consciousness-computing-api.ts(27,25): error TS2304: Cannot find name 'CommunicationProfile'.
+api/consciousness-computing-api.ts(55,13): error TS2304: Cannot find name 'EmotionalPattern'.
+api/consciousness-computing-api.ts(58,21): error TS2304: Cannot find name 'StressIndicator'.
+api/consciousness-computing-api.ts(63,18): error TS2304: Cannot find name 'StressDefect'.
+api/consciousness-computing-api.ts(66,24): error TS2304: Cannot find name 'ValenceOptimization'.
+api/consciousness-computing-api.ts(69,21): error TS2304: Cannot find name 'CouplingDynamics'.
+api/consciousness-computing-api.ts(86,10): error TS2304: Cannot find name 'ProtocolStep'.
+api/consciousness-computing-api.ts(240,15): error TS2304: Cannot find name 'DevelopmentTrackingResult'.
+api/consciousness-computing-api.ts(254,15): error TS2304: Cannot find name 'DevelopmentRecommendationResult'.
+api/consciousness-computing-api.ts(274,15): error TS2304: Cannot find name 'AnalyticsResult'.
+api/consciousness-computing-api.ts(337,22): error TS2304: Cannot find name 'ProtocolStep'.
+api/consciousness-types.ts(245,23): error TS2304: Cannot find name 'ConsciousnessState'.
+api/consciousness-types.ts(385,26): error TS2304: Cannot find name 'AwarenessLevel'.
+api/consciousness-types.ts(561,16): error TS2304: Cannot find name 'DataQualityMetrics'.
+api/consciousness-types.ts(581,27): error TS2304: Cannot find name 'GeographicMetric'.
+api/consciousness-types.ts(584,17): error TS2304: Cannot find name 'DemographicMetric'.
+api/consciousness-types.ts(601,21): error TS2304: Cannot find name 'EmergingPattern'.
+api/consciousness-types.ts(618,22): error TS2304: Cannot find name 'SeasonalPattern'.
+app/admin/page.tsx(38,30): error TS2551: Property 'getUser' does not exist on type 'BetaSessionManager'. Did you mean 'setUser'?
+app/ain-demo/page.tsx(164,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/ain-demo/page.tsx(343,17): error TS2322: Type '{ elements: { fire: number; water: number; earth: number; air: number; aether: number; }; }' is not assignable to type 'IntrinsicAttributes & HoloflowerProps'.
+  Property 'elements' does not exist on type 'IntrinsicAttributes & HoloflowerProps'.
+app/ain-evolution/page.tsx(389,15): error TS2322: Type '{ elements: { fire: number; water: number; earth: number; air: number; aether: number; } | undefined; }' is not assignable to type 'IntrinsicAttributes & HoloflowerProps'.
+  Property 'elements' does not exist on type 'IntrinsicAttributes & HoloflowerProps'.
+app/api/analytics/consciousness-correlations/route.ts(193,7): error TS2322: Type '{ correlationStrength: never[]; wisdomEmergence: never[]; shadowIntegration: never[]; archetypalActivation: never[]; overallTrend: string; }' is not assignable to type 'null'.
+app/api/analytics/consciousness-correlations/route.ts(334,37): error TS2345: Argument of type '{ timestamp: any; value: any; }' is not assignable to parameter of type 'never'.
+app/api/analytics/consciousness-correlations/route.ts(338,33): error TS2345: Argument of type '{ timestamp: any; value: any; }' is not assignable to parameter of type 'never'.
+app/api/analytics/consciousness-correlations/route.ts(342,35): error TS2345: Argument of type '{ timestamp: any; value: any; }' is not assignable to parameter of type 'never'.
+app/api/analytics/consciousness-correlations/route.ts(346,38): error TS2345: Argument of type '{ timestamp: any; value: any; }' is not assignable to parameter of type 'never'.
+app/api/analytics/consciousness-correlations/route.ts(431,5): error TS2322: Type '{ timestamp: Date; dominant_patterns: any; correlation_strength: number; }[]' is not assignable to type 'never[]'.
+  Type '{ timestamp: Date; dominant_patterns: any; correlation_strength: number; }' is not assignable to type 'never'.
+app/api/analytics/consciousness-correlations/route.ts(433,26): error TS18047: 'analysis.dominantPatterns' is possibly 'null'.
+app/api/analytics/consciousness-correlations/route.ts(433,52): error TS2339: Property 'map' does not exist on type 'string | number | boolean | JsonObject | JsonArray'.
+  Property 'map' does not exist on type 'string'.
+app/api/backend/__tests__/utils/voiceRouter.simple.test.ts(2,10): error TS2305: Module '"../../src/utils/voiceRouter"' has no exported member 'getVoiceConfig'.
+app/api/backend/__tests__/utils/voiceRouter.test.ts(3,44): error TS2307: Cannot find module './voiceRouter' or its corresponding type declarations.
+app/api/backend/__tests__/utils/voiceRouter.test.ts(4,33): error TS2307: Cannot find module './voiceService' or its corresponding type declarations.
+app/api/backend/api/adjuster/log.ts(4,26): error TS2307: Cannot find module '../../src/lib/dbClient' or its corresponding type declarations.
+app/api/backend/api/oracle-agent/conversationalFlow.ts(8,8): error TS2307: Cannot find module '../../src/core/agents/SacredMirrorIntegrityProtocol' or its corresponding type declarations.
+app/api/backend/api/oracle-agent/conversationalFlow.ts(9,24): error TS2307: Cannot find module '../../src/core/agents/mainOracleAgent' or its corresponding type declarations.
+app/api/backend/api/oracle-agent/conversationalFlow.ts(13,12): error TS2709: Cannot use namespace 'ContextSnapshot' as a type.
+app/api/backend/api/oracle-agent/conversationalFlow.ts(29,29): error TS2709: Cannot use namespace 'AIResponse' as a type.
+app/api/backend/api/oracle-agent/conversationalFlow.ts(74,12): error TS2709: Cannot use namespace 'ContextSnapshot' as a type.
+app/api/backend/api/oracle-agent/phaseRecognition.ts(7,12): error TS2709: Cannot use namespace 'ContextSnapshot' as a type.
+app/api/backend/api/oracle-agent/promptLoggingService.ts(25,21): error TS2304: Cannot find name 'createClient'.
+app/api/backend/api/oracle-agent/promptUtils.ts(23,21): error TS2304: Cannot find name 'createClient'.
+app/api/backend/api/oracle/insightHistory.ts(3,18): error TS2304: Cannot find name 'createClient'.
+app/api/backend/api/ritual.ts(5,16): error TS2304: Cannot find name 'BowTieMemoryAgent'.
+app/api/backend/api/ritual.ts(7,20): error TS2304: Cannot find name 'shadowOracle'.
+app/api/backend/api/rituals/progress.ts(3,18): error TS2304: Cannot find name 'createClient'.
+app/api/backend/api/transform.ts(3,26): error TS2307: Cannot find module '../src/lib/dbClient' or its corresponding type declarations.
+app/api/backend/api/whisper/transcribe.ts(34,44): error TS2694: Namespace '"formidable"' has no exported member 'File'.
+app/api/backend/scripts/ingestKnowledge.ts(4,47): error TS2307: Cannot find module '../src/services/ingestService' or its corresponding type declarations.
+app/api/backend/scripts/seed-sample-file.ts(17,18): error TS2304: Cannot find name 'createClient'.
+app/api/backend/scripts/testSpiralogicSystem.ts(30,51): error TS2339: Property 'cusps' does not exist on type 'any[]'.
+app/api/backend/snet/usage-metrics-logger.ts(41,5): error TS2322: Type 'number' is not assignable to type 'Timer'.
+app/api/backend/snet/usage-metrics-logger.ts(264,19): error TS2769: No overload matches this call.
+  Overload 1 of 3, '(handle: number): void', gave the following error.
+    Argument of type 'Timer' is not assignable to parameter of type 'number'.
+  Overload 2 of 3, '(timeout: string | number | Timeout | undefined): void', gave the following error.
+    Argument of type 'Timer' is not assignable to parameter of type 'string | number | Timeout | undefined'.
+      Type 'Timer' is missing the following properties from type 'Timeout': close, _onTimeout, [Symbol.dispose]
+  Overload 3 of 3, '(id: number | undefined): void', gave the following error.
+    Argument of type 'Timer' is not assignable to parameter of type 'number'.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(35,7): error TS2554: Expected 0 arguments, but got 3.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(46,46): error TS2554: Expected 0 arguments, but got 1.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(68,74): error TS2345: Argument of type '{ element: string; response: string; confidence: number; qualityScore: number; processingMeta: { latencyMs: number; spiralogicPhase: string; microPsiEmotionalState: { arousal: number; pleasure: number; dominance: number; }; shadowPattern: string; evolutionaryStage: string; supportingArchetypes: string[]; }; }' is not assignable to parameter of type 'never'.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(149,34): error TS2339: Property 'processAfferentStream' does not exist on type 'CollectiveIntelligence'.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(155,53): error TS2339: Property 'getFieldState' does not exist on type 'CollectiveIntelligence'.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(169,36): error TS2339: Property 'processAfferentStream' does not exist on type 'CollectiveIntelligence'.
+app/api/backend/src/__tests__/afferent-stream.integration.test.ts(184,60): error TS2339: Property 'getEvolutionGuidance' does not exist on type 'CollectiveIntelligence'.
+app/api/backend/src/__tests__/divinationAgent.test.ts(1,33): error TS2307: Cannot find module '../core/agents/divinationAgent' or its corresponding type declarations.
+app/api/backend/src/__tests__/elementalAlchemyKnowledge.test.ts(3,37): error TS2307: Cannot find module '../core/agents/soullabFounderAgent' or its corresponding type declarations.
+app/api/backend/src/__tests__/fourPillarsRoute.test.ts(3,31): error TS2307: Cannot find module '../routes/astrology/fourPillars.routes' or its corresponding type declarations.
+app/api/backend/src/__tests__/MaiaLevinIntegration.test.ts(257,26): error TS2345: Argument of type 'ExtractionResult' is not assignable to parameter of type 'never'.
+app/api/backend/src/__tests__/MaiaLevinIntegration.test.ts(261,42): error TS2339: Property 'symbols' does not exist on type 'never'.
+app/api/backend/src/__tests__/MaiaLevinIntegration.test.ts(264,43): error TS2339: Property 'symbols' does not exist on type 'never'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(13,60): error TS2459: Module '"../services/OnboardingCeremony"' declares 'OnboardingPreferences' locally, but it is not exported.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(149,32): error TS2339: Property 'microPsiEmotionalState' does not exist on type '{ sessionId?: string | undefined; symbols?: string[] | undefined; phase?: string | undefined; recommendations?: string[] | undefined; nextSteps?: string[] | undefined; fileContextsUsed?: number | undefined; ttsDuration?: number | undefined; wordCount?: number | undefined; }'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(150,32): error TS2339: Property 'emotionalResonance' does not exist on type '{ sessionId?: string | undefined; symbols?: string[] | undefined; phase?: string | undefined; recommendations?: string[] | undefined; nextSteps?: string[] | undefined; fileContextsUsed?: number | undefined; ttsDuration?: number | undefined; wordCount?: number | undefined; }'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(152,52): error TS2339: Property 'emotionalResonance' does not exist on type '{ sessionId?: string | undefined; symbols?: string[] | undefined; phase?: string | undefined; recommendations?: string[] | undefined; nextSteps?: string[] | undefined; fileContextsUsed?: number | undefined; ttsDuration?: number | undefined; wordCount?: number | undefined; }'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(158,32): error TS2339: Property 'oracleStage' does not exist on type '{ sessionId?: string | undefined; symbols?: string[] | undefined; phase?: string | undefined; recommendations?: string[] | undefined; nextSteps?: string[] | undefined; fileContextsUsed?: number | undefined; ttsDuration?: number | undefined; wordCount?: number | undefined; }'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(159,32): error TS2339: Property 'relationshipMetrics' does not exist on type '{ sessionId?: string | undefined; symbols?: string[] | undefined; phase?: string | undefined; recommendations?: string[] | undefined; nextSteps?: string[] | undefined; fileContextsUsed?: number | undefined; ttsDuration?: number | undefined; wordCount?: number | undefined; }'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(336,40): error TS2339: Property 'microPsiEmotionalState' does not exist on type '{ sessionId?: string | undefined; symbols?: string[] | undefined; phase?: string | undefined; recommendations?: string[] | undefined; nextSteps?: string[] | undefined; fileContextsUsed?: number | undefined; ttsDuration?: number | undefined; wordCount?: number | undefined; }'.
+app/api/backend/src/__tests__/onboarding-ceremony-integration.test.ts(339,38): error TS2339: Property 'getOracleState' does not exist on type 'PersonalOracleAgent'.
+app/api/backend/src/__tests__/performance.test.ts(10,17): error TS2540: Cannot assign to 'NODE_ENV' because it is a read-only property.
+app/api/backend/src/__tests__/soullabFounderAgent.test.ts(3,37): error TS2307: Cannot find module '../core/agents/soullabFounderAgent' or its corresponding type declarations.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(25,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(26,19): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(27,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(38,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(39,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(40,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(51,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(52,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(64,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(76,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(87,12): error TS18048: 'earlyResponse.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(96,12): error TS18048: 'midResponse.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(105,12): error TS18048: 'lateResponse.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(118,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(119,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(120,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(121,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(122,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(125,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(126,12): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(127,26): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(128,26): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(129,26): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(141,12): error TS18048: 'settingsResponse.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(142,12): error TS18048: 'settingsResponse.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(147,12): error TS18048: 'getSettingsResponse.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.simple.spec.ts(168,14): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(208,33): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(346,35): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(348,30): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(349,28): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(350,28): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(351,31): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(352,29): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(368,43): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(439,34): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(449,34): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(462,32): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(476,26): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(477,28): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(536,32): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(566,22): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(654,33): error TS18048: 'response.data' is possibly 'undefined'.
+app/api/backend/src/__tests__/system.readiness.spec.ts(723,29): error TS2345: Argument of type 'number' is not assignable to parameter of type 'never'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(28,50): error TS2554: Expected 2 arguments, but got 1.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(48,9): error TS2353: Object literal may only specify known properties, and 'enableVoice' does not exist in type 'ConversationalContext'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(60,24): error TS2339: Property 'response' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(60,51): error TS2339: Property 'message' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(61,28): error TS2339: Property 'voiceUrl' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(63,28): error TS2339: Property 'tokens' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(64,32): error TS2339: Property 'tokens' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(64,64): error TS2339: Property 'response' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(67,30): error TS2339: Property 'response' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts(68,51): error TS2339: Property 'response' does not exist on type 'ConversationalResult'.
+app/api/backend/src/adapters/voice/VoiceMemo.ts(18,5): error TS2322: Type 'number' is not assignable to type 'Timeout'.
+app/api/backend/src/agents/AetherAgent.ts(370,7): error TS2353: Object literal may only specify known properties, and 'content' does not exist in type 'Partial<OracleInsight> & { userId: string; agentType: string; query: string; response: string; }'.
+app/api/backend/src/agents/AirAgent.ts(317,7): error TS2353: Object literal may only specify known properties, and 'content' does not exist in type 'Partial<OracleInsight> & { userId: string; agentType: string; query: string; response: string; }'.
+app/api/backend/src/agents/ArchetypeAgent.ts(78,7): error TS2353: Object literal may only specify known properties, and 'routingPath' does not exist in type 'AgentResponse'.
