@@ -125,20 +125,9 @@ async function validateAndRepairResponse(
           summary: validation.summary,
         };
 
-        // Try Supabase first (production), fall back to local Postgres (dev)
-        const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
-        const dbKey = process.env.DATABASE_SERVICE_KEY;
-
-        if (dbUrl && dbKey && !dbUrl.includes('disabled')) {
-          // Production: Use Supabase
-          const { createClient } = await import('@supabase/supabase-js');
-          const supabase = createClient(dbUrl, dbKey);
-          await supabase.from('socratic_validator_events').insert(eventData);
-        } else {
-          // Local dev: Use direct Postgres
-          const { insertOne } = await import('../db/postgres');
-          await insertOne('socratic_validator_events', eventData);
-        }
+        // Use local Postgres (sovereignty-compliant)
+        const { insertOne } = await import('../db/postgres');
+        await insertOne('socratic_validator_events', eventData);
       } catch (dbError) {
         console.error(`❌ [Socratic Validator ${processingPath}] Database logging failed:`, dbError);
       }
