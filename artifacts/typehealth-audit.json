@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-21T11:52:50.694Z",
-  "totalErrors": 6424,
+  "timestamp": "2025-12-21T12:21:47.830Z",
+  "totalErrors": 6425,
   "totalFiles": 1042,
   "modules": [
     {
@@ -29,9 +29,9 @@
     },
     {
       "module": "app",
-      "errorCount": 2338,
+      "errorCount": 2342,
       "lineCount": 162614,
-      "density": 1.4377605864193737,
+      "density": 1.4402203992276188,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -437,9 +437,9 @@
     },
     {
       "module": "lib",
-      "errorCount": 3678,
+      "errorCount": 3675,
       "lineCount": 271215,
-      "density": 1.356119683645816,
+      "density": 1.3550135501355014,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -1121,7 +1121,7 @@
   "topErrorCodes": [
     {
       "code": "TS2339",
-      "count": 2186,
+      "count": 2183,
       "description": "Property does not exist"
     },
     {
@@ -1131,7 +1131,7 @@
     },
     {
       "code": "TS2322",
-      "count": 564,
+      "count": 563,
       "description": "Type not assignable"
     },
     {
@@ -1146,7 +1146,7 @@
     },
     {
       "code": "TS2307",
-      "count": 260,
+      "count": 265,
       "description": "Cannot find module"
     },
     {
