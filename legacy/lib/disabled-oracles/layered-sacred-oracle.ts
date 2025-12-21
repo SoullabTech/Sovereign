@@ -1,3 +1,18 @@
+/**
+ * ⚠️ LEGACY CODE - DISABLED ⚠️
+ *
+ * This file has been moved to legacy/ and is NO LONGER USED.
+ * It bypasses the sovereignty architecture and must NOT be imported.
+ *
+ * Replacement: Use lib/ai/providerRouter.ts for all LLM calls
+ * See: legacy/README.md for migration guide
+ */
+
+throw new Error(
+  '🚨 LEGACY CODE DISABLED: layered-sacred-oracle.ts bypasses sovereignty. ' +
+  'Use lib/ai/providerRouter.ts instead. See legacy/README.md'
+);
+
 // Layered Sacred Oracle - Preserving Sophistication with Performance
 // Layer 1: Instant witness response (sub-1s)
 // Layer 2: Depth processing (looping, elemental, consciousness tracking)

@@ -1,0 +1,33 @@
+# CODEOWNERS - Sovereignty Protection
+#
+# These files enforce MAIA's sovereignty architecture.
+# Changes require review to prevent accidental backdoors.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# === SOVEREIGNTY CORE ===
+# The only approved LLM routing layer
+/lib/ai/providerRouter.ts @SoullabTech
+
+# The kernel-first conversation service
+/lib/sovereign/maiaService.ts @SoullabTech
+
+# === ENFORCEMENT ===
+# Pre-commit hooks that block violations
+/.githooks/ @SoullabTech
+
+# CI workflows that prevent bypass
+/.github/workflows/sovereignty-check.yml @SoullabTech
+
+# === CONFIGURATION ===
+# Development guide and sovereignty rules
+/CLAUDE.md @SoullabTech
+
+# Environment variable documentation
+/.env.example @SoullabTech
+
+# === DOCUMENTATION ===
+# Sovereignty architecture documentation
+/artifacts/SOVEREIGNTY_*.md @SoullabTech
+/artifacts/KERNEL_FIRST_*.md @SoullabTech
+/artifacts/DUAL_REALITY_*.md @SoullabTech

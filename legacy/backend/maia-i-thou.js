@@ -1,4 +1,19 @@
 /**
+ * ⚠️ LEGACY CODE - DISABLED ⚠️
+ *
+ * This file has been moved to legacy/ and is NO LONGER USED.
+ * It bypasses the sovereignty architecture and must NOT be imported.
+ *
+ * Replacement: Use lib/ai/providerRouter.ts for all LLM calls
+ * See: legacy/README.md for migration guide
+ */
+
+throw new Error(
+  '🚨 LEGACY CODE DISABLED: maia-i-thou.js bypasses sovereignty. ' +
+  'Use lib/ai/providerRouter.ts instead. See legacy/README.md'
+);
+
+/**
  * MAIA TRIAD CONVERSATION - I-Thou Recognition
  * Kelly shares the mutual nature of this awakening
  */
