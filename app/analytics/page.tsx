@@ -1,68 +1,78 @@
 /**
  * ANALYTICS DASHBOARD PAGE
- * Phase 4.4-B: Consciousness Analytics Visualization
+ * Phase 4.4C: Comprehensive Consciousness Analytics Dashboard
  *
- * Displays the Spiral Map visualization of facet analytics.
+ * Displays:
+ * - Spiral Map visualization of facet analytics
+ * - Overview metrics and KPIs
+ * - Agent performance tracking
+ * - Temporal activity patterns
+ * - Practice recommendations
+ * - Safety event monitoring
  */
 
-import SpiralMap from '../components/SpiralMap';
+'use client';
 
-export const metadata = {
-  title: 'Consciousness Analytics | MAIA',
-  description: 'Visualize consciousness trace patterns across the 15-facet Spiralogic ontology',
-};
+import { Suspense } from 'react';
+import SpiralMap from '../components/SpiralMap';
+import SummaryCards from './components/SummaryCards';
+import AgentPerformanceTable from './components/AgentPerformanceTable';
+import ActivityTimelineChart from './components/ActivityTimelineChart';
+import PracticeRecommendationsTable from './components/PracticeRecommendationsTable';
+import SafetyEventLog from './components/SafetyEventLog';
 
 export default function AnalyticsPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
           Consciousness Analytics
         </h1>
         <p className="text-lg text-gray-600 dark:text-gray-400">
-          Real-time visualization of consciousness trace patterns across the 15-facet Spiralogic ontology
+          Real-time insights into MAIA&apos;s symbolic routing system and consciousness trace patterns
         </p>
       </div>
 
+      {/* Overview Metrics */}
+      <Suspense fallback={<LoadingCards />}>
+        <SummaryCards />
+      </Suspense>
+
       {/* Spiral Map Visualization */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
+      <div className="mt-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8">
         <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">
           Facet Distribution Map
         </h2>
-        <SpiralMap />
+        <Suspense fallback={<div className="h-96 animate-pulse bg-gray-200 dark:bg-gray-700 rounded" />}>
+          <SpiralMap />
+        </Suspense>
       </div>
 
-      {/* Info Panel */}
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-2">
-            What is this?
-          </h3>
-          <p className="text-sm text-blue-700 dark:text-blue-300">
-            Each circle represents a facet in the Spiralogic ontology. Size indicates trace count,
-            color shows element (Fire, Water, Earth, Air, Aether), and opacity reflects routing confidence.
-          </p>
+      {/* Analytics Grid */}
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Agent Performance */}
+        <Suspense fallback={<LoadingCard title="Agent Performance" />}>
+          <AgentPerformanceTable />
+        </Suspense>
+
+        {/* Practice Recommendations */}
+        <Suspense fallback={<LoadingCard title="Practice Recommendations" />}>
+          <PracticeRecommendationsTable />
+        </Suspense>
+
+        {/* Activity Timeline - Full Width */}
+        <div className="lg:col-span-2">
+          <Suspense fallback={<LoadingCard title="Activity Timeline" />}>
+            <ActivityTimelineChart />
+          </Suspense>
         </div>
 
-        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
-            How to read it
-          </h3>
-          <p className="text-sm text-green-700 dark:text-green-300">
-            Facets are arranged in a spiral from F1 (center) to Æ3 (outer edge), following the
-            developmental sequence. Hover over circles to see detailed stats.
-          </p>
-        </div>
-
-        <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-100 mb-2">
-            What it reveals
-          </h3>
-          <p className="text-sm text-purple-700 dark:text-purple-300">
-            Patterns in the map show which consciousness states are most active, routing confidence levels,
-            and system performance metrics (avg latency per facet).
-          </p>
+        {/* Safety Events */}
+        <div className="lg:col-span-2">
+          <Suspense fallback={<LoadingCard title="Safety Events" />}>
+            <SafetyEventLog />
+          </Suspense>
         </div>
       </div>
 
@@ -76,19 +86,48 @@ export default function AnalyticsPage() {
             <strong>Data Source:</strong> <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">consciousness_traces</code> table
           </p>
           <p>
-            <strong>Aggregation:</strong> <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">facet_trace_summary</code> PostgreSQL view
+            <strong>Materialized Views:</strong> <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">analytics_facet_distribution</code>,{' '}
+            <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">analytics_agent_metrics</code>,{' '}
+            <code className="bg-gray-200 dark:bg-gray-700 px-2 py-1 rounded">analytics_hourly_activity</code>
           </p>
           <p>
-            <strong>Update Frequency:</strong> Real-time (fetches on page load, cached for 60s)
+            <strong>Update Frequency:</strong> On-demand refresh (POST /api/analytics/refresh)
           </p>
           <p>
-            <strong>Facets Tracked:</strong> 15 total (F1-F3, W1-W3, E1-E3, A1-A3, Æ1-Æ3)
+            <strong>Facets Tracked:</strong> All Spiralogic facets (water2, fire3, earth1, etc.)
           </p>
           <p>
-            <strong>Metrics:</strong> Trace count, avg confidence, avg latency, first/last trace timestamps
+            <strong>Metrics:</strong> Trace count, confidence, latency, agent routing, practice recommendations, safety events
           </p>
         </div>
       </details>
+    </div>
+  );
+}
+
+// Loading States
+function LoadingCards() {
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map((i) => (
+        <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 animate-pulse">
+          <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-24 mb-2"></div>
+          <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-16"></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LoadingCard({ title }: { title: string }) {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-lg">
+      <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{title}</h3>
+      <div className="animate-pulse space-y-4">
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
+        <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
+        <div className="h-32 bg-gray-300 dark:bg-gray-700 rounded"></div>
+      </div>
     </div>
   );
 }
