@@ -1,0 +1,3646 @@
+diff --git a/.auto-claude-status b/.auto-claude-status
+index 0751b8a74..90680dfea 100644
+--- a/.auto-claude-status
++++ b/.auto-claude-status
+@@ -3,7 +3,7 @@
+   "spec": "001-invalid-api-key-fix-external-api-key",
+   "state": "building",
+   "subtasks": {
+-    "completed": 4,
++    "completed": 6,
+     "total": 28,
+     "in_progress": 1,
+     "failed": 0
+@@ -18,8 +18,8 @@
+     "max": 1
+   },
+   "session": {
+-    "number": 110,
+-    "started_at": "2025-12-21T15:21:00.354430"
++    "number": 64,
++    "started_at": "2025-12-21T15:21:01.065274"
+   },
+-  "last_update": "2025-12-21T15:39:10.911984"
++  "last_update": "2025-12-21T16:00:54.171298"
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/implementation_plan.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/implementation_plan.json
+index c378112e4..7b97f7ee1 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/implementation_plan.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/implementation_plan.json
+@@ -138,7 +138,9 @@
+             "type": "manual",
+             "instructions": "Verify technical-debt-report.md identifies specific duplication patterns and debt areas with file references"
+           },
+-          "status": "pending"
++          "status": "completed",
++          "notes": "Created comprehensive technical-debt-report.md identifying: 5 PersonalOracleAgent duplications, 7 MaiaOrchestrator implementations, 10+ VoiceService implementations, 100+ Memory system files, 13,847 console.log statements, 8,126 any type usages, TypeScript strict mode disabled in backend (838 files), 157 files with TODO/FIXME, 29+ oversized files (>1000 lines), and dual mobile framework debt. Report includes specific file references and prioritized remediation recommendations.",
++          "updated_at": "2025-12-21T20:39:24.707624+00:00"
+         },
+         {
+           "id": "subtask-2-3",
+@@ -790,5 +792,5 @@
+       "subtask": "subtask-8-3"
+     }
+   ],
+-  "last_updated": "2025-12-21T20:36:20.680553+00:00"
++  "last_updated": "2025-12-21T20:39:24.707628+00:00"
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/attempt_history.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/attempt_history.json
+index 4bc62429d..2d4060af0 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/attempt_history.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/attempt_history.json
+@@ -824,6 +824,830 @@
+           "approach": "Session ended without progress",
+           "success": false,
+           "error": "Subtask status is pending"
++        },
++        {
++          "session": 110,
++          "timestamp": "2025-12-21T15:39:23.255542",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 6,
++          "timestamp": "2025-12-21T15:39:35.056983",
++          "approach": "Implemented: Identify code duplication and technical debt patterns",
++          "success": true,
++          "error": null
++        }
++      ],
++      "status": "completed"
++    },
++    "subtask-2-3": {
++      "attempts": [
++        {
++          "session": 111,
++          "timestamp": "2025-12-21T15:39:40.779232",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 7,
++          "timestamp": "2025-12-21T15:39:52.499162",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 112,
++          "timestamp": "2025-12-21T15:39:57.098060",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 8,
++          "timestamp": "2025-12-21T15:40:09.066265",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 113,
++          "timestamp": "2025-12-21T15:40:13.777793",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 9,
++          "timestamp": "2025-12-21T15:40:25.937607",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 114,
++          "timestamp": "2025-12-21T15:40:30.380000",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 10,
++          "timestamp": "2025-12-21T15:40:42.666014",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 115,
++          "timestamp": "2025-12-21T15:40:46.586933",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 11,
++          "timestamp": "2025-12-21T15:40:58.986740",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 116,
++          "timestamp": "2025-12-21T15:41:02.658506",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 12,
++          "timestamp": "2025-12-21T15:41:15.729514",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 117,
++          "timestamp": "2025-12-21T15:41:19.319880",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 13,
++          "timestamp": "2025-12-21T15:41:33.169343",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 118,
++          "timestamp": "2025-12-21T15:41:36.122208",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 14,
++          "timestamp": "2025-12-21T15:41:51.187340",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 119,
++          "timestamp": "2025-12-21T15:41:53.781334",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 15,
++          "timestamp": "2025-12-21T15:42:08.939406",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 120,
++          "timestamp": "2025-12-21T15:42:11.454950",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 16,
++          "timestamp": "2025-12-21T15:42:26.795068",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 121,
++          "timestamp": "2025-12-21T15:42:29.082809",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 17,
++          "timestamp": "2025-12-21T15:42:44.378668",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 122,
++          "timestamp": "2025-12-21T15:42:46.689455",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 18,
++          "timestamp": "2025-12-21T15:43:02.841086",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 123,
++          "timestamp": "2025-12-21T15:43:04.678072",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 19,
++          "timestamp": "2025-12-21T15:43:21.137561",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 124,
++          "timestamp": "2025-12-21T15:43:22.843689",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 20,
++          "timestamp": "2025-12-21T15:43:39.909081",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 125,
++          "timestamp": "2025-12-21T15:43:41.425956",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 21,
++          "timestamp": "2025-12-21T15:43:58.627188",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 126,
++          "timestamp": "2025-12-21T15:43:59.794997",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 22,
++          "timestamp": "2025-12-21T15:44:17.354796",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 127,
++          "timestamp": "2025-12-21T15:44:18.437251",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 23,
++          "timestamp": "2025-12-21T15:44:36.272994",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 128,
++          "timestamp": "2025-12-21T15:44:37.557486",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 24,
++          "timestamp": "2025-12-21T15:44:55.693459",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 129,
++          "timestamp": "2025-12-21T15:44:56.802806",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 25,
++          "timestamp": "2025-12-21T15:45:15.564991",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 130,
++          "timestamp": "2025-12-21T15:45:16.020108",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 131,
++          "timestamp": "2025-12-21T15:45:33.919737",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 26,
++          "timestamp": "2025-12-21T15:45:35.198859",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 132,
++          "timestamp": "2025-12-21T15:45:53.743583",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 27,
++          "timestamp": "2025-12-21T15:45:54.780021",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 133,
++          "timestamp": "2025-12-21T15:46:13.913277",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 28,
++          "timestamp": "2025-12-21T15:46:15.256965",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 29,
++          "timestamp": "2025-12-21T15:46:34.203985",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 134,
++          "timestamp": "2025-12-21T15:46:35.071993",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 30,
++          "timestamp": "2025-12-21T15:46:54.411511",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 135,
++          "timestamp": "2025-12-21T15:46:55.592074",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 31,
++          "timestamp": "2025-12-21T15:47:14.706796",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 136,
++          "timestamp": "2025-12-21T15:47:16.188205",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 32,
++          "timestamp": "2025-12-21T15:47:35.782953",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 137,
++          "timestamp": "2025-12-21T15:47:37.095557",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 33,
++          "timestamp": "2025-12-21T15:47:57.296361",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 138,
++          "timestamp": "2025-12-21T15:47:58.581340",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 34,
++          "timestamp": "2025-12-21T15:48:19.654580",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 139,
++          "timestamp": "2025-12-21T15:48:20.867237",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 35,
++          "timestamp": "2025-12-21T15:48:41.934056",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 140,
++          "timestamp": "2025-12-21T15:48:43.177693",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 36,
++          "timestamp": "2025-12-21T15:49:04.115747",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 141,
++          "timestamp": "2025-12-21T15:49:05.158070",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 142,
++          "timestamp": "2025-12-21T15:49:26.721067",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 37,
++          "timestamp": "2025-12-21T15:49:27.565028",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 143,
++          "timestamp": "2025-12-21T15:49:49.997544",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 38,
++          "timestamp": "2025-12-21T15:49:50.584678",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 144,
++          "timestamp": "2025-12-21T15:50:13.304376",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 39,
++          "timestamp": "2025-12-21T15:50:13.895908",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 40,
++          "timestamp": "2025-12-21T15:50:36.375722",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 145,
++          "timestamp": "2025-12-21T15:50:37.154201",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 41,
++          "timestamp": "2025-12-21T15:50:59.968324",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 146,
++          "timestamp": "2025-12-21T15:51:00.900547",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 42,
++          "timestamp": "2025-12-21T15:51:23.996763",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 147,
++          "timestamp": "2025-12-21T15:51:25.015566",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 43,
++          "timestamp": "2025-12-21T15:51:50.088087",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 148,
++          "timestamp": "2025-12-21T15:51:50.195129",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 149,
++          "timestamp": "2025-12-21T15:52:14.131894",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 44,
++          "timestamp": "2025-12-21T15:52:15.366083",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 150,
++          "timestamp": "2025-12-21T15:52:39.708103",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 45,
++          "timestamp": "2025-12-21T15:52:40.120014",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 46,
++          "timestamp": "2025-12-21T15:53:03.622942",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 151,
++          "timestamp": "2025-12-21T15:53:04.450736",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 152,
++          "timestamp": "2025-12-21T15:53:28.719725",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 47,
++          "timestamp": "2025-12-21T15:53:29.826196",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 153,
++          "timestamp": "2025-12-21T15:53:55.062725",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 48,
++          "timestamp": "2025-12-21T15:53:55.526306",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 154,
++          "timestamp": "2025-12-21T15:54:20.736816",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 49,
++          "timestamp": "2025-12-21T15:54:21.865281",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 155,
++          "timestamp": "2025-12-21T15:54:47.454082",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 50,
++          "timestamp": "2025-12-21T15:54:48.412944",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 51,
++          "timestamp": "2025-12-21T15:55:13.779285",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 156,
++          "timestamp": "2025-12-21T15:55:14.663686",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 52,
++          "timestamp": "2025-12-21T15:55:40.978668",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 157,
++          "timestamp": "2025-12-21T15:55:41.393285",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 53,
++          "timestamp": "2025-12-21T15:56:08.017883",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 158,
++          "timestamp": "2025-12-21T15:56:09.260841",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 54,
++          "timestamp": "2025-12-21T15:56:35.397338",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 159,
++          "timestamp": "2025-12-21T15:56:36.532995",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 160,
++          "timestamp": "2025-12-21T15:57:01.220043",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 55,
++          "timestamp": "2025-12-21T15:57:02.311766",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 161,
++          "timestamp": "2025-12-21T15:57:28.572442",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 56,
++          "timestamp": "2025-12-21T15:57:29.640417",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 162,
++          "timestamp": "2025-12-21T15:57:55.135400",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 57,
++          "timestamp": "2025-12-21T15:57:57.169619",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 163,
++          "timestamp": "2025-12-21T15:58:22.916427",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 58,
++          "timestamp": "2025-12-21T15:58:24.532086",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 164,
++          "timestamp": "2025-12-21T15:58:51.183663",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 59,
++          "timestamp": "2025-12-21T15:58:52.593352",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 165,
++          "timestamp": "2025-12-21T15:59:20.245705",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 60,
++          "timestamp": "2025-12-21T15:59:21.884346",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 166,
++          "timestamp": "2025-12-21T15:59:50.812821",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 61,
++          "timestamp": "2025-12-21T15:59:52.202593",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 167,
++          "timestamp": "2025-12-21T16:00:19.587658",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 62,
++          "timestamp": "2025-12-21T16:00:20.955449",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 168,
++          "timestamp": "2025-12-21T16:00:49.550272",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
++        },
++        {
++          "session": 63,
++          "timestamp": "2025-12-21T16:00:50.164355",
++          "approach": "Session ended without progress",
++          "success": false,
++          "error": "Subtask status is pending"
+         }
+       ],
+       "status": "stuck"
+@@ -865,10 +1689,16 @@
+       "reason": "Failed after 3 attempts",
+       "escalated_at": "2025-12-21T15:35:34.219240",
+       "attempt_count": 3
++    },
++    {
++      "subtask_id": "subtask-2-3",
++      "reason": "Failed after 3 attempts",
++      "escalated_at": "2025-12-21T15:39:57.099819",
++      "attempt_count": 3
+     }
+   ],
+   "metadata": {
+     "created_at": "2025-12-21T15:21:01.064649",
+-    "last_updated": "2025-12-21T15:39:06.908835"
++    "last_updated": "2025-12-21T16:00:50.166564"
+   }
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/build_commits.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/build_commits.json
+index 835c5c1e9..b69adf951 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/build_commits.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/build_commits.json
+@@ -29,11 +29,16 @@
+       "hash": "faea101e543d3186bf98182d6a9c841b0906fca0",
+       "subtask_id": "subtask-2-1",
+       "timestamp": "2025-12-21T15:36:36.242748"
++    },
++    {
++      "hash": "83652448e71964619a9e5282929f54bdea35414e",
++      "subtask_id": "subtask-2-2",
++      "timestamp": "2025-12-21T15:39:35.062357"
+     }
+   ],
+-  "last_good_commit": "faea101e543d3186bf98182d6a9c841b0906fca0",
++  "last_good_commit": "83652448e71964619a9e5282929f54bdea35414e",
+   "metadata": {
+     "created_at": "2025-12-21T15:21:01.065007",
+-    "last_updated": "2025-12-21T15:36:36.242757"
++    "last_updated": "2025-12-21T15:39:35.062372"
+   }
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/codebase_map.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/codebase_map.json
+index f0f4abde7..fd8339958 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/codebase_map.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/codebase_map.json
+@@ -24,7 +24,12 @@
+       "description": "Backend API runs with strict: false and all type safety flags disabled (noImplicitAny: false, noImplicitReturns: false, etc.) - HIGH RISK for type safety issues",
+       "category": "code-quality",
+       "discovered_at": "2025-12-21T20:36:20.701601+00:00"
++    },
++    "./artifacts/code-quality/technical-debt-report.md": {
++      "description": "Comprehensive technical debt report identifying: PersonalOracleAgent (5 implementations), MaiaOrchestrator (7 implementations), VoiceService (10+ implementations), Memory systems (100+ files), 13,847 console.logs, 8,126 any types, and critical backend TypeScript strict mode disabled",
++      "category": "code-quality",
++      "discovered_at": "2025-12-21T20:39:34.837493+00:00"
+     }
+   },
+-  "last_updated": "2025-12-21T20:36:20.701617+00:00"
++  "last_updated": "2025-12-21T20:39:34.837500+00:00"
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/gotchas.md b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/gotchas.md
+index 9987255a9..130d133d0 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/gotchas.md
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/gotchas.md
+@@ -11,3 +11,8 @@ _Context: Frontend architecture has framework overlap that may need consolidatio
+ The backend API (apps/api/backend) has strict mode completely disabled with 838 TypeScript files affected - any type safety improvements must start by enabling strict mode incrementally
+ 
+ _Context: TypeScript analysis revealed that while frontend has excellent strict mode compliance, the core backend API runs without any type checking, creating a significant type safety gap_
++
++## [2025-12-21 20:39]
++PersonalOracleAgent has 5 different implementations across the codebase - any changes must be synchronized: apps/api/backend/src/agents/PersonalOracleAgent.ts, lib/agents/PersonalOracleAgent.ts, lib/oracle/PersonalOracleAgent.ts, apps/web/lib/agents/PersonalOracleAgent.ts, and an unused version
++
++_Context: Code duplication analysis revealed critical class duplications that create maintenance burden and inconsistency risks_
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_006.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_006.json
+index 327c736ef..d8dc2e72a 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_006.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_006.json
+@@ -1,26 +1,28 @@
+ {
+   "session_number": 6,
+-  "timestamp": "2025-12-21T20:21:40.432742+00:00",
+-  "subtasks_completed": [],
++  "timestamp": "2025-12-21T20:39:35.973360+00:00",
++  "subtasks_completed": [
++    "subtask-2-2"
++  ],
+   "discoveries": {
+     "file_insights": [],
+     "patterns_discovered": [],
+     "gotchas_discovered": [],
+     "approach_outcome": {
+-      "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "success": true,
++      "approach_used": "Implemented subtask: subtask-2-2",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
+-    "success": false,
++    "subtask_id": "subtask-2-2",
++    "success": true,
+     "changed_files": []
+   },
+-  "what_worked": [],
+-  "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++  "what_worked": [
++    "Implemented subtask: subtask-2-2"
+   ],
++  "what_failed": [],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_007.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_007.json
+index 1c8020c24..d433f1c31 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_007.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_007.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 7,
+-  "timestamp": "2025-12-21T20:21:47.377662+00:00",
++  "timestamp": "2025-12-21T20:39:52.500655+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_008.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_008.json
+index 114739596..4e722dc4f 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_008.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_008.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 8,
+-  "timestamp": "2025-12-21T20:21:54.180717+00:00",
++  "timestamp": "2025-12-21T20:40:09.067560+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_009.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_009.json
+index 1eb2852e9..d2df30e96 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_009.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_009.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 9,
+-  "timestamp": "2025-12-21T20:22:01.217554+00:00",
++  "timestamp": "2025-12-21T20:40:25.938598+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_010.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_010.json
+index c13eed5fe..d354b4c0e 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_010.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_010.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 10,
+-  "timestamp": "2025-12-21T20:22:08.203350+00:00",
++  "timestamp": "2025-12-21T20:40:42.666839+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_011.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_011.json
+index 6640b202a..ed3b3ed56 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_011.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_011.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 11,
+-  "timestamp": "2025-12-21T20:22:15.200442+00:00",
++  "timestamp": "2025-12-21T20:40:58.987653+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_012.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_012.json
+index 87940fbce..87ed6b308 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_012.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_012.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 12,
+-  "timestamp": "2025-12-21T20:22:22.329933+00:00",
++  "timestamp": "2025-12-21T20:41:15.730354+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_013.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_013.json
+index f1a0d64c4..410335de1 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_013.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_013.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 13,
+-  "timestamp": "2025-12-21T20:22:29.646992+00:00",
++  "timestamp": "2025-12-21T20:41:33.170392+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_014.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_014.json
+index 96ee45e62..f973ee754 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_014.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_014.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 14,
+-  "timestamp": "2025-12-21T20:22:36.934317+00:00",
++  "timestamp": "2025-12-21T20:41:51.188286+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_015.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_015.json
+index 1705fd93e..a4661641d 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_015.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_015.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 15,
+-  "timestamp": "2025-12-21T20:22:43.899627+00:00",
++  "timestamp": "2025-12-21T20:42:08.940280+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_016.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_016.json
+index 77558cbc3..f3fed1b3a 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_016.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_016.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 16,
+-  "timestamp": "2025-12-21T20:22:51.449873+00:00",
++  "timestamp": "2025-12-21T20:42:26.796103+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_017.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_017.json
+index 9b1bfdd77..97eda80d9 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_017.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_017.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 17,
+-  "timestamp": "2025-12-21T20:22:58.522594+00:00",
++  "timestamp": "2025-12-21T20:42:44.379636+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_018.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_018.json
+index a8a54275c..0ed60e3df 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_018.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_018.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 18,
+-  "timestamp": "2025-12-21T20:23:05.743584+00:00",
++  "timestamp": "2025-12-21T20:43:02.841989+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_019.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_019.json
+index 7480e248b..4fa6af1a7 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_019.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_019.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 19,
+-  "timestamp": "2025-12-21T20:23:12.998245+00:00",
++  "timestamp": "2025-12-21T20:43:21.138546+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_020.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_020.json
+index d75cac642..92fdba78b 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_020.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_020.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 20,
+-  "timestamp": "2025-12-21T20:23:20.183925+00:00",
++  "timestamp": "2025-12-21T20:43:39.910129+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_021.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_021.json
+index 78cd8ad63..0f63a97b0 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_021.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_021.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 21,
+-  "timestamp": "2025-12-21T20:23:27.532805+00:00",
++  "timestamp": "2025-12-21T20:43:58.628183+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_022.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_022.json
+index 9e88a9100..d876b4d15 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_022.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_022.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 22,
+-  "timestamp": "2025-12-21T20:23:35.284349+00:00",
++  "timestamp": "2025-12-21T20:44:17.355792+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_023.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_023.json
+index 587925e28..7dfd5f1af 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_023.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_023.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 23,
+-  "timestamp": "2025-12-21T20:23:43.293775+00:00",
++  "timestamp": "2025-12-21T20:44:36.274059+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_024.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_024.json
+index 83c5d0a7f..edd212d7f 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_024.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_024.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 24,
+-  "timestamp": "2025-12-21T20:23:50.821675+00:00",
++  "timestamp": "2025-12-21T20:44:55.694361+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_025.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_025.json
+index b4666460c..795f1956a 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_025.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_025.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 25,
+-  "timestamp": "2025-12-21T20:23:58.234819+00:00",
++  "timestamp": "2025-12-21T20:45:15.566112+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_026.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_026.json
+index 6d6b9b828..7b594171e 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_026.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_026.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 26,
+-  "timestamp": "2025-12-21T20:24:05.754420+00:00",
++  "timestamp": "2025-12-21T20:45:35.199833+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_027.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_027.json
+index 46b2e2ceb..5e33d50ea 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_027.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_027.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 27,
+-  "timestamp": "2025-12-21T20:24:14.507536+00:00",
++  "timestamp": "2025-12-21T20:45:54.781099+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-1"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_028.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_028.json
+index f66b89a7e..cfd717d0e 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_028.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_028.json
+@@ -1,28 +1,26 @@
+ {
+   "session_number": 28,
+-  "timestamp": "2025-12-21T20:24:22.163353+00:00",
+-  "subtasks_completed": [
+-    "subtask-1-1"
+-  ],
++  "timestamp": "2025-12-21T20:46:15.257941+00:00",
++  "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+     "patterns_discovered": [],
+     "gotchas_discovered": [],
+     "approach_outcome": {
+-      "success": true,
+-      "approach_used": "Implemented subtask: subtask-1-1",
++      "success": false,
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-1",
+-    "success": true,
++    "subtask_id": "subtask-2-3",
++    "success": false,
+     "changed_files": []
+   },
+-  "what_worked": [
+-    "Implemented subtask: subtask-1-1"
++  "what_worked": [],
++  "what_failed": [
++    "Failed to complete subtask: subtask-2-3"
+   ],
+-  "what_failed": [],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_029.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_029.json
+index 948510cd5..29e35b30c 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_029.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_029.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 29,
+-  "timestamp": "2025-12-21T20:24:29.925343+00:00",
++  "timestamp": "2025-12-21T20:46:34.205001+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_030.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_030.json
+index 3e9b8a51a..379cbd3bd 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_030.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_030.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 30,
+-  "timestamp": "2025-12-21T20:24:37.629934+00:00",
++  "timestamp": "2025-12-21T20:46:54.412507+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_031.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_031.json
+index 3f7091a74..f3639407f 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_031.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_031.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 31,
+-  "timestamp": "2025-12-21T20:24:45.598931+00:00",
++  "timestamp": "2025-12-21T20:47:14.708169+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_032.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_032.json
+index 1760e33a7..216c25c84 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_032.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_032.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 32,
+-  "timestamp": "2025-12-21T20:24:53.652171+00:00",
++  "timestamp": "2025-12-21T20:47:35.784703+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_033.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_033.json
+index 729c3cb68..2eaea0499 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_033.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_033.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 33,
+-  "timestamp": "2025-12-21T20:25:01.457465+00:00",
++  "timestamp": "2025-12-21T20:47:57.297971+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_034.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_034.json
+index 91e1b1b25..362852545 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_034.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_034.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 34,
+-  "timestamp": "2025-12-21T20:25:09.998422+00:00",
++  "timestamp": "2025-12-21T20:48:19.655596+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_035.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_035.json
+index d69d8b29d..ca3a24a10 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_035.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_035.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 35,
+-  "timestamp": "2025-12-21T20:25:17.955259+00:00",
++  "timestamp": "2025-12-21T20:48:41.935110+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_036.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_036.json
+index 14c86d52f..56d209efc 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_036.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_036.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 36,
+-  "timestamp": "2025-12-21T20:25:25.912180+00:00",
++  "timestamp": "2025-12-21T20:49:04.116824+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_037.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_037.json
+index 629cd4ff0..4fb5e867d 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_037.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_037.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 37,
+-  "timestamp": "2025-12-21T20:25:33.988099+00:00",
++  "timestamp": "2025-12-21T20:49:27.565934+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_038.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_038.json
+index 32c520798..5a4f10971 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_038.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_038.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 38,
+-  "timestamp": "2025-12-21T20:25:42.697914+00:00",
++  "timestamp": "2025-12-21T20:49:50.585805+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_039.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_039.json
+index f3fa33d77..7e3f7034d 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_039.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_039.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 39,
+-  "timestamp": "2025-12-21T20:25:50.859890+00:00",
++  "timestamp": "2025-12-21T20:50:13.897093+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_040.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_040.json
+index cce59e4a7..3c64fdcbd 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_040.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_040.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 40,
+-  "timestamp": "2025-12-21T20:25:59.191697+00:00",
++  "timestamp": "2025-12-21T20:50:36.376916+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_041.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_041.json
+index a7f0fa601..b917ec674 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_041.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_041.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 41,
+-  "timestamp": "2025-12-21T20:26:08.303381+00:00",
++  "timestamp": "2025-12-21T20:50:59.969498+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_042.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_042.json
+index 7e5de2717..223e2cabe 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_042.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_042.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 42,
+-  "timestamp": "2025-12-21T20:26:16.929678+00:00",
++  "timestamp": "2025-12-21T20:51:23.997839+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_043.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_043.json
+index 11372ed2b..b9270cc99 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_043.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_043.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 43,
+-  "timestamp": "2025-12-21T20:26:25.315754+00:00",
++  "timestamp": "2025-12-21T20:51:50.089313+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_044.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_044.json
+index 491cc2109..9be42511b 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_044.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_044.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 44,
+-  "timestamp": "2025-12-21T20:26:33.742413+00:00",
++  "timestamp": "2025-12-21T20:52:15.367254+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_045.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_045.json
+index bb7826044..db0883a14 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_045.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_045.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 45,
+-  "timestamp": "2025-12-21T20:26:42.703221+00:00",
++  "timestamp": "2025-12-21T20:52:40.121129+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_046.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_046.json
+index 7cc365aa3..8887e3c98 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_046.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_046.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 46,
+-  "timestamp": "2025-12-21T20:26:51.263428+00:00",
++  "timestamp": "2025-12-21T20:53:03.625051+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_047.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_047.json
+index aad392f83..ba5b288ec 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_047.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_047.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 47,
+-  "timestamp": "2025-12-21T20:26:59.981714+00:00",
++  "timestamp": "2025-12-21T20:53:29.827400+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_048.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_048.json
+index bca139612..d9bd17e70 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_048.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_048.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 48,
+-  "timestamp": "2025-12-21T20:27:08.731136+00:00",
++  "timestamp": "2025-12-21T20:53:55.527454+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_049.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_049.json
+index 4641faa8c..cdddb969a 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_049.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_049.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 49,
+-  "timestamp": "2025-12-21T20:27:17.684155+00:00",
++  "timestamp": "2025-12-21T20:54:21.866391+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_050.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_050.json
+index e8d78a566..e199ee623 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_050.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_050.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 50,
+-  "timestamp": "2025-12-21T20:27:26.476693+00:00",
++  "timestamp": "2025-12-21T20:54:48.414117+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-2"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_051.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_051.json
+index 4bd22c946..d38760a89 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_051.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_051.json
+@@ -1,28 +1,26 @@
+ {
+   "session_number": 51,
+-  "timestamp": "2025-12-21T20:27:35.309841+00:00",
+-  "subtasks_completed": [
+-    "subtask-1-2"
+-  ],
++  "timestamp": "2025-12-21T20:55:13.780501+00:00",
++  "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+     "patterns_discovered": [],
+     "gotchas_discovered": [],
+     "approach_outcome": {
+-      "success": true,
+-      "approach_used": "Implemented subtask: subtask-1-2",
++      "success": false,
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-2",
+-    "success": true,
++    "subtask_id": "subtask-2-3",
++    "success": false,
+     "changed_files": []
+   },
+-  "what_worked": [
+-    "Implemented subtask: subtask-1-2"
++  "what_worked": [],
++  "what_failed": [
++    "Failed to complete subtask: subtask-2-3"
+   ],
+-  "what_failed": [],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_052.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_052.json
+index 09fd365c6..b26a6d888 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_052.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_052.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 52,
+-  "timestamp": "2025-12-21T20:27:44.806163+00:00",
++  "timestamp": "2025-12-21T20:55:40.979900+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_053.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_053.json
+index 99c006a0b..7b64cb842 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_053.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_053.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 53,
+-  "timestamp": "2025-12-21T20:27:54.267070+00:00",
++  "timestamp": "2025-12-21T20:56:08.019068+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_054.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_054.json
+index 4923e24cb..261c54064 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_054.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_054.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 54,
+-  "timestamp": "2025-12-21T20:28:03.653053+00:00",
++  "timestamp": "2025-12-21T20:56:35.398467+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_055.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_055.json
+index dbe418ec9..8d53bbdf0 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_055.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_055.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 55,
+-  "timestamp": "2025-12-21T20:28:13.201513+00:00",
++  "timestamp": "2025-12-21T20:57:02.312994+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_056.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_056.json
+index e6afacddf..b655efb11 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_056.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_056.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 56,
+-  "timestamp": "2025-12-21T20:28:22.633379+00:00",
++  "timestamp": "2025-12-21T20:57:29.641622+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_057.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_057.json
+index 4d41a1cdf..49a77cf0e 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_057.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_057.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 57,
+-  "timestamp": "2025-12-21T20:28:32.075281+00:00",
++  "timestamp": "2025-12-21T20:57:57.170804+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_058.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_058.json
+index 3911d0dbe..3a0e393d6 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_058.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_058.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 58,
+-  "timestamp": "2025-12-21T20:28:41.584829+00:00",
++  "timestamp": "2025-12-21T20:58:24.534265+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-3",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-3",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-3"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_059.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_059.json
+index ce344f1a9..573925e1c 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_059.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_059.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 59,
+-  "timestamp": "2025-12-21T20:28:51.406549+00:00",
++  "timestamp": "2025-12-21T20:58:52.594712+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-4",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-4",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-4"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_060.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_060.json
+index bcf11733e..012ce8133 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_060.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_060.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 60,
+-  "timestamp": "2025-12-21T20:29:00.919022+00:00",
++  "timestamp": "2025-12-21T20:59:21.885585+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-4",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-4",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-4"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_061.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_061.json
+index a01fbc464..c3760f7a4 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_061.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_061.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 61,
+-  "timestamp": "2025-12-21T20:29:10.773896+00:00",
++  "timestamp": "2025-12-21T20:59:52.204048+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-4",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-4",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-4"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_062.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_062.json
+index 39c6d87a2..e805d8aff 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_062.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_062.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 62,
+-  "timestamp": "2025-12-21T20:29:20.670711+00:00",
++  "timestamp": "2025-12-21T21:00:20.956887+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-4",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-4",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-4"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_063.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_063.json
+index c25fa7ebb..4d326a7d7 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_063.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_063.json
+@@ -1,6 +1,6 @@
+ {
+   "session_number": 63,
+-  "timestamp": "2025-12-21T20:29:30.564376+00:00",
++  "timestamp": "2025-12-21T21:00:50.165930+00:00",
+   "subtasks_completed": [],
+   "discoveries": {
+     "file_insights": [],
+@@ -8,19 +8,19 @@
+     "gotchas_discovered": [],
+     "approach_outcome": {
+       "success": false,
+-      "approach_used": "Implemented subtask: subtask-1-4",
++      "approach_used": "Implemented subtask: subtask-2-3",
+       "why_it_worked": null,
+       "why_it_failed": null,
+       "alternatives_tried": []
+     },
+     "recommendations": [],
+-    "subtask_id": "subtask-1-4",
++    "subtask_id": "subtask-2-3",
+     "success": false,
+     "changed_files": []
+   },
+   "what_worked": [],
+   "what_failed": [
+-    "Failed to complete subtask: subtask-1-4"
++    "Failed to complete subtask: subtask-2-3"
+   ],
+   "recommendations_for_next_session": []
+ }
+\ No newline at end of file
+diff --git a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/task_logs.json b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/task_logs.json
+index 0ca47387c..061661725 100644
+--- a/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/task_logs.json
++++ b/.auto-claude/specs/001-invalid-api-key-fix-external-api-key/task_logs.json
+@@ -1,7 +1,7 @@
+ {
+   "spec_id": "001-invalid-api-key-fix-external-api-key",
+   "created_at": "2025-12-21T19:57:34.109827+00:00",
+-  "updated_at": "2025-12-21T20:39:14.394098+00:00",
++  "updated_at": "2025-12-21T21:00:50.121101+00:00",
+   "phases": {
+     "planning": {
+       "phase": "planning",
+@@ -4792,6 +4792,545 @@
+           "tool_input": "git add . && git commit -m \"$(cat <<'EOF'\nauto-...",
+           "subtask_id": "subtask-2-2",
+           "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:18.588328+00:00",
++          "type": "tool_end",
++          "content": "[Bash] Done",
++          "phase": "coding",
++          "tool_name": "Bash",
++          "subtask_id": "subtask-2-2",
++          "session": 6,
++          "detail": "[auto-claude/001-invalid-api-key-fix-external-api-key 83652448e] auto-claude: subtask-2-2 - Identify code duplication and technical debt patterns\n 72 files changed, 5497 insertions(+), 289 deletions(-)\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_050.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_051.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_052.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_053.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_054.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_055.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_056.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_057.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_058.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_059.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_060.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_061.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_062.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_063.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_064.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_065.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_066.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_067.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_068.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_069.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_070.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_071.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_072.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_073.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_074.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_075.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_076.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_077.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_078.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_079.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_080.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_081.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_082.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_083.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_084.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_085.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_086.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_087.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_088.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_089.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_090.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_091.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_092.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_093.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_094.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_095.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_096.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_097.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_098.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_099.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_100.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_101.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_102.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_103.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_104.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_105.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_106.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_107.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_108.json\n create mode 100644 .auto-claude/specs/001-invalid-api-key-fix-external-api-key/memory/session_insights/session_109.json\n create mode 100644 artifacts/code-quality/technical-debt-report.md",
++          "collapsed": true
++        },
++        {
++          "timestamp": "2025-12-21T20:39:22.465713+00:00",
++          "type": "text",
++          "content": "Now let me update the subtask status:",
++          "phase": "coding",
++          "subtask_id": "subtask-2-2",
++          "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:24.703225+00:00",
++          "type": "tool_start",
++          "content": "[mcp__auto-claude__update_subtask_status]",
++          "phase": "coding",
++          "tool_name": "mcp__auto-claude__update_subtask_status",
++          "subtask_id": "subtask-2-2",
++          "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:24.719733+00:00",
++          "type": "tool_end",
++          "content": "[mcp__auto-claude__update_subtask_status] Done",
++          "phase": "coding",
++          "tool_name": "mcp__auto-claude__update_subtask_status",
++          "subtask_id": "subtask-2-2",
++          "session": 6,
++          "collapsed": true
++        },
++        {
++          "timestamp": "2025-12-21T20:39:30.763723+00:00",
++          "type": "text",
++          "content": "Let me also record key discoveries for future sessions:",
++          "phase": "coding",
++          "subtask_id": "subtask-2-2",
++          "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:32.463664+00:00",
++          "type": "tool_start",
++          "content": "[mcp__auto-claude__record_discovery] ./artifacts/code-quality/technical-debt-report.md",
++          "phase": "coding",
++          "tool_name": "mcp__auto-claude__record_discovery",
++          "tool_input": "./artifacts/code-quality/technical-debt-report.md",
++          "subtask_id": "subtask-2-2",
++          "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:34.832878+00:00",
++          "type": "tool_start",
++          "content": "[mcp__auto-claude__record_gotcha]",
++          "phase": "coding",
++          "tool_name": "mcp__auto-claude__record_gotcha",
++          "subtask_id": "subtask-2-2",
++          "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:34.850956+00:00",
++          "type": "tool_end",
++          "content": "[mcp__auto-claude__record_gotcha] Done",
++          "phase": "coding",
++          "tool_name": "mcp__auto-claude__record_gotcha",
++          "subtask_id": "subtask-2-2",
++          "session": 6,
++          "collapsed": true
++        },
++        {
++          "timestamp": "2025-12-21T20:39:35.010359+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-2",
++          "session": 6
++        },
++        {
++          "timestamp": "2025-12-21T20:39:52.458447+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 7
++        },
++        {
++          "timestamp": "2025-12-21T20:40:09.023057+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 8
++        },
++        {
++          "timestamp": "2025-12-21T20:40:25.895641+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 9
++        },
++        {
++          "timestamp": "2025-12-21T20:40:42.625529+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 10
++        },
++        {
++          "timestamp": "2025-12-21T20:40:58.946664+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 11
++        },
++        {
++          "timestamp": "2025-12-21T20:41:15.688884+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 12
++        },
++        {
++          "timestamp": "2025-12-21T20:41:33.127093+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 13
++        },
++        {
++          "timestamp": "2025-12-21T20:41:51.142150+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 14
++        },
++        {
++          "timestamp": "2025-12-21T20:42:08.898040+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 15
++        },
++        {
++          "timestamp": "2025-12-21T20:42:26.754886+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 16
++        },
++        {
++          "timestamp": "2025-12-21T20:42:44.335841+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 17
++        },
++        {
++          "timestamp": "2025-12-21T20:43:02.799159+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 18
++        },
++        {
++          "timestamp": "2025-12-21T20:43:21.096317+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 19
++        },
++        {
++          "timestamp": "2025-12-21T20:43:39.861044+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 20
++        },
++        {
++          "timestamp": "2025-12-21T20:43:58.584814+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 21
++        },
++        {
++          "timestamp": "2025-12-21T20:44:17.312071+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 22
++        },
++        {
++          "timestamp": "2025-12-21T20:44:36.229909+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 23
++        },
++        {
++          "timestamp": "2025-12-21T20:44:55.644712+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 24
++        },
++        {
++          "timestamp": "2025-12-21T20:45:15.523970+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 25
++        },
++        {
++          "timestamp": "2025-12-21T20:45:35.155876+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 26
++        },
++        {
++          "timestamp": "2025-12-21T20:45:54.740231+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 27
++        },
++        {
++          "timestamp": "2025-12-21T20:46:15.216249+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 28
++        },
++        {
++          "timestamp": "2025-12-21T20:46:34.166849+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 29
++        },
++        {
++          "timestamp": "2025-12-21T20:46:54.366724+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 30
++        },
++        {
++          "timestamp": "2025-12-21T20:47:14.657195+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 31
++        },
++        {
++          "timestamp": "2025-12-21T20:47:35.734759+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 32
++        },
++        {
++          "timestamp": "2025-12-21T20:47:57.251673+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 33
++        },
++        {
++          "timestamp": "2025-12-21T20:48:19.607733+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 34
++        },
++        {
++          "timestamp": "2025-12-21T20:48:41.886399+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 35
++        },
++        {
++          "timestamp": "2025-12-21T20:49:04.066412+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 36
++        },
++        {
++          "timestamp": "2025-12-21T20:49:27.524888+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 37
++        },
++        {
++          "timestamp": "2025-12-21T20:49:50.543150+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 38
++        },
++        {
++          "timestamp": "2025-12-21T20:50:13.852720+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 39
++        },
++        {
++          "timestamp": "2025-12-21T20:50:36.334140+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 40
++        },
++        {
++          "timestamp": "2025-12-21T20:50:59.926754+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 41
++        },
++        {
++          "timestamp": "2025-12-21T20:51:23.952650+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 42
++        },
++        {
++          "timestamp": "2025-12-21T20:51:50.046632+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 43
++        },
++        {
++          "timestamp": "2025-12-21T20:52:15.325019+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 44
++        },
++        {
++          "timestamp": "2025-12-21T20:52:40.081541+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 45
++        },
++        {
++          "timestamp": "2025-12-21T20:53:03.566425+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 46
++        },
++        {
++          "timestamp": "2025-12-21T20:53:29.783474+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 47
++        },
++        {
++          "timestamp": "2025-12-21T20:53:55.487057+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 48
++        },
++        {
++          "timestamp": "2025-12-21T20:54:21.824509+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 49
++        },
++        {
++          "timestamp": "2025-12-21T20:54:48.371571+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 50
++        },
++        {
++          "timestamp": "2025-12-21T20:55:13.739105+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 51
++        },
++        {
++          "timestamp": "2025-12-21T20:55:40.932362+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 52
++        },
++        {
++          "timestamp": "2025-12-21T20:56:07.975710+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 53
++        },
++        {
++          "timestamp": "2025-12-21T20:56:35.357746+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 54
++        },
++        {
++          "timestamp": "2025-12-21T20:57:02.272800+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 55
++        },
++        {
++          "timestamp": "2025-12-21T20:57:29.596710+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 56
++        },
++        {
++          "timestamp": "2025-12-21T20:57:57.129492+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 57
++        },
++        {
++          "timestamp": "2025-12-21T20:58:24.492218+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 58
++        },
++        {
++          "timestamp": "2025-12-21T20:58:52.554187+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 59
++        },
++        {
++          "timestamp": "2025-12-21T20:59:21.842238+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 60
++        },
++        {
++          "timestamp": "2025-12-21T20:59:52.162631+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 61
++        },
++        {
++          "timestamp": "2025-12-21T21:00:20.914156+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 62
++        },
++        {
++          "timestamp": "2025-12-21T21:00:50.121046+00:00",
++          "type": "text",
++          "content": "Credit balance is too low",
++          "phase": "coding",
++          "subtask_id": "subtask-2-3",
++          "session": 63
+         }
+       ]
+     },
+diff --git a/.claude_settings.json b/.claude_settings.json
+index c03bfdb9b..d5bc84556 100644
+--- a/.claude_settings.json
++++ b/.claude_settings.json
+@@ -13,7 +13,12 @@
+       "Grep(./**)",
+       "Bash(*)",
+       "mcp__context7__resolve-library-id",
+-      "mcp__context7__get-library-docs"
++      "mcp__context7__get-library-docs",
++      "mcp__graphiti-memory__search_nodes",
++      "mcp__graphiti-memory__search_facts",
++      "mcp__graphiti-memory__add_episode",
++      "mcp__graphiti-memory__get_episodes",
++      "mcp__graphiti-memory__get_entity_edge"
+     ]
+   }
+ }
+\ No newline at end of file
