@@ -1,6 +1,6 @@
 {
-  "timestamp": "2025-12-21T12:21:47.830Z",
-  "totalErrors": 6425,
+  "timestamp": "2025-12-21T12:50:08.176Z",
+  "totalErrors": 6424,
   "totalFiles": 1042,
   "modules": [
     {
@@ -437,9 +437,9 @@
     },
     {
       "module": "lib",
-      "errorCount": 3675,
+      "errorCount": 3674,
       "lineCount": 271215,
-      "density": 1.3550135501355014,
+      "density": 1.3546448389653964,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -1121,7 +1121,7 @@
   "topErrorCodes": [
     {
       "code": "TS2339",
-      "count": 2183,
+      "count": 2182,
       "description": "Property does not exist"
     },
     {
