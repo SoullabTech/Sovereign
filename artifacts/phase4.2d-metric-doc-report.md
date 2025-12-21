@@ -1,7 +1,7 @@
 # Phase 4.2D Phase 5 — Biomarker Metric Documentation Report
 
 **Target:** `lib/types/consciousness/biomarkers.ts`
-**Generated:** 2025-12-21T14:22:41.823Z
+**Generated:** 2025-12-21T14:55:18.492Z
 
 ## Summary
 
