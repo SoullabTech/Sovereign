@@ -9,7 +9,7 @@ import { Pool, QueryResult, QueryResultRow } from 'pg';
 
 // Create connection pool
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://maia:maia_dev_password@localhost:5433/maia_sovereign',
+  connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
