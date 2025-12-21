@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { StorytellerAgent, StorytellerContext } from '../agents/StorytellerAgent';
 import { logger } from '../utils/logger';
-import type { ConsciousnessProfile } from '../../lib/types/cognitive-types';
+import type { ConsciousnessProfile } from '@/lib/types';
 
 const router = Router();
 const storytellerAgent = new StorytellerAgent();

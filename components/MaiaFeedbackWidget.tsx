@@ -4,7 +4,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MaiaTurnFeedbackPayload } from '../lib/types/maia';
+import { MaiaTurnFeedbackPayload } from '@/lib/types/maia';
 
 interface MaiaFeedbackWidgetProps {
   turnId: number;
@@ -124,7 +124,7 @@ export default function MaiaFeedbackWidget({
           onClick={() => setIsOpen(true)}
           className="text-gray-500 hover:text-gray-700 text-sm"
         >
-          =­ Give feedback
+          =ï¿½ Give feedback
         </button>
       </div>
     );

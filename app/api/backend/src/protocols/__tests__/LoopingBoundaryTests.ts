@@ -6,7 +6,7 @@
 
 import { MayaWitnessService } from '../../services/MayaWitnessService';
 import { LoopingIntensity } from '../LoopingProtocol';
-import { ElementalArchetype } from '../../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 export interface BoundaryTestCase {
   id: string;

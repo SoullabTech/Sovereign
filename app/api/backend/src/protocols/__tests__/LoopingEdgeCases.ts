@@ -5,7 +5,7 @@
 
 import { MayaWitnessService, WitnessContext } from '../../services/MayaWitnessService';
 import { LoopingIntensity } from '../LoopingProtocol';
-import { ElementalArchetype } from '../../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 /**
  * Cultural and linguistic variation tests

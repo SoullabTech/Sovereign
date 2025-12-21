@@ -6,7 +6,7 @@
 import { LoopingTestHarness, MEDIUM_STAKES_SCENARIOS } from './LoopingTestHarness';
 import { BoundaryTestRunner, BOUNDARY_TEST_CASES, SEMANTIC_EQUIVALENTS } from './LoopingBoundaryTests';
 import { loopingMonitor } from '../LoopingMonitor';
-import { ElementalArchetype } from '../../../../web/lib/types/elemental';
+import { ElementalArchetype } from '@/lib/types/elemental';
 
 export interface TestMode {
   type: 'scripted' | 'sandbox' | 'automated' | 'live';

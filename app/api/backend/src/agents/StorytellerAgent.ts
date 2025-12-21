@@ -2,13 +2,13 @@ import { LIDAWorkspace } from '../../lib/cognitive-engines/lida-workspace';
 import { SOARPlanner } from '../../lib/cognitive-engines/soar-planner';
 import { ACTRMemory } from '../../lib/cognitive-engines/actr-memory';
 import { MicroPsiCore } from '../../lib/cognitive-engines/micropsi-core';
-import type { 
-  ConsciousnessProfile, 
-  AttentionState, 
-  WisdomPlan, 
-  MemoryIntegration, 
-  EmotionalResonance 
-} from '../../lib/types/cognitive-types';
+import type {
+  ConsciousnessProfile,
+  AttentionState,
+  WisdomPlan,
+  MemoryIntegration,
+  EmotionalResonance
+} from '@/lib/types';
 
 export interface StoryStructure {
   type: 'myth' | 'parable' | 'fable' | 'allegory' | 'poem' | 'journey' | 'transformation';
