@@ -10,7 +10,7 @@
  * Part of: Phase 1 Foundation Implementation
  */
 
-import { supabase } from '../dbClient';
+import { insertOne, query } from '../db/postgres';
 
 // =====================================================================
 // TYPE DEFINITIONS
@@ -65,12 +65,6 @@ export async function logCognitiveTurn({
   scaffoldingUsed,
 }: LogTurnArgs): Promise<void> {
   try {
-    // Guard: Supabase client may be null in mock mode or missing config
-    if (!supabase) {
-      console.warn('[Dialectical Scaffold] Supabase not configured - skipping cognitive event logging');
-      return;
-    }
-
     // Prepare insert payload
     const payload = {
       user_id: userId,
@@ -96,16 +90,9 @@ export async function logCognitiveTurn({
       archetype: bloom.archetype ?? null,
     };
 
-    // Insert into Postgres
-    const { error } = await supabase
-      .from('cognitive_turn_events')
-      .insert(payload);
-
-    if (error) {
-      console.error('[Dialectical Scaffold] Failed to log cognitive turn:', error);
-    } else {
-      console.log(`🧠 [Dialectical Scaffold] Cognitive turn logged: Level ${bloom.numericLevel ?? bloom.level} (${bloom.label})`);
-    }
+    // Insert into Postgres (local sovereignty-compliant database)
+    await insertOne('cognitive_turn_events', payload);
+    console.log(`🧠 [Dialectical Scaffold] Cognitive turn logged: Level ${bloom.numericLevel ?? bloom.level} (${bloom.label})`);
   } catch (err) {
     // Catch-all: Never crash, just log error
     console.error('[Dialectical Scaffold] Unexpected error logging cognitive turn:', err);
@@ -125,21 +112,19 @@ export async function getUserCognitiveProgression(
   limit: number = 20
 ): Promise<BloomDetection[] | null> {
   try {
-    if (!supabase) return null;
+    // Query Postgres (local sovereignty-compliant database)
+    const sql = `
+      SELECT *
+      FROM cognitive_turn_events
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT $2
+    `;
 
-    const { data, error } = await supabase
-      .from('cognitive_turn_events')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) {
-      console.error('[Dialectical Scaffold] Failed to retrieve cognitive progression:', error);
-      return null;
-    }
+    const result = await query(sql, [userId, limit]);
 
     // Transform DB rows back to BloomDetection objects
-    return (data || []).map((row: any) => ({
+    return (result.rows || []).map((row: any) => ({
       level: row.bloom_level,
       numericLevel: row.bloom_level,
       score: parseFloat(row.bloom_score),
