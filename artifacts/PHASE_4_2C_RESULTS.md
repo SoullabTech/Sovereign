@@ -84,14 +84,14 @@ _[To be filled during execution]_
 
 ### 3.2  Checkpoint Metrics
 
-**Checkpoint A-1:** _[pending]_
+**Checkpoint A-1:** 2025-12-21
 **Command:** `npm run audit:typehealth > artifacts/typehealth-phase4.2c-A1.log`
 
 | Metric | Baseline | Post-A1 | Δ | Target Met? |
 |:--|--:|--:|--:|:--:|
-| Total Diagnostics | 6,424 | _[pending]_ | _[pending]_ | ☐ < 5,700 |
-| TS2339 | 2,190 | _[pending]_ | _[pending]_ | ☐ |
-| TS2304 | 1,227 | _[pending]_ | _[pending]_ | ☐ |
+| Total Diagnostics | 6424 | 6424 | 0 (0.0%) | ☐ < 5,700 |
+| TS2339 | 2186 | 2186 | 0 (0.0%) | ☐ |
+| TS2304 | 1227 | 1227 | 0 (0.0%) | ☐ |
 
 ### 3.3  Interface Catalog
 

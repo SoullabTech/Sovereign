@@ -131,3 +131,13 @@ export * from './spiritual';
  * Elemental layer - Elemental framework and alchemical processing
  */
 export * from './elemental';
+
+// ============================================================================
+// GENERATED INTERFACES (Phase 4.2C Module A)
+// ============================================================================
+
+/**
+ * Auto-generated interface stubs from TS2339 pattern analysis
+ * Includes: SystemContext, WisdomOracleContext, AstrologyContext, ReflectionContext
+ */
+export * from './generated';

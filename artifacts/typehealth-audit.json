@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-12-20T19:59:29.008Z",
-  "totalErrors": 6500,
-  "totalFiles": 1026,
+  "timestamp": "2025-12-21T11:24:26.465Z",
+  "totalErrors": 6424,
+  "totalFiles": 1043,
   "modules": [
     {
       "module": "beta-deployment",
@@ -29,9 +29,9 @@
     },
     {
       "module": "app",
-      "errorCount": 2422,
-      "lineCount": 166155,
-      "density": 1.457675062441696,
+      "errorCount": 2338,
+      "lineCount": 163150,
+      "density": 1.4330370824394727,
       "topErrors": {},
       "files": [
         "app/admin/page.tsx",
@@ -64,7 +64,6 @@
         "app/api/backend/src/__tests__/soullabFounderAgent.test.ts",
         "app/api/backend/src/__tests__/system.readiness.simple.spec.ts",
         "app/api/backend/src/__tests__/system.readiness.spec.ts",
-        "app/api/backend/src/adapters/memory/SupabaseMemory.ts",
         "app/api/backend/src/adapters/orchestrator/ConversationalOrchestrator.ts",
         "app/api/backend/src/adapters/voice/VoiceMemo.ts",
         "app/api/backend/src/agents/AetherAgent.ts",
@@ -191,7 +190,6 @@
         "app/api/backend/src/routes/flow.routes.ts",
         "app/api/backend/src/routes/founder.routes.ts",
         "app/api/backend/src/routes/fourPillars.routes.ts",
-        "app/api/backend/src/routes/health.routes.ts",
         "app/api/backend/src/routes/holistic.routes.ts",
         "app/api/backend/src/routes/holoflower.routes.ts",
         "app/api/backend/src/routes/iching.routes.ts",
@@ -205,9 +203,7 @@
         "app/api/backend/src/routes/oracle.routes.ts",
         "app/api/backend/src/routes/oracle/personal.routes.ts",
         "app/api/backend/src/routes/oracle/preferences.routes.ts",
-        "app/api/backend/src/routes/oracle/reflection.ts",
         "app/api/backend/src/routes/oracle/session.ts",
-        "app/api/backend/src/routes/oraclePreferences.routes.ts",
         "app/api/backend/src/routes/personalOracle.routes.ts",
         "app/api/backend/src/routes/practitionerPortal.routes.ts",
         "app/api/backend/src/routes/profileSettings.routes.ts",
@@ -244,9 +240,7 @@
         "app/api/backend/src/services/agentOrchestrator-shadow-integration.ts",
         "app/api/backend/src/services/agentOrchestrator.ts",
         "app/api/backend/src/services/AntiSolipsisticValidator.ts",
-        "app/api/backend/src/services/archive/astrologicalService.ts",
         "app/api/backend/src/services/archive/comprehensiveAstrologicalService.ts",
-        "app/api/backend/src/services/authService.ts",
         "app/api/backend/src/services/BetaSafetyGuards.ts",
         "app/api/backend/src/services/calendarIntegrationService.ts",
         "app/api/backend/src/services/CollectiveDaimonicDashboardService.ts",
@@ -273,8 +267,6 @@
         "app/api/backend/src/services/EnhancedDialogueStateTracker.ts",
         "app/api/backend/src/services/EnhancedSesameMayaRefiner.ts",
         "app/api/backend/src/services/EnhancedSHIFtNarrative.ts",
-        "app/api/backend/src/services/EventService.ts",
-        "app/api/backend/src/services/facetMapService.ts",
         "app/api/backend/src/services/facilitatorDashboardService.ts",
         "app/api/backend/src/services/founderKnowledgeService.ts",
         "app/api/backend/src/services/groupDynamicsService.ts",
@@ -296,7 +288,6 @@
         "app/api/backend/src/services/MultiModalEmotionalIntelligence.ts",
         "app/api/backend/src/services/OnboardingCeremony.ts",
         "app/api/backend/src/services/OnboardingService.ts",
-        "app/api/backend/src/services/OracleIntelligenceService.ts",
         "app/api/backend/src/services/OracleService.ts",
         "app/api/backend/src/services/OracleSettingsService.ts",
         "app/api/backend/src/services/participantContextService.ts",
@@ -304,7 +295,6 @@
         "app/api/backend/src/services/postRetreatService.ts",
         "app/api/backend/src/services/profileService.ts",
         "app/api/backend/src/services/ProgressionInvitationService.ts",
-        "app/api/backend/src/services/QueryService.ts",
         "app/api/backend/src/services/retreatOnboardingService.ts",
         "app/api/backend/src/services/retreatSupportService.ts",
         "app/api/backend/src/services/SafetyModerationService.ts",
@@ -323,7 +313,6 @@
         "app/api/backend/src/services/spiralogicAtmosphere.ts",
         "app/api/backend/src/services/spiralogicReportPdfService.ts",
         "app/api/backend/src/services/SynapticResonance.ts",
-        "app/api/backend/src/services/tests/memoryService.test.ts",
         "app/api/backend/src/services/UnifiedDataAccessService.ts",
         "app/api/backend/src/services/UserMemoryService.ts",
         "app/api/backend/src/services/vectorEquilibrium.ts",
@@ -449,9 +438,9 @@
     },
     {
       "module": "lib",
-      "errorCount": 3670,
-      "lineCount": 257206,
-      "density": 1.4268718459133922,
+      "errorCount": 3678,
+      "lineCount": 271215,
+      "density": 1.356119683645816,
       "topErrors": {},
       "files": [
         "lib/__tests__/activation-logic.test.ts",
@@ -493,7 +482,6 @@
         "lib/ain/awareness-style-suggestions.ts",
         "lib/ain/ConsciousnessEvolutionSystem.ts",
         "lib/ain/elemental-alchemy-integration.ts",
-        "lib/ain/maia-style-journal.ts",
         "lib/ain/MetaObserverSystem.ts",
         "lib/ain/oracle-ain-service.ts",
         "lib/ain/PilotDroneInterface.ts",
@@ -517,11 +505,9 @@
         "lib/astrology/spiralogicMapping.ts",
         "lib/audio/ttsWithFallback.ts",
         "lib/auth.ts",
-        "lib/auth/AuthProvider.tsx",
         "lib/auth/BetaAuth.ts",
         "lib/auth/local-client.ts",
         "lib/auth/sessionManager.ts",
-        "lib/auth/workingAuth.ts",
         "lib/awareness/reflexive-awareness.ts",
         "lib/backend/MayaOrchestrator.ts",
         "lib/backend/PersonalOracleAgent.ts",
@@ -738,7 +724,6 @@
         "lib/ganesha/contacts.ts",
         "lib/hooks/useAuth.ts",
         "lib/hooks/useFeatureFlag.ts",
-        "lib/hooks/useOracleData.ts",
         "lib/hooks/usePersonalization.ts",
         "lib/hooks/useUserAuth.ts",
         "lib/hooks/useUserPreferences.ts",
@@ -803,14 +788,12 @@
         "lib/maia/NavigationAwareness.ts",
         "lib/maia/obsidianExport.ts",
         "lib/maia/performance-optimizer.ts",
-        "lib/maia/ReflectionReplay.ts",
         "lib/maia/resonance-breath-integration.ts",
         "lib/maia/RitualSuggestionEngine.ts",
         "lib/maia/services/ContextCompressionService.ts",
         "lib/maia/types/MayaContext.ts",
         "lib/maia/voicePatterns.ts",
         "lib/maia/wisdom-vault-ingestion.ts",
-        "lib/maya-cohort-tracker.ts",
         "lib/maya-conversation-flow.ts",
         "lib/maya-escape-hatch-refined.ts",
         "lib/maya-masters-integrated-system.ts",
@@ -862,7 +845,6 @@
         "lib/onboarding/sacred-initiation.ts",
         "lib/oracle-bridge/index.ts",
         "lib/oracle/__tests__/GenderAwareContext.test.ts",
-        "lib/oracle/admin/archetypes/NovelArchetypeDiscovery.tsx",
         "lib/oracle/AskMaiaInsights.ts",
         "lib/oracle/ConversationIntelligenceEngine.gender-integration.example.ts",
         "lib/oracle/ConversationIntelligenceEngine.ts",
@@ -939,7 +921,6 @@
         "lib/services/CommunityWitnessing.ts",
         "lib/services/consciousness-file-bridge.ts",
         "lib/services/ConsciousnessEvolutionOrchestrator.ts",
-        "lib/services/conversation-analytics-service.ts",
         "lib/services/conversationStorageService.ts",
         "lib/services/core-member-profile.ts",
         "lib/services/CrossNarrativeService.ts",
@@ -966,7 +947,43 @@
         "lib/services/MaiaOrchestrator.ts",
         "lib/services/memoryService.ts",
         "lib/services/microact-service.ts",
-        "lib/services/mythicLabService.ts"
+        "lib/services/mythicLabService.ts",
+        "lib/services/newsletter/FieldReportGenerator.ts",
+        "lib/services/newsletter/NewsletterIntegration.ts",
+        "lib/services/offering-session-service.ts",
+        "lib/services/OnboardingService.ts",
+        "lib/services/personal-metrics.ts",
+        "lib/services/premium-storage.ts",
+        "lib/services/quota-service.ts",
+        "lib/services/RedisCacheService.ts",
+        "lib/services/ritualEventService.ts",
+        "lib/services/SesameVoiceService.ts",
+        "lib/services/sessionStorage.ts",
+        "lib/services/simple-memory-capture.ts",
+        "lib/services/spiral-constellation.ts",
+        "lib/services/telos-service.ts",
+        "lib/services/timingMiddleware.ts",
+        "lib/services/UnifiedOracleService.ts",
+        "lib/services/UnifiedVoiceRouter.ts",
+        "lib/services/userPreferenceService.ts",
+        "lib/services/UserService.ts",
+        "lib/services/VoiceServiceWithFallback.ts",
+        "lib/session-persistence.ts",
+        "lib/session.ts",
+        "lib/session/SessionTimer.ts",
+        "lib/skills/db.ts",
+        "lib/soullab-consciousness-engine.ts",
+        "lib/soulprint/JournalSoulprintIntegration.ts",
+        "lib/sovereign/awarenessLevelDetection.ts",
+        "lib/sovereign/conversationalConventions.ts",
+        "lib/sovereign/maiaService.ts",
+        "lib/sovereign/maiaVoice.ts",
+        "lib/spiralogic/Agents.ts",
+        "lib/spiritual-guidance/ain-faith-memory-schema.ts",
+        "lib/spiritual-guidance/interfaith-prompting-system.ts",
+        "lib/spiritual-guidance/ritual-language-model.ts",
+        "lib/spiritual-guidance/sacred-database-schema.ts",
+        "lib/spiritual-guidance/universal-faith-architecture.ts"
       ]
     },
     {
@@ -1105,37 +1122,37 @@
   "topErrorCodes": [
     {
       "code": "TS2339",
-      "count": 2114,
+      "count": 2186,
       "description": "Property does not exist"
     },
     {
       "code": "TS2304",
-      "count": 1429,
+      "count": 1227,
       "description": "Cannot find name/module"
     },
     {
       "code": "TS2322",
-      "count": 552,
+      "count": 564,
       "description": "Type not assignable"
     },
     {
-      "code": "TS2307",
-      "count": 274,
-      "description": "Cannot find module"
-    },
-    {
       "code": "TS2353",
-      "count": 266,
+      "count": 285,
       "description": "Unknown error"
     },
     {
       "code": "TS2345",
-      "count": 265,
+      "count": 269,
       "description": "Argument type mismatch"
     },
     {
+      "code": "TS2307",
+      "count": 266,
+      "description": "Cannot find module"
+    },
+    {
       "code": "TS2305",
-      "count": 199,
+      "count": 210,
       "description": "Unknown error"
     },
     {
@@ -1145,12 +1162,12 @@
     },
     {
       "code": "TS2551",
-      "count": 128,
+      "count": 130,
       "description": "Unknown error"
     },
     {
       "code": "TS2709",
-      "count": 94,
+      "count": 93,
       "description": "Unknown error"
     }
   ],
