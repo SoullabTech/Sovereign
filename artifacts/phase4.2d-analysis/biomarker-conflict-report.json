@@ -1,0 +1,11 @@
+{
+  "totalBiomarkerTypes": 28,
+  "totalExistingTypes": 170,
+  "conflicts": [],
+  "summary": {
+    "high": 0,
+    "medium": 0,
+    "low": 0,
+    "noConflicts": 28
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "sourceImports": [
+    {
+      "module": "./soullab-metadata",
+      "types": [
+        "ConsciousnessProfile",
+        "ElementType"
+      ]
+    }
+  ],
+  "targetMappings": [
+    {
+      "sourceType": "ConsciousnessProfile",
+      "targetPath": "@/lib/types/cognitive/ConsciousnessProfile",
+      "exists": true,
+      "action": "use-canonical"
+    },
+    {
+      "sourceType": "ElementType",
+      "targetPath": "@/lib/types/soullab-metadata",
+      "exists": true,
+      "action": "use-canonical"
+    }
+  ]
+}

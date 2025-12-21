@@ -1,0 +1,279 @@
+{
+  "sourceFile": "/Users/soullab/MAIA-PAI-SOVEREIGN/lib/types/consciousness-biomarkers.ts",
+  "totalTypes": 28,
+  "exportedTypes": 28,
+  "imports": [
+    {
+      "module": "./soullab-metadata",
+      "types": [
+        "ConsciousnessProfile",
+        "ElementType"
+      ]
+    }
+  ],
+  "typeDefinitions": [
+    {
+      "name": "AlchemicalPhase",
+      "kind": "union",
+      "line": 16,
+      "exported": true,
+      "category": "ALCHEMICAL STAGE TRACKING"
+    },
+    {
+      "name": "AlchemicalStage",
+      "kind": "interface",
+      "line": 25,
+      "exported": true,
+      "category": "ALCHEMICAL STAGE TRACKING"
+    },
+    {
+      "name": "SomaticMarker",
+      "kind": "union",
+      "line": 37,
+      "exported": true,
+      "category": "SOMATIC & EMBODIED STATES"
+    },
+    {
+      "name": "SomaticState",
+      "kind": "interface",
+      "line": 47,
+      "exported": true,
+      "category": "SOMATIC & EMBODIED STATES"
+    },
+    {
+      "name": "PolyvagalMode",
+      "kind": "union",
+      "line": 59,
+      "exported": true,
+      "category": "POLYVAGAL THEORY INTEGRATION"
+    },
+    {
+      "name": "PolyvagalState",
+      "kind": "interface",
+      "line": 64,
+      "exported": true,
+      "category": "POLYVAGAL THEORY INTEGRATION"
+    },
+    {
+      "name": "IFSPartType",
+      "kind": "union",
+      "line": 77,
+      "exported": true,
+      "category": "INTERNAL FAMILY SYSTEMS (IFS)"
+    },
+    {
+      "name": "IFSPart",
+      "kind": "interface",
+      "line": 79,
+      "exported": true,
+      "category": "INTERNAL FAMILY SYSTEMS (IFS)"
+    },
+    {
+      "name": "IFSParts",
+      "kind": "interface",
+      "line": 88,
+      "exported": true,
+      "category": "INTERNAL FAMILY SYSTEMS (IFS)"
+    },
+    {
+      "name": "HemisphericMode",
+      "kind": "union",
+      "line": 99,
+      "exported": true,
+      "category": "HEMISPHERIC INTEGRATION (McGilchrist)"
+    },
+    {
+      "name": "HemisphericBalance",
+      "kind": "interface",
+      "line": 105,
+      "exported": true,
+      "category": "HEMISPHERIC INTEGRATION (McGilchrist)"
+    },
+    {
+      "name": "GestaltContact",
+      "kind": "union",
+      "line": 117,
+      "exported": true,
+      "category": "GESTALT AWARENESS"
+    },
+    {
+      "name": "GestaltState",
+      "kind": "interface",
+      "line": 125,
+      "exported": true,
+      "category": "GESTALT AWARENESS"
+    },
+    {
+      "name": "JungianPhase",
+      "kind": "union",
+      "line": 137,
+      "exported": true,
+      "category": "JUNGIAN PROCESS TRACKING"
+    },
+    {
+      "name": "JungianProcess",
+      "kind": "interface",
+      "line": 144,
+      "exported": true,
+      "category": "JUNGIAN PROCESS TRACKING"
+    },
+    {
+      "name": "PhenomenologicalState",
+      "kind": "interface",
+      "line": 157,
+      "exported": true,
+      "category": "PHENOMENOLOGICAL PRESENCE"
+    },
+    {
+      "name": "DialogicalPosition",
+      "kind": "interface",
+      "line": 169,
+      "exported": true,
+      "category": "DIALOGICAL SELF"
+    },
+    {
+      "name": "DialogicalState",
+      "kind": "interface",
+      "line": 176,
+      "exported": true,
+      "category": "DIALOGICAL SELF"
+    },
+    {
+      "name": "ACTState",
+      "kind": "interface",
+      "line": 187,
+      "exported": true,
+      "category": "ACT (ACCEPTANCE & COMMITMENT THERAPY) MARKERS"
+    },
+    {
+      "name": "ConstellationState",
+      "kind": "interface",
+      "line": 201,
+      "exported": true,
+      "category": "CONSTELLATION STATE (Family/Systemic)"
+    },
+    {
+      "name": "SpiralogicElement",
+      "kind": "union",
+      "line": 212,
+      "exported": true,
+      "category": "SPIRALOGIC PHASE (12-Phase System)"
+    },
+    {
+      "name": "SpiralogicRefinement",
+      "kind": "union",
+      "line": 214,
+      "exported": true,
+      "category": "SPIRALOGIC PHASE (12-Phase System)"
+    },
+    {
+      "name": "SpiralogicPhase",
+      "kind": "interface",
+      "line": 216,
+      "exported": true,
+      "category": "SPIRALOGIC PHASE (12-Phase System)"
+    },
+    {
+      "name": "TransformationScore",
+      "kind": "interface",
+      "line": 228,
+      "exported": true,
+      "category": "TRANSFORMATION SCORE"
+    },
+    {
+      "name": "ConsciousnessBiomarkers",
+      "kind": "interface",
+      "line": 251,
+      "exported": true,
+      "category": "COMMON BIOMARKER MIXIN"
+    },
+    {
+      "name": "ExtendedConsciousnessProfile",
+      "kind": "interface",
+      "line": 288,
+      "exported": true,
+      "category": "EXTENDED CONSCIOUSNESS PROFILE",
+      "extends": [
+        "ConsciousnessProfile"
+      ]
+    },
+    {
+      "name": "BiomarkerSnapshot",
+      "kind": "interface",
+      "line": 298,
+      "exported": true,
+      "category": "BIOMARKER SNAPSHOT"
+    },
+    {
+      "name": "BiomarkerEvolution",
+      "kind": "interface",
+      "line": 317,
+      "exported": true,
+      "category": "BIOMARKER EVOLUTION"
+    }
+  ],
+  "categories": {
+    "ALCHEMICAL STAGE TRACKING": [
+      "AlchemicalPhase",
+      "AlchemicalStage"
+    ],
+    "SOMATIC & EMBODIED STATES": [
+      "SomaticMarker",
+      "SomaticState"
+    ],
+    "POLYVAGAL THEORY INTEGRATION": [
+      "PolyvagalMode",
+      "PolyvagalState"
+    ],
+    "INTERNAL FAMILY SYSTEMS (IFS)": [
+      "IFSPartType",
+      "IFSPart",
+      "IFSParts"
+    ],
+    "HEMISPHERIC INTEGRATION (McGilchrist)": [
+      "HemisphericMode",
+      "HemisphericBalance"
+    ],
+    "GESTALT AWARENESS": [
+      "GestaltContact",
+      "GestaltState"
+    ],
+    "JUNGIAN PROCESS TRACKING": [
+      "JungianPhase",
+      "JungianProcess"
+    ],
+    "PHENOMENOLOGICAL PRESENCE": [
+      "PhenomenologicalState"
+    ],
+    "DIALOGICAL SELF": [
+      "DialogicalPosition",
+      "DialogicalState"
+    ],
+    "ACT (ACCEPTANCE & COMMITMENT THERAPY) MARKERS": [
+      "ACTState"
+    ],
+    "CONSTELLATION STATE (Family/Systemic)": [
+      "ConstellationState"
+    ],
+    "SPIRALOGIC PHASE (12-Phase System)": [
+      "SpiralogicElement",
+      "SpiralogicRefinement",
+      "SpiralogicPhase"
+    ],
+    "TRANSFORMATION SCORE": [
+      "TransformationScore"
+    ],
+    "COMMON BIOMARKER MIXIN": [
+      "ConsciousnessBiomarkers"
+    ],
+    "EXTENDED CONSCIOUSNESS PROFILE": [
+      "ExtendedConsciousnessProfile"
+    ],
+    "BIOMARKER SNAPSHOT": [
+      "BiomarkerSnapshot"
+    ],
+    "BIOMARKER EVOLUTION": [
+      "BiomarkerEvolution"
+    ]
+  }
+}
