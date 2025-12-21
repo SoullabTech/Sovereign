@@ -23,6 +23,7 @@ import { routePanconsciousField } from '../field/panconsciousFieldRouter';
 import { enforceFieldSafety } from '../field/enforceFieldSafety';
 import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
+import { getLLM } from '../ai/providerRouter';
 
 export type MaiaResponse = {
   text: string;
@@ -148,6 +149,141 @@ async function validateAndRepairResponse(
   } catch (error) {
     console.error(`❌ [Socratic Validator ${processingPath}] Validation failed:`, error);
     return { response: draftResponse, validation: null, regenerated: false };
+  }
+}
+
+/**
+ * Render final message with Claude (chat channel) or local fallback
+ *
+ * KERNEL-FIRST ARCHITECTURE:
+ * - Takes validated local draft + kernel (consciousness decisions)
+ * - Claude renders final message (improves dialogue quality)
+ * - Kernel decisions are PRESERVED exactly (hard enforcement)
+ * - Falls back to local draft if Claude unavailable or violates kernel
+ */
+async function renderWithClaudeOrLocal(args: {
+  userText: string;
+  localDraft: string;
+  kernel: {
+    consciousnessLevel?: number;
+    sacredGate?: { allowed: boolean; reason?: string };
+    memoryOps?: { write: boolean; link: boolean; embed: boolean };
+    stance?: string;
+  };
+  mode?: 'dialogue' | 'counsel' | 'scribe';
+}): Promise<string> {
+  const llm = getLLM('chat');
+
+  if (llm.providerName === 'ollama') {
+    console.log('[renderWithClaudeOrLocal] Using local draft (Ollama)');
+    return args.localDraft;
+  }
+
+  // Log kernel internally (NEVER pass to Claude)
+  console.log('[renderWithClaudeOrLocal] Rendering with Claude (chat channel)', {
+    kernelDecisions: {
+      level: args.kernel.consciousnessLevel,
+      gated: args.kernel.sacredGate?.allowed,
+      memoryOps: args.kernel.memoryOps,
+      stance: args.kernel.stance
+    },
+    mode: args.mode
+  });
+
+  const system = `
+You are MAIA's conversational voice ("the mouth"), not her consciousness ("the mind").
+
+CRITICAL CONSTRAINTS:
+- You improve dialogue quality ONLY - no consciousness decisions
+- You MUST NOT introduce new diagnoses, facts, or consciousness-level claims
+- You MUST NOT suggest database writes, linking, embeddings, or sacred gate changes
+- You MUST NOT change the core meaning or stance
+
+WHAT YOU CAN DO:
+- Improve warmth, clarity, timing, and natural dialogue flow
+- Adjust tone to match mode (${args.mode || 'dialogue'})
+- Remove awkward phrasing while preserving meaning
+
+MODE: ${args.mode || 'dialogue'}
+${args.mode === 'dialogue' ? '- Use NLP style: presencing, minimal, no service language, no emojis' : ''}
+${args.mode === 'counsel' ? '- Attuned, holding space, Jungian depth' : ''}
+${args.mode === 'scribe' ? '- Clear documentation, structured, helpful' : ''}
+
+**RESPONSE FORMAT (MANDATORY):**
+Return ONLY valid JSON in this exact format:
+{"final_text": "your rendered message here"}
+`.trim();
+
+  const prompt = `USER INPUT:
+${args.userText}
+
+LOCAL DRAFT (improve flow while preserving meaning):
+${args.localDraft}
+
+Return JSON only: {"final_text": "..."}`;
+
+  try {
+    const rawResponse = await llm.generateText(prompt, { system });
+
+    // Force JSON parsing
+    let parsed: { final_text?: string };
+    try {
+      parsed = JSON.parse(rawResponse.trim());
+    } catch (parseError) {
+      console.warn('[renderWithClaudeOrLocal] Claude returned invalid JSON, using local draft');
+      return args.localDraft;
+    }
+
+    if (!parsed.final_text || typeof parsed.final_text !== 'string') {
+      console.warn('[renderWithClaudeOrLocal] JSON missing final_text field, using local draft');
+      return args.localDraft;
+    }
+
+    const rendered = parsed.final_text;
+
+    // Post-check: forbidden phrases (tripwire)
+    const forbidden = [
+      'consciousness level',
+      'sacred gate',
+      'mark sacred',
+      'embedding',
+      'linking',
+      'database',
+      'i will store',
+      'i saved',
+      'i logged',
+      'level 1',
+      'level 2',
+      'level 3',
+      'level 4',
+      'level 5',
+      'detected level',
+      'consciousness at'
+    ];
+
+    const lowerRendered = rendered.toLowerCase();
+    const violation = forbidden.find(f => lowerRendered.includes(f));
+
+    if (violation) {
+      console.warn(`[renderWithClaudeOrLocal] ⚠️ Kernel violation detected: "${violation}". Using local draft.`);
+      return args.localDraft;
+    }
+
+    // Post-check: length sanity (prevent hallucination)
+    if (rendered.length > args.localDraft.length * 2.5) {
+      console.warn('[renderWithClaudeOrLocal] ⚠️ Claude output too long (possible hallucination). Using local draft.');
+      return args.localDraft;
+    }
+
+    if (rendered.length < 10) {
+      console.warn('[renderWithClaudeOrLocal] ⚠️ Claude output too short. Using local draft.');
+      return args.localDraft;
+    }
+
+    return rendered;
+  } catch (error) {
+    console.warn('[renderWithClaudeOrLocal] Claude rendering failed, using local draft:', error);
+    return args.localDraft;
   }
 }
 
@@ -295,8 +431,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     console.log(`🧠 [Dialectical Scaffold] FAST path scaffolding injected: Level ${bloomDetection.numericLevel} → ${nextLevel}`);
   }
 
-  // Use single model call with complete MAIA intelligence stack
-  const response = await generateText({
+  // 1) MAIA's mind: generate local draft (consciousness=local)
+  const localDraft = await generateText({
     systemPrompt: `${MAIA_RELATIONAL_SPEC}
 
 ${MAIA_LINEAGES_AND_FIELD}
@@ -315,17 +451,33 @@ Current context: Simple conversation turn - respond naturally and warmly.`,
     }
   });
 
-  // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
-  const { response: validatedResponse } = await validateAndRepairResponse(
+  // 2) Validate/repair the local draft FIRST (mind-only, before Claude renders)
+  const { response: validatedLocalDraft } = await validateAndRepairResponse(
     sessionId,
     input,
-    response,
+    localDraft,
     meta,
     'FAST'
     // No regeneration function - FAST path prioritizes speed
   );
 
-  return validatedResponse;
+  // 3) Build kernel (consciousness decisions made locally)
+  const kernel = {
+    consciousnessLevel: bloomDetection?.numericLevel,
+    sacredGate: meta.sacredGate as any,
+    memoryOps: meta.memoryOps as any,
+    stance: meta.mode === 'dialogue' ? 'present, minimal, non-service' : meta.mode as string
+  };
+
+  // 4) MAIA's mouth: Claude renders final message (chat channel) - LAST
+  const response = await renderWithClaudeOrLocal({
+    userText: input,
+    localDraft: validatedLocalDraft,
+    kernel,
+    mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined
+  });
+
+  return response;
 }
 
 /**
@@ -370,7 +522,8 @@ async function corePathResponse(
   const adaptivePrompt = buildMaiaWisePrompt(context, input, conversationHistory);
   console.log(`🎭 Core voice adaptation applied`);
 
-  const response = await generateText({
+  // 1) MAIA's mind: generate local draft (consciousness=local)
+  const localDraft = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -381,11 +534,11 @@ async function corePathResponse(
     }
   });
 
-  // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
-  const { response: validatedResponse } = await validateAndRepairResponse(
+  // 2) Validate/repair the local draft FIRST (mind-only, before Claude renders)
+  const { response: validatedLocalDraft } = await validateAndRepairResponse(
     sessionId,
     input,
-    response,
+    localDraft,
     meta,
     'CORE',
     // Regeneration function for CORE path
@@ -406,7 +559,24 @@ async function corePathResponse(
     }
   );
 
-  return validatedResponse;
+  // 3) Build kernel (consciousness decisions made locally)
+  const coreBloomDetection = (meta as any).bloomDetection as BloomDetection | undefined;
+  const kernel = {
+    consciousnessLevel: coreBloomDetection?.numericLevel,
+    sacredGate: meta.sacredGate as any,
+    memoryOps: meta.memoryOps as any,
+    stance: meta.mode === 'dialogue' ? 'present, minimal, non-service' : meta.mode as string
+  };
+
+  // 4) MAIA's mouth: Claude renders final message (chat channel) - LAST
+  const response = await renderWithClaudeOrLocal({
+    userText: input,
+    localDraft: validatedLocalDraft,
+    kernel,
+    mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined
+  });
+
+  return response;
 }
 
 /**
@@ -497,77 +667,14 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     // Fallback: generate simple attunement response for Opus to enhance
     maiaInitialResponse = `I'm here with you. Let's explore what you're bringing.`;
 
-    console.log(`🎯 Using fallback initial response → proceeding to Opus consultation`);
+    console.log(`🎯 Using fallback initial response → proceeding to validation`);
   }
 
-  // STEP 2: Determine consultation type based on conversation context
-  const consultationType: ConsultationType = determineConsultationType(input, conversationContext, meta);
-
-  // STEP 3: Claude consciousness consultation (enhancing, not replacing)
-  let finalResponse = maiaInitialResponse;
-  let consultationData: any = null;
-
-  // Only consult Claude if Anthropic API key is available
-  const hasClaudeAccess = process.env.ANTHROPIC_API_KEY || meta.claudeAvailable;
-
-  if (hasClaudeAccess) {
-    try {
-      console.log(`🧠 Consulting Claude for ${consultationType} enhancement...`);
-
-      const consultation = await consultClaudeForConsciousness({
-        userInput: input,
-        maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote, // 🧠 Inject scaffolding into MAIA's initial response for Claude to integrate
-        conversationContext: conversationHistory.slice(-5).map(ex => ({
-          userMessage: ex.userMessage || '',
-          maiaResponse: ex.maiaResponse || ''
-        })),
-        consultationType,
-        sessionMetadata: {
-          turnCount: conversationHistory.length + 1,
-          relationshipDepth: conversationContext.profile.relationshipDepth,
-          emotionalIntensity: conversationContext.profile.dominantElement === 'fire' ? 'high' :
-                             conversationContext.profile.dominantElement === 'water' ? 'medium' : 'low',
-          recentRuptures: meta.recentRuptures as boolean || false
-        }
-      });
-
-      // STEP 4: MAIA integrates consultation (maintains sovereignty)
-      finalResponse = await maiaIntegrateConsultation(
-        maiaInitialResponse,
-        consultation,
-        { conversationContext, meta }
-      );
-
-      consultationData = {
-        consultationType,
-        attunementScore: consultation.responseQuality.attunementScore,
-        fieldReading: consultation.fieldReading,
-        enhancementUsed: consultation.integrationGuidance.useEnhanced,
-        consultationReasoning: consultation.integrationGuidance.reasoning
-      };
-
-      console.log(`✅ Claude consultation integrated | Type: ${consultationType} | Enhancement: ${consultation.integrationGuidance.useEnhanced ? 'Used' : 'Declined'}`);
-    } catch (consultationError) {
-      console.warn('⚠️ Claude consultation failed, using MAIA original response:', consultationError);
-      // Gracefully continue with MAIA's original response + scaffolding
-      if (cognitiveScaffoldingNote) {
-        finalResponse = maiaInitialResponse + '\n\n' + cognitiveScaffoldingNote;
-      }
-    }
-  } else {
-    console.log(`⚠️ Claude consultation unavailable (no API key) - using MAIA original response`);
-    // If no Claude, inject scaffolding directly into response
-    if (cognitiveScaffoldingNote) {
-      finalResponse = maiaInitialResponse + '\n\n' + cognitiveScaffoldingNote;
-      console.log(`🧠 [Dialectical Scaffold] DEEP path scaffolding injected directly (no Claude)`);
-    }
-  }
-
-  // 🛡️ SOCRATIC VALIDATOR: Validate with full regeneration capability
-  const { response: validatedResponse, validation } = await validateAndRepairResponse(
+  // STEP 2: Validate local response FIRST (before any Claude involvement)
+  const { response: validatedLocalResponse, validation } = await validateAndRepairResponse(
     sessionId,
     input,
-    finalResponse,
+    maiaInitialResponse,
     meta,
     'DEEP',
     // Regeneration function for DEEP path - re-run consciousness orchestration
@@ -596,8 +703,82 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     }
   );
 
+  // STEP 3: Determine consultation type based on conversation context
+  const consultationType: ConsultationType = determineConsultationType(input, conversationContext, meta);
+
+  // STEP 4: Claude consciousness consultation (enhancing validated response, not replacing)
+  let finalResponse = validatedLocalResponse;
+  let consultationData: any = null;
+
+  // Only consult Claude if Anthropic API key is available AND sovereignty mode allows it
+  const hasClaudeAccess = (process.env.ANTHROPIC_API_KEY || meta.claudeAvailable)
+    && process.env.DISABLE_CLAUDE !== 'true'
+    && process.env.SOVEREIGN_MODE !== 'true';
+
+  console.log('[maiaService] Claude consultation gate:', {
+    hasClaudeAccess,
+    hasKey: !!process.env.ANTHROPIC_API_KEY,
+    disableClaude: process.env.DISABLE_CLAUDE,
+    sovereignMode: process.env.SOVEREIGN_MODE
+  });
+
+  if (hasClaudeAccess) {
+    console.log(`🌩️ [ANTHROPIC CLOUD] Consulting Claude ${consultationType} - using external API`);
+
+    try {
+      console.log(`🧠 Consulting Claude for ${consultationType} enhancement...`);
+
+      const consultation = await consultClaudeForConsciousness({
+        userInput: input,
+        maiaInitialResponse: validatedLocalResponse + cognitiveScaffoldingNote, // 🧠 Inject scaffolding into validated response for Claude to integrate
+        conversationContext: conversationHistory.slice(-5).map(ex => ({
+          userMessage: ex.userMessage || '',
+          maiaResponse: ex.maiaResponse || ''
+        })),
+        consultationType,
+        sessionMetadata: {
+          turnCount: conversationHistory.length + 1,
+          relationshipDepth: conversationContext.profile.relationshipDepth,
+          emotionalIntensity: conversationContext.profile.dominantElement === 'fire' ? 'high' :
+                             conversationContext.profile.dominantElement === 'water' ? 'medium' : 'low',
+          recentRuptures: meta.recentRuptures as boolean || false
+        }
+      });
+
+      // STEP 5: MAIA integrates consultation (maintains sovereignty)
+      finalResponse = await maiaIntegrateConsultation(
+        validatedLocalResponse,
+        consultation,
+        { conversationContext, meta }
+      );
+
+      consultationData = {
+        consultationType,
+        attunementScore: consultation.responseQuality.attunementScore,
+        fieldReading: consultation.fieldReading,
+        enhancementUsed: consultation.integrationGuidance.useEnhanced,
+        consultationReasoning: consultation.integrationGuidance.reasoning
+      };
+
+      console.log(`✅ Claude consultation integrated | Type: ${consultationType} | Enhancement: ${consultation.integrationGuidance.useEnhanced ? 'Used' : 'Declined'}`);
+    } catch (consultationError) {
+      console.warn('⚠️ Claude consultation failed, using validated local response:', consultationError);
+      // Gracefully continue with validated response + scaffolding
+      if (cognitiveScaffoldingNote) {
+        finalResponse = validatedLocalResponse + '\n\n' + cognitiveScaffoldingNote;
+      }
+    }
+  } else {
+    console.log(`⚠️ Claude consultation unavailable (sovereignty enforced) - using validated local response`);
+    // If no Claude, inject scaffolding directly into validated response
+    if (cognitiveScaffoldingNote) {
+      finalResponse = validatedLocalResponse + '\n\n' + cognitiveScaffoldingNote;
+      console.log(`🧠 [Dialectical Scaffold] DEEP path scaffolding injected directly (no Claude)`);
+    }
+  }
+
   return {
-    response: validatedResponse,
+    response: finalResponse,
     socraticValidation: validation,
     consciousnessData: {
       layersActivated: consciousnessResponse.layersActivated,
