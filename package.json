@@ -38,6 +38,7 @@
     "verify:aetheric": "node scripts/verify-aetheric-consciousness.js",
     "consciousness:check": "node scripts/verify-aetheric-consciousness.js",
     "consciousness:dev": "npm run verify:aetheric && npm run dev",
+    "consciousness:seed-rules": "tsx scripts/seed-consciousness-rules.ts",
     "postinstall": "prisma generate",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",

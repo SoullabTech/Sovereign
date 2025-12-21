@@ -140,7 +140,6 @@ export function runRuleEngine(rules: CompiledRule[], facts: Facts): RuleFire[] {
 
 export function pickRouting(fired: RuleFire[]): { route?: string; practices?: string[]; tags?: string[]; flags?: string[]; infer?: Record<string, unknown> } {
   const matched = fired.filter((f) => f.matched);
-  if (!matched.length) return {};
 
   const out: { route?: string; practices?: string[]; tags?: string[]; flags?: string[]; infer?: Record<string, unknown> } = {
     practices: [],
@@ -148,6 +147,8 @@ export function pickRouting(fired: RuleFire[]): { route?: string; practices?: st
     flags: [],
     infer: {},
   };
+
+  if (!matched.length) return out;
 
   for (const f of matched) {
     // merge infer (higher priority first)

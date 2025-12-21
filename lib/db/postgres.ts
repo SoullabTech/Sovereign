@@ -8,8 +8,12 @@
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 
 // Create connection pool
+const connectionString =
+  process.env.DATABASE_URL ||
+  'postgresql://localhost:5432/maia_consciousness'; // safe fallback (no credentials)
+
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://maia:maia_dev_password@localhost:5433/maia_sovereign',
+  connectionString,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
