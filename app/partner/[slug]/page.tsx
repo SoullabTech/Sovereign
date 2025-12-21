@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
-import { PartnerProvider } from '../../../components/partner/PartnerProvider';
-import { SacredSoulInduction } from '../../../components/onboarding/SacredSoulInduction';
-import PartnerWelcomeFlow from '../../../components/partner/PartnerWelcomeFlow';
+import { PartnerProvider } from '@/components/partner/PartnerProvider';
+import { SacredSoulInduction } from '@/components/onboarding/SacredSoulInduction';
+import PartnerWelcomeFlow from '@/components/partner/PartnerWelcomeFlow';
 import { getPartnerConfig } from '@/lib/partner/partner-config';
 
 interface PartnerPageProps {

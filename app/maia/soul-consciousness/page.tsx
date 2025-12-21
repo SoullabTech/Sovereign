@@ -1,6 +1,6 @@
 'use client';
 
-import { SoulConsciousnessConsole } from '../labtools/components/SoulConsciousnessConsole';
+import { SoulConsciousnessConsole } from '@/app/maia/labtools/components/SoulConsciousnessConsole';
 import { SoulAuthenticationResult } from '@/lib/consciousness/SoulConsciousnessInterface';
 
 export default function SoulConsciousnessPage() {

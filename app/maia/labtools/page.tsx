@@ -16,13 +16,13 @@ import { RealTimeBiometricMeditationConsole } from './components/RealTimeBiometr
 import { MeditationProtocols } from './components/MeditationProtocols';
 import { SacredGeometryField } from './components/SacredGeometryField';
 import { LabToolsService } from './lib/LabToolsService';
-import DreamJournalInterface from '../../../components/dreams/DreamJournalInterface';
-import { SacredLabDrawer } from '../../../components/ui/SacredLabDrawer';
-import { PilotDroneVisualizer } from '../../../components/consciousness/PilotDroneVisualizer';
+import DreamJournalInterface from '@/components/dreams/DreamJournalInterface';
+import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
+import { PilotDroneVisualizer } from '@/components/consciousness/PilotDroneVisualizer';
 // import { FieldCoherenceDashboard } from '../../../apps/web/components/biometrics/FieldCoherenceDashboard'; // REMOVED: was in deleted apps/web directory
 // IPP Components - TODO: Create these components
-// import IPPDashboard from '../../../components/clinical/IPPDashboard';
-// import IPPAssessment from '../../../components/clinical/IPPAssessment';
+// import IPPDashboard from '@/components/clinical/IPPDashboard';
+// import IPPAssessment from '@/components/clinical/IPPAssessment';
 
 export default function MAIALabTools() {
   const [labToolsService] = useState(() => new LabToolsService());

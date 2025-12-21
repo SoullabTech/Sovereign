@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { LabToolsService } from '../maia/labtools/lib/LabToolsService';
-import { BiometricStream } from '../maia/labtools/components/BiometricStream';
-import { GuardianStatus } from '../maia/labtools/components/GuardianStatus';
-import { ConsciousnessFieldMap } from '../maia/labtools/components/ConsciousnessFieldMap';
-import { FrequencySpectrum } from '../maia/labtools/components/FrequencySpectrum';
-import NOWModelMonitor from '../maia/labtools/components/NOWModelMonitor';
+import { BiometricStream } from '@/app/maia/labtools/components/BiometricStream';
+import { GuardianStatus } from '@/app/maia/labtools/components/GuardianStatus';
+import { ConsciousnessFieldMap } from '@/app/maia/labtools/components/ConsciousnessFieldMap';
+import { FrequencySpectrum } from '@/app/maia/labtools/components/FrequencySpectrum';
+import NOWModelMonitor from '@/app/maia/labtools/components/NOWModelMonitor';
 
 export default function PresenceMirror() {
   const [labToolsService] = useState(() => new LabToolsService());
