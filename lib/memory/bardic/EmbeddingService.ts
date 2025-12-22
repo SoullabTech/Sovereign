@@ -12,6 +12,7 @@
  *
  * SECURITY: Calls server-side /api/memory/embed route (never exposes API keys)
  */
+import 'server-only';
 import { query } from '@/lib/db/postgres';
 
 import type { Episode } from './types';

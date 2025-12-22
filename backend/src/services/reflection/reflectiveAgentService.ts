@@ -20,7 +20,7 @@
  * - Privacy-preserving symbolic summaries
  */
 
-import { getClient } from '../../../../lib/db/postgres';
+import { pool as getClient } from '../../../../lib/db/postgres';
 import { generateReflectiveNarrative } from '../../lib/reflectiveNarrative';
 import type { FacetCode } from '../../../../lib/consciousness/spiralogic-facet-mapping';
 

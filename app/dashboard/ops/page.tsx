@@ -13,10 +13,22 @@ import {
   CheckCircle,
   Zap
 } from 'lucide-react';
-import MemoryOrchestrationPanel from '@/app/beta/components/MemoryOrchestrationPanel';
-import VoicePipelineOpsPanel from '@/app/beta/components/VoicePipelineOpsPanel';
-import ConversationQualityPanel from '@/app/beta/components/ConversationQualityPanel';
-import SystemOpsPanel from '@/app/beta/components/SystemOpsPanel';
+// Ops panel stubs (build unblock - sovereignty mode)
+function OpsStub({ title }: { title: string }) {
+  return (
+    <div className="rounded-lg border border-amber-500/30 bg-amber-50/10 p-4">
+      <div className="font-semibold">{title}</div>
+      <div className="mt-1 text-sm opacity-80">
+        Disabled in this branch (placeholder to unblock build).
+      </div>
+    </div>
+  );
+}
+
+const ConversationQualityPanel = () => <OpsStub title="Conversation Quality" />;
+const MemoryOrchestrationPanel = () => <OpsStub title="Memory Orchestration" />;
+const SystemOpsPanel = () => <OpsStub title="System Ops" />;
+const VoicePipelineOpsPanel = () => <OpsStub title="Voice Pipeline Ops" />;
 
 interface OperationalMetrics {
   timestamp: string;

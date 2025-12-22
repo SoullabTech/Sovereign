@@ -5,6 +5,7 @@
  * Uses DATABASE_URL from environment
  */
 
+import 'server-only';
 import { Pool, QueryResult, QueryResultRow } from 'pg';
 
 // Create connection pool

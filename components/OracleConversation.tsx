@@ -74,12 +74,17 @@ import {
 } from '@/lib/session/SessionPersistence';
 // 🧠 BARDIC MEMORY INTEGRATION - McGilchrist's master-emissary pattern
 // Air (contextual wisdom) serves Fire (present emergence)
-import {
-  getConversationMemory,
-  type ConversationContext,
-  type PatternRecognitionResult,
-  type CrystallizationDetection
-} from '@/lib/memory/bardic/ConversationMemoryIntegration';
+// DISABLED: EmbeddingService causes pg to leak into client bundle (sovereignty mode)
+// import {
+//   getConversationMemory,
+//   type ConversationContext,
+//   type PatternRecognitionResult,
+//   type CrystallizationDetection
+// } from '@/lib/memory/bardic/ConversationMemoryIntegration';
+type ConversationContext = any;
+type PatternRecognitionResult = any;
+type CrystallizationDetection = any;
+const getConversationMemory = () => ({ storeMemory: () => {}, retrieveMemory: () => null });
 // 🌟 TEEN SUPPORT SYSTEM - ED-aware & Neurodivergent-affirming safety protocols
 import {
   performTeenSafetyCheck,
