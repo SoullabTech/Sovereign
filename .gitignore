@@ -292,3 +292,6 @@ artifacts/.manifest.json
 **/.worktrees/
 **/.temp/
 *.worktree/
+
+# Build artifacts
+app/api/backend/dist-minimal/

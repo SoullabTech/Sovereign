@@ -49,7 +49,7 @@ const ALLOW_FILE_EXT = new Set([
   ".env", ".env.local", ".env.development", ".env.production",
   // .md files excluded - too many false positives in docs
 ]);
-const LEGACY_IGNORE_PATH_RE = /(lib\/db\/legacy\/|utils\/supabase\/|app\/api\/backend\/dist\/|dist-minimal\/)/;
+const LEGACY_IGNORE_PATH_RE = /(lib\/db\/legacy\/|utils\/supabase\/|app\/api\/backend\/dist\/|app\/api\/backend\/dist-minimal\/)/;
 const IGNORE_PATH_RE = /(node_modules\/|\.next\/|dist\/|dist-minimal\/|build\/|coverage\/|artifacts\/|backups\/|ios\/|android\/|Community-Commons\/|scripts\/codemods\/|\.md$|\.mdx$)/;
 
 // Don't scan the quarantined legacy directory contents (so history can exist)
