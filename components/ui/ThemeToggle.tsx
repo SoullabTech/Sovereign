@@ -4,56 +4,21 @@ import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { setUserThemePreference } from '@/lib/theme/userTheme';
+
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [previousTheme, setPreviousTheme] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-    setPreviousTheme(theme || 'system');
   }, []);
-
-  // Log theme changes to Supabase
-  const logThemeChange = async (newTheme: string) => {
-    try {
-      // Get current user session if available
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Log to event_logs table
-      await supabase.from('event_logs').insert({
-        event_name: 'theme_changed',
-        user_id: session?.user?.id || null,
-        metadata: {
-          theme: newTheme,
-          previous: previousTheme,
-          timestamp: new Date().toISOString(),
-        },
-        payload: {
-          new: newTheme,
-          previous: previousTheme,
-          session_id: session?.access_token?.substring(0, 8) || null,
-        }
-      });
-
-      // Update user profile if logged in
-      if (session?.user?.id) {
-        await supabase
-          .from('profiles')
-          .update({ theme_preference: newTheme })
-          .eq('id', session.user.id);
-      }
-    } catch (error) {
-      console.warn('Failed to log theme change:', error);
-    }
-  };
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
-    logThemeChange(newTheme);
-    setPreviousTheme(newTheme);
+    // Persist to localStorage (Sovereignty mode: Supabase removed)
+    setUserThemePreference(newTheme as any);
   };
 
   if (!mounted) return null;

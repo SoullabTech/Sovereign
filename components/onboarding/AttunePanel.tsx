@@ -41,29 +41,23 @@ export default function AttunePanel({ showPreview = true, onSettingsChange }: At
     theme: 'system'
   })
   const [isSaving, setIsSaving] = useState(false)
-  const supabase = createClientComponentClient()
 
-  // Load saved settings on mount
+  // Sovereignty mode: Load saved settings from localStorage only (Supabase removed)
   useEffect(() => {
     loadSettings()
   }, [])
 
-  const loadSettings = async () => {
+  const loadSettings = () => {
+    if (typeof window === 'undefined') return
+
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('tone, style, theme')
-        .eq('user_id', user.id)
-        .single()
-
-      if (data) {
+      const saved = localStorage.getItem('maia_attune_settings')
+      if (saved) {
+        const parsed = JSON.parse(saved)
         setSettings({
-          tone: data.tone || 50,
-          style: data.style || 'auto',
-          theme: data.theme || 'system'
+          tone: parsed.tone || 50,
+          style: parsed.style || 'auto',
+          theme: parsed.theme || 'system'
         })
       }
     } catch (error) {
@@ -71,30 +65,20 @@ export default function AttunePanel({ showPreview = true, onSettingsChange }: At
     }
   }
 
-  const saveSettings = async (newSettings: UserSettings) => {
+  const saveSettings = (newSettings: UserSettings) => {
     setSettings(newSettings)
     onSettingsChange?.(newSettings)
 
+    if (typeof window === 'undefined') return
+
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
       setIsSaving(true)
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          tone: newSettings.tone,
-          style: newSettings.style,
-          theme: newSettings.theme,
-          updated_at: new Date().toISOString()
-        })
+      // Sovereignty mode: Save to localStorage only (Supabase removed)
+      localStorage.setItem('maia_attune_settings', JSON.stringify(newSettings))
 
-      if (error) throw error
-      
       // Apply theme immediately
       applyTheme(newSettings.theme)
-      
+
     } catch (error) {
       console.error('[Attune] Error saving settings:', error)
     } finally {

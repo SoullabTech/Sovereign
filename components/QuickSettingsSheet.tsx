@@ -64,67 +64,20 @@ const DEFAULT_SETTINGS: MaiaSettings = {
 
 export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps) {
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
-    const loadSettings = async () => {
+    const loadSettings = () => {
       if (typeof window === 'undefined') return;
 
-      const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-      // const conversationMode = ConversationStylePreference.get();
-      const conversationMode = 'voice'; // Default fallback
-
-      try {
-        if (explorerId) {
-          const { data } = await supabase
-            .from('user_preferences')
-            .select('*')
-            .eq('user_id', explorerId)
-            .single();
-
-          if (data) {
-            setSettings({
-              voice: {
-                openaiVoice: 'shimmer',
-                speed: data.voice_speed || 0.95,
-              },
-              memory: {
-                enabled: true,
-                depth: 'moderate',
-              },
-              personality: {
-                warmth: data.tone ? data.tone / 100 : 0.8,
-              },
-              archetype: (data.archetype as ArchetypeId) || 'AUTO',
-              conversationMode: conversationMode,
-            });
-            localStorage.setItem('maia_settings', JSON.stringify(settings));
-            return;
-          }
-        }
-
-        const saved = localStorage.getItem('maia_settings');
-        if (saved) {
+      // Sovereignty mode: Load from localStorage only (Supabase removed)
+      const saved = localStorage.getItem('maia_settings');
+      if (saved) {
+        try {
           const parsedSettings = JSON.parse(saved);
-          setSettings({
-            ...parsedSettings,
-            conversationMode: conversationMode, // Always use latest from preference
-          });
-        } else {
-          setSettings({
-            ...DEFAULT_SETTINGS,
-            conversationMode: conversationMode,
-          });
-        }
-      } catch (e) {
-        console.error('Failed to load settings', e);
-        const saved = localStorage.getItem('maia_settings');
-        if (saved) {
-          const parsedSettings = JSON.parse(saved);
-          setSettings({
-            ...parsedSettings,
-            conversationMode: conversationMode,
-          });
+          setSettings(parsedSettings);
+        } catch (e) {
+          console.error('Failed to parse settings', e);
+          setSettings(DEFAULT_SETTINGS);
         }
       }
     };
@@ -132,7 +85,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
     if (isOpen) {
       loadSettings();
     }
-  }, [isOpen, supabase]);
+  }, [isOpen]);
 
   const updateSetting = async (path: string, value: any) => {
     if ('vibrate' in navigator) {
@@ -165,10 +118,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
           }));
         }
 
-        const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-        if (explorerId) {
-          saveToSupabase(explorerId, newSettings);
-        }
+        // Sovereignty mode: Settings persistence is localStorage-only (Supabase removed)
       }
 
       return newSettings;
@@ -182,27 +132,6 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
       adaptive: "Got it. I'll match your rhythm and energy."
     };
     return acknowledgments[mode];
-  };
-
-  const saveToSupabase = async (userId: string, settings: MaiaSettings) => {
-    try {
-      await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          voice_speed: settings.voice.speed,
-          tone: Math.round(settings.personality.warmth * 100),
-          archetype: settings.archetype,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
-
-      console.log('✅ Settings saved to Supabase');
-    } catch (error) {
-      console.error('Failed to save settings to Supabase:', error);
-    }
   };
 
   return (

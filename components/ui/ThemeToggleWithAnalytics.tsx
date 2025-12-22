@@ -2,132 +2,23 @@
 
 import { useTheme } from 'next-themes';
 import { Sun, Moon, Monitor } from 'lucide-react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { setUserThemePreference } from '@/lib/theme/userTheme';
+
 export default function ThemeToggleWithAnalytics() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const [previousTheme, setPreviousTheme] = useState<string | null>(null);
-  const supabase = createClientComponentClient();
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
-    setPreviousTheme(theme || 'system');
   }, []);
-
-  // Track theme changes
-  const trackThemeChange = useCallback(async (newTheme: string) => {
-    try {
-      // Get user session if available
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      // Log to event_logs
-      await supabase
-        .from('event_logs')
-        .insert({
-          event_name: 'theme_changed',
-          event_type: 'preference',
-          user_id: session?.user?.id || 'anonymous',
-          session_id: `session_${Date.now()}`, // Generate session ID for anonymous
-          metadata: {
-            from_theme: previousTheme,
-            to_theme: newTheme,
-            timestamp: new Date().toISOString(),
-            user_agent: typeof window !== 'undefined' ? window.navigator.userAgent : null,
-            screen_width: typeof window !== 'undefined' ? window.screen.width : null,
-            screen_height: typeof window !== 'undefined' ? window.screen.height : null,
-            time_of_day: getTimeOfDay(),
-            platform: getPlatform()
-          }
-        });
-
-      // Update user preferences if logged in
-      if (session?.user?.id) {
-        await supabase
-          .from('user_preferences')
-          .upsert({
-            user_id: session.user.id,
-            theme: newTheme,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'user_id'
-          });
-      }
-
-      // Track aggregate metrics
-      await updateThemeMetrics(newTheme);
-      
-      setPreviousTheme(newTheme);
-    } catch (error) {
-      console.error('Failed to track theme change:', error);
-    }
-  }, [previousTheme, supabase]);
-
-  // Helper function to get time of day
-  const getTimeOfDay = () => {
-    const hour = new Date().getHours();
-    if (hour < 6) return 'night';
-    if (hour < 12) return 'morning';
-    if (hour < 18) return 'afternoon';
-    if (hour < 21) return 'evening';
-    return 'night';
-  };
-
-  // Helper function to detect platform
-  const getPlatform = () => {
-    if (typeof window === 'undefined') return 'unknown';
-    const userAgent = window.navigator.userAgent.toLowerCase();
-    if (/mobile|android|iphone|ipad/.test(userAgent)) return 'mobile';
-    if (/tablet/.test(userAgent)) return 'tablet';
-    return 'desktop';
-  };
-
-  // Update aggregate theme metrics
-  const updateThemeMetrics = async (theme: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    
-    // Check if today's metrics exist
-    const { data: existing } = await supabase
-      .from('theme_metrics')
-      .select('*')
-      .eq('date', today)
-      .single();
-
-    if (existing) {
-      // Update existing metrics
-      const updates: any = {
-        total_changes: (existing.total_changes || 0) + 1,
-        updated_at: new Date().toISOString()
-      };
-      
-      // Increment theme-specific counter
-      if (theme === 'light') updates.light_count = (existing.light_count || 0) + 1;
-      if (theme === 'dark') updates.dark_count = (existing.dark_count || 0) + 1;
-      if (theme === 'system') updates.system_count = (existing.system_count || 0) + 1;
-
-      await supabase
-        .from('theme_metrics')
-        .update(updates)
-        .eq('date', today);
-    } else {
-      // Create new metrics for today
-      await supabase
-        .from('theme_metrics')
-        .insert({
-          date: today,
-          light_count: theme === 'light' ? 1 : 0,
-          dark_count: theme === 'dark' ? 1 : 0,
-          system_count: theme === 'system' ? 1 : 0,
-          total_changes: 1,
-          created_at: new Date().toISOString()
-        });
-    }
-  };
 
   const handleThemeChange = (newTheme: string) => {
     setTheme(newTheme);
-    trackThemeChange(newTheme);
+    // Persist to localStorage (Sovereignty mode: Supabase analytics removed)
+    setUserThemePreference(newTheme as any);
   };
 
   if (!mounted) {

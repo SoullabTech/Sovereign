@@ -1,72 +1,29 @@
-// app/api/community/commons/posts/[id]/route.ts
 /**
- * COMMUNITY COMMONS SINGLE POST ROUTE
+ * COMMUNITY COMMONS POST DETAIL ROUTE
  *
- * Retrieves a single post by ID and increments view count.
+ * TEMPORARILY DISABLED during PostgreSQL migration
+ * TODO: Refactor to use lib/db/postgres.ts
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-export async function GET(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params;
+import { NextResponse } from 'next/server';
 
-    if (!id) {
-      return NextResponse.json(
-        {
-          ok: false,
-          reason: 'invalid_id',
-          message: 'Post ID is required',
-        },
-        { status: 400 }
-      );
-    }
+export async function GET() {
+  return NextResponse.json(
+    { ok: false, error: "Temporarily disabled during PostgreSQL migration." },
+    { status: 501 }
+  );
+}
 
-    const supabase = createClient();
+export async function PATCH() {
+  return NextResponse.json(
+    { ok: false, error: "Temporarily disabled during PostgreSQL migration." },
+    { status: 501 }
+  );
+}
 
-    // Fetch post
-    const { data: post, error } = await supabase
-      .from('community_commons_posts')
-      .select('*')
-      .eq('id', id)
-      .eq('is_published', true)
-      .single();
-
-    if (error || !post) {
-      console.error('[Commons] Post not found:', id, error);
-      return NextResponse.json(
-        {
-          ok: false,
-          reason: 'not_found',
-          message: 'Post not found',
-        },
-        { status: 404 }
-      );
-    }
-
-    // Increment view count (fire and forget)
-    supabase
-      .from('community_commons_posts')
-      .update({ view_count: (post.view_count || 0) + 1 })
-      .eq('id', id)
-      .then(() => {})
-      .catch(err => console.warn('[Commons] Failed to increment view count:', err));
-
-    return NextResponse.json({
-      ok: true,
-      post,
-    });
-  } catch (err) {
-    console.error('[Commons] GET error:', err);
-    return NextResponse.json(
-      {
-        ok: false,
-        reason: 'server_error',
-        message: 'An unexpected error occurred',
-      },
-      { status: 500 }
-    );
-  }
+export async function DELETE() {
+  return NextResponse.json(
+    { ok: false, error: "Temporarily disabled during PostgreSQL migration." },
+    { status: 501 }
+  );
 }

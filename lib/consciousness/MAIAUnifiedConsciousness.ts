@@ -130,8 +130,7 @@ export class MAIAUnifiedConsciousness {
     });
 
     // PostgreSQL implementation - no Supabase client needed
-
-    this.apprentice = supabase ? new ApprenticeMayaTraining(supabase) : null;
+    this.apprentice = null;
 
     // Initialize semantic learning
     this.semanticMemory = new SemanticMemoryService();

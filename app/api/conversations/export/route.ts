@@ -229,86 +229,13 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const supabase = createClientComponentClient();
-
-    // Build query
-    let query = supabase
-      .from('conversation_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: true });
-
-    // Add session filter if specified
-    if (sessionId) {
-      query = query.eq('session_id', sessionId);
-    }
-
-    // Add date range filter if specified
-    if (startDate) {
-      query = query.gte('timestamp', startDate);
-    }
-    if (endDate) {
-      query = query.lte('timestamp', endDate);
-    }
-
-    // Execute query
-    const { data: messages, error } = await query;
-
-    if (error) {
-      console.error('Database error:', error);
-      return NextResponse.json({
-        error: 'Failed to retrieve conversations',
-        details: error.message
-      }, { status: 500 });
-    }
-
-    if (!messages || messages.length === 0) {
-      return NextResponse.json({
-        error: 'No conversations found for the specified criteria'
-      }, { status: 404 });
-    }
-
-    // Format based on requested format
-    const options: ExportOptions = {
-      format,
-      sessionId: sessionId || undefined,
-      userId,
-      includeMetadata,
-      dateRange: startDate && endDate ? { start: startDate, end: endDate } : undefined
-    };
-
-    let formattedContent: string;
-    switch (format) {
-      case 'json':
-        formattedContent = formatAsJson(messages, options);
-        break;
-      case 'txt':
-        formattedContent = formatAsText(messages, options);
-        break;
-      case 'markdown':
-      default:
-        formattedContent = formatAsMarkdown(messages, options);
-        break;
-    }
-
-    // Prepare file info
-    const { extension, mimeType } = getFileInfo(format);
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = sessionId
-      ? `conversation-${sessionId}-${timestamp}.${extension}`
-      : `conversations-${userId}-${timestamp}.${extension}`;
-
-    // Return as downloadable file
-    return new NextResponse(formattedContent, {
-      status: 200,
-      headers: {
-        'Content-Type': mimeType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
-      }
-    });
+    // Sovereignty mode: Export API disabled (Supabase removed)
+    // Conversations are stored in localStorage only
+    return NextResponse.json({
+      error: 'Export unavailable in sovereignty mode',
+      message: 'Conversations are stored locally in your browser. Use localStorage to access them.',
+      suggestion: 'Manually copy conversations from the UI or localStorage'
+    }, { status: 501 });
 
   } catch (error) {
     console.error('Export error:', error);
@@ -341,80 +268,12 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const supabase = createClientComponentClient();
-
-    // Build query for multiple sessions
-    let query = supabase
-      .from('conversation_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: true });
-
-    // Add session filter if specified
-    if (sessionIds.length > 0) {
-      query = query.in('session_id', sessionIds);
-    }
-
-    // Add date range filter if specified
-    if (dateRange?.start) {
-      query = query.gte('timestamp', dateRange.start);
-    }
-    if (dateRange?.end) {
-      query = query.lte('timestamp', dateRange.end);
-    }
-
-    const { data: messages, error } = await query;
-
-    if (error) {
-      return NextResponse.json({
-        error: 'Failed to retrieve conversations',
-        details: error.message
-      }, { status: 500 });
-    }
-
-    if (!messages || messages.length === 0) {
-      return NextResponse.json({
-        error: 'No conversations found'
-      }, { status: 404 });
-    }
-
-    // Format content
-    const options: ExportOptions = {
-      format,
-      userId,
-      includeMetadata,
-      dateRange
-    };
-
-    let formattedContent: string;
-    switch (format) {
-      case 'json':
-        formattedContent = formatAsJson(messages, options);
-        break;
-      case 'txt':
-        formattedContent = formatAsText(messages, options);
-        break;
-      case 'markdown':
-      default:
-        formattedContent = formatAsMarkdown(messages, options);
-        break;
-    }
-
-    // Prepare response
-    const { extension, mimeType } = getFileInfo(format);
-    const timestamp = new Date().toISOString().split('T')[0];
-    const filename = title
-      ? `${title.replace(/[^a-zA-Z0-9]/g, '-')}-${timestamp}.${extension}`
-      : `conversations-export-${timestamp}.${extension}`;
-
-    return new NextResponse(formattedContent, {
-      status: 200,
-      headers: {
-        'Content-Type': mimeType,
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Cache-Control': 'no-cache, no-store, must-revalidate'
-      }
-    });
+    // Sovereignty mode: Bulk export API disabled (Supabase removed)
+    return NextResponse.json({
+      error: 'Bulk export unavailable in sovereignty mode',
+      message: 'Conversations are stored locally in your browser. Use localStorage to access them.',
+      suggestion: 'Manually copy conversations from the UI or localStorage'
+    }, { status: 501 });
 
   } catch (error) {
     console.error('Export POST error:', error);

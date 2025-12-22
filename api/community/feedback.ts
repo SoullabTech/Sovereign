@@ -70,7 +70,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       feedbackData.reflection.toLowerCase().includes(keyword)
     );
 
-    if (hasCrisisLanguage || feedbackData.crisis_indicators?.length > 0) {
+    if (hasCrisisLanguage || (feedbackData.crisis_indicators?.length ?? 0) > 0) {
       // Immediate crisis response
       await handleSpiritualCrisis(feedbackData);
 

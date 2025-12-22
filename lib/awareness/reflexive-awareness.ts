@@ -6,8 +6,8 @@
 
 import {
   ConversationStylePreference,
-  DEFAULT_CONVERSATION_STYLE,
 } from '@/lib/preferences/conversation-style-preference';
+import { query } from '@/lib/db/postgres';
 
 type KnowledgeSourceId =
   | 'FIELD'
@@ -38,25 +38,18 @@ export async function getLatestAwarenessSnapshot(
   userId: string | null
 ): Promise<AwarenessSnapshot | null> {
   try {
-    const supabase = createClient();
+    const sql = userId
+      ? 'SELECT * FROM oracle_awareness_log WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1'
+      : 'SELECT * FROM oracle_awareness_log ORDER BY created_at DESC LIMIT 1';
 
-    const query = supabase
-      .from('oracle_awareness_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1);
+    const params = userId ? [userId] : [];
+    const result = await query(sql, params);
 
-    const { data, error } = userId
-      ? await query.eq('user_id', userId)
-      : await query;
-
-    if (error) {
-      console.error('[MAIA Reflexive] getLatestAwarenessSnapshot error:', error);
+    if (result.rows.length === 0) {
       return null;
     }
 
-    const row = (data ?? [])[0] as AwarenessSnapshot | undefined;
-    return row ?? null;
+    return result.rows[0] as AwarenessSnapshot;
   } catch (error) {
     console.error('[MAIA Reflexive] Failed to get awareness snapshot:', error);
     return null;
@@ -191,24 +184,14 @@ export async function getAwarenessTrend(
   count: number = 3
 ): Promise<AwarenessSnapshot[]> {
   try {
-    const supabase = createClient();
+    const sql = userId
+      ? 'SELECT * FROM oracle_awareness_log WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2'
+      : 'SELECT * FROM oracle_awareness_log ORDER BY created_at DESC LIMIT $1';
 
-    const query = supabase
-      .from('oracle_awareness_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(count);
+    const params = userId ? [userId, count] : [count];
+    const result = await query(sql, params);
 
-    const { data, error } = userId
-      ? await query.eq('user_id', userId)
-      : await query;
-
-    if (error) {
-      console.error('[MAIA Reflexive] getAwarenessTrend error:', error);
-      return [];
-    }
-
-    return (data ?? []) as AwarenessSnapshot[];
+    return result.rows as AwarenessSnapshot[];
   } catch (error) {
     console.error('[MAIA Reflexive] Failed to get awareness trend:', error);
     return [];

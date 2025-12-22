@@ -1,3 +1,5 @@
+// Sovereignty mode: Archetype service uses localStorage only (Supabase removed)
+
 export type ArchetypeId =
   | 'LAB_PARTNER'
   | 'TRUSTED_FRIEND'
@@ -98,8 +100,6 @@ const MODE_CHANGE_REQUESTS: Record<string, ArchetypeId> = {
 };
 
 export class ArchetypePreferenceService {
-  private supabase = createClientComponentClient();
-
   async getUserPreference(userId: string): Promise<ArchetypeId> {
     const saved = await this.getStoredPreference(userId);
 
@@ -118,158 +118,52 @@ export class ArchetypePreferenceService {
       return localPref as ArchetypeId;
     }
 
-    try {
-      const { data } = await this.supabase
-        .from('user_preferences')
-        .select('archetype')
-        .eq('user_id', userId)
-        .single();
+    // Sovereignty mode: Supabase lookup removed
+    return null;
+  }
 
-      if (data?.archetype) {
-        return data.archetype as ArchetypeId;
+  private async getSmartDefault(userId: string): Promise<ArchetypeId> {
+    const profile = await this.getUserProfile(userId);
+
+    if (!profile || !profile.lastArchetype) {
+      return 'TRUSTED_FRIEND';
+    }
+
+    if (profile.patterns.respondsToAutoDetect) {
+      return 'AUTO';
+    }
+
+    return profile.lastArchetype;
+  }
+
+  async getUserProfile(userId: string): Promise<UserArchetypeProfile | null> {
+    if (typeof window === 'undefined') return null;
+
+    // Sovereignty mode: Load from localStorage only
+    const stored = localStorage.getItem('maia_archetype_profile');
+    if (stored) {
+      try {
+        return JSON.parse(stored) as UserArchetypeProfile;
+      } catch (e) {
+        console.error('[archetypeService] Failed to parse profile', e);
       }
-    } catch (error) {
-      console.warn('Could not load archetype preference:', error);
     }
 
     return null;
   }
 
-  async getSmartDefault(userId: string): Promise<ArchetypeId> {
-    const context = await this.analyzeContext(userId);
+  async saveUserProfile(profile: UserArchetypeProfile): Promise<void> {
+    if (typeof window === 'undefined') return;
 
-    if (context.isFirstSession) return 'LAB_PARTNER';
-    if (context.inCrisis) return 'TRUSTED_FRIEND';
-    if (context.seekingDirection) return 'GUIDE';
-    if (context.deepWork) return 'ALCHEMIST';
-
-    if (context.lastArchetypeWorkedWell && context.lastArchetype) {
-      return context.lastArchetype;
-    }
-
-    return 'LAB_PARTNER';
+    // Sovereignty mode: Save to localStorage only
+    localStorage.setItem('maia_archetype_profile', JSON.stringify(profile));
   }
 
-  private async analyzeContext(userId: string): Promise<ConversationContext> {
-    const profile = await this.getUserProfile(userId);
-
-    return {
-      isFirstSession: !profile.lastArchetype,
-      inCrisis: false,
-      seekingDirection: false,
-      deepWork: false,
-      lastArchetypeWorkedWell: (profile.lastSessionQuality || 0) > 0.7,
-      lastArchetype: profile.lastArchetype
-    };
-  }
-
-  async getUserProfile(userId: string): Promise<UserArchetypeProfile> {
-    const defaultProfile: UserArchetypeProfile = {
-      userId,
-      preferredModes: {},
-      effectiveness: {
-        LAB_PARTNER: 0.5,
-        TRUSTED_FRIEND: 0.5,
-        GUIDE: 0.5,
-        ALCHEMIST: 0.5,
-        MENTOR: 0.5,
-        WITNESS: 0.5,
-        CHALLENGER: 0.5,
-        AUTO: 0.5
-      },
-      patterns: {
-        switchesOften: false,
-        prefersConsistency: true,
-        respondsToAutoDetect: true
-      }
-    };
-
-    try {
-      const { data } = await this.supabase
-        .from('user_archetype_profiles')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (data) {
-        return {
-          ...defaultProfile,
-          ...data,
-          effectiveness: data.effectiveness || defaultProfile.effectiveness,
-          preferredModes: data.preferred_modes || defaultProfile.preferredModes,
-          patterns: data.patterns || defaultProfile.patterns
-        };
-      }
-    } catch (error) {
-      console.warn('Could not load archetype profile:', error);
-    }
-
-    return defaultProfile;
-  }
-
-  async trackEffectiveness(
-    userId: string,
-    archetype: ArchetypeId,
-    sessionQuality: number
-  ): Promise<void> {
-    try {
-      await this.supabase
-        .from('archetype_sessions')
-        .insert({
-          user_id: userId,
-          archetype,
-          effectiveness: sessionQuality,
-          timestamp: new Date().toISOString()
-        });
-
-      await this.updateUserProfile(userId, archetype, sessionQuality);
-    } catch (error) {
-      console.error('Failed to track archetype effectiveness:', error);
-    }
-  }
-
-  private async updateUserProfile(
-    userId: string,
-    archetype: ArchetypeId,
-    sessionQuality: number
-  ): Promise<void> {
-    const profile = await this.getUserProfile(userId);
-
-    const currentEffectiveness = profile.effectiveness[archetype];
-    const newEffectiveness = (currentEffectiveness * 0.8) + (sessionQuality * 0.2);
-
-    profile.effectiveness[archetype] = newEffectiveness;
-    profile.lastArchetype = archetype;
-    profile.lastSessionQuality = sessionQuality;
-
-    try {
-      await this.supabase
-        .from('user_archetype_profiles')
-        .upsert({
-          user_id: userId,
-          effectiveness: profile.effectiveness,
-          preferred_modes: profile.preferredModes,
-          patterns: profile.patterns,
-          last_archetype: archetype,
-          last_session_quality: sessionQuality,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-    } catch (error) {
-      console.error('Failed to update archetype profile:', error);
-    }
-  }
-
-  getArchetypeConfig(archetypeId: ArchetypeId): ArchetypeConfig {
-    return ARCHETYPE_CONFIGS[archetypeId];
-  }
-
-  detectModeChangeRequest(message: string): ArchetypeId | null {
-    const lowerMessage = message.toLowerCase();
+  detectArchetypeFromMessage(message: string): ArchetypeId | null {
+    const lowered = message.toLowerCase();
 
     for (const [phrase, archetype] of Object.entries(MODE_CHANGE_REQUESTS)) {
-      if (lowerMessage.includes(phrase)) {
+      if (lowered.includes(phrase)) {
         return archetype;
       }
     }
@@ -277,25 +171,38 @@ export class ArchetypePreferenceService {
     return null;
   }
 
-  async savePreference(userId: string, archetype: ArchetypeId): Promise<void> {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('maia_archetype', archetype);
-    }
+  async recordSessionFeedback(
+    userId: string,
+    archetype: ArchetypeId,
+    quality: number
+  ): Promise<void> {
+    const profile = await this.getUserProfile(userId) || {
+      userId,
+      preferredModes: {},
+      effectiveness: {} as Record<ArchetypeId, number>,
+      patterns: {
+        switchesOften: false,
+        prefersConsistency: false,
+        respondsToAutoDetect: false
+      }
+    };
 
-    try {
-      await this.supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          archetype,
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        });
-    } catch (error) {
-      console.error('Failed to save archetype preference:', error);
-    }
+    profile.effectiveness[archetype] = quality;
+    profile.lastArchetype = archetype;
+    profile.lastSessionQuality = quality;
+
+    await this.saveUserProfile(profile);
+  }
+
+  getArchetypeConfig(id: ArchetypeId): ArchetypeConfig {
+    return ARCHETYPE_CONFIGS[id];
+  }
+
+  getAllArchetypes(): ArchetypeConfig[] {
+    return Object.values(ARCHETYPE_CONFIGS);
   }
 }
 
-export const archetypePreferenceService = new ArchetypePreferenceService();
+export function getArchetypeService(): ArchetypePreferenceService {
+  return new ArchetypePreferenceService();
+}
