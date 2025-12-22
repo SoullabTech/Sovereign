@@ -5,6 +5,7 @@ import { SubscriptionProvider } from "@/hooks/useSubscription";
 import { SevenLayerArchitectureProvider } from "@/components/architecture/SevenLayerArchitectureProvider";
 import { AethericConsciousnessProvider } from "@/components/consciousness/AethericConsciousnessProvider";
 import { SystemHealthProvider } from "@/components/providers/SystemHealthProvider";
+import { ReactQueryProvider } from "@/components/providers/ReactQueryProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -50,18 +51,20 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`} suppressHydrationWarning>
-        <SubscriptionProvider>
-          <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
-            <AethericConsciousnessProvider>
-              <SevenLayerArchitectureProvider
-                autoSync={true}
-                syncInterval={30000}
-              >
-                {children}
-              </SevenLayerArchitectureProvider>
-            </AethericConsciousnessProvider>
-          </SystemHealthProvider>
-        </SubscriptionProvider>
+        <ReactQueryProvider>
+          <SubscriptionProvider>
+            <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
+              <AethericConsciousnessProvider>
+                <SevenLayerArchitectureProvider
+                  autoSync={true}
+                  syncInterval={30000}
+                >
+                  {children}
+                </SevenLayerArchitectureProvider>
+              </AethericConsciousnessProvider>
+            </SystemHealthProvider>
+          </SubscriptionProvider>
+        </ReactQueryProvider>
       </body>
     </html>
   );
