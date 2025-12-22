@@ -20,7 +20,7 @@
  * - Privacy-preserving conversation logs
  */
 
-import { pool as getClient } from '../../../../lib/db/postgres';
+import { getClient } from '../../../../lib/db/postgres';
 import { generateDialogueResponse } from '../../lib/dialogueSynthesis';
 import type { FacetCode } from '../../../../lib/consciousness/spiralogic-facet-mapping';
 

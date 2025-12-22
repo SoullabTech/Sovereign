@@ -240,7 +240,7 @@ export class EarthAgent extends ArchetypeAgent {
     voiceProfile?: any,
     phase: string = "initiation",
   ) {
-    super("earth", oracleName, voiceProfile, phase);
+    super("earth");
   }
 
   public async processExtendedQuery(query: {

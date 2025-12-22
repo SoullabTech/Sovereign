@@ -27,3 +27,13 @@ export async function getOracleAgentId(userId: string): Promise<string | null> {
   console.log('[memoryService] Sovereignty mode: Agent lookup disabled');
   return null;
 }
+
+export async function getRelevantMemories(userId: string, query: string, limit = 10) {
+  console.log('[memoryService] Sovereignty mode: Memory retrieval disabled');
+  return [];
+}
+
+export async function storeMemoryItem(userId: string, content: string, metadata?: any) {
+  console.log('[memoryService] Sovereignty mode: Memory storage disabled');
+  return { success: true, id: 'local-memory' };
+}

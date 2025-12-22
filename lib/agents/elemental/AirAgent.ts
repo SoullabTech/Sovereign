@@ -241,7 +241,7 @@ export class AirAgent extends ArchetypeAgent {
     voiceProfile?: any,
     phase: string = "initiation",
   ) {
-    super("air", oracleName, voiceProfile, phase);
+    super("air");
   }
 
   public async processExtendedQuery(query: {

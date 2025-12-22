@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "exclude": [
+    "node_modules",
+    "apps/**/*",
+    "**/backup*/**/*",
+    "**/maia.sov-backup*/**/*",
+    "**/.next/**/*",
+    "**/dist/**/*",
+    "**/build/**/*",
+    "**/tmp/**/*",
+    "**/temp/**/*",
+    "**/legacy/**/*",
+
+    // Exclude entire backend directory (legacy Supabase code)
+    "app/api/backend/**/*",
+
+    // Exclude test files
+    "**/__tests__/**/*",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+
+    // Exclude scripts
+    "scripts/**/*",
+
+    // Exclude backup/example files
+    "**/*.backup.*",
+    "**/*.example.*",
+    "**/*.bak.*"
+  ]
+}

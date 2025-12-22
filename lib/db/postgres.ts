@@ -156,6 +156,14 @@ export async function closePool(): Promise<void> {
 }
 
 /**
+ * Get a pooled client for transactions or multi-query operations
+ * IMPORTANT: Caller MUST call client.release() when done
+ */
+export async function getClient() {
+  return pool.connect();
+}
+
+/**
  * Helper: Insert and return the inserted row
  */
 export async function insertOne<T extends QueryResultRow = any>(
@@ -257,6 +265,7 @@ export default {
   testConnection,
   getPoolStats,
   closePool,
+  getClient,
   insertOne,
   updateOne,
   softDelete,

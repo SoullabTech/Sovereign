@@ -68,7 +68,7 @@ export class BioelectricMaiaAgent extends PersonalOracleAgent {
       history.push(userMessage);
 
       // 2. Generate initial response using base agent
-      const baseResponse = await super.generateResponse(query);
+      const baseResponse = await super.generateVoiceResponse(query);
 
       // 3. Analyze conversation bioelectricity
       const stress = this.stressMonitor.analyzeConversationStress(history);
@@ -162,7 +162,7 @@ export class BioelectricMaiaAgent extends PersonalOracleAgent {
       console.error('Bioelectric response generation failed:', error);
 
       // Fallback to base response
-      const fallbackResponse = await super.generateResponse(query);
+      const fallbackResponse = await super.generateVoiceResponse(query);
       return {
         ...fallbackResponse,
         bioelectricData: undefined
@@ -258,7 +258,7 @@ export class BioelectricMaiaAgent extends PersonalOracleAgent {
     };
 
     // Generate response with bioelectric enhancement
-    const response = await super.generateResponse(enhancedQuery);
+    const response = await super.generateVoiceResponse(enhancedQuery);
 
     // Extract the refined response (assuming it includes the bioelectric guidance)
     // In practice, you'd want more sophisticated extraction

@@ -1,10 +1,11 @@
 // Awareness Log - MAIA's Consciousness Data Storage
 //
-// This module logs MAIA's consciousness snapshots to local Supabase for
+// This module logs MAIA's consciousness snapshots to PostgreSQL for
 // analytics, timelines, and evolution tracking. Each response from MAIA
 // creates a timestamped record of her awareness level, source mix, and
 // reflexive adjustment state.
 
+import { query } from '@/lib/db/postgres';
 import type { SourceContribution } from './knowledge-gate';
 import type { AwarenessState } from './awareness-levels';
 
@@ -21,15 +22,13 @@ interface AwarenessSnapshotArgs {
 }
 
 /**
- * Logs a consciousness snapshot to Supabase for analytics and evolution tracking
+ * Logs a consciousness snapshot to PostgreSQL for analytics and evolution tracking
  *
  * Creates a persistent record of MAIA's awareness state, source mix, and reflexive
  * adjustments for each response, enabling consciousness timeline analysis.
  */
 export async function logAwarenessSnapshot(args: AwarenessSnapshotArgs) {
   try {
-    const supabase = createClient();
-
     const awarenessLevel = args.awarenessLevel || args.awarenessState?.level || null;
 
     // Create rich metadata about the consciousness state
@@ -72,21 +71,18 @@ export async function logAwarenessSnapshot(args: AwarenessSnapshotArgs) {
       snapshotTimestamp: new Date().toISOString()
     };
 
-    const insertData = {
-      user_id: args.userId || null,
-      awareness_level: awarenessLevel,
-      awareness_meta: args.awarenessMeta || JSON.stringify(awarenessMetadata),
-      source_mix: Array.isArray(args.sourceMix) ? args.sourceMix : args.sourceMix || null,
-    };
+    const sql = `
+      INSERT INTO oracle_awareness_log (user_id, awareness_level, awareness_meta, source_mix)
+      VALUES ($1, $2, $3, $4)
+    `;
 
-    const { error } = await supabase
-      .from('oracle_awareness_log')
-      .insert(insertData);
-
-    if (error) {
-      console.error('[MAIA Awareness Log] Failed to insert snapshot:', error);
-      return false;
-    }
+    const sourceMix = Array.isArray(args.sourceMix) ? args.sourceMix : args.sourceMix || null;
+    await query(sql, [
+      args.userId || null,
+      awarenessLevel,
+      args.awarenessMeta || JSON.stringify(awarenessMetadata),
+      JSON.stringify(sourceMix)
+    ]);
 
     console.log('[MAIA Awareness Log] Snapshot logged:', {
       awarenessLevel,
@@ -112,31 +108,31 @@ export async function getConsciousnessTimeline(
   limit: number = 50
 ): Promise<any[]> {
   try {
-    const supabase = createClient();
-
-    let query = supabase
-      .from('oracle_awareness_log')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
+    let sql = `
+      SELECT * FROM oracle_awareness_log
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+    let paramCounter = 1;
 
     if (userId) {
-      query = query.eq('user_id', userId);
+      sql += ` AND user_id = $${paramCounter}`;
+      params.push(userId);
+      paramCounter++;
     }
 
     if (sessionId) {
       // Note: sessionId would need to be stored in awareness_meta JSON or a separate column
-      query = query.like('awareness_meta', `%"sessionId":"${sessionId}"%`);
+      sql += ` AND awareness_meta::text LIKE $${paramCounter}`;
+      params.push(`%"sessionId":"${sessionId}"%`);
+      paramCounter++;
     }
 
-    const { data, error } = await query;
+    sql += ` ORDER BY created_at DESC LIMIT $${paramCounter}`;
+    params.push(limit);
 
-    if (error) {
-      console.error('[MAIA Awareness Log] Failed to fetch timeline:', error);
-      return [];
-    }
-
-    return data || [];
+    const result = await query(sql, params);
+    return result.rows || [];
 
   } catch (error) {
     console.error('[MAIA Awareness Log] Failed to get consciousness timeline:', error);
@@ -158,25 +154,27 @@ export async function analyzeConsciousnessEvolution(
   totalInteractions: number;
 }> {
   try {
-    const supabase = createClient();
-
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
 
-    let query = supabase
-      .from('oracle_awareness_log')
-      .select('awareness_level, source_mix, awareness_meta, created_at')
-      .gte('created_at', cutoffDate.toISOString())
-      .order('created_at', { ascending: true });
+    let sql = `
+      SELECT awareness_level, source_mix, awareness_meta, created_at
+      FROM oracle_awareness_log
+      WHERE created_at >= $1
+    `;
+    const params: any[] = [cutoffDate.toISOString()];
 
     if (userId) {
-      query = query.eq('user_id', userId);
+      sql += ` AND user_id = $2`;
+      params.push(userId);
     }
 
-    const { data, error } = await query;
+    sql += ` ORDER BY created_at ASC`;
 
-    if (error || !data) {
-      console.error('[MAIA Awareness Log] Failed to analyze evolution:', error);
+    const result = await query(sql, params);
+    const data = result.rows;
+
+    if (!data || data.length === 0) {
       return {
         averageAwarenessLevel: 0,
         awarenessProgression: [],
@@ -200,8 +198,9 @@ export async function analyzeConsciousnessEvolution(
 
     data.forEach(item => {
       // Count source mix occurrences
-      if (item.source_mix && Array.isArray(item.source_mix)) {
-        const dominantSource = item.source_mix[0]?.source;
+      const sourceMix = typeof item.source_mix === 'string' ? JSON.parse(item.source_mix) : item.source_mix;
+      if (sourceMix && Array.isArray(sourceMix)) {
+        const dominantSource = sourceMix[0]?.source;
         if (dominantSource) {
           dominantSources[dominantSource] = (dominantSources[dominantSource] || 0) + 1;
         }

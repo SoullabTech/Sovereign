@@ -225,7 +225,7 @@ export class WaterAgent extends ArchetypeAgent {
     voiceProfile?: any,
     phase: string = "initiation",
   ) {
-    super("water", oracleName, voiceProfile, phase);
+    super("water");
   }
 
   public async processExtendedQuery(query: {
