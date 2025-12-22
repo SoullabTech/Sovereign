@@ -127,8 +127,13 @@ echo "✅ No Anthropic SDK imports in routes"
 # ========================================
 echo "🔍 Checking for Supabase violations..."
 
-# Check staged files for Supabase imports
-VIOLATIONS=$(git diff --cached --name-only | grep -E '\.(ts|tsx|js|jsx)$' | xargs grep -l "@supabase" 2>/dev/null || true)
+# Check staged files for Supabase imports (skip deletions and checker script)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACMRTUXB | grep -v "scripts/check-no-supabase.ts" | grep -E '\.(ts|tsx|js|jsx)$')
+if [ -n "$STAGED_FILES" ]; then
+  VIOLATIONS=$(echo "$STAGED_FILES" | xargs grep -l "@supabase" 2>/dev/null || true)
+else
+  VIOLATIONS=""
+fi
 
 if [ -n "$VIOLATIONS" ]; then
   echo ""
