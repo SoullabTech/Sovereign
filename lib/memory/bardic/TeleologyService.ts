@@ -46,7 +46,6 @@ export interface CheckBalanceInput {
 
 export class TeleologyService {
   private anthropic: Anthropic;
-  private supabase = createClientComponentClient();
 
   constructor(apiKey?: string) {
     this.anthropic = new Anthropic({

@@ -26,7 +26,6 @@ export interface LinkSuggestion {
 
 export class LinkingService {
   private anthropic: Anthropic;
-  private supabase = createClientComponentClient();
 
   constructor(apiKey?: string) {
     this.anthropic = new Anthropic({

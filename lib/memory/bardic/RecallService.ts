@@ -35,7 +35,6 @@ export interface RecallInput {
 }
 
 export class RecallService {
-  private supabase = createClientComponentClient();
 
   /**
    * Recall an episode with artifacts

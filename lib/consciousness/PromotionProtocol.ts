@@ -57,10 +57,6 @@ export class PromotionProtocol {
     this.currentPhase = this.initializePhase('co-pilot');
 
     // Initialize Supabase for tracking
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_DATABASE_URL || '',
-      process.env.DATABASE_SERVICE_KEY || ''
-    );
   }
 
   /**

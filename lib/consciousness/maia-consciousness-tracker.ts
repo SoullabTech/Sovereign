@@ -3,7 +3,6 @@
 
 const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
 const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
-const supabase = createClient(dbUrl, dbKey);
 
 export interface MAIAConsciousnessState {
   attendingQuality: number; // 0-1, how empathetic/relational vs analytical

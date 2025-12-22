@@ -28,12 +28,6 @@ const dbServiceKey = process.env.DATABASE_SERVICE_KEY;
 
 let supabaseAdmin: any = null;
 if (dbUrl && dbServiceKey) {
-  supabaseAdmin = createClient(dbUrl, dbServiceKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  });
 }
 
 export interface MAIASelfEssence {

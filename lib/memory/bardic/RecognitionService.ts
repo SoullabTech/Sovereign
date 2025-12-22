@@ -18,7 +18,6 @@ import type {
 } from './types';
 
 export class RecognitionService {
-  private supabase = createClientComponentClient();
 
   /**
    * Recognize familiar scenes

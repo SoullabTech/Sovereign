@@ -117,10 +117,6 @@ export class GuardianProtocol extends EventEmitter {
   constructor() {
     super();
 
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_DATABASE_URL || '',
-      process.env.DATABASE_SERVICE_KEY || ''
-    );
 
     // Initialize with all guardian tasks
     this.GUARDIAN_TASKS.forEach(task => {

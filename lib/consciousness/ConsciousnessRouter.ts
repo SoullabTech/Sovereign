@@ -317,14 +317,7 @@ You don't need to remember - the field decides.
         }
       }
 
-      // TODO: Write to Supabase orbit_experiments table
-      // await supabase.from('orbit_experiments').insert({
-      //   query,
-      //   complexity: analysis.complexity,
-      //   recommended_mode: analysis.recommendedMode,
-      //   actual_mode: result.processingMode,
-      //   ...
-      // });
+      // TODO: Write to PostgreSQL orbit_experiments table when schema is ready
     } catch (error) {
       console.error('[ANALYTICS] Failed to log:', error);
       // Don't throw - logging failure shouldn't break the response

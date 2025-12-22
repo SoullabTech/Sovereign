@@ -2,7 +2,11 @@
  * Beta Authentication System
  * Simple code-based auth for beta testers
  * Maps beta codes to explorer IDs
+ *
+ * PostgreSQL implementation (sovereign, no Supabase)
  */
+
+import { query } from '@/lib/db/postgres';
 
 export interface BetaTester {
   explorerId: string;
@@ -14,33 +18,23 @@ export interface BetaTester {
 }
 
 export class BetaAuth {
-  private supabase: ReturnType<typeof createClient>;
-
-  constructor() {
-    const dbKey = process.env.DATABASE_SERVICE_KEY || '';
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_DATABASE_URL || '',
-      dbKey
-    );
-  }
-
   /**
    * Verify beta code and return explorer ID
    */
   async verifyBetaCode(betaCode: string): Promise<{ valid: boolean; explorerId?: string; name?: string }> {
     try {
       // Query beta_explorers table
-      const { data, error } = await this.supabase
-        .from('beta_explorers')
-        .select('explorer_id, name, registered')
-        .eq('beta_code', betaCode.trim())
-        .single();
+      const result = await query(
+        'SELECT explorer_id, name, registered FROM beta_explorers WHERE beta_code = $1',
+        [betaCode.trim()]
+      );
 
-      if (error || !data) {
+      if (result.rows.length === 0) {
         console.warn('❌ Invalid beta code:', betaCode);
         return { valid: false };
       }
 
+      const data = result.rows[0];
       console.log('✅ Valid beta code verified:', { explorerId: data.explorer_id, name: data.name });
 
       return {
@@ -59,15 +53,10 @@ export class BetaAuth {
    */
   async registerBetaTester(betaCode: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('beta_explorers')
-        .update({ registered: true, joined_at: new Date().toISOString() })
-        .eq('beta_code', betaCode);
-
-      if (error) {
-        console.error('Registration error:', error);
-        return false;
-      }
+      await query(
+        'UPDATE beta_explorers SET registered = true, joined_at = NOW() WHERE beta_code = $1',
+        [betaCode]
+      );
 
       console.log('✅ Beta tester registered:', betaCode);
       return true;
@@ -82,14 +71,14 @@ export class BetaAuth {
    */
   async getExplorerInfo(explorerId: string): Promise<BetaTester | null> {
     try {
-      const { data, error } = await this.supabase
-        .from('beta_explorers')
-        .select('*')
-        .eq('explorer_id', explorerId)
-        .single();
+      const result = await query(
+        'SELECT * FROM beta_explorers WHERE explorer_id = $1',
+        [explorerId]
+      );
 
-      if (error || !data) return null;
+      if (result.rows.length === 0) return null;
 
+      const data = result.rows[0];
       return {
         explorerId: data.explorer_id,
         name: data.name,

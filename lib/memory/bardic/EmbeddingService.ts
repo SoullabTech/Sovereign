@@ -12,6 +12,7 @@
  *
  * SECURITY: Calls server-side /api/memory/embed route (never exposes API keys)
  */
+import { query } from '@/lib/db/postgres';
 
 import type { Episode } from './types';
 
@@ -28,7 +29,6 @@ export interface EmbeddingResult {
 }
 
 export class EmbeddingService {
-  private supabase = createClientComponentClient();
 
   /**
    * Generate embedding for episode
@@ -80,19 +80,12 @@ export class EmbeddingService {
    */
   async store(episodeId: string, result: EmbeddingResult): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('episode_vectors')
-        .insert({
-          episode_id: episodeId,
-          embedding: result.embedding,
-          similarity_hash: result.similarityHash,
-          decay_rate: 0.0 // Future: implement memory decay
-        });
+      await query(
+        `INSERT INTO episode_vectors (episode_id, embedding, similarity_hash, decay_rate)
+         VALUES ($1, $2, $3, $4)`,
+        [episodeId, JSON.stringify(result.embedding), result.similarityHash, 0.0]
+      );
 
-      if (error) {
-        console.error('[EmbeddingService] Error storing embedding:', error);
-        return false;
-      }
 
       console.log(`[EmbeddingService] Stored embedding for episode ${episodeId}`);
       return true;
@@ -131,18 +124,17 @@ export class EmbeddingService {
     try {
       // Use pgvector's cosine similarity operator (<=>)
       // Note: This requires proper pgvector setup and RPC function
-      const { data, error } = await this.supabase.rpc('match_episodes', {
-        query_embedding: embedding,
-        match_threshold: 1 - minSimilarity, // Convert to distance
-        match_count: limit
-      });
+      const result = await query(
+        `SELECT episode_id, 1 - (embedding <=> $1::vector) as similarity
+         FROM episode_vectors
+         WHERE 1 - (embedding <=> $1::vector) >= $2
+         ORDER BY embedding <=> $1::vector
+         LIMIT $3`,
+        [JSON.stringify(embedding), minSimilarity, limit]
+      );
 
-      if (error) {
-        console.error('[EmbeddingService] Error finding similar:', error);
-        return [];
-      }
 
-      return data.map((row: any) => ({
+      return result.rows.map((row: any) => ({
         episodeId: row.episode_id,
         similarity: 1 - row.distance // Convert distance back to similarity
       }));

@@ -92,7 +92,6 @@ export class SemanticMemoryService {
       return;
     }
 
-    this.supabase = createClient(dbUrl, dbKey);
     this.enabled = true;
   }
 

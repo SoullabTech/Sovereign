@@ -60,7 +60,6 @@ export interface MemoryEnrichedResponse {
 }
 
 export class ConversationMemoryIntegration {
-  private supabase = createClientComponentClient();
   private recognitionCache = new Map<string, PatternRecognitionResult>();
   private lastBalanceCheck: Date | null = null;
 

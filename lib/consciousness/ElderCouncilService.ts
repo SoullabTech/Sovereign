@@ -958,8 +958,6 @@ export class ElderCouncilService {
       const key = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
       if (url && key) {
-        this.supabase = createClient(url, key);
-        console.log('   🔗 Supabase connected');
       }
     } catch (error) {
       console.log('   ⚠️  Supabase initialization skipped (client-side)');

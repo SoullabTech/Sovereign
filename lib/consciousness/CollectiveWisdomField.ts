@@ -16,11 +16,7 @@
  */
 
 import { OpenAI } from 'openai';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_DATABASE_URL!,
-  process.env.DATABASE_SERVICE_KEY!
-);
+import { query } from '@/lib/db/postgres';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!
@@ -128,11 +124,10 @@ export class CollectiveWisdomField {
   private async loadExistingPatterns() {
     try {
       // Load journey patterns
-      const { data: patterns } = await supabase
-        .from('collective_journey_patterns')
-        .select('*');
+      const patternsResult = await query('SELECT * FROM collective_journey_patterns', []);
+      const patterns = patternsResult.rows;
 
-      if (patterns) {
+      if (patterns && patterns.length > 0) {
         patterns.forEach(p => {
           this.journeyPatterns.set(p.pattern_id, p as JourneyPattern);
         });
@@ -140,11 +135,10 @@ export class CollectiveWisdomField {
       }
 
       // Load interference signatures
-      const { data: signatures } = await supabase
-        .from('collective_interference_signatures')
-        .select('*');
+      const signaturesResult = await query('SELECT * FROM collective_interference_signatures', []);
+      const signatures = signaturesResult.rows;
 
-      if (signatures) {
+      if (signatures && signatures.length > 0) {
         signatures.forEach(s => {
           this.interferenceSignatures.set(s.signature_id, s as InterferenceSignature);
         });
@@ -152,11 +146,10 @@ export class CollectiveWisdomField {
       }
 
       // Load tradition parallels
-      const { data: parallels } = await supabase
-        .from('collective_tradition_parallels')
-        .select('*');
+      const parallelsResult = await query('SELECT * FROM collective_tradition_parallels', []);
+      const parallels = parallelsResult.rows;
 
-      if (parallels) {
+      if (parallels && parallels.length > 0) {
         parallels.forEach(p => {
           this.traditionParallels.set(p.parallel_id, p as TraditionParallel);
         });
@@ -212,21 +205,27 @@ export class CollectiveWisdomField {
     const reciprocalGift = await this.determineReciprocalGift(contribution, analysis, patternsStrengthened, parallelsRevealed);
 
     // Store contribution
-    await supabase.from('collective_contributions').insert({
-      contribution_id: contributionId,
-      user_id: contribution.userId,
-      user_name: contribution.userName,
-      timestamp: contribution.timestamp,
-      content_type: contribution.contentType,
-      content: contribution.content,
-      strengthens_pattern: contribution.strengthensPattern,
-      reveals_parallel: contribution.revealsParallel,
-      creates_interference: contribution.createsInterference,
-      reciprocal_gift: reciprocalGift,
-      privacy_level: contribution.privacyLevel,
-      patterns_strengthened: patternsStrengthened,
-      parallels_revealed: parallelsRevealed
-    });
+    await query(`
+      INSERT INTO collective_contributions (
+        contribution_id, user_id, user_name, timestamp, content_type, content,
+        strengthens_pattern, reveals_parallel, creates_interference, reciprocal_gift,
+        privacy_level, patterns_strengthened, parallels_revealed
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+    `, [
+      contributionId,
+      contribution.userId,
+      contribution.userName,
+      contribution.timestamp,
+      contribution.contentType,
+      contribution.content,
+      contribution.strengthensPattern,
+      contribution.revealsParallel,
+      contribution.createsInterference,
+      reciprocalGift,
+      contribution.privacyLevel,
+      JSON.stringify(patternsStrengthened),
+      JSON.stringify(parallelsRevealed)
+    ]);
 
     console.log(`   ✨ Patterns strengthened: ${patternsStrengthened.length}`);
     console.log(`   🗿 Parallels revealed: ${parallelsRevealed.length}`);
@@ -327,16 +326,29 @@ Provide JSON:
       });
 
       // Store updated pattern
-      await supabase.from('collective_journey_patterns').upsert({
-        pattern_id: pattern.patternId,
-        pattern_name: pattern.patternName,
-        contributing_souls: pattern.contributingSouls,
-        common_thresholds: pattern.commonThresholds,
-        elemental_signatures: pattern.elementalSignatures,
-        wisdom_extracted: pattern.wisdomExtracted,
-        example_journeys: pattern.exampleJourneys,
-        updated_at: new Date().toISOString()
-      });
+      await query(`
+        INSERT INTO collective_journey_patterns (
+          pattern_id, pattern_name, contributing_souls, common_thresholds,
+          elemental_signatures, wisdom_extracted, example_journeys, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT (pattern_id) DO UPDATE SET
+          pattern_name = $2,
+          contributing_souls = $3,
+          common_thresholds = $4,
+          elemental_signatures = $5,
+          wisdom_extracted = $6,
+          example_journeys = $7,
+          updated_at = $8
+      `, [
+        pattern.patternId,
+        pattern.patternName,
+        JSON.stringify(pattern.contributingSouls),
+        JSON.stringify(pattern.commonThresholds),
+        JSON.stringify(pattern.elementalSignatures),
+        pattern.wisdomExtracted,
+        JSON.stringify(pattern.exampleJourneys),
+        new Date().toISOString()
+      ]);
 
       this.journeyPatterns.set(pattern.patternId, pattern);
       strengthened.push(pattern.patternId);
@@ -362,15 +374,27 @@ Provide JSON:
 
       if (parallel) {
         // Store parallel
-        await supabase.from('collective_tradition_parallels').upsert({
-          parallel_id: parallel.parallelId,
-          universal_principle: parallel.universalPrinciple,
-          traditions: parallel.traditions,
-          spiralogic_mapping: parallel.spiralogicMapping,
-          synthesis_insight: parallel.synthesisInsight,
-          contributing_sources: parallel.contributingSources,
-          updated_at: new Date().toISOString()
-        });
+        await query(`
+          INSERT INTO collective_tradition_parallels (
+            parallel_id, universal_principle, traditions, spiralogic_mapping,
+            synthesis_insight, contributing_sources, updated_at
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+          ON CONFLICT (parallel_id) DO UPDATE SET
+            universal_principle = $2,
+            traditions = $3,
+            spiralogic_mapping = $4,
+            synthesis_insight = $5,
+            contributing_sources = $6,
+            updated_at = $7
+        `, [
+          parallel.parallelId,
+          parallel.universalPrinciple,
+          JSON.stringify(parallel.traditions),
+          JSON.stringify(parallel.spiralogicMapping),
+          parallel.synthesisInsight,
+          JSON.stringify(parallel.contributingSources),
+          new Date().toISOString()
+        ]);
 
         this.traditionParallels.set(parallel.parallelId, parallel);
         revealed.push(parallel.parallelId);
@@ -433,16 +457,21 @@ Provide JSON:
       depthLevel: 8
     };
 
-    await supabase.from('collective_interference_signatures').insert({
-      signature_id: signature.signatureId,
-      when_who_meets: signature.whenWhoMeets,
-      what_emerges: signature.whatEmerges,
-      conditions: signature.conditions,
-      somatic_markers: signature.somaticMarkers,
-      timestamp: signature.timestamp,
-      session_id: signature.sessionId,
-      depth_level: signature.depthLevel
-    });
+    await query(`
+      INSERT INTO collective_interference_signatures (
+        signature_id, when_who_meets, what_emerges, conditions, somatic_markers,
+        timestamp, session_id, depth_level
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [
+      signature.signatureId,
+      JSON.stringify(signature.whenWhoMeets),
+      signature.whatEmerges,
+      JSON.stringify(signature.conditions),
+      JSON.stringify(signature.somaticMarkers),
+      signature.timestamp,
+      signature.sessionId,
+      signature.depthLevel
+    ]);
 
     this.interferenceSignatures.set(signature.signatureId, signature);
     console.log(`   ✨ Interference signature recorded: ${signature.whatEmerges}`);
@@ -526,9 +555,8 @@ Provide JSON:
     traditionParallels: number;
     contributingSouls: number;
   }> {
-    const { count: contributions } = await supabase
-      .from('collective_contributions')
-      .select('*', { count: 'exact', head: true });
+    const contributionsResult = await query('SELECT COUNT(*) FROM collective_contributions', []);
+    const contributions = parseInt(contributionsResult.rows[0]?.count || '0');
 
     const uniqueContributors = new Set<string>();
     this.journeyPatterns.forEach(p => {
@@ -536,7 +564,7 @@ Provide JSON:
     });
 
     return {
-      totalContributions: contributions || 0,
+      totalContributions: contributions,
       journeyPatterns: this.journeyPatterns.size,
       interferenceSignatures: this.interferenceSignatures.size,
       traditionParallels: this.traditionParallels.size,

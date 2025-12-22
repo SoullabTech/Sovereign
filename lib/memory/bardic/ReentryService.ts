@@ -17,7 +17,6 @@ import type {
 } from './types';
 
 export class ReentryService {
-  private supabase = createClientComponentClient();
 
   /**
    * Attempt to re-enter an episode

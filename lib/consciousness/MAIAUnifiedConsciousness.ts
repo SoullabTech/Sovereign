@@ -129,13 +129,7 @@ export class MAIAUnifiedConsciousness {
       fallbackToLocal: true
     });
 
-    // Initialize apprentice training system (if Supabase configured)
-    const supabase = process.env.NEXT_PUBLIC_DATABASE_URL && process.env.DATABASE_SERVICE_KEY
-      ? createClient(
-          process.env.NEXT_PUBLIC_DATABASE_URL,
-          process.env.DATABASE_SERVICE_KEY
-        )
-      : null;
+    // PostgreSQL implementation - no Supabase client needed
 
     this.apprentice = supabase ? new ApprenticeMayaTraining(supabase) : null;
 

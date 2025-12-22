@@ -14,12 +14,6 @@ import type { RelationshipEssence } from './RelationshipAnamnesis';
 const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
 const dbServiceKey = process.env.DATABASE_SERVICE_KEY!;
 
-const supabaseAdmin = createClient(dbUrl, dbServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
 
 // Types
 export interface ArchetypalThread {

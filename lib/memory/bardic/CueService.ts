@@ -39,7 +39,6 @@ export interface FindByCueInput {
 }
 
 export class CueService {
-  private supabase = createClientComponentClient();
 
   /**
    * Create a new cue

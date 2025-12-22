@@ -72,13 +72,8 @@ export class BrainTrustOrchestrator extends EventEmitter {
     this.promotionProtocol = new PromotionProtocol();
     this.parallelProcessor = new ParallelFieldProcessor();
 
-    // Initialize Supabase for apprentice
-    this.supabase = process.env.NEXT_PUBLIC_DATABASE_URL && process.env.DATABASE_SERVICE_KEY
-      ? createClient(
-          process.env.NEXT_PUBLIC_DATABASE_URL!,
-          process.env.DATABASE_SERVICE_KEY!
-        )
-      : null;
+    // PostgreSQL implementation - no Supabase client needed
+    this.supabase = null;
 
     this.apprenticeTraining = this.supabase
       ? new ApprenticeMayaTraining(this.supabase)

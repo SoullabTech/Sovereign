@@ -12,14 +12,11 @@
  */
 
 import { OpenAI } from 'openai';
+import { query } from '@/lib/db/postgres';
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_DATABASE_URL!,
-  process.env.DATABASE_SERVICE_KEY!
-);
 
 // Elemental balance across library
 export interface LibraryElementalBalance {
@@ -180,18 +177,18 @@ export class WeQIngestionQueue {
     console.log(`   Source: ${job.metadata.source || 'unknown'}`);
 
     try {
-      // 1. Download file
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from('user-files')
-        .download(job.filePath);
+      // 1. Fetch file content from database
+      const fileResult = await query(
+        'SELECT content FROM user_files WHERE file_path = $1',
+        [job.filePath]
+      );
 
-      if (downloadError || !fileData) {
-        throw new Error(`Failed to download: ${downloadError?.message}`);
+      if (!fileResult.rows || fileResult.rows.length === 0) {
+        throw new Error(`File not found: ${job.filePath}`);
       }
 
-      // 2. Extract content (use existing extraction logic)
-      const buffer = Buffer.from(await fileData.arrayBuffer());
-      const text = buffer.toString('utf-8'); // Simplified for now
+      // 2. Extract content
+      const text = fileResult.rows[0].content || '';
 
       // 3. Generate embedding
       const embedding = await this.generateEmbedding(text);
@@ -324,13 +321,20 @@ Provide analysis in JSON format:
   ): Promise<DocumentResonance[]> {
     try {
       // Use vector similarity to find related documents
-      const { data: similarDocs, error } = await supabase.rpc('match_documents', {
-        query_embedding: embedding,
-        match_threshold: 0.7,
-        match_count: 10
-      });
+      // Note: Requires pgvector extension and custom function
+      const similarDocsResult = await query(`
+        SELECT id, file_name, content, key_topics,
+               1 - (embedding <=> $1::vector) as similarity
+        FROM weq_documents
+        WHERE user_id = $2
+          AND 1 - (embedding <=> $1::vector) > $3
+        ORDER BY similarity DESC
+        LIMIT $4
+      `, [JSON.stringify(embedding), job.userId, 0.7, 10]);
 
-      if (error || !similarDocs) {
+      const similarDocs = similarDocsResult.rows;
+
+      if (!similarDocs || similarDocs.length === 0) {
         console.log('   No cross-document resonances found');
         return [];
       }
@@ -342,9 +346,9 @@ Provide analysis in JSON format:
 
           return {
             documentId: doc.id,
-            fileName: doc.fileName,
+            fileName: doc.file_name,
             resonanceScore: doc.similarity,
-            sharedThemes: doc.keyTopics?.filter((topic: string) =>
+            sharedThemes: doc.key_topics?.filter((topic: string) =>
               text.toLowerCase().includes(topic.toLowerCase())
             ) || [],
             relationType
@@ -433,13 +437,12 @@ Provide analysis in JSON format:
   ): Promise<void> {
     try {
       // Fetch current library balance
-      const { data: currentBalance } = await supabase
-        .from('library_metadata')
-        .select('elemental_balance')
-        .eq('user_id', job.userId)
-        .single();
+      const currentBalanceResult = await query(
+        'SELECT elemental_balance FROM library_metadata WHERE user_id = $1',
+        [job.userId]
+      );
 
-      const balance: LibraryElementalBalance = currentBalance?.elemental_balance || {
+      const balance: LibraryElementalBalance = currentBalanceResult.rows[0]?.elemental_balance || {
         fire: 0,
         water: 0,
         earth: 0,
@@ -458,13 +461,13 @@ Provide analysis in JSON format:
       balance.totalDocuments = total;
 
       // Store updated balance
-      await supabase
-        .from('library_metadata')
-        .upsert({
-          user_id: job.userId,
-          elemental_balance: balance,
-          updated_at: new Date().toISOString()
-        });
+      await query(`
+        INSERT INTO library_metadata (user_id, elemental_balance, updated_at)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id) DO UPDATE SET
+          elemental_balance = $2,
+          updated_at = $3
+      `, [job.userId, JSON.stringify(balance), new Date().toISOString()]);
 
       console.log(`   Library balance: Fire=${(balance.fire*100).toFixed(0)}% Water=${(balance.water*100).toFixed(0)}% Earth=${(balance.earth*100).toFixed(0)}% Air=${(balance.air*100).toFixed(0)}% Aether=${(balance.aether*100).toFixed(0)}%`);
 
@@ -484,35 +487,56 @@ Provide analysis in JSON format:
     try {
       // Create nodes for new concepts introduced
       for (const concept of analysis.conceptsIntroduced) {
-        await supabase.from('knowledge_graph_nodes').upsert({
-          concept_name: concept,
-          introduced_by_document: job.fileName,
-          contributor_id: job.userId,
-          contributor_name: job.contributor.contributorName,
-          element: analysis.elementalResonance,
-          created_at: new Date().toISOString()
-        });
+        await query(`
+          INSERT INTO knowledge_graph_nodes (
+            concept_name, introduced_by_document, contributor_id, contributor_name, element, created_at
+          ) VALUES ($1, $2, $3, $4, $5, $6)
+          ON CONFLICT (concept_name) DO UPDATE SET
+            introduced_by_document = $2,
+            contributor_id = $3,
+            contributor_name = $4,
+            element = $5
+        `, [
+          concept,
+          job.fileName,
+          job.userId,
+          job.contributor.contributorName,
+          analysis.elementalResonance,
+          new Date().toISOString()
+        ]);
       }
 
       // Create edges for concepts referenced
       for (const concept of analysis.conceptsReferenced) {
-        await supabase.from('knowledge_graph_edges').insert({
-          from_document: job.fileName,
-          to_concept: concept,
-          relationship_type: 'references',
-          created_at: new Date().toISOString()
-        });
+        await query(`
+          INSERT INTO knowledge_graph_edges (
+            from_document, to_concept, relationship_type, created_at
+          ) VALUES ($1, $2, $3, $4)
+        `, [
+          job.fileName,
+          concept,
+          'references',
+          new Date().toISOString()
+        ]);
       }
 
       // Create practice connections
       for (const practice of analysis.practicesDescribed) {
-        await supabase.from('knowledge_graph_practices').upsert({
-          practice_name: practice,
-          source_document: job.fileName,
-          element: analysis.elementalResonance,
-          contributor_id: job.userId,
-          created_at: new Date().toISOString()
-        });
+        await query(`
+          INSERT INTO knowledge_graph_practices (
+            practice_name, source_document, element, contributor_id, created_at
+          ) VALUES ($1, $2, $3, $4, $5)
+          ON CONFLICT (practice_name) DO UPDATE SET
+            source_document = $2,
+            element = $3,
+            contributor_id = $4
+        `, [
+          practice,
+          job.fileName,
+          analysis.elementalResonance,
+          job.userId,
+          new Date().toISOString()
+        ]);
       }
 
     } catch (error) {
@@ -531,44 +555,48 @@ Provide analysis in JSON format:
   }) {
     const { job, text, embedding, analysis } = context;
 
-    await supabase.from('weq_documents').insert({
-      user_id: job.userId,
-      file_name: job.fileName,
-      file_path: job.filePath,
-      file_type: job.fileType,
-      file_size: job.fileSize,
-      content: text,
-      embedding,
-
-      // Standard analysis
-      summary: analysis.summary,
-      key_topics: analysis.keyTopics,
-      emotional_tone: analysis.emotionalTone,
-      elemental_resonance: analysis.elementalResonance,
-      elemental_breakdown: analysis.elementalBreakdown,
-
-      // WeQ enhancements
-      cross_document_resonances: analysis.crossDocumentResonances,
-      detected_traditions: analysis.detectedTraditions,
-      rosetta_stone_parallels: analysis.rosettaStoneParallels,
-      concepts_introduced: analysis.conceptsIntroduced,
-      concepts_referenced: analysis.conceptsReferenced,
-      practices_described: analysis.practicesDescribed,
-      archetypes_activated: analysis.archetypesActivated,
-
-      // Contributor attribution
-      contributor_id: job.contributor.userId,
-      contributor_name: job.contributor.contributorName,
-      contributor_role: job.contributor.contributorRole,
-      contributor_gifts: job.contributor.uniqueGifts,
-      privacy_level: job.contributor.privacyLevel,
-      consent_to_collective: job.contributor.consentToCollective,
-
-      // Metadata
-      source: job.metadata.source,
-      uploaded_at: job.metadata.uploadedAt,
-      created_at: new Date().toISOString()
-    });
+    await query(`
+      INSERT INTO weq_documents (
+        user_id, file_name, file_path, file_type, file_size, content, embedding,
+        summary, key_topics, emotional_tone, elemental_resonance, elemental_breakdown,
+        cross_document_resonances, detected_traditions, rosetta_stone_parallels,
+        concepts_introduced, concepts_referenced, practices_described, archetypes_activated,
+        contributor_id, contributor_name, contributor_role, contributor_gifts,
+        privacy_level, consent_to_collective, source, uploaded_at, created_at
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15,
+        $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28
+      )
+    `, [
+      job.userId,
+      job.fileName,
+      job.filePath,
+      job.fileType,
+      job.fileSize,
+      text,
+      JSON.stringify(embedding),
+      analysis.summary,
+      JSON.stringify(analysis.keyTopics),
+      analysis.emotionalTone,
+      analysis.elementalResonance,
+      JSON.stringify(analysis.elementalBreakdown),
+      JSON.stringify(analysis.crossDocumentResonances),
+      JSON.stringify(analysis.detectedTraditions),
+      JSON.stringify(analysis.rosettaStoneParallels),
+      JSON.stringify(analysis.conceptsIntroduced),
+      JSON.stringify(analysis.conceptsReferenced),
+      JSON.stringify(analysis.practicesDescribed),
+      JSON.stringify(analysis.archetypesActivated),
+      job.contributor.userId,
+      job.contributor.contributorName,
+      job.contributor.contributorRole,
+      JSON.stringify(job.contributor.uniqueGifts),
+      job.contributor.privacyLevel,
+      job.contributor.consentToCollective,
+      job.metadata.source,
+      job.metadata.uploadedAt,
+      new Date().toISOString()
+    ]);
   }
 
   /**
@@ -595,13 +623,12 @@ Provide analysis in JSON format:
    */
   async getLibraryBalance(userId: string): Promise<LibraryElementalBalance | null> {
     try {
-      const { data } = await supabase
-        .from('library_metadata')
-        .select('elemental_balance')
-        .eq('user_id', userId)
-        .single();
+      const result = await query(
+        'SELECT elemental_balance FROM library_metadata WHERE user_id = $1',
+        [userId]
+      );
 
-      return data?.elemental_balance || null;
+      return result.rows[0]?.elemental_balance || null;
     } catch (error) {
       return null;
     }

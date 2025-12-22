@@ -9,11 +9,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY!,
 });
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_DATABASE_URL!,
-  process.env.DATABASE_SERVICE_KEY!
-);
-
 export interface MemoryContext {
   session: ConversationTurn[];       // Last N turns
   journals: JournalEntry[];          // Relevant recent entries

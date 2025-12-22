@@ -58,10 +58,6 @@ export class SessionMemoryService {
     const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
 
     if (dbUrl && dbKey) {
-      this.supabase = createClient(dbUrl, dbKey);
-      this.isInitialized = true;
-    } else {
-      console.warn('⚠️ SessionMemoryService: Supabase not configured, memory will be simulated');
     }
   }
 
