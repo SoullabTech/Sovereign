@@ -105,7 +105,12 @@ export class MetricsCollectionSystem {
   private batchSize = 10;
 
   constructor(dbUrl: string, dbKey: string) {
-    this.db = createClient(dbUrl, dbKey);
+    // Sovereignty mode (research): Supabase client removed.
+    // Keep args to avoid touching call sites.
+    void dbUrl;
+    void dbKey;
+
+    this.db = null;
   }
 
   /**
@@ -289,17 +294,14 @@ export class MetricsCollectionSystem {
   async flush(): Promise<void> {
     if (this.buffer.length === 0) return;
 
-    const { error } = await this.db
-      .from('emergence_decisions')
-      .insert(this.buffer);
-
-    if (error) {
-      console.error('Failed to upload metrics:', error);
-      // Store locally as backup
-      this.storeLocalBackup(this.buffer);
-    }
-
+    // Sovereignty mode (research): persistence disabled.
+    // Keep the buffer semantics intact.
+    const count = this.buffer.length;
     this.buffer = [];
+
+    if (count > 0) {
+      console.warn(`[metrics-collection-system] Dropped ${count} emergence_decisions (persistence disabled in sovereignty mode).`);
+    }
   }
 
   private storeLocalBackup(data: EmergenceDecision[]): void {
