@@ -77,109 +77,27 @@ export default function DeploymentOrchestrationPanel() {
   const updateInterval = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
-    // Initialize Supabase client
-    if (!supabase.current) {
-      supabase.current = createClient(
-        process.env.NEXT_PUBLIC_DATABASE_URL!,
-        process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!
-      );
-    }
-
-    // Subscribe to orchestration events
-    const channel = supabase.current
-      .channel('orchestration-events')
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'deployment_decisions'
-      }, (payload: any) => {
-        handleNewDecision(payload.new);
-      })
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'alerts'
-      }, (payload: any) => {
-        handleNewAlert(payload.new);
-      })
-      .subscribe();
-
-    // Poll for current status every 30 seconds
-    updateInterval.current = setInterval(fetchCurrentStatus, 30000);
-    fetchCurrentStatus();
+    // Sovereignty mode: Demo mode only (Supabase removed)
+    // Set default demo state
+    setCurrentPhase({
+      name: 'Monitoring',
+      progress: 65,
+      status: 'active',
+      metrics: {
+        coherence: 0.72,
+        responseTime: 420,
+        errorRate: 0.02,
+        emergenceQuality: 0.68
+      }
+    });
 
     return () => {
       if (updateInterval.current) clearInterval(updateInterval.current);
-      supabase.current.removeChannel(channel);
     };
   }, []);
 
   const fetchCurrentStatus = async () => {
-    try {
-      // Get current deployment phase
-      const { data: phase } = await supabase.current
-        .from('deployment_phases')
-        .select('*')
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (phase) {
-        // Calculate progress based on time in phase
-        const startTime = new Date(phase.started_at).getTime();
-        const now = Date.now();
-        const hoursElapsed = (now - startTime) / (1000 * 60 * 60);
-        const progress = Math.min((hoursElapsed / phase.duration_hours) * 100, 100);
-
-        // Get latest metrics
-        const { data: metrics } = await supabase.current
-          .from('system_health')
-          .select('*')
-          .order('timestamp', { ascending: false })
-          .limit(1)
-          .single();
-
-        setCurrentPhase({
-          name: phase.phase,
-          progress,
-          status: phase.completed ? 'completed' : 'active',
-          metrics: {
-            coherence: metrics?.coherence_ratio || 0,
-            responseTime: metrics?.response_time_p99 || 500,
-            errorRate: metrics?.error_rate || 0,
-            emergenceQuality: metrics?.emergence_quality || 0
-          }
-        });
-
-        setCrystalWeight(phase.current_crystal_weight || 0);
-        setAetherWeight(phase.current_aether_weight || 0.35);
-      }
-
-      // Get recent decisions
-      const { data: decisions } = await supabase.current
-        .from('deployment_decisions')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(5);
-
-      if (decisions) {
-        setRecentDecisions(decisions);
-      }
-
-      // Get active alerts
-      const { data: activeAlerts } = await supabase.current
-        .from('alerts')
-        .select('*')
-        .eq('acknowledged', false)
-        .order('timestamp', { ascending: false });
-
-      if (activeAlerts) {
-        setAlerts(activeAlerts);
-      }
-
-    } catch (error) {
-      console.error('Failed to fetch orchestration status:', error);
-    }
+    // Sovereignty mode: No-op (demo state set in useEffect)
   };
 
   const handleNewDecision = (decision: any) => {
@@ -216,11 +134,7 @@ export default function DeploymentOrchestrationPanel() {
   };
 
   const acknowledgeAlert = async (alertId: string) => {
-    await supabase.current
-      .from('alerts')
-      .update({ acknowledged: true })
-      .eq('id', alertId);
-
+    // Sovereignty mode: No DB update (demo only)
     setAlerts(prev => prev.filter(a => a.id !== alertId));
   };
 

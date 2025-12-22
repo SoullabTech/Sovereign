@@ -260,8 +260,6 @@ export function useBetaMetrics() {
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClient();
-
   const fetchMetrics = async () => {
     try {
       setError(null);
@@ -307,52 +305,8 @@ export function useBetaMetrics() {
     return () => clearInterval(interval);
   }, []);
 
-  // Real-time updates via Supabase
-  useEffect(() => {
-    if (!supabase) return;
-
-    // Set up real-time subscriptions to beta analytics tables
-    const channel = supabase
-      .channel('beta-dashboard-updates')
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'voice_events' 
-        }, 
-        () => {
-          // Refresh metrics when new voice events come in
-          fetchMetrics();
-        }
-      )
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'beta_feedback' 
-        }, 
-        () => {
-          // Refresh metrics when new feedback is submitted
-          fetchMetrics();
-        }
-      )
-      .on('postgres_changes', 
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'user_sessions' 
-        }, 
-        () => {
-          // Refresh metrics when new sessions start
-          fetchMetrics();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      channel.unsubscribe();
-    };
-  }, [supabase]);
+  // Sovereignty mode: Real-time updates disabled (Supabase removed).
+  // Auto-refresh via polling (see 30s interval above) provides eventual consistency.
 
   return {
     metrics,

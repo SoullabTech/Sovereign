@@ -48,41 +48,16 @@ export default function CrystalHealthMonitor() {
 
   // Initialize connection
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_DATABASE_URL) {
-      supabase.current = createClient(
-        process.env.NEXT_PUBLIC_DATABASE_URL!,
-        process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!
-      );
-      subscribeToHealth();
-    } else {
-      // Demo mode with simulated data
-      simulateHealthData();
-    }
+    // Sovereignty mode: always use demo mode (Supabase removed)
+    // Demo mode with simulated data
+    simulateHealthData();
 
     return () => {
       if (breathInterval.current) clearInterval(breathInterval.current);
     };
   }, []);
 
-  // Subscribe to real-time health updates
-  const subscribeToHealth = () => {
-    if (!supabase.current) return;
-
-    const channel = supabase.current
-      .channel('system-health')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'system_health'
-        },
-        (payload: any) => {
-          updateHealth(payload.new);
-        }
-      )
-      .subscribe();
-  };
+  // Sovereignty mode: subscribeToHealth removed (Supabase removed)
 
   // Simulate health data for demo
   const simulateHealthData = () => {
