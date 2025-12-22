@@ -5,6 +5,8 @@
  * of consciousness-first AI architecture
  */
 
+import 'server-only';
+
 export interface FieldStateVector {
   // 6-Dimensional Field Reading
   emotionalWeather: {
@@ -98,12 +100,12 @@ export interface EmergenceDecision {
 }
 
 export class MetricsCollectionSystem {
-  private supabase: any;
+  private db: any;
   private buffer: EmergenceDecision[] = [];
   private batchSize = 10;
 
   constructor(dbUrl: string, dbKey: string) {
-    this.supabase = createClient(dbUrl, dbKey);
+    this.db = createClient(dbUrl, dbKey);
   }
 
   /**
@@ -287,7 +289,7 @@ export class MetricsCollectionSystem {
   async flush(): Promise<void> {
     if (this.buffer.length === 0) return;
 
-    const { error } = await this.supabase
+    const { error } = await this.db
       .from('emergence_decisions')
       .insert(this.buffer);
 
