@@ -3,22 +3,31 @@
  * Ported from MAIA-PAI to MAIA-SOVEREIGN
  */
 
-export type ConfigurationMethod = 'manual' | 'voice' | 'conversational';
+export type ConfigurationMethod =
+  | 'manual'
+  | 'voice'
+  | 'conversational'
+  | 'iching'
+  | 'survey';
 
 export interface PetalConfiguration {
   petal: string;
   intensity: number;
+  element?: string | null;
 }
 
 export interface SpiralStage {
-  code: string;
-  name: string;
   element: string;
+  stage: string;
+  description?: string | null;
+  code?: string | null;
+  name?: string | null;
 }
 
 export interface ConversationMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'maia';
   content: string;
+  timestamp?: string | Date;
 }
 
 export interface HoloflowerJournalEntry {
@@ -49,6 +58,11 @@ export interface CreateJournalEntryInput {
   tags?: string[];
   is_favorite?: boolean;
   visibility?: 'private' | 'shared' | 'public';
+  elemental_alchemy?: any;
+  reflection?: string | null;
+  practice?: string | null;
+  conversation_summary?: string | null;
+  soulprint_url?: string | null;
 }
 
 export interface UpdateJournalEntryInput {
@@ -83,6 +97,9 @@ export interface CreateSoulPatternInput {
   confidence_score?: number;
   observations_count?: number;
   maia_interpretation?: string;
+  first_observed?: string | null;
+  last_observed?: string | null;
+  insight?: string | null;
 }
 
 export interface UpdateSoulPatternInput {

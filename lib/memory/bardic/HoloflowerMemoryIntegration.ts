@@ -274,6 +274,7 @@ export class HoloflowerMemoryIntegration {
     };
 
     petals.forEach(petal => {
+      if (!petal.element) return;
       elementTotals[petal.element] += petal.intensity;
     });
 
