@@ -274,21 +274,34 @@ export class ConversationMemoryIntegration {
         console.log(`[ConversationMemoryIntegration] 🌀 Holoflower reading persisted with episode ${episodeId}`);
       }
 
-      // Generate embedding & links (async, non-blocking)
-      const embeddingService = getEmbeddingService();
-      const linkingService = getLinkingService();
+      // ═══════════════════════════════════════════════════════════════
+      // ⚠️  LEGACY BARDIC POST-CAPTURE (Still Supabase-backed)
+      // ═══════════════════════════════════════════════════════════════
+      // These services haven't been migrated yet. Gated behind env flag.
+      // TODO: Migrate EmbeddingService + LinkingService to Postgres (separate PR)
+      const ENABLE_LEGACY_BARDIC_POST_CAPTURE =
+        process.env.MAIA_ENABLE_LEGACY_BARDIC_POST_CAPTURE === 'true';
 
-      Promise.all([
-        embeddingService.embedEpisode(episodeId, {
-          text: userMessage + '\n\n' + assistantResponse,
-          stanza: crystallization.suggestedStanza,
-          placeCue: context.placeCue,
-          senseCues: context.senseCues
-        }),
-        linkingService.generateLinks(episodeId, context.userId)
-      ]).catch(err => {
-        console.error('[ConversationMemoryIntegration] Error in post-capture tasks:', err);
-      });
+      if (ENABLE_LEGACY_BARDIC_POST_CAPTURE) {
+        // Generate embedding & links (async, non-blocking)
+        const embeddingService = getEmbeddingService();
+        const linkingService = getLinkingService();
+
+        Promise.all([
+          embeddingService.embedEpisode(episodeId, {
+            text: userMessage + '\n\n' + assistantResponse,
+            stanza: crystallization.suggestedStanza,
+            placeCue: context.placeCue,
+            senseCues: context.senseCues
+          }),
+          linkingService.generateLinks(episodeId, context.userId)
+        ]).catch(err => {
+          console.error('[ConversationMemoryIntegration] Error in legacy post-capture tasks:', err);
+        });
+      } else {
+        // Sovereign mode: Episode + Holoflower persisted, skip legacy services
+        console.log(`[ConversationMemoryIntegration] ⚙️  Legacy post-capture disabled (sovereign mode)`);
+      }
 
       console.log(`[ConversationMemoryIntegration] ✨ Captured crystallization moment: ${episodeId}`);
       return episodeId;
