@@ -17,7 +17,8 @@ export interface FacetWeights {
   Æ1: number;
   Æ2: number;
   Æ3: number;
-  [key: string]: number; // Allow additional facets
+  version?: number; // Version tracking for CEE causality
+  [key: string]: number | undefined; // Allow additional facets and version
 }
 
 /**
@@ -50,8 +51,8 @@ export async function getEffectiveFacetWeights(memberId: string): Promise<FacetW
   const client = await pool.connect();
   try {
     // Check if member is in active canary
-    const canary = await client.query<{ proposed_config: FacetWeights }>(
-      `SELECT ic.proposed_config
+    const canary = await client.query<{ proposed_config: FacetWeights; version: number }>(
+      `SELECT ic.proposed_config, ic.version
        FROM canary_deployments cd
        JOIN improvement_candidates ic ON ic.id = cd.improvement_candidate_id
        WHERE cd.ended_at IS NULL
@@ -63,24 +64,72 @@ export async function getEffectiveFacetWeights(memberId: string): Promise<FacetW
     );
 
     if (canary.rows[0]?.proposed_config) {
-      return canary.rows[0].proposed_config;
+      return {
+        ...canary.rows[0].proposed_config,
+        version: canary.rows[0].version
+      };
     }
 
     // Return global weights
-    const global = await client.query<{ facet_weights: FacetWeights }>(
-      `SELECT facet_weights
+    const global = await client.query<{ facet_weights: FacetWeights; version: number }>(
+      `SELECT facet_weights, version
        FROM router_weights
        WHERE scope='global' AND active=true
        ORDER BY updated_at DESC
        LIMIT 1`
     );
 
-    return global.rows[0]?.facet_weights ?? null;
+    if (global.rows[0]?.facet_weights) {
+      return {
+        ...global.rows[0].facet_weights,
+        version: global.rows[0].version
+      };
+    }
+
+    return null;
   } catch (error) {
     console.error("[routerWeightsResolver] Error:", error);
     return null;
   } finally {
     client.release();
+  }
+}
+
+/**
+ * Resolve all version pointers for CEE causality tracking
+ *
+ * Returns version numbers for router weights, relational profile, and rules
+ * to enable full causality tracking in CEE.
+ */
+export async function resolveRouterWeights(memberId: string): Promise<{
+  relational_profile_version_used: number | null;
+  router_weights_version_used: number | null;
+  rule_version_used: number | null;
+}> {
+  try {
+    // Get router weights version (uses its own pool connection)
+    const weights = await getEffectiveFacetWeights(memberId);
+    const router_weights_version_used = weights?.version ?? null;
+
+    // Get relational profile version (uses its own pool connection)
+    const profile = await getRelationalProfile(memberId);
+    const relational_profile_version_used = profile?.version ?? null;
+
+    // Rule version is currently static (would come from consciousness_rules table)
+    const rule_version_used = 1;
+
+    return {
+      relational_profile_version_used,
+      router_weights_version_used,
+      rule_version_used
+    };
+  } catch (error) {
+    console.error("[resolveRouterWeights] Error:", error);
+    return {
+      relational_profile_version_used: null,
+      router_weights_version_used: null,
+      rule_version_used: null
+    };
   }
 }
 

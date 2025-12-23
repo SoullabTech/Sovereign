@@ -1,6 +1,33 @@
 // Integration Helper: Routing Decision Logger with Version Pointers
 import { pool } from "@/lib/db/postgres";
 
+/**
+ * Recursively sanitize an object by parsing any JSON strings found
+ * This prevents malformed JSON from blocking database INSERTs
+ */
+function deepSanitizeJson(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  if (typeof obj === 'string') {
+    // Try to parse as JSON, return parsed or original
+    try {
+      return JSON.parse(obj);
+    } catch {
+      return obj; // Keep as string if not valid JSON
+    }
+  }
+  if (Array.isArray(obj)) {
+    return obj.map(deepSanitizeJson);
+  }
+  if (typeof obj === 'object') {
+    const sanitized: Record<string, any> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      sanitized[key] = deepSanitizeJson(value);
+    }
+    return sanitized;
+  }
+  return obj;
+}
+
 export interface RoutingDecisionInput {
   userId: string;
   sessionId: string;
@@ -14,6 +41,7 @@ export interface RoutingDecisionInput {
   safetyFlags?: any;
 
   myceliumCycleId?: string | null;
+  traceId?: string | null; // For coupling feedback signals
 
   // VERSION POINTERS - Keystone for causality tracking
   relationalProfileVersionUsed?: number | null;
@@ -56,12 +84,21 @@ export interface RoutingDecisionInput {
 export async function recordRoutingDecision(input: RoutingDecisionInput): Promise<string | null> {
   const client = await pool.connect();
   try {
+    // Sanitize all JSON fields to prevent malformed nested JSON from blocking INSERT
+    const sanitizedBiomarkers = deepSanitizeJson(input.biomarkers ?? {});
+    const sanitizedExtractedCues = deepSanitizeJson(input.extractedCues ?? {});
+    const sanitizedSafetyFlags = deepSanitizeJson(input.safetyFlags ?? {});
+    const sanitizedAlternatives = deepSanitizeJson(input.alternatives ?? []);
+
+    // DEBUG: Log sanitized data
+    console.log('[routingDecisionLogger] Sanitized extractedCues:', JSON.stringify(sanitizedExtractedCues).substring(0, 200));
+
     const { rows } = await client.query<{ id: string }>(
       `INSERT INTO routing_decisions (
         member_id, session_id,
         facet_code, confidence, alternatives, routing_rule_id,
         biomarkers, extracted_cues, safety_flags,
-        mycelium_cycle_id,
+        mycelium_cycle_id, trace_id,
         relational_profile_version_used,
         router_weights_version_used,
         rule_version_used,
@@ -70,8 +107,8 @@ export async function recordRoutingDecision(input: RoutingDecisionInput): Promis
         $1,$2,
         $3,$4,$5::jsonb,$6,
         $7::jsonb,$8::jsonb,$9::jsonb,
-        $10,
-        $11,$12,$13,
+        $10,$11,
+        $12,$13,$14,
         NOW()
       )
       RETURNING id`,
@@ -80,12 +117,13 @@ export async function recordRoutingDecision(input: RoutingDecisionInput): Promis
         input.sessionId,
         input.facetCode,
         input.confidence,
-        JSON.stringify(input.alternatives ?? []),
+        JSON.stringify(sanitizedAlternatives),
         input.routingRuleId,
-        JSON.stringify(input.biomarkers ?? {}),
-        JSON.stringify(input.extractedCues ?? {}),
-        JSON.stringify(input.safetyFlags ?? {}),
+        JSON.stringify(sanitizedBiomarkers),
+        JSON.stringify(sanitizedExtractedCues),
+        JSON.stringify(sanitizedSafetyFlags),
         input.myceliumCycleId ?? null,
+        input.traceId ?? null,
         input.relationalProfileVersionUsed ?? null,
         input.routerWeightsVersionUsed ?? null,
         input.ruleVersionUsed ?? null,

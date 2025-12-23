@@ -31,6 +31,8 @@ import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEsse
 import { memoryPalaceOrchestrator } from '@/lib/consciousness/memory/MemoryPalaceOrchestrator';
 import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { randomUUID } from 'crypto';
+import { recordRoutingDecision } from '@/lib/co-evolution/routingDecisionLogger';
+import { resolveRouterWeights } from '@/lib/co-evolution/routerWeightsResolver';
 
 /**
  * Oracle Conversation API endpoint - Option A: "Oracle = DEEP = Opus"
@@ -158,6 +160,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Generate trace ID once for entire request (shared across all routing decisions)
+    const traceId = randomUUID();
+
+    // DEV-ONLY: Force field-safety blocking for audit verification
+    const FORCE_FIELD_SAFETY =
+      process.env.NODE_ENV !== 'production' &&
+      request.headers.get('x-force-field-safety') === '1';
+
+    // DEV-ONLY: Force specific skill execution for audit verification
+    // Requires explicit opt-in via SKILLS_DEV_FORCE_EXECUTE=1 to prevent accidental triggering
+    const FORCE_SKILL_ID =
+      process.env.NODE_ENV !== 'production' &&
+      process.env.SKILLS_DEV_FORCE_EXECUTE === '1'
+        ? request.headers.get('x-force-skill-id')?.trim() || null
+        : null;
+
     // Ensure conversationHistory is always an array (defensive)
     const conversationHistory = Array.isArray(body.conversationHistory)
       ? body.conversationHistory
@@ -174,21 +192,64 @@ export async function POST(request: NextRequest) {
     try {
       cognitiveProfile = await getCognitiveProfile(userId);
 
-      if (cognitiveProfile) {
+      // DEV-ONLY: Force field-safety blocking for audit testing
+      if (FORCE_FIELD_SAFETY) {
+        fieldSafety = {
+          allowed: false,
+          message: "[DEV-ONLY] Field-safety blocking triggered for audit testing",
+          elementalNote: "Test boundary for audit verification.",
+          fieldRouting: { realm: "care", intent: "stabilize", depth: "contained" },
+        };
+      } else if (cognitiveProfile) {
         fieldSafety = enforceFieldSafety({
           cognitiveProfile,
           element: body.element,
           userName: body.userName,
           context: 'oracle',
         });
+      }
 
-        // If field work is not safe, return mythic boundary message immediately
-        if (!fieldSafety.allowed) {
-          console.log(
-            `🛡️  [Field Safety - Oracle] Blocked - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
-              `stability=${cognitiveProfile.stability}, fieldWorkSafe=false`,
-          );
+      // If field work is not safe, return mythic boundary message immediately
+      if (fieldSafety && !fieldSafety.allowed) {
+        const avg = cognitiveProfile?.rollingAverage;
+        const stability = cognitiveProfile?.stability;
 
+        console.log(
+          `🛡️  [Field Safety - Oracle] Blocked - avg=${avg != null ? avg.toFixed(2) : "n/a"}, ` +
+            `stability=${stability ?? "n/a"}, fieldWorkSafe=false`,
+        );
+
+        // Record routing decision for field-safety boundary (W1 = Safety-Containment)
+        try {
+          const weightsCtx = await resolveRouterWeights(userId);
+
+          const decisionId = await recordRoutingDecision({
+            userId,
+            sessionId,
+            facetCode: 'W1',
+            confidence: 0,
+            alternatives: [],
+            routingRuleId: 'field-safety:blocked',
+            biomarkers: {},
+            extractedCues: {
+              audit: {
+                fieldSafety: {
+                  allowed: false,
+                  boundaryType: 'field-safety',
+                },
+                skill: null,
+              },
+              fieldRouting: fieldSafety.fieldRouting ?? null,
+            },
+            safetyFlags: { fieldSafetyBlocked: true },
+            myceliumCycleId: null,
+            traceId,
+            relationalProfileVersionUsed: weightsCtx.relational_profile_version_used,
+            routerWeightsVersionUsed: weightsCtx.router_weights_version_used,
+            ruleVersionUsed: weightsCtx.rule_version_used,
+          });
+
+          // Return with standardized context shape
           return NextResponse.json(
             {
               success: true,
@@ -197,15 +258,47 @@ export async function POST(request: NextRequest) {
               metadata: {
                 fieldWorkSafe: false,
                 fieldRouting: fieldSafety.fieldRouting,
-                cognitiveAltitude: cognitiveProfile.rollingAverage,
-                stability: cognitiveProfile.stability,
+                cognitiveAltitude: avg,
+                stability,
                 boundaryType: 'field-safety',
               },
+              context: {
+                traceId,
+                routingDecisionId: decisionId ?? null,
+                skillMemoryReceipts: null,
+                usedMemoryModules: null,
+              },
             },
-            { status: 200 }, // Not an error - expected behavior
+            { status: 200 },
+          );
+        } catch (decisionLogError) {
+          console.error('[Field Safety] Failed to log routing decision (non-critical):', decisionLogError);
+          // Fall back to response without decision tracking (keep same context shape)
+          return NextResponse.json(
+            {
+              success: true,
+              response: fieldSafety.message,
+              elementalNote: fieldSafety.elementalNote,
+              metadata: {
+                fieldWorkSafe: false,
+                fieldRouting: fieldSafety.fieldRouting,
+                cognitiveAltitude: avg,
+                stability,
+                boundaryType: 'field-safety',
+              },
+              context: {
+                traceId,
+                routingDecisionId: null,
+                skillMemoryReceipts: null,
+                usedMemoryModules: null,
+              },
+            },
+            { status: 200 },
           );
         }
+      }
 
+      if (cognitiveProfile && fieldSafety) {
         console.log(
           `🛡️  [Field Safety - Oracle] Allowed - avg=${cognitiveProfile.rollingAverage.toFixed(2)}, ` +
             `fieldWorkSafe=true, realm=${fieldSafety.fieldRouting.realm}`,
@@ -262,6 +355,101 @@ export async function POST(request: NextRequest) {
 
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
+
+    // DEV-ONLY: Force skill execution for audit verification
+    if (FORCE_SKILL_ID) {
+      suggestedInterventions.unshift({
+        flowId: FORCE_SKILL_ID,
+        name: `[DEV] Forced skill: ${FORCE_SKILL_ID}`,
+        description: 'Dev-only forced skill execution for audit trail verification',
+        confidence: 1.0
+      });
+
+      // Execute forced skill and record audit trail (proof of concept)
+      // DEV-ONLY: proof block; delete after Phase 4.2C verification
+      console.log(`🎯 [DEV-ONLY] Forcing skill execution: ${FORCE_SKILL_ID}`);
+
+      try {
+        const weightsCtx = await resolveRouterWeights(userId);
+
+        // Compute correct facet code from spiralogicCell (element + phase)
+        const skillFacetCode = `${spiralogicCell.element.charAt(0).toUpperCase()}${spiralogicCell.phase}`;
+
+        const skillDecisionId = await recordRoutingDecision({
+          userId,
+          sessionId,
+          facetCode: skillFacetCode as any, // F1, W2, E3, A1, etc.
+          confidence: 1.0,
+          alternatives: [],
+          routingRuleId: `skill:${FORCE_SKILL_ID}`,
+          biomarkers: {},
+          extractedCues: {
+            audit: {
+              skill: {
+                id: FORCE_SKILL_ID,
+                outcome: 'success',
+                executedAt: new Date().toISOString(),
+                memoryReceipts: null, // Shape parity with future real skill runtime
+              },
+              fieldSafety: null,
+            },
+            skillContext: {
+              flowId: FORCE_SKILL_ID,
+              triggerReason: 'dev-force',
+            },
+          },
+          safetyFlags: {},
+          myceliumCycleId: null,
+          traceId,
+          relationalProfileVersionUsed: weightsCtx.relational_profile_version_used,
+          routerWeightsVersionUsed: weightsCtx.router_weights_version_used,
+          ruleVersionUsed: weightsCtx.rule_version_used,
+        });
+
+        console.log(`✅ [DEV-ONLY] Skill audit recorded: ${skillDecisionId}`);
+
+        // Return with standardized context shape
+        return NextResponse.json(
+          {
+            success: true,
+            response: `[DEV-ONLY] Skill "${FORCE_SKILL_ID}" executed successfully for audit verification.`,
+            metadata: {
+              skillExecuted: FORCE_SKILL_ID,
+              outcome: 'success',
+              auditTrailRecorded: true,
+            },
+            context: {
+              traceId,
+              routingDecisionId: skillDecisionId ?? null,
+              skillMemoryReceipts: null,
+              usedMemoryModules: null,
+            },
+          },
+          { status: 200 },
+        );
+      } catch (skillAuditError) {
+        console.error('[Skill Audit] Failed to record routing decision (non-critical):', skillAuditError);
+        // Fall back to response without decision tracking
+        return NextResponse.json(
+          {
+            success: true,
+            response: `[DEV-ONLY] Skill "${FORCE_SKILL_ID}" execution attempted (audit recording failed).`,
+            metadata: {
+              skillExecuted: FORCE_SKILL_ID,
+              outcome: 'partial',
+              auditTrailRecorded: false,
+            },
+            context: {
+              traceId,
+              routingDecisionId: null,
+              skillMemoryReceipts: null,
+              usedMemoryModules: null,
+            },
+          },
+          { status: 200 },
+        );
+      }
+    }
 
     // Generate disposable pixel configuration with spiralogic enhancements
     const disposablePixels = PanconsciousFieldService.generateDisposablePixels(
