@@ -177,4 +177,39 @@ const nextConfig = {
   },
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// SOVEREIGN DEPLOYMENT CONFIG - SELF-HOSTED (NOT VERCEL)
+// ═══════════════════════════════════════════════════════════════════════════════
+// These settings are for standalone Node.js deployment on local/VPS infrastructure
+// DO NOT REMOVE - Required for production standalone builds
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/* eslint-disable */
+// prettier-ignore
+
+// Biofield redirect (disable for Capacitor/static export)
+if (!process.env.CAPACITOR_BUILD) {
+  nextConfig.redirects = async () => [
+    {
+      source: '/maia/journey/:path*',
+      destination: '/maia?panel=biofield',
+      permanent: false,
+    },
+  ];
+}
+
+// Output file tracing excludes - prevents "Failed to copy traced files" warnings
+// Route glob '/*' targets all routes - https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
+nextConfig.outputFileTracingExcludes = {
+  '/*': [
+    'backups/**',
+    'Community-Commons/**',
+    'artifacts/**',
+    '**/*.md',
+    '**/*.mmd',
+  ],
+};
+
+/* eslint-enable */
+
 module.exports = nextConfig;
