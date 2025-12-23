@@ -71,8 +71,6 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      const crystallization = detectCrystallization(message, finalMessage);
-
       return NextResponse.json({
         message: finalMessage,
         route: {
@@ -87,7 +85,6 @@ export async function POST(req: NextRequest) {
         },
         metadata: {
           ...simpleResult.metadata,
-          crystallization,
           ruptureDetection: ruptureDetection.ruptureDetected ? {
             detected: ruptureDetection.ruptureDetected,
             type: ruptureDetection.ruptureType,
