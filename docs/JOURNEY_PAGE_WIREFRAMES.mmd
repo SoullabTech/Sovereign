@@ -1,0 +1,96 @@
+%% MAIA Journey Page - Wireframe Diagrams
+%% Interactive prototype layout specification
+%% Generated: December 23, 2024
+
+graph TB
+    subgraph DESKTOP["Desktop Layout (1440px+)"]
+        NAV[Navigation Bar<br/>Tapestry · Spiral · Narrative · Timeline · Biofield · Aether Mode]
+
+        COHERENCE_METER[✨ Collective Coherence Meter<br/>Top-left overlay<br/>- Anonymized group coherence<br/>- Real-time WebSocket sync]
+
+        INSIGHT_PANEL[🌬️ Air Insight Panel<br/>Top-right overlay<br/>- Dynamic reflections<br/>- Semantic pattern insights<br/>- Voice reflection playback]
+
+        subgraph MAIN["Main Canvas (Center - 60% width)"]
+            AETHER_FIELD[✨ Aether Field Overlay<br/>- Aurora-like coherence shimmer<br/>- Subtle animation layer<br/>- Always present, varies by coherence]
+            SYMBOL_CLOUD[🌬️ Air Symbol Cloud<br/>- Interactive tag/bubble network<br/>- Filter by archetype/symbol<br/>- D3.js force layout]
+            SPIRAL[🌀 Interactive Spiral<br/>- Thread nodes sized by coherence<br/>- Color-coded by element<br/>- Animated temporal evolution<br/>- Hover: aura glow + tooltip<br/>- Click: open detail modal]
+            LEGEND[Spiral Legend Overlay<br/>🔥 Fire · 💧 Water · 🌍 Earth · 🌬️ Air · ✨ Aether]
+        end
+
+        subgraph LEFT["Thread Sidebar (Left - 20% width)"]
+            FILTER[Thread Filter<br/>By element/archetype/status]
+            CARDS[Thread Cards Stack<br/>- Motif name<br/>- Narrative snippet<br/>- Coherence/resonance scores<br/>- Last occurrence date]
+            COAUTHOR[Co-Author Controls<br/>✏️ Rename · 👁️ Hide · 📝 Annotate]
+        end
+
+        subgraph RIGHT["Biofield Panel (Right - 20% width)"]
+            HRV[🫀 HRV Coherence Graph<br/>Time-series heart rate variability]
+            VOICE[🎙 Voice Prosody Graph<br/>Spectral rhythm visualization]
+            CONC[💫 Concordance Graph<br/>Text-emotion correlation timeline]
+        end
+    end
+
+    NAV --> MAIN
+    NAV --> LEFT
+    NAV --> RIGHT
+
+    SPIRAL --> LEGEND
+    FILTER --> CARDS
+    CARDS --> COAUTHOR
+
+    HRV --> VOICE
+    VOICE --> CONC
+
+    subgraph TABLET["Tablet Layout (768px - 1439px)"]
+        NAV_T[Navigation Bar<br/>View toggles]
+
+        MAIN_T[Interactive Spiral<br/>Full width, collapsible panels]
+
+        SIDEBAR_T[Collapsible Side Panel<br/>Toggle between Threads/Biofield]
+    end
+
+    NAV_T --> MAIN_T
+    MAIN_T --> SIDEBAR_T
+
+    subgraph MOBILE["Mobile Layout (< 768px)"]
+        NAV_M[Bottom Navigation<br/>Icon-based view switcher]
+
+        HEADER_M[Spiral Badge<br/>Current phase indicator]
+
+        CARDS_M[Thread Cards List<br/>Swipeable, full-screen detail]
+
+        BIO_M[Biofield Graphs<br/>Tap to expand modal]
+    end
+
+    NAV_M --> HEADER_M
+    HEADER_M --> CARDS_M
+    CARDS_M --> BIO_M
+
+    subgraph MODALS["Overlays & Modals"]
+        DETAIL[Thread Detail Modal<br/>- Full narrative summary<br/>- Fragment timeline<br/>- Biofield signature graph<br/>- Co-author controls<br/>- Voice playback button]
+
+        PRESENCE[Presence Overlay<br/>- Current elemental mode<br/>- Voice parameters<br/>- Ambient pulse animation]
+
+        SYNTHESIS[✨ Aether Synthesis Panel<br/>Bottom overlay<br/>- Cross-thread motifs<br/>- Repeating cycles<br/>- Long-term growth arc<br/>- Appears when multiple threads selected]
+    end
+
+    SPIRAL -.->|Click node| DETAIL
+    MAIN -.->|Always visible| PRESENCE
+    MAIN -.->|Multi-select| SYNTHESIS
+    SYMBOL_CLOUD -.->|Tag click| FILTER
+    NAV -.->|Aether Mode toggle| AETHER_FIELD
+
+    classDef canvas fill:#F0E6FF,stroke:#A46FF0,stroke-width:3px
+    classDef sidebar fill:#E6F5E6,stroke:#88CC88,stroke-width:2px
+    classDef biofield fill:#E8FAE6,stroke:#77C577,stroke-width:2px
+    classDef modal fill:#FFE8CC,stroke:#FFAA66,stroke-width:2px
+    classDef air fill:#DDE9F3,stroke:#6699CC,stroke-width:2px
+    classDef aether fill:#E6D5F5,stroke:#A46FF0,stroke-width:3px,stroke-dasharray:5
+
+    class MAIN,SPIRAL,LEGEND canvas
+    class LEFT,FILTER,CARDS,COAUTHOR sidebar
+    class RIGHT,HRV,VOICE,CONC biofield
+    class DETAIL,PRESENCE modal
+    class INSIGHT_PANEL,SYMBOL_CLOUD air
+    class AETHER_FIELD,COHERENCE_METER,SYNTHESIS aether
+

@@ -1,0 +1,104 @@
+%% MAIA Journey Page - Component Tree & Data Flow
+%% React component hierarchy with API integration points
+%% Generated: December 23, 2024
+
+graph TD
+    ROOT[app/journey/page.tsx<br/>JourneyPage]
+
+    ROOT --> NAV[JourneyNav.tsx<br/>View mode state]
+    ROOT --> AETHER_OVERLAY[AetherFieldOverlay.tsx<br/>🌬️ Aurora coherence layer]
+    ROOT --> COHERENCE[CollectiveCoherenceMeter.tsx<br/>✨ Group coherence indicator]
+    ROOT --> CANVAS[JourneyCanvas.tsx<br/>Spiral visualization]
+    ROOT --> SIDEBAR[ThreadSidebar.tsx<br/>Narrative threads panel]
+    ROOT --> BIO[BiofieldPanel.tsx<br/>Embodied coherence graphs]
+    ROOT --> INSIGHT[InsightPanel.tsx<br/>🌬️ Air reflection layer]
+    ROOT --> DETAIL[ThreadDetailModal.tsx<br/>Expanded narrative view]
+    ROOT --> SYNTHESIS[SynthesisPanel.tsx<br/>✨ Cross-thread integration]
+    ROOT --> PRESENCE[PresenceOverlay.tsx<br/>Ambient state indicator]
+
+    NAV --> NAV_ITEM[NavItem.tsx<br/>View toggle button]
+
+    CANVAS --> AETHER_FIELD[AetherField.tsx<br/>Shimmer animation layer]
+    CANVAS --> SYMBOL_CLOUD[SymbolCloud.tsx<br/>🌬️ Interactive tag network]
+    CANVAS --> SPIRAL_CORE[SpiralCore.tsx<br/>Three.js scene]
+    CANVAS --> THREAD_NODE[ThreadNode.tsx<br/>Interactive node x N]
+    CANVAS --> LEGEND[SpiralLegend.tsx<br/>Element color key]
+
+    SPIRAL_CORE --> API_THREADS[🔌 /api/bardic/threads<br/>GET threads list]
+    THREAD_NODE --> API_THREAD_DETAIL[🔌 /api/bardic/threads/:id<br/>GET thread details]
+
+    SIDEBAR --> FILTER[ThreadFilter.tsx<br/>Element/archetype filter]
+    SIDEBAR --> CARD_LIST[ThreadCardList.tsx<br/>Scrollable container]
+    SIDEBAR --> COAUTHOR[CoAuthorControls.tsx<br/>Edit controls]
+
+    CARD_LIST --> CARD[ThreadCard.tsx<br/>Summary card x N]
+    CARD --> API_THREADS
+
+    COAUTHOR --> API_UPDATE[🔌 /api/bardic/threads/:id<br/>PATCH update thread]
+
+    BIO --> HRV_GRAPH[HRVGraph.tsx<br/>Recharts time-series]
+    BIO --> VOICE_GRAPH[VoiceGraph.tsx<br/>Spectral visualization]
+    BIO --> CONC_GRAPH[ConcordanceGraph.tsx<br/>Correlation timeline]
+
+    HRV_GRAPH --> API_PRESENCE[🔌 /api/presence/current<br/>GET biomarkers]
+    VOICE_GRAPH --> API_PRESENCE
+    CONC_GRAPH --> API_PRESENCE
+
+    DETAIL --> NARRATIVE[NarrativeSummary.tsx<br/>Prose display]
+    DETAIL --> FRAGMENTS[FragmentTimeline.tsx<br/>Occurrence list]
+    DETAIL --> BIO_SIG[BiofieldSignature.tsx<br/>HRV/voice graph]
+    DETAIL --> VOICE_PLAY[VoicePlayback.tsx<br/>Tone.js audio]
+
+    FRAGMENTS --> API_FRAGMENTS[🔌 /api/bardic/threads/:id/fragments<br/>GET fragments]
+
+    INSIGHT --> INSIGHT_TEXT[InsightText.tsx<br/>Prose display]
+    INSIGHT --> VOICE_REFLECT[VoiceReflection.tsx<br/>Audio playback]
+
+    INSIGHT --> API_INSIGHTS[🔌 /api/bardic/insights<br/>GET semantic insights]
+
+    SYNTHESIS --> MOTIF_LIST[MotifList.tsx<br/>Cross-thread patterns]
+    SYNTHESIS --> CYCLE_VIZ[CycleVisualization.tsx<br/>Temporal rhythms]
+
+    SYNTHESIS --> API_SYNTHESIS[🔌 /api/bardic/synthesis<br/>GET cross-thread analysis]
+
+    AETHER_OVERLAY --> API_PRESENCE
+    COHERENCE --> API_COLLECTIVE[🔌 /api/collective/coherence<br/>GET group metrics]
+
+    SYMBOL_CLOUD --> API_SYMBOLS[🔌 /api/bardic/symbols<br/>GET archetypal tags]
+
+    ROOT --> HOOKS[hooks/]
+    HOOKS --> USE_THREADS[useThreads.ts<br/>TanStack Query]
+    HOOKS --> USE_PRESENCE[usePresence.ts<br/>Real-time polling]
+    HOOKS --> USE_BIOFIELD[useBiofieldData.ts<br/>Time-series cache]
+    HOOKS --> USE_INSIGHTS[useInsights.ts<br/>🌬️ Semantic reflections]
+    HOOKS --> USE_SYNTHESIS[useSynthesis.ts<br/>✨ Cross-thread patterns]
+    HOOKS --> USE_COLLECTIVE[useCollective.ts<br/>✨ Group coherence]
+
+    USE_THREADS --> API_THREADS
+    USE_PRESENCE --> API_PRESENCE
+    USE_BIOFIELD --> API_PRESENCE
+    USE_INSIGHTS --> API_INSIGHTS
+    USE_SYNTHESIS --> API_SYNTHESIS
+    USE_COLLECTIVE --> API_COLLECTIVE
+
+    ROOT --> STATE[State Management<br/>Zustand store]
+    STATE --> VIEW_MODE[viewMode: spiral/tapestry/timeline/biofield/aether]
+    STATE --> SELECTED[selectedThread: Thread or null]
+    STATE --> FILTERS[filters: element/archetype/status]
+    STATE --> AETHER_MODE[aetherModeActive: boolean]
+    STATE --> SYNTHESIS_VISIBLE[synthesisVisible: boolean]
+    STATE --> INSIGHT_VISIBLE[insightVisible: boolean]
+
+    classDef page fill:#F0E6FF,stroke:#A46FF0,stroke-width:3px
+    classDef component fill:#E6F5E6,stroke:#88CC88,stroke-width:2px
+    classDef api fill:#E6F2FF,stroke:#6699CC,stroke-width:2px
+    classDef state fill:#FFE8CC,stroke:#FFAA66,stroke-width:2px
+    classDef air fill:#DDE9F3,stroke:#6699CC,stroke-width:2px
+    classDef aether fill:#E6D5F5,stroke:#A46FF0,stroke-width:3px,stroke-dasharray:5
+
+    class ROOT page
+    class NAV,CANVAS,SIDEBAR,BIO,DETAIL,PRESENCE,SPIRAL_CORE,THREAD_NODE,LEGEND,FILTER,CARD_LIST,CARD,COAUTHOR,HRV_GRAPH,VOICE_GRAPH,CONC_GRAPH,NARRATIVE,FRAGMENTS,BIO_SIG,VOICE_PLAY component
+    class INSIGHT,SYMBOL_CLOUD,INSIGHT_TEXT,VOICE_REFLECT air
+    class AETHER_OVERLAY,COHERENCE,SYNTHESIS,AETHER_FIELD,MOTIF_LIST,CYCLE_VIZ aether
+    class API_THREADS,API_THREAD_DETAIL,API_UPDATE,API_PRESENCE,API_FRAGMENTS,API_INSIGHTS,API_SYNTHESIS,API_COLLECTIVE,API_SYMBOLS api
+    class HOOKS,USE_THREADS,USE_PRESENCE,USE_BIOFIELD,USE_INSIGHTS,USE_SYNTHESIS,USE_COLLECTIVE,STATE,VIEW_MODE,SELECTED,FILTERS,AETHER_MODE,SYNTHESIS_VISIBLE,INSIGHT_VISIBLE state
