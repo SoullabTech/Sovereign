@@ -71,6 +71,8 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      const crystallization = detectCrystallization(message, finalMessage);
+
       return NextResponse.json({
         message: finalMessage,
         route: {
@@ -85,6 +87,7 @@ export async function POST(req: NextRequest) {
         },
         metadata: {
           ...simpleResult.metadata,
+          crystallization,
           ruptureDetection: ruptureDetection.ruptureDetected ? {
             detected: ruptureDetection.ruptureDetected,
             type: ruptureDetection.ruptureType,
@@ -136,6 +139,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    const crystallization = detectCrystallization(message, finalMessage);
+
     return NextResponse.json({
       message: finalMessage,
       consciousness: orchestratorResult.consciousness,
@@ -153,6 +158,7 @@ export async function POST(req: NextRequest) {
         ...orchestratorResult.metadata,
         consciousnessLayers: orchestratorResult.metadata.consciousnessLayers,
         failSoftMode: true,
+        crystallization,
         ruptureDetection: ruptureDetection.ruptureDetected ? {
           detected: ruptureDetection.ruptureDetected,
           type: ruptureDetection.ruptureType,
@@ -172,4 +178,27 @@ export async function POST(req: NextRequest) {
       { status: 500 },
     );
   }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Crystallization Detection - Identifies breakthrough moments for episode capture
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function detectCrystallization(userMessage: string, assistantResponse: string) {
+  const text = `${userMessage}\n${assistantResponse}`.toLowerCase();
+
+  const markers = [
+    'aha', 'epiphany', 'it clicked', 'now i see', 'i see now',
+    'i realize', 'i realised', 'i finally', 'this changes',
+    'breakthrough', 'core insight', 'something shifted',
+  ];
+
+  const hit = markers.some((m) => text.includes(m));
+
+  // conservative default: mostly false
+  return {
+    shouldCapture: hit,
+    fireAirAlignment: hit ? 0.85 : 0.5,
+    suggestedStanza: hit ? assistantResponse.split('\n')[0]?.slice(0, 160) : undefined,
+  };
 }

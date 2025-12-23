@@ -1,5 +1,9 @@
 'use client';
 
+// Force dynamic rendering (skip build-time pre-render to avoid Supabase init errors)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 /**
  * MAIA Page - SOUL​LAB Dream-Weaver Edition
  *
