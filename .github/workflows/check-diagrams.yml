@@ -47,7 +47,7 @@ jobs:
 
       - name: Sanity versions
         run: |
-          npx --no-install mmdc --version
+          ./node_modules/.bin/mmdc --version
           node -p "require('puppeteer/package.json').version"
 
       - name: Ensure Chromium exists for mmdc
