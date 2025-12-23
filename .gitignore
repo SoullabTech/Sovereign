@@ -289,3 +289,17 @@ artifacts/*sovereignty*audit*.json
 
 # Keep manifest but not sovereignty audits
 artifacts/.manifest.json
+
+# local dev/worktrees
+.worktrees/
+**/.worktrees/
+**/.temp/
+*.worktree/
+
+# Build artifacts
+app/api/backend/dist-minimal/
+
+# local deploy docs/scripts (keep out of feature branches)
+Community-Commons/09-Technical/SOVEREIGN_DEPLOYMENT_ARCHITECTURE.md
+SOVEREIGN_DEPLOYMENT_GUIDE.md
+scripts/sovereign-deploy.sh

@@ -20,11 +20,21 @@ import { getTeleologyService } from './TeleologyService';
 import { getStanzaWriter } from './StanzaWriter';
 import { getEmbeddingService } from './EmbeddingService';
 import { getLinkingService } from './LinkingService';
+import { episodeService } from '@/lib/services/episodeService';
+import { HoloflowerMemoryIntegration } from '@/lib/memory/bardic/HoloflowerMemoryIntegration';
+import type { HoloflowerReadingData } from '@/lib/memory/bardic/HoloflowerMemoryIntegration';
 import type {
   EpisodeCandidate,
   Telos,
   BalanceCheck
 } from './types';
+
+// Module-level singleton (avoids re-instantiation per call)
+const holoflowerMemory = new HoloflowerMemoryIntegration();
+
+// ✅ Type-safe Holoflower snapshot (no shape duplication)
+// Stays in sync with HoloflowerReadingData automatically
+export type HoloflowerReadingSnapshot = Omit<HoloflowerReadingData, 'userId' | 'sessionId'>;
 
 export interface ConversationContext {
   userId: string;
@@ -36,6 +46,10 @@ export interface ConversationContext {
   currentCoherence?: number; // 0-1 from biometrics
   placeCue?: string;
   senseCues?: string[];
+
+  // ✅ Holoflower reading snapshot (ONLY set on explicit finalize)
+  // One event = one save (Bardic safety rule)
+  holoflowerReading?: HoloflowerReadingSnapshot;
 }
 
 export interface PatternRecognitionResult {
@@ -226,31 +240,39 @@ export class ConversationMemoryIntegration {
         return null;
       }
 
-      const { data, error } = await this.supabase
-        .from('episodes')
-        .insert({
-          user_id: context.userId,
-          occurred_at: new Date().toISOString(),
-          place_cue: context.placeCue,
-          sense_cues: context.senseCues,
-          affect_valence: context.currentAffect?.valence,
-          affect_arousal: context.currentAffect?.arousal,
-          elemental_state: {
-            fire: crystallization.fireAirAlignment,
-            air: crystallization.fireAirAlignment,
-            water: context.currentAffect?.valence ? (context.currentAffect.valence + 5) / 10 : 0.5,
-            earth: context.currentCoherence || 0.5,
-            aether: (crystallization.fireAirAlignment + (context.currentCoherence || 0.5)) / 2
-          },
-          scene_stanza: crystallization.suggestedStanza,
-          sacred_flag: false
-        })
-        .select()
-        .single();
+      // ✅ FIXED: Use Postgres instead of broken Supabase
+      const episodeId = await episodeService.createEpisode({
+        userId: context.userId,
+        occurredAt: new Date().toISOString(),
+        placeCue: context.placeCue,
+        senseCues: context.senseCues,
+        affectValence: context.currentAffect?.valence,
+        affectArousal: context.currentAffect?.arousal,
+        elementalState: {
+          fire: crystallization.fireAirAlignment,
+          air: crystallization.fireAirAlignment,
+          water: context.currentAffect?.valence != null
+            ? (context.currentAffect.valence + 5) / 10
+            : 0.5,
+          earth: context.currentCoherence ?? 0.5,
+          aether: (crystallization.fireAirAlignment + (context.currentCoherence ?? 0.5)) / 2,
+        },
+        sceneStanza: crystallization.suggestedStanza,
+        sacredFlag: false,
+      });
 
-      if (error || !data) {
-        console.error('[ConversationMemoryIntegration] Error capturing episode:', error);
-        return null;
+      // ═══════════════════════════════════════════════════════════════
+      // ✅ HOLOFLOWER SAVE HOOK (Type-Safe, No Duplication)
+      // ═══════════════════════════════════════════════════════════════
+      // Only persists if context.holoflowerReading is set (explicit finalize)
+      // One event = one save (Bardic safety rule)
+      if (context.holoflowerReading) {
+        await holoflowerMemory.saveHoloflowerReading({
+          userId: context.userId,
+          sessionId: context.sessionId,
+          ...context.holoflowerReading,
+        });
+        console.log(`[ConversationMemoryIntegration] 🌀 Holoflower reading persisted with episode ${episodeId}`);
       }
 
       // Generate embedding & links (async, non-blocking)
@@ -258,19 +280,19 @@ export class ConversationMemoryIntegration {
       const linkingService = getLinkingService();
 
       Promise.all([
-        embeddingService.embedEpisode(data.id, {
+        embeddingService.embedEpisode(episodeId, {
           text: userMessage + '\n\n' + assistantResponse,
           stanza: crystallization.suggestedStanza,
           placeCue: context.placeCue,
           senseCues: context.senseCues
         }),
-        linkingService.generateLinks(data.id, context.userId)
+        linkingService.generateLinks(episodeId, context.userId)
       ]).catch(err => {
         console.error('[ConversationMemoryIntegration] Error in post-capture tasks:', err);
       });
 
-      console.log(`[ConversationMemoryIntegration] ✨ Captured crystallization moment: ${data.id}`);
-      return data.id;
+      console.log(`[ConversationMemoryIntegration] ✨ Captured crystallization moment: ${episodeId}`);
+      return episodeId;
     } catch (error) {
       console.error('[ConversationMemoryIntegration] Error:', error);
       return null;
