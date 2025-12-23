@@ -235,7 +235,11 @@ export class ConversationMemoryIntegration {
     crystallization: CrystallizationDetection
   ): Promise<string | null> {
     try {
-      if (!crystallization.shouldCapture) {
+      // Bulletproof: accept both shouldCapture and isCrystallizing
+      const shouldCapture =
+        (crystallization as any).shouldCapture ?? crystallization.isCrystallizing;
+
+      if (!shouldCapture) {
         return null;
       }
 
