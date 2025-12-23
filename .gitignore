@@ -130,6 +130,9 @@ tmp/
 temp/
 .tmp/
 
+# Supabase CLI cache (build artifacts only, not config)
+supabase/.temp/
+
 # Logs
 logs
 *.log
