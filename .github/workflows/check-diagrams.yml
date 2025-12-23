@@ -1,0 +1,56 @@
+name: Check diagrams
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: check-diagrams-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-diagrams:
+    runs-on: ubuntu-latest
+    env:
+      TZ: UTC
+      LC_ALL: C
+      CI: "true"
+      PUPPETEER_CACHE_DIR: ${{ github.workspace }}/.cache/puppeteer
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Restore Puppeteer browser cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.PUPPETEER_CACHE_DIR }}
+          key: ${{ runner.os }}-puppeteer-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-puppeteer-
+
+      - name: Prepare Puppeteer cache dir
+        run: mkdir -p "${PUPPETEER_CACHE_DIR}"
+
+      - name: Install deps (don't let SKIP_DOWNLOAD win)
+        run: |
+          unset PUPPETEER_SKIP_DOWNLOAD
+          npm ci
+
+      - name: Sanity versions
+        run: |
+          npx --no-install mmdc --version
+          node -p "require('puppeteer/package.json').version"
+
+      - name: Ensure Chromium exists for mmdc
+        run: |
+          unset PUPPETEER_SKIP_DOWNLOAD
+          npx --no-install puppeteer browsers install chrome
+
+      - name: Check diagrams
+        run: npm run check:diagrams
