@@ -139,6 +139,8 @@ echo -e "${GREEN}✓${NC} Images built"
 # 3. Run database migration
 echo -e "${BLUE}3/6${NC} Running database migration..."
 psql "$DATABASE_URL" < "${PROJECT_ROOT}/db/migrations/20251220_beads_integration.sql" 2>&1 | grep -v "already exists" || true
+psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/20251223_create_episodes_table.sql" 2>&1 | grep -v "already exists" || true
+psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/20251223_create_holoflower_tables.sql" 2>&1 | grep -v "already exists" || true
 echo -e "${GREEN}✓${NC} Migration complete"
 
 # 4. Start services
