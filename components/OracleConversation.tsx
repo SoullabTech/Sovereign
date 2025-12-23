@@ -1988,7 +1988,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setCoherenceLevel(responseData.metadata?.fieldState?.depth || 0.85);
 
       // 🧠 BARDIC MEMORY: Enrich response with memory wisdom (Air serves Fire)
-      // TEMP DISABLED - Causes browser API errors
+      //
+      // ACTIVATION CHECKLIST (follow-up PR):
+      // - [ ] Wire crystallization detection (only trigger on breakthrough moments, not every message)
+      // - [ ] Set context.holoflowerReading ONLY on explicit "Finalize" user action
+      // - [ ] Verify "one event = one save" rule (no accidental high-frequency writes)
+      // - [ ] Test episode persistence works without errors
+      // - [ ] Test Holoflower 3-layer save (journal, soul patterns, anamnesis)
+      //
+      // Infrastructure is sovereign and ready (episode + holoflower tables exist in Postgres).
+      // See: lib/memory/bardic/ConversationMemoryIntegration.ts:captureEpisode()
       let enrichedResponseText = responseText;
       // if (userId && recognition && crystallization) {
       //   try {
