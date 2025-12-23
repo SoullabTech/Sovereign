@@ -18,6 +18,9 @@ export interface CreateSoulPatternInput {
   confidence_score?: number;
   observations_count?: number;
   maia_interpretation?: string;
+  first_observed?: string | null;
+  last_observed?: string | null;
+  insight?: string | null;
 }
 
 export class SoulPatternService {
