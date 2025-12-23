@@ -1,77 +1,56 @@
-# MAIA Sovereign - Production Dockerfile
-FROM node:20-alpine AS base
+# ════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign Dockerfile (Portable / Multi-Arch Safe)
+# - No Alpine / musl coupling
+# - No PRISMA_* arch pinning
+# - Stages kept as: base → deps → builder → runner (matches your compose)
+# ════════════════════════════════════════════════════════════════════════
 
-# Install dependencies only when needed
+FROM node:20-bookworm-slim AS base
+WORKDIR /app
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# --- deps: install full deps (build tooling lives in devDependencies) ---
 FROM base AS deps
-RUN apk add --no-cache libc6-compat build-base python3 make g++ openssl openssl-dev
-WORKDIR /app
-
-# Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
-# Copy prisma directory for schema generation
-COPY prisma ./prisma
-RUN npm ci --legacy-peer-deps
+RUN npm ci --ignore-scripts
 
-# Rebuild the source code only when needed
+# --- builder: prisma generate + next build (creates .next/standalone) ---
 FROM base AS builder
-WORKDIR /app
+ENV NODE_ENV=production
+ENV SKIP_ENV_VALIDATION=true
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment for build
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
+# Prisma client + engines for THIS build platform (no arch pinning)
+RUN npx prisma generate
 
-# Generate Prisma client with correct Alpine Linux ARM64 OpenSSL 3.x target
-ENV PRISMA_CLI_BINARY_TARGETS=linux-musl-arm64-openssl-3.0.x
-RUN rm -rf node_modules/.prisma && npx prisma generate
-
-# Set environment for Next.js build to skip Prisma connections during static generation
-ENV SKIP_ENV_VALIDATION=true
-
-# Force Prisma to use correct OpenSSL 3.x binary at runtime
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node
-ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node
-
-# Build the application
+# Next build (standalone output)
 RUN npm run build
 
-# Production image, copy all the files and run next
-FROM base AS runner
+# --- runner: minimal runtime with standalone server ---
+FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
 
-# Force Prisma to use correct OpenSSL 3.x binary at runtime
-ENV PRISMA_QUERY_ENGINE_BINARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node
-ENV PRISMA_QUERY_ENGINE_LIBRARY=/app/node_modules/.prisma/client/libquery_engine-linux-musl-arm64-openssl-3.0.x.so.node
+# Copy standalone output + static assets
+COPY --from=builder --chown=node:node /app/.next/standalone ./
+COPY --from=builder --chown=node:node /app/.next/static ./.next/static
+COPY --from=builder --chown=node:node /app/public ./public
 
-# Install OpenSSL for Prisma (including 1.1 compatibility for ARM64)
-RUN apk add --no-cache openssl openssl-dev
+# Safety belt: ensure Prisma engines are present at runtime
+# (Next standalone tracing sometimes misses .prisma/@prisma in edge cases)
+COPY --from=builder --chown=node:node /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@prisma
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
-
-COPY --from=builder /app/public ./public
-
-# Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Automatically leverage output traces to reduce image size
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-USER nextjs
-
+USER node
 EXPOSE 3000
 
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:3000/api/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
 
 CMD ["node", "server.js"]
