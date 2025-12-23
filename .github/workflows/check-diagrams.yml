@@ -4,9 +4,7 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches:
-      - main
-      - phase4.6-reflective-agentics  # TEMP: testing before merge
+    branches: [main]
 
 concurrency:
   group: check-diagrams-${{ github.ref }}
@@ -44,11 +42,6 @@ jobs:
         run: |
           unset PUPPETEER_SKIP_DOWNLOAD
           npm ci
-
-      - name: Debug node_modules
-        run: |
-          ls -la node_modules/.bin/ | grep -E "(mmdc|puppeteer)" || echo "mmdc/puppeteer not found"
-          test -f node_modules/@mermaid-js/mermaid-cli/package.json && echo "mermaid-cli package exists" || echo "mermaid-cli package missing"
 
       - name: Sanity versions
         run: |
