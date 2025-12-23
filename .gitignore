@@ -300,4 +300,3 @@ app/api/backend/dist-minimal/
 Community-Commons/09-Technical/SOVEREIGN_DEPLOYMENT_ARCHITECTURE.md
 SOVEREIGN_DEPLOYMENT_GUIDE.md
 scripts/sovereign-deploy.sh
-tsconfig.typecheck.json
