@@ -1,118 +1,184 @@
-# MAIA Sovereign - Production Docker Compose Stack for soullab.life
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Fully Container-Sovereign Docker Compose Stack
+# ═══════════════════════════════════════════════════════════════════════════════
+# Philosophy: Zero host dependencies except Docker itself
+# - PostgreSQL: Internal container (not host service)
+# - Ollama: Optional internal container (see ollama service)
+# - No Vercel, no Supabase, no cloud AI required
+# ═══════════════════════════════════════════════════════════════════════════════
+
 version: '3.8'
 
 services:
-  # Main MAIA Web Application (using Supabase as database)
-  web:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # MAIA Web Application - Consciousness Computing Platform
+  # ═════════════════════════════════════════════════════════════════════════════
+  maia:
     build:
       context: .
+      dockerfile: Dockerfile
+    container_name: maia-sovereign
     ports:
-      - "3002:3000"
-    environment:
-      - NODE_ENV=production
-      - REDIS_URL=redis://redis:6379
-      - MAIA_SOVEREIGN_DEMO_MODE=false
-      - DATABASE_URL=postgresql://postgres:@host.docker.internal:5432/maia_consciousness
-      - POSTGRES_HOST=host.docker.internal
-      - POSTGRES_PORT=5432
-      - POSTGRES_DB=maia_consciousness
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=
+      - "3000:3000"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Startup Orchestration - Wait for database to be healthy
+    # ═══════════════════════════════════════════════════════════════════════════
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Linux Compatibility - Map host.docker.internal to host gateway
+    # ═══════════════════════════════════════════════════════════════════════════
+    # On Mac Docker Desktop, host.docker.internal works by default
+    # On Linux, this extra_hosts entry makes it work the same way
+    # Required for: Ollama running on host (if not using ollama service)
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Environment Configuration
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CRITICAL: All secrets (DATABASE_URL, POSTGRES_PASSWORD, API keys) come from
+    # .env.production, NOT from interpolation here. This avoids the footgun where
+    # ${VAR:-default} silently uses 'default' when .env.production exists but
+    # compose doesn't read it for interpolation.
+    # ═══════════════════════════════════════════════════════════════════════════
     env_file:
       - .env.production
-    depends_on:
-      - redis
-    restart: unless-stopped
-    networks:
-      - maia-network
-    volumes:
-      - ./logs/web:/app/logs
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsSL http://localhost:3000/api/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
 
-  # Redis for Sessions & Caching
-  redis:
-    image: redis:7-alpine
-    command: redis-server --appendonly yes
-    volumes:
-      - redis_data:/data
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-    networks:
-      - maia-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Nginx Reverse Proxy with SSL
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
-      - ./ssl:/etc/nginx/ssl
-      - ./logs/nginx:/var/log/nginx
-    depends_on:
-      - web
-    restart: unless-stopped
-    networks:
-      - maia-network
-
-  # TURN Server for WebRTC (voice chat)
-  coturn:
-    image: coturn/coturn:alpine
-    network_mode: host
     environment:
-      - TURN_USERNAME=${TURN_USERNAME}
-      - TURN_PASSWORD=${TURN_PASSWORD}
-    volumes:
-      - ./coturn/turnserver.conf:/etc/coturn/turnserver.conf
+      # Application runtime settings (non-secret)
+      NODE_ENV: "production"
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: "1"
+
+      # NOTE: DATABASE_URL, POSTGRES_PASSWORD, API keys, etc. are in .env.production
+      # DO NOT add them here - let env_file provide them
+
     restart: unless-stopped
 
-  # Monitoring with Prometheus
-  prometheus:
-    image: prom/prometheus:latest
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
     networks:
       - maia-network
 
-  # Grafana for Metrics Visualization
-  grafana:
-    image: grafana/grafana:latest
-    ports:
-      - "3001:3000"
+  # ═════════════════════════════════════════════════════════════════════════════
+  # PostgreSQL - Consciousness Trace Persistence
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Fully container-internal, persistent volume, health-checked
+  postgres:
+    image: postgres:16-alpine
+    container_name: maia-postgres
+
+    # Read POSTGRES_PASSWORD from .env.production
+    env_file:
+      - .env.production
+
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD}
+      # Database name and user (non-secret)
+      POSTGRES_DB: maia_consciousness
+      POSTGRES_USER: soullab
+      # DO NOT set POSTGRES_PASSWORD here - comes from env_file
+
     volumes:
-      - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soullab -d maia_consciousness"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
     restart: unless-stopped
+
     networks:
       - maia-network
 
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Prisma Migrations - One-Off Service (run when needed)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Usage: docker compose --profile migrate run --rm migrate
+  # This applies Prisma migrations using the builder stage (which has Prisma CLI)
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder  # Uses builder stage with Prisma CLI
+
+    # Read DATABASE_URL from .env.production
+    env_file:
+      - .env.production
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    command: ["sh", "-c", "npx prisma migrate deploy"]
+
+    profiles: ["migrate"]
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Ollama - Local LLM Inference (Optional Internal Service)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Uncomment to run Ollama as internal service instead of on host
+  # Requires: GPU passthrough for performance (CPU fallback works but slow)
+  #
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: maia-ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   # GPU support (NVIDIA - uncomment if available)
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: 1
+  #   #           capabilities: [gpu]
+  #   restart: unless-stopped
+  #   networks:
+  #     - maia-network
+  #
+  # Then change MAIA environment in .env.production to:
+  #   OLLAMA_BASE_URL=http://ollama:11434
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Persistent Volumes - Consciousness Traces, Model Weights
+# ═══════════════════════════════════════════════════════════════════════════════
 volumes:
-  redis_data:
-  prometheus_data:
-  grafana_data:
+  postgres_data:
+    driver: local
+  # ollama_data:  # Uncomment if using internal ollama service
+  #   driver: local
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Network - Internal Container Communication
+# ═══════════════════════════════════════════════════════════════════════════════
 networks:
   maia-network:
     driver: bridge
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Resource Limits (Optional - for production tuning)
+# ═══════════════════════════════════════════════════════════════════════════════
+# NOTE: 'deploy:' is ignored by regular docker compose (Swarm-only)
+# For runtime limits with docker compose, use CLI flags:
+#   docker compose run --cpus=2 --memory=4g maia
+# Or use compose v3 runtime syntax (platform-specific):
+#   cpus: 2.0
+#   mem_limit: 4g
+# ═══════════════════════════════════════════════════════════════════════════════
