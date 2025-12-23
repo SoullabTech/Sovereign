@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "app/api/backend/**",
+    "**/__tests__/**",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "**/*.backup.ts",
+    "**/*.backup.tsx",
+    "lib/consciousness/RelationshipAnamnesis_Direct.ts",
+    "lib/services/journalPromptGenerator.ts"
+  ]
+}
