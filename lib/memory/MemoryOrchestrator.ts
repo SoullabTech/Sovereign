@@ -1,18 +1,7 @@
 import { PrismaClient } from '@prisma/client';
-// Temporarily stub out backend imports that are excluded from build
-// import { searchUserFiles } from '../../backend/src/services/IngestionQueue';
-import { searchUserFiles } from '../consciousness/WeQIngestionQueue';
-import { OpenAI } from 'openai';
+import { generateLocalEmbedding } from './embeddings';
 
 const prisma = new PrismaClient();
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY!,
-});
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_DATABASE_URL!,
-  process.env.DATABASE_SERVICE_KEY!
-);
 
 export interface MemoryContext {
   session: ConversationTurn[];       // Last N turns
@@ -187,16 +176,7 @@ export class MemoryOrchestrator {
   }
 
   private async generateQueryEmbedding(text: string): Promise<number[]> {
-    try {
-      const response = await openai.embeddings.create({
-        model: 'text-embedding-3-small',
-        input: text.substring(0, 8000),
-      });
-      return response.data[0].embedding;
-    } catch (error) {
-      console.error('Query embedding error:', error);
-      return [];
-    }
+    return generateLocalEmbedding(text);
   }
 
   private async getSessionContext(
