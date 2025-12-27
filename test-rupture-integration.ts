@@ -1,3 +1,5 @@
+export {};
+
 // Test script for rupture detection integration
 // This tests the full Claude consultation + rupture repair pipeline
 
