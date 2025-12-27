@@ -862,10 +862,13 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   let finalResponse = maiaInitialResponse;
   let consultationData: any = null;
 
-  // Only consult Claude if Anthropic API key is available
+  // 🎯 MAIA SOVEREIGNTY: Claude consultation is DISABLED by default
+  // MAIA now has relationship memory (themes, breakthroughs, patterns) - she doesn't need Claude
+  // To re-enable: Set MAIA_USE_CLAUDE_CONSULTATION=true in .env
   const hasClaudeAccess = process.env.ANTHROPIC_API_KEY || meta.claudeAvailable;
+  const enableClaudeConsultation = process.env.MAIA_USE_CLAUDE_CONSULTATION === 'true';
 
-  if (hasClaudeAccess) {
+  if (enableClaudeConsultation && hasClaudeAccess) {
     try {
       console.log(`🧠 Consulting Claude for ${consultationType} enhancement...`);
 
@@ -910,7 +913,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       }
     }
   } else {
-    console.log(`⚠️ Claude consultation unavailable (no API key) - using MAIA original response`);
+    if (!enableClaudeConsultation) {
+      console.log(`✨ MAIA SOVEREIGN: Using original response (Claude consultation disabled)`);
+    } else {
+      console.log(`⚠️ Claude consultation unavailable (no API key) - using MAIA original response`);
+    }
     // If no Claude, inject scaffolding directly into response
     if (cognitiveScaffoldingNote) {
       finalResponse = maiaInitialResponse + '\n\n' + cognitiveScaffoldingNote;
