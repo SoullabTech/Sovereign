@@ -163,12 +163,30 @@ export class PresenceGreeting {
     sensedElement?: string;
     emotionalWeight?: number;
   }): string {
-    // Sometimes just use their name
-    if (context.userName && Math.random() > 0.7) {
-      return nameGreeting(context.userName);
+    // Get time of day for contextual greetings (lowercase for natural flow)
+    const hour = new Date().getHours();
+    const timeContext = hour >= 0 && hour < 5 ? 'late night' :
+                       hour >= 5 && hour < 12 ? 'morning' :
+                       hour >= 12 && hour < 17 ? 'afternoon' :
+                       hour >= 17 && hour < 22 ? 'evening' : 'night';
+
+    // If we have a real name (not generic), use it with context
+    if (context.userName) {
+      // Returning user: "{Name} returns" or "{Name}, {time}"
+      if (context.returnVisit && context.lastVisitHours && context.lastVisitHours > 1) {
+        // Use "returns" pattern or time-aware greeting
+        if (Math.random() > 0.4) {
+          return this.getNamedReturnGreeting(context.userName, timeContext);
+        }
+      }
+
+      // First visit or same session: Just name + time context
+      if (Math.random() > 0.3) {
+        return this.getNamedTimeGreeting(context.userName, timeContext);
+      }
     }
 
-    // If they're returning after a short time
+    // If they're returning after a short time (without name)
     if (context.returnVisit && context.lastVisitHours && context.lastVisitHours < 24) {
       if (Math.random() > 0.5) {
         return ReturnGreetings[Math.floor(Math.random() * ReturnGreetings.length)];
@@ -217,6 +235,44 @@ export class PresenceGreeting {
 
     // Default to simple presence
     return SimplePresence[Math.floor(Math.random() * SimplePresence.length)];
+  }
+
+  /**
+   * Named return greetings: "{Name} returns", "{Name}, evening"
+   * Full sentences, not just 2 words
+   */
+  private static getNamedReturnGreeting(name: string, timeContext: string): string {
+    const patterns = [
+      `${name} returns. How are you?`,
+      `${name} returns! What's been moving?`,
+      `Back again, ${name}. What's alive?`,
+      `${name}... ${timeContext}. How's it been?`,
+      `${name}, ${timeContext}. Good to see you.`,
+      `${name}. Thought you might return. What's present?`,
+      `${name}. Welcome back. How are you?`,
+      `${name} returns. What's on your mind?`,
+      `Back, ${name}. What brings you here?`
+    ];
+    return patterns[Math.floor(Math.random() * patterns.length)];
+  }
+
+  /**
+   * Named time greetings: "{Name}, morning", "{Name}..."
+   * Full sentences, conversational but not service-y
+   */
+  private static getNamedTimeGreeting(name: string, timeContext: string): string {
+    const patterns = [
+      `${name}. How are you?`,
+      `${name}, ${timeContext}. What's going on?`,
+      `Hey, ${name}. What's alive?`,
+      `${name}... how are you doing?`,
+      `Oh. ${name}. What brings you here?`,
+      `${name}, yeah. What's on your mind?`,
+      `Morning, ${name}. How's it going?`, // Generic "Morning" works anytime
+      `${name}. Good to see you. What's present?`,
+      `${name}, ${timeContext}. What's moving in you?`
+    ];
+    return patterns[Math.floor(Math.random() * patterns.length)];
   }
 
   /**
