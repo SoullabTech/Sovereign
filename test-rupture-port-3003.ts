@@ -1,3 +1,5 @@
+export {};
+
 // Test rupture detection using the dedicated SAFE_MODE server on port 3003
 // This should bypass the Ollama performance issues entirely
 
