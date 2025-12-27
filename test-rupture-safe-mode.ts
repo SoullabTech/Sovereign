@@ -1,3 +1,5 @@
+export {};
+
 // Test rupture detection in SAFE MODE to bypass Ollama performance issues
 // This tests if the rupture detection middleware itself is working
 

@@ -1,3 +1,5 @@
+export {};
+
 /**
  * Test script for Opus Axioms integration in MAIA Oracle endpoint
  * Tests the 8 Jungian alchemical axioms that guide MAIA's universal stance
