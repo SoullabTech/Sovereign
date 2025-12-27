@@ -40,6 +40,73 @@ function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
   return mode === 'counsel' || mode === 'scribe' || mode === 'dialogue' ? mode : 'dialogue';
 }
 
+/**
+ * Filter mode-inappropriate language from responses
+ * DeepSeek-R1 often ignores system prompts, so we post-process
+ */
+function filterModeLanguage(response: string, userInput: string, mode: 'dialogue' | 'counsel' | 'scribe'): string {
+  const lower = response.toLowerCase();
+  const userLower = userInput.toLowerCase().trim();
+  const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening)\b/.test(userLower);
+
+  // TALK MODE: Filter service language, ensure NLP-style presence
+  if (mode === 'dialogue') {
+    const servicePatterns = [
+      /how can i (help|assist|support)/i,
+      /what can i do for you/i,
+      /how may i (help|assist)/i,
+      /what would you like to/i,
+      /where (do|would) you (want to|like to) start/i,
+      /what (brings you|are you hoping to)/i,
+    ];
+
+    const hasServiceLanguage = servicePatterns.some(pattern => pattern.test(response));
+
+    if (hasServiceLanguage) {
+      if (isGreeting) {
+        // Simple greeting responses (Talk mode style)
+        const nlpGreetings = [
+          "Hey. What's moving?",
+          "Yeah, hi. What's alive?",
+          "You're here. What's present?",
+          "Morning. What brings you?",
+          "Hey. What's going on?"
+        ];
+        return nlpGreetings[Math.floor(Math.random() * nlpGreetings.length)];
+      }
+      // For non-greetings, try to extract the essence and reflect
+      return "I'm here. Tell me more.";
+    }
+  }
+
+  // NOTE MODE: Filter generic greetings, ensure witnessing language
+  if (mode === 'scribe') {
+    const genericGreetingPatterns = [
+      /how are you (doing|today)/i,
+      /nice to (meet|see) you/i,
+      /good to (meet|see) you/i,
+      /^hello!?\s*😊/i,
+    ];
+
+    const hasGenericGreeting = genericGreetingPatterns.some(pattern => pattern.test(response));
+
+    if (hasGenericGreeting || isGreeting) {
+      // Witnessing presence responses (Note mode style)
+      const witnessingGreetings = [
+        "I'm here. Ready when you are.",
+        "Listening. Go ahead.",
+        "I'm with you. Begin when ready.",
+        "Ready to witness. Speak freely.",
+        "Here. I'll capture what comes."
+      ];
+      return witnessingGreetings[Math.floor(Math.random() * witnessingGreetings.length)];
+    }
+  }
+
+  // CARE MODE: No filtering - service language is appropriate
+  return response;
+}
+
 // Helper: Convert relationship depth (number) to ConsciousnessDepth name
 function depthFromRelationship(depth: number): 'surface' | 'medium' | 'deep' | 'archetypal' | 'transcendent' {
   if (depth >= 0.8) return 'transcendent';
@@ -416,7 +483,13 @@ MAIA shows up as a wise friend in real conversation - present, direct, unadorned
 
 The quality is minimal, sacred mirror. Match energy, don't add therapeutic warmth. Reflect what's there without centering your own process.
 
-This is how friends actually talk - pattern interruption, elegant reframes, well-timed questions. Developmental support flows implicitly through presence, not explicit guidance.${fieldAwareness}`;
+This is how friends actually talk - pattern interruption, elegant reframes, well-timed questions. Developmental support flows implicitly through presence, not explicit guidance.
+
+⚠️  CRITICAL TALK MODE RULES - OVERRIDE ALL OTHER EXAMPLES:
+NEVER say: "How can I help you?" / "How can I assist you?" / "What can I do for you?" / "What would you like to explore?" / "Where do you want to start?"
+INSTEAD say: "Hey." / "What's moving?" / "Tell me more." / "You're here." / "Yeah." / "What's alive?"
+
+First contact in Talk mode: "Hey. What's moving?" or "You're here. What's present?" or similar NLP-style presence.${fieldAwareness}`;
         break;
       case 'counsel':
         modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
@@ -477,7 +550,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   });
 
   // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
-  const { response: validatedResponse } = await validateAndRepairResponse(
+  let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
     response,
@@ -485,6 +558,9 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     'FAST'
     // No regeneration function - FAST path prioritizes speed
   );
+
+  // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
+  validatedResponse = filterModeLanguage(validatedResponse, input, mode);
 
   return validatedResponse;
 }
@@ -562,7 +638,7 @@ async function corePathResponse(
   });
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
-  const { response: validatedResponse } = await validateAndRepairResponse(
+  let { response: validatedResponse } = await validateAndRepairResponse(
     sessionId,
     input,
     response,
@@ -595,6 +671,10 @@ async function corePathResponse(
       });
     }
   );
+
+  // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
+  const mode = normalizeMode(meta.mode);
+  validatedResponse = filterModeLanguage(validatedResponse, input, mode);
 
   return validatedResponse;
 }
