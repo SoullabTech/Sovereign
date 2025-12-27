@@ -26,6 +26,7 @@ export class ConversationAwareConsciousnessEngine {
       messageCount?: number;
       sessionHistory?: any[];
       priorElementalState?: any;
+      mode?: 'dialogue' | 'counsel' | 'scribe';
     }
   ): Promise<OptimizedConsciousnessResponse> {
 
@@ -38,7 +39,7 @@ export class ConversationAwareConsciousnessEngine {
     const processingPath = this.determineProcessingPath(messageAnalysis);
 
     // Generate response based on path
-    const response = await this.generateResponse(processingPath, userMessage, messageAnalysis);
+    const response = await this.generateResponse(processingPath, userMessage, messageAnalysis, context.mode);
 
     const processingTime = Date.now() - startTime;
 
@@ -126,12 +127,13 @@ export class ConversationAwareConsciousnessEngine {
   private static async generateResponse(
     path: string,
     userMessage: string,
-    analysis: any
+    analysis: any,
+    mode?: 'dialogue' | 'counsel' | 'scribe'
   ): Promise<{ text: string; enginesUsed: string[] }> {
 
     switch (path) {
       case 'fast_greeting':
-        return this.generateGreetingResponse(userMessage);
+        return this.generateGreetingResponse(userMessage, mode);
 
       case 'natural_conversation':
         return this.generateNaturalResponse(userMessage, analysis);
@@ -145,17 +147,56 @@ export class ConversationAwareConsciousnessEngine {
   }
 
   /**
-   * Fast greeting responses
+   * Fast greeting responses - MODE-AWARE
    */
-  private static generateGreetingResponse(message: string): { text: string; enginesUsed: string[] } {
+  private static generateGreetingResponse(message: string, mode?: 'dialogue' | 'counsel' | 'scribe'): { text: string; enginesUsed: string[] } {
 
-    const responses = [
-      "Hello! What's on your mind today?",
-      "Hi there. What would you like to explore?",
-      "Good to meet you. How can I help?",
-      "Hello. What brings you here?",
-      "Hi! What's happening for you right now?"
-    ];
+    // Default to dialogue if no mode specified
+    const activeMode = mode || 'dialogue';
+
+    let responses: string[];
+
+    switch (activeMode) {
+      case 'dialogue':
+        // Talk mode: NLP conversational presence - NO service language
+        responses = [
+          "Hey. What's moving?",
+          "Yeah, hi. What's alive?",
+          "You're here. What's present?",
+          "Morning. What brings you?",
+          "It's you. Tell me more."
+        ];
+        break;
+
+      case 'counsel':
+        // Care mode: Therapeutic support - service language OK
+        responses = [
+          "I'm here with you. Where do you want support?",
+          "What brings you here today? How can I help?",
+          "Welcome. What's alive for you right now?",
+          "I'm listening. What do you need?",
+          "Let's explore this together. Where shall we start?"
+        ];
+        break;
+
+      case 'scribe':
+        // Note mode: Neutral witnessing - no questions, just presence
+        responses = [
+          "I'm here. Ready when you are.",
+          "Listening. Go ahead.",
+          "I'm with you. Begin when ready.",
+          "Here. I'll capture what comes.",
+          "Ready to witness. Speak freely."
+        ];
+        break;
+
+      default:
+        // Fallback to dialogue
+        responses = [
+          "Hey. What's moving?",
+          "What's present?"
+        ];
+    }
 
     const response = responses[Math.floor(Math.random() * responses.length)];
 

@@ -14,6 +14,7 @@ export interface UseMaiaStreamResult {
     element: string;
     userId?: string;
     lang?: string;
+    mode?: 'dialogue' | 'counsel' | 'scribe';
   }) => Promise<string>;
   stopStream: () => void;
 }
@@ -35,8 +36,9 @@ export function useMaiaStream(): UseMaiaStreamResult {
     element: string;
     userId?: string;
     lang?: string;
+    mode?: 'dialogue' | 'counsel' | 'scribe';
   }): Promise<string> => {
-    const { userText, element, userId = 'anonymous' } = params;
+    const { userText, element, userId = 'anonymous', mode = 'dialogue' } = params;
 
     console.log('[MaiaStream] Starting request:', {
       userText: userText.substring(0, 50) + '...',
@@ -67,7 +69,8 @@ export function useMaiaStream(): UseMaiaStreamResult {
         body: JSON.stringify({
           message: userText,
           sessionId: userId,
-          element: element
+          element: element,
+          mode: mode // ✅ Talk/Care/Note mode awareness
         }),
         signal: newController.signal
       });
@@ -111,7 +114,8 @@ export function useMaiaStream(): UseMaiaStreamResult {
             body: JSON.stringify({
               message: userText,
               sessionId: userId,
-              element: element
+              element: element,
+              mode: mode // ✅ Talk/Care/Note mode awareness
             })
           });
 
