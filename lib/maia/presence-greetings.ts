@@ -257,18 +257,53 @@ export class PresenceGreeting {
    * Full sentences, conversational but not service-y
    */
   private static getNamedTimeGreeting(name: string, timeContext: string): string {
-    const patterns = [
+    // Time-specific greetings (use only when time matches)
+    const timeSpecificGreetings: { [key: string]: string[] } = {
+      'morning': [
+        `${name}. Morning. How are you?`,
+        `Morning, ${name}. What's alive?`,
+        `${name}, morning. How's it going?`
+      ],
+      'afternoon': [
+        `${name}. Afternoon. How are you?`,
+        `Afternoon, ${name}. What's going on?`,
+        `${name}, afternoon. How's your day been?`
+      ],
+      'evening': [
+        `${name}. Evening. How are you?`,
+        `Evening, ${name}. How's it been?`,
+        `${name}, evening. What's moving?`
+      ],
+      'night': [
+        `${name}. Late night. How are you?`,
+        `${name}, night. What's keeping you up?`,
+        `Late night, ${name}. How are you doing?`
+      ],
+      'late night': [
+        `${name}. Late night. How are you?`,
+        `${name}, late night. What's on your mind?`,
+        `Late night, ${name}. How are you?`
+      ]
+    };
+
+    // Generic greetings that work anytime (no time reference)
+    const genericGreetings = [
       `${name}. How are you?`,
-      `${name}, ${timeContext}. What's going on?`,
       `Hey, ${name}. What's alive?`,
       `${name}... how are you doing?`,
       `Oh. ${name}. What brings you here?`,
       `${name}, yeah. What's on your mind?`,
-      `Morning, ${name}. How's it going?`, // Generic "Morning" works anytime
       `${name}. Good to see you. What's present?`,
-      `${name}, ${timeContext}. What's moving in you?`
+      `${name}. What's going on?`
     ];
-    return patterns[Math.floor(Math.random() * patterns.length)];
+
+    // Use time-specific greeting 60% of the time, generic 40%
+    if (Math.random() > 0.4 && timeSpecificGreetings[timeContext]) {
+      const timeGreetings = timeSpecificGreetings[timeContext];
+      return timeGreetings[Math.floor(Math.random() * timeGreetings.length)];
+    }
+
+    return genericGreetings[Math.floor(Math.random() * genericGreetings.length)];
   }
 
   /**
