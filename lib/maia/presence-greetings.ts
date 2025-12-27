@@ -170,20 +170,16 @@ export class PresenceGreeting {
                        hour >= 12 && hour < 17 ? 'afternoon' :
                        hour >= 17 && hour < 22 ? 'evening' : 'night';
 
-    // If we have a real name (not generic), use it with context
+    // If we have a real name (not generic), ALWAYS use it with context
     if (context.userName) {
       // Returning user: "{Name} returns" or "{Name}, {time}"
       if (context.returnVisit && context.lastVisitHours && context.lastVisitHours > 1) {
-        // Use "returns" pattern or time-aware greeting
-        if (Math.random() > 0.4) {
-          return this.getNamedReturnGreeting(context.userName, timeContext);
-        }
+        return this.getNamedReturnGreeting(context.userName, timeContext);
       }
 
       // First visit or same session: Just name + time context
-      if (Math.random() > 0.3) {
-        return this.getNamedTimeGreeting(context.userName, timeContext);
-      }
+      // ALWAYS use name when we have it (not just 70% of the time)
+      return this.getNamedTimeGreeting(context.userName, timeContext);
     }
 
     // If they're returning after a short time (without name)

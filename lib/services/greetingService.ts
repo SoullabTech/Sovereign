@@ -94,9 +94,16 @@ export class GreetingService {
       presenceTimeOfDay = 'midday';
     }
 
+    // Filter out generic names - only use real names for personalized greetings
+    const isGenericName = !userName ||
+                          userName === 'friend' ||
+                          userName === 'Explorer' ||
+                          userName === 'guest' ||
+                          userName.toLowerCase().includes('guest');
+
     // Use presence greetings from presence-greetings.ts
     const greeting = PresenceGreeting.greet({
-      userName: userName && userName !== 'friend' ? userName : undefined,
+      userName: isGenericName ? undefined : userName,
       timeOfDay: presenceTimeOfDay,
       returnVisit: daysSinceLastVisit > 0,
       lastVisitHours: daysSinceLastVisit * 24,
