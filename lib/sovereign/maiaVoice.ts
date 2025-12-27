@@ -3,6 +3,7 @@ import { type MemberProfile, type WisdomAdaptation } from '../consciousness/memb
 import { buildComprehensiveVoicePrompt, buildAdaptiveVoicePrompt, type ComprehensiveVoiceAnalysis, type InputComplexityAnalysis } from './intelligentVoiceAdaptation';
 import { awarenessLanguageAdapter, type AwarenessLevel } from '../consciousness/awareness-language-adapter';
 import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt } from '../memory/RelationshipMemoryService';
+import { buildSelfAwareContext } from '../consciousness/maiaArchitectureContext';
 
 export interface MaiaContext {
   sessionId: string;
@@ -52,6 +53,9 @@ export interface MaiaContext {
     messageCount?: number;
     contextPrompt?: string;
   };
+  // 🧠 SELF-AWARENESS: Enable MAIA to explain her own architecture
+  selfAwareMode?: boolean;
+  selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
 }
 
 /**
@@ -518,6 +522,14 @@ ${summary}`;
       adaptedPrompt += relationshipContext;
       console.log(`🌊 [Relationship Memory] Included in prompt: ${context.relationshipMemory.totalEncounters} encounters, ${context.relationshipMemory.themes.length} themes`);
     }
+  }
+
+  // 🧠 SELF-AWARENESS: Enable MAIA to explain her architecture and process
+  if (context.selfAwareMode) {
+    const detail = context.selfAwarenessDetail || 'standard';
+    const selfAwareContext = buildSelfAwareContext(detail);
+    adaptedPrompt += `\n\n${selfAwareContext}`;
+    console.log(`🧠 [Self-Awareness] Enabled (${detail} detail) - MAIA can explain her architecture`);
   }
 
   return adaptedPrompt.trim();
