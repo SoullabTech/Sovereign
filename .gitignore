@@ -308,3 +308,6 @@ scripts/sovereign-deploy.sh
 /golden-states/golden_state_*.md
 !/golden-states/golden_state_20251227_BASELINE.md
 /golden-states/test-results/
+
+# Golden benchmark outputs
+/snapshots/
