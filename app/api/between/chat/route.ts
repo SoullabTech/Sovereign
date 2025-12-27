@@ -74,13 +74,13 @@ function isCanonQuery(message: string): boolean {
     /care mode/,
     /(note|scribe) mode/,
     /explain.*(talk|care|note).*modes?/,
-    /tell me about.*(modes?|talk|care|note)/,
+    /tell me about.*\b(talk|care|note)\b.*(mode|modes)/,
 
     // Processing paths
     /what are.*(processing )?paths?/,
     /\b(fast|core|deep)\b.*(path|mode|processing)/,
     /explain.*(fast|core|deep)/,
-    /tell me about.*(fast|core|deep)/,
+    /tell me about.*\b(fast|core|deep)\b.*(path|paths|processing)/,
 
     // Sanctuary / privacy / consent
     /sanctuary/,
