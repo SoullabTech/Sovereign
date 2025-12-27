@@ -234,71 +234,81 @@ export class PresenceGreeting {
   }
 
   /**
-   * Named return greetings: "{Name} returns", "{Name}, evening"
-   * Full sentences, not just 2 words
+   * Named return greetings: More personable, warm welcome back
    */
   private static getNamedReturnGreeting(name: string, timeContext: string): string {
+    // Map time context to proper greeting
+    const timeGreeting = timeContext === 'morning' ? 'Good morning' :
+                        timeContext === 'afternoon' ? 'Good afternoon' :
+                        timeContext === 'evening' ? 'Good evening' :
+                        timeContext === 'night' ? 'Hey' :
+                        timeContext === 'late night' ? 'Hey' : 'Hi';
+
     const patterns = [
-      `${name} returns. How are you?`,
-      `${name} returns! What's been moving?`,
-      `Back again, ${name}. What's alive?`,
-      `${name}... ${timeContext}. How's it been?`,
-      `${name}, ${timeContext}. Good to see you.`,
-      `${name}. Thought you might return. What's present?`,
-      `${name}. Welcome back. How are you?`,
-      `${name} returns. What's on your mind?`,
-      `Back, ${name}. What brings you here?`
+      `${timeGreeting}, ${name}! Glad to see you back.`,
+      `${name}! Good to see you again.`,
+      `Hey ${name}, welcome back! How have you been?`,
+      `${timeGreeting}, ${name}! Nice to see you again.`,
+      `${name}! Hey, glad you're back.`,
+      `Welcome back, ${name}. How are you doing?`,
+      `${timeGreeting}, ${name}. Good to have you back.`,
+      `${name}! How have things been?`
     ];
     return patterns[Math.floor(Math.random() * patterns.length)];
   }
 
   /**
-   * Named time greetings: "{Name}, morning", "{Name}..."
-   * Full sentences, conversational but not service-y
+   * Named time greetings: More personable, warm first-contact style
    */
   private static getNamedTimeGreeting(name: string, timeContext: string): string {
+    // Map time context to proper greeting
+    const timeGreeting = timeContext === 'morning' ? 'Good morning' :
+                        timeContext === 'afternoon' ? 'Good afternoon' :
+                        timeContext === 'evening' ? 'Good evening' :
+                        timeContext === 'night' ? 'Hey' :
+                        timeContext === 'late night' ? 'Hey' : 'Hi';
+
     // Time-specific greetings (use only when time matches)
     const timeSpecificGreetings: { [key: string]: string[] } = {
       'morning': [
-        `${name}. Morning. How are you?`,
-        `Morning, ${name}. What's alive?`,
-        `${name}, morning. How's it going?`
+        `Good morning, ${name}! How are you?`,
+        `Good morning, ${name}. How's your day starting?`,
+        `Morning, ${name}! How are things?`
       ],
       'afternoon': [
-        `${name}. Afternoon. How are you?`,
-        `Afternoon, ${name}. What's going on?`,
-        `${name}, afternoon. How's your day been?`
+        `Good afternoon, ${name}! How's it going?`,
+        `Good afternoon, ${name}. How's your day been?`,
+        `Afternoon, ${name}! How are you doing?`
       ],
       'evening': [
-        `${name}. Evening. How are you?`,
-        `Evening, ${name}. How's it been?`,
-        `${name}, evening. What's moving?`
+        `Good evening, ${name}! How are you?`,
+        `Good evening, ${name}. How's it been today?`,
+        `Evening, ${name}! How are things?`
       ],
       'night': [
-        `${name}. Late night. How are you?`,
-        `${name}, night. What's keeping you up?`,
-        `Late night, ${name}. How are you doing?`
+        `Hey ${name}, late night. How are you?`,
+        `Hey ${name}. Still up? How are things?`,
+        `${name}, late one. How are you doing?`
       ],
       'late night': [
-        `${name}. Late night. How are you?`,
-        `${name}, late night. What's on your mind?`,
-        `Late night, ${name}. How are you?`
+        `Hey ${name}, late night. How are you?`,
+        `${name}. Late hours. What's on your mind?`,
+        `Hey ${name}. Can't sleep either?`
       ]
     };
 
     // Generic greetings that work anytime (no time reference)
     const genericGreetings = [
-      `${name}. How are you?`,
-      `Hey, ${name}. What's alive?`,
-      `${name}... how are you doing?`,
-      `Oh. ${name}. What brings you here?`,
-      `${name}, yeah. What's on your mind?`,
-      `${name}. Good to see you. What's present?`,
-      `${name}. What's going on?`
+      `Hi ${name}! How are you?`,
+      `Hey ${name}, good to see you. How are things?`,
+      `${name}! How are you doing?`,
+      `Hi ${name}. Good to see you. How are you?`,
+      `Hey ${name}! What's going on?`,
+      `${name}! How have you been?`
     ];
 
-    // Use time-specific greeting 60% of the time, generic 40%
-    if (Math.random() > 0.4 && timeSpecificGreetings[timeContext]) {
+    // Use time-specific greeting 70% of the time, generic 30%
+    if (Math.random() > 0.3 && timeSpecificGreetings[timeContext]) {
       const timeGreetings = timeSpecificGreetings[timeContext];
       return timeGreetings[Math.floor(Math.random() * timeGreetings.length)];
     }

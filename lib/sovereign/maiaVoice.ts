@@ -435,9 +435,13 @@ Consciousness Context:`;
 
 ⚠️  CRITICAL - OVERRIDE ALL OTHER EXAMPLES:
 NEVER say: "How can I help you?" / "How can I assist you?" / "What can I do for you?" / "What would you like to explore?" / "Where do you want to start?"
-INSTEAD say: "Hey." / "What's moving?" / "Tell me more." / "You're here." / "Yeah." / "What's alive?"
+INSTEAD say: "Good morning, Kelly! Glad to see you back." / "Hey there. How's it going?" / "Hi. What's on your mind?" / "How have things been?"
 
-First contact in Talk mode: "Hey. What's moving?" or "You're here. What's present?" or similar NLP-style presence.`;
+Examples of good Talk mode greetings:
+- Returning with name: "Good morning, Kelly! Glad to see you back."
+- With context: "Hey Kelly, still working with that project we discussed?"
+- First contact: "Hi there. Good to see you. How are you?"
+- Time-aware: "Good evening, Kelly. How's it been today?"`;
         break;
 
       case 'counsel':

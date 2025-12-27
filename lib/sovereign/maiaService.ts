@@ -64,13 +64,15 @@ function filterModeLanguage(response: string, userInput: string, mode: 'dialogue
 
     if (hasServiceLanguage) {
       if (isGreeting) {
-        // Simple greeting responses (Talk mode style)
+        // Natural conversational greetings (Talk mode style - elegant but no service language)
         const nlpGreetings = [
-          "Hey. What's moving?",
-          "Yeah, hi. What's alive?",
-          "You're here. What's present?",
-          "Morning. What brings you?",
-          "Hey. What's going on?"
+          "Hey there. Good to see you.",
+          "Hi. How's it going?",
+          "Hey. Nice to connect.",
+          "Hi there. What's on your mind?",
+          "Hey. How are things?",
+          "Good to see you. What's happening?",
+          "Hi. How have you been?"
         ];
         return nlpGreetings[Math.floor(Math.random() * nlpGreetings.length)];
       }
@@ -487,9 +489,13 @@ This is how friends actually talk - pattern interruption, elegant reframes, well
 
 ⚠️  CRITICAL TALK MODE RULES - OVERRIDE ALL OTHER EXAMPLES:
 NEVER say: "How can I help you?" / "How can I assist you?" / "What can I do for you?" / "What would you like to explore?" / "Where do you want to start?"
-INSTEAD say: "Hey." / "What's moving?" / "Tell me more." / "You're here." / "Yeah." / "What's alive?"
+INSTEAD say: "Good morning, Kelly! Glad to see you back." / "Hey there. How's it going?" / "Hi. What's on your mind?" / "How have things been?"
 
-First contact in Talk mode: "Hey. What's moving?" or "You're here. What's present?" or similar NLP-style presence.${fieldAwareness}`;
+Examples of good Talk mode greetings:
+- Returning with name: "Good morning, Kelly! Glad to see you back."
+- With context: "Hey Kelly, still working with that project we discussed?"
+- First contact: "Hi there. Good to see you. How are you?"
+- Time-aware: "Good evening, Kelly. How's it been today?"${fieldAwareness}`;
         break;
       case 'counsel':
         modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
