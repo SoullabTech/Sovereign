@@ -13,9 +13,10 @@ const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, sessionId } = body as {
+    const { message, sessionId, mode } = body as {
       message?: string;
       sessionId?: string;
+      mode?: 'dialogue' | 'counsel' | 'scribe';
     };
 
     if (!message || typeof message !== 'string') {
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest) {
 
     const safeSessionId = sessionId || `chat-${Date.now()}`;
     const userId = 'between-chat-user'; // Anonymous user for between chat
+
+    // Log mode for debugging
+    console.log('[Chat API] Mode parameter:', mode || 'not provided (will default to dialogue)');
 
     // 🔍 RUPTURE DETECTION: Check for relational ruptures in user input
     const ruptureDetection = ruptureDetectionService.detectRupture(message);
@@ -40,7 +44,9 @@ export async function POST(req: NextRequest) {
 
     if (SAFE_MODE) {
       // In safe mode, use simplified orchestrator without full consciousness pipeline
-      const simpleResult = await generateSimpleMaiaResponse(message, safeSessionId, {});
+      const simpleResult = await generateSimpleMaiaResponse(message, safeSessionId, {
+        mode: mode || 'dialogue' // Pass mode for Talk/Care/Note awareness
+      });
 
       // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
       let finalMessage = simpleResult.message;
@@ -106,7 +112,8 @@ export async function POST(req: NextRequest) {
       conversationHistory: [], // Could be enhanced with session history
       context: {
         chatType: 'between-member',
-        endpoint: '/api/between/chat'
+        endpoint: '/api/between/chat',
+        mode: mode || 'dialogue' // Pass mode (Talk/Care/Note) for appropriate system prompts
       }
     });
 
