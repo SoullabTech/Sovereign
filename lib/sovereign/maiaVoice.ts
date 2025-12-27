@@ -2,6 +2,7 @@
 import { type MemberProfile, type WisdomAdaptation } from '../consciousness/member-archetype-system';
 import { buildComprehensiveVoicePrompt, buildAdaptiveVoicePrompt, type ComprehensiveVoiceAnalysis, type InputComplexityAnalysis } from './intelligentVoiceAdaptation';
 import { awarenessLanguageAdapter, type AwarenessLevel } from '../consciousness/awareness-language-adapter';
+import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt } from '../memory/RelationshipMemoryService';
 
 export interface MaiaContext {
   sessionId: string;
@@ -35,6 +36,8 @@ export interface MaiaContext {
   mode?: 'dialogue' | 'counsel' | 'scribe';
   // 🔧 REPAIR GUIDANCE (for regeneration/repair passes)
   repairGuidance?: string;
+  // 🌊 RELATIONSHIP MEMORY (relational continuity)
+  relationshipMemory?: RelationshipMemoryContext;
   // 🌀 MAIA-PAI KERNEL INTEGRATION
   conversationContext?: {
     depth?: string;
@@ -495,6 +498,15 @@ Tone:
 
 Context for this conversation:
 ${summary}`;
+
+  // 🌊 RELATIONSHIP MEMORY: Add relational continuity
+  if (context.relationshipMemory) {
+    const relationshipContext = formatRelationshipMemoryForPrompt(context.relationshipMemory);
+    if (relationshipContext) {
+      adaptedPrompt += relationshipContext;
+      console.log(`🌊 [Relationship Memory] Included in prompt: ${context.relationshipMemory.totalEncounters} encounters, ${context.relationshipMemory.themes.length} themes`);
+    }
+  }
 
   return adaptedPrompt.trim();
 }

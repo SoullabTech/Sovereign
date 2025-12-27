@@ -34,6 +34,11 @@ import {
   type AwarenessLevel,
   type ConsciousnessPolicy
 } from '../consciousness/awareness-levels';
+import {
+  loadRelationshipMemory,
+  formatRelationshipMemoryForPrompt,
+  type RelationshipMemoryContext
+} from '../memory/RelationshipMemoryService';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -396,6 +401,23 @@ async function fastPathResponse(
     (meta as any).consciousnessPolicy = policy;
   }
 
+  // 🌊 RELATIONSHIP MEMORY (load relational context)
+  let relationshipMemory: RelationshipMemoryContext | null = null;
+  if (userId) {
+    try {
+      relationshipMemory = await loadRelationshipMemory(userId, {
+        includeThemes: true,
+        includeBreakthroughs: true,
+        includePatterns: false, // FAST path: skip patterns for speed
+        maxThemes: 3,
+        maxBreakthroughs: 1
+      });
+      console.log(`🌊 [Relationship Memory FAST] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase`);
+    } catch (error) {
+      console.warn('⚠️ Could not load relationship memory for FAST path:', error);
+    }
+  }
+
   // Build minimal context for fast processing
   const recentContext = conversationHistory.slice(-3).map(ex =>
     `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
@@ -524,6 +546,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     console.log(`🧠 [Dialectical Scaffold] FAST path scaffolding injected: Level ${bloomDetection.numericLevel} → ${nextLevel}`);
   }
 
+  // 🌊 FORMAT RELATIONSHIP MEMORY for prompt
+  const relationshipContext = relationshipMemory
+    ? formatRelationshipMemoryForPrompt(relationshipMemory)
+    : '';
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   let baseSystemPrompt = `${MAIA_RELATIONAL_SPEC}
 
@@ -531,7 +558,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}
+${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -594,6 +621,24 @@ async function corePathResponse(
     (meta as any).consciousnessPolicy = policy;
   }
 
+  // 🌊 RELATIONSHIP MEMORY (load relational context for CORE path)
+  let relationshipMemory: RelationshipMemoryContext | null = null;
+  if (userId) {
+    try {
+      relationshipMemory = await loadRelationshipMemory(userId, {
+        includeThemes: true,
+        includeBreakthroughs: true,
+        includePatterns: true, // CORE path: include patterns
+        maxThemes: 5,
+        maxBreakthroughs: 2
+      });
+      console.log(`🌊 [Relationship Memory CORE] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase, ${relationshipMemory.themes.length} themes`);
+      (meta as any).relationshipMemory = relationshipMemory;
+    } catch (error) {
+      console.warn('⚠️ Could not load relationship memory for CORE path:', error);
+    }
+  }
+
   // Light conversation analysis
   const conversationContext = conversationElementalTracker.processMessage(sessionId, input, conversationHistory);
 
@@ -610,6 +655,8 @@ async function corePathResponse(
     },
     mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
     conversationContext: (meta as any).conversationContext as any,
+    // 🌊 RELATIONSHIP MEMORY
+    relationshipMemory: relationshipMemory || undefined,
     // 🧠 THE DIALECTICAL SCAFFOLD - Pass cognitive level to voice system
     cognitiveLevel: (meta as any).bloomDetection ? {
       level: (meta as any).bloomDetection.level,
@@ -706,6 +753,24 @@ async function deepPathResponse(
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
     }
     (meta as any).consciousnessPolicy = policy;
+  }
+
+  // 🌊 RELATIONSHIP MEMORY (load full relational context for DEEP path)
+  let relationshipMemory: RelationshipMemoryContext | null = null;
+  if (userId) {
+    try {
+      relationshipMemory = await loadRelationshipMemory(userId, {
+        includeThemes: true,
+        includeBreakthroughs: true,
+        includePatterns: true, // DEEP path: full context
+        maxThemes: 10, // More themes for deep work
+        maxBreakthroughs: 5 // More breakthroughs for deep work
+      });
+      console.log(`🌊 [Relationship Memory DEEP] Loaded: ${relationshipMemory.totalEncounters} encounters, ${relationshipMemory.relationshipPhase} phase, ${relationshipMemory.themes.length} themes, ${relationshipMemory.breakthroughs.length} breakthroughs`);
+      (meta as any).relationshipMemory = relationshipMemory;
+    } catch (error) {
+      console.warn('⚠️ Could not load relationship memory for DEEP path:', error);
+    }
   }
 
   // Full conversation analysis
