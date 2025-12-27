@@ -32,6 +32,12 @@ import {
   type ComplexityAnalysis,
   type ProcessingMode
 } from './QueryAnalyzer';
+import {
+  shouldSuggestGatheringMode,
+  buildGatheringSuggestion,
+  detectMetaQuestion,
+  type GatheringTriggerInput
+} from './gatheringMode';
 
 export interface RouterContext {
   userId: string;
@@ -50,6 +56,11 @@ export interface RouterResponse {
   totalTime: number;
   circuitHealth?: any; // Only if orbit mode
   metadata?: any;
+  gatheringMode?: {
+    suggested: boolean;
+    script: string;
+    reason: string;
+  };
 }
 
 export class ConsciousnessRouter {
@@ -132,6 +143,42 @@ You don't need to remember - the field decides.
         console.log(formatAnalysisForLog(analysis));
       } else if (this.logLevel === 'basic') {
         console.log(`[ROUTER] ${analysis.complexity} query → ${analysis.recommendedMode} mode (${(analysis.confidence * 100).toFixed(0)}% confidence)`);
+      }
+
+      // 1.5. CHECK FOR GATHERING MODE
+      // When the system can't honestly localize, it should globalize.
+      const isMetaQuestion = detectMetaQuestion(query);
+      const triggeredElements = this.detectTriggeredElements(query, analysis);
+
+      const gatheringInput: GatheringTriggerInput = {
+        triggeredFacets: triggeredElements,
+        routerConfidence: analysis.confidence,
+        isMetaQuestion,
+      };
+
+      if (shouldSuggestGatheringMode(gatheringInput)) {
+        const gatheringSuggestion = buildGatheringSuggestion('text');
+
+        if (this.logLevel !== 'silent') {
+          console.log('\n🌀 [ROUTER] Suggesting GATHERING MODE (coherence before routing)');
+          console.log(`   Reason: ${isMetaQuestion ? 'meta-question' : triggeredElements.length >= 2 ? 'multiple elements triggered' : 'low confidence'}\n`);
+        }
+
+        return {
+          response: gatheringSuggestion.script,
+          processingMode: 'gathering',
+          analysis,
+          totalTime: Date.now() - startTime,
+          gatheringMode: {
+            suggested: true,
+            script: gatheringSuggestion.script,
+            reason: isMetaQuestion
+              ? 'Meta-question detected - need global coherence first'
+              : triggeredElements.length >= 2
+                ? `Multiple elements active (${triggeredElements.join(', ')}) - gather before routing`
+                : `Low router confidence (${(analysis.confidence * 100).toFixed(0)}%) - stabilize presence first`,
+          },
+        };
       }
 
       // 2. ROUTE TO APPROPRIATE PROCESSOR
@@ -329,6 +376,41 @@ You don't need to remember - the field decides.
       console.error('[ANALYTICS] Failed to log:', error);
       // Don't throw - logging failure shouldn't break the response
     }
+  }
+
+  /**
+   * Detect which elements are triggered in the query
+   * Used for Gathering Mode decision
+   */
+  private detectTriggeredElements(query: string, analysis: ComplexityAnalysis): string[] {
+    const triggered: string[] = [];
+    const lowerQuery = query.toLowerCase();
+
+    // Element keyword detection
+    const elementPatterns: Record<string, RegExp[]> = {
+      'Earth': [/ground|stable|body|routine|structure|practical|physical|manifest/i],
+      'Water': [/feel|emotion|grief|sadness|tear|heart|compassion|flow|intuition/i],
+      'Fire': [/anger|passion|energy|drive|will|action|desire|motivation|purpose/i],
+      'Air': [/think|thought|mind|understand|clarity|perspective|idea|pattern/i],
+      'Aether': [/meaning|spirit|soul|transcend|sacred|whole|unity|purpose/i],
+    };
+
+    for (const [element, patterns] of Object.entries(elementPatterns)) {
+      if (patterns.some(p => p.test(lowerQuery))) {
+        triggered.push(element);
+      }
+    }
+
+    // Also use the analysis.factors.activeElements if available
+    // This bridges the existing analysis with element-specific detection
+    if (analysis.factors.activeElements >= 2 && triggered.length < 2) {
+      // Analysis detected multiple elements but our keyword search didn't
+      // Trust the analysis and ensure we trigger gathering mode (needs length >= 2)
+      if (triggered.length === 0) triggered.push('Mixed');
+      if (triggered.length === 1) triggered.push('Multiple');
+    }
+
+    return triggered;
   }
 
   /**

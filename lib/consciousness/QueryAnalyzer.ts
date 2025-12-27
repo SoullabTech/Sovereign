@@ -16,7 +16,7 @@
  */
 
 export type QueryComplexity = 'simple' | 'moderate' | 'deep' | 'profound';
-export type ProcessingMode = 'parallel' | 'orbit';
+export type ProcessingMode = 'parallel' | 'orbit' | 'gathering';
 
 export interface ComplexityAnalysis {
   complexity: QueryComplexity;

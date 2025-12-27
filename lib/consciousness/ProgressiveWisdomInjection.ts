@@ -31,6 +31,7 @@ import { maiaKnowledgeBase } from '../oracle/MaiaKnowledgeBase';
 import { searchWithResonance, formatFieldReportForPrompt } from './ResonanceField';
 
 export interface WisdomContext {
+  query?: string;
   userQuery: string;
   conversationHistory: any[];
   userId: string;
