@@ -92,6 +92,21 @@ import {
 } from '@/lib/safety/teenSupportIntegration';
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
 
+// Canon Wrap localStorage helpers (default-on for Care mode)
+const CANON_WRAP_KEY = 'maia.canonWrap.enabled';
+
+function getCanonWrapEnabled(): boolean {
+  if (typeof window === 'undefined') return true; // default-on for care
+  const v = window.localStorage.getItem(CANON_WRAP_KEY);
+  if (v === null) return true; // default-on
+  return v === '1';
+}
+
+function setCanonWrapEnabled(enabled: boolean) {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(CANON_WRAP_KEY, enabled ? '1' : '0');
+}
+
 interface OracleConversationProps {
   userId?: string;
   userName?: string;
@@ -1727,6 +1742,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         ? getTeenSystemPrompt(teenProfile, lastSafetyCheck || undefined)
         : undefined;
 
+      // Canon Wrap: default-on for Care mode, killable via localStorage
+      const isCareMode = realtimeMode === 'counsel';
+      const allowCanonWrap = isCareMode && getCanonWrapEnabled();
+
       // MAIA speaks through sovereign API - working consciousness system
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -1737,6 +1756,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           userName: userName || 'Explorer',
           sessionId,
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
+
+          // Canon Wrap (care-mode only)
+          allowCanonWrap,
+          allowRemoteRendering: false,
+          voiceEngine: 'local',
+
           isVoiceMode: !showChatInterface, // Voice mode = faster Essential tier
           fieldState: {
             active: true,
@@ -3510,7 +3535,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                }}>
             <AnimatePresence>
               {messages.length > 0 && (
-                <div className="space-y-3 pb-32 md:pb-24">
+                <div className="space-y-3 pb-52 md:pb-32">
                 {/* Show all messages with proper scrolling */}
                 {messages
                   .map((message, index) => {
