@@ -64,10 +64,13 @@ const nextConfig = {
         util: false,
         url: false,
         zlib: false,
+        dns: false,
         // Add missing packages that should only run on server
         '@qdrant/js-client-rest': false,
         'better-sqlite3': false,
         'luxon': false,
+        pg: false,
+        'pg-native': false,
       };
     }
 

@@ -3,22 +3,30 @@
  *
  * Simple, reliable Postgres client for local development
  * Uses DATABASE_URL from environment
+ *
+ * NOTE: Conditionally imports pg only on server-side to avoid bundling for browser
  */
 
-import { Pool, QueryResult, QueryResultRow } from 'pg';
+import type { Pool, QueryResult, QueryResultRow } from 'pg';
 
-// Create connection pool
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
-  max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+// Only create pool on server-side (Node.js environment)
+const isServer = typeof window === 'undefined';
+let pool: Pool | null = null;
 
-// Handle pool errors
-pool.on('error', (err) => {
-  console.error('❌ [POSTGRES] Unexpected pool error:', err);
-});
+if (isServer) {
+  const { Pool: PgPool } = require('pg');
+  pool = new PgPool({
+    connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
+    max: 20,
+    idleTimeoutMillis: 30000,
+    connectionTimeoutMillis: 2000,
+  });
+
+  // Handle pool errors
+  pool.on('error', (err) => {
+    console.error('❌ [POSTGRES] Unexpected pool error:', err);
+  });
+}
 
 /**
  * Execute a parameterized query
@@ -35,6 +43,10 @@ export async function query<T extends QueryResultRow = any>(
   sql: string,
   params: any[] = []
 ): Promise<QueryResult<T>> {
+  if (!pool) {
+    throw new Error('[POSTGRES] Database queries can only be executed server-side');
+  }
+
   const start = Date.now();
 
   try {

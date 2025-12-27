@@ -64,45 +64,17 @@ const DEFAULT_SETTINGS: MaiaSettings = {
 
 export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps) {
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
-  const supabase = createClientComponentClient();
+  // Removed: Supabase client (now using localStorage only for sovereign mode)
 
   useEffect(() => {
     const loadSettings = async () => {
       if (typeof window === 'undefined') return;
 
-      const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
       // const conversationMode = ConversationStylePreference.get();
       const conversationMode = 'voice'; // Default fallback
 
       try {
-        if (explorerId) {
-          const { data } = await supabase
-            .from('user_preferences')
-            .select('*')
-            .eq('user_id', explorerId)
-            .single();
-
-          if (data) {
-            setSettings({
-              voice: {
-                openaiVoice: 'shimmer',
-                speed: data.voice_speed || 0.95,
-              },
-              memory: {
-                enabled: true,
-                depth: 'moderate',
-              },
-              personality: {
-                warmth: data.tone ? data.tone / 100 : 0.8,
-              },
-              archetype: (data.archetype as ArchetypeId) || 'AUTO',
-              conversationMode: conversationMode,
-            });
-            localStorage.setItem('maia_settings', JSON.stringify(settings));
-            return;
-          }
-        }
-
+        // Load settings from localStorage (sovereign mode - no cloud storage)
         const saved = localStorage.getItem('maia_settings');
         if (saved) {
           const parsedSettings = JSON.parse(saved);
@@ -132,7 +104,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
     if (isOpen) {
       loadSettings();
     }
-  }, [isOpen, supabase]);
+  }, [isOpen]); // Removed supabase dependency (no longer used)
 
   const updateSetting = async (path: string, value: any) => {
     if ('vibrate' in navigator) {

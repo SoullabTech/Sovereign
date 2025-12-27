@@ -8,7 +8,6 @@
  * across multiple encounters.
  */
 
-import 'server-only';
 import { query } from '@/lib/db/postgres';
 import type { SoulPattern } from '@/lib/types/holoflower/journal';
 

@@ -4,7 +4,6 @@
  * Replaces Supabase-based episode capture
  */
 
-import 'server-only';
 import { query } from '@/lib/db/postgres';
 
 export interface CreateEpisodeInput {

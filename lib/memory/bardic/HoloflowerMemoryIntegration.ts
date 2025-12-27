@@ -19,7 +19,8 @@
  * Migrated from MAIA-PAI - Postgres adapter (no Supabase)
  */
 
-import 'server-only';
+// NOTE: Removed 'server-only' import as this is called from client component tree
+// The actual DB operations in journalService/soulPatternService are server-protected
 import { journalService } from '@/lib/services/journalService';
 import { soulPatternService } from '@/lib/services/soulPatternService';
 import {

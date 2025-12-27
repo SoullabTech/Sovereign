@@ -74,7 +74,7 @@ export interface MemoryEnrichedResponse {
 }
 
 export class ConversationMemoryIntegration {
-  private supabase = createClientComponentClient();
+  // Removed: Supabase client (migrated to direct PostgreSQL via episodeService)
   private recognitionCache = new Map<string, PatternRecognitionResult>();
   private lastBalanceCheck: Date | null = null;
 
