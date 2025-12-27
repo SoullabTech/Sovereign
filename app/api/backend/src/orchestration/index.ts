@@ -3,43 +3,59 @@
  * Unified exports for the orchestration layer
  */
 
-// Main orchestrator
+// Main orchestrator - runtime exports
 export {
   OracleOrchestrator,
-  OracleIdentity,
-  OracleSession,
-  OracleResponse,
-  OrchestratorConfig,
-  ConversationEntry,
   createOracleOrchestrator,
   defaultOrchestrator
 } from './OracleOrchestrator';
 
-// Priority resolution
+// Main orchestrator - type exports
+export type {
+  OracleIdentity,
+  OracleSession,
+  OracleResponse,
+  OrchestratorConfig,
+  ConversationEntry
+} from './OracleOrchestrator';
+
+// Priority resolution - runtime exports
 export {
-  OrchestrationClaim,
-  OrchestrationDecision,
   resolvePriority,
   composeWithSupport,
   applyConfidenceGovernor
 } from './priorityResolver';
 
-// Claim collection
+// Priority resolution - type exports
+export type {
+  OrchestrationClaim,
+  OrchestrationDecision
+} from './priorityResolver';
+
+// Claim collection - runtime exports
 export {
-  CollectionContext,
   collectClaims,
   validateContext,
   enrichContext
 } from './collectClaims';
 
-// Unified presence orchestrator (legacy/alternative implementation)
+// Claim collection - type exports
+export type {
+  CollectionContext
+} from './collectClaims';
+
+// Unified presence orchestrator (legacy/alternative implementation) - runtime exports
 export {
   UnifiedPresenceOrchestrator,
-  UnifiedOraclePresence,
-  RelationshipMemory,
-  VoiceCoherence,
   unifiedPresence
 } from './UnifiedPresenceOrchestrator';
 
+// Unified presence orchestrator - type exports
+export type {
+  UnifiedOraclePresence,
+  RelationshipMemory,
+  VoiceCoherence
+} from './UnifiedPresenceOrchestrator';
+
 // Re-export elemental types for convenience
-export { ElementalArchetype } from '@/lib/types/elemental';
+export type { ElementalArchetype } from '@/lib/types/elemental';

@@ -33,6 +33,8 @@ export interface MaiaContext {
   };
   // 🔄 MAIA CONVERSATION MODES
   mode?: 'dialogue' | 'counsel' | 'scribe';
+  // 🔧 REPAIR GUIDANCE (for regeneration/repair passes)
+  repairGuidance?: string;
   // 🌀 MAIA-PAI KERNEL INTEGRATION
   conversationContext?: {
     depth?: string;

@@ -6,12 +6,13 @@
  */
 
 import { maiaModelSystem } from '@/lib/models/maia-integration';
-import {
+import type {
   AwarenessLevel,
   AwarenessState,
-  AwarenessDetectionResult,
-  detectAwarenessLevel as detectAwarenessLevelRegex
+  AwarenessDetectionResult
 } from './awareness-levels';
+
+import { detectAwarenessLevel as detectAwarenessLevelRegex } from './awareness-levels';
 
 export interface LocalConsciousnessCalibration {
   awarenessAnalysis: AwarenessDetectionResult;
@@ -414,10 +415,15 @@ export async function temporalConsciousnessCalibration(
   });
 
   // Analyze historical trend if data available
-  let evolution = {
-    trend: 'unknown' as const,
+  let evolution: {
+    trend: 'ascending' | 'stable' | 'descending' | 'unknown';
+    rate: number;
+    prediction: AwarenessLevel;
+    confidence: number;
+  } = {
+    trend: 'unknown',
     rate: 0,
-    prediction: currentAnalysis.awarenessAnalysis.awarenessState.level,
+    prediction: currentAnalysis.awarenessAnalysis.awarenessState.level as AwarenessLevel,
     confidence: 0.5
   };
 
@@ -452,4 +458,4 @@ export async function temporalConsciousnessCalibration(
   };
 }
 
-export { AwarenessLevel, AwarenessState, AwarenessDetectionResult };
+export type { AwarenessLevel, AwarenessState, AwarenessDetectionResult };

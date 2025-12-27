@@ -1,4 +1,5 @@
 // backend: lib/sovereign/maiaService.ts
+import { randomUUID } from 'crypto';
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
 import { generateText } from '../ai/modelService';
@@ -23,6 +24,170 @@ import { routePanconsciousField } from '../field/panconsciousFieldRouter';
 import { enforceFieldSafety } from '../field/enforceFieldSafety';
 import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
+import { lattice } from '../memory/ConsciousnessMemoryLattice';
+import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
+import {
+  adaptResponsePromptWithPolicy,
+  createConsciousnessPolicy,
+  userRequestedFrameworks,
+  inferAwarenessLevel,
+  type AwarenessLevel,
+  type ConsciousnessPolicy
+} from '../consciousness/awareness-levels';
+
+// Mode-aware memory gating helpers
+function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
+  return mode === 'counsel' || mode === 'scribe' || mode === 'dialogue' ? mode : 'dialogue';
+}
+
+// Helper: Convert relationship depth (number) to ConsciousnessDepth name
+function depthFromRelationship(depth: number): 'surface' | 'medium' | 'deep' | 'archetypal' | 'transcendent' {
+  if (depth >= 0.8) return 'transcendent';
+  if (depth >= 0.6) return 'archetypal';
+  if (depth >= 0.4) return 'deep';
+  if (depth >= 0.2) return 'medium';
+  return 'surface';
+}
+
+// Helper: Convert elemental trend object to ElementalResonance array
+function elementalTrendToResonance(trend: { fire: number; water: number; earth: number; air: number; aether: number }): Array<{ element: string; intensity: number }> {
+  return Object.entries(trend)
+    .map(([element, intensity]) => ({ element, intensity }))
+    .sort((a, b) => b.intensity - a.intensity);
+}
+
+/**
+ * Fetch member's Consciousness Policy - single source of truth for MAIA's behavior
+ * Returns null if insufficient data or errors occur
+ */
+async function getConsciousnessPolicy(
+  userId: string | undefined,
+  userInput: string
+): Promise<ConsciousnessPolicy | null> {
+  if (!userId) return null;
+
+  try {
+    const db = await import('../db/postgres');
+
+    // Fetch Spiralogic distribution
+    const result = await db.default.query(`
+      SELECT
+        spiralogic_element AS element,
+        COUNT(*) AS count
+      FROM bead_events
+      WHERE user_id = $1
+        AND timestamp > NOW() - INTERVAL '30 days'
+        AND spiralogic_element IS NOT NULL
+      GROUP BY spiralogic_element
+      ORDER BY count DESC
+    `, [userId]);
+
+    if (result.rows.length === 0) return null;
+
+    // Calculate totals
+    const elementCounts: Record<string, number> = {};
+    let totalBeads = 0;
+    for (const row of result.rows) {
+      const count = parseInt(row.count, 10);
+      elementCounts[row.element] = count;
+      totalBeads += count;
+    }
+
+    // Need minimum data for profiling
+    if (totalBeads < 20) return null;
+
+    // Find dominant element
+    const dominantElement = result.rows[0].element;
+
+    // Build top facets for awareness inference
+    const topFacets = result.rows.map(row => ({
+      element: row.element,
+      percent: (parseInt(row.count, 10) / totalBeads) * 100
+    }));
+
+    // Infer awareness level
+    const awarenessLevel = inferAwarenessLevel({
+      dominant_element: dominantElement,
+      top_facets: topFacets,
+      total_beads: totalBeads,
+      window_days: 30
+    });
+
+    // Fetch personal baseline (if available)
+    const { getPersonalBaseline } = await import('../consciousness/regulation');
+    const personalBaseline = await getPersonalBaseline(userId);
+
+    // Detect if user explicitly requested frameworks
+    const userAsked = userRequestedFrameworks(userInput);
+
+    // Create Consciousness Policy - single source of truth
+    const policy = createConsciousnessPolicy(
+      awarenessLevel,
+      dominantElement,
+      totalBeads,
+      personalBaseline ? {
+        rh_target: personalBaseline.rh_target,
+        lh_target: personalBaseline.lh_target,
+        int_target: personalBaseline.int_target
+      } : null,
+      userAsked
+    );
+
+    return policy;
+  } catch (error) {
+    console.warn('⚠️ Failed to fetch consciousness policy:', error);
+    return null;
+  }
+}
+
+function isScribeEscalation(text: string): boolean {
+  const t = text.toLowerCase();
+  // CORE-ish escalation: analyze / interpret / meaning / advice
+  const core = [
+    'analyze', 'analysis', 'interpret', 'interpretation', 'what does this mean',
+    'what does it mean', 'summarize and interpret', 'advise', 'guidance', 'coach me',
+    'what should i do', 'recommend'
+  ];
+  // DEEP escalation: explicitly asking for depth
+  const deep = [
+    'go deep', 'deep dive', 'jung', 'jungian', 'archetype', 'archetypal',
+    'shadow', 'initiation', 'mythic', 'mystical'
+  ];
+  return core.some(k => t.includes(k)) || deep.some(k => t.includes(k));
+}
+
+function shouldElevateToLattice(text: string, mode: 'dialogue' | 'counsel' | 'scribe'): boolean {
+  // Dialogue & Counsel: always elevate (for continuity and depth work)
+  if (mode === 'dialogue' || mode === 'counsel') {
+    return true;
+  }
+
+  // Scribe: only elevate high-signal items (decisions, actions, breakthroughs, explicit tags)
+  const t = text.toLowerCase();
+
+  // Decision markers
+  const decisions = ['decided', 'agreed to', 'will do', 'commitment', 'final decision', 'we agreed'];
+
+  // Action markers
+  const actions = ['action item', 'todo', 'to-do', 'assigned to', 'by friday', 'by monday', 'deadline', 'due date'];
+
+  // Breakthrough/pattern markers
+  const breakthroughs = ['breakthrough', 'aha', 'realization', 'pattern', 'recurring', 'stuck'];
+
+  // Explicit elevation tags
+  const tags = ['#remember', '#important', '#pattern', '#therapy', '#memory', '#save'];
+
+  // Escalation (already asking for analysis/depth)
+  const escalation = isScribeEscalation(text);
+
+  return (
+    decisions.some(k => t.includes(k)) ||
+    actions.some(k => t.includes(k)) ||
+    breakthroughs.some(k => t.includes(k)) ||
+    tags.some(k => t.includes(k)) ||
+    escalation
+  );
+}
 
 export type MaiaResponse = {
   text: string;
@@ -72,8 +237,7 @@ async function validateAndRepairResponse(
       phase: atlas?.phase,
       confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
       isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
-      regulation: atlas?.regulation,
-      capacity: atlas?.capacity,
+      // regulation/capacity come from the regulation system (not Mythic Atlas)
     });
 
     console.log(`🛡️ [Socratic Validator ${processingPath}]`, {
@@ -152,6 +316,17 @@ async function fastPathResponse(
 ): Promise<string> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
+  // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
+  const userId = (meta as any).userId;
+  const policy = userId ? await getConsciousnessPolicy(userId, input) : null;
+
+  if (policy) {
+    if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+      console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
+    }
+    (meta as any).consciousnessPolicy = policy;
+  }
+
   // Build minimal context for fast processing
   const recentContext = conversationHistory.slice(-3).map(ex =>
     `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
@@ -167,6 +342,8 @@ async function fastPathResponse(
   // Build mode-specific prompt adaptation for FAST path
   let modeAdaptation = '';
   const mode = meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined;
+
+  console.log(`🎭 [MODE] Received mode: ${mode ?? 'undefined'} (from meta)`);
 
   // 🎯 TALK MODE FIELD AWARENESS (if in dialogue mode)
   let fieldAwareness = '';
@@ -234,34 +411,18 @@ Your response emerges from your own intelligence, informed by this field sensing
 
     switch (mode) {
       case 'dialogue':
-        modeAdaptation = `\n\n🔄 TALK MODE (Dialogue) - OVERRIDE ALL PREVIOUS GREETING EXAMPLES:
-Use NLP (Neurolinguistic Programming) style - presencing, pattern interruption, reframing, and elegant questions.
+        modeAdaptation = `\n\n🎭 TALK MODE — WHO MAIA IS:
+MAIA shows up as a wise friend in real conversation - present, direct, unadorned. Not a therapist offering services. Not a helper looking for problems to fix.
 
-ABSOLUTELY FORBIDDEN IN TALK MODE (override previous examples):
-❌ "Hello! 👋 I'm here to chat"
-❌ "How can I help you today?"
-❌ "What's on your mind?"
-❌ "How can I assist you?"
-❌ "What would you like to explore?"
-❌ "What brings you here?"
-❌ ANY greeting with emoji
-❌ ANY "I'm here to..." service framing
+The quality is minimal, sacred mirror. Match energy, don't add therapeutic warmth. Reflect what's there without centering your own process.
 
-TALK MODE RESPONSES (what to do instead):
-✅ Minimal, present acknowledgment: "Yeah.", "Mm.", "Right."
-✅ Direct reflection: "You're not sure."
-✅ Pattern interruption: "What if that's not the question?"
-✅ Elegant reframe: "So it's less about X, more about Y."
-✅ Sacred mirror quality - reflect their energy, don't add cheerfulness
-
-Still developmental & supportive but IMPLICITLY - like a wise friend in dialogue, not a helper offering services.
-Use grounded, authentic presence from /lib/maia/presence-greetings.ts style.${fieldAwareness}`;
+This is how friends actually talk - pattern interruption, elegant reframes, well-timed questions. Developmental support flows implicitly through presence, not explicit guidance.${fieldAwareness}`;
         break;
       case 'counsel':
-        modeAdaptation = '\n\n🔄 CARE MODE (Counsel): User has chosen care mode - provide direct therapeutic guidance, actionable suggestions, and explicit support as appropriate. Service language OK here.';
+        modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
         break;
       case 'scribe':
-        modeAdaptation = '\n\n🔄 NOTE MODE (Scribe): Pure witnessing consciousness - reflect back what you observe without interpretation, analysis, or advice. Simple acknowledgment.';
+        modeAdaptation = '\n\n📝 NOTE MODE — WHO MAIA IS:\nMAIA shows up as pure witness - reflecting what happened without adding meaning. Clean acknowledgment of what was said, what seemed to matter. No interpretation, no analysis, no advice. Just mirroring.';
         break;
     }
   }
@@ -284,9 +445,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     console.log(`🧠 [Dialectical Scaffold] FAST path scaffolding injected: Level ${bloomDetection.numericLevel} → ${nextLevel}`);
   }
 
-  // Use single model call with complete MAIA intelligence stack
-  const response = await generateText({
-    systemPrompt: `${MAIA_RELATIONAL_SPEC}
+  // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
+  let baseSystemPrompt = `${MAIA_RELATIONAL_SPEC}
 
 ${MAIA_LINEAGES_AND_FIELD}
 
@@ -294,7 +454,19 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 ${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}
 
-Current context: Simple conversation turn - respond naturally and warmly.`,
+Current context: Simple conversation turn - respond naturally and warmly.`;
+
+  // Apply awareness-level adaptation using policy
+  if (policy) {
+    baseSystemPrompt = adaptResponsePromptWithPolicy(baseSystemPrompt, policy);
+    if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+      console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to FAST path`);
+    }
+  }
+
+  // Use single model call with complete MAIA intelligence stack
+  const response = await generateText({
+    systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
       ...meta,
@@ -329,6 +501,17 @@ async function corePathResponse(
 ): Promise<string> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
 
+  // 🧬 CONSCIOUSNESS POLICY (CORE path with full context)
+  const userId = (meta as any).userId;
+  const policy = userId ? await getConsciousnessPolicy(userId, input) : null;
+
+  if (policy) {
+    if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+      console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
+    }
+    (meta as any).consciousnessPolicy = policy;
+  }
+
   // Light conversation analysis
   const conversationContext = conversationElementalTracker.processMessage(sessionId, input, conversationHistory);
 
@@ -344,7 +527,7 @@ async function corePathResponse(
       relationshipDepth: conversationContext.profile.relationshipDepth
     },
     mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
-    conversationContext: meta.conversationContext,
+    conversationContext: (meta as any).conversationContext as any,
     // 🧠 THE DIALECTICAL SCAFFOLD - Pass cognitive level to voice system
     cognitiveLevel: (meta as any).bloomDetection ? {
       level: (meta as any).bloomDetection.level,
@@ -356,8 +539,16 @@ async function corePathResponse(
   };
 
   // Use MAIA wise prompt with conversation awareness
-  const adaptivePrompt = buildMaiaWisePrompt(context, input, conversationHistory);
+  let adaptivePrompt = buildMaiaWisePrompt(context, input, conversationHistory);
   console.log(`🎭 Core voice adaptation applied`);
+
+  // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
+  if (policy) {
+    adaptivePrompt = adaptResponsePromptWithPolicy(adaptivePrompt, policy);
+    if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+      console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to CORE path`);
+    }
+  }
 
   const response = await generateText({
     systemPrompt: adaptivePrompt,
@@ -380,7 +571,17 @@ async function corePathResponse(
     // Regeneration function for CORE path
     async (repairPrompt: string) => {
       const repairedContext = { ...context };
-      const repairedPrompt = adaptivePrompt + '\n\n' + repairPrompt;
+      let repairedPrompt = buildMaiaWisePrompt(repairedContext, input, conversationHistory);
+
+      // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy to regeneration as well
+      if (policy) {
+        repairedPrompt = adaptResponsePromptWithPolicy(repairedPrompt, policy);
+        if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+          console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to CORE regeneration`);
+        }
+      }
+
+      repairedPrompt = repairedPrompt + '\n\n' + repairPrompt;
 
       return await generateText({
         systemPrompt: repairedPrompt,
@@ -407,8 +608,19 @@ async function deepPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>
-): Promise<{ response: string; consciousnessData?: any }> {
+): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
+
+  // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
+  const userId = (meta as any).userId;
+  const policy = userId ? await getConsciousnessPolicy(userId, input) : null;
+
+  if (policy) {
+    if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+      console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
+    }
+    (meta as any).consciousnessPolicy = policy;
+  }
 
   // Full conversation analysis
   const conversationContext = conversationElementalTracker.processMessage(sessionId, input, conversationHistory);
@@ -417,11 +629,14 @@ async function deepPathResponse(
   const cognitiveProfile = (meta as any).cognitiveProfile ?? null;
   const bloomDetectionForField = (meta as any).bloomDetection as BloomDetection | undefined;
 
+  // Safe access to profile properties (dominantFacet/dominantArchetype may not exist on type)
+  const profile = conversationContext?.profile as any;
+
   const fieldRouting = routePanconsciousField({
     cognitiveProfile,
     element: conversationContext?.profile?.dominantElement ?? null,
-    facet: conversationContext?.profile?.dominantFacet ?? null,
-    archetype: conversationContext?.profile?.dominantArchetype ?? null,
+    facet: profile?.dominantFacet ?? profile?.facet ?? null,
+    archetype: profile?.dominantArchetype ?? profile?.archetype ?? null,
     bloomLevel: bloomDetectionForField?.numericLevel ?? null,
   });
 
@@ -455,8 +670,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     sessionId,
     userId: sessionId,
     conversationHistory,
-    currentDepth: conversationContext.profile.relationshipDepth,
-    elementalResonance: conversationContext.profile.elementalTrend,
+    currentDepth: depthFromRelationship(conversationContext.profile.relationshipDepth),
+    elementalResonance: elementalTrendToResonance(conversationContext.profile.elementalTrend),
     observerLevel: Math.max(1, Math.min(conversationHistory.length + 1, 7)),
     temporalWindow: conversationContext.profile.conversationPhase === 'transcending' ? 'eternal' : 'present',
     metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether'
@@ -563,13 +778,32 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     async (repairPrompt: string) => {
       console.log('🔧 [DEEP] Re-running consciousness orchestration with repair guidance...');
 
-      // Rebuild context with repair guidance
+      // Build repair context (DEEP path uses consciousness wrapper, minimal context needed)
       const repairedContext: MaiaContext = {
-        ...context,
+        sessionId,
+        summary: `Repair attempt for: ${input}`,
+        memberProfile: conversationContext.memberProfile,
+        wisdomAdaptation: conversationContext.wisdomAdaptation,
+        consciousnessInsights: {
+          dominantElement: conversationContext.profile.dominantElement,
+          processingStrategy: 'deep',
+          relationshipDepth: conversationContext.profile.relationshipDepth
+        },
+        mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
+        conversationContext: (meta as any).conversationContext as any,
         repairGuidance: repairPrompt
       };
 
-      const repairedPrompt = buildMaiaComprehensivePrompt(repairedContext, input, conversationHistory);
+      const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, conversationHistory);
+      let repairedPrompt = comprehensiveResult.prompt;
+
+      // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy to regeneration as well
+      if (policy) {
+        repairedPrompt = adaptResponsePromptWithPolicy(repairedPrompt, policy);
+        if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+          console.log(`🧬 [Awareness Adaptation] Level ${policy.awarenessLevel} (${policy.awarenessName}) guidance applied to DEEP regeneration`);
+        }
+      }
 
       return await generateText({
         systemPrompt: repairedPrompt + '\n\n' + repairPrompt,
@@ -791,6 +1025,67 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Continue without atlas - MAIA can still function
     }
 
+    // 🔮 MEMORY RECALL: Get resonant memories for context (mode-aware + lightweight)
+    let memoryField: MemoryField | null = null;
+    try {
+      const activeMode = normalizeMode((meta as any)?.mode);
+      const recallKey = userId || sessionId;
+
+      console.log(`🎭 [MODE] activeMode=${activeMode} userId=${userId ?? 'none'} sessionId=${sessionId ?? 'none'}`);
+
+      // Scribe = Fathom capture: prefer FAST; only recall if explicitly escalated
+      const allowRecall =
+        activeMode === 'counsel' ||
+        activeMode === 'dialogue' ||
+        (activeMode === 'scribe' && isScribeEscalation(input));
+
+      if (recallKey && allowRecall) {
+        const recallStart = Date.now();
+
+        memoryField = await lattice.resonanceRecall(recallKey, {
+          query: input,
+          facet: atlasResult?.facet
+            ? { element: atlasResult.element, phase: atlasResult.phase, code: atlasResult.facet }
+            : undefined,
+        });
+
+        // Dialogue = light recall + relational continuity: clamp what we *use* (fast + stable)
+        if (activeMode === 'dialogue' && memoryField) {
+          memoryField = {
+            ...memoryField,
+            nodes: (memoryField.nodes || []).slice(0, 3),
+            stuckPatterns: (memoryField.stuckPatterns || []).slice(0, 1),
+            breakthroughMoments: (memoryField.breakthroughMoments || []).slice(0, 1),
+          } as typeof memoryField;
+        }
+
+        // Scribe escalation: still clamp (scribe should not balloon into long psychoanalysis)
+        if (activeMode === 'scribe' && memoryField) {
+          memoryField = {
+            ...memoryField,
+            nodes: (memoryField.nodes || []).slice(0, 2),
+            stuckPatterns: [],
+            breakthroughMoments: (memoryField.breakthroughMoments || []).slice(0, 1),
+          } as typeof memoryField;
+        }
+
+        console.log(
+          `🔮 [MEMORY] Recalled ${memoryField?.nodes?.length ?? 0} resonant memories ` +
+          `(${activeMode}) in ${Date.now() - recallStart}ms`
+        );
+        if (memoryField && memoryField.stuckPatterns && memoryField.stuckPatterns.length > 0) {
+          console.log(`⚠️  [MEMORY] Detected ${memoryField.stuckPatterns.length} stuck patterns`);
+        }
+        if (memoryField && memoryField.breakthroughMoments && memoryField.breakthroughMoments.length > 0) {
+          console.log(`✨ [MEMORY] Found ${memoryField.breakthroughMoments.length} breakthrough moments`);
+        }
+      }
+    } catch (memErr) {
+      console.error('⚠️  [MEMORY] Recall failed (non-blocking):', memErr);
+      // Memory should never block the conversation
+      memoryField = null;
+    }
+
     // 🎯 DELIBERATION GATE (Phase 2 Integration Point)
     const GAP_THRESHOLD = 15; // percent - matches Python backend threshold
     let finalFacet = atlasResult?.primary ?? 'UNKNOWN::UNKNOWN';
@@ -953,6 +1248,123 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Store Bloom's cognitive level for learning/analysis
       cognition: bloomMeta,
     });
+
+    // ✨ MEMORY INTEGRATION: Form memory from this conversation (mode-aware)
+    try {
+      const activeMode = normalizeMode((meta as any)?.mode);
+      const memoryKey = userId ?? sessionId;
+
+      // Check if this message should be elevated to lattice (prevents Scribe pollution)
+      const shouldElevate = shouldElevateToLattice(input, activeMode);
+
+      if (memoryKey && shouldElevate) {
+        const conversationEvent: ConsciousnessEvent = {
+          type: 'mental',
+          insight: `${input} → ${text.substring(0, 500)}`,
+          cognitiveLevel: bloomDetection?.numericLevel || 3,
+          bypassing: false,
+          timestamp: new Date(),
+          traceId: (meta as any).traceId ?? randomUUID(), // Cryptographic proof linkage (always present)
+        };
+
+        console.log(`🔬 [MEMORY] TraceId: ${conversationEvent.traceId || 'none'} (mode: ${activeMode}, elevated: ${shouldElevate})`);
+
+        const memoryResult = await lattice.integrateEvent(
+          memoryKey,
+          conversationEvent,
+          atlasResult?.facet ? {
+            element: atlasResult.element,
+            phase: atlasResult.phase,
+            code: atlasResult.facet
+          } : { element: 'EARTH', phase: 1, code: 'EARTH-1' },
+          { name: 'current', age: (meta as any).userAge || 30 }
+        );
+
+        console.log(`✨ [MEMORY] Memory ${memoryResult.memoryFormed ? 'FORMED' : 'logged'}, Patterns: ${memoryResult.patternsDetected.length}`);
+        if (memoryResult.insights.length > 0) {
+          console.log(`💡 [MEMORY] Insights: ${memoryResult.insights.join(', ')}`);
+        }
+      } else if (memoryKey && !shouldElevate) {
+        console.log(`⏭️  [MEMORY] Skipped lattice elevation (mode: ${activeMode}, scribe capture only)`);
+      }
+
+      // 🔮 SEMANTIC EMBEDDING: Store vector for semantic search (mode-aware)
+      try {
+        // Note: activeMode already declared above at line 1063
+        // Scribe = Fathom capture: NO embeddings unless explicit escalation
+        // Dialogue = optional embeddings only when message is "substantive"
+        // Counsel = embeddings always (or almost always)
+        const shouldEmbed =
+          activeMode === 'counsel' ||
+          (activeMode === 'dialogue' && input.trim().split(/\s+/).length >= 18) ||
+          (activeMode === 'scribe' && isScribeEscalation(input));
+
+        if (!memoryKey || !shouldEmbed) {
+          // Keep conversation flowing; skip expensive work
+          if (process.env.DEBUG_SEMANTIC === '1') {
+            console.log(`[SEMANTIC] Skipping embedding: mode=${activeMode}, shouldEmbed=${shouldEmbed}`);
+          }
+        } else {
+          const DEBUG_SEMANTIC = process.env.DEBUG_SEMANTIC === '1';
+
+          if (DEBUG_SEMANTIC) {
+            console.log(`[SEMANTIC] Starting embedding generation (mode=${activeMode})...`);
+          }
+
+          const { generateLocalEmbedding } = await import('../memory/embeddings');
+          const { query: dbQuery } = await import('../db/postgres');
+
+          // Create semantic text from conversation exchange
+          const semanticText = `User: ${input}\n\nMAIA: ${text.substring(0, 1000)}`;
+
+          if (DEBUG_SEMANTIC) {
+            console.log(`[SEMANTIC] Generating embedding for ${semanticText.length} chars...`);
+          }
+
+          const embedding = await generateLocalEmbedding(semanticText);
+
+          if (DEBUG_SEMANTIC) {
+            console.log(`[SEMANTIC] Embedding generated: ${embedding?.length || 0} dims`);
+          }
+
+          // Validate embedding before insert
+          if (embedding && embedding.length === 768) {
+            // Prepare metadata with context
+            const metadata = {
+              facet: atlasResult?.facet || null,
+              emotion: atlasResult?.primary_emotion || null,
+              timestamp: new Date().toISOString(),
+              mode: activeMode
+            };
+
+            // Store in semantic_memory_vectors (dedicated retrieval table)
+            await dbQuery(
+              `INSERT INTO semantic_memory_vectors (
+                user_id, chunk_text, chunk_type, metadata, vector_embedding, created_at
+              ) VALUES ($1, $2, $3, $4, $5::vector, NOW())`,
+              [
+                memoryKey,
+                semanticText,
+                'conversation',
+                JSON.stringify(metadata),
+                `[${embedding.join(',')}]` // pgvector format with explicit cast
+              ]
+            );
+
+            if (DEBUG_SEMANTIC) {
+              console.log(`🔮 [SEMANTIC] Vector stored: ${embedding.length} dims, mode=${activeMode}, facet=${metadata.facet}`);
+            }
+          } else {
+            console.warn(`⚠️  [SEMANTIC] Skipping insert: embedding.length=${embedding?.length || 0} (expected 768)`);
+          }
+        }
+      } catch (embErr) {
+        console.error('⚠️  [SEMANTIC] Embedding storage failed (non-blocking):', embErr);
+      }
+    } catch (memErr) {
+      console.error('⚠️  [MEMORY] Integration failed (non-blocking):', memErr);
+      // Memory formation should never block the conversation
+    }
 
     // 🧠 SOVEREIGN LEARNING INTEGRATION: Log conversation turn
     try {
