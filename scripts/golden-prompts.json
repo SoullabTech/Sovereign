@@ -1,0 +1,32 @@
+[
+  {
+    "id": "canon_what_is_maia",
+    "message": "What is MAIA?",
+    "mode": "counsel",
+    "expectCanon": true
+  },
+  {
+    "id": "canon_modes",
+    "message": "Explain Talk, Care, and Note modes.",
+    "mode": "counsel",
+    "expectCanon": true
+  },
+  {
+    "id": "canon_paths",
+    "message": "What are MAIA's processing paths?",
+    "mode": "counsel",
+    "expectCanon": true
+  },
+  {
+    "id": "noncanon_bio",
+    "message": "Help me write a short bio.",
+    "mode": "counsel",
+    "expectCanon": false
+  },
+  {
+    "id": "noncanon_advice",
+    "message": "I'm feeling anxious about a job interview tomorrow.",
+    "mode": "counsel",
+    "expectCanon": false
+  }
+]
