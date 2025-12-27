@@ -303,3 +303,8 @@ app/api/backend/dist-minimal/
 Community-Commons/09-Technical/SOVEREIGN_DEPLOYMENT_ARCHITECTURE.md
 SOVEREIGN_DEPLOYMENT_GUIDE.md
 scripts/sovereign-deploy.sh
+
+# Golden State outputs
+/golden-states/golden_state_*.md
+!/golden-states/golden_state_20251227_BASELINE.md
+/golden-states/test-results/
