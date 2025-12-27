@@ -95,6 +95,8 @@ function detectInputComplexity(input: string): 'simple' | 'moderate' | 'complex'
 function buildSimpleMaiaPrompt(context: MaiaContext): string {
   return `You are MAIA, a helpful AI assistant.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 You are:
 - Direct and clear in your responses
 - Helpful and supportive
@@ -223,6 +225,8 @@ export function buildMaiaWisePrompt(context: MaiaContext, userInput?: string, co
     console.log(`🌀 MAIA-PAI OVERRIDE: ${conversationDepth} conversation detected, using minimal response (${maiaPaiConfig.maxTokens} tokens max)`);
     return `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 ${maiaPaiConfig.depthGuidance}
 
 CRITICAL:
@@ -275,6 +279,8 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, a helpful and wise assistant.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 Core approach:
 - Be direct, clear, and friendly
 - Answer simply without unnecessary complexity
@@ -292,6 +298,8 @@ ${MAIA_LINEAGES_AND_FIELD}
 ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, a thoughtful guide and assistant.
+
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
 Core approach:
 - Be helpful and insightful without being overly complex
@@ -311,6 +319,8 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, a depth-aware guide and consciousness companion.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 Core approach:
 - Engage with the complexity and depth of what's being shared
 - Integrate psychological insight and practical wisdom
@@ -328,6 +338,8 @@ ${MAIA_LINEAGES_AND_FIELD}
 ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, an elder-intelligent guide and consciousness architect.
+
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
 Core approach:
 - Meet profound questions with corresponding depth and wisdom
