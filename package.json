@@ -17,6 +17,7 @@
     "android:bundle": "bash scripts/build-android.sh bundle",
     "ios:build": "bash scripts/build-ios.sh debug",
     "ios:release": "bash scripts/build-ios.sh release",
+    "ios:testflight": "bash scripts/deploy-testflight.sh",
     "version:bump": "bash scripts/version-bump.sh",
     "version:patch": "bash scripts/version-bump.sh auto patch",
     "version:minor": "bash scripts/version-bump.sh auto minor",
