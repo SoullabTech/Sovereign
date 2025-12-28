@@ -541,8 +541,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       },
       // Claude development mode analysis (only in development)
       claudeDevAnalysis: process.env.NODE_ENV === 'development' ? claudeDevAnalysis : null,
-      // 🧠 MEMORY PIPELINE DATA
-      memoryPipeline: {
+      // 🧠 MEMORY PIPELINE DATA (full details in dev, minimal in prod)
+      memoryPipeline: process.env.NODE_ENV === 'development' || meta.debugMemory ? {
         mode: memoryMode,
         retrieval: memoryBundle ? {
           turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
@@ -552,6 +552,9 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         } : null,
         writeback: writebackResult,
         relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
+      } : {
+        mode: memoryMode,
+        wrote: writebackResult?.wrote || false,
       },
       // 🎯 PERFORMANCE PROFILING DATA
       performanceProfile: {
