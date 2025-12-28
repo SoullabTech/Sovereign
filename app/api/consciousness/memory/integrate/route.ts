@@ -47,10 +47,26 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Integrate event into lattice
-    const result = await lattice.integrateEvent(userId, event, facet, phase || { name: 'current' });
+    // Memory permission gate: require explicit memoryMode
+    // Defense-in-depth: lattice also checks internally, but be explicit
+    const memoryMode = (body.memoryMode as 'ephemeral' | 'continuity' | 'longterm') || 'continuity';
 
-    console.log(`✅ [API] Event integrated: ${event.type} for ${userId}, Memory: ${result.memoryFormed}`);
+    // Server-side allowlist check (same as orchestrator)
+    const allowLongterm =
+      process.env.MAIA_LONGTERM_WRITEBACK === '1' &&
+      new Set((process.env.MAIA_LONGTERM_WRITEBACK_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean))
+        .has(userId);
+
+    const effectiveMode = memoryMode === 'longterm' && allowLongterm ? 'longterm' : memoryMode === 'ephemeral' ? 'ephemeral' : 'continuity';
+
+    if (memoryMode === 'longterm' && effectiveMode !== 'longterm') {
+      console.warn('🛡️ [MemoryGate] API integrate route: longterm requested but denied', { userId });
+    }
+
+    // Integrate event into lattice (with permission-gated memoryMode)
+    const result = await lattice.integrateEvent(userId, event, facet, phase || { name: 'current' }, { memoryMode: effectiveMode });
+
+    console.log(`✅ [API] Event integrated: ${event.type} for ${userId}, Memory: ${result.memoryFormed}, Mode: ${effectiveMode}`);
 
     return NextResponse.json({
       success: true,
