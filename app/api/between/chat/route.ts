@@ -768,7 +768,14 @@ export async function POST(req: NextRequest) {
     });
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
-    const memPipeline = orchestratorResult.metadata?.memoryPipeline;
+    // Dev-only: simulate pipeline missing via header for calibration testing
+    const simulatePipelineMissing =
+      process.env.NODE_ENV !== 'production' &&
+      req.headers.get('x-maia-simulate-pipeline-missing') === '1';
+
+    const memPipeline = simulatePipelineMissing
+      ? null
+      : orchestratorResult.metadata?.memoryPipeline;
     const memRetrieval = memPipeline?.retrieval;
 
     // Configurable thresholds (tune via env without code changes)
