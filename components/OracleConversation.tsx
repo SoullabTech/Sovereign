@@ -1787,6 +1787,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           meta: {
             explorerId, // ✅ Stable identity across sessions
             sessionId,  // Current session (changes per session)
+            memoryMode: 'continuity', // Default: turns only, no long-term writeback
           },
 
           // Canon Wrap (care-mode only)

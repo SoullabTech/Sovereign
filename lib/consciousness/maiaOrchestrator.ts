@@ -247,7 +247,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`🔥 STAKES ASSESSMENT: "${stakes}"`);
 
   // 🧠 MEMORY BUNDLE: Retrieve ranked context from multiple buckets
-  const memoryMode = (meta.memoryMode as MemoryMode) || 'longterm';
+  const memoryMode = (meta.memoryMode as MemoryMode) || 'continuity';
   let memoryBundle: MemoryBundle | null = null;
   let memoryContext = '';
 
