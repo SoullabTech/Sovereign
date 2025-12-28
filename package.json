@@ -30,6 +30,7 @@
     "lint": "cd apps/web && next lint",
     "check:sovereignty": "tsx scripts/check-maia-sovereignty.ts",
     "check:no-supabase": "tsx scripts/check-no-supabase.ts",
+    "leak-guard": "bash scripts/ci/leak-guard.sh",
     "validate:critical": "node scripts/validate-critical-files.js",
     "verify:claude": "bash scripts/verify-claude-project.sh",
     "claude:env": "bash scripts/claude-env-setup.sh",
