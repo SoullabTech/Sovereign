@@ -9,6 +9,7 @@ interface SubscriptionContextType {
   requireSubscription: (feature: PremiumFeature) => boolean;
   showUpgradeModal: (feature: PremiumFeature) => void;
   isLoading: boolean;
+  isBetaTester: boolean; // Tracked in state for hydration
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType>({
@@ -17,13 +18,20 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   requireSubscription: () => false,
   showUpgradeModal: () => {},
   isLoading: true,
+  isBetaTester: false,
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBetaTester, setIsBetaTester] = useState(false); // State for hydration-safe beta check
 
   useEffect(() => {
+    // Check beta code on mount (client-side only)
+    const betaCode = localStorage.getItem('soullab_beta_code');
+    if (betaCode && betaCode.toUpperCase().startsWith('SOULLAB-')) {
+      setIsBetaTester(true);
+    }
     // Initialize user - for now, simulate with localStorage
     // In production, this would be an API call
     initializeUser();
@@ -74,13 +82,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   };
 
   const hasFeature = (feature: PremiumFeature): boolean => {
-    // Beta testers with SOULLAB-[NAME] code get full premium access (check first!)
-    // Guard for SSR - localStorage only exists on client
-    if (typeof window !== 'undefined') {
-      const betaCode = localStorage.getItem('soullab_beta_code');
-      if (betaCode && betaCode.toUpperCase().startsWith('SOULLAB-')) {
-        return true; // All features unlocked for beta testers
-      }
+    // Beta testers get full premium access (uses state for hydration-safe check)
+    if (isBetaTester) {
+      return true; // All features unlocked for beta testers
     }
 
     if (!user) return false;
@@ -117,7 +121,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       hasFeature,
       requireSubscription,
       showUpgradeModal,
-      isLoading
+      isLoading,
+      isBetaTester
     }}>
       {children}
     </SubscriptionContext.Provider>
