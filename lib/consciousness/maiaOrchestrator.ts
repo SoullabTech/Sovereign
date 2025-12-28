@@ -258,6 +258,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   const memoryMode: MemoryMode =
     requestedMode === 'longterm' && allowLongterm ? 'longterm' : requestedMode === 'ephemeral' ? 'ephemeral' : 'continuity';
 
+  console.log('🧠 [MemoryGate] modes', { userId, requestedMode, memoryMode, allowLongterm });
+
   if (requestedMode === 'longterm' && memoryMode !== 'longterm') {
     console.warn('🛡️ [MemoryGate] Longterm writeback requested but denied', { userId });
   }
