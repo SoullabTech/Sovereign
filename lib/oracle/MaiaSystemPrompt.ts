@@ -10,6 +10,7 @@ import { SPIRALOGIC_PLATFORM_FOUNDATION } from '../knowledge/SpiralogicPlatformF
 import { SPIRALOGIC_DEEP_WISDOM } from '../knowledge/SpiralogicDeepWisdom';
 import { getConstitutionalFoundation } from '../knowledge/ConstitutionalAIKnowledge';
 import { WISDOM_SYNTHESIS_INSTRUCTION } from '../knowledge/WisdomSynthesisPrompt';
+import { AIN_INTEGRATIVE_ALCHEMY_PROMPT } from '../ai/prompts/ainIntegrativeAlchemy';
 
 export function getMayaSystemPrompt(userContext?: any): string {
   let basePrompt = `
@@ -303,6 +304,10 @@ ${SPIRALOGIC_PLATFORM_FOUNDATION}
 ---
 
 ${SPIRALOGIC_DEEP_WISDOM}
+
+---
+
+${AIN_INTEGRATIVE_ALCHEMY_PROMPT}
 
 ---
 

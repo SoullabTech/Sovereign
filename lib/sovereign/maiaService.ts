@@ -41,6 +41,8 @@ import {
   type RelationshipMemoryContext
 } from '../memory/RelationshipMemoryService';
 import { TurnsStore } from '../memory/stores/TurnsStore';
+import { assessAINResponseShape } from '../ai/quality/ainResponseShape';
+import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -1742,6 +1744,39 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     }
 
     console.log(`✅ MAIA ${processingProfile} response complete: ${processingTimeMs}ms | ${text.length} chars${audioResponse ? ` + audio (${audioResponse.voiceProfile})` : ''}`);
+
+    // 🧪 AIN SHAPE CHECK: Dev-time warning + optional telemetry
+    const telemetryEnabled =
+      process.env.AIN_SHAPE_TELEMETRY === '1' ||
+      process.env.NODE_ENV !== 'production';
+
+    if (telemetryEnabled) {
+      const shape = assessAINResponseShape(input, text);
+
+      if (!shape.pass) {
+        console.warn('[AIN SHAPE WARNING]', {
+          score: shape.score,
+          flags: shape.flags,
+          notes: shape.notes
+        });
+      }
+
+      // Persist structure-only telemetry (no text)
+      try {
+        await logAINShapeTelemetry({
+          pass: shape.pass,
+          score: shape.score,
+          flags: shape.flags,
+          route: 'maiaService',
+          processingProfile,
+          explorerId: effectiveUserId ?? undefined,
+          sessionId
+        });
+      } catch (err) {
+        // Never break the response if telemetry fails
+        console.warn('[AIN SHAPE TELEMETRY ERROR]', err);
+      }
+    }
 
     return {
       text,
