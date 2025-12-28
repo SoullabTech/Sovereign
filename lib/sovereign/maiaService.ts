@@ -26,6 +26,7 @@ import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 import { lattice } from '../memory/ConsciousnessMemoryLattice';
 import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
+import { containsSensitiveData } from '../memory/sensitivePatterns';
 import {
   adaptResponsePromptWithPolicy,
   createConsciousnessPolicy,
@@ -462,6 +463,11 @@ async function fastPathResponse(
   const memoryContext = (meta as any).memoryContext as string | undefined;
   const hasMemoryBundle = !!(meta as any).memoryBundle;
 
+  // 🔒 SECURITY: If user shares sensitive data, instruct MAIA not to claim it was stored
+  const sensitiveInstruction = containsSensitiveData(input)
+    ? `\n\n🔒 SECURITY: The user is sharing sensitive data (passwords, codes, etc). Do NOT claim you stored or will remember it. Say you can't store secrets in memory and suggest they keep it in a secure password manager or personal vault.`
+    : '';
+
   if (memoryContext && hasMemoryBundle) {
     console.log(`📦 [MemoryBundle] Using compressed context (${memoryContext.length} chars)`);
   }
@@ -470,12 +476,12 @@ async function fastPathResponse(
   let contextPrompt: string;
   if (memoryContext && memoryContext.length > 0) {
     // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
-    contextPrompt = `${memoryContext}${memoryRecallInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${memoryContext}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
   } else if (recentContext.length > 0) {
     // Fallback to simple recent context
-    contextPrompt = `Recent conversation:\n${recentContext}${memoryRecallInstruction}\n\nUser: ${input}`;
+    contextPrompt = `Recent conversation:\n${recentContext}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
   } else {
-    contextPrompt = input;
+    contextPrompt = `${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
   }
 
   // Import MAIA runtime prompt with full relational and lineage intelligence

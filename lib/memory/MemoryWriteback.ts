@@ -16,6 +16,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -41,28 +42,6 @@ export interface MemoryCapsule {
   openLoops: string[];  // Max 3
   entities: string[];   // Max 8
 }
-
-// ═══════════════════════════════════════════════════════════════
-// SECURITY: Sensitive data patterns (NEVER store these)
-// ═══════════════════════════════════════════════════════════════
-const SENSITIVE_PATTERNS = [
-  /secret\s*code/i,
-  /password/i,
-  /passphrase/i,
-  /\bpin\b/i,
-  /\botp\b/i,
-  /2fa|two.?factor/i,
-  /social\s*security/i,
-  /\bssn\b/i,
-  /credit\s*card/i,
-  /\bcvv\b/i,
-  /api.?key/i,
-  /private.?key/i,
-  /seed\s*phrase/i,
-  /recovery\s*phrase/i,
-  /bank\s*account/i,
-  /routing\s*number/i,
-];
 
 // Patterns that indicate "stable facts" worth storing
 const STABLE_FACT_PATTERNS = [
@@ -119,7 +98,7 @@ export const MemoryWritebackService = {
     console.log(`[MemoryWriteback] Analyzing exchange for user: ${userId}`);
 
     // SECURITY GATE: Block sensitive data from ever entering memory
-    if (this.containsSensitiveData(userMessage)) {
+    if (containsSensitiveData(userMessage)) {
       console.log('[MemoryWriteback] 🔒 BLOCKED - sensitive data detected (secrets never stored)');
       return { wrote: false, reason: 'sensitive_blocked' };
     }
@@ -498,18 +477,6 @@ export const MemoryWritebackService = {
     ]);
 
     return result.rows[0]?.id;
-  },
-
-  // ═══════════════════════════════════════════════════════════════
-  // SECURITY
-  // ═══════════════════════════════════════════════════════════════
-
-  /**
-   * Check if message contains sensitive data that should NEVER be stored
-   * This is a trust cornerstone - secrets don't enter memory
-   */
-  containsSensitiveData(message: string): boolean {
-    return SENSITIVE_PATTERNS.some(pattern => pattern.test(message));
   },
 
   // ═══════════════════════════════════════════════════════════════
