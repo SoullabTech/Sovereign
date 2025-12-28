@@ -250,7 +250,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
 
   // 🧠 MEMORY BUNDLE: Retrieve ranked context from multiple buckets
   // Server-side allowlist guard: client can request, but server decides
-  const modeResolution = resolveMemoryMode(userId, meta.memoryMode as string);
+  const modeResolution = resolveMemoryMode(userId, (meta as any)?.memoryMode);
   const memoryMode = modeResolution.effective;
 
   console.log('🧠 [MemoryGate] modes', {

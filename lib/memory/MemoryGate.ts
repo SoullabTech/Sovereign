@@ -1,3 +1,6 @@
+// Server-only: prevent accidental client-side bundling
+import 'server-only';
+
 /**
  * MEMORY PERMISSION GATE
  *
@@ -20,6 +23,9 @@
  */
 
 export type MemoryMode = 'ephemeral' | 'continuity' | 'longterm';
+
+// Valid modes for normalization
+const VALID_MODES: Set<MemoryMode> = new Set(['ephemeral', 'continuity', 'longterm']);
 
 export interface MemoryModeResolution {
   /** The server-approved effective mode */
@@ -44,8 +50,11 @@ export function resolveMemoryMode(
   userId: string,
   requested?: MemoryMode | string | null
 ): MemoryModeResolution {
-  const requestedMode: MemoryMode =
-    (requested as MemoryMode) || 'continuity';
+  // Normalize: only accept valid modes, anything else → 'continuity'
+  const normalizedRequest = typeof requested === 'string' ? requested.toLowerCase().trim() : '';
+  const requestedMode: MemoryMode = VALID_MODES.has(normalizedRequest as MemoryMode)
+    ? (normalizedRequest as MemoryMode)
+    : 'continuity';
 
   // Check if longterm is allowed for this user
   const envEnabled = process.env.MAIA_LONGTERM_WRITEBACK === '1';
