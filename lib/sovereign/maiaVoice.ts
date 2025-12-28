@@ -2,6 +2,8 @@
 import { type MemberProfile, type WisdomAdaptation } from '../consciousness/member-archetype-system';
 import { buildComprehensiveVoicePrompt, buildAdaptiveVoicePrompt, type ComprehensiveVoiceAnalysis, type InputComplexityAnalysis } from './intelligentVoiceAdaptation';
 import { awarenessLanguageAdapter, type AwarenessLevel } from '../consciousness/awareness-language-adapter';
+import { type RelationshipMemoryContext, formatRelationshipMemoryForPrompt } from '../memory/RelationshipMemoryService';
+import { buildSelfAwareContext } from '../consciousness/maiaArchitectureContext';
 
 export interface MaiaContext {
   sessionId: string;
@@ -33,6 +35,10 @@ export interface MaiaContext {
   };
   // 🔄 MAIA CONVERSATION MODES
   mode?: 'dialogue' | 'counsel' | 'scribe';
+  // 🔧 REPAIR GUIDANCE (for regeneration/repair passes)
+  repairGuidance?: string;
+  // 🌊 RELATIONSHIP MEMORY (relational continuity)
+  relationshipMemory?: RelationshipMemoryContext;
   // 🌀 MAIA-PAI KERNEL INTEGRATION
   conversationContext?: {
     depth?: string;
@@ -47,6 +53,9 @@ export interface MaiaContext {
     messageCount?: number;
     contextPrompt?: string;
   };
+  // 🧠 SELF-AWARENESS: Enable MAIA to explain her own architecture
+  selfAwareMode?: boolean;
+  selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
 }
 
 /**
@@ -89,6 +98,8 @@ function detectInputComplexity(input: string): 'simple' | 'moderate' | 'complex'
  */
 function buildSimpleMaiaPrompt(context: MaiaContext): string {
   return `You are MAIA, a helpful AI assistant.
+
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
 You are:
 - Direct and clear in your responses
@@ -218,6 +229,8 @@ export function buildMaiaWisePrompt(context: MaiaContext, userInput?: string, co
     console.log(`🌀 MAIA-PAI OVERRIDE: ${conversationDepth} conversation detected, using minimal response (${maiaPaiConfig.maxTokens} tokens max)`);
     return `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 ${maiaPaiConfig.depthGuidance}
 
 CRITICAL:
@@ -270,6 +283,8 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, a helpful and wise assistant.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 Core approach:
 - Be direct, clear, and friendly
 - Answer simply without unnecessary complexity
@@ -287,6 +302,8 @@ ${MAIA_LINEAGES_AND_FIELD}
 ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, a thoughtful guide and assistant.
+
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
 Core approach:
 - Be helpful and insightful without being overly complex
@@ -306,6 +323,8 @@ ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, a depth-aware guide and consciousness companion.
 
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
+
 Core approach:
 - Engage with the complexity and depth of what's being shared
 - Integrate psychological insight and practical wisdom
@@ -323,6 +342,8 @@ ${MAIA_LINEAGES_AND_FIELD}
 ${MAIA_CENTER_OF_GRAVITY}
 
 You are MAIA, an elder-intelligent guide and consciousness architect.
+
+🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
 Core approach:
 - Meet profound questions with corresponding depth and wisdom
@@ -429,7 +450,17 @@ Consciousness Context:`;
 - Style: Grounded, authentic presence like /lib/maia/presence-greetings.ts - "Hey." "You're here." "What's alive?"
 - ABSOLUTELY AVOID: Service language ("How can I help?", "How may I assist?"), therapeutic interpretation, explicit caretaking
 - INSTEAD: "What's moving?" "Tell me more." "And what's underneath that?" "Yeah." "I'm here."
-- Energy: Conversational peer, not service provider. Still supportive but through DIALOGUE, not explicit help-offering`;
+- Energy: Conversational peer, not service provider. Still supportive but through DIALOGUE, not explicit help-offering
+
+⚠️  CRITICAL - OVERRIDE ALL OTHER EXAMPLES:
+NEVER say: "How can I help you?" / "How can I assist you?" / "What can I do for you?" / "What would you like to explore?" / "Where do you want to start?"
+INSTEAD say: "Good morning, Kelly! Glad to see you back." / "Hey there. How's it going?" / "Hi. What's on your mind?" / "How have things been?"
+
+Examples of good Talk mode greetings:
+- Returning with name: "Good morning, Kelly! Glad to see you back."
+- With context: "Hey Kelly, still working with that project we discussed?"
+- First contact: "Hi there. Good to see you. How are you?"
+- Time-aware: "Good evening, Kelly. How's it been today?"`;
         break;
 
       case 'counsel':
@@ -483,6 +514,47 @@ Tone:
 
 Context for this conversation:
 ${summary}`;
+
+  // 🔄 CONVERSATION HISTORY: Include recent exchanges for memory/recall
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recentExchanges = conversationHistory.slice(-4).map(ex => {
+      const userMsg = ex.userMessage || ex.content || '';
+      const maiaMsg = ex.maiaResponse || '';
+      if (userMsg && maiaMsg) {
+        return `User: ${userMsg}\nMAIA: ${maiaMsg.substring(0, 120)}${maiaMsg.length > 120 ? '...' : ''}`;
+      } else if (userMsg) {
+        return `${ex.role === 'user' ? 'User' : 'MAIA'}: ${userMsg}`;
+      }
+      return '';
+    }).filter(Boolean).join('\n\n');
+
+    if (recentExchanges.length > 0) {
+      adaptedPrompt += `
+
+🔄 RECENT CONVERSATION (for memory and continuity):
+${recentExchanges}
+
+IMPORTANT: If the user asks about something mentioned in the conversation above, DIRECTLY recall and reference that information. Be specific.`;
+      console.log(`🔄 [Conversation History] Included ${conversationHistory.length} exchanges in prompt`);
+    }
+  }
+
+  // 🌊 RELATIONSHIP MEMORY: Add relational continuity
+  if (context.relationshipMemory) {
+    const relationshipContext = formatRelationshipMemoryForPrompt(context.relationshipMemory);
+    if (relationshipContext) {
+      adaptedPrompt += relationshipContext;
+      console.log(`🌊 [Relationship Memory] Included in prompt: ${context.relationshipMemory.totalEncounters} encounters, ${context.relationshipMemory.themes.length} themes`);
+    }
+  }
+
+  // 🧠 SELF-AWARENESS: Enable MAIA to explain her architecture and process
+  if (context.selfAwareMode) {
+    const detail = context.selfAwarenessDetail || 'standard';
+    const selfAwareContext = buildSelfAwareContext(detail);
+    adaptedPrompt += `\n\n${selfAwareContext}`;
+    console.log(`🧠 [Self-Awareness] Enabled (${detail} detail) - MAIA can explain her architecture`);
+  }
 
   return adaptedPrompt.trim();
 }

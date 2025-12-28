@@ -211,6 +211,30 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       ],
     },
     {
+      title: 'WISDOM PATTERNS',
+      icon: '🌀',
+      items: [
+        {
+          icon: Compass,
+          label: 'Archetypal Journey',
+          action: () => onNavigate('/journey'),
+          description: 'Your cosmic spiral & elemental blueprint'
+        },
+        {
+          icon: BookOpen,
+          label: 'Conversation Threads',
+          action: () => onNavigate('/maia?panel=journey'),
+          description: 'Voice settings, patterns & trajectory'
+        },
+        {
+          icon: Sparkles,
+          label: 'Weaving Visualization',
+          action: () => onNavigate('/maia?panel=journey'),
+          description: 'Watch your wisdom threads unfold'
+        },
+      ],
+    },
+    {
       title: 'SOUL SIGNATURE',
       icon: '🧬',
       items: [

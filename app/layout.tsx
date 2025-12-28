@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { SubscriptionProvider } from "@/hooks/useSubscription";
+import { DevNoServiceWorker } from "./DevNoServiceWorker";
 import { SevenLayerArchitectureProvider } from "@/components/architecture/SevenLayerArchitectureProvider";
 import { AethericConsciousnessProvider } from "@/components/consciousness/AethericConsciousnessProvider";
 import { SystemHealthProvider } from "@/components/providers/SystemHealthProvider";
@@ -51,6 +52,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className}`} suppressHydrationWarning>
         <SubscriptionProvider>
+          <DevNoServiceWorker />
           <SystemHealthProvider autoStart={true} emergencyThreshold={0.4}>
             <AethericConsciousnessProvider>
               <SevenLayerArchitectureProvider

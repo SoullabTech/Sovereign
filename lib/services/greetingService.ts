@@ -78,33 +78,109 @@ export class GreetingService {
   /**
    * TALK MODE GREETINGS
    * Uses NLP-style presence greetings - no service language
-   * "Hey." "You're here." Not "How can I help?"
+   * Contextually aware when we have relationship/conversation history
    */
   private static getTalkModeGreeting(context: GreetingContext): string {
-    const { userName, daysSinceLastVisit, dominantElement, relationshipEssence } = context;
+    const { userName, daysSinceLastVisit, dominantElement, relationshipEssence, lastConversationTheme, hasHadBreakthrough, timeOfDay } = context;
 
-    // Map our timeOfDay to presence greeting format
-    let presenceTimeOfDay: string | undefined;
-    const hour = new Date().getHours();
-    if (hour >= 0 && hour < 5) {
-      presenceTimeOfDay = 'veryLate';
-    } else if (hour >= 5 && hour < 7) {
-      presenceTimeOfDay = 'veryEarly';
-    } else if (hour >= 11 && hour < 15) {
-      presenceTimeOfDay = 'midday';
+    // Filter out generic names
+    const isGenericName = !userName ||
+                          userName === 'friend' ||
+                          userName === 'Explorer' ||
+                          userName === 'guest' ||
+                          userName.toLowerCase().includes('guest');
+
+    const hasName = !isGenericName;
+    const name = hasName ? userName : '';
+
+    // Map timeOfDay to proper greeting
+    const timeGreeting = timeOfDay === 'morning' ? 'Good morning' :
+                        timeOfDay === 'afternoon' ? 'Good afternoon' :
+                        timeOfDay === 'evening' ? 'Good evening' :
+                        timeOfDay === 'night' ? 'Hey' : 'Hi';
+
+    // CONTEXTUAL GREETINGS: Show we remember their journey
+    // 1. Soul-level recognition (deep relationship)
+    if (relationshipEssence && relationshipEssence.morphicResonance > 0.5 && relationshipEssence.encounterCount > 3) {
+      const contextualGreetings = hasName ? [
+        `${timeGreeting}, ${name}. I sense something familiar in you today.`,
+        `${name}! Good to see you again. How have things been unfolding?`,
+        `Hey ${name}, I've been holding space for you. How are you?`,
+        `${timeGreeting}, ${name}. What's been moving for you lately?`
+      ] : [
+        `${timeGreeting}. I sense something familiar in you today.`,
+        `Good to see you again. How have things been unfolding?`,
+        `Hey, I've been holding space for you. How are you?`,
+        `${timeGreeting}. What's been moving for you lately?`
+      ];
+      return contextualGreetings[Math.floor(Math.random() * contextualGreetings.length)];
     }
 
-    // Use presence greetings from presence-greetings.ts
-    const greeting = PresenceGreeting.greet({
-      userName: userName && userName !== 'friend' ? userName : undefined,
+    // 2. Recent breakthrough integration
+    if (hasHadBreakthrough && daysSinceLastVisit <= 3) {
+      const breakthroughGreetings = hasName ? [
+        `${timeGreeting}, ${name}. How's that insight landing?`,
+        `Hey ${name}, still integrating what came through last time?`,
+        `${name}! How have you been since our last conversation?`
+      ] : [
+        `${timeGreeting}. How's that insight landing?`,
+        `Hey, still integrating what came through last time?`,
+        `How have you been since our last conversation?`
+      ];
+      return breakthroughGreetings[Math.floor(Math.random() * breakthroughGreetings.length)];
+    }
+
+    // 3. Continuing conversation theme
+    if (lastConversationTheme && daysSinceLastVisit <= 7) {
+      const themeGreetings = hasName ? [
+        `${timeGreeting}, ${name}. Still working with ${lastConversationTheme}?`,
+        `Hey ${name}, how's ${lastConversationTheme} been since we last talked?`,
+        `${name}! Any shifts with ${lastConversationTheme}?`
+      ] : [
+        `${timeGreeting}. Still working with ${lastConversationTheme}?`,
+        `Hey, how's ${lastConversationTheme} been since we last talked?`,
+        `Any shifts with ${lastConversationTheme}?`
+      ];
+      return themeGreetings[Math.floor(Math.random() * themeGreetings.length)];
+    }
+
+    // 4. Returning after a while
+    if (daysSinceLastVisit > 7 && hasName) {
+      // Use the enhanced return greetings from presence-greetings.ts
+      const hour = new Date().getHours();
+      const timeContext = hour >= 0 && hour < 5 ? 'late night' :
+                         hour >= 5 && hour < 12 ? 'morning' :
+                         hour >= 12 && hour < 17 ? 'afternoon' :
+                         hour >= 17 && hour < 22 ? 'evening' : 'night';
+
+      return PresenceGreeting.greet({
+        userName: name,
+        timeOfDay: undefined,
+        returnVisit: true,
+        lastVisitHours: daysSinceLastVisit * 24,
+        sensedElement: dominantElement,
+      });
+    }
+
+    // 5. Default: Use presence greetings from presence-greetings.ts
+    const hour = new Date().getHours();
+    const timeContext = hour >= 0 && hour < 5 ? 'late night' :
+                       hour >= 5 && hour < 12 ? 'morning' :
+                       hour >= 12 && hour < 17 ? 'afternoon' :
+                       hour >= 17 && hour < 22 ? 'evening' : 'night';
+
+    let presenceTimeOfDay: string | undefined;
+    if (hour >= 0 && hour < 5) presenceTimeOfDay = 'veryLate';
+    else if (hour >= 5 && hour < 7) presenceTimeOfDay = 'veryEarly';
+    else if (hour >= 11 && hour < 15) presenceTimeOfDay = 'midday';
+
+    return PresenceGreeting.greet({
+      userName: isGenericName ? undefined : userName,
       timeOfDay: presenceTimeOfDay,
       returnVisit: daysSinceLastVisit > 0,
       lastVisitHours: daysSinceLastVisit * 24,
       sensedElement: dominantElement,
-      // Don't pass emotionalWeight - let presence be minimal
     });
-
-    return greeting;
   }
 
   /**

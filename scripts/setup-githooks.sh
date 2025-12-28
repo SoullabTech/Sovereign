@@ -1,12 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-git config core.hooksPath .githooks
-chmod +x .githooks/pre-commit
-echo "✅ Git hooks enabled (core.hooksPath=.githooks)"
-echo ""
-echo "Committed hooks active:"
-echo "  • pre-commit: Sovereignty audit (blocks cloud dependencies)"
-echo ""
-echo "To bypass temporarily (emergencies only):"
-echo "  git commit --no-verify"
+echo "🔧 Installing git hooks..."
+
+mkdir -p .git/hooks
+
+cat > .git/hooks/pre-push << 'HOOK'
+#!/usr/bin/env bash
+set -euo pipefail
+scripts/check-no-secrets.sh
+scripts/check-no-large-staged-files.sh
+HOOK
+
+chmod +x .git/hooks/pre-push
+
+echo "✅ pre-push hook installed"

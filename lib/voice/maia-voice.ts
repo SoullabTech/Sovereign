@@ -595,7 +595,7 @@ export class MaiaVoiceSystem {
 
   // Main speak method with intelligent fallback
   async speak(text: string, context?: any): Promise<void> {
-    console.log('🔊 MaiaVoiceSystem.speak called with text:', text.substring(0, 50) + '...');
+    console.log('🔊 MaiaVoiceSystem.speak called with text:', text.length, 'chars'); // Never log content
 
     // Signal Maya is starting to speak
     signalMayaSpeaking(true);

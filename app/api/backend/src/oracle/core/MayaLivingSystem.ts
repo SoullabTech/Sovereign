@@ -222,7 +222,7 @@ export class MayaLivingSystem {
     };
 
     // This would ideally update the last recorded pattern, but for now we can track it separately
-    console.log(`Maya learning: User engagement ${engagement.toFixed(2)} for response: "${lastMayaMessage.substring(0, 50)}..."`);
+    console.log(`Maya learning: User engagement ${engagement.toFixed(2)} for response: ${lastMayaMessage.length} chars`); // Never log content
   }
 
   private detectVulnerability(message: string): boolean {

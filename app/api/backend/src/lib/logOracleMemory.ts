@@ -1,4 +1,10 @@
-import { supabase } from "@/lib/db/postgres";
+/**
+ * Oracle Memory Logger - Stub
+ *
+ * NOTE: Supabase has been removed per project rules (CLAUDE.md).
+ * Memory persistence now happens via /api/consciousness/memory/store
+ * which writes to the conversation_turns table.
+ */
 
 interface OracleMemoryInput {
   userId: string;
@@ -21,18 +27,10 @@ interface OracleMemoryInput {
 }
 
 export async function logOracleMemory(input: OracleMemoryInput) {
-  const { userId, ...rest } = input;
-
-  const { error } = await supabase.from("oracle_memories").insert([
-    {
-      user_id: userId,
-      ...rest,
-    },
-  ]);
-
-  if (error) {
-    console.error("🛑 Failed to log Oracle memory:", error);
-  } else {
-    console.log("✅ Oracle memory logged successfully");
-  }
+  // Stub: Oracle memory logging is now handled by the consciousness memory system
+  console.log("[logOracleMemory] Stub - memory logged (no-op):", {
+    userId: input.userId,
+    type: input.type,
+    archetype: input.archetype,
+  });
 }

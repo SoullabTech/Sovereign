@@ -311,3 +311,17 @@ scripts/sovereign-deploy.sh
 
 # Golden benchmark outputs
 /snapshots/
+
+# Private beta operations (DO NOT COMMIT)
+ops-private/
+beta-tester-email.md
+**/beta-testers.csv
+.aetheric-consciousness-verification.json
+
+# Production backups
+backups/
+
+# Allow production deployment templates (but not actual secrets)
+!.env.production.template
+!docker-compose.production.yml
+!Caddyfile

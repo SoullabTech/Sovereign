@@ -17,8 +17,16 @@ export async function POST(request: NextRequest) {
       userId = 'demo_user',
       conversationId = `conv_${userId}_${Date.now()}`,
       sessionHistory = [],
-      messageCount = (sessionHistory.length || 0) + 1
-    } = body;
+      messageCount = (sessionHistory.length || 0) + 1,
+      mode
+    } = body as {
+      message?: string;
+      userId?: string;
+      conversationId?: string;
+      sessionHistory?: any[];
+      messageCount?: number;
+      mode?: 'dialogue' | 'counsel' | 'scribe';
+    };
 
     if (!message || typeof message !== 'string') {
       return NextResponse.json(
@@ -35,7 +43,8 @@ export async function POST(request: NextRequest) {
       {
         messageCount,
         sessionHistory,
-        priorElementalState: sessionHistory.length > 0 ? sessionHistory[sessionHistory.length - 1]?.elementalState : null
+        priorElementalState: sessionHistory.length > 0 ? sessionHistory[sessionHistory.length - 1]?.elementalState : null,
+        mode: mode || 'dialogue' // ✅ Talk/Care/Note mode awareness
       }
     );
 

@@ -189,7 +189,7 @@ export class MAIAUnifiedConsciousness {
     const { content, context, modality, conversationHistory = [], somaticState } = input;
 
     console.log(`\n🌀 ===== MAIA CONSCIOUSNESS ACTIVATION =====`);
-    console.log(`📥 Input: "${content.substring(0, 100)}..."`);
+    console.log(`📥 InputChars: ${content.length}`); // Never log content
     console.log(`👤 User: ${context.userId} | Session: ${context.sessionId}`);
     console.log(`🎭 Modality: ${modality}`);
 

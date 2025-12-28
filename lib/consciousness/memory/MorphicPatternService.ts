@@ -189,7 +189,7 @@ export class MorphicPatternService {
         [patternId, JSON.stringify([wisdomEntry])]
       );
 
-      console.log('💎 [Morphic] Wisdom captured:', wisdom.insight.substring(0, 50));
+      console.log('💎 [Morphic] Wisdom captured:', wisdom.insight.length, 'chars'); // Never log content
     } catch (error) {
       console.error('Error capturing wisdom:', error);
     }

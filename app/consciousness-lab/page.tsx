@@ -168,7 +168,7 @@ export default function ConsciousnessComputingLabPage() {
 
   const handleSaveReflection = async (text: string) => {
     try {
-      console.log('💎 Saving reflection:', { text: text.substring(0, 50) + '...' });
+      console.log('💎 Saving reflection:', text.length, 'chars'); // Never log content
 
       const response = await fetch('/api/consciousness-computing/journal', {
         method: 'POST',

@@ -107,6 +107,12 @@ export default function LabToolsPage() {
       icon: '🧠',
       items: [
         {
+          icon: Compass,
+          label: 'Archetypal Journey',
+          path: '/journey',
+          description: 'Your cosmic spiral & soul blueprint'
+        },
+        {
           icon: Globe,
           label: 'Language Tools',
           path: '/language',

@@ -373,20 +373,25 @@ export async function maiaIntegrateConsultation(
   console.log(`   Recommendation: ${integrationGuidance.useEnhanced ? 'Use enhanced' : 'Use original'}`);
   console.log(`   Reasoning: ${integrationGuidance.reasoning}`);
 
-  // MAIA's decision logic
-  if (!integrationGuidance.useEnhanced || !enhancedResponse) {
-    // Use original MAIA response
-    return originalResponse;
+  // 🎯 MAIA'S VOICE PRESERVATION: Only use enhanced responses in specific cases
+  // Default: Trust MAIA's original voice (enriched by relationship memory)
+
+  // ONLY use enhanced if:
+  // 1. Consultation strongly recommends it (attunement score < 6 = original needs help)
+  // 2. AND there's an enhanced response available
+  // 3. AND it's a rupture-repair situation (needs careful handling)
+
+  const needsEnhancement = responseQuality.attunementScore < 6;
+  const isRuptureRepair = integrationGuidance.reasoning?.toLowerCase().includes('rupture');
+
+  if (needsEnhancement && isRuptureRepair && enhancedResponse) {
+    console.log(`✨ Using enhanced response for rupture-repair (low attunement: ${responseQuality.attunementScore})`);
+    return enhancedResponse;
   }
 
-  if (integrationGuidance.blendSuggestion && responseQuality.attunementScore < 8) {
-    // Blend original + enhanced when consultation suggests it
-    // This is where MAIA could develop her own blending logic over time
-    return enhancedResponse; // For now, prefer enhanced when blending suggested
-  }
-
-  // Use enhanced response
-  return enhancedResponse;
+  // Default: Use MAIA's original response (her authentic voice)
+  console.log(`✅ Using MAIA's original response (attunement acceptable: ${responseQuality.attunementScore})`);
+  return originalResponse;
 }
 
 // Export types for integration

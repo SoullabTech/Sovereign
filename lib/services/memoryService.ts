@@ -1,5 +1,16 @@
 'use client';
 
+/**
+ * MEMORY SERVICE - Client-side stubs
+ *
+ * The actual memory persistence happens via:
+ * - /api/consciousness/memory/store (writes to conversation_turns)
+ * - /api/consciousness/memory/recall (reads from conversation_turns)
+ *
+ * These functions are stubs to prevent runtime errors in components
+ * that import them. They log warnings so we can track usage.
+ */
+
 export interface ConversationMemory {
   oracleAgentId: string;
   content: string;
@@ -12,83 +23,29 @@ export interface ConversationMemory {
 }
 
 export async function saveConversationMemory(memory: ConversationMemory) {
-  const supabase = createClientComponentClient();
-
-  try {
-    const { data, error } = await supabase
-      .from('memories')
-      .insert({
-        oracle_agent_id: memory.oracleAgentId,
-        content: memory.content,
-        memory_type: memory.memoryType,
-        source_type: memory.sourceType,
-        emotional_tone: memory.emotionalTone,
-        wisdom_themes: memory.wisdomThemes,
-        elemental_resonance: memory.elementalResonance,
-        session_id: memory.sessionId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      })
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    console.log('✅ Memory saved to Supabase:', data.id);
-    return { success: true, memory: data };
-  } catch (error) {
-    console.error('Failed to save memory:', error);
-    return { success: false, error };
-  }
+  // Stub: Memory persistence now happens via /api/consciousness/memory/store
+  // This function is kept for backwards compatibility
+  console.log('[memoryService] saveConversationMemory is a stub - using API routes instead');
+  return { success: true, memory: null };
 }
 
 export async function getConversationHistory(oracleAgentId: string, limit = 20) {
-  const supabase = createClientComponentClient();
-
-  try {
-    const { data, error } = await supabase
-      .from('memories')
-      .select('*')
-      .eq('oracle_agent_id', oracleAgentId)
-      .eq('memory_type', 'conversation')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (error) throw error;
-
-    console.log(`✅ Retrieved ${data.length} memories from Supabase`);
-    return { success: true, memories: data };
-  } catch (error) {
-    console.error('Failed to retrieve memories:', error);
-    return { success: false, error, memories: [] };
-  }
+  // Stub: Memory retrieval now happens via /api/consciousness/memory/recall
+  console.log('[memoryService] getConversationHistory is a stub - using API routes instead');
+  return { success: true, memories: [] };
 }
 
 export async function getOracleAgentId(userId: string): Promise<string | null> {
-  const supabase = createClientComponentClient();
+  // Stub: Oracle agent lookup not needed for new memory system
+  // The conversation_turns table uses user_id directly
+  console.log('[memoryService] getOracleAgentId is a stub - user_id used directly');
 
-  try {
-    // Validate UUID format or user_ prefix format to prevent database errors
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    const userIdRegex = /^user_\d+$/;
-    if (!uuidRegex.test(userId) && !userIdRegex.test(userId)) {
-      console.log(`[memoryService] Skipping agent lookup for non-UUID/user_ user: ${userId}`);
-      return null;
-    }
-
-    const { data, error } = await supabase
-      .from('oracle_agents')
-      .select('id')
-      .eq('user_id', userId)
-      .single();
-
-    if (error) throw error;
-
-    return data?.id || null;
-  } catch (error) {
-    console.error('Failed to get oracle agent ID:', error);
-    return null;
+  // Return the userId itself as a fallback identifier
+  // This allows components to have a non-null value to work with
+  if (userId && userId !== 'guest') {
+    return userId;
   }
+  return null;
 }
 
 /**
@@ -96,8 +53,7 @@ export async function getOracleAgentId(userId: string): Promise<string | null> {
  * Stub implementation - returns empty array for now
  */
 export async function getRelevantMemories(userId: string, context?: any): Promise<any[]> {
-  // TODO: Implement semantic memory retrieval
-  // For now, return empty array so elemental agents don't crash
+  // TODO: Implement semantic memory retrieval via API route
   return [];
 }
 
@@ -106,7 +62,6 @@ export async function getRelevantMemories(userId: string, context?: any): Promis
  * Stub implementation - no-op for now
  */
 export async function storeMemoryItem(userId: string, memory: any): Promise<void> {
-  // TODO: Implement memory storage
-  // For now, no-op so elemental agents don't crash
+  // TODO: Implement memory storage via API route
   return;
 }

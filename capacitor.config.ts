@@ -4,10 +4,10 @@ const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
   webDir: 'out',
-  bundledWebRuntime: false,
   server: {
-    // For simulator testing - connect to dev server
-    url: 'http://192.168.4.210:3000',
+    // For simulator: use localhost (points to Mac)
+    // For physical device: change to LAN IP (192.168.4.210)
+    url: 'http://localhost:3000',
     cleartext: true,
     androidScheme: 'https'
   },

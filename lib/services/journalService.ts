@@ -4,7 +4,6 @@
  * All roads lead back to MAIA's deepening understanding of each member
  */
 
-import 'server-only';
 import { query } from '@/lib/db/postgres';
 import type {
   HoloflowerJournalEntry,

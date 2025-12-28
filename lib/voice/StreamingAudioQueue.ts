@@ -52,7 +52,7 @@ export class StreamingAudioQueue {
    * Add audio chunk to queue and start playing if not already playing
    */
   enqueue(item: AudioQueueItem): void {
-    console.log('🎵 [StreamingQueue] Enqueuing audio chunk:', item.text.substring(0, 50));
+    console.log('🎵 [StreamingQueue] Enqueuing audio chunk:', item.text.length, 'chars'); // Never log content
     this.queue.push(item);
 
     if (!this.isPlaying) {
@@ -78,7 +78,7 @@ export class StreamingAudioQueue {
     this.currentAudio = item.audio;
     this.onPlayingChange?.(true);
 
-    console.log('🔊 [StreamingQueue] Playing chunk:', item.text.substring(0, 50));
+    console.log('🔊 [StreamingQueue] Playing chunk:', item.text.length, 'chars'); // Never log content
     this.onTextChange?.(item.text);
 
     // Register audio with feedback prevention to pause microphone
@@ -299,7 +299,7 @@ export async function generateAudioChunk(
     agentVoice?: string;
   }
 ): Promise<HTMLAudioElement> {
-  console.log('🎤 [TTS] Generating audio for:', text.substring(0, 50));
+  console.log('🎤 [TTS] Generating audio for:', text.length, 'chars'); // Never log content
 
   try {
     const response = await fetch('/api/voice/openai-tts', {

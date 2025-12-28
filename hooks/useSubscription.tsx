@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, UserTier, SubscriptionStatus, PremiumFeature, TIER_FEATURES, FEATURE_NAMES } from '@/lib/subscription/types';
 
 interface SubscriptionContextType {
@@ -9,6 +9,7 @@ interface SubscriptionContextType {
   requireSubscription: (feature: PremiumFeature) => boolean;
   showUpgradeModal: (feature: PremiumFeature) => void;
   isLoading: boolean;
+  isBetaTester: boolean; // Tracked in state for hydration
 }
 
 const SubscriptionContext = createContext<SubscriptionContextType>({
@@ -17,13 +18,20 @@ const SubscriptionContext = createContext<SubscriptionContextType>({
   requireSubscription: () => false,
   showUpgradeModal: () => {},
   isLoading: true,
+  isBetaTester: false,
 });
 
 export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isBetaTester, setIsBetaTester] = useState(false); // State for hydration-safe beta check
 
   useEffect(() => {
+    // Check beta code on mount (client-side only)
+    const betaCode = localStorage.getItem('soullab_beta_code');
+    if (betaCode && betaCode.toUpperCase().startsWith('SOULLAB-')) {
+      setIsBetaTester(true);
+    }
     // Initialize user - for now, simulate with localStorage
     // In production, this would be an API call
     initializeUser();
@@ -73,15 +81,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const hasFeature = (feature: PremiumFeature): boolean => {
+  const hasFeature = useCallback((feature: PremiumFeature): boolean => {
+    // Beta testers get full premium access (uses state for hydration-safe check)
+    if (isBetaTester) return true;
     if (!user) return false;
+    return TIER_FEATURES[user.subscription.tier].includes(feature);
+  }, [isBetaTester, user]);
 
-    // Check if user tier includes this feature
-    const tierFeatures = TIER_FEATURES[user.subscription.tier];
-    return tierFeatures.includes(feature);
-  };
-
-  const requireSubscription = (feature: PremiumFeature): boolean => {
+  const requireSubscription = useCallback((feature: PremiumFeature): boolean => {
     const hasAccess = hasFeature(feature);
 
     if (!hasAccess) {
@@ -90,7 +97,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     return true;
-  };
+  }, [hasFeature]);
 
   const showUpgradeModal = (feature: PremiumFeature) => {
     const featureName = FEATURE_NAMES[feature];
@@ -108,7 +115,8 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       hasFeature,
       requireSubscription,
       showUpgradeModal,
-      isLoading
+      isLoading,
+      isBetaTester
     }}>
       {children}
     </SubscriptionContext.Provider>
@@ -137,8 +145,42 @@ export function useFeatureAccess(feature: PremiumFeature) {
 
 // Utility functions for manual subscription management (dev/testing)
 export const subscriptionUtils = {
+  // Activate beta tester access with SOULLAB-[NAME] code
+  activateBetaCode: (code: string): boolean => {
+    if (typeof window === 'undefined') return false;
+    if (code && code.toUpperCase().startsWith('SOULLAB-')) {
+      localStorage.setItem('soullab_beta_code', code.toUpperCase());
+      console.log(`🌟 Beta access activated: ${code}`);
+      window.location.reload(); // Refresh to apply changes
+      return true;
+    }
+    console.error('Invalid beta code. Must start with SOULLAB-');
+    return false;
+  },
+
+  // Check if user has beta access
+  isBetaTester: (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const betaCode = localStorage.getItem('soullab_beta_code');
+    return !!(betaCode && betaCode.toUpperCase().startsWith('SOULLAB-'));
+  },
+
+  // Get beta code
+  getBetaCode: (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem('soullab_beta_code');
+  },
+
+  // Remove beta access
+  removeBetaCode: () => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('soullab_beta_code');
+    window.location.reload();
+  },
+
   // Upgrade user to subscriber
   upgradeToSubscriber: () => {
+    if (typeof window === 'undefined') return;
     const userData = localStorage.getItem('maia_user_subscription');
     if (userData) {
       const user = JSON.parse(userData);
@@ -151,6 +193,7 @@ export const subscriptionUtils = {
 
   // Downgrade to free
   downgradeToFree: () => {
+    if (typeof window === 'undefined') return;
     const userData = localStorage.getItem('maia_user_subscription');
     if (userData) {
       const user = JSON.parse(userData);

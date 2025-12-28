@@ -40,7 +40,7 @@ console.log('=' .repeat(80));
 
 for (const test of testInputs) {
   console.log(`\n📝 Expected: ${test.level}`);
-  console.log(`Input: "${test.input.substring(0, 100)}..."\n`);
+  console.log(`Input: "${test.input.substring(0, 100)}..."\n`); // leak-guard:ignore - demo file with test data only
 
   // Run full awareness + cognitive detection
   const profile = awarenessLevelDetector.detectAwarenessLevel(test.input);

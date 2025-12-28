@@ -112,7 +112,7 @@ export class BrainTrustOrchestrator extends EventEmitter {
   async orchestrate(input: ConsciousnessInput): Promise<OrchestratedResponse> {
     const startTime = Date.now();
     console.log('\n🎭 ===== BRAIN TRUST ORCHESTRATION =====');
-    console.log(`📥 Input: "${input.content.substring(0, 80)}..."`);
+    console.log(`📥 InputChars: ${input.content.length}`); // Never log content
     console.log(`🧠 Configuration:`, {
       primary: this.configuration.primary,
       phase: this.configuration.claudeCodePhase

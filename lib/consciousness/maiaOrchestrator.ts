@@ -20,12 +20,86 @@ import { ConversationalElementalIntelligence } from '@/lib/consciousness/convers
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { getConversationContext, ConversationContext } from '@/lib/consciousness/conversationContext';
 import { claudeDevOrchestration, type DevModeContext, type ClaudeDevAnalysis } from '@/lib/development/claude-dev-orchestration';
+import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
+import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
+import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
+import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
+
+// ─── Recall Quality Helpers ───────────────────────────────────────────────────
+function clamp01(n: number) {
+  return Math.max(0, Math.min(1, n));
+}
+
+/**
+ * Content-free scalar (0-100) measuring recall health.
+ * Weights: crossShare 45%, semanticRate 30%, bundleScore 20%, breakthroughs 5%
+ */
+function computeRecallQuality(stats: {
+  turnsRetrieved: number;
+  turnsCrossSession?: number;
+  semanticHits: number;
+  breakthroughsFound: number;
+}, bundleChars: number): number {
+  const turns = Math.max(1, stats.turnsRetrieved || 0);
+
+  // how much recall came from prior sessions
+  const crossShare = clamp01((stats.turnsCrossSession ?? 0) / turns);
+
+  // how "semantic" the recall was (vector hits per turn retrieved)
+  const semanticRate = clamp01((stats.semanticHits ?? 0) / turns);
+
+  // saturate around ~1200 chars
+  const bundleScore = clamp01(bundleChars / 1200);
+
+  const breakthroughScore = clamp01((stats.breakthroughsFound ?? 0) / 3);
+
+  // 0..100
+  const score01 =
+    0.45 * crossShare +
+    0.30 * semanticRate +
+    0.20 * bundleScore +
+    0.05 * breakthroughScore;
+
+  return Math.round(score01 * 100);
+}
+
+/**
+ * Content-free scalar (0-100) estimating "bloat risk":
+ * high when bundleChars is large but semantic retrieval is weak.
+ */
+function computeBloatRisk(stats: {
+  turnsRetrieved: number;
+  semanticHits: number;
+  turnsCrossSession?: number;
+}, bundleChars: number): number {
+  const turns = Math.max(1, stats.turnsRetrieved || 0);
+
+  const semanticRate = clamp01((stats.semanticHits ?? 0) / turns);
+  const crossShare = clamp01((stats.turnsCrossSession ?? 0) / turns);
+
+  // saturate around ~2000 chars for bloat-risk
+  const charsScore = clamp01(bundleChars / 2000);
+
+  // high penalty when semanticRate is low
+  const semanticPenalty = 1 - semanticRate;
+
+  // tiny penalty when it's not cross-session
+  const crossPenalty = 1 - crossShare;
+
+  const risk01 =
+    0.60 * charsScore +
+    0.30 * semanticPenalty +
+    0.10 * crossPenalty;
+
+  return Math.round(clamp01(risk01) * 100);
+}
 
 export interface MaiaConsciousnessInput {
   message: string;
   userId: string;
   sessionId: string;
   conversationHistory?: any[];
+  meta?: { explorerId?: string; userId?: string; sessionId?: string; [key: string]: any };
   context?: any;
 }
 
@@ -158,7 +232,7 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
 }
 
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
-  const { message, userId, sessionId, conversationHistory = [], context = {} } = input;
+  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {} } = input;
 
   // 🧠 MAIA-PAI CONVERSATIONAL KERNEL: Initialize conversation context
   const conversationContext = getConversationContext(sessionId);
@@ -243,6 +317,50 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`🎯 THROUGHLINE REFLEX: "${throughline}"`);
   console.log(`🔥 STAKES ASSESSMENT: "${stakes}"`);
 
+  // 🧠 MEMORY BUNDLE: Retrieve ranked context from multiple buckets
+  // Server-side allowlist guard: client can request, but server decides
+  const modeResolution = resolveMemoryMode(userId, (meta as any)?.memoryMode);
+  const memoryMode = modeResolution.effective;
+
+  console.log('🧠 [MemoryGate] modes', {
+    userId,
+    requestedMode: modeResolution.requested,
+    memoryMode: modeResolution.effective,
+    allowLongterm: modeResolution.allowLongterm,
+  });
+
+  logMemoryGateDenial('Orchestrator', userId, modeResolution);
+
+  let memoryBundle: MemoryBundle | null = null;
+  let memoryContext = '';
+
+  if (memoryMode !== 'ephemeral') {
+    try {
+      const memoryBundleStartTime = Date.now();
+      memoryBundle = await MemoryBundleService.build({
+        userId,
+        currentInput: message,
+        sessionId,
+        scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
+        maxBullets: 5,
+      });
+
+      if (memoryBundle) {
+        memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
+        console.log(`📦 [MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
+        console.log(`📦 [MemoryBundle] Relationship: ${memoryBundle.relationshipSnapshot.encounterCount} encounters, ${memoryBundle.relationshipSnapshot.breakthroughCount} breakthroughs`);
+      }
+
+      layerTimings['memory-bundle'] = Date.now() - memoryBundleStartTime;
+      layersSuccessful.push('memory-bundle');
+    } catch (error) {
+      console.warn('[MemoryBundle] Retrieval failed (continuing without):', error);
+      layersFailed.push('memory-bundle');
+    }
+  } else {
+    console.log('📦 [MemoryBundle] Skipped - ephemeral mode');
+  }
+
   // 1️⃣ ALWAYS: Get base MAIA response first (core functionality) with conversation context
   let maiaResult;
   try {
@@ -251,7 +369,17 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       sessionId,
       input: message,
       meta: {
+        ...meta,     // ✅ Include explorerId/userId from normalized meta
         ...context,
+        userId,      // 🔑 Explicitly include userId for TurnsStore cross-session persistence
+        memoryMode,  // 🧠 Permission gate for memory operations
+        // 🧠 MEMORY BUNDLE: Inject compressed context from multi-bucket retrieval
+        memoryContext: memoryContext || undefined,
+        memoryBundle: memoryBundle ? {
+          bulletCount: memoryBundle.memoryBullets.length,
+          encounterCount: memoryBundle.relationshipSnapshot.encounterCount,
+          breakthroughCount: memoryBundle.relationshipSnapshot.breakthroughCount,
+        } : undefined,
         // MAIA-PAI conversational kernel context
         conversationContext: {
           depth: conversationContext.getSpine().conversationDepth,
@@ -422,6 +550,43 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   conversationContext.addMoment(message, maiaResult.text, significance);
   console.log(`💫 Conversation moment tracked: ${significance} | Spine updated`);
 
+  // 🧠 MEMORY WRITEBACK: Promote to long-term memory if conditions met
+  let writebackResult: { wrote: boolean; memoryId?: string; reason?: string } = { wrote: false, reason: 'skipped' };
+  if (memoryMode === 'longterm') {
+    try {
+      const writebackStartTime = Date.now();
+      // Extract elemental info (cast to any to avoid strict type issues with null assignments)
+      const elementField = elementalField as any;
+      const convElemental = conversationalElemental as any;
+
+      writebackResult = await MemoryWritebackService.writeBack({
+        userId,
+        sessionId,
+        userMessage: message,
+        assistantResponse: maiaResult.text,
+        facetCode: elementField?.dominantElement || convElemental?.context?.dominantElement,
+        element: elementField?.dominantElement,
+        memoryMode,
+        route: (maiaResult as any).metadata?.route || 'unknown',
+        timestamp: new Date(),
+      });
+
+      layerTimings['memory-writeback'] = Date.now() - writebackStartTime;
+
+      if (writebackResult.wrote) {
+        console.log(`✅ [MemoryWriteback] Promoted to long-term memory: ${writebackResult.memoryId}`);
+        layersSuccessful.push('memory-writeback');
+      } else {
+        console.log(`📝 [MemoryWriteback] Skipped: ${writebackResult.reason}`);
+      }
+    } catch (error) {
+      console.warn('[MemoryWriteback] Failed (continuing without):', error);
+      layersFailed.push('memory-writeback');
+    }
+  } else {
+    console.log(`📝 [MemoryWriteback] Skipped - ${memoryMode} mode`);
+  }
+
   // 7️⃣ COMPILE FINAL RESPONSE
   const compilationStartTime = Date.now();
   performanceProfile.totalDuration = Date.now() - orchestrationStartTime;
@@ -459,6 +624,60 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       },
       // Claude development mode analysis (only in development)
       claudeDevAnalysis: process.env.NODE_ENV === 'development' ? claudeDevAnalysis : null,
+      // 🔒 SECURITY: Signal to UI when input contained sensitive data (not stored)
+      sensitiveInput: containsSensitiveData(message),
+      // 🧠 MEMORY PIPELINE DATA (full details in dev, minimal in prod)
+      memoryPipeline: (() => {
+        const bundleChars = memoryContext.length;
+        const recallQuality = memoryBundle
+          ? computeRecallQuality(
+              {
+                turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+                turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
+                semanticHits: memoryBundle.retrievalStats.semanticHits,
+                breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
+              },
+              bundleChars
+            )
+          : 0;
+
+        const bloatRisk = memoryBundle
+          ? computeBloatRisk(
+              {
+                turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+                turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
+                semanticHits: memoryBundle.retrievalStats.semanticHits,
+              },
+              bundleChars
+            )
+          : 0;
+
+        if (process.env.NODE_ENV === 'development' || meta.debugMemory) {
+          return {
+            mode: memoryMode,
+            retrieval: memoryBundle ? {
+              turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+              turnsSameSession: memoryBundle.retrievalStats.turnsSameSession,
+              turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
+              semanticHits: memoryBundle.retrievalStats.semanticHits,
+              breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
+              bulletsInjected: memoryBundle.memoryBullets.length,
+            } : null,
+            bundleChars,
+            recallQuality,
+            bloatRisk,
+            writeback: writebackResult,
+            relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
+          };
+        }
+        return {
+          mode: memoryMode,
+          wrote: writebackResult?.wrote || false,
+          bundleChars,
+          recallQuality,
+          bloatRisk,
+        };
+      })(),
       // 🎯 PERFORMANCE PROFILING DATA
       performanceProfile: {
         totalDuration: performanceProfile.totalDuration,
@@ -526,10 +745,16 @@ export async function generateSimpleMaiaResponse(
   context: any = {}
 ): Promise<{ message: string; metadata: any }> {
   try {
+    // Extract normalized meta if provided, otherwise use context directly
+    const { meta: normalizedMeta, ...restContext } = context;
+    const mergedMeta = normalizedMeta
+      ? { ...normalizedMeta, ...restContext }
+      : context;
+
     const maiaResult = await getMaiaResponse({
       sessionId,
       input: message,
-      meta: context,
+      meta: mergedMeta,
     });
 
     return {

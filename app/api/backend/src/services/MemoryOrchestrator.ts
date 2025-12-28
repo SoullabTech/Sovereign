@@ -1112,4 +1112,35 @@ export class MemoryOrchestrator {
       };
     }
   }
+
+  // ============================================================================
+  // STUB METHODS (unblock build - Supabase removed, using PostgreSQL)
+  // ============================================================================
+
+  /**
+   * Get sessions for a user (stub)
+   */
+  async getSessionsByUser(_userId: string, _limit: number = 5): Promise<any[]> {
+    return [];
+  }
+
+  /**
+   * Get journal entries for a user (stub)
+   */
+  async getJournalEntries(_userId: string, _limit: number = 3): Promise<any[]> {
+    return [];
+  }
+
+  /**
+   * Store a conversation (stub)
+   */
+  async storeConversation(_params: {
+    userId: string;
+    sessionId: string;
+    userMessage: string;
+    assistantResponse: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    // Storage happens via TurnsStore in maiaService.ts
+  }
 }

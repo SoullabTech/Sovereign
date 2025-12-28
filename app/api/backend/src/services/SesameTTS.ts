@@ -137,7 +137,7 @@ export class SesameTTS {
    * Synthesize speech from text with prosody support
    */
   async synthesize(text: string, options: TTSOptions = {}): Promise<string | null> {
-    console.log('[SesameTTS] TTS input:', text.substring(0, 100) + '...');
+    console.log('[SesameTTS] TTS input:', text.length, 'chars'); // Never log content
     
     try {
       // Skip if no Sesame URL configured

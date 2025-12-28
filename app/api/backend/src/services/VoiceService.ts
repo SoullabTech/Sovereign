@@ -70,7 +70,7 @@ export class VoiceService {
         preset
       });
 
-      console.log(`🎤 Voice queued: ${taskId} | ${voiceId} | ${preset} | ${cleanText.substring(0, 30)}...`);
+      console.log(`🎤 Voice queued: ${taskId} | ${voiceId} | ${preset} | ${cleanText.length} chars`); // Never log content
 
       // Emit analytics event
       this.eventBus.emit({

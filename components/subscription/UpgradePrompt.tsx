@@ -90,7 +90,7 @@ export function UpgradePrompt({ feature, inline = false, className = '' }: Upgra
         <div className="flex gap-3 justify-center">
           <button className="px-6 py-3 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-900 font-semibold rounded-lg transition-all flex items-center gap-2">
             <Crown className="w-4 h-4" />
-            Upgrade to Sacred Access
+            Upgrade to Member Access
           </button>
           <button className="px-4 py-3 border border-amber-500/40 text-amber-300 hover:bg-amber-500/10 rounded-lg transition-all">
             Learn More

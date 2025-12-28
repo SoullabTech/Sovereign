@@ -22,6 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { lattice } from '@/lib/memory/ConsciousnessMemoryLattice';
+import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,10 +48,37 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Integrate event into lattice
-    const result = await lattice.integrateEvent(userId, event, facet, phase || { name: 'current' });
+    // Normalize facet - accept { code } or { facetCode } or { facet_code }
+    const facetCode = facet?.code ?? facet?.facetCode ?? facet?.facet_code ?? null;
+    if (!facetCode) {
+      return NextResponse.json(
+        { error: 'facet.code (or facetCode/facet_code) is required' },
+        { status: 400 }
+      );
+    }
 
-    console.log(`✅ [API] Event integrated: ${event.type} for ${userId}, Memory: ${result.memoryFormed}`);
+    // Build normalized facet object for lattice
+    const normalizedFacet = {
+      code: facetCode,
+      element: facet?.element ?? (facetCode.split('-')[0] || facetCode.split('_')[0]),
+      phase: facet?.phase ?? (parseInt(facetCode.split(/[-_]/)[1]) || 1),
+    };
+
+    // Memory permission gate: use centralized resolver
+    // Defense-in-depth: lattice also checks internally, but be explicit
+    const modeResolution = resolveMemoryMode(userId, body.memoryMode);
+    logMemoryGateDenial('API integrate route', userId, modeResolution);
+
+    // Integrate event into lattice (with permission-gated memoryMode)
+    const result = await lattice.integrateEvent(
+      userId,
+      event,
+      normalizedFacet,
+      phase || { name: 'current' },
+      { memoryMode: modeResolution.effective }
+    );
+
+    console.log(`✅ [API] Event integrated: ${event.type} for ${userId}, Memory: ${result.memoryFormed}, Mode: ${modeResolution.effective}`);
 
     return NextResponse.json({
       success: true,

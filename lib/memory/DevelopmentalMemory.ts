@@ -14,7 +14,8 @@
  * - User feedback loops for continuous learning
  */
 
-import { db } from '@/lib/db/postgres';
+import { query as dbQuery } from '@/lib/db/postgres';
+import { toPgVectorLiteralOrNull } from '@/lib/db/pgvector';
 import { generateLocalEmbedding } from './embeddings';
 
 // ═══════════════════════════════════════════════════════════════
@@ -49,6 +50,11 @@ export interface DevelopmentalMemory {
   sourceBeadsTaskId?: string;
   sourceAinSessionId?: string;
   sourceConsciousnessEntryId?: string;
+
+  // 🔮 CANON FIELDS: For canon beads with direct content
+  contentText?: string;  // The actual canon text content
+  authority?: string;    // 'CANON', 'MEMORY', 'RETRIEVAL', etc.
+  scope?: string;        // 'GLOBAL', 'USER', etc.
 }
 
 export interface FormMemoryInput {
@@ -121,18 +127,18 @@ export class DevelopmentalMemoryService {
         user_id, memory_type, trigger_event, facet_code, spiral_cycle,
         significance, vector_embedding, entity_tags,
         source_beads_task_id, source_ain_session_id, source_consciousness_entry_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8, $9, $10, $11)
       RETURNING *
     `;
 
-    const result = await db.query(query, [
+    const result = await dbQuery(query, [
       input.userId,
       input.type,
       JSON.stringify(input.triggerEvent),
       input.facetCode,
       input.spiralCycle ?? 1,
       significance,
-      vectorEmbedding.length > 0 ? `{${vectorEmbedding.join(',')}}` : null,
+      toPgVectorLiteralOrNull(vectorEmbedding),
       input.entityTags ?? [],
       input.sourceBeadsTaskId,
       input.sourceAinSessionId,
@@ -205,7 +211,7 @@ export class DevelopmentalMemoryService {
       params.push(input.limit);
     }
 
-    const result = await db.query(query, params);
+    const result = await dbQuery(query, params);
     const memories = result.rows.map(row => this.parseMemory(row));
 
     // Update recall count for retrieved memories
@@ -229,7 +235,7 @@ export class DevelopmentalMemoryService {
     limit: number = 10,
     threshold: number = 0.65
   ): Promise<DevelopmentalMemory[]> {
-    console.log(`🔎 [SEMANTIC SEARCH] Query: "${query.substring(0, 50)}..."`);
+    console.log(`🔎 [SEMANTIC SEARCH] QueryChars: ${query.length}`); // Never log query content
 
     // Generate query embedding
     const queryEmbedding = await generateLocalEmbedding(query);
@@ -251,7 +257,7 @@ export class DevelopmentalMemoryService {
       LIMIT $4
     `;
 
-    const result = await db.query(sql, [
+    const result = await dbQuery(sql, [
       `[${queryEmbedding.join(',')}]`,
       userId,
       threshold,
@@ -300,7 +306,7 @@ export class DevelopmentalMemoryService {
     const delta = feedback.feedback === 'up' ? 0.05 : -0.05;
     const newSignificance = Math.max(0, Math.min(1, memory.significance + delta));
 
-    await db.query(
+    await dbQuery(
       `UPDATE developmental_memories
        SET user_feedback = $1, significance = $2, updated_at = NOW()
        WHERE id = $3`,
@@ -332,7 +338,7 @@ export class DevelopmentalMemoryService {
       HAVING COUNT(*) >= 3
     `;
 
-    const result = await db.query(sql, [userId]);
+    const result = await dbQuery(sql, [userId]);
 
     if (result.rows.length > 0) {
       console.log(`⚠️ [STUCK PATTERNS] Found ${result.rows.length} recurring issues`);
@@ -377,11 +383,15 @@ export class DevelopmentalMemoryService {
       sourceBeadsTaskId: row.source_beads_task_id,
       sourceAinSessionId: row.source_ain_session_id,
       sourceConsciousnessEntryId: row.source_consciousness_entry_id,
+      // 🔮 CANON FIX: Map content_text → contentText for canon beads
+      contentText: row.content_text,
+      authority: row.authority,
+      scope: row.scope,
     };
   }
 
   private async getMemoryById(id: string): Promise<DevelopmentalMemory | null> {
-    const result = await db.query(
+    const result = await dbQuery(
       'SELECT * FROM developmental_memories WHERE id = $1',
       [id]
     );
@@ -392,7 +402,7 @@ export class DevelopmentalMemoryService {
   private async incrementRecallCounts(memoryIds: string[]): Promise<void> {
     if (memoryIds.length === 0) return;
 
-    await db.query(
+    await dbQuery(
       `UPDATE developmental_memories
        SET recall_count = recall_count + 1, last_recalled_at = NOW()
        WHERE id = ANY($1)`,

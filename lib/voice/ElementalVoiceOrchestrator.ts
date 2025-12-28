@@ -292,7 +292,7 @@ export class ElementalVoiceOrchestrator {
       // Check smart cache first
       const cached = this.checkCache(text);
       if (cached) {
-        console.log('⚡ Cache hit:', cached.substring(0, 30));
+        console.log('⚡ Cache hit:', cached.length, 'chars'); // Never log content
         await this.sendResponse(cached);
         this.isProcessing = false;
         return;
@@ -672,7 +672,7 @@ export class ElementalVoiceOrchestrator {
    * Send response through the pipeline
    */
   private async sendResponse(text: string): Promise<void> {
-    console.log('📤 Sending response:', text.substring(0, 50));
+    console.log('📤 Sending response:', text.length, 'chars'); // Never log content
 
     // Notify UI
     this.config.onTranscript(text, false);

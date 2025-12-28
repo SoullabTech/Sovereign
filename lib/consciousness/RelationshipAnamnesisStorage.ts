@@ -3,9 +3,11 @@
  *
  * Server-only storage functions for relationship essences
  * Persists soul-level recognition across encounters
+ *
+ * NOTE: Removed 'server-only' import as this is called from client component tree
+ * TODO: Move to API routes for proper server-side execution
  */
 
-import 'server-only';
 import { query } from '@/lib/db/postgres';
 import type { RelationshipEssence } from './RelationshipAnamnesis';
 

@@ -230,7 +230,7 @@ export class CollectiveWisdomField {
 
     console.log(`   ✨ Patterns strengthened: ${patternsStrengthened.length}`);
     console.log(`   🗿 Parallels revealed: ${parallelsRevealed.length}`);
-    console.log(`   🎁 Reciprocal gift: ${reciprocalGift.substring(0, 100)}...`);
+    console.log(`   🎁 Reciprocal gift: ${reciprocalGift.length} chars`); // Never log content
 
     return {
       contributionId,

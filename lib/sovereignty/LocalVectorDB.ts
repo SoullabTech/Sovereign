@@ -201,7 +201,7 @@ export class LocalVectorDB {
       : options.query;
 
     console.log('🔍 [VECTOR DB] Retrieving relevant wisdom...');
-    console.log(`   Query: ${options.query.substring(0, 100)}...`);
+    console.log(`   QueryChars: ${options.query.length}`); // Never log content
     console.log(`   Max tokens: ${maxTokens}`);
 
     // Generate query embedding

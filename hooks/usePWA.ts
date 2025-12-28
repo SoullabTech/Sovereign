@@ -208,8 +208,12 @@ export const usePWA = () => {
     icon: '📱'
   });
 
-  // Register/update service worker
+  // Register/update service worker (production only to avoid dev caching issues)
   const registerServiceWorker = useCallback(async () => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('⏭️ Skipping Service Worker registration in development');
+      return null;
+    }
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw-enhanced.js');

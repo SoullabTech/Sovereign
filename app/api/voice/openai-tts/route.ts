@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log(`🎤 TTS Request: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`);
+    console.log(`🎤 TTS Request: ${text.length} chars`); // Never log content
 
     let buffer: Buffer;
     let contentType: string;

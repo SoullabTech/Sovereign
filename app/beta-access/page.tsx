@@ -65,6 +65,9 @@ export default function BetaAccessPage() {
     // Store in localStorage
     localStorage.setItem('maia_user_subscription', JSON.stringify(betaUser));
 
+    // Store the beta code for feature access check
+    localStorage.setItem('soullab_beta_code', passcodeTrimmed);
+
     // Store in beta testers list
     const existingTesters = JSON.parse(localStorage.getItem('maia_beta_testers') || '[]');
     const updatedTesters = [...existingTesters, {
@@ -184,7 +187,7 @@ export default function BetaAccessPage() {
               </div>
               <div className="flex items-center gap-2 text-amber-300/80">
                 <Star className="w-4 h-4 text-amber-400" />
-                Sacred Access
+                Member Access
               </div>
             </div>
           </div>

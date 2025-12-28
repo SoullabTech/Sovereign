@@ -1,6 +1,7 @@
 // backend: app/api/between/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
 import {
   ruptureDetectionService,
@@ -15,6 +16,204 @@ import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+// Audit fingerprint secret - must be set in production for secure correlation
+const AUDIT_FINGERPRINT_SECRET =
+  process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
+  (IS_PROD ? '' : 'dev-only-secret'); // Dev fallback OK, prod requires real secret
+
+// Fail-closed: production MUST have fingerprint secret configured
+if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
+  console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+  throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔍 AUDIT LOGGING: Privacy-safe structured events
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Create a privacy-safe fingerprint for correlation without exposing raw values.
+ * In dev: shows masked value (first 4 + last 4 chars)
+ * In prod: shows HMAC-based fingerprint using secret from env
+ */
+function fingerprint(value: string | undefined, label: string): string {
+  if (!value) return 'none';
+  if (!IS_PROD) {
+    // Dev: show masked value for debugging
+    if (value.length <= 8) return `${value.slice(0, 2)}…${value.slice(-2)}`;
+    return `${value.slice(0, 4)}…${value.slice(-4)}`;
+  }
+  // Prod: require secret for secure fingerprinting
+  if (!AUDIT_FINGERPRINT_SECRET) return 'fp_unconfigured';
+
+  // HMAC with secret + label + value (label prevents cross-field correlation attacks)
+  const hmac = crypto.createHmac('sha256', AUDIT_FINGERPRINT_SECRET);
+  hmac.update(label);
+  hmac.update(':');
+  hmac.update(value);
+  return `fp_${hmac.digest('hex').slice(0, 12)}`;
+}
+
+/**
+ * Generate a unique request ID for correlation across logs.
+ */
+function generateReqId(): string {
+  return `req_${crypto.randomBytes(8).toString('hex')}`;
+}
+
+/**
+ * Structured audit log for identity resolution decisions.
+ * Never logs raw IDs in production - only booleans and fingerprints.
+ */
+function logIdentityResolution(reqId: string, data: {
+  mode: string;
+  explorerId?: string;
+  bodyUserId?: string;
+  effectiveUserId: string;
+  sessionId: string;
+  bodySessionIdProvided: boolean;
+  cookieWasNew: boolean;
+}) {
+  console.log('[Audit:IdentityResolution]', {
+    reqId,
+    ts: new Date().toISOString(),
+    env: IS_PROD ? 'prod' : 'dev',
+    mode: data.mode,
+    // Booleans - safe for any environment
+    hasExplorerId: !!data.explorerId,
+    hasBodyUserId: !!data.bodyUserId,
+    bodySessionIdProvided: data.bodySessionIdProvided, // True if client sent sessionId (which we ignore)
+    cookieWasNew: data.cookieWasNew,
+    // Fingerprints - privacy-safe correlation
+    effectiveUserFp: fingerprint(data.effectiveUserId, 'user'),
+    sessionFp: fingerprint(data.sessionId, 'session'),
+    // Guardrail flags
+    devTrustEnabled: process.env.MAIA_DEV_TRUST_BODY_ID === '1',
+  });
+}
+
+/**
+ * Structured audit log for memory pipeline decisions.
+ * Logs modes, gates, and counts - never content.
+ * Ties identity → retrieval → injection under same reqId for incident timeline.
+ */
+function logMemoryPipelineDecision(reqId: string, data: {
+  userId: string;
+  sessionId: string;
+  memoryModeEffective: string;
+  sensitiveInput: boolean;
+  counts: {
+    turnsRetrieved: number;
+    turnsSameSession: number;
+    turnsCrossSession: number;
+    semanticHits: number;
+    breakthroughsFound: number;
+    bulletsInjected: number;
+  };
+  relationshipEncounters: number;
+  injected: boolean;
+  bundleChars: number;
+  recallQuality: number;
+  bloatRisk: number;
+  healthFlags: string[];
+  reason?: string;
+}) {
+  console.log('[Audit:MemoryPipeline]', {
+    reqId,
+    ts: new Date().toISOString(),
+    env: IS_PROD ? 'prod' : 'dev',
+    userFp: fingerprint(data.userId, 'user'),
+    sessionFp: fingerprint(data.sessionId, 'session'),
+    mode: data.memoryModeEffective,
+    sensitiveInput: data.sensitiveInput,
+    counts: data.counts,
+    relationshipEncounters: data.relationshipEncounters,
+    injected: data.injected,
+    bundleChars: data.bundleChars,
+    recallQuality: data.recallQuality,
+    bloatRisk: data.bloatRisk,
+    healthFlags: data.healthFlags,
+    reason: data.reason ?? null,
+    longtermGate: {
+      envEnabled: process.env.MAIA_LONGTERM_WRITEBACK === '1',
+    },
+  });
+
+  // Optional warning log (gated by env)
+  if (process.env.MAIA_MEMORY_ALERTS === '1' && data.healthFlags.length > 0) {
+    console.warn('[Audit:MemoryPipeline:WARN]', {
+      reqId,
+      healthFlags: data.healthFlags,
+      rq: data.recallQuality,
+      br: data.bloatRisk,
+      bc: data.bundleChars,
+    });
+  }
+}
+
+/**
+ * Structured audit log for request completion.
+ * Gives "incident timeline in 3 greps": identity → memory → complete
+ */
+function logRequestComplete(reqId: string, data: {
+  ok: boolean;
+  status: number;
+  route: string;
+  latencyMs: number;
+  responseChars?: number;
+  safeMode?: boolean;
+  path?: 'simple' | 'orchestrator' | 'canon';
+  errorCode?: string;
+}) {
+  console.log('[Audit:RequestComplete]', {
+    reqId,
+    ts: new Date().toISOString(),
+    env: IS_PROD ? 'prod' : 'dev',
+    ...data,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔒 SESSION MANAGEMENT: Cookie-based server-issued session IDs
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Cookie name: __Host- prefix in production for extra hardening
+// (requires Secure + Path=/ + no Domain, prevents cookie injection/shadowing)
+const SESSION_COOKIE_NAME = process.env.NODE_ENV === 'production' ? '__Host-maia_sid' : 'maia_sid';
+
+/**
+ * Get session ID from cookie or create a new one.
+ * This prevents clients from spoofing session IDs via request body.
+ * Uses NextRequest cookies API (more robust than regex parsing).
+ */
+function getOrCreateSessionId(req: NextRequest): { sid: string; setCookie?: string } {
+  // Use Next.js cookies API - handles parsing edge cases
+  const existingCookie = req.cookies.get(SESSION_COOKIE_NAME);
+  if (existingCookie?.value) {
+    return { sid: existingCookie.value };
+  }
+
+  // Create new server-issued session ID
+  const sid = `sid_${crypto.randomBytes(16).toString('hex')}`;
+  const isProd = process.env.NODE_ENV === 'production';
+  const secure = isProd ? '; Secure' : '';
+  // Note: __Host- prefix requires Path=/ and no Domain attribute (which we comply with)
+  const setCookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 30}`;
+  return { sid, setCookie };
+}
+
+/**
+ * Helper to add Set-Cookie header to a NextResponse if needed.
+ * Uses append() so additional cookies can be added later without overwriting.
+ */
+function withSessionCookie(res: NextResponse, setCookie?: string): NextResponse {
+  if (setCookie) {
+    res.headers.append('Set-Cookie', setCookie);
+  }
+  return res;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔮 CANON BYPASS: Detect identity/canon questions and return canon beads directly
@@ -74,13 +273,13 @@ function isCanonQuery(message: string): boolean {
     /care mode/,
     /(note|scribe) mode/,
     /explain.*(talk|care|note).*modes?/,
-    /tell me about.*(modes?|talk|care|note)/,
+    /tell me about.*\b(talk|care|note)\b.*(mode|modes)/,
 
     // Processing paths
     /what are.*(processing )?paths?/,
     /\b(fast|core|deep)\b.*(path|mode|processing)/,
     /explain.*(fast|core|deep)/,
-    /tell me about.*(fast|core|deep)/,
+    /tell me about.*\b(fast|core|deep)\b.*(path|paths|processing)/,
 
     // Sanctuary / privacy / consent
     /sanctuary/,
@@ -197,17 +396,21 @@ async function queryCanonBeads(message: string): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
+  const reqId = generateReqId();
+  const startTime = Date.now();
+
   try {
     // Initialize database tables if needed
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta } = body as {
       message?: string;
       sessionId?: string;
       mode?: 'dialogue' | 'counsel' | 'scribe';
       userId?: string;
       userName?: string;
+      meta?: { explorerId?: string; sessionId?: string };
     };
 
     // Voice Renderer request flags
@@ -218,22 +421,68 @@ export async function POST(req: NextRequest) {
     const serverAllowsCanonWrap = process.env.CANON_WRAP_ENABLED === '1';
     const allowCanonWrap = serverAllowsCanonWrap && body?.allowCanonWrap === true;
 
+    // 🔒 SESSION: Get server-issued session ID from cookie (prevents spoofing)
+    const { sid: safeSessionId, setCookie: sessionCookie } = getOrCreateSessionId(req);
+    // Note: body.sessionId is now ignored for identity - server controls session assignment
+
     if (!message || typeof message !== 'string') {
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 },
+      return withSessionCookie(
+        NextResponse.json({ error: 'Message is required' }, { status: 400 }),
+        sessionCookie
       );
     }
 
-    // ✅ IDENTITY RESOLUTION: Use provided userId or create session-scoped pseudo-user
-    const safeSessionId = sessionId || `chat-${Date.now()}`;
-    const effectiveUserId = (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
-      ? bodyUserId.trim()
-      : `anon:${safeSessionId}`; // Session-scoped continuity without cross-user leakage
+    // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
+    const explorerId = meta?.explorerId;
+    const devTrustBodyId = process.env.MAIA_DEV_TRUST_BODY_ID === '1';
+
+    // TODO: When auth is implemented, authUserId should come from verified session/token
+    const authUserId: string | null = null; // Placeholder for future auth integration
+
+    let effectiveUserId: string;
+    if (authUserId) {
+      // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
+      effectiveUserId = authUserId;
+    } else if (IS_PROD) {
+      // 🔒 Production: Always session-scoped, never trust client body
+      effectiveUserId = `anon:${safeSessionId}`;
+    } else if (devTrustBodyId) {
+      // 🧪 Dev mode with trust enabled: Allow client-supplied IDs for testing
+      effectiveUserId = explorerId
+        ? explorerId
+        : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
+          ? bodyUserId.trim()
+          : `anon:${safeSessionId}`;
+    } else {
+      // 🔒 Dev mode without trust: Session-scoped (safe default)
+      effectiveUserId = `anon:${safeSessionId}`;
+    }
+
+    // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
+    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
+    logIdentityResolution(reqId, {
+      mode: identityMode,
+      explorerId,
+      bodyUserId,
+      effectiveUserId,
+      sessionId: safeSessionId,
+      bodySessionIdProvided: !!sessionId,
+      cookieWasNew: !!sessionCookie,
+    });
+
+    // Build normalized meta for consistent downstream propagation
+    const normalizedMeta = {
+      ...(meta ?? {}),
+      explorerId: explorerId ?? undefined,
+      userId: effectiveUserId,      // 👈 explicit for downstream consumers
+      sessionId: safeSessionId,
+      reqId,                        // 👈 for audit correlation (cognitive events + logs)
+    };
 
     // Log mode for debugging
     console.log('[Chat API] Mode parameter:', mode || 'not provided (will default to dialogue)');
     console.log('[Chat API] Effective userId:', effectiveUserId);
+    console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     const conversationHistory = await getConversationHistory(safeSessionId, 20);
@@ -312,7 +561,17 @@ export async function POST(req: NextRequest) {
               wrapOnly: true,
             });
 
-            return NextResponse.json({
+            logRequestComplete(reqId, {
+              ok: true,
+              status: 200,
+              route: '/api/between/chat',
+              latencyMs: Date.now() - startTime,
+              responseChars: wrapped.renderedText.length,
+              safeMode: false,
+              path: 'canon',
+            });
+
+            return withSessionCookie(NextResponse.json({
               message: wrapped.renderedText,
               route: {
                 endpoint: '/api/between/chat',
@@ -332,11 +591,21 @@ export async function POST(req: NextRequest) {
                 voiceMode: normalizedMode,
                 voiceRenderer: wrapped.compliance,
               },
-            });
+            }), sessionCookie);
           }
 
           // NO WRAP: Return canon bead directly
-          return NextResponse.json({
+          logRequestComplete(reqId, {
+            ok: true,
+            status: 200,
+            route: '/api/between/chat',
+            latencyMs: Date.now() - startTime,
+            responseChars: canonResponse.length,
+            safeMode: false,
+            path: 'canon',
+          });
+
+          return withSessionCookie(NextResponse.json({
             message: canonResponse,
             route: {
               endpoint: '/api/between/chat',
@@ -354,7 +623,7 @@ export async function POST(req: NextRequest) {
               bypassedLLM: true,
               hallucinationPrevented: true,
             },
-          });
+          }), sessionCookie);
         } else {
           console.log('[Chat API] ⚠️ CANON BYPASS MISS - no canon bead found, falling through to LLM');
         }
@@ -371,13 +640,14 @@ export async function POST(req: NextRequest) {
       type: ruptureDetection.ruptureType,
       confidence: ruptureDetection.confidence,
       patterns: ruptureDetection.patterns,
-      userInput: message.substring(0, 50) + '...'
+      inputChars: message.length, // Never log message content
     });
 
     if (SAFE_MODE) {
       // In safe mode, use simplified orchestrator without full consciousness pipeline
       const simpleResult = await generateSimpleMaiaResponse(message, safeSessionId, {
-        mode: mode || 'dialogue' // Pass mode for Talk/Care/Note awareness
+        mode: mode || 'dialogue', // Pass mode for Talk/Care/Note awareness
+        meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
       });
 
       // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
@@ -443,7 +713,18 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
-      return NextResponse.json({
+      // Audit: request complete (simple path)
+      logRequestComplete(reqId, {
+        ok: true,
+        status: 200,
+        route: '/api/between/chat',
+        latencyMs: Date.now() - startTime,
+        responseChars: outboundText.length,
+        safeMode: true,
+        path: 'simple',
+      });
+
+      return withSessionCookie(NextResponse.json({
         message: outboundText,
         route: {
           endpoint: '/api/between/chat',
@@ -466,7 +747,7 @@ export async function POST(req: NextRequest) {
             enhanced: ruptureProcessingResult?.consultationUsed || false
           } : undefined
         },
-      });
+      }), sessionCookie);
     }
 
     // Use full fail-soft consciousness orchestrator
@@ -475,6 +756,7 @@ export async function POST(req: NextRequest) {
       userId: effectiveUserId,
       sessionId: safeSessionId,
       conversationHistory, // ✅ Now loaded from database
+      meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
       context: {
         chatType: 'between-member',
         endpoint: '/api/between/chat',
@@ -483,6 +765,65 @@ export async function POST(req: NextRequest) {
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
       }
+    });
+
+    // 📊 AUDIT: Memory pipeline metrics (content-free)
+    const memPipeline = orchestratorResult.metadata?.memoryPipeline;
+    const memRetrieval = memPipeline?.retrieval;
+
+    // Configurable thresholds (tune via env without code changes)
+    const WARN_BLOAT = parseInt(process.env.MAIA_MEMORY_WARN_BLOAT || '70', 10);
+    const WARN_RECALL = parseInt(process.env.MAIA_MEMORY_WARN_RECALL || '40', 10);
+
+    // Compute health flags (content-free signals for grep-able alerting)
+    const rq = memPipeline?.recallQuality ?? 0;
+    const br = memPipeline?.bloatRisk ?? 0;
+    const bc = memPipeline?.bundleChars ?? 0;
+    const turnsRetrieved = memRetrieval?.turnsRetrieved ?? 0;
+    const turnsSameSession = memRetrieval?.turnsSameSession ?? 0;
+    const turnsCrossSession = memRetrieval?.turnsCrossSession ?? 0;
+    const semanticHits = memRetrieval?.semanticHits ?? 0;
+    const breakthroughsFound = memRetrieval?.breakthroughsFound ?? 0;
+    const bulletsInjected = memRetrieval?.bulletsInjected ?? 0;
+
+    const healthFlags: string[] = [];
+
+    // Pipeline failure modes
+    if (!memPipeline) {
+      healthFlags.push('pipeline_missing');
+    } else if (turnsRetrieved === 0 && bc === 0) {
+      healthFlags.push('retrieval_zero');
+    }
+
+    // Bloat/quality issues
+    if (br > WARN_BLOAT && rq < WARN_RECALL) healthFlags.push('bloat_high_recall_low');
+    if (bc > 1800 && semanticHits === 0) healthFlags.push('big_bundle_zero_semantic');
+
+    // Cross-session pattern (only flag when meaningful: enough turns, actually injected)
+    if (turnsCrossSession > 0 && turnsSameSession === 0 && turnsRetrieved >= 8 && bulletsInjected > 0) {
+      healthFlags.push('all_cross_session');
+    }
+
+    logMemoryPipelineDecision(reqId, {
+      userId: effectiveUserId,
+      sessionId: safeSessionId,
+      memoryModeEffective: memPipeline?.mode || 'unknown',
+      sensitiveInput: orchestratorResult.metadata?.sensitiveInput || false,
+      counts: {
+        turnsRetrieved,
+        turnsSameSession,
+        turnsCrossSession,
+        semanticHits,
+        breakthroughsFound,
+        bulletsInjected,
+      },
+      relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
+      injected: bulletsInjected > 0 && bc > 0,
+      bundleChars: bc,
+      recallQuality: rq,
+      bloatRisk: br,
+      healthFlags,
+      reason: memRetrieval ? undefined : 'no_retrieval',
     });
 
     // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
@@ -548,7 +889,18 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
-    return NextResponse.json({
+    // Audit: request complete (orchestrator path)
+    logRequestComplete(reqId, {
+      ok: true,
+      status: 200,
+      route: '/api/between/chat',
+      latencyMs: Date.now() - startTime,
+      responseChars: outboundText2.length,
+      safeMode: false,
+      path: 'orchestrator',
+    });
+
+    return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
       route: {
@@ -574,9 +926,19 @@ export async function POST(req: NextRequest) {
           enhanced: ruptureProcessingResult?.consultationUsed || false
         } : undefined
       }
-    });
+    }), sessionCookie);
   } catch (err: any) {
+    // Audit: request failed
+    logRequestComplete(reqId, {
+      ok: false,
+      status: 500,
+      route: '/api/between/chat',
+      latencyMs: Date.now() - startTime,
+      errorCode: 'MAIA_TEMPORARY_ERROR',
+    });
+
     console.error('Chat route error:', err);
+    // Error responses don't need session cookie - no session continuity for failed requests
     return NextResponse.json(
       {
         error: 'MAIA_TEMPORARY_ERROR',

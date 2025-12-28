@@ -9,11 +9,252 @@ import { autonomousHealthMonitor } from './AutonomousHealthMonitor';
 import { automatedReportingService } from './AutomatedReportingService';
 import { fieldProtocolIntegration } from './FieldProtocolIntegration';
 import { MaiaCrystalBridge } from '@/lib/integration/MaiaCrystalBridge';
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_DATABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
-);
+import db from '@/lib/db/postgres';
+
+// --- Supabase-compat shim (minimal): supports from().select().eq().order().limit().single()/maybeSingle()/insert()/update() ---
+type CompatResult<T> = { data: T | null; error: Error | null };
+type OrderOpts = { ascending?: boolean };
+
+function assertSafeIdent(name: string) {
+  if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) {
+    throw new Error(`Unsafe identifier: ${name}`);
+  }
+}
+function qi(name: string) {
+  assertSafeIdent(name);
+  return `"${name}"`;
+}
+
+function createSupabaseCompat(database: typeof db) {
+  return {
+    from(table: string) {
+      assertSafeIdent(table);
+
+      const state: {
+        table: string;
+        columns: string;
+        wheres: { col: string; op: '='; val: any }[];
+        limit?: number;
+        order?: { col: string; asc: boolean };
+        operation?: { type: 'insert' | 'update' | 'upsert'; data: any };
+      } = { table, columns: '*', wheres: [] };
+
+      const builder: any = {
+        select(columns = '*') {
+          state.columns = columns;
+          return builder;
+        },
+        eq(col: string, val: any) {
+          assertSafeIdent(col);
+          state.wheres.push({ col, op: '=', val });
+          return builder;
+        },
+        limit(n: number) {
+          state.limit = Math.max(0, Math.floor(n));
+          return builder;
+        },
+        order(col: string, opts: OrderOpts = {}) {
+          assertSafeIdent(col);
+          state.order = { col, asc: opts.ascending ?? true };
+          return builder;
+        },
+
+        // Mutation operations - return builder for chaining
+        insert(values: Record<string, any> | Record<string, any>[]) {
+          state.operation = { type: 'insert', data: values };
+          return builder;
+        },
+
+        update(updates: Record<string, any>) {
+          state.operation = { type: 'update', data: updates };
+          return builder;
+        },
+
+        upsert(values: Record<string, any> | Record<string, any>[]) {
+          state.operation = { type: 'upsert', data: values };
+          return builder;
+        },
+
+        // Make builder Promise-like so it can be awaited directly
+        then(resolve: any, reject: any) {
+          return builder._execute().then(resolve, reject);
+        },
+
+        async maybeSingle<T = any>(): Promise<CompatResult<T>> {
+          state.limit = 1;
+          const r = await builder._execute();
+          if (r.error) return { data: null, error: r.error };
+          const row = (r.data ?? [])[0] ?? null;
+          return { data: row as any, error: null };
+        },
+
+        async single<T = any>(): Promise<CompatResult<T>> {
+          state.limit = 2;
+          const r = await builder._execute();
+          if (r.error) return { data: null, error: r.error };
+          const rows = r.data ?? [];
+          if (rows.length !== 1) {
+            return { data: null, error: new Error(`Expected single row, got ${rows.length}`) };
+          }
+          return { data: rows[0] as any, error: null };
+        },
+
+        async _execute<T = any>(): Promise<CompatResult<T>> {
+          // Determine which operation to execute
+          if (state.operation) {
+            switch (state.operation.type) {
+              case 'insert':
+                return await builder._executeInsert();
+              case 'update':
+                return await builder._executeUpdate();
+              case 'upsert':
+                return await builder._executeUpsert();
+            }
+          }
+          // Default to select
+          return await builder._executeSelect();
+        },
+
+        async _executeInsert<T = any>(): Promise<CompatResult<T[]>> {
+          try {
+            const values = state.operation!.data;
+            const rows = Array.isArray(values) ? values : [values];
+            if (rows.length === 0) return { data: [], error: null };
+
+            const cols = Object.keys(rows[0]);
+            cols.forEach(assertSafeIdent);
+
+            const colSql = cols.map(qi).join(', ');
+            const params: any[] = [];
+
+            const valuesSql = rows
+              .map((row) => {
+                const placeholders = cols.map((c) => {
+                  params.push((row as any)[c]);
+                  return `$${params.length}`;
+                });
+                return `(${placeholders.join(', ')})`;
+              })
+              .join(', ');
+
+            const sql = `INSERT INTO ${qi(state.table)} (${colSql}) VALUES ${valuesSql} RETURNING *`;
+            const res = await database.query<any>(sql, params);
+            return { data: (res.rows ?? []) as any, error: null };
+          } catch (e: any) {
+            return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+          }
+        },
+
+        async _executeUpdate<T = any>(): Promise<CompatResult<T[]>> {
+          try {
+            const updates = state.operation!.data;
+            const cols = Object.keys(updates);
+            cols.forEach(assertSafeIdent);
+
+            const params: any[] = [];
+            const setClauses = cols.map((c) => {
+              params.push(updates[c]);
+              return `${qi(c)} = $${params.length}`;
+            });
+
+            const whereSql =
+              state.wheres.length === 0
+                ? ''
+                : ' WHERE ' +
+                  state.wheres
+                    .map((w) => {
+                      params.push(w.val);
+                      return `${qi(w.col)} = $${params.length}`;
+                    })
+                    .join(' AND ');
+
+            const sql = `UPDATE ${qi(state.table)} SET ${setClauses.join(', ')}${whereSql} RETURNING *`;
+            const res = await database.query<any>(sql, params);
+            return { data: (res.rows ?? []) as any, error: null };
+          } catch (e: any) {
+            return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+          }
+        },
+
+        async _executeUpsert<T = any>(): Promise<CompatResult<T[]>> {
+          try {
+            const values = state.operation!.data;
+            const rows = Array.isArray(values) ? values : [values];
+            if (rows.length === 0) return { data: [], error: null };
+
+            const cols = Object.keys(rows[0]);
+            cols.forEach(assertSafeIdent);
+
+            const colSql = cols.map(qi).join(', ');
+            const params: any[] = [];
+
+            const valuesSql = rows
+              .map((row) => {
+                const placeholders = cols.map((c) => {
+                  params.push((row as any)[c]);
+                  return `$${params.length}`;
+                });
+                return `(${placeholders.join(', ')})`;
+              })
+              .join(', ');
+
+            // Use ON CONFLICT DO UPDATE - assumes first column is the conflict key
+            const conflictCol = cols[0];
+            const updateClauses = cols.slice(1).map((c) => `${qi(c)} = EXCLUDED.${qi(c)}`);
+
+            const sql = `INSERT INTO ${qi(state.table)} (${colSql}) VALUES ${valuesSql} ON CONFLICT (${qi(conflictCol)}) DO UPDATE SET ${updateClauses.join(', ')} RETURNING *`;
+            const res = await database.query<any>(sql, params);
+            return { data: (res.rows ?? []) as any, error: null };
+          } catch (e: any) {
+            return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+          }
+        },
+
+        async _executeSelect<T = any>(): Promise<CompatResult<T>> {
+          try {
+            const selectCols =
+              state.columns === '*'
+                ? '*'
+                : state.columns
+                    .split(',')
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                    .map((c) => qi(c))
+                    .join(', ');
+
+            const params: any[] = [];
+            const whereSql =
+              state.wheres.length === 0
+                ? ''
+                : ' WHERE ' +
+                  state.wheres
+                    .map((w) => {
+                      params.push(w.val);
+                      return `${qi(w.col)} = $${params.length}`;
+                    })
+                    .join(' AND ');
+
+            const orderSql = state.order
+              ? ` ORDER BY ${qi(state.order.col)} ${state.order.asc ? 'ASC' : 'DESC'}`
+              : '';
+
+            const limitSql = typeof state.limit === 'number' ? ` LIMIT ${state.limit}` : '';
+
+            const sql = `SELECT ${selectCols} FROM ${qi(state.table)}${whereSql}${orderSql}${limitSql}`;
+            const res = await database.query<any>(sql, params);
+            return { data: (res.rows as any) ?? [], error: null };
+          } catch (e: any) {
+            return { data: null, error: e instanceof Error ? e : new Error(String(e)) };
+          }
+        }
+      };
+
+      return builder;
+    }
+  };
+}
+
+const supabase = createSupabaseCompat(db);
 
 export interface OrchestrationConfig {
   autoStart: boolean;
@@ -118,9 +359,12 @@ class CrystalOrchestrationSystem {
     this.bridge = new MaiaCrystalBridge({
       mode: config?.mode || 'legacy',
       crystalWeight: config?.crystal_weight || 0,
-      aetherWeight: config?.aether_weight || 0.35,
-      enableEmergence: config?.emergence_enabled || false,
-      paradoxThreshold: config?.paradox_threshold || 3
+      enableParallelProcessing: config?.parallel_processing_enabled || false,
+      enableParadoxAccumulation: config?.paradox_accumulation_enabled || false,
+      enableSymbolicMediation: config?.symbolic_mediation_enabled || false,
+      enableCollectiveField: config?.collective_field_enabled || false,
+      cacheResponses: true,
+      asyncProcessing: true
     });
 
     console.log('✅ Crystal Bridge initialized');
@@ -275,9 +519,8 @@ class CrystalOrchestrationSystem {
       orchestrator: orchestratorReport,
       health: healthReport,
       bridge: this.bridge ? {
-        mode: this.bridge.config.mode,
-        crystalWeight: this.bridge.config.crystalWeight,
-        aetherWeight: this.bridge.config.aetherWeight
+        status: 'active',
+        initialized: true
       } : null
     };
   }
@@ -414,5 +657,4 @@ export {
   fieldProtocolIntegration
 };
 
-// Export types
-export type { OrchestrationConfig };
+// Note: OrchestrationConfig already exported via interface declaration at line 17

@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
-import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff } from "lucide-react";
+import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff, AlertCircle } from "lucide-react";
 import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
+import { getPlatformInfo, getVoiceUnavailableMessage, type PlatformInfo } from "@/lib/utils/platformDetection";
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 interface ContinuousConversationProps {
@@ -43,6 +44,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
+  const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -673,15 +676,33 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     console.log('🎤 [ContinuousConversation] startListening called');
 
     try {
+      // 🔍 Check platform capabilities first
+      if (!platformInfo) {
+        const info = await getPlatformInfo();
+        setPlatformInfo(info);
+
+        if (!info.hasVoiceSupport) {
+          const errorMsg = getVoiceUnavailableMessage(info);
+          console.warn('⚠️ [ContinuousConversation] Voice not supported:', errorMsg);
+          setVoiceError(errorMsg);
+          throw new Error('VOICE_UNAVAILABLE');
+        }
+      } else if (!platformInfo.hasVoiceSupport) {
+        const errorMsg = getVoiceUnavailableMessage(platformInfo);
+        setVoiceError(errorMsg);
+        throw new Error('VOICE_UNAVAILABLE');
+      }
+
       // Initialize audio monitoring
       const audioReady = await initializeAudioMonitoring();
       if (!audioReady) {
         console.error('❌ [ContinuousConversation] Audio monitoring failed');
-        // Don't show alert - let parent component handle error state
+        setVoiceError('Microphone access failed. Please check permissions.');
         throw new Error('MICROPHONE_UNAVAILABLE');
       }
 
       console.log('✅ [ContinuousConversation] Audio monitoring ready');
+      setVoiceError(null); // Clear any previous errors
 
     // Initialize speech recognition
     if (!recognitionRef.current) {
@@ -871,19 +892,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       {/* Main control button */}
       <button
         onClick={toggleListening}
-        disabled={isProcessing}
+        disabled={isProcessing || (platformInfo?.hasVoiceSupport === false)}
         className={`
           relative p-3 rounded-lg transition-all
-          ${isListening 
-            ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' 
+          ${isListening
+            ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
             : 'bg-white/10 text-gray-400 hover:bg-white/20'
           }
-          ${isProcessing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+          ${(isProcessing || platformInfo?.hasVoiceSupport === false) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
         `}
         aria-label={isListening ? 'Stop continuous listening' : 'Start continuous listening'}
+        title={platformInfo?.hasVoiceSupport === false ? voiceError || 'Voice unavailable' : undefined}
       >
         {showLoader ? (
           <Loader2 className="w-5 h-5 animate-spin" />
+        ) : platformInfo?.hasVoiceSupport === false ? (
+          <AlertCircle className="w-5 h-5" />
         ) : isListening ? (
           <Wifi className="w-5 h-5" />
         ) : (
@@ -901,25 +925,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       {/* Status indicator */}
       <div className="flex items-center gap-2 text-sm">
-        {isListening && (
+        {voiceError ? (
+          <>
+            <AlertCircle className="w-4 h-4 text-yellow-400" />
+            <span className="text-yellow-400 max-w-xs text-xs">
+              {voiceError}
+            </span>
+          </>
+        ) : isListening ? (
           <>
             <Activity className="w-4 h-4 text-green-400" />
             <span className="text-green-400">
-              {isRecording ? 'Listening...' : 
-               isSpeaking ? 'Maya speaking...' : 
+              {isRecording ? 'Listening...' :
+               isSpeaking ? 'Maya speaking...' :
                isProcessing ? 'Processing...' : 'Ready'}
             </span>
           </>
-        )}
+        ) : null}
       </div>
 
       {/* Audio level indicator */}
-      {isListening && isRecording && (
+      {isListening && isRecording && !voiceError && (
         <div className="flex items-center gap-1">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className={`w-1 h-${Math.max(1, Math.floor(audioLevel * 5) - i)} 
+              className={`w-1 h-${Math.max(1, Math.floor(audioLevel * 5) - i)}
                          bg-green-400/60 rounded-full transition-all duration-100`}
               style={{ height: `${Math.max(4, audioLevel * 20 * (1 - i * 0.15))}px` }}
             />
