@@ -16,6 +16,87 @@ import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔍 AUDIT LOGGING: Privacy-safe structured events
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Create a privacy-safe fingerprint for correlation without exposing raw values.
+ * In dev: shows masked value (first 4 + last 4 chars)
+ * In prod: shows HMAC-based fingerprint
+ */
+function fingerprint(value: string | undefined, label: string): string {
+  if (!value) return 'none';
+  if (!IS_PROD) {
+    // Dev: show masked value for debugging
+    if (value.length <= 8) return `${value.slice(0, 2)}…${value.slice(-2)}`;
+    return `${value.slice(0, 4)}…${value.slice(-4)}`;
+  }
+  // Prod: HMAC fingerprint (no raw value exposure)
+  const hmac = crypto.createHmac('sha256', label);
+  hmac.update(value);
+  return `fp_${hmac.digest('hex').slice(0, 12)}`;
+}
+
+/**
+ * Structured audit log for identity resolution decisions.
+ * Never logs raw IDs in production - only booleans and fingerprints.
+ */
+function logIdentityResolution(data: {
+  mode: string;
+  explorerId?: string;
+  bodyUserId?: string;
+  effectiveUserId: string;
+  sessionId: string;
+  bodySessionIdProvided: boolean;
+  cookieWasNew: boolean;
+}) {
+  console.log('[Audit:IdentityResolution]', {
+    ts: new Date().toISOString(),
+    env: IS_PROD ? 'prod' : 'dev',
+    mode: data.mode,
+    // Booleans - safe for any environment
+    hasExplorerId: !!data.explorerId,
+    hasBodyUserId: !!data.bodyUserId,
+    bodySessionIdIgnored: data.bodySessionIdProvided,
+    cookieWasNew: data.cookieWasNew,
+    // Fingerprints - privacy-safe correlation
+    effectiveUserFp: fingerprint(data.effectiveUserId, 'user'),
+    sessionFp: fingerprint(data.sessionId, 'session'),
+    // Guardrail flags
+    devTrustEnabled: process.env.MAIA_DEV_TRUST_BODY_ID === '1',
+  });
+}
+
+/**
+ * Structured audit log for memory pipeline decisions.
+ * Logs modes, gates, and counts - never content.
+ */
+function logMemoryPipelineDecision(data: {
+  userId: string;
+  memoryModeRequested: string | null;
+  memoryModeEffective: string;
+  sensitiveInput: boolean;
+  persistenceBlocked: { turns: boolean; writeback: boolean };
+  counts: { turnsRetrieved: number; semanticHits: number; bulletsInjected: number };
+  downgradeReason: string | null;
+}) {
+  console.log('[Audit:MemoryPipeline]', {
+    ts: new Date().toISOString(),
+    userFp: fingerprint(data.userId, 'user'),
+    modeRequested: data.memoryModeRequested || 'default',
+    modeEffective: data.memoryModeEffective,
+    sensitiveInput: data.sensitiveInput,
+    persistenceBlocked: data.persistenceBlocked,
+    counts: data.counts,
+    downgradeReason: data.downgradeReason,
+    longtermGate: {
+      envEnabled: process.env.MAIA_LONGTERM_WRITEBACK === '1',
+    },
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔒 SESSION MANAGEMENT: Cookie-based server-issued session IDs
@@ -273,10 +354,6 @@ export async function POST(req: NextRequest) {
 
     // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
     const explorerId = meta?.explorerId;
-
-    // 🔒 SECURITY: In production, never trust client-supplied identity without auth
-    // In dev, optionally trust body ID for local testing with MAIA_DEV_TRUST_BODY_ID=1
-    const isProd = process.env.NODE_ENV === 'production';
     const devTrustBodyId = process.env.MAIA_DEV_TRUST_BODY_ID === '1';
 
     // TODO: When auth is implemented, authUserId should come from verified session/token
@@ -286,7 +363,7 @@ export async function POST(req: NextRequest) {
     if (authUserId) {
       // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
       effectiveUserId = authUserId;
-    } else if (isProd) {
+    } else if (IS_PROD) {
       // 🔒 Production: Always session-scoped, never trust client body
       effectiveUserId = `anon:${safeSessionId}`;
     } else if (devTrustBodyId) {
@@ -301,14 +378,16 @@ export async function POST(req: NextRequest) {
       effectiveUserId = `anon:${safeSessionId}`;
     }
 
-    // Log identity resolution for debugging
-    const identityMode = authUserId ? 'auth' : isProd ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
-    console.log('[Chat API] 🧠 Identity resolution:', {
+    // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
+    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
+    logIdentityResolution({
       mode: identityMode,
-      explorerId: explorerId || 'not provided',
-      bodyUserId: bodyUserId || 'not provided',
+      explorerId,
+      bodyUserId,
       effectiveUserId,
       sessionId: safeSessionId,
+      bodySessionIdProvided: !!sessionId,
+      cookieWasNew: !!sessionCookie,
     });
 
     // Build normalized meta for consistent downstream propagation
