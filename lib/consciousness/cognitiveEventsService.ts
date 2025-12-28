@@ -44,6 +44,7 @@ type LogTurnArgs = {
   turnIndex?: number;
   bloom: BloomDetection;
   scaffoldingUsed: boolean;   // Was scaffolding injected into MAIA prompt?
+  reqId?: string | null;      // Correlation with [Audit:*] logs
 };
 
 // =====================================================================
@@ -68,6 +69,7 @@ export async function logCognitiveTurn({
   turnIndex,
   bloom,
   scaffoldingUsed,
+  reqId,
 }: LogTurnArgs): Promise<void> {
   // Gate: skip if table doesn't exist yet (fail-open for telemetry)
   if (!COGNITIVE_EVENTS_ENABLED) {
@@ -80,6 +82,7 @@ export async function logCognitiveTurn({
       user_id: userId,
       session_id: sessionId ?? null,
       turn_index: turnIndex ?? null,
+      req_id: reqId ?? null,
 
       // Bloom's Taxonomy detection
       bloom_level: bloom.numericLevel ?? bloom.level,

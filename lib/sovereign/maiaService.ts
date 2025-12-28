@@ -1265,6 +1265,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
       // 🗃️ PHASE 1: POSTGRES PERSISTENCE - Log cognitive turn event
       // Fire-and-forget: never blocks MAIA response
+      // Extract reqId from meta for audit correlation
+      const reqId = (meta as any)?.reqId ?? null;
+
       if (userId) {
         logCognitiveTurn({
           userId,
@@ -1278,6 +1281,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             scaffoldingPrompt: bloomDetection.scaffoldingPrompt,
           },
           scaffoldingUsed: false, // Will be set to true after voice system injects scaffolding
+          reqId,
         }).catch(err => {
           // Log but don't throw - fire-and-forget pattern
           console.error('[Dialectical Scaffold] Failed to log cognitive turn (non-blocking):', err);
@@ -1297,6 +1301,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             scaffoldingPrompt: bloomDetection.scaffoldingPrompt,
           },
           scaffoldingUsed: false,
+          reqId,
         }).catch(err => {
           console.error('[Dialectical Scaffold] Failed to log cognitive turn (non-blocking):', err);
         });

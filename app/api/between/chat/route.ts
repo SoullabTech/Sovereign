@@ -97,25 +97,37 @@ function logIdentityResolution(reqId: string, data: {
 /**
  * Structured audit log for memory pipeline decisions.
  * Logs modes, gates, and counts - never content.
+ * Ties identity → retrieval → injection under same reqId for incident timeline.
  */
-function logMemoryPipelineDecision(data: {
+function logMemoryPipelineDecision(reqId: string, data: {
   userId: string;
-  memoryModeRequested: string | null;
+  sessionId: string;
   memoryModeEffective: string;
   sensitiveInput: boolean;
-  persistenceBlocked: { turns: boolean; writeback: boolean };
-  counts: { turnsRetrieved: number; semanticHits: number; bulletsInjected: number };
-  downgradeReason: string | null;
+  counts: {
+    turnsRetrieved: number;
+    semanticHits: number;
+    breakthroughsFound: number;
+    bulletsInjected: number;
+  };
+  relationshipEncounters: number;
+  injected: boolean;
+  bundleChars: number;
+  reason?: string;
 }) {
   console.log('[Audit:MemoryPipeline]', {
+    reqId,
     ts: new Date().toISOString(),
+    env: IS_PROD ? 'prod' : 'dev',
     userFp: fingerprint(data.userId, 'user'),
-    modeRequested: data.memoryModeRequested || 'default',
-    modeEffective: data.memoryModeEffective,
+    sessionFp: fingerprint(data.sessionId, 'session'),
+    mode: data.memoryModeEffective,
     sensitiveInput: data.sensitiveInput,
-    persistenceBlocked: data.persistenceBlocked,
     counts: data.counts,
-    downgradeReason: data.downgradeReason,
+    relationshipEncounters: data.relationshipEncounters,
+    injected: data.injected,
+    bundleChars: data.bundleChars,
+    reason: data.reason ?? null,
     longtermGate: {
       envEnabled: process.env.MAIA_LONGTERM_WRITEBACK === '1',
     },
@@ -445,6 +457,7 @@ export async function POST(req: NextRequest) {
       explorerId: explorerId ?? undefined,
       userId: effectiveUserId,      // 👈 explicit for downstream consumers
       sessionId: safeSessionId,
+      reqId,                        // 👈 for audit correlation (cognitive events + logs)
     };
 
     // Log mode for debugging
