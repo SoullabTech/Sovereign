@@ -25,6 +25,44 @@ import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWrit
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 
+// ─── Recall Quality Helpers ───────────────────────────────────────────────────
+function clamp01(n: number) {
+  return Math.max(0, Math.min(1, n));
+}
+
+/**
+ * Content-free scalar (0-100) measuring recall health.
+ * Weights: crossShare 45%, semanticRate 30%, bundleScore 20%, breakthroughs 5%
+ */
+function computeRecallQuality(stats: {
+  turnsRetrieved: number;
+  turnsCrossSession?: number;
+  semanticHits: number;
+  breakthroughsFound: number;
+}, bundleChars: number): number {
+  const turns = Math.max(1, stats.turnsRetrieved || 0);
+
+  // how much recall came from prior sessions
+  const crossShare = clamp01((stats.turnsCrossSession ?? 0) / turns);
+
+  // how "semantic" the recall was (vector hits per turn retrieved)
+  const semanticRate = clamp01((stats.semanticHits ?? 0) / turns);
+
+  // saturate around ~1200 chars
+  const bundleScore = clamp01(bundleChars / 1200);
+
+  const breakthroughScore = clamp01((stats.breakthroughsFound ?? 0) / 3);
+
+  // 0..100
+  const score01 =
+    0.45 * crossShare +
+    0.30 * semanticRate +
+    0.20 * bundleScore +
+    0.05 * breakthroughScore;
+
+  return Math.round(score01 * 100);
+}
+
 export interface MaiaConsciousnessInput {
   message: string;
   userId: string;
@@ -558,24 +596,44 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       // 🔒 SECURITY: Signal to UI when input contained sensitive data (not stored)
       sensitiveInput: containsSensitiveData(message),
       // 🧠 MEMORY PIPELINE DATA (full details in dev, minimal in prod)
-      memoryPipeline: process.env.NODE_ENV === 'development' || meta.debugMemory ? {
-        mode: memoryMode,
-        retrieval: memoryBundle ? {
-          turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
-          turnsSameSession: memoryBundle.retrievalStats.turnsSameSession,
-          turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
-          semanticHits: memoryBundle.retrievalStats.semanticHits,
-          breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
-          bulletsInjected: memoryBundle.memoryBullets.length,
-        } : null,
-        bundleChars: memoryContext.length,  // Audit: proves injection size without content
-        writeback: writebackResult,
-        relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
-      } : {
-        mode: memoryMode,
-        wrote: writebackResult?.wrote || false,
-        bundleChars: memoryContext.length,  // Always expose for audit
-      },
+      memoryPipeline: (() => {
+        const bundleChars = memoryContext.length;
+        const recallQuality = memoryBundle
+          ? computeRecallQuality(
+              {
+                turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+                turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
+                semanticHits: memoryBundle.retrievalStats.semanticHits,
+                breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
+              },
+              bundleChars
+            )
+          : 0;
+
+        if (process.env.NODE_ENV === 'development' || meta.debugMemory) {
+          return {
+            mode: memoryMode,
+            retrieval: memoryBundle ? {
+              turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+              turnsSameSession: memoryBundle.retrievalStats.turnsSameSession,
+              turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
+              semanticHits: memoryBundle.retrievalStats.semanticHits,
+              breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
+              bulletsInjected: memoryBundle.memoryBullets.length,
+            } : null,
+            bundleChars,
+            recallQuality,
+            writeback: writebackResult,
+            relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
+          };
+        }
+        return {
+          mode: memoryMode,
+          wrote: writebackResult?.wrote || false,
+          bundleChars,
+          recallQuality,
+        };
+      })(),
       // 🎯 PERFORMANCE PROFILING DATA
       performanceProfile: {
         totalDuration: performanceProfile.totalDuration,

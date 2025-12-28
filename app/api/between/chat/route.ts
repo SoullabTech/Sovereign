@@ -115,6 +115,7 @@ function logMemoryPipelineDecision(reqId: string, data: {
   relationshipEncounters: number;
   injected: boolean;
   bundleChars: number;
+  recallQuality: number;
   reason?: string;
 }) {
   console.log('[Audit:MemoryPipeline]', {
@@ -129,6 +130,7 @@ function logMemoryPipelineDecision(reqId: string, data: {
     relationshipEncounters: data.relationshipEncounters,
     injected: data.injected,
     bundleChars: data.bundleChars,
+    recallQuality: data.recallQuality,
     reason: data.reason ?? null,
     longtermGate: {
       envEnabled: process.env.MAIA_LONGTERM_WRITEBACK === '1',
@@ -769,6 +771,7 @@ export async function POST(req: NextRequest) {
       relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
       injected: (memRetrieval?.bulletsInjected ?? 0) > 0 && (memPipeline?.bundleChars ?? 0) > 0,
       bundleChars: memPipeline?.bundleChars ?? 0,
+      recallQuality: memPipeline?.recallQuality ?? 0,
       reason: memRetrieval ? undefined : 'no_retrieval',
     });
 
