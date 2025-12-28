@@ -771,16 +771,38 @@ export async function POST(req: NextRequest) {
     const memPipeline = orchestratorResult.metadata?.memoryPipeline;
     const memRetrieval = memPipeline?.retrieval;
 
+    // Configurable thresholds (tune via env without code changes)
+    const WARN_BLOAT = parseInt(process.env.MAIA_MEMORY_WARN_BLOAT || '70', 10);
+    const WARN_RECALL = parseInt(process.env.MAIA_MEMORY_WARN_RECALL || '40', 10);
+
     // Compute health flags (content-free signals for grep-able alerting)
     const rq = memPipeline?.recallQuality ?? 0;
     const br = memPipeline?.bloatRisk ?? 0;
     const bc = memPipeline?.bundleChars ?? 0;
+    const turnsRetrieved = memRetrieval?.turnsRetrieved ?? 0;
+    const turnsSameSession = memRetrieval?.turnsSameSession ?? 0;
+    const turnsCrossSession = memRetrieval?.turnsCrossSession ?? 0;
+    const semanticHits = memRetrieval?.semanticHits ?? 0;
+    const breakthroughsFound = memRetrieval?.breakthroughsFound ?? 0;
+    const bulletsInjected = memRetrieval?.bulletsInjected ?? 0;
+
     const healthFlags: string[] = [];
-    if (br > 70 && rq < 40) healthFlags.push('bloat_high_recall_low');
-    if (bc > 1800 && (memRetrieval?.semanticHits ?? 0) === 0) healthFlags.push('big_bundle_zero_semantic');
-    if ((memRetrieval?.turnsCrossSession ?? 0) > 0 && (memRetrieval?.turnsSameSession ?? 0) === 0)
+
+    // Pipeline failure modes
+    if (!memPipeline) {
+      healthFlags.push('pipeline_missing');
+    } else if (turnsRetrieved === 0 && bc === 0) {
+      healthFlags.push('retrieval_zero');
+    }
+
+    // Bloat/quality issues
+    if (br > WARN_BLOAT && rq < WARN_RECALL) healthFlags.push('bloat_high_recall_low');
+    if (bc > 1800 && semanticHits === 0) healthFlags.push('big_bundle_zero_semantic');
+
+    // Cross-session pattern (only flag when meaningful: enough turns, actually injected)
+    if (turnsCrossSession > 0 && turnsSameSession === 0 && turnsRetrieved >= 8 && bulletsInjected > 0) {
       healthFlags.push('all_cross_session');
-    if ((memRetrieval?.turnsRetrieved ?? 0) === 0 && bc === 0) healthFlags.push('no_memory_retrieved');
+    }
 
     logMemoryPipelineDecision(reqId, {
       userId: effectiveUserId,
@@ -788,15 +810,15 @@ export async function POST(req: NextRequest) {
       memoryModeEffective: memPipeline?.mode || 'unknown',
       sensitiveInput: orchestratorResult.metadata?.sensitiveInput || false,
       counts: {
-        turnsRetrieved: memRetrieval?.turnsRetrieved ?? 0,
-        turnsSameSession: memRetrieval?.turnsSameSession ?? 0,
-        turnsCrossSession: memRetrieval?.turnsCrossSession ?? 0,
-        semanticHits: memRetrieval?.semanticHits ?? 0,
-        breakthroughsFound: memRetrieval?.breakthroughsFound ?? 0,
-        bulletsInjected: memRetrieval?.bulletsInjected ?? 0,
+        turnsRetrieved,
+        turnsSameSession,
+        turnsCrossSession,
+        semanticHits,
+        breakthroughsFound,
+        bulletsInjected,
       },
       relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
-      injected: (memRetrieval?.bulletsInjected ?? 0) > 0 && (memPipeline?.bundleChars ?? 0) > 0,
+      injected: bulletsInjected > 0 && bc > 0,
       bundleChars: bc,
       recallQuality: rq,
       bloatRisk: br,
