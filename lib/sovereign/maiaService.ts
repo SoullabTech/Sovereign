@@ -275,7 +275,9 @@ export type MaiaResponse = {
 type MaiaRequest = {
   sessionId: string;
   input: string;
-  meta?: Record<string, unknown>;
+  meta?: Record<string, unknown> & {
+    reqId?: string | null;  // Correlation with [Audit:*] logs
+  };
   includeAudio?: boolean;
   voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
 };
@@ -1266,7 +1268,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // 🗃️ PHASE 1: POSTGRES PERSISTENCE - Log cognitive turn event
       // Fire-and-forget: never blocks MAIA response
       // Extract reqId from meta for audit correlation
-      const reqId = (meta as any)?.reqId ?? null;
+      const reqId = meta?.reqId ?? null;
 
       if (userId) {
         logCognitiveTurn({
@@ -1282,9 +1284,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           },
           scaffoldingUsed: false, // Will be set to true after voice system injects scaffolding
           reqId,
-        }).catch(err => {
-          // Log but don't throw - fire-and-forget pattern
-          console.error('[Dialectical Scaffold] Failed to log cognitive turn (non-blocking):', err);
+        }).catch((err: unknown) => {
+          // Log but don't throw - fire-and-forget pattern (sanitized to avoid SQL/param leaks)
+          const e = err as { name?: string; code?: string; message?: string };
+          console.error('[Dialectical Scaffold] Failed to log cognitive turn (non-blocking):', {
+            name: e?.name,
+            code: e?.code,
+          });
         });
       } else {
         // Fallback: Use sessionId as userId for anonymous sessions
@@ -1302,8 +1308,12 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           },
           scaffoldingUsed: false,
           reqId,
-        }).catch(err => {
-          console.error('[Dialectical Scaffold] Failed to log cognitive turn (non-blocking):', err);
+        }).catch((err: unknown) => {
+          const e = err as { name?: string; code?: string; message?: string };
+          console.error('[Dialectical Scaffold] Failed to log cognitive turn (non-blocking):', {
+            name: e?.name,
+            code: e?.code,
+          });
         });
       }
     } catch (err) {
