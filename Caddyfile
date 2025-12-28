@@ -1,0 +1,51 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Caddy Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+# Automatic HTTPS via Let's Encrypt
+# Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
+# ═══════════════════════════════════════════════════════════════════════════════
+
+{$DOMAIN:localhost} {
+    # Reverse proxy to MAIA container
+    reverse_proxy maia:3000 {
+        # Health checks
+        health_uri /api/consciousness/health
+        health_interval 30s
+        health_timeout 5s
+
+        # Headers
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        # HSTS
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        # Prevent clickjacking
+        X-Frame-Options "SAMEORIGIN"
+        # XSS protection
+        X-Content-Type-Options "nosniff"
+        X-XSS-Protection "1; mode=block"
+        # Remove server header
+        -Server
+    }
+
+    # Compression
+    encode gzip zstd
+
+    # Logging
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
+# Health check endpoint for load balancers
+:8080 {
+    respond /health 200
+}

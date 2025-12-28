@@ -1,0 +1,177 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Production Docker Compose with HTTPS
+# ═══════════════════════════════════════════════════════════════════════════════
+# Full production stack:
+# - Caddy: Automatic HTTPS, reverse proxy
+# - MAIA: Consciousness computing platform
+# - PostgreSQL: Persistent data storage
+# - Ollama (optional): Local LLM inference
+#
+# Usage:
+#   1. Copy .env.production.template to .env.production
+#   2. Fill in your domain and secrets
+#   3. docker compose -f docker-compose.production.yml up -d
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: '3.8'
+
+services:
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Caddy - Automatic HTTPS Reverse Proxy
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Handles:
+  # - Automatic Let's Encrypt SSL certificates
+  # - HTTPS termination
+  # - Reverse proxy to MAIA
+  caddy:
+    image: caddy:2-alpine
+    container_name: maia-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    environment:
+      - DOMAIN=${BASE_URL:-localhost}
+    depends_on:
+      maia:
+        condition: service_healthy
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # MAIA - Consciousness Computing Platform
+  # ═════════════════════════════════════════════════════════════════════════════
+  maia:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maia-sovereign
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOSTNAME: "0.0.0.0"
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # PostgreSQL - Consciousness Data Persistence
+  # ═════════════════════════════════════════════════════════════════════════════
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: maia-postgres
+    restart: unless-stopped
+
+    env_file:
+      - .env.production
+
+    environment:
+      POSTGRES_DB: maia_consciousness
+      POSTGRES_USER: soullab
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U soullab -d maia_consciousness"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Database Migrations - One-Off Service
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Usage: docker compose -f docker-compose.production.yml run --rm migrate
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+
+    env_file:
+      - .env.production
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    command: ["sh", "-c", "npx prisma migrate deploy && for f in /app/database/migrations/*.sql; do psql $DATABASE_URL -f $f || true; done"]
+
+    volumes:
+      - ./database/migrations:/app/database/migrations:ro
+
+    profiles: ["migrate"]
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Ollama - Local LLM (Optional)
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Uncomment to run Ollama in a container
+  # For GPU support, add nvidia runtime configuration
+  #
+  # ollama:
+  #   image: ollama/ollama:latest
+  #   container_name: maia-ollama
+  #   restart: unless-stopped
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #   # For NVIDIA GPU:
+  #   # deploy:
+  #   #   resources:
+  #   #     reservations:
+  #   #       devices:
+  #   #         - driver: nvidia
+  #   #           count: 1
+  #   #           capabilities: [gpu]
+  #   networks:
+  #     - maia-network
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Persistent Volumes
+# ═══════════════════════════════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    driver: local
+  caddy_data:
+    driver: local
+  caddy_config:
+    driver: local
+  # ollama_data:
+  #   driver: local
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Network
+# ═══════════════════════════════════════════════════════════════════════════════
+networks:
+  maia-network:
+    driver: bridge
