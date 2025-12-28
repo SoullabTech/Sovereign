@@ -23,6 +23,12 @@ const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
   (IS_PROD ? '' : 'dev-only-secret'); // Dev fallback OK, prod requires real secret
 
+// Fail-closed: production MUST have fingerprint secret configured
+if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
+  console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+  throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔍 AUDIT LOGGING: Privacy-safe structured events
 // ═══════════════════════════════════════════════════════════════════════════════

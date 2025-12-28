@@ -347,7 +347,7 @@ export class ConsciousnessMemoryLattice {
     confidence: number;
     emergenceLevel: number;
   }> {
-    console.log(`💎 [WISDOM SYNTHESIS] Question: "${question.substring(0, 50)}..."`);
+    console.log(`💎 [WISDOM SYNTHESIS] QuestionChars: ${question.length}`); // Never log question content
 
     // 1. Recall resonant field
     const field = await this.resonanceRecall(userId, { query: question, facet });

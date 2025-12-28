@@ -65,6 +65,9 @@ export default function BetaAccessPage() {
     // Store in localStorage
     localStorage.setItem('maia_user_subscription', JSON.stringify(betaUser));
 
+    // Store the beta code for feature access check
+    localStorage.setItem('soullab_beta_code', passcodeTrimmed);
+
     // Store in beta testers list
     const existingTesters = JSON.parse(localStorage.getItem('maia_beta_testers') || '[]');
     const updatedTesters = [...existingTesters, {
