@@ -22,6 +22,7 @@ import { getConversationContext, ConversationContext } from '@/lib/consciousness
 import { claudeDevOrchestration, type DevModeContext, type ClaudeDevAnalysis } from '@/lib/development/claude-dev-orchestration';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
+import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 
 export interface MaiaConsciousnessInput {
   message: string;
@@ -554,6 +555,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       },
       // Claude development mode analysis (only in development)
       claudeDevAnalysis: process.env.NODE_ENV === 'development' ? claudeDevAnalysis : null,
+      // 🔒 SECURITY: Signal to UI when input contained sensitive data (not stored)
+      sensitiveInput: containsSensitiveData(message),
       // 🧠 MEMORY PIPELINE DATA (full details in dev, minimal in prod)
       memoryPipeline: process.env.NODE_ENV === 'development' || meta.debugMemory ? {
         mode: memoryMode,
