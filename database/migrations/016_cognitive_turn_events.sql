@@ -4,6 +4,9 @@
 --
 -- Enable with: MAIA_ENABLE_COGNITIVE_TURN_EVENTS=1
 
+-- Required for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 CREATE TABLE IF NOT EXISTS cognitive_turn_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
