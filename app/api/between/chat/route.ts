@@ -21,31 +21,38 @@ const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 // 🔒 SESSION MANAGEMENT: Cookie-based server-issued session IDs
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Cookie name: __Host- prefix in production for extra hardening
+// (requires Secure + Path=/ + no Domain, prevents cookie injection/shadowing)
+const SESSION_COOKIE_NAME = process.env.NODE_ENV === 'production' ? '__Host-maia_sid' : 'maia_sid';
+
 /**
  * Get session ID from cookie or create a new one.
  * This prevents clients from spoofing session IDs via request body.
+ * Uses NextRequest cookies API (more robust than regex parsing).
  */
 function getOrCreateSessionId(req: NextRequest): { sid: string; setCookie?: string } {
-  const cookieHeader = req.headers.get('cookie') ?? '';
-  const match = cookieHeader.match(/(?:^|;\s*)maia_sid=([^;]+)/);
-  if (match?.[1]) {
-    return { sid: decodeURIComponent(match[1]) };
+  // Use Next.js cookies API - handles parsing edge cases
+  const existingCookie = req.cookies.get(SESSION_COOKIE_NAME);
+  if (existingCookie?.value) {
+    return { sid: existingCookie.value };
   }
 
   // Create new server-issued session ID
   const sid = `sid_${crypto.randomBytes(16).toString('hex')}`;
   const isProd = process.env.NODE_ENV === 'production';
   const secure = isProd ? '; Secure' : '';
-  const setCookie = `maia_sid=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 30}`;
+  // Note: __Host- prefix requires Path=/ and no Domain attribute (which we comply with)
+  const setCookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 30}`;
   return { sid, setCookie };
 }
 
 /**
- * Helper to add Set-Cookie header to a NextResponse if needed
+ * Helper to add Set-Cookie header to a NextResponse if needed.
+ * Uses append() so additional cookies can be added later without overwriting.
  */
 function withSessionCookie(res: NextResponse, setCookie?: string): NextResponse {
   if (setCookie) {
-    res.headers.set('Set-Cookie', setCookie);
+    res.headers.append('Set-Cookie', setCookie);
   }
   return res;
 }
