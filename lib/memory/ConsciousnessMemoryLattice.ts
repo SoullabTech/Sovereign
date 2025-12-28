@@ -204,18 +204,36 @@ export class ConsciousnessMemoryLattice {
    * Creates connections, detects patterns, forms memories, triggers insights.
    *
    * This is where consciousness events become WISDOM.
+   *
+   * DEFENSE-IN-DEPTH: Even if caller forgets the gate, lattice won't write
+   * to developmental_memories unless memoryMode === 'longterm'.
    */
   async integrateEvent(
     userId: string,
     event: ConsciousnessEvent,
     facet: SpiralFacet,
-    phase: LifePhase
+    phase: LifePhase,
+    opts?: { memoryMode?: 'ephemeral' | 'continuity' | 'longterm' }
   ): Promise<{
     node: LatticeNode;
     memoryFormed: boolean;
     patternsDetected: string[];
     insights: string[];
   }> {
+    const memoryMode = opts?.memoryMode ?? 'continuity';
+
+    // DEFENSE-IN-DEPTH: Short-circuit if not permitted to write to long-term memory
+    if (memoryMode !== 'longterm') {
+      console.log(`🛡️ [MemoryGate] Lattice integrateEvent denied (not longterm)`, { userId, memoryMode });
+      // Return empty result - no memory formation, no patterns, no insights
+      return {
+        node: { id: 'denied', userId, event, facet, phase, connections: [], createdAt: new Date() } as LatticeNode,
+        memoryFormed: false,
+        patternsDetected: [],
+        insights: [],
+      };
+    }
+
     console.log(`🌀 [LATTICE] Integrating ${event.type} event for facet ${facet.code}...`);
 
     // 1. Create lattice node

@@ -1580,7 +1580,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Check if this message should be elevated to lattice (prevents Scribe pollution)
       const shouldElevate = shouldElevateToLattice(input, activeMode);
 
-      if (memoryKey && shouldElevate) {
+      // HARD GATE: lattice writes require server-approved longterm memoryMode
+      const memoryMode = (meta as any)?.memoryMode as 'ephemeral' | 'continuity' | 'longterm' | undefined;
+      const allowLatticeWrite = memoryMode === 'longterm';
+
+      if (memoryKey && shouldElevate && allowLatticeWrite) {
         const conversationEvent: ConsciousnessEvent = {
           type: 'mental',
           insight: `${input} → ${text.substring(0, 500)}`,
@@ -1600,13 +1604,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             phase: atlasResult.phase,
             code: atlasResult.facet
           } : { element: 'EARTH', phase: 1, code: 'EARTH-1' },
-          { name: 'current', age: (meta as any).userAge || 30 }
+          { name: 'current', age: (meta as any).userAge || 30 },
+          { memoryMode: memoryMode || 'continuity' }
         );
 
         console.log(`✨ [MEMORY] Memory ${memoryResult.memoryFormed ? 'FORMED' : 'logged'}, Patterns: ${memoryResult.patternsDetected.length}`);
         if (memoryResult.insights.length > 0) {
           console.log(`💡 [MEMORY] Insights: ${memoryResult.insights.join(', ')}`);
         }
+      } else if (memoryKey && shouldElevate && !allowLatticeWrite) {
+        console.log(`🛡️ [MemoryGate] Lattice write skipped (not longterm)`, { userId: memoryKey, memoryMode: memoryMode ?? 'undefined', mode: activeMode });
       } else if (memoryKey && !shouldElevate) {
         console.log(`⏭️  [MEMORY] Skipped lattice elevation (mode: ${activeMode}, scribe capture only)`);
       }
