@@ -115,24 +115,26 @@ export default function MAIAPage() {
   const labToolsAccess = useFeatureAccess(PREMIUM_FEATURES.LAB_TOOLS);
 
   // URL-based panel control (preserves other query params, uses replace for clean history)
-  const sp = searchParams.toString();
+  const sp = searchParams?.toString() ?? '';
 
   const setPanel = useCallback((nextPanel: string) => {
     const params = new URLSearchParams(sp);
     params.set('panel', nextPanel);
     const q = params.toString();
-    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    const path = pathname ?? '/maia';
+    router.replace(q ? `${path}?${q}` : path, { scroll: false });
   }, [sp, pathname, router]);
 
   const clearPanel = useCallback(() => {
     const params = new URLSearchParams(sp);
     params.delete('panel');
     const q = params.toString();
-    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+    const path = pathname ?? '/maia';
+    router.replace(q ? `${path}?${q}` : path, { scroll: false });
   }, [sp, pathname, router]);
 
   // Derive showDashboard from URL
-  const showDashboard = searchParams.get('panel') === 'journey';
+  const showDashboard = searchParams?.get('panel') === 'journey';
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
   const [explorerId, setExplorerId] = useState('guest');
