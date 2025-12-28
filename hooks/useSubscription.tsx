@@ -29,9 +29,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check beta code on mount (client-side only)
     const betaCode = localStorage.getItem('soullab_beta_code');
-    console.log('🔑 [SubscriptionProvider] Beta code check:', betaCode);
     if (betaCode && betaCode.toUpperCase().startsWith('SOULLAB-')) {
-      console.log('✅ [SubscriptionProvider] Setting isBetaTester = true');
       setIsBetaTester(true);
     }
     // Initialize user - for now, simulate with localStorage
@@ -85,9 +83,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
 
   const hasFeature = useCallback((feature: PremiumFeature): boolean => {
     // Beta testers get full premium access (uses state for hydration-safe check)
-    const result = isBetaTester ? true : (!user ? false : TIER_FEATURES[user.subscription.tier].includes(feature));
-    console.log(`🎫 [hasFeature] ${feature}: isBetaTester=${isBetaTester}, result=${result}`);
-    return result;
+    if (isBetaTester) return true;
+    if (!user) return false;
+    return TIER_FEATURES[user.subscription.tier].includes(feature);
   }, [isBetaTester, user]);
 
   const requireSubscription = useCallback((feature: PremiumFeature): boolean => {
