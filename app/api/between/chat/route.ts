@@ -748,6 +748,26 @@ export async function POST(req: NextRequest) {
       }
     });
 
+    // 📊 AUDIT: Memory pipeline metrics (content-free)
+    const memPipeline = orchestratorResult.metadata?.memoryPipeline;
+    const memRetrieval = memPipeline?.retrieval;
+    logMemoryPipelineDecision(reqId, {
+      userId: effectiveUserId,
+      sessionId: safeSessionId,
+      memoryModeEffective: memPipeline?.mode || 'unknown',
+      sensitiveInput: orchestratorResult.metadata?.sensitiveInput || false,
+      counts: {
+        turnsRetrieved: memRetrieval?.turnsRetrieved ?? 0,
+        semanticHits: memRetrieval?.semanticHits ?? 0,
+        breakthroughsFound: memRetrieval?.breakthroughsFound ?? 0,
+        bulletsInjected: memRetrieval?.bulletsInjected ?? 0,
+      },
+      relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
+      injected: (memRetrieval?.bulletsInjected ?? 0) > 0,
+      bundleChars: 0, // Bundle text length not exposed; could add if needed
+      reason: memRetrieval ? undefined : 'no_retrieval',
+    });
+
     // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
     let finalMessage = orchestratorResult.message;
     let ruptureProcessingResult: RuptureDetectionResult | undefined;
