@@ -15,6 +15,7 @@
  */
 
 import { query as dbQuery } from '@/lib/db/postgres';
+import { toPgVectorLiteralOrNull } from '@/lib/db/pgvector';
 import { generateLocalEmbedding } from './embeddings';
 
 // ═══════════════════════════════════════════════════════════════
@@ -126,7 +127,7 @@ export class DevelopmentalMemoryService {
         user_id, memory_type, trigger_event, facet_code, spiral_cycle,
         significance, vector_embedding, entity_tags,
         source_beads_task_id, source_ain_session_id, source_consciousness_entry_id
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7::vector, $8, $9, $10, $11)
       RETURNING *
     `;
 
@@ -137,7 +138,7 @@ export class DevelopmentalMemoryService {
       input.facetCode,
       input.spiralCycle ?? 1,
       significance,
-      vectorEmbedding.length > 0 ? `{${vectorEmbedding.join(',')}}` : null,
+      toPgVectorLiteralOrNull(vectorEmbedding),
       input.entityTags ?? [],
       input.sourceBeadsTaskId,
       input.sourceAinSessionId,

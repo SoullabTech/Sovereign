@@ -48,6 +48,22 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Normalize facet - accept { code } or { facetCode } or { facet_code }
+    const facetCode = facet?.code ?? facet?.facetCode ?? facet?.facet_code ?? null;
+    if (!facetCode) {
+      return NextResponse.json(
+        { error: 'facet.code (or facetCode/facet_code) is required' },
+        { status: 400 }
+      );
+    }
+
+    // Build normalized facet object for lattice
+    const normalizedFacet = {
+      code: facetCode,
+      element: facet?.element ?? (facetCode.split('-')[0] || facetCode.split('_')[0]),
+      phase: facet?.phase ?? (parseInt(facetCode.split(/[-_]/)[1]) || 1),
+    };
+
     // Memory permission gate: use centralized resolver
     // Defense-in-depth: lattice also checks internally, but be explicit
     const modeResolution = resolveMemoryMode(userId, body.memoryMode);
@@ -57,7 +73,7 @@ export async function POST(req: NextRequest) {
     const result = await lattice.integrateEvent(
       userId,
       event,
-      facet,
+      normalizedFacet,
       phase || { name: 'current' },
       { memoryMode: modeResolution.effective }
     );
