@@ -20,12 +20,15 @@ import { ConversationalElementalIntelligence } from '@/lib/consciousness/convers
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { getConversationContext, ConversationContext } from '@/lib/consciousness/conversationContext';
 import { claudeDevOrchestration, type DevModeContext, type ClaudeDevAnalysis } from '@/lib/development/claude-dev-orchestration';
+import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
+import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
 
 export interface MaiaConsciousnessInput {
   message: string;
   userId: string;
   sessionId: string;
   conversationHistory?: any[];
+  meta?: { explorerId?: string; userId?: string; sessionId?: string; [key: string]: any };
   context?: any;
 }
 
@@ -158,7 +161,7 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
 }
 
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
-  const { message, userId, sessionId, conversationHistory = [], context = {} } = input;
+  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {} } = input;
 
   // 🧠 MAIA-PAI CONVERSATIONAL KERNEL: Initialize conversation context
   const conversationContext = getConversationContext(sessionId);
@@ -243,6 +246,38 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`🎯 THROUGHLINE REFLEX: "${throughline}"`);
   console.log(`🔥 STAKES ASSESSMENT: "${stakes}"`);
 
+  // 🧠 MEMORY BUNDLE: Retrieve ranked context from multiple buckets
+  const memoryMode = (meta.memoryMode as MemoryMode) || 'longterm';
+  let memoryBundle: MemoryBundle | null = null;
+  let memoryContext = '';
+
+  if (memoryMode !== 'ephemeral') {
+    try {
+      const memoryBundleStartTime = Date.now();
+      memoryBundle = await MemoryBundleService.build({
+        userId,
+        currentInput: message,
+        sessionId,
+        scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
+        maxBullets: 5,
+      });
+
+      if (memoryBundle) {
+        memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
+        console.log(`📦 [MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
+        console.log(`📦 [MemoryBundle] Relationship: ${memoryBundle.relationshipSnapshot.encounterCount} encounters, ${memoryBundle.relationshipSnapshot.breakthroughCount} breakthroughs`);
+      }
+
+      layerTimings['memory-bundle'] = Date.now() - memoryBundleStartTime;
+      layersSuccessful.push('memory-bundle');
+    } catch (error) {
+      console.warn('[MemoryBundle] Retrieval failed (continuing without):', error);
+      layersFailed.push('memory-bundle');
+    }
+  } else {
+    console.log('📦 [MemoryBundle] Skipped - ephemeral mode');
+  }
+
   // 1️⃣ ALWAYS: Get base MAIA response first (core functionality) with conversation context
   let maiaResult;
   try {
@@ -251,7 +286,17 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       sessionId,
       input: message,
       meta: {
+        ...meta,     // ✅ Include explorerId/userId from normalized meta
         ...context,
+        userId,      // 🔑 Explicitly include userId for TurnsStore cross-session persistence
+        memoryMode,  // 🧠 Permission gate for memory operations
+        // 🧠 MEMORY BUNDLE: Inject compressed context from multi-bucket retrieval
+        memoryContext: memoryContext || undefined,
+        memoryBundle: memoryBundle ? {
+          bulletCount: memoryBundle.memoryBullets.length,
+          encounterCount: memoryBundle.relationshipSnapshot.encounterCount,
+          breakthroughCount: memoryBundle.relationshipSnapshot.breakthroughCount,
+        } : undefined,
         // MAIA-PAI conversational kernel context
         conversationContext: {
           depth: conversationContext.getSpine().conversationDepth,
@@ -422,6 +467,39 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   conversationContext.addMoment(message, maiaResult.text, significance);
   console.log(`💫 Conversation moment tracked: ${significance} | Spine updated`);
 
+  // 🧠 MEMORY WRITEBACK: Promote to long-term memory if conditions met
+  let writebackResult = { wrote: false, reason: 'skipped' };
+  if (memoryMode === 'longterm') {
+    try {
+      const writebackStartTime = Date.now();
+      writebackResult = await MemoryWritebackService.writeBack({
+        userId,
+        sessionId,
+        userMessage: message,
+        assistantResponse: maiaResult.text,
+        facetCode: elementalField?.dominantElement || conversationalElemental?.context?.dominantElement,
+        element: elementalField?.dominantElement,
+        memoryMode,
+        route: maiaResult.metadata?.route || 'unknown',
+        timestamp: new Date(),
+      });
+
+      layerTimings['memory-writeback'] = Date.now() - writebackStartTime;
+
+      if (writebackResult.wrote) {
+        console.log(`✅ [MemoryWriteback] Promoted to long-term memory: ${writebackResult.memoryId}`);
+        layersSuccessful.push('memory-writeback');
+      } else {
+        console.log(`📝 [MemoryWriteback] Skipped: ${writebackResult.reason}`);
+      }
+    } catch (error) {
+      console.warn('[MemoryWriteback] Failed (continuing without):', error);
+      layersFailed.push('memory-writeback');
+    }
+  } else {
+    console.log(`📝 [MemoryWriteback] Skipped - ${memoryMode} mode`);
+  }
+
   // 7️⃣ COMPILE FINAL RESPONSE
   const compilationStartTime = Date.now();
   performanceProfile.totalDuration = Date.now() - orchestrationStartTime;
@@ -459,6 +537,18 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       },
       // Claude development mode analysis (only in development)
       claudeDevAnalysis: process.env.NODE_ENV === 'development' ? claudeDevAnalysis : null,
+      // 🧠 MEMORY PIPELINE DATA
+      memoryPipeline: {
+        mode: memoryMode,
+        retrieval: memoryBundle ? {
+          turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+          semanticHits: memoryBundle.retrievalStats.semanticHits,
+          breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
+          bulletsInjected: memoryBundle.memoryBullets.length,
+        } : null,
+        writeback: writebackResult,
+        relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
+      },
       // 🎯 PERFORMANCE PROFILING DATA
       performanceProfile: {
         totalDuration: performanceProfile.totalDuration,
@@ -526,10 +616,16 @@ export async function generateSimpleMaiaResponse(
   context: any = {}
 ): Promise<{ message: string; metadata: any }> {
   try {
+    // Extract normalized meta if provided, otherwise use context directly
+    const { meta: normalizedMeta, ...restContext } = context;
+    const mergedMeta = normalizedMeta
+      ? { ...normalizedMeta, ...restContext }
+      : context;
+
     const maiaResult = await getMaiaResponse({
       sessionId,
       input: message,
-      meta: context,
+      meta: mergedMeta,
     });
 
     return {
