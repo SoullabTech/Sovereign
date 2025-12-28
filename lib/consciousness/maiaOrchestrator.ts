@@ -562,6 +562,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         mode: memoryMode,
         retrieval: memoryBundle ? {
           turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+          turnsSameSession: memoryBundle.retrievalStats.turnsSameSession,
+          turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
           semanticHits: memoryBundle.retrievalStats.semanticHits,
           breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
           bulletsInjected: memoryBundle.memoryBullets.length,

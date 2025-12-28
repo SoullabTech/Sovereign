@@ -45,6 +45,8 @@ export interface MemoryBundle {
   // Metadata for debugging/logging
   retrievalStats: {
     turnsRetrieved: number;
+    turnsSameSession: number;      // Turns from current session
+    turnsCrossSession: number;     // Turns from other sessions
     semanticHits: number;
     breakthroughsFound: number;
     totalCandidates: number;
@@ -109,7 +111,11 @@ export const MemoryBundleService = {
     // Build relationship snapshot
     const relationshipSnapshot = this.buildRelationshipSnapshot(relationshipData, breakthroughs);
 
-    console.log(`📦 [MemoryBundle] Built: ${memoryBullets.length} bullets, ${recentTurns.length} recent turns`);
+    // Compute same-session vs cross-session turn counts
+    const turnsSameSession = recentTurns.filter(t => t.sessionId === sessionId).length;
+    const turnsCrossSession = recentTurns.length - turnsSameSession;
+
+    console.log(`📦 [MemoryBundle] Built: ${memoryBullets.length} bullets, ${recentTurns.length} recent turns (${turnsCrossSession} cross-session)`);
 
     return {
       recentContinuity,
@@ -117,6 +123,8 @@ export const MemoryBundleService = {
       relationshipSnapshot,
       retrievalStats: {
         turnsRetrieved: recentTurns.length,
+        turnsSameSession,
+        turnsCrossSession,
         semanticHits: semanticMemories.length,
         breakthroughsFound: breakthroughs.length,
         totalCandidates: allCandidates.length,

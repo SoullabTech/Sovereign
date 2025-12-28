@@ -106,6 +106,8 @@ function logMemoryPipelineDecision(reqId: string, data: {
   sensitiveInput: boolean;
   counts: {
     turnsRetrieved: number;
+    turnsSameSession: number;
+    turnsCrossSession: number;
     semanticHits: number;
     breakthroughsFound: number;
     bulletsInjected: number;
@@ -758,6 +760,8 @@ export async function POST(req: NextRequest) {
       sensitiveInput: orchestratorResult.metadata?.sensitiveInput || false,
       counts: {
         turnsRetrieved: memRetrieval?.turnsRetrieved ?? 0,
+        turnsSameSession: memRetrieval?.turnsSameSession ?? 0,
+        turnsCrossSession: memRetrieval?.turnsCrossSession ?? 0,
         semanticHits: memRetrieval?.semanticHits ?? 0,
         breakthroughsFound: memRetrieval?.breakthroughsFound ?? 0,
         bulletsInjected: memRetrieval?.bulletsInjected ?? 0,
