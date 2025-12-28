@@ -226,17 +226,41 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ IDENTITY RESOLUTION: Prefer stable explorerId from meta, then userId, then session-scoped
+    // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
     const safeSessionId = sessionId || `chat-${Date.now()}`;
     const explorerId = meta?.explorerId;
-    const effectiveUserId = explorerId
-      ? explorerId  // ✅ Stable cross-session identity
-      : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
-        ? bodyUserId.trim()
-        : `anon:${safeSessionId}`; // Session-scoped continuity without cross-user leakage
+
+    // 🔒 SECURITY: In production, never trust client-supplied identity without auth
+    // In dev, optionally trust body ID for local testing with MAIA_DEV_TRUST_BODY_ID=1
+    const isProd = process.env.NODE_ENV === 'production';
+    const devTrustBodyId = process.env.MAIA_DEV_TRUST_BODY_ID === '1';
+
+    // TODO: When auth is implemented, authUserId should come from verified session/token
+    const authUserId: string | null = null; // Placeholder for future auth integration
+
+    let effectiveUserId: string;
+    if (authUserId) {
+      // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
+      effectiveUserId = authUserId;
+    } else if (isProd) {
+      // 🔒 Production: Always session-scoped, never trust client body
+      effectiveUserId = `anon:${safeSessionId}`;
+    } else if (devTrustBodyId) {
+      // 🧪 Dev mode with trust enabled: Allow client-supplied IDs for testing
+      effectiveUserId = explorerId
+        ? explorerId
+        : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
+          ? bodyUserId.trim()
+          : `anon:${safeSessionId}`;
+    } else {
+      // 🔒 Dev mode without trust: Session-scoped (safe default)
+      effectiveUserId = `anon:${safeSessionId}`;
+    }
 
     // Log identity resolution for debugging
+    const identityMode = authUserId ? 'auth' : isProd ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
     console.log('[Chat API] 🧠 Identity resolution:', {
+      mode: identityMode,
       explorerId: explorerId || 'not provided',
       bodyUserId: bodyUserId || 'not provided',
       effectiveUserId,
