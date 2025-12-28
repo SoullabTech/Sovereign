@@ -1,6 +1,7 @@
 // backend: app/api/between/chat/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'crypto';
 import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
 import {
   ruptureDetectionService,
@@ -15,6 +16,39 @@ import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔒 SESSION MANAGEMENT: Cookie-based server-issued session IDs
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Get session ID from cookie or create a new one.
+ * This prevents clients from spoofing session IDs via request body.
+ */
+function getOrCreateSessionId(req: NextRequest): { sid: string; setCookie?: string } {
+  const cookieHeader = req.headers.get('cookie') ?? '';
+  const match = cookieHeader.match(/(?:^|;\s*)maia_sid=([^;]+)/);
+  if (match?.[1]) {
+    return { sid: decodeURIComponent(match[1]) };
+  }
+
+  // Create new server-issued session ID
+  const sid = `sid_${crypto.randomBytes(16).toString('hex')}`;
+  const isProd = process.env.NODE_ENV === 'production';
+  const secure = isProd ? '; Secure' : '';
+  const setCookie = `maia_sid=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 30}`;
+  return { sid, setCookie };
+}
+
+/**
+ * Helper to add Set-Cookie header to a NextResponse if needed
+ */
+function withSessionCookie(res: NextResponse, setCookie?: string): NextResponse {
+  if (setCookie) {
+    res.headers.set('Set-Cookie', setCookie);
+  }
+  return res;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔮 CANON BYPASS: Detect identity/canon questions and return canon beads directly
@@ -219,15 +253,18 @@ export async function POST(req: NextRequest) {
     const serverAllowsCanonWrap = process.env.CANON_WRAP_ENABLED === '1';
     const allowCanonWrap = serverAllowsCanonWrap && body?.allowCanonWrap === true;
 
+    // 🔒 SESSION: Get server-issued session ID from cookie (prevents spoofing)
+    const { sid: safeSessionId, setCookie: sessionCookie } = getOrCreateSessionId(req);
+    // Note: body.sessionId is now ignored for identity - server controls session assignment
+
     if (!message || typeof message !== 'string') {
-      return NextResponse.json(
-        { error: 'Message is required' },
-        { status: 400 },
+      return withSessionCookie(
+        NextResponse.json({ error: 'Message is required' }, { status: 400 }),
+        sessionCookie
       );
     }
 
     // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
-    const safeSessionId = sessionId || `chat-${Date.now()}`;
     const explorerId = meta?.explorerId;
 
     // 🔒 SECURITY: In production, never trust client-supplied identity without auth
@@ -357,7 +394,7 @@ export async function POST(req: NextRequest) {
               wrapOnly: true,
             });
 
-            return NextResponse.json({
+            return withSessionCookie(NextResponse.json({
               message: wrapped.renderedText,
               route: {
                 endpoint: '/api/between/chat',
@@ -377,11 +414,11 @@ export async function POST(req: NextRequest) {
                 voiceMode: normalizedMode,
                 voiceRenderer: wrapped.compliance,
               },
-            });
+            }), sessionCookie);
           }
 
           // NO WRAP: Return canon bead directly
-          return NextResponse.json({
+          return withSessionCookie(NextResponse.json({
             message: canonResponse,
             route: {
               endpoint: '/api/between/chat',
@@ -399,7 +436,7 @@ export async function POST(req: NextRequest) {
               bypassedLLM: true,
               hallucinationPrevented: true,
             },
-          });
+          }), sessionCookie);
         } else {
           console.log('[Chat API] ⚠️ CANON BYPASS MISS - no canon bead found, falling through to LLM');
         }
@@ -489,7 +526,7 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
-      return NextResponse.json({
+      return withSessionCookie(NextResponse.json({
         message: outboundText,
         route: {
           endpoint: '/api/between/chat',
@@ -512,7 +549,7 @@ export async function POST(req: NextRequest) {
             enhanced: ruptureProcessingResult?.consultationUsed || false
           } : undefined
         },
-      });
+      }), sessionCookie);
     }
 
     // Use full fail-soft consciousness orchestrator
@@ -595,7 +632,7 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
-    return NextResponse.json({
+    return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
       route: {
@@ -621,9 +658,10 @@ export async function POST(req: NextRequest) {
           enhanced: ruptureProcessingResult?.consultationUsed || false
         } : undefined
       }
-    });
+    }), sessionCookie);
   } catch (err: any) {
     console.error('Chat route error:', err);
+    // Error responses don't need session cookie - no session continuity for failed requests
     return NextResponse.json(
       {
         error: 'MAIA_TEMPORARY_ERROR',
