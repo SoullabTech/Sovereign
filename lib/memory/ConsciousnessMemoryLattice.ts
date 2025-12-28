@@ -226,8 +226,10 @@ export class ConsciousnessMemoryLattice {
     if (memoryMode !== 'longterm') {
       console.log(`🛡️ [MemoryGate] Lattice integrateEvent denied (not longterm)`, { userId, memoryMode });
       // Return empty result - no memory formation, no patterns, no insights
+      // Use unique ID to avoid downstream collisions
+      const deniedId = (globalThis.crypto as any)?.randomUUID?.() ?? `denied_${Date.now()}_${Math.random().toString(36).slice(2)}`;
       return {
-        node: { id: 'denied', userId, event, facet, phase, connections: [], createdAt: new Date() } as LatticeNode,
+        node: { id: deniedId, userId, event, facet, phase, connections: [], createdAt: new Date() } as LatticeNode,
         memoryFormed: false,
         patternsDetected: [],
         insights: [],
