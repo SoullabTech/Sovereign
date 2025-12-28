@@ -22,6 +22,7 @@ import { getConversationContext, ConversationContext } from '@/lib/consciousness
 import { claudeDevOrchestration, type DevModeContext, type ClaudeDevAnalysis } from '@/lib/development/claude-dev-orchestration';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
+import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 
 export interface MaiaConsciousnessInput {
@@ -249,20 +250,17 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
 
   // 🧠 MEMORY BUNDLE: Retrieve ranked context from multiple buckets
   // Server-side allowlist guard: client can request, but server decides
-  const requestedMode = (meta.memoryMode as MemoryMode) || 'continuity';
-  const allowLongterm =
-    process.env.MAIA_LONGTERM_WRITEBACK === '1' &&
-    new Set((process.env.MAIA_LONGTERM_WRITEBACK_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean))
-      .has(userId);
+  const modeResolution = resolveMemoryMode(userId, meta.memoryMode as string);
+  const memoryMode = modeResolution.effective;
 
-  const memoryMode: MemoryMode =
-    requestedMode === 'longterm' && allowLongterm ? 'longterm' : requestedMode === 'ephemeral' ? 'ephemeral' : 'continuity';
+  console.log('🧠 [MemoryGate] modes', {
+    userId,
+    requestedMode: modeResolution.requested,
+    memoryMode: modeResolution.effective,
+    allowLongterm: modeResolution.allowLongterm,
+  });
 
-  console.log('🧠 [MemoryGate] modes', { userId, requestedMode, memoryMode, allowLongterm });
-
-  if (requestedMode === 'longterm' && memoryMode !== 'longterm') {
-    console.warn('🛡️ [MemoryGate] Longterm writeback requested but denied', { userId });
-  }
+  logMemoryGateDenial('Orchestrator', userId, modeResolution);
 
   let memoryBundle: MemoryBundle | null = null;
   let memoryContext = '';

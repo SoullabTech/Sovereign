@@ -22,6 +22,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { lattice } from '@/lib/memory/ConsciousnessMemoryLattice';
+import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,26 +48,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Memory permission gate: require explicit memoryMode
+    // Memory permission gate: use centralized resolver
     // Defense-in-depth: lattice also checks internally, but be explicit
-    const memoryMode = (body.memoryMode as 'ephemeral' | 'continuity' | 'longterm') || 'continuity';
-
-    // Server-side allowlist check (same as orchestrator)
-    const allowLongterm =
-      process.env.MAIA_LONGTERM_WRITEBACK === '1' &&
-      new Set((process.env.MAIA_LONGTERM_WRITEBACK_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean))
-        .has(userId);
-
-    const effectiveMode = memoryMode === 'longterm' && allowLongterm ? 'longterm' : memoryMode === 'ephemeral' ? 'ephemeral' : 'continuity';
-
-    if (memoryMode === 'longterm' && effectiveMode !== 'longterm') {
-      console.warn('🛡️ [MemoryGate] API integrate route: longterm requested but denied', { userId });
-    }
+    const modeResolution = resolveMemoryMode(userId, body.memoryMode);
+    logMemoryGateDenial('API integrate route', userId, modeResolution);
 
     // Integrate event into lattice (with permission-gated memoryMode)
-    const result = await lattice.integrateEvent(userId, event, facet, phase || { name: 'current' }, { memoryMode: effectiveMode });
+    const result = await lattice.integrateEvent(
+      userId,
+      event,
+      facet,
+      phase || { name: 'current' },
+      { memoryMode: modeResolution.effective }
+    );
 
-    console.log(`✅ [API] Event integrated: ${event.type} for ${userId}, Memory: ${result.memoryFormed}, Mode: ${effectiveMode}`);
+    console.log(`✅ [API] Event integrated: ${event.type} for ${userId}, Memory: ${result.memoryFormed}, Mode: ${modeResolution.effective}`);
 
     return NextResponse.json({
       success: true,
