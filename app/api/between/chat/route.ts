@@ -767,7 +767,7 @@ export async function POST(req: NextRequest) {
         bulletsInjected: memRetrieval?.bulletsInjected ?? 0,
       },
       relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
-      injected: (memRetrieval?.bulletsInjected ?? 0) > 0,
+      injected: (memRetrieval?.bulletsInjected ?? 0) > 0 && (memPipeline?.bundleChars ?? 0) > 0,
       bundleChars: memPipeline?.bundleChars ?? 0,
       reason: memRetrieval ? undefined : 'no_retrieval',
     });
