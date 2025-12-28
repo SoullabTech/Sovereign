@@ -43,6 +43,9 @@ jobs:
         working-directory: apps/web
         run: npm ci
 
+      - name: Run leak guardrail
+        run: bash scripts/ci/leak-guard.sh
+
       - name: Run security audit
         working-directory: apps/web
         run: npm audit --audit-level=high

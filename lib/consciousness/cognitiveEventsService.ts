@@ -13,6 +13,11 @@
 import { insertOne, query } from '../db/postgres';
 
 // =====================================================================
+// FEATURE FLAG - Gate until table exists in production
+// =====================================================================
+const COGNITIVE_EVENTS_ENABLED = process.env.MAIA_ENABLE_COGNITIVE_TURN_EVENTS === '1';
+
+// =====================================================================
 // TYPE DEFINITIONS
 // =====================================================================
 
@@ -64,6 +69,11 @@ export async function logCognitiveTurn({
   bloom,
   scaffoldingUsed,
 }: LogTurnArgs): Promise<void> {
+  // Gate: skip if table doesn't exist yet (fail-open for telemetry)
+  if (!COGNITIVE_EVENTS_ENABLED) {
+    return;
+  }
+
   try {
     // Prepare insert payload
     const payload = {
@@ -111,6 +121,11 @@ export async function getUserCognitiveProgression(
   userId: string,
   limit: number = 20
 ): Promise<BloomDetection[] | null> {
+  // Gate: return null if table doesn't exist
+  if (!COGNITIVE_EVENTS_ENABLED) {
+    return null;
+  }
+
   try {
     // Query Postgres (local sovereignty-compliant database)
     const sql = `
