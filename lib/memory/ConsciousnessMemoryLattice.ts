@@ -281,7 +281,7 @@ export class ConsciousnessMemoryLattice {
       intention?: string;
     }
   ): Promise<MemoryField> {
-    console.log(`🔮 [RESONANCE RECALL] Query: "${currentState.query?.substring(0, 50)}..."`);
+    console.log(`🔮 [RESONANCE RECALL] QueryChars: ${currentState.query?.length ?? 0}`); // Never log query content
 
     // Multi-dimensional retrieval
     const [

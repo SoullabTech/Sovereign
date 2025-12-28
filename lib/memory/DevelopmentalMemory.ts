@@ -234,7 +234,7 @@ export class DevelopmentalMemoryService {
     limit: number = 10,
     threshold: number = 0.65
   ): Promise<DevelopmentalMemory[]> {
-    console.log(`🔎 [SEMANTIC SEARCH] Query: "${query.substring(0, 50)}..."`);
+    console.log(`🔎 [SEMANTIC SEARCH] QueryChars: ${query.length}`); // Never log query content
 
     // Generate query embedding
     const queryEmbedding = await generateLocalEmbedding(query);

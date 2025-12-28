@@ -69,7 +69,7 @@ export async function getMythicAtlasContext(
   const { input, sessionId } = params;
 
   console.log(`🧠 [MythicAtlas] Requesting classification...`);
-  console.log(`   Input: ${input.substring(0, 100)}${input.length > 100 ? '...' : ''}`);
+  console.log(`   InputChars: ${input.length}`); // Never log message content
 
   try {
     // Call Python FastAPI backend

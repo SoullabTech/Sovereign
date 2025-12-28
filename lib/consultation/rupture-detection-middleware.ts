@@ -298,7 +298,7 @@ export function ruptureDetectionMiddleware() {
         detected: detection.ruptureDetected,
         type: detection.ruptureType,
         confidence: detection.confidence,
-        userInput: userInput.substring(0, 50) + '...'
+        inputChars: userInput.length, // Never log message content
       });
 
       next();
