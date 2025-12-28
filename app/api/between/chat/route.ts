@@ -117,6 +117,7 @@ function logMemoryPipelineDecision(reqId: string, data: {
   bundleChars: number;
   recallQuality: number;
   bloatRisk: number;
+  healthFlags: string[];
   reason?: string;
 }) {
   console.log('[Audit:MemoryPipeline]', {
@@ -133,11 +134,23 @@ function logMemoryPipelineDecision(reqId: string, data: {
     bundleChars: data.bundleChars,
     recallQuality: data.recallQuality,
     bloatRisk: data.bloatRisk,
+    healthFlags: data.healthFlags,
     reason: data.reason ?? null,
     longtermGate: {
       envEnabled: process.env.MAIA_LONGTERM_WRITEBACK === '1',
     },
   });
+
+  // Optional warning log (gated by env)
+  if (process.env.MAIA_MEMORY_ALERTS === '1' && data.healthFlags.length > 0) {
+    console.warn('[Audit:MemoryPipeline:WARN]', {
+      reqId,
+      healthFlags: data.healthFlags,
+      rq: data.recallQuality,
+      br: data.bloatRisk,
+      bc: data.bundleChars,
+    });
+  }
 }
 
 /**
@@ -757,6 +770,18 @@ export async function POST(req: NextRequest) {
     // 📊 AUDIT: Memory pipeline metrics (content-free)
     const memPipeline = orchestratorResult.metadata?.memoryPipeline;
     const memRetrieval = memPipeline?.retrieval;
+
+    // Compute health flags (content-free signals for grep-able alerting)
+    const rq = memPipeline?.recallQuality ?? 0;
+    const br = memPipeline?.bloatRisk ?? 0;
+    const bc = memPipeline?.bundleChars ?? 0;
+    const healthFlags: string[] = [];
+    if (br > 70 && rq < 40) healthFlags.push('bloat_high_recall_low');
+    if (bc > 1800 && (memRetrieval?.semanticHits ?? 0) === 0) healthFlags.push('big_bundle_zero_semantic');
+    if ((memRetrieval?.turnsCrossSession ?? 0) > 0 && (memRetrieval?.turnsSameSession ?? 0) === 0)
+      healthFlags.push('all_cross_session');
+    if ((memRetrieval?.turnsRetrieved ?? 0) === 0 && bc === 0) healthFlags.push('no_memory_retrieved');
+
     logMemoryPipelineDecision(reqId, {
       userId: effectiveUserId,
       sessionId: safeSessionId,
@@ -772,9 +797,10 @@ export async function POST(req: NextRequest) {
       },
       relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
       injected: (memRetrieval?.bulletsInjected ?? 0) > 0 && (memPipeline?.bundleChars ?? 0) > 0,
-      bundleChars: memPipeline?.bundleChars ?? 0,
-      recallQuality: memPipeline?.recallQuality ?? 0,
-      bloatRisk: memPipeline?.bloatRisk ?? 0,
+      bundleChars: bc,
+      recallQuality: rq,
+      bloatRisk: br,
+      healthFlags,
       reason: memRetrieval ? undefined : 'no_retrieval',
     });
 
