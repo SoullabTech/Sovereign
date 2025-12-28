@@ -769,8 +769,10 @@ export async function POST(req: NextRequest) {
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
     // Dev-only: simulate pipeline missing via header for calibration testing
+    // Requires MAIA_MEMORY_SIM_HEADERS=1 env var AND the header (double-gate)
     const simulatePipelineMissing =
       process.env.NODE_ENV !== 'production' &&
+      process.env.MAIA_MEMORY_SIM_HEADERS === '1' &&
       req.headers.get('x-maia-simulate-pipeline-missing') === '1';
 
     const memPipeline = simulatePipelineMissing
