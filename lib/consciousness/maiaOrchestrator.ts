@@ -566,11 +566,13 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           breakthroughsFound: memoryBundle.retrievalStats.breakthroughsFound,
           bulletsInjected: memoryBundle.memoryBullets.length,
         } : null,
+        bundleChars: memoryContext.length,  // Audit: proves injection size without content
         writeback: writebackResult,
         relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
       } : {
         mode: memoryMode,
         wrote: writebackResult?.wrote || false,
+        bundleChars: memoryContext.length,  // Always expose for audit
       },
       // 🎯 PERFORMANCE PROFILING DATA
       performanceProfile: {

@@ -764,7 +764,7 @@ export async function POST(req: NextRequest) {
       },
       relationshipEncounters: memPipeline?.relationshipSnapshot?.encounterCount ?? 0,
       injected: (memRetrieval?.bulletsInjected ?? 0) > 0,
-      bundleChars: 0, // Bundle text length not exposed; could add if needed
+      bundleChars: memPipeline?.bundleChars ?? 0,
       reason: memRetrieval ? undefined : 'no_retrieval',
     });
 
