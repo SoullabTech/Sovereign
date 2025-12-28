@@ -468,19 +468,23 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`💫 Conversation moment tracked: ${significance} | Spine updated`);
 
   // 🧠 MEMORY WRITEBACK: Promote to long-term memory if conditions met
-  let writebackResult = { wrote: false, reason: 'skipped' };
+  let writebackResult: { wrote: boolean; memoryId?: string; reason?: string } = { wrote: false, reason: 'skipped' };
   if (memoryMode === 'longterm') {
     try {
       const writebackStartTime = Date.now();
+      // Extract elemental info (cast to any to avoid strict type issues with null assignments)
+      const elementField = elementalField as any;
+      const convElemental = conversationalElemental as any;
+
       writebackResult = await MemoryWritebackService.writeBack({
         userId,
         sessionId,
         userMessage: message,
         assistantResponse: maiaResult.text,
-        facetCode: elementalField?.dominantElement || conversationalElemental?.context?.dominantElement,
-        element: elementalField?.dominantElement,
+        facetCode: elementField?.dominantElement || convElemental?.context?.dominantElement,
+        element: elementField?.dominantElement,
         memoryMode,
-        route: maiaResult.metadata?.route || 'unknown',
+        route: (maiaResult as any).metadata?.route || 'unknown',
         timestamp: new Date(),
       });
 

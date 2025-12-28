@@ -515,6 +515,30 @@ Tone:
 Context for this conversation:
 ${summary}`;
 
+  // 🔄 CONVERSATION HISTORY: Include recent exchanges for memory/recall
+  if (conversationHistory && conversationHistory.length > 0) {
+    const recentExchanges = conversationHistory.slice(-4).map(ex => {
+      const userMsg = ex.userMessage || ex.content || '';
+      const maiaMsg = ex.maiaResponse || '';
+      if (userMsg && maiaMsg) {
+        return `User: ${userMsg}\nMAIA: ${maiaMsg.substring(0, 120)}${maiaMsg.length > 120 ? '...' : ''}`;
+      } else if (userMsg) {
+        return `${ex.role === 'user' ? 'User' : 'MAIA'}: ${userMsg}`;
+      }
+      return '';
+    }).filter(Boolean).join('\n\n');
+
+    if (recentExchanges.length > 0) {
+      adaptedPrompt += `
+
+🔄 RECENT CONVERSATION (for memory and continuity):
+${recentExchanges}
+
+IMPORTANT: If the user asks about something mentioned in the conversation above, DIRECTLY recall and reference that information. Be specific.`;
+      console.log(`🔄 [Conversation History] Included ${conversationHistory.length} exchanges in prompt`);
+    }
+  }
+
   // 🌊 RELATIONSHIP MEMORY: Add relational continuity
   if (context.relationshipMemory) {
     const relationshipContext = formatRelationshipMemoryForPrompt(context.relationshipMemory);
