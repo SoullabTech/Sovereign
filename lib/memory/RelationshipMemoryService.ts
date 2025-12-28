@@ -10,7 +10,7 @@
  * - Context creates continuity, continuity creates trust
  */
 
-import { db } from '@/lib/db/postgres';
+import { query as dbQuery } from '@/lib/db/postgres';
 import { loadRelationshipEssence, type RelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesis';
 import { lattice } from './ConsciousnessMemoryLattice';
 
@@ -176,7 +176,7 @@ export async function loadRelationshipMemory(
  */
 async function loadConversationThemes(userId: string, limit: number): Promise<ConversationTheme[]> {
   try {
-    const result = await db.query(`
+    const result = await dbQuery(`
       SELECT
         theme,
         first_mentioned,
@@ -210,7 +210,7 @@ async function loadConversationThemes(userId: string, limit: number): Promise<Co
  */
 async function loadBreakthroughMoments(userId: string, limit: number): Promise<BreakthroughMoment[]> {
   try {
-    const result = await db.query(`
+    const result = await dbQuery(`
       SELECT
         id,
         timestamp,
@@ -243,7 +243,7 @@ async function loadBreakthroughMoments(userId: string, limit: number): Promise<B
  */
 async function loadRelationshipPatterns(userId: string): Promise<RelationshipPattern[]> {
   try {
-    const result = await db.query(`
+    const result = await dbQuery(`
       SELECT
         pattern,
         frequency,
@@ -388,7 +388,7 @@ export async function saveConversationTheme(
   context?: string
 ): Promise<void> {
   try {
-    await db.query(`
+    await dbQuery(`
       INSERT INTO conversation_themes (user_id, theme, first_mentioned, last_mentioned, occurrences, significance, context)
       VALUES ($1, $2, NOW(), NOW(), 1, $3, $4)
       ON CONFLICT (user_id, theme)
@@ -413,7 +413,7 @@ export async function saveBreakthroughMoment(
   relatedThemes: string[] = []
 ): Promise<void> {
   try {
-    await db.query(`
+    await dbQuery(`
       INSERT INTO breakthrough_moments (user_id, timestamp, insight, element, integrated, related_themes)
       VALUES ($1, NOW(), $2, $3, false, $4)
     `, [userId, insight, element, relatedThemes]);
@@ -432,7 +432,7 @@ export async function saveRelationshipPattern(
   pattern: string
 ): Promise<void> {
   try {
-    await db.query(`
+    await dbQuery(`
       INSERT INTO relationship_patterns (user_id, pattern, frequency, first_seen, last_seen)
       VALUES ($1, $2, 1, NOW(), NOW())
       ON CONFLICT (user_id, pattern)

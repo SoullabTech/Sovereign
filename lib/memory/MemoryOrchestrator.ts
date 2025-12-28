@@ -1,7 +1,20 @@
 import { PrismaClient } from '@prisma/client';
 import { generateLocalEmbedding } from './embeddings';
+import { RelationshipContextStore, type RelationshipContext } from './stores/RelationshipContextStore';
+import { TurnsStore } from './stores/TurnsStore';
+import { BreakthroughStore } from './stores/BreakthroughStore';
 
 const prisma = new PrismaClient();
+
+/**
+ * Minimal session context for cross-conversation continuity
+ * (No embeddings required - just recency + relationship + breakthroughs)
+ */
+export interface SessionRecallContext {
+  relationshipContext?: RelationshipContext;
+  recentTurns?: Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>;
+  recentBreakthroughs?: Array<{ insight: string; element?: string; integrated: boolean; createdAt: string }>;
+}
 
 export interface MemoryContext {
   session: ConversationTurn[];       // Last N turns
@@ -180,17 +193,99 @@ export class MemoryOrchestrator {
   }
 
   private async getSessionContext(
-    userId: string, 
+    userId: string,
     maxTurns: number = 10
   ): Promise<ConversationTurn[]> {
     try {
-      // In production, fetch from Redis or session store
-      // For now, return mock data structure
-      return [];
+      // Fetch real turns from database
+      const turns = await TurnsStore.getRecentTurns(userId, maxTurns);
+      return turns.map(t => ({
+        role: t.role,
+        content: t.content,
+        timestamp: new Date(t.createdAt),
+      }));
     } catch (error) {
       console.error('Session context error:', error);
       return [];
     }
+  }
+
+  /**
+   * Get minimal recall context for session start
+   * This is the MVP: relationship + recent turns + breakthroughs
+   * No embeddings needed - just recency-based recall
+   */
+  async getSessionRecallContext(userId: string): Promise<SessionRecallContext> {
+    try {
+      const [relationshipContext, recentTurns, recentBreakthroughs] = await Promise.all([
+        RelationshipContextStore.get(userId),
+        TurnsStore.getRecentTurns(userId, 12),
+        BreakthroughStore.getRecentBreakthroughs(userId, 5),
+      ]);
+
+      return {
+        relationshipContext: relationshipContext ?? undefined,
+        recentTurns,
+        recentBreakthroughs,
+      };
+    } catch (error) {
+      console.error('Session recall error:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Format session recall context into a prompt block
+   * Call this at session start and prepend/append to system prompt
+   */
+  formatRecallForPrompt(recall: SessionRecallContext): string {
+    const sections: string[] = [];
+
+    // Relationship essence
+    if (recall.relationshipContext) {
+      const ctx = recall.relationshipContext;
+      const parts: string[] = [];
+
+      if (ctx.preferredName) {
+        parts.push(`Name: ${ctx.preferredName}`);
+      }
+      if (ctx.conversationHistorySummary) {
+        parts.push(`Relationship: ${ctx.conversationHistorySummary}`);
+      }
+      if (ctx.recurringThemes?.length) {
+        parts.push(`Recurring themes: ${ctx.recurringThemes.join(', ')}`);
+      }
+      if (ctx.consciousnessJourneyStage) {
+        parts.push(`Journey stage: ${ctx.consciousnessJourneyStage}`);
+      }
+      if (ctx.totalSessions) {
+        parts.push(`Sessions together: ${ctx.totalSessions}`);
+      }
+
+      if (parts.length > 0) {
+        sections.push(`RELATIONSHIP CONTEXT:\n${parts.join('\n')}`);
+      }
+    }
+
+    // Recent breakthroughs
+    if (recall.recentBreakthroughs?.length) {
+      const breakthroughLines = recall.recentBreakthroughs.map(b => {
+        const elementTag = b.element ? ` [${b.element}]` : '';
+        const statusTag = b.integrated ? '' : ' (still integrating)';
+        return `- ${b.insight}${elementTag}${statusTag}`;
+      });
+      sections.push(`RECENT BREAKTHROUGHS:\n${breakthroughLines.join('\n')}`);
+    }
+
+    // Recent conversation turns (condensed)
+    if (recall.recentTurns?.length) {
+      const turnLines = recall.recentTurns.slice(-6).map(t =>
+        `${t.role.toUpperCase()}: ${t.content.slice(0, 200)}${t.content.length > 200 ? '...' : ''}`
+      );
+      sections.push(`RECENT CONVERSATION:\n${turnLines.join('\n')}`);
+    }
+
+    return sections.join('\n\n');
   }
 
   private async getRelevantJournals(
@@ -506,14 +601,58 @@ export class MemoryOrchestrator {
   async updateSessionMemory(
     userId: string,
     userMessage: string,
-    assistantResponse: string
+    assistantResponse: string,
+    sessionId?: string
   ): Promise<void> {
     try {
-      // In production, store in Redis/session store
-      console.log(`Updating session memory for user ${userId}`);
+      // Persist to database for cross-session recall
+      await TurnsStore.addExchange(userId, sessionId, userMessage, assistantResponse);
+      console.log(`[MEMORY] Stored exchange for user ${userId}`);
     } catch (error) {
       console.error('Session memory update error:', error);
     }
+  }
+
+  // ============================================================================
+  // STUB METHODS (unblock build while stabilizing recall)
+  // These are called by ConversationalPipeline and MemoryManager
+  // ============================================================================
+
+  /**
+   * Get sessions for a user (stub - unblocks ConversationalPipeline)
+   */
+  async getSessionsByUser(_userId: string, _limit: number = 5): Promise<any[]> {
+    // TODO: Implement when needed - derive from conversation_turns distinct session_id
+    return [];
+  }
+
+  /**
+   * Get journal entries for a user (stub - unblocks ConversationalPipeline)
+   */
+  async getJournalEntries(_userId: string, _limit: number = 3): Promise<JournalEntry[]> {
+    // TODO: Implement - query journal_entries table
+    return [];
+  }
+
+  /**
+   * Store a conversation (stub - unblocks ConversationalPipeline)
+   */
+  async storeConversation(_params: {
+    userId: string;
+    sessionId: string;
+    userMessage: string;
+    assistantResponse: string;
+    metadata?: Record<string, unknown>;
+  }): Promise<void> {
+    // Actual storage happens via TurnsStore in maiaService.ts
+    // This stub just satisfies the type checker
+  }
+
+  /**
+   * Session store accessor (stub - unblocks MemoryManager)
+   */
+  get sessionStore() {
+    return TurnsStore;
   }
 
   /**

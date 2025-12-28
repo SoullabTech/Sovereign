@@ -9,6 +9,7 @@ import { SesameClient } from './clients/SesameClient';
 import { JournalDatabase } from './clients/JournalDatabase';
 import { MemoryPrioritizer } from './prioritizer';
 import { MemoryFallbackHandler } from './fallback';
+import { TurnsStore } from './stores/TurnsStore';
 
 // Core Types
 export interface ConversationTurn {
@@ -102,6 +103,7 @@ export class MemoryOrchestrator {
   private journalDb: JournalDatabase;
   private prioritizer: MemoryPrioritizer;
   private fallbackHandler: MemoryFallbackHandler;
+  private sessionStore = TurnsStore;  // Cross-session turn storage
   
   constructor(config: MemoryOrchestratorConfig) {
     this.mem0Client = new Mem0Client(config.mem0);
@@ -179,12 +181,20 @@ export class MemoryOrchestrator {
    * Get recent conversation history
    */
   private async getSessionContext(
-    userId: string, 
+    userId: string,
     maxTurns = 10
   ): Promise<ConversationTurn[]> {
-    // This would connect to your session store (Redis/in-memory)
-    const sessions = await this.sessionStore.getRecentTurns(userId, maxTurns);
-    return sessions;
+    try {
+      const turns = await this.sessionStore.getRecentTurns(userId, maxTurns);
+      return turns.map(t => ({
+        role: t.role === 'assistant' ? 'maya' : 'user', // normalize role name
+        content: t.content,
+        timestamp: new Date(t.createdAt),
+      }));
+    } catch (error) {
+      console.error('Session context error:', error);
+      return [];
+    }
   }
   
   /**
@@ -307,18 +317,12 @@ export class MemoryOrchestrator {
     userInput: string,
     mayaResponse: string
   ): Promise<void> {
-    // Update session
-    await this.sessionStore.addTurn(userId, {
-      role: 'user',
-      content: userInput,
-      timestamp: new Date()
-    });
-    
-    await this.sessionStore.addTurn(userId, {
-      role: 'maya',
-      content: mayaResponse,
-      timestamp: new Date()
-    });
+    // Update session - use addExchange for paired storage
+    try {
+      await this.sessionStore.addExchange(userId, undefined, userInput, mayaResponse);
+    } catch (error) {
+      console.error('Failed to update session store:', error);
+    }
     
     // Update long-term memory if significant
     if (this.isSignificantInteraction(userInput, mayaResponse)) {

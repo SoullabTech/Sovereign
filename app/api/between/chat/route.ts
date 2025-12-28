@@ -202,12 +202,13 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta } = body as {
       message?: string;
       sessionId?: string;
       mode?: 'dialogue' | 'counsel' | 'scribe';
       userId?: string;
       userName?: string;
+      meta?: { explorerId?: string; sessionId?: string };
     };
 
     // Voice Renderer request flags
@@ -225,15 +226,35 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ✅ IDENTITY RESOLUTION: Use provided userId or create session-scoped pseudo-user
+    // ✅ IDENTITY RESOLUTION: Prefer stable explorerId from meta, then userId, then session-scoped
     const safeSessionId = sessionId || `chat-${Date.now()}`;
-    const effectiveUserId = (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
-      ? bodyUserId.trim()
-      : `anon:${safeSessionId}`; // Session-scoped continuity without cross-user leakage
+    const explorerId = meta?.explorerId;
+    const effectiveUserId = explorerId
+      ? explorerId  // ✅ Stable cross-session identity
+      : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
+        ? bodyUserId.trim()
+        : `anon:${safeSessionId}`; // Session-scoped continuity without cross-user leakage
+
+    // Log identity resolution for debugging
+    console.log('[Chat API] 🧠 Identity resolution:', {
+      explorerId: explorerId || 'not provided',
+      bodyUserId: bodyUserId || 'not provided',
+      effectiveUserId,
+      sessionId: safeSessionId,
+    });
+
+    // Build normalized meta for consistent downstream propagation
+    const normalizedMeta = {
+      ...(meta ?? {}),
+      explorerId: explorerId ?? undefined,
+      userId: effectiveUserId,      // 👈 explicit for downstream consumers
+      sessionId: safeSessionId,
+    };
 
     // Log mode for debugging
     console.log('[Chat API] Mode parameter:', mode || 'not provided (will default to dialogue)');
     console.log('[Chat API] Effective userId:', effectiveUserId);
+    console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     const conversationHistory = await getConversationHistory(safeSessionId, 20);
@@ -377,7 +398,8 @@ export async function POST(req: NextRequest) {
     if (SAFE_MODE) {
       // In safe mode, use simplified orchestrator without full consciousness pipeline
       const simpleResult = await generateSimpleMaiaResponse(message, safeSessionId, {
-        mode: mode || 'dialogue' // Pass mode for Talk/Care/Note awareness
+        mode: mode || 'dialogue', // Pass mode for Talk/Care/Note awareness
+        meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
       });
 
       // ✨ RUPTURE ENHANCEMENT: Check if we need to enhance response due to detected rupture
@@ -475,6 +497,7 @@ export async function POST(req: NextRequest) {
       userId: effectiveUserId,
       sessionId: safeSessionId,
       conversationHistory, // ✅ Now loaded from database
+      meta: normalizedMeta, // ✅ Normalized identity for downstream persistence
       context: {
         chatType: 'between-member',
         endpoint: '/api/between/chat',

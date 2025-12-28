@@ -39,6 +39,7 @@ import {
   formatRelationshipMemoryForPrompt,
   type RelationshipMemoryContext
 } from '../memory/RelationshipMemoryService';
+import { TurnsStore } from '../memory/stores/TurnsStore';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -392,7 +393,14 @@ async function fastPathResponse(
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
   const userId = (meta as any).userId;
-  const policy = userId ? await getConsciousnessPolicy(userId, input) : null;
+  // 🔑 EFFECTIVE USER ID for cross-session recall
+  const effectiveUserId =
+    userId ??
+    (meta as any)?.explorerId ??
+    (meta as any)?.memberId ??
+    (meta as any)?.user?.id ??
+    null;
+  const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -419,13 +427,56 @@ async function fastPathResponse(
   }
 
   // Build minimal context for fast processing
-  const recentContext = conversationHistory.slice(-3).map(ex =>
-    `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
-  ).join('\n');
+  // 🔄 CROSS-SESSION RECALL: If current session is empty, load from cross-session turns
+  let recentContext = '';
+  if (conversationHistory.length > 0) {
+    // Use current session history
+    recentContext = conversationHistory.slice(-3).map(ex =>
+      `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+    ).join('\n');
+  } else if (effectiveUserId) {
+    // New session - load cross-session turns for continuity
+    try {
+      const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 6);
+      if (crossSessionTurns.length > 0) {
+        recentContext = crossSessionTurns.slice(-3).map(t =>
+          `${t.role === 'user' ? 'User' : 'MAIA'}: ${t.content.substring(0, 100)}${t.content.length > 100 ? '...' : ''}`
+        ).join('\n');
+        console.log(`🔄 [Cross-Session Recall] Loaded ${crossSessionTurns.length} turns from previous sessions`);
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not load cross-session turns:', err);
+    }
+  }
 
-  const contextPrompt = recentContext.length > 0
-    ? `Recent conversation:\n${recentContext}\n\nUser: ${input}`
-    : input;
+  // 🧠 MEMORY RECALL DETECTION: Detect when user is asking about previous conversation
+  const isMemoryRecallQuestion = /what (was|did|is) (my|i|the)|remember (when|what)|recall|told you|said (earlier|before)|mentioned|secret code|code phrase/i.test(input);
+
+  let memoryRecallInstruction = '';
+  if (isMemoryRecallQuestion && recentContext.length > 0) {
+    memoryRecallInstruction = `\n\n🧠 MEMORY RECALL: The user is asking about something from the conversation. Check the "Recent conversation" above and give them the specific information they're asking about. Be direct and helpful - quote or reference what they said.`;
+    console.log(`🧠 [Memory Recall] Detected recall question, adding instruction`);
+  }
+
+  // 🧠 MEMORY BUNDLE: Use compressed context from multi-bucket retrieval if available
+  const memoryContext = (meta as any).memoryContext as string | undefined;
+  const hasMemoryBundle = !!(meta as any).memoryBundle;
+
+  if (memoryContext && hasMemoryBundle) {
+    console.log(`📦 [MemoryBundle] Using compressed context (${memoryContext.length} chars)`);
+  }
+
+  // Build context prompt with memory bundle OR recent context
+  let contextPrompt: string;
+  if (memoryContext && memoryContext.length > 0) {
+    // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
+    contextPrompt = `${memoryContext}${memoryRecallInstruction}\n\nUser: ${input}`;
+  } else if (recentContext.length > 0) {
+    // Fallback to simple recent context
+    contextPrompt = `Recent conversation:\n${recentContext}${memoryRecallInstruction}\n\nUser: ${input}`;
+  } else {
+    contextPrompt = input;
+  }
 
   // Import MAIA runtime prompt with full relational and lineage intelligence
   const { MAIA_RUNTIME_PROMPT, MAIA_RELATIONAL_SPEC, MAIA_LINEAGES_AND_FIELD, MAIA_CENTER_OF_GRAVITY } = await import('../consciousness/MAIA_RUNTIME_PROMPT');
@@ -612,7 +663,14 @@ async function corePathResponse(
 
   // 🧬 CONSCIOUSNESS POLICY (CORE path with full context)
   const userId = (meta as any).userId;
-  const policy = userId ? await getConsciousnessPolicy(userId, input) : null;
+  // 🔑 EFFECTIVE USER ID for cross-session recall
+  const effectiveUserId =
+    userId ??
+    (meta as any)?.explorerId ??
+    (meta as any)?.memberId ??
+    (meta as any)?.user?.id ??
+    null;
+  const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -639,8 +697,37 @@ async function corePathResponse(
     }
   }
 
+  // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
+  let effectiveHistory = conversationHistory;
+  if (conversationHistory.length === 0 && effectiveUserId) {
+    try {
+      const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 8);
+      if (crossSessionTurns.length > 0) {
+        // Convert turns to conversation exchange format
+        const pairs: any[] = [];
+        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
+          const userTurn = crossSessionTurns[i];
+          const assistantTurn = crossSessionTurns[i + 1];
+          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
+            pairs.push({
+              userMessage: userTurn.content,
+              maiaResponse: assistantTurn.content,
+              timestamp: userTurn.createdAt
+            });
+          }
+        }
+        if (pairs.length > 0) {
+          effectiveHistory = pairs.slice(-4); // Last 4 exchanges
+          console.log(`🔄 [Cross-Session Recall CORE] Loaded ${pairs.length} exchanges from previous sessions`);
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not load cross-session turns for CORE path:', err);
+    }
+  }
+
   // Light conversation analysis
-  const conversationContext = conversationElementalTracker.processMessage(sessionId, input, conversationHistory);
+  const conversationContext = conversationElementalTracker.processMessage(sessionId, input, effectiveHistory);
 
   // Build context with light consciousness insights
   const context: MaiaContext = {
@@ -668,7 +755,7 @@ async function corePathResponse(
   };
 
   // Use MAIA wise prompt with conversation awareness
-  let adaptivePrompt = buildMaiaWisePrompt(context, input, conversationHistory);
+  let adaptivePrompt = buildMaiaWisePrompt(context, input, effectiveHistory);
   console.log(`🎭 Core voice adaptation applied`);
 
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
@@ -700,7 +787,7 @@ async function corePathResponse(
     // Regeneration function for CORE path
     async (repairPrompt: string) => {
       const repairedContext = { ...context };
-      let repairedPrompt = buildMaiaWisePrompt(repairedContext, input, conversationHistory);
+      let repairedPrompt = buildMaiaWisePrompt(repairedContext, input, effectiveHistory);
 
       // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy to regeneration as well
       if (policy) {
@@ -746,7 +833,14 @@ async function deepPathResponse(
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
   const userId = (meta as any).userId;
-  const policy = userId ? await getConsciousnessPolicy(userId, input) : null;
+  // 🔑 EFFECTIVE USER ID for cross-session recall
+  const effectiveUserId =
+    userId ??
+    (meta as any)?.explorerId ??
+    (meta as any)?.memberId ??
+    (meta as any)?.user?.id ??
+    null;
+  const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
@@ -773,8 +867,37 @@ async function deepPathResponse(
     }
   }
 
+  // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
+  let effectiveHistory = conversationHistory;
+  if (conversationHistory.length === 0 && effectiveUserId) {
+    try {
+      const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 10);
+      if (crossSessionTurns.length > 0) {
+        // Convert turns to conversation exchange format
+        const pairs: any[] = [];
+        for (let i = 0; i < crossSessionTurns.length - 1; i += 2) {
+          const userTurn = crossSessionTurns[i];
+          const assistantTurn = crossSessionTurns[i + 1];
+          if (userTurn?.role === 'user' && assistantTurn?.role === 'assistant') {
+            pairs.push({
+              userMessage: userTurn.content,
+              maiaResponse: assistantTurn.content,
+              timestamp: userTurn.createdAt
+            });
+          }
+        }
+        if (pairs.length > 0) {
+          effectiveHistory = pairs.slice(-5); // Last 5 exchanges for DEEP path
+          console.log(`🔄 [Cross-Session Recall DEEP] Loaded ${pairs.length} exchanges from previous sessions`);
+        }
+      }
+    } catch (err) {
+      console.warn('⚠️ Could not load cross-session turns for DEEP path:', err);
+    }
+  }
+
   // Full conversation analysis
-  const conversationContext = conversationElementalTracker.processMessage(sessionId, input, conversationHistory);
+  const conversationContext = conversationElementalTracker.processMessage(sessionId, input, effectiveHistory);
 
   // 🌀 PANCONSCIOUS FIELD ROUTING (Field Safety Gate)
   const cognitiveProfile = (meta as any).cognitiveProfile ?? null;
@@ -819,11 +942,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
   // Build enhanced consciousness context
   const consciousnessContext: ConsciousnessContext = {
     sessionId,
-    userId: sessionId,
-    conversationHistory,
+    userId: userId ?? sessionId,  // prefer real userId, fallback to sessionId only if absent
+    conversationHistory: effectiveHistory,
     currentDepth: depthFromRelationship(conversationContext.profile.relationshipDepth),
     elementalResonance: elementalTrendToResonance(conversationContext.profile.elementalTrend),
-    observerLevel: Math.max(1, Math.min(conversationHistory.length + 1, 7)),
+    observerLevel: Math.max(1, Math.min(effectiveHistory.length + 1, 7)),
     temporalWindow: conversationContext.profile.conversationPhase === 'transcending' ? 'eternal' : 'present',
     metaAwareness: conversationContext.profile.conversationPhase === 'transcending' || conversationContext.profile.dominantElement === 'aether'
   };
@@ -875,13 +998,13 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       const consultation = await consultClaudeForConsciousness({
         userInput: input,
         maiaInitialResponse: maiaInitialResponse + cognitiveScaffoldingNote, // 🧠 Inject scaffolding into MAIA's initial response for Claude to integrate
-        conversationContext: conversationHistory.slice(-5).map(ex => ({
+        conversationContext: effectiveHistory.slice(-5).map(ex => ({
           userMessage: ex.userMessage || '',
           maiaResponse: ex.maiaResponse || ''
         })),
         consultationType,
         sessionMetadata: {
-          turnCount: conversationHistory.length + 1,
+          turnCount: effectiveHistory.length + 1,
           relationshipDepth: conversationContext.profile.relationshipDepth,
           emotionalIntensity: conversationContext.profile.dominantElement === 'fire' ? 'high' :
                              conversationContext.profile.dominantElement === 'water' ? 'medium' : 'low',
@@ -952,7 +1075,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         repairGuidance: repairPrompt
       };
 
-      const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, conversationHistory);
+      const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);
       let repairedPrompt = comprehensiveResult.prompt;
 
       // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy to regeneration as well
@@ -1045,6 +1168,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     // 🛡️ FIELD SAFETY GATE: Check ALL paths (FAST/CORE/DEEP) before any processing
     const userId = (meta as any).userId;
+
+    // 🔑 EFFECTIVE USER ID: stable identifier for cross-session memory
+    // Falls back through multiple sources to find a persistent identifier
+    const effectiveUserId =
+      userId ??
+      (meta as any)?.explorerId ??
+      (meta as any)?.memberId ??
+      (meta as any)?.user?.id ??
+      null;
+
     let cognitiveProfile = null;
     let fieldSafety = null;
 
@@ -1385,7 +1518,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     const processingTimeMs = Date.now() - startTime;
 
-    // Store conversation exchange
+    // Store conversation exchange (session-scoped)
     await addConversationExchange(sessionId, input, text, {
       ...meta,
       processingProfile,
@@ -1406,6 +1539,27 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Store Bloom's cognitive level for learning/analysis
       cognition: bloomMeta,
     });
+
+    // 🔄 CROSS-SESSION TURNS: Store to user-keyed table for cross-session recall
+    console.log('🧠 [TurnsStore] attempting persist', {
+      effectiveUserId,
+      userId,
+      explorerId: (meta as any)?.explorerId,
+      sessionId,
+      db: process.env.DATABASE_URL ?? '(no DATABASE_URL env)',
+    });
+
+    if (effectiveUserId) {
+      try {
+        await TurnsStore.addExchange(effectiveUserId, sessionId, input, text);
+        console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
+      } catch (turnsErr) {
+        console.error('❌ [TurnsStore] persist failed', turnsErr);
+        // Non-blocking - don't fail the response
+      }
+    } else {
+      console.warn('⚠️ [TurnsStore] No effectiveUserId - skipping cross-session storage');
+    }
 
     // ✨ MEMORY INTEGRATION: Form memory from this conversation (mode-aware)
     try {

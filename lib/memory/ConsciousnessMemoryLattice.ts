@@ -29,7 +29,7 @@
  */
 
 import { developmentalMemory, FormMemoryInput } from './DevelopmentalMemory';
-import { db } from '@/lib/db/postgres';
+import { query as dbQuery } from '@/lib/db/postgres';
 import { generateLocalEmbedding } from './embeddings';
 
 // ═══════════════════════════════════════════════════════════════
@@ -398,7 +398,7 @@ export class ConsciousnessMemoryLattice {
     phase: LifePhase
   ): Promise<LatticeNode> {
     // Store in lattice_nodes table
-    const result = await db.query(
+    const result = await dbQuery(
       `INSERT INTO lattice_nodes (user_id, event_type, event_data, facet_code, phase_name)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
@@ -475,7 +475,7 @@ export class ConsciousnessMemoryLattice {
 
     // Pattern 1: Repeated body regions (somatic)
     if (event.type === 'somatic') {
-      const result = await db.query(
+      const result = await dbQuery(
         `SELECT COUNT(*) as count FROM lattice_nodes
          WHERE user_id = $1
            AND event_type = 'somatic'
@@ -490,7 +490,7 @@ export class ConsciousnessMemoryLattice {
 
     // Pattern 2: Repeated emotions
     if (event.type === 'emotional') {
-      const result = await db.query(
+      const result = await dbQuery(
         `SELECT COUNT(*) as count FROM lattice_nodes
          WHERE user_id = $1
            AND event_type = 'emotional'
@@ -504,7 +504,7 @@ export class ConsciousnessMemoryLattice {
     }
 
     // Pattern 3: Stuck in same facet
-    const facetResult = await db.query(
+    const facetResult = await dbQuery(
       `SELECT COUNT(*) as count FROM lattice_nodes
        WHERE user_id = $1
          AND facet_code = $2
@@ -517,14 +517,14 @@ export class ConsciousnessMemoryLattice {
 
     // Pattern 4: Spiritual bypassing (mental insights without emotional processing)
     if (event.type === 'mental') {
-      const recentEmotional = await db.query(
+      const recentEmotional = await dbQuery(
         `SELECT COUNT(*) as count FROM lattice_nodes
          WHERE user_id = $1
            AND event_type = 'emotional'
            AND created_at > NOW() - INTERVAL '7 days'`,
         [userId]
       );
-      const recentMental = await db.query(
+      const recentMental = await dbQuery(
         `SELECT COUNT(*) as count FROM lattice_nodes
          WHERE user_id = $1
            AND event_type = 'mental'
@@ -606,10 +606,10 @@ export class ConsciousnessMemoryLattice {
 
     // Find memories from same facet at different times
     // This reveals spiral cycle patterns - how you experience the same archetype across time
-    const result = await db.query(
+    const result = await dbQuery(
       `SELECT dm.*, ln.event_data, ln.created_at as node_time
        FROM developmental_memories dm
-       LEFT JOIN lattice_nodes ln ON dm.source_consciousness_entry_id = ln.id
+       LEFT JOIN lattice_nodes ln ON dm.source_consciousness_entry_id = ln.id::text
        WHERE dm.user_id = $1
          AND dm.facet_code = $2
        ORDER BY dm.formed_at DESC
@@ -639,7 +639,7 @@ export class ConsciousnessMemoryLattice {
     // Get corresponding lattice nodes
     const memoryIds = memories.map(m => m.id);
     const nodesResult = memoryIds.length > 0
-      ? await db.query(
+      ? await dbQuery(
           `SELECT * FROM lattice_nodes
            WHERE user_id = $1 AND memory_trace_id = ANY($2)
            ORDER BY created_at DESC`,
