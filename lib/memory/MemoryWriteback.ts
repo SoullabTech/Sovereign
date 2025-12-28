@@ -42,17 +42,47 @@ export interface MemoryCapsule {
   entities: string[];   // Max 8
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SECURITY: Sensitive data patterns (NEVER store these)
+// ═══════════════════════════════════════════════════════════════
+const SENSITIVE_PATTERNS = [
+  /secret\s*code/i,
+  /password/i,
+  /passphrase/i,
+  /\bpin\b/i,
+  /\botp\b/i,
+  /2fa|two.?factor/i,
+  /social\s*security/i,
+  /\bssn\b/i,
+  /credit\s*card/i,
+  /\bcvv\b/i,
+  /api.?key/i,
+  /private.?key/i,
+  /seed\s*phrase/i,
+  /recovery\s*phrase/i,
+  /bank\s*account/i,
+  /routing\s*number/i,
+];
+
 // Patterns that indicate "stable facts" worth storing
 const STABLE_FACT_PATTERNS = [
-  /my (?:name|secret|code|phrase) (?:is|was) (.+)/i,
+  /my (?:name) (?:is|was) (.+)/i,  // Name (removed secret/code/phrase)
   /call me (.+)/i,
   /i (?:prefer|like|love|hate|dislike) (.+)/i,
   /i (?:am|'m) (?:a|an) (.+)/i,
   /i work (?:at|for|as) (.+)/i,
-  /my (?:partner|wife|husband|friend|dog|cat) (?:is|'s) called (.+)/i,
+  /my (?:partner|wife|husband|friend|dog|cat|child|daughter|son) (?:is|'s) (?:called|named)? ?(.+)/i,
   /(?:don't|never) (.+)/i,  // Boundaries
   /i always (.+)/i,
   /remind me (?:to|that|about) (.+)/i,
+  // NEW: Practical coping/help patterns
+  /what helps (?:me|is) (.+)/i,
+  /when (.+?),?\s*(.+?) helps/i,
+  /(.+?) helps (?:me|with) (.+)/i,
+  /my goal (?:is|was) (.+)/i,
+  /i struggle with (.+)/i,
+  /i'm working on (.+)/i,
+  /i get (?:anxious|stressed|overwhelmed) when (.+)/i,
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -87,6 +117,12 @@ export const MemoryWritebackService = {
 
     // Longterm mode: analyze and write
     console.log(`[MemoryWriteback] Analyzing exchange for user: ${userId}`);
+
+    // SECURITY GATE: Block sensitive data from ever entering memory
+    if (this.containsSensitiveData(userMessage)) {
+      console.log('[MemoryWriteback] 🔒 BLOCKED - sensitive data detected (secrets never stored)');
+      return { wrote: false, reason: 'sensitive_blocked' };
+    }
 
     // Detect stable facts
     const extractedFacts = this.extractStableFacts(userMessage);
@@ -169,11 +205,12 @@ export const MemoryWritebackService = {
     const entities: string[] = [];
 
     // Capitalized words (potential names/places)
-    const caps = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b/g) || [];
-    entities.push(...caps.filter(c => c.length > 2 && !['The', 'This', 'That', 'What', 'How', 'Why', 'When', 'Where'].includes(c)));
+    const caps: string[] = text.match(/\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)?\b/g) || [];
+    const stopWords = ['The', 'This', 'That', 'What', 'How', 'Why', 'When', 'Where'];
+    entities.push(...caps.filter(c => c.length > 2 && !stopWords.includes(c)));
 
     // Quoted strings
-    const quoted = text.match(/"([^"]+)"|'([^']+)'/g) || [];
+    const quoted: string[] = text.match(/"([^"]+)"|'([^']+)'/g) || [];
     entities.push(...quoted.map(q => q.replace(/['"]/g, '')));
 
     // Dedupe and limit
@@ -461,6 +498,18 @@ export const MemoryWritebackService = {
     ]);
 
     return result.rows[0]?.id;
+  },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECURITY
+  // ═══════════════════════════════════════════════════════════════
+
+  /**
+   * Check if message contains sensitive data that should NEVER be stored
+   * This is a trust cornerstone - secrets don't enter memory
+   */
+  containsSensitiveData(message: string): boolean {
+    return SENSITIVE_PATTERNS.some(pattern => pattern.test(message));
   },
 
   // ═══════════════════════════════════════════════════════════════
