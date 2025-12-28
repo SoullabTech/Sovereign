@@ -247,7 +247,20 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`🔥 STAKES ASSESSMENT: "${stakes}"`);
 
   // 🧠 MEMORY BUNDLE: Retrieve ranked context from multiple buckets
-  const memoryMode = (meta.memoryMode as MemoryMode) || 'continuity';
+  // Server-side allowlist guard: client can request, but server decides
+  const requestedMode = (meta.memoryMode as MemoryMode) || 'continuity';
+  const allowLongterm =
+    process.env.MAIA_LONGTERM_WRITEBACK === '1' &&
+    new Set((process.env.MAIA_LONGTERM_WRITEBACK_ALLOWLIST || '').split(',').map(s => s.trim()).filter(Boolean))
+      .has(userId);
+
+  const memoryMode: MemoryMode =
+    requestedMode === 'longterm' && allowLongterm ? 'longterm' : requestedMode === 'ephemeral' ? 'ephemeral' : 'continuity';
+
+  if (requestedMode === 'longterm' && memoryMode !== 'longterm') {
+    console.warn('🛡️ [MemoryGate] Longterm writeback requested but denied', { userId });
+  }
+
   let memoryBundle: MemoryBundle | null = null;
   let memoryContext = '';
 
