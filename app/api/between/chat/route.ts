@@ -768,12 +768,23 @@ export async function POST(req: NextRequest) {
     });
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
-    // Dev-only: simulate pipeline missing via header for calibration testing
+    // Dev-only simulation headers for calibration testing
     // Requires MAIA_MEMORY_SIM_HEADERS=1 env var AND the header (double-gate)
-    const simulatePipelineMissing =
+    const simHeadersEnabled =
       process.env.NODE_ENV !== 'production' &&
-      process.env.MAIA_MEMORY_SIM_HEADERS === '1' &&
+      process.env.MAIA_MEMORY_SIM_HEADERS === '1';
+
+    const simulatePipelineMissing =
+      simHeadersEnabled &&
       req.headers.get('x-maia-simulate-pipeline-missing') === '1';
+
+    const simulateZeroSemantic =
+      simHeadersEnabled &&
+      req.headers.get('x-maia-simulate-zero-semantic') === '1';
+
+    const simulateBigBundle =
+      simHeadersEnabled &&
+      req.headers.get('x-maia-simulate-big-bundle') === '1';
 
     const memPipeline = simulatePipelineMissing
       ? null
@@ -787,11 +798,17 @@ export async function POST(req: NextRequest) {
     // Compute health flags (content-free signals for grep-able alerting)
     const rq = memPipeline?.recallQuality ?? 0;
     const br = memPipeline?.bloatRisk ?? 0;
-    const bc = memPipeline?.bundleChars ?? 0;
+
+    const bcRaw = memPipeline?.bundleChars ?? 0;
+    const bc = memPipeline && simulateBigBundle ? Math.max(bcRaw, 2000) : bcRaw;
+
     const turnsRetrieved = memRetrieval?.turnsRetrieved ?? 0;
     const turnsSameSession = memRetrieval?.turnsSameSession ?? 0;
     const turnsCrossSession = memRetrieval?.turnsCrossSession ?? 0;
-    const semanticHits = memRetrieval?.semanticHits ?? 0;
+
+    const semanticHitsRaw = memRetrieval?.semanticHits ?? 0;
+    const semanticHits = memPipeline && simulateZeroSemantic ? 0 : semanticHitsRaw;
+
     const breakthroughsFound = memRetrieval?.breakthroughsFound ?? 0;
     const bulletsInjected = memRetrieval?.bulletsInjected ?? 0;
 
