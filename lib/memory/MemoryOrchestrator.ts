@@ -3,6 +3,7 @@ import { generateLocalEmbedding } from './embeddings';
 import { RelationshipContextStore, type RelationshipContext } from './stores/RelationshipContextStore';
 import { TurnsStore } from './stores/TurnsStore';
 import { BreakthroughStore } from './stores/BreakthroughStore';
+import { containsSensitiveData } from './sensitivePatterns';
 
 const prisma = new PrismaClient();
 
@@ -604,6 +605,12 @@ export class MemoryOrchestrator {
     assistantResponse: string,
     sessionId?: string
   ): Promise<void> {
+    // 🔒 SECURITY: Never persist sensitive data to conversation_turns
+    if (containsSensitiveData(userMessage)) {
+      console.log('[MEMORY] 🔒 Skipping persist - sensitive data detected');
+      return;
+    }
+
     try {
       // Persist to database for cross-session recall
       await TurnsStore.addExchange(userId, sessionId, userMessage, assistantResponse);

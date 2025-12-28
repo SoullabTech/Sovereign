@@ -1556,12 +1556,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     });
 
     if (effectiveUserId) {
-      try {
-        await TurnsStore.addExchange(effectiveUserId, sessionId, input, text);
-        console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
-      } catch (turnsErr) {
-        console.error('❌ [TurnsStore] persist failed', turnsErr);
-        // Non-blocking - don't fail the response
+      // 🔒 SECURITY: Never persist sensitive data to conversation_turns
+      if (containsSensitiveData(input)) {
+        console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
+      } else {
+        try {
+          await TurnsStore.addExchange(effectiveUserId, sessionId, input, text);
+          console.log(`✅ [TurnsStore] Persisted exchange for ${effectiveUserId}`);
+        } catch (turnsErr) {
+          console.error('❌ [TurnsStore] persist failed', turnsErr);
+          // Non-blocking - don't fail the response
+        }
       }
     } else {
       console.warn('⚠️ [TurnsStore] No effectiveUserId - skipping cross-session storage');
