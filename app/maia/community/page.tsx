@@ -400,7 +400,7 @@ export default function CommunityBBSPage() {
                           <div className="flex items-center gap-2 mb-2">
                             <h3 className="font-semibold text-amber-100">Community Commons</h3>
                             <span className="px-2 py-1 bg-amber-600/20 text-amber-300 text-xs rounded-md font-medium">
-                              SACRED ACCESS
+                              MEMBER ACCESS
                             </span>
                           </div>
                           <p className="text-amber-300/60 text-sm mb-3">
