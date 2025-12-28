@@ -44,6 +44,7 @@ import { toast } from 'react-hot-toast';
 import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
+import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
 import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
@@ -91,6 +92,15 @@ import {
   type TeenSafetyCheck
 } from '@/lib/safety/teenSupportIntegration';
 import { calculateAge, getUserData, type UserData } from '@/lib/safety/teenProfileUtils';
+
+// Time-aware greeting helper for welcome screen
+function getTimeGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 12) return 'Good morning';
+  if (hour >= 12 && hour < 17) return 'Good afternoon';
+  if (hour >= 17 && hour < 21) return 'Good evening';
+  return 'Good evening'; // Late night feels like evening
+}
 
 // Canon Wrap localStorage helpers (default-on for Care mode)
 const CANON_WRAP_KEY = 'maia.canonWrap.enabled';
@@ -298,6 +308,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [enableVoiceInput, setEnableVoiceInput] = useState(false); // Voice input mode toggle for chat interface
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [oracleAgentId, setOracleAgentId] = useState<string | null>(null);
+  const [explorerId, setExplorerId] = useState<string>(''); // Stable cross-session identity
   const [showWelcome, setShowWelcome] = useState(true);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [isSavingJournal, setIsSavingJournal] = useState(false);
@@ -357,6 +368,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const lastUserMessageRef = useRef<string>('');
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
+  const welcomeInputRef = useRef<HTMLTextAreaElement>(null); // Separate ref for welcome screen input
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const isProcessingRef = useRef(false);
@@ -733,6 +745,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Client-side only check
   useEffect(() => {
     setIsMounted(true);
+
+    // Initialize stable explorer ID for cross-session memory
+    const stableId = getOrCreateExplorerId();
+    setExplorerId(stableId);
+    console.log('🧠 [Identity] Explorer ID initialized:', stableId);
+
     trackEvent('session_start', { userId: userId || 'anonymous', sessionId });
 
     // AUTO-START FIX: Initialize AudioContext immediately on mount
@@ -1746,6 +1764,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const isCareMode = realtimeMode === 'counsel';
       const allowCanonWrap = isCareMode && getCanonWrapEnabled();
 
+      // Guard: Ensure stable identity is available for memory persistence
+      if (!explorerId) {
+        console.warn('🧠 [Identity] No explorerId yet - waiting for initialization');
+        setIsProcessing(false);
+        setCurrentMotionState('idle');
+        return;
+      }
+
       // MAIA speaks through sovereign API - working consciousness system
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -1756,6 +1782,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           userName: userName || 'Explorer',
           sessionId,
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
+
+          // Stable identity for cross-session memory persistence
+          meta: {
+            explorerId, // ✅ Stable identity across sessions
+            sessionId,  // Current session (changes per session)
+          },
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,
@@ -2930,6 +2962,121 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
+      {/* Claude-like Welcome Greeting - Shows when no messages yet */}
+      <AnimatePresence>
+        {messages.filter(m => !m.id.startsWith('greeting-')).length === 0 && !isProcessing && !isResponding && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center"
+          >
+            <div className="flex flex-col items-center gap-8 px-4 w-full max-w-2xl">
+              {/* Holoflower Icon + Greeting */}
+              <div className="flex items-center gap-4">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.02, 1],
+                  }}
+                  transition={{
+                    duration: 4,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                >
+                  <img
+                    src="/holoflower-amber.png"
+                    alt="MAIA"
+                    className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-[0_0_20px_rgba(251,146,60,0.5)]"
+                    style={{
+                      filter: 'brightness(1.2)',
+                    }}
+                  />
+                </motion.div>
+
+                {/* Greeting Text - Inline with icon */}
+                <motion.h1
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.2, duration: 0.5 }}
+                  className="text-3xl sm:text-4xl md:text-5xl font-light"
+                  style={{
+                    fontFamily: 'Spectral, Georgia, serif',
+                    color: '#C9956C',
+                    textShadow: '0 2px 20px rgba(0,0,0,0.5)',
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {getTimeGreeting()}{userName ? `, ${userName}` : ''}
+                </motion.h1>
+              </div>
+
+              {/* Welcome Input Field - Claude-like centered input */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.4 }}
+                className="w-full"
+              >
+                <div className="flex items-end gap-3 bg-[#2a2a3e]/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl px-4 py-3">
+                  <textarea
+                    ref={welcomeInputRef}
+                    placeholder="How can I help you today?"
+                    className="flex-1 bg-transparent text-[#E8D5B7] placeholder-white/40
+                             resize-none outline-none text-base md:text-lg"
+                    style={{
+                      fontFamily: 'Spectral, Georgia, serif',
+                      minHeight: '40px',
+                      maxHeight: '200px',
+                    }}
+                    rows={1}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        const text = (e.target as HTMLTextAreaElement).value.trim();
+                        if (text) {
+                          setShowChatInterface(true); // Switch to chat mode after first message
+                          handleTextMessage(text);
+                          (e.target as HTMLTextAreaElement).value = '';
+                        }
+                      }
+                    }}
+                    onInput={(e) => {
+                      const target = e.target as HTMLTextAreaElement;
+                      target.style.height = 'auto';
+                      target.style.height = Math.min(target.scrollHeight, 200) + 'px';
+                    }}
+                  />
+                  {/* Send button - right side */}
+                  <button
+                    onClick={() => {
+                      const textarea = welcomeInputRef.current;
+                      if (textarea) {
+                        const text = textarea.value.trim();
+                        if (text) {
+                          setShowChatInterface(true); // Switch to chat mode after first message
+                          handleTextMessage(text);
+                          textarea.value = '';
+                          textarea.style.height = 'auto';
+                        }
+                      }
+                    }}
+                    className="flex-shrink-0 p-2.5 rounded-xl bg-amber-600/90 hover:bg-amber-500
+                             transition-all active:scale-95 shadow-lg shadow-amber-600/30"
+                    title="Send message"
+                  >
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    </svg>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Scribe Mode Recording Indicator */}
       <AnimatePresence>
         {isScribing && (
@@ -3171,6 +3318,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             )}
 
             {/* Sparkles emanating from center - ULTRA SLOW & EPHEMERAL */}
+            {/* Only render on client to prevent hydration mismatch from Math.random() */}
+            {isMounted && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               {/* Main radial sparkles - slower drift */}
               {[...Array(12)].map((_, i) => (
@@ -3187,11 +3336,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                     scale: [0, 1.2, 0.8, 0]
                   }}
                   transition={{
-                    duration: 10 + Math.random() * 5, // 10-15 seconds
+                    duration: 10 + i * 0.5, // Deterministic: 10-15.5 seconds
                     repeat: Infinity,
-                    delay: i * 1.5 + Math.random() * 5, // Very sporadic
+                    delay: i * 1.5 + i * 0.3, // Deterministic delay
                     ease: "easeInOut",
-                    repeatDelay: Math.random() * 5 // Long pauses
+                    repeatDelay: i * 0.4 // Deterministic pauses
                   }}
                 />
               ))}
@@ -3200,8 +3349,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               {[...Array(16)].map((_, i) => {
                 const angle = (i * Math.PI * 2) / 16;
                 const spiralRotation = i * 30;
-                const randomDuration = 12 + Math.random() * 6; // 12-18 seconds
-                const randomDelay = Math.random() * 10; // 0-10 second random delay
+                const deterministicDuration = 12 + (i % 6); // 12-17 seconds (deterministic)
+                const deterministicDelay = i * 0.6; // Deterministic delay
                 return (
                   <motion.div
                     key={`sparkle-spiral-${i}`}
@@ -3230,42 +3379,52 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       rotate: [0, spiralRotation]
                     }}
                     transition={{
-                      duration: randomDuration,
+                      duration: deterministicDuration,
                       repeat: Infinity,
-                      delay: randomDelay + i * 0.5,
+                      delay: deterministicDelay + i * 0.5,
                       ease: "easeInOut",
-                      repeatDelay: Math.random() * 8 // Very long pauses
+                      repeatDelay: i * 0.5 // Deterministic pauses
                     }}
                   />
                 );
               })}
               
               {/* Tiny twinkling sparkles - ultra gentle */}
-              {[...Array(25)].map((_, i) => (
-                <motion.div
-                  key={`sparkle-tiny-${i}`}
-                  className="absolute w-px h-px rounded-full"
-                  style={{
-                    left: `${35 + Math.random() * 30}%`,
-                    top: `${35 + Math.random() * 30}%`,
-                    background: 'white',
-                    boxShadow: '0 0 2px rgba(255,255,255,0.5)'
-                  }}
-                  animate={{
-                    opacity: [0, 0, Math.random() * 0.6 + 0.2, 0, 0],
-                    scale: [0, 0, Math.random() + 0.5, 0, 0],
-                  }}
-                  transition={{
-                    duration: 8 + Math.random() * 7, // 8-15 seconds
-                    repeat: Infinity,
-                    delay: Math.random() * 15, // 0-15 second random start
-                    ease: "easeInOut",
-                    repeatDelay: Math.random() * 10, // Very long pauses between twinkles
-                    times: [0, 0.3, 0.5, 0.7, 1] // Quick twinkle in the middle
-                  }}
-                />
-              ))}
+              {/* Using deterministic positions based on index to avoid hydration mismatch */}
+              {[...Array(25)].map((_, i) => {
+                // Use golden ratio-based distribution for natural-looking but deterministic positions
+                const goldenRatio = 1.618033988749895;
+                const posX = 35 + ((i * goldenRatio * 30) % 30);
+                const posY = 35 + ((i * goldenRatio * goldenRatio * 30) % 30);
+                const opacityPeak = 0.2 + (i % 6) * 0.1; // 0.2-0.7
+                const scalePeak = 0.5 + (i % 5) * 0.2; // 0.5-1.3
+                return (
+                  <motion.div
+                    key={`sparkle-tiny-${i}`}
+                    className="absolute w-px h-px rounded-full"
+                    style={{
+                      left: `${posX}%`,
+                      top: `${posY}%`,
+                      background: 'white',
+                      boxShadow: '0 0 2px rgba(255,255,255,0.5)'
+                    }}
+                    animate={{
+                      opacity: [0, 0, opacityPeak, 0, 0],
+                      scale: [0, 0, scalePeak, 0, 0],
+                    }}
+                    transition={{
+                      duration: 8 + (i % 7), // 8-14 seconds (deterministic)
+                      repeat: Infinity,
+                      delay: i * 0.6, // Deterministic delay
+                      ease: "easeInOut",
+                      repeatDelay: i * 0.4, // Deterministic pauses
+                      times: [0, 0.3, 0.5, 0.7, 1] // Quick twinkle in the middle
+                    }}
+                  />
+                );
+              })}
             </div>
+            )}
 
             {/* Voice Visualizer - User's voice (amber plasma field with radial gradients) */}
             {isMounted && !showChatInterface && voiceEnabled && voiceMicRef.current?.isListening && (

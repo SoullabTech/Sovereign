@@ -61,10 +61,10 @@ const SacredNavigation: React.FC<SacredNavigationProps> = ({
 
     // Secondary vertices (expanded functions)
     {
-      id: "astrology",
-      label: "Astrology",
-      icon: "🪐",
-      route: "/astrology",
+      id: "journey",
+      label: "Journey",
+      icon: "🌀",
+      route: "/journey",
       position: { x: 56.6, y: -56.6 },
       significance: "secondary",
     },

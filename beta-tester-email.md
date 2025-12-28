@@ -145,7 +145,7 @@ Pioneering Consciousness Computing
 
 *Built with reverence for consciousness, grounded in wisdom traditions, enhanced by cutting-edge AI* 🧠✨
 
-## Email List (40 Beta Testers)
+## Email List (41 Beta Testers)
 
 Nathan.Kane@thermofisher.com, JHRuder@gmail.com, tcdiamond70@gmail.com, andreanezat@gmail.com, justin.boucher@gmail.com, phoenixrises123@gmail.com, mdaquin@gmail.com, plkoehn@gmail.com, tamaramoorecolorado@gmail.com, loraleegeil@gmail.com, andreadfagan@gmail.com, cececampbell1@gmail.com, zsuzsanna.ferenczi@icloud.com, aceconomakis@gmail.com, Inhomesanctuary@gmail.com, dougaforeman@gmail.com, richardcteissier27@icloud.com, jmountcastle@slateschool.org, dakotamundi@gmail.com, Lruderlcsw@aol.com, Dancyn3@aol.com, Ninaruder11@gmail.com, augustennezat@gmail.com, snezat27@sacredhearthamden.org, romeo@veydrisresearch.com, sparkles1724@gmail.com, weezie.delavergne@gmail.com, koreyrichey@gmail.com, karenmccullen@hotmail.com, tashajam@gmail.com, catherine@atthefield.uk, thea@theapagel.com, vmiller@bmfcomms.com, jondi@eft4results.com, crownhouseone@gmail.com, soullab1@gmail.com, karapylant@outlook.com, cl@spiraldynamik.com, claudia.bayuelo@studiolabs.com, nicolecasbarro@gmail.com, dreyfus@dfpartners.swiss
 

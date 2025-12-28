@@ -184,7 +184,7 @@ export default function BetaAccessPage() {
               </div>
               <div className="flex items-center gap-2 text-amber-300/80">
                 <Star className="w-4 h-4 text-amber-400" />
-                Sacred Access
+                Member Access
               </div>
             </div>
           </div>

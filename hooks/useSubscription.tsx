@@ -76,6 +76,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   const hasFeature = (feature: PremiumFeature): boolean => {
     if (!user) return false;
 
+    // Beta testers with SOULLAB-[NAME] code get full premium access
+    const betaCode = localStorage.getItem('soullab_beta_code');
+    if (betaCode && betaCode.toUpperCase().startsWith('SOULLAB-')) {
+      return true; // All features unlocked for beta testers
+    }
+
     // Check if user tier includes this feature
     const tierFeatures = TIER_FEATURES[user.subscription.tier];
     return tierFeatures.includes(feature);
@@ -137,6 +143,35 @@ export function useFeatureAccess(feature: PremiumFeature) {
 
 // Utility functions for manual subscription management (dev/testing)
 export const subscriptionUtils = {
+  // Activate beta tester access with SOULLAB-[NAME] code
+  activateBetaCode: (code: string): boolean => {
+    if (code && code.toUpperCase().startsWith('SOULLAB-')) {
+      localStorage.setItem('soullab_beta_code', code.toUpperCase());
+      console.log(`🌟 Beta access activated: ${code}`);
+      window.location.reload(); // Refresh to apply changes
+      return true;
+    }
+    console.error('Invalid beta code. Must start with SOULLAB-');
+    return false;
+  },
+
+  // Check if user has beta access
+  isBetaTester: (): boolean => {
+    const betaCode = localStorage.getItem('soullab_beta_code');
+    return !!(betaCode && betaCode.toUpperCase().startsWith('SOULLAB-'));
+  },
+
+  // Get beta code
+  getBetaCode: (): string | null => {
+    return localStorage.getItem('soullab_beta_code');
+  },
+
+  // Remove beta access
+  removeBetaCode: () => {
+    localStorage.removeItem('soullab_beta_code');
+    window.location.reload();
+  },
+
   // Upgrade user to subscriber
   upgradeToSubscriber: () => {
     const userData = localStorage.getItem('maia_user_subscription');

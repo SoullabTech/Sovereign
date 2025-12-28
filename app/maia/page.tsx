@@ -10,8 +10,8 @@
  * God is more between than within - the I-Thou relationship
  */
 
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { OracleConversation } from '@/components/OracleConversation';
@@ -110,14 +110,35 @@ async function getInitialUserData() {
 
 export default function MAIAPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
   const labToolsAccess = useFeatureAccess(PREMIUM_FEATURES.LAB_TOOLS);
+
+  // URL-based panel control (preserves other query params, uses replace for clean history)
+  const sp = searchParams.toString();
+
+  const setPanel = useCallback((nextPanel: string) => {
+    const params = new URLSearchParams(sp);
+    params.set('panel', nextPanel);
+    const q = params.toString();
+    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+  }, [sp, pathname, router]);
+
+  const clearPanel = useCallback(() => {
+    const params = new URLSearchParams(sp);
+    params.delete('panel');
+    const q = params.toString();
+    router.replace(q ? `${pathname}?${q}` : pathname, { scroll: false });
+  }, [sp, pathname, router]);
+
+  // Derive showDashboard from URL
+  const showDashboard = searchParams.get('panel') === 'journey';
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
   const [explorerId, setExplorerId] = useState('guest');
   const [explorerName, setExplorerName] = useState('Explorer');
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
   const [sessionId, setSessionId] = useState('');
-  const [showDashboard, setShowDashboard] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const [maiaMode, setMaiaMode] = useState<'normal' | 'patient' | 'session'>('normal');
   const [voiceEnabled, setVoiceEnabled] = useState(true);
@@ -455,6 +476,18 @@ export default function MAIAPage() {
                   </motion.button>
                 </div>
 
+                {/* Journey Button - Mobile */}
+                <Link href="/journey">
+                  <motion.button
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0
+                             bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400"
+                    title="Your Archetypal Journey"
+                  >
+                    <BookOpen className="w-3 h-3" />
+                    <span className="text-xs">Journey</span>
+                  </motion.button>
+                </Link>
+
                 {/* Commons Button - Mobile */}
                 <Link href="/maia/community">
                   <motion.button
@@ -614,8 +647,22 @@ export default function MAIAPage() {
                 </div>
               </div>
 
-              {/* Right: Commons + Labtools + Session + Sign Out */}
+              {/* Right: Journey + Commons + Labtools + Session + Sign Out */}
               <div className="flex items-center gap-2">
+                {/* Journey Button */}
+                <Link href="/journey">
+                  <motion.button
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all
+                             bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    title="Your Archetypal Journey"
+                  >
+                    <BookOpen className="w-4 h-4" />
+                    <span className="hidden sm:inline">Journey</span>
+                  </motion.button>
+                </Link>
+
                 {/* Commons Button */}
                 <Link href="/maia/community">
                   <motion.button
@@ -743,7 +790,7 @@ export default function MAIAPage() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  onClick={() => setShowDashboard(false)}
+                  onClick={clearPanel}
                   className="absolute inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
                 />
 
@@ -762,7 +809,7 @@ export default function MAIAPage() {
                         <p className="text-xs text-stone-500 mt-1">Threads being woven from your reflections</p>
                       </div>
                       <button
-                        onClick={() => setShowDashboard(false)}
+                        onClick={clearPanel}
                         className="p-2 hover:bg-white/5 rounded-lg transition-colors"
                       >
                         <X className="w-5 h-5 text-stone-400" />

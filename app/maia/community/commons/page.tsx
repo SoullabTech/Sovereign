@@ -40,7 +40,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: BookOpen,
           label: 'Nigredo - The Sacred Descent',
-          path: '/maia/community/concepts/nigredo',
+          path: '/maia/community/content/concepts/nigredo',
           description: 'The alchemical stage of breakdown and purification',
           type: 'concept',
           readTime: '8 min'
@@ -48,7 +48,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: BookOpen,
           label: 'Albedo - The Whitening',
-          path: '/maia/community/concepts/albedo',
+          path: '/maia/community/content/concepts/albedo',
           description: 'Essential concept cards for understanding alchemical psychology',
           type: 'concept',
           readTime: '6 min'
@@ -56,7 +56,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: BookOpen,
           label: 'Citrinitas - The Yellowing',
-          path: '/maia/community/concepts/citrinitas',
+          path: '/maia/community/content/concepts/citrinitas',
           description: 'The dawn of consciousness and insight',
           type: 'concept',
           readTime: '7 min'
@@ -64,7 +64,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: BookOpen,
           label: 'Soul vs Spirit',
-          path: '/maia/community/concepts/soul-spirit',
+          path: '/maia/community/content/concepts/soul-spirit',
           description: 'Understanding the fundamental distinction',
           type: 'concept',
           readTime: '10 min'
@@ -78,7 +78,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: FileText,
           label: 'Against Literalization',
-          path: '/maia/community/essays/against-literalization',
+          path: '/maia/community/content/essays/against-literalization',
           description: 'Deep explorations of key themes in depth psychology',
           type: 'essay',
           readTime: '15 min'
@@ -86,7 +86,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: FileText,
           label: 'Stick with the Image',
-          path: '/maia/community/essays/stick-with-image',
+          path: '/maia/community/content/essays/stick-with-image',
           description: 'Staying with the symbolic rather than reducing to literal',
           type: 'essay',
           readTime: '12 min'
@@ -94,7 +94,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: FileText,
           label: 'Depression as Soul Work',
-          path: '/maia/community/essays/depression-soul-work',
+          path: '/maia/community/content/essays/depression-soul-work',
           description: 'Reframing depression as meaningful psychological work',
           type: 'essay',
           readTime: '18 min'
@@ -102,7 +102,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: FileText,
           label: 'Spiralogic of Soul Integration',
-          path: '/maia/community/essays/spiralogic',
+          path: '/maia/community/content/essays/spiralogic',
           description: 'Deep integration of Jung, Edinger, and Hillman approaches',
           type: 'essay',
           readTime: '25 min'
@@ -116,7 +116,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Lightbulb,
           label: 'Active Imagination Practice',
-          path: '/maia/community/practices/active-imagination',
+          path: '/maia/community/content/practices/active-imagination',
           description: 'Jung\'s revolutionary method for engaging unconscious content',
           type: 'practice',
           readTime: '15 min'
@@ -124,7 +124,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Lightbulb,
           label: 'Shadow Work Techniques',
-          path: '/maia/community/practices/shadow-work',
+          path: '/maia/community/content/practices/shadow-work',
           description: 'Step-by-step guides for personal and clinical work',
           type: 'practice',
           readTime: '20 min'
@@ -132,7 +132,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Lightbulb,
           label: 'Dream Work Methods',
-          path: '/maia/community/practices/dream-work',
+          path: '/maia/community/content/practices/dream-work',
           description: 'Approaches to working with dreams therapeutically',
           type: 'practice',
           readTime: '14 min'
@@ -140,7 +140,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Lightbulb,
           label: 'Embodied Awareness',
-          path: '/maia/community/practices/embodied-awareness',
+          path: '/maia/community/content/practices/embodied-awareness',
           description: 'Somatic approaches to psychological transformation',
           type: 'practice',
           readTime: '12 min'
@@ -154,7 +154,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Quote,
           label: 'Jung Collection',
-          path: '/maia/community/voices/jung',
+          path: '/maia/community/content/voices/jung',
           description: 'Direct quotes and dialogues from C.G. Jung',
           type: 'voice',
           count: '8 items'
@@ -162,7 +162,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Quote,
           label: 'Hillman Wisdom',
-          path: '/maia/community/voices/hillman',
+          path: '/maia/community/content/voices/hillman',
           description: 'James Hillman on archetypal psychology',
           type: 'voice',
           count: '6 items'
@@ -170,7 +170,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Quote,
           label: 'Marlan Insights',
-          path: '/maia/community/voices/marlan',
+          path: '/maia/community/content/voices/marlan',
           description: 'Stanton Marlan on the black sun and darkness',
           type: 'voice',
           count: '4 items'
@@ -178,7 +178,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Quote,
           label: 'Edinger Teachings',
-          path: '/maia/community/voices/edinger',
+          path: '/maia/community/content/voices/edinger',
           description: 'Edward Edinger on ego-Self axis',
           type: 'voice',
           count: '4 items'
@@ -192,7 +192,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Image,
           label: 'Classical Alchemical Art',
-          path: '/maia/community/images/classical-alchemical',
+          path: '/maia/community/content/images/classical-alchemical',
           description: 'Traditional alchemical illustrations and symbolism',
           type: 'image',
           count: '3 collections'
@@ -200,7 +200,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Image,
           label: 'Contemporary Interpretations',
-          path: '/maia/community/images/contemporary',
+          path: '/maia/community/content/images/contemporary',
           description: 'Modern artistic expressions of depth psychology',
           type: 'image',
           count: '3 collections'
@@ -208,7 +208,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Image,
           label: 'Dreams & Visions',
-          path: '/maia/community/images/dreams-visions',
+          path: '/maia/community/content/images/dreams-visions',
           description: 'Visual material supporting psychological work',
           type: 'image',
           count: '2 collections'
@@ -222,7 +222,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Link,
           label: 'Essential Books',
-          path: '/maia/community/resources/books',
+          path: '/maia/community/content/resources/books',
           description: 'Curated reading list for depth psychology',
           type: 'resource',
           count: '25 books'
@@ -230,7 +230,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Link,
           label: 'Research Articles',
-          path: '/maia/community/resources/articles',
+          path: '/maia/community/content/resources/articles',
           description: 'Academic papers and scholarly works',
           type: 'resource',
           count: '15 articles'
@@ -238,7 +238,7 @@ export default function MAIACommunityCommonsPage() {
         {
           icon: Link,
           label: 'Video Resources',
-          path: '/maia/community/resources/videos',
+          path: '/maia/community/content/resources/videos',
           description: 'Lectures, documentaries, and presentations',
           type: 'resource',
           count: '8 videos'

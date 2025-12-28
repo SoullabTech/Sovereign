@@ -8,7 +8,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Desert Sand Tones
+        // Desert Sand Tones (flat for backward compatibility)
         'spice-sand': '#D4A574',
         'deep-sand': '#8B6F47',
         'dune-amber': '#E6B887',
@@ -40,6 +40,37 @@ module.exports = {
         'desert-light': '#F5E6D3',
         'desert-dark': '#2A1F1A',
         'sand-white': '#FFF8F0',
+
+        // 🏜️ DUNE AESTHETIC PALETTE - Nested namespace for dune-* classes
+        dune: {
+          // Desert Sand Tones
+          'spice-sand': '#D4A574',
+          'deep-sand': '#8B6F47',
+          'dune-amber': '#E6B887',
+          'sienna-rock': '#A0522D',
+
+          // Spice Orange (The Melange)
+          'spice-orange': '#FF8C42',
+          'spice-glow': '#FFA85C',
+          'spice-deep': '#CC6F35',
+
+          // Fremen Blue (Eyes of Ibad)
+          'ibad-blue': '#1E3A5F',
+          'fremen-azure': '#2E5A8A',
+          'spice-blue': '#4A7BA7',
+
+          // Caladan Water (Memory of Home)
+          'caladan-teal': '#2C7873',
+          'water-deep': '#1A4D4A',
+          'ocean-mist': '#5FA8A3',
+
+          // Semantic Colors
+          'bene-gesserit-gold': '#B8860B',
+          'navigator-purple': '#6A4C93',
+          'atreides-green': '#4A7C59',
+          'harkonnen-crimson': '#8B0000',
+          'guild-silver': '#C0C0C0',
+        },
       },
       fontFamily: {
         'cinzel': ['Cinzel', 'Palatino', 'Georgia', 'serif'],
