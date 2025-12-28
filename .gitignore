@@ -311,3 +311,9 @@ scripts/sovereign-deploy.sh
 
 # Golden benchmark outputs
 /snapshots/
+
+# Private beta operations (DO NOT COMMIT)
+ops-private/
+beta-tester-email.md
+**/beta-testers.csv
+.aetheric-consciousness-verification.json
