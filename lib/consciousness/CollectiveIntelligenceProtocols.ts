@@ -985,7 +985,7 @@ export class CollectiveIntelligenceProtocols extends EventEmitter {
     wisdomSynthesis: string;
     actionableGuidance: string[];
   }> {
-    console.log('🎭 Generating collective intelligence response for:', inquiry.substring(0, 100));
+    console.log('🎭 Generating collective intelligence response:', inquiry.length, 'chars'); // Never log content
 
     // Initiate collective inquiry
     const session = await this.initiateCollectiveInquiry(

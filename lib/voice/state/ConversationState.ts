@@ -109,7 +109,7 @@ export const useConversationState = create<ConversationState>((set, get) => ({
         { ...message, timestamp }
       ]
     }));
-    console.log(`[CONVERSATION_STATE] Message added (${message.role}):`, message.text.substring(0, 50));
+    console.log(`[CONVERSATION_STATE] Message added (${message.role}):`, message.text.length, 'chars'); // Never log content
   },
 
   clearHistory: () => {

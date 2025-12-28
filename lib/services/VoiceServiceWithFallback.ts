@@ -55,7 +55,7 @@ export class VoiceServiceWithFallback extends EventEmitter {
       insertNaturalPauses: false
     }) as string;
 
-    console.log(`Voice preprocessing: "${options.text.substring(0, 60)}..." -> "${processedText.substring(0, 60)}..."`);
+    console.log(`Voice preprocessing: ${options.text.length} chars -> ${processedText.length} chars`); // Never log content
 
     const text = processedText;
 

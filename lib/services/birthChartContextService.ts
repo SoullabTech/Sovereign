@@ -317,10 +317,7 @@ export function synthesizeAspectForMAIA(
 
     // Return poetic synthesis with soul question
     const result = `\n\n✨ ARCHETYPAL INSIGHT:\n${synthesis.essence}\n\nCore Question: ${synthesis.coreQuestion}${synthesis.elementalDynamic ? `\n(${synthesis.elementalDynamic})` : ''}`;
-    console.log('   ✅ Returning archetypal synthesis (', result.length, 'chars)');
-    console.log('   📝 [SYNTHESIS CONTENT]:');
-    console.log('   ', synthesis.essence.substring(0, 150) + '...');
-    console.log('   ', 'Core Question:', synthesis.coreQuestion);
+    console.log('   ✅ Returning archetypal synthesis:', result.length, 'chars'); // Never log content
     return result;
   } catch (error) {
     console.error('❌ [ASPECT SYNTHESIS ERROR]:', error);

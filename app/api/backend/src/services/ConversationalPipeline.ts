@@ -1424,7 +1424,7 @@ export class ConversationalPipeline {
       console.log('[Pipeline] Generating AI response...');
       let draft = await this.draftTextWithMemory(ctx, memoryContext, fileContexts);
       let draftModel = this.getDraftModelName(ctx.element);
-      console.log('[Pipeline] Draft response generated:', draft.substring(0, 100) + '...');
+      console.log('[Pipeline] Draft response generated:', draft.length, 'chars'); // Never log content
       
       // Pass semantic debug info to response if available
       const semanticDebugInfo = (memoryContext as any).semanticDebugInfo;

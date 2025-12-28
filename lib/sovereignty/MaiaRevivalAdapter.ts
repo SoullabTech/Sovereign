@@ -119,7 +119,7 @@ export class MaiaRevivalAdapter {
     const retrievalQuery = this.buildRetrievalQuery(userQuery, conversationHistory, userContext);
 
     console.log(`🔍 [REVIVAL ADAPTER] Retrieving wisdom for ${tier} tier...`);
-    console.log(`   Query: ${retrievalQuery.substring(0, 100)}...`);
+    console.log(`   QueryChars: ${retrievalQuery.length}`); // Never log content
     console.log(`   Max tokens: ${maxWisdomTokens.toLocaleString()}`);
 
     const retrieval = await this.vectorDB.retrieve({

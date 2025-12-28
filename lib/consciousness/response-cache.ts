@@ -151,7 +151,7 @@ export class ResponseCache {
     // Maintain cache size
     await this.maintainCacheSize();
 
-    console.log(`💾 Cached response: ${input.substring(0, 50)}... (confidence: ${(confidence * 100).toFixed(0)}%)`);
+    console.log(`💾 Cached response: ${input.length} chars (confidence: ${(confidence * 100).toFixed(0)}%)`); // Never log content
   }
 
   /**
@@ -194,7 +194,7 @@ export class ResponseCache {
     // For now, just log the intent
 
     for (const query of commonQueries) {
-      console.log(`  - Preparing to cache: "${query.substring(0, 40)}..."`);
+      console.log(`  - Preparing to cache: ${query.length} chars`); // Never log content
     }
   }
 

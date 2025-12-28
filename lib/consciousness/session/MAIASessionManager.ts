@@ -116,7 +116,7 @@ export class MAIASessionManager {
       session.conversationHistory = session.conversationHistory.slice(-this.maxMessagesPerSession);
     }
 
-    console.log(`📝 User message added to session ${sessionId}: "${content.slice(0, 50)}..."`);
+    console.log(`📝 User message added to session ${sessionId}: ${content.length} chars`); // Never log content
   }
 
   /**
@@ -139,7 +139,7 @@ export class MAIASessionManager {
     session.conversationHistory.push(messageEntry);
     session.lastActivity = new Date();
 
-    console.log(`🤖 Assistant message added to session ${sessionId}: "${content.slice(0, 50)}..."`);
+    console.log(`🤖 Assistant message added to session ${sessionId}: ${content.length} chars`); // Never log content
   }
 
   /**

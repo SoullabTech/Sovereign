@@ -778,7 +778,7 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
   ): Promise<{ response: string; element?: string; metadata?: any; suggestions?: string[]; ritual?: any }> {
     const startTime = Date.now(); // Track response time for semantic memory
 
-    console.log('🎯 PersonalOracleAgent.processInteraction called with input:', input?.substring(0, 50));
+    console.log('🎯 PersonalOracleAgent.processInteraction called with inputChars:', input?.length ?? 0); // Never log content
     console.log('🟢🟢🟢 [VERSION CHECK] PersonalOracleAgent v2025-01-04-DIRECT - Using Direct DB functions 🟢🟢🟢');
 
     try {
@@ -883,14 +883,14 @@ You speak with **phenomenological presence** - grounded in lived experience, sen
         // Continue without anamnesis (graceful degradation)
       }
 
-      // 🔍 DEBUG: Show what memories we retrieved
+      // 🔍 DEBUG: Show what memories we retrieved (never log content)
       if (conversationHistory.length > 0) {
-        console.log('🔍 DEBUG - Memory retrieval details:');
+        console.log('🔍 DEBUG - Memory retrieval details:', conversationHistory.length, 'turns');
         conversationHistory.slice(0, 3).forEach((msg, i) => {
-          console.log(`  ${i + 1}. [${msg.role}] ${msg.content.substring(0, 60)}...`);
+          console.log(`  ${i + 1}. [${msg.role}] ${msg.content.length} chars`); // Never log content
         });
       } else {
-        console.log('🔍 DEBUG - No conversation history found for user:', this.userId);
+        console.log('🔍 DEBUG - No conversation history found for user:', this.userId.substring(0, 12) + '...');
       }
 
       // 🧠 EXTRACT SYMBOLIC INTELLIGENCE from user input
@@ -1406,7 +1406,7 @@ This is the soul-level truth you're helping them see, not reference material to 
       console.log('🔍 DEBUG - System prompt includes conversation history:', hasHistorySection);
       if (hasHistorySection) {
         const historySection = systemPrompt.split('## Our Conversation History')[1]?.split('##')[0];
-        console.log('🔍 DEBUG - History section preview:', historySection?.substring(0, 200) + '...');
+        console.log('🔍 DEBUG - History section chars:', historySection?.length ?? 0); // Never log content
       }
 
       // 🎧 ACTIVE LISTENING - Analyze user input for listening cues
@@ -1452,7 +1452,7 @@ This is the soul-level truth you're helping them see, not reference material to 
 
           if (ipWisdom.synthesizedWisdom) {
             bookWisdom = ipWisdom.synthesizedWisdom;
-            console.log('✅ Book wisdom retrieved:', bookWisdom.substring(0, 100) + '...');
+            console.log('✅ Book wisdom retrieved:', bookWisdom.length, 'chars'); // Never log content
 
             // Add book wisdom to system prompt
             systemPrompt += `\n\n## From Kelly's "Elemental Alchemy: The Ancient Art of Living a Phenomenal Life":\n${bookWisdom}\n\n`;
@@ -1521,7 +1521,7 @@ This is the soul-level truth you're helping them see, not reference material to 
         });
 
         eoWisdom = eoResponse.wisdom;
-        console.log('✅ Elemental Oracle 2.0 wisdom received:', eoWisdom.substring(0, 100) + '...');
+        console.log('✅ Elemental Oracle 2.0 wisdom received:', eoWisdom.length, 'chars'); // Never log content
 
         // Add EO wisdom as advisory knowledge
         if (eoWisdom) {

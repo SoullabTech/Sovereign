@@ -937,7 +937,7 @@ async function logConversationInteraction(
   response: ConversationResponse
 ) {
   // Log for learning and improvement
-  console.log(`💬 [MAIA-IPP-CONVERSATION] ${userId}: ${message.substring(0, 50)}...`);
+  console.log(`💬 [MAIA-IPP-CONVERSATION] ${userId.substring(0, 12)}...: ${message.length} chars`); // Never log content
   return true;
 }
 

@@ -83,7 +83,7 @@ export async function saveMaiaMessage(message: MaiaMessageData) {
       return { success: false, error };
     }
 
-    console.log(`✅ MAIA message saved: ${message.role} (${message.content.substring(0, 50)}...)`);
+    console.log(`✅ MAIA message saved: ${message.role} (${message.content.length} chars)`); // Never log content
     return { success: true, data };
 
   } catch (err: any) {

@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     // Extract transcription from Whisper.cpp response format
     const transcription = result.text || result.transcription || '';
 
-    console.log("✅ Local Whisper transcription:", transcription.substring(0, 100));
+    console.log("✅ Local Whisper transcription:", transcription.length, "chars"); // Never log content
 
     return NextResponse.json({
       success: true,
