@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, UserTier, SubscriptionStatus, PremiumFeature, TIER_FEATURES, FEATURE_NAMES } from '@/lib/subscription/types';
 
 interface SubscriptionContextType {
@@ -29,7 +29,9 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Check beta code on mount (client-side only)
     const betaCode = localStorage.getItem('soullab_beta_code');
+    console.log('🔑 [SubscriptionProvider] Beta code check:', betaCode);
     if (betaCode && betaCode.toUpperCase().startsWith('SOULLAB-')) {
+      console.log('✅ [SubscriptionProvider] Setting isBetaTester = true');
       setIsBetaTester(true);
     }
     // Initialize user - for now, simulate with localStorage
@@ -81,20 +83,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const hasFeature = (feature: PremiumFeature): boolean => {
+  const hasFeature = useCallback((feature: PremiumFeature): boolean => {
     // Beta testers get full premium access (uses state for hydration-safe check)
-    if (isBetaTester) {
-      return true; // All features unlocked for beta testers
-    }
+    const result = isBetaTester ? true : (!user ? false : TIER_FEATURES[user.subscription.tier].includes(feature));
+    console.log(`🎫 [hasFeature] ${feature}: isBetaTester=${isBetaTester}, result=${result}`);
+    return result;
+  }, [isBetaTester, user]);
 
-    if (!user) return false;
-
-    // Check if user tier includes this feature
-    const tierFeatures = TIER_FEATURES[user.subscription.tier];
-    return tierFeatures.includes(feature);
-  };
-
-  const requireSubscription = (feature: PremiumFeature): boolean => {
+  const requireSubscription = useCallback((feature: PremiumFeature): boolean => {
     const hasAccess = hasFeature(feature);
 
     if (!hasAccess) {
@@ -103,7 +99,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     }
 
     return true;
-  };
+  }, [hasFeature]);
 
   const showUpgradeModal = (feature: PremiumFeature) => {
     const featureName = FEATURE_NAMES[feature];
