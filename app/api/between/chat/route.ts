@@ -122,6 +122,28 @@ function logMemoryPipelineDecision(data: {
   });
 }
 
+/**
+ * Structured audit log for request completion.
+ * Gives "incident timeline in 3 greps": identity → memory → complete
+ */
+function logRequestComplete(reqId: string, data: {
+  ok: boolean;
+  status: number;
+  route: string;
+  latencyMs: number;
+  responseChars?: number;
+  safeMode?: boolean;
+  path?: 'simple' | 'orchestrator' | 'canon';
+  errorCode?: string;
+}) {
+  console.log('[Audit:RequestComplete]', {
+    reqId,
+    ts: new Date().toISOString(),
+    env: IS_PROD ? 'prod' : 'dev',
+    ...data,
+  });
+}
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // 🔒 SESSION MANAGEMENT: Cookie-based server-issued session IDs
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -507,6 +529,16 @@ export async function POST(req: NextRequest) {
               wrapOnly: true,
             });
 
+            logRequestComplete(reqId, {
+              ok: true,
+              status: 200,
+              route: '/api/between/chat',
+              latencyMs: Date.now() - startTime,
+              responseChars: wrapped.renderedText.length,
+              safeMode: false,
+              path: 'canon',
+            });
+
             return withSessionCookie(NextResponse.json({
               message: wrapped.renderedText,
               route: {
@@ -531,6 +563,16 @@ export async function POST(req: NextRequest) {
           }
 
           // NO WRAP: Return canon bead directly
+          logRequestComplete(reqId, {
+            ok: true,
+            status: 200,
+            route: '/api/between/chat',
+            latencyMs: Date.now() - startTime,
+            responseChars: canonResponse.length,
+            safeMode: false,
+            path: 'canon',
+          });
+
           return withSessionCookie(NextResponse.json({
             message: canonResponse,
             route: {
@@ -639,6 +681,17 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
+      // Audit: request complete (simple path)
+      logRequestComplete(reqId, {
+        ok: true,
+        status: 200,
+        route: '/api/between/chat',
+        latencyMs: Date.now() - startTime,
+        responseChars: outboundText.length,
+        safeMode: true,
+        path: 'simple',
+      });
+
       return withSessionCookie(NextResponse.json({
         message: outboundText,
         route: {
@@ -745,6 +798,17 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
+    // Audit: request complete (orchestrator path)
+    logRequestComplete(reqId, {
+      ok: true,
+      status: 200,
+      route: '/api/between/chat',
+      latencyMs: Date.now() - startTime,
+      responseChars: outboundText2.length,
+      safeMode: false,
+      path: 'orchestrator',
+    });
+
     return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
@@ -773,6 +837,15 @@ export async function POST(req: NextRequest) {
       }
     }), sessionCookie);
   } catch (err: any) {
+    // Audit: request failed
+    logRequestComplete(reqId, {
+      ok: false,
+      status: 500,
+      route: '/api/between/chat',
+      latencyMs: Date.now() - startTime,
+      errorCode: 'MAIA_TEMPORARY_ERROR',
+    });
+
     console.error('Chat route error:', err);
     // Error responses don't need session cookie - no session continuity for failed requests
     return NextResponse.json(
