@@ -63,6 +63,37 @@ function computeRecallQuality(stats: {
   return Math.round(score01 * 100);
 }
 
+/**
+ * Content-free scalar (0-100) estimating "bloat risk":
+ * high when bundleChars is large but semantic retrieval is weak.
+ */
+function computeBloatRisk(stats: {
+  turnsRetrieved: number;
+  semanticHits: number;
+  turnsCrossSession?: number;
+}, bundleChars: number): number {
+  const turns = Math.max(1, stats.turnsRetrieved || 0);
+
+  const semanticRate = clamp01((stats.semanticHits ?? 0) / turns);
+  const crossShare = clamp01((stats.turnsCrossSession ?? 0) / turns);
+
+  // saturate around ~2000 chars for bloat-risk
+  const charsScore = clamp01(bundleChars / 2000);
+
+  // high penalty when semanticRate is low
+  const semanticPenalty = 1 - semanticRate;
+
+  // tiny penalty when it's not cross-session
+  const crossPenalty = 1 - crossShare;
+
+  const risk01 =
+    0.60 * charsScore +
+    0.30 * semanticPenalty +
+    0.10 * crossPenalty;
+
+  return Math.round(clamp01(risk01) * 100);
+}
+
 export interface MaiaConsciousnessInput {
   message: string;
   userId: string;
@@ -610,6 +641,17 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
             )
           : 0;
 
+        const bloatRisk = memoryBundle
+          ? computeBloatRisk(
+              {
+                turnsRetrieved: memoryBundle.retrievalStats.turnsRetrieved,
+                turnsCrossSession: memoryBundle.retrievalStats.turnsCrossSession,
+                semanticHits: memoryBundle.retrievalStats.semanticHits,
+              },
+              bundleChars
+            )
+          : 0;
+
         if (process.env.NODE_ENV === 'development' || meta.debugMemory) {
           return {
             mode: memoryMode,
@@ -623,6 +665,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
             } : null,
             bundleChars,
             recallQuality,
+            bloatRisk,
             writeback: writebackResult,
             relationshipSnapshot: memoryBundle?.relationshipSnapshot || null,
           };
@@ -632,6 +675,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           wrote: writebackResult?.wrote || false,
           bundleChars,
           recallQuality,
+          bloatRisk,
         };
       })(),
       // 🎯 PERFORMANCE PROFILING DATA
