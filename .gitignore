@@ -119,7 +119,7 @@ docker-compose.*.yml
 
 # Gatsby files
 .cache/
-public
+# Note: Next.js public/ should be tracked, not ignored
 
 # Storybook build outputs
 .out

@@ -1,0 +1,47 @@
+/* Global icon visibility fix */
+/* Ensures all Lucide icons are visible with proper stroke color */
+svg[class*="lucide"] {
+  stroke: currentColor !important;
+  fill: none !important;
+  color: inherit !important;
+}
+
+/* Specific fix for bottom navigation/control icons */
+[class*="bottom"] svg,
+.fixed.bottom-0 svg,
+button svg {
+  stroke: currentColor !important;
+  fill: none !important;
+  color: inherit !important;
+}
+
+/* Ensure icons inherit text color from parent */
+button svg {
+  color: currentColor !important;
+  stroke: currentColor !important;
+  fill: none !important;
+}
+
+/* Safari-specific button interaction fixes - MINIMAL APPROACH */
+button {
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+/* Fix for Safari SVG rendering issues - Allow button SVGs to be clickable */
+svg {
+  pointer-events: none;
+}
+
+/* Ensure button content is visible - but allow clicks through */
+button * {
+  pointer-events: none;
+}
+
+/* Specific fix for Sign Out and similar buttons */
+button svg[class*="log-out"],
+button svg[class*="lucide-log-out"] {
+  stroke: currentColor !important;
+  fill: none !important;
+  color: inherit !important;
+}
