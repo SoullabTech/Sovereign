@@ -12,12 +12,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # --- deps: install full deps (build tooling lives in devDependencies) ---
 FROM base AS deps
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts
+RUN npm ci --ignore-scripts --legacy-peer-deps
 
 # --- builder: prisma generate + next build (creates .next/standalone) ---
 FROM base AS builder
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
+# Build-time placeholders for Next.js static generation
+ENV OPENAI_API_KEY=dummy-build-key
+ENV ANTHROPIC_API_KEY=dummy-build-key
+ENV MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
