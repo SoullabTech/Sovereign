@@ -893,8 +893,9 @@ async function deepPathResponse(
   }
 
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
+  // Note: For DEEP path, selflet context is stored but prompt injection happens via meta passed to consciousness wrapper
   const selfletContext = (meta as any)?.selfletContext;
-  const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
+  (meta as any).selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
   let effectiveHistory = conversationHistory;
