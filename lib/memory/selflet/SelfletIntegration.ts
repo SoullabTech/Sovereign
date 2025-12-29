@@ -266,11 +266,12 @@ export async function processSelfletAfterResponse(
     }
 
     // Phase 2C: Create message on major/metamorphosis boundaries
+    // Uses 'letter' type (valid per CHECK constraint: letter|symbolic_state|future_projection|wisdom_seed)
     if ((boundaryKind === 'major' || boundaryKind === 'metamorphosis') && currentSelflet) {
       try {
         await selfletChain.createSelfletMessage({
           fromSelfletId: currentSelflet.id,
-          messageType: boundaryKind === 'metamorphosis' ? 'metamorphosis_note' : 'breakthrough_letter',
+          messageType: 'letter',  // boundaryKind stored in deliveryContext
           title: `${boundary.type} insight: ${boundary.trigger}`,
           content: `At this moment of ${boundary.type}, I wanted to preserve this: ${input.assistantResponse.slice(0, 500)}...`,
           relevanceThemes: input.currentThemes,
