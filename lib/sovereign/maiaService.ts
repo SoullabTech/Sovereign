@@ -663,10 +663,11 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   validatedResponse = filterModeLanguage(validatedResponse, input, mode);
 
   // 🌀 SELFLET PHASE 2E: Prepend past-self message if model didn't include it
+  const SELFLET_MARKER = '\u2063\u2063\u2063'; // invisible marker (prevents double-prepend)
   const requiredAck = selfletContext?.requiredAcknowledgment;
-  if (requiredAck && !validatedResponse.toLowerCase().includes('past self')) {
+  if (requiredAck && !validatedResponse.includes(SELFLET_MARKER) && !validatedResponse.startsWith(requiredAck)) {
     console.log('[SELFLET FAST] Model ignored instruction - prepending acknowledgment');
-    validatedResponse = requiredAck + validatedResponse;
+    validatedResponse = requiredAck + SELFLET_MARKER + validatedResponse;
   }
 
   return validatedResponse;
