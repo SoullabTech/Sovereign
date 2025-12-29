@@ -252,12 +252,20 @@ $$ LANGUAGE plpgsql;
 
 -- =============================================================================
 -- PERMISSIONS
--- Grant access to maia application role
+-- Grant access to maia application role (only if role exists)
 -- =============================================================================
-GRANT USAGE ON SCHEMA public TO maia;
-GRANT ALL PRIVILEGES ON TABLE public.selflet_nodes TO maia;
-GRANT ALL PRIVILEGES ON TABLE public.selflet_messages TO maia;
-GRANT ALL PRIVILEGES ON TABLE public.selflet_reinterpretations TO maia;
-GRANT EXECUTE ON FUNCTION public.get_current_selflet(TEXT) TO maia;
-GRANT EXECUTE ON FUNCTION public.get_pending_selflet_messages(TEXT) TO maia;
-GRANT EXECUTE ON FUNCTION public.calculate_chain_continuity(TEXT) TO maia;
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'maia') THEN
+    GRANT USAGE ON SCHEMA public TO maia;
+    GRANT ALL PRIVILEGES ON TABLE public.selflet_nodes TO maia;
+    GRANT ALL PRIVILEGES ON TABLE public.selflet_messages TO maia;
+    GRANT ALL PRIVILEGES ON TABLE public.selflet_reinterpretations TO maia;
+    GRANT EXECUTE ON FUNCTION public.get_current_selflet(TEXT) TO maia;
+    GRANT EXECUTE ON FUNCTION public.get_pending_selflet_messages(TEXT) TO maia;
+    GRANT EXECUTE ON FUNCTION public.calculate_chain_continuity(TEXT) TO maia;
+    RAISE NOTICE 'Grants applied to maia role';
+  ELSE
+    RAISE NOTICE 'Role maia does not exist, skipping grants';
+  END IF;
+END $$;
