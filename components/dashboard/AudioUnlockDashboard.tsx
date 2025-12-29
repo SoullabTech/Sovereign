@@ -44,7 +44,7 @@ export default function AudioUnlockDashboard() {
   const [metrics, setMetrics] = useState<AudioUnlockMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | 'all'>('7d');
-  const supabase = createClientComponentClient();
+  // Supabase removed for sovereignty - using local mock data
 
   useEffect(() => {
     fetchMetrics();
@@ -54,26 +54,8 @@ export default function AudioUnlockDashboard() {
 
   async function fetchMetrics() {
     try {
-      const now = new Date();
-      let startDate = new Date();
-      
-      if (timeRange === '7d') {
-        startDate.setDate(now.getDate() - 7);
-      } else if (timeRange === '30d') {
-        startDate.setDate(now.getDate() - 30);
-      } else {
-        startDate = new Date('2024-01-01');
-      }
-
-      // Fetch audio unlock events
-      const { data, error } = await supabase
-        .from('event_logs')
-        .select('*')
-        .eq('event_name', 'audio_unlock')
-        .gte('created_at', startDate.toISOString())
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      // Mock data for sovereignty - replace with local PostgreSQL when ready
+      const data: Array<{ created_at: string; metadata?: { success?: boolean; browser?: string; deviceType?: string } }> = [];
 
       // Process metrics
       const totalAttempts = data?.length || 0;

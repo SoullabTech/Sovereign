@@ -13,10 +13,10 @@ import {
   CheckCircle,
   Zap
 } from 'lucide-react';
-import MemoryOrchestrationPanel from '@/app/beta/components/MemoryOrchestrationPanel';
-import VoicePipelineOpsPanel from '@/app/beta/components/VoicePipelineOpsPanel';
-import ConversationQualityPanel from '@/app/beta/components/ConversationQualityPanel';
-import SystemOpsPanel from '@/app/beta/components/SystemOpsPanel';
+import MemoryOrchestrationPanel from '@/app/dashboard/beta/components/MemoryOrchestrationPanel';
+import VoicePipelineOpsPanel from '@/app/dashboard/beta/components/VoicePipelineOpsPanel';
+import ConversationQualityPanel from '@/app/dashboard/beta/components/ConversationQualityPanel';
+import SystemOpsPanel from '@/app/dashboard/beta/components/SystemOpsPanel';
 
 interface OperationalMetrics {
   timestamp: string;

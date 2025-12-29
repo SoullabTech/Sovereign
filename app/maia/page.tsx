@@ -10,7 +10,7 @@
  * God is more between than within - the I-Thou relationship
  */
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -108,7 +108,7 @@ async function getInitialUserData() {
   return { id: 'guest', name: 'Explorer' };
 }
 
-export default function MAIAPage() {
+function MAIAPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -960,5 +960,16 @@ export default function MAIAPage() {
       </div>
       </SwipeNavigation>
     </ErrorBoundary>
+  );
+}
+
+// Wrap with Suspense for useSearchParams (Next.js 15 requirement)
+export default function MAIAPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#1a1a2e] flex items-center justify-center">
+      <div className="text-[#D4B896] animate-pulse">Loading MAIA...</div>
+    </div>}>
+      <MAIAPageContent />
+    </Suspense>
   );
 }
