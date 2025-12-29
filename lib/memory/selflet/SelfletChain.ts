@@ -715,6 +715,7 @@ export class SelfletChainService {
 
   /**
    * Insert a reinterpretation (how current self interpreted past-self message)
+   * Idempotent per (message_id, origin) - won't duplicate auto_delivery writes
    */
   async insertReinterpretationFromDelivery(input: {
     messageId: string;
@@ -723,7 +724,10 @@ export class SelfletChainService {
     integrationDepth: number;
     emotionalResonance?: string | null;
     translationNotes?: string | null;
-  }): Promise<string> {
+    origin?: 'auto_delivery' | 'manual';
+  }): Promise<void> {
+    const origin = input.origin ?? 'auto_delivery';
+
     // Get the source selflet from the message
     const msgResult = await dbQuery(
       `SELECT from_selflet_id FROM selflet_messages WHERE id = $1`,
@@ -731,13 +735,15 @@ export class SelfletChainService {
     );
     const sourceSelfletId = msgResult.rows[0]?.from_selflet_id;
     if (!sourceSelfletId) {
-      throw new Error(`Message ${input.messageId} not found`);
+      console.log(`[SELFLET] Message ${input.messageId} not found, skipping reinterpretation`);
+      return;
     }
 
     // Get current selflet for interpreting_selflet_id
     const currentSelflet = await this.getCurrentSelflet(input.userId);
     if (!currentSelflet) {
-      throw new Error(`No current selflet for user ${input.userId}`);
+      console.log(`[SELFLET] No current selflet for user ${input.userId}, skipping reinterpretation`);
+      return;
     }
 
     const query = `
@@ -748,11 +754,12 @@ export class SelfletChainService {
         interpretation,
         integration_depth,
         emotional_resonance,
-        translation_notes
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING id
+        translation_notes,
+        origin
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      ON CONFLICT (source_message_id, origin) DO NOTHING
     `;
-    const result = await dbQuery(query, [
+    await dbQuery(query, [
       currentSelflet.id,
       sourceSelfletId,
       input.messageId,
@@ -760,10 +767,9 @@ export class SelfletChainService {
       input.integrationDepth,
       input.emotionalResonance ?? null,
       input.translationNotes ?? null,
+      origin,
     ]);
-    const id = result.rows[0]?.id;
-    console.log(`📝 [SELFLET REINTERPRETATION] Created: ${id}`);
-    return id;
+    console.log(`📝 [SELFLET REINTERPRETATION] Recorded (origin: ${origin}) for message ${input.messageId}`);
   }
 
   // ─────────────────────────────────────────────────────────────
