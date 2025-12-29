@@ -1,0 +1,53 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA Sovereign - Render Blueprint
+# ═══════════════════════════════════════════════════════════════════════════════
+# Deploys:
+#   - Render Postgres (pgvector-ready)
+#   - MAIA Web Service (Docker)
+#
+# Migrations run automatically via preDeployCommand before each deploy goes live.
+# ═══════════════════════════════════════════════════════════════════════════════
+
+databases:
+  - name: maia-db
+    databaseName: maia_consciousness
+    user: soullab
+    plan: standard
+
+services:
+  - type: web
+    name: maia
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/consciousness/health
+
+    envVars:
+      - key: NODE_ENV
+        value: production
+
+      - key: DATABASE_URL
+        fromDatabase:
+          name: maia-db
+          property: connectionString
+
+      # Next.js standalone needs explicit hostname
+      - key: HOSTNAME
+        value: 0.0.0.0
+
+      # Disable Next.js telemetry
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+
+    # Runs before each deploy goes live (fail-fast with ON_ERROR_STOP)
+    preDeployCommand: >
+      set -e;
+      echo "=== Extensions ===";
+      psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f database/init/001_extensions.sql;
+      echo "=== Prisma ===";
+      npx prisma migrate deploy;
+      echo "=== SQL migrations ===";
+      for f in database/migrations/*.sql; do
+        echo "→ ${f##*/}";
+        psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f";
+      done
