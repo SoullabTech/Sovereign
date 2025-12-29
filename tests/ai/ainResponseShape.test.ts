@@ -20,6 +20,7 @@ Next step (5 minutes): ask the protector, "What are you afraid would happen if y
     expect(res.pass).toBe(true);
     expect(res.flags.mirror).toBe(true);
     expect(res.flags.nextStep).toBe(true);
+    expect(res.flags.menuMode).toBe(false);
   });
 
   it('passes for Jungian-style input', () => {
@@ -41,6 +42,7 @@ Then ask: "Where do I do a quieter version of that?"
     expect(res.flags.bridge).toBe(true);
     expect(res.flags.permission).toBe(true);
     expect(res.flags.nextStep).toBe(true);
+    expect(res.flags.menuMode).toBe(false);
   });
 
   it('passes for somatic-style input', () => {
@@ -61,6 +63,26 @@ Next step (90 seconds): place a hand on the sternum, breathe in gently for 4, ou
     expect(res.flags.bridge).toBe(true);
     expect(res.flags.permission).toBe(true);
     expect(res.flags.nextStep).toBe(true);
+    expect(res.flags.menuMode).toBe(false);
+  });
+
+  it('fails for menu-mode response with multiple strategies', () => {
+    const input = 'A protector part keeps sabotaging me.';
+    const output = `
+I understand you are struggling with self-sabotage. Here are 5 strategies you can try:
+
+1. Practice mindfulness meditation daily
+2. Keep a journal of your thoughts
+3. Challenge negative self-talk
+4. Set small achievable goals
+5. Consider talking to a therapist
+
+Remember, I am not a therapist, but these are evidence-based approaches.
+`.trim();
+
+    const res = assessAINResponseShape(input, output);
+    expect(res.pass).toBe(false);
+    expect(res.flags.menuMode).toBe(true);
   });
 
   it('fails for response missing mirror and next step', () => {
