@@ -1807,6 +1807,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           pass: shape.pass,
           score: shape.score,
           flags: shape.flags,
+          menuSignals: shape.signals ?? null,
           route: 'maiaService',
           processingProfile,
           explorerId: effectiveUserId ?? undefined,
