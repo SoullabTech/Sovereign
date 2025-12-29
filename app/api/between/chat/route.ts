@@ -561,12 +561,14 @@ export async function POST(req: NextRequest) {
     }
 
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
+    console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
     let selfletContext = null;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
       // Ensure user has initial selflet (creates on first interaction if needed)
       if (!effectiveUserId.startsWith('anon:')) {
+        console.log('[Chat API] 🌀 SELFLET: Calling ensureInitialSelflet for:', effectiveUserId);
         await ensureInitialSelflet(effectiveUserId);
       }
 
@@ -582,7 +584,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       // Graceful degradation - selflet system is optional
-      console.log('[Chat API] Selflet context not available (tables may not exist)');
+      console.log('[Chat API] Selflet context not available (tables may not exist)', err);
     }
 
     // 🔮 CANON BYPASS: Check if this is an identity/canon question
