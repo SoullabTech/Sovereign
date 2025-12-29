@@ -14,6 +14,7 @@ import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
+import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet } from '@/lib/memory/selflet';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -559,6 +560,31 @@ export async function POST(req: NextRequest) {
       // Graceful degradation - continue without wisdom field
     }
 
+    // 🌀 SELFLET CONTEXT: Load temporal identity awareness
+    let selfletContext = null;
+    try {
+      const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
+
+      // Ensure user has initial selflet (creates on first interaction if needed)
+      if (!effectiveUserId.startsWith('anon:')) {
+        await ensureInitialSelflet(effectiveUserId);
+      }
+
+      // Load selflet context for temporal awareness
+      const selfletLoad = await loadSelfletContext(effectiveUserId, currentThemes, message);
+      selfletContext = selfletLoad;
+
+      if (selfletLoad.promptInjection) {
+        console.log('[Chat API] 🌀 Selflet context loaded, prompt injection:', selfletLoad.promptInjection.length, 'chars');
+      }
+      if (selfletLoad.shouldSurfaceReflection && selfletLoad.pendingReflection) {
+        console.log('[Chat API] 💭 Temporal reflection available from past self');
+      }
+    } catch (err) {
+      // Graceful degradation - selflet system is optional
+      console.log('[Chat API] Selflet context not available (tables may not exist)');
+    }
+
     // 🔮 CANON BYPASS: Check if this is an identity/canon question
     if (isCanonQuery(message)) {
       console.log('[Chat API] 🔮 CANON QUERY DETECTED - attempting bypass');
@@ -820,6 +846,7 @@ export async function POST(req: NextRequest) {
         userName: userName || 'Explorer',
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
+        selfletContext, // 🌀 Temporal identity awareness
       }
     });
 
