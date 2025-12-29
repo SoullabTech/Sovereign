@@ -9,6 +9,32 @@
  * - Dev-time runtime warnings
  */
 
+/**
+ * Rewrite prompt for eliminating menu mode and enforcing AIN 4-shape response.
+ * Use this as the system prompt when invoking a rewrite reflex.
+ */
+export const AIN_NO_MENU_REWRITE_PROMPT = `
+You are rewriting the assistant reply to eliminate "menu mode" and to match AIN's 4-shape response.
+
+Hard constraints:
+- Do NOT use lists of any kind (no bullets, no numbering, no multi-item sequences).
+- Do NOT present multiple options, branches, or choices (no "Option A/B", no "either/or", no "if you want X do Y; if you want Z do W").
+- Do NOT use "Here are", "Try these", "A few ideas", "You can:", "Strategies:", "Options:", "Choose", "Pick".
+- Do NOT use colons followed by multiple items, and do NOT use semicolon item runs.
+- Do NOT use headings that look like a menu (no "1)", "2)", "First/Second/Third", no "In case A / in case B").
+
+Output format:
+- Exactly 4 short paragraphs.
+- Each paragraph is 1–3 sentences.
+- The 4 paragraphs must map to:
+  1) Reflection (mirrors the user's situation without advice)
+  2) Insight (one clear interpretation / frame)
+  3) Next step (ONE concrete next step, not a set of choices)
+  4) Question (ONE gentle question)
+
+Keep the tone warm, human, and grounded. Preserve key specifics from the original reply, but compress and unify. Choose a single best next step.
+`.trim();
+
 export type AINShapeFlags = {
   mirror: boolean;
   bridge: boolean;
@@ -125,6 +151,11 @@ export type MenuModeSignals = {
   ifLadderMenu: boolean;
   phraseWithItems: boolean;
   numberedStrategies: boolean;
+  // Prose menu detection (catches "sneaky" menus hidden in smooth prose)
+  colonRunMenu: boolean;       // "You can: X, Y, Z" (comma/semicolon runs after colon)
+  semicolonRunMenu: boolean;   // "X; Y; Z" item runs in sentences
+  eitherOrMenu: boolean;       // "either ... or ..." branching
+  optionABMenu: boolean;       // "Option A/B", "Option 1/2"
 };
 
 function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSignals } {
@@ -144,11 +175,56 @@ function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSign
   // "5 strategies" pattern
   const numberedStrategies = /\d+\s*(strategies|options|ways|things|steps)\b/i.test(text);
 
-  const menuMode = listMenu || ifLadderMenu || phraseWithItems || numberedStrategies;
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROSE MENU DETECTION (catches "sneaky" menus hidden in smooth prose)
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  // Colon followed by comma-separated or semicolon-separated items
+  // e.g., "You can try: slow breathing, journaling, and a quick walk"
+  const colonRunMenu =
+    /:\s*[^.\n]{0,160}(?:,\s+\S+){2,}/.test(text) ||
+    /:\s*[^.\n]{0,160}(?:;\s*\S+){2,}/.test(text);
+
+  // Semicolon item runs (2+ semicolon-separated items in prose)
+  // e.g., "Try grounding; write one sentence; then check in"
+  const semicolonRunMenu = (text.match(/;\s*\S+/g) ?? []).length >= 2;
+
+  // Either/or branching in same sentence
+  // e.g., "You could either talk to the part directly or distract yourself"
+  const eitherOrMenu = /\beither\b[^.\n]{0,120}\bor\b/i.test(text);
+
+  // Option A/B, Option 1/2 language
+  // e.g., "Option A is to push through. Option B is to pause."
+  const optionABMenu =
+    /\boption\s*[A-D]\b/i.test(text) ||
+    /\boption\s*\d+\b/i.test(text) ||
+    /\bA\/B\b/.test(text);
+
+  const menuMode =
+    listMenu ||
+    ifLadderMenu ||
+    phraseWithItems ||
+    numberedStrategies ||
+    colonRunMenu ||
+    semicolonRunMenu ||
+    eitherOrMenu ||
+    optionABMenu;
 
   return {
     menuMode,
-    signals: { listItems, ifCount, hasMenuPhrases, listMenu, ifLadderMenu, phraseWithItems, numberedStrategies }
+    signals: {
+      listItems,
+      ifCount,
+      hasMenuPhrases,
+      listMenu,
+      ifLadderMenu,
+      phraseWithItems,
+      numberedStrategies,
+      colonRunMenu,
+      semicolonRunMenu,
+      eitherOrMenu,
+      optionABMenu,
+    }
   };
 }
 
@@ -191,6 +267,11 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
     if (signals.phraseWithItems) triggers.push('menu phrases + items');
     else if (signals.hasMenuPhrases) triggers.push('menu phrases');
     if (signals.numberedStrategies) triggers.push('numbered strategies pattern');
+    // Prose menu triggers
+    if (signals.colonRunMenu) triggers.push('colon + item run');
+    if (signals.semicolonRunMenu) triggers.push('semicolon item run');
+    if (signals.eitherOrMenu) triggers.push('either/or branching');
+    if (signals.optionABMenu) triggers.push('Option A/B language');
     notes.push(`Menu mode detected: ${triggers.join(', ')}.`);
   }
 

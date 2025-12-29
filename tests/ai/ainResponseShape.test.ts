@@ -136,4 +136,64 @@ Remember, I am not a therapist, but these are evidence-based approaches.
     const shape = assessAINResponseShape(input, output);
     expect(shape.flags.menuMode).toBe(false);
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PROSE MENU DETECTION TESTS
+  // These catch "sneaky" menus hidden in smooth prose
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  it('flags prose menus: colon + comma runs', () => {
+    const input = 'I feel overwhelmed.';
+    const output =
+      'You can try: slow breathing, journaling, and a quick walk. Notice what shifts.';
+    const res = assessAINResponseShape(input, output);
+    expect(res.pass).toBe(false);
+    expect(res.flags.menuMode).toBe(true);
+  });
+
+  it('flags prose menus: semicolon item runs', () => {
+    const input = 'I feel stuck.';
+    const output =
+      'Try grounding; write one sentence; then check in with your body.';
+    const res = assessAINResponseShape(input, output);
+    expect(res.pass).toBe(false);
+    expect(res.flags.menuMode).toBe(true);
+  });
+
+  it('flags prose menus: either/or branching', () => {
+    const input = 'A part of me is fighting itself.';
+    const output =
+      'You could either talk to the part directly or distract yourself until it passes.';
+    const res = assessAINResponseShape(input, output);
+    expect(res.pass).toBe(false);
+    expect(res.flags.menuMode).toBe(true);
+  });
+
+  it('flags prose menus: Option A/B language', () => {
+    const input = 'I don\'t know what to do next.';
+    const output =
+      'Option A is to push through. Option B is to pause and regroup.';
+    const res = assessAINResponseShape(input, output);
+    expect(res.pass).toBe(false);
+    expect(res.flags.menuMode).toBe(true);
+  });
+
+  it('flags prose menus: Option 1/2 numbered language', () => {
+    const input = 'I feel torn.';
+    const output =
+      'Option 1 would be to stay and fight. Option 2 is to step away.';
+    const res = assessAINResponseShape(input, output);
+    expect(res.pass).toBe(false);
+    expect(res.flags.menuMode).toBe(true);
+  });
+
+  it('does not flag single colon without item run', () => {
+    const input = 'I feel lost.';
+    const output =
+      'I hear you: that sense of being adrift can feel disorienting. ' +
+      'Would you like to explore what might be underneath it? ' +
+      'Next step: take one slow breath and notice where the lostness lives in your body.';
+    const res = assessAINResponseShape(input, output);
+    expect(res.flags.menuMode).toBe(false);
+  });
 });
