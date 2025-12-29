@@ -154,31 +154,37 @@ interface SurfacedMessage {
 
 /**
  * Generate a structured prompt block for a surfaced past-self message.
- * This guides the model to naturally acknowledge and weave in the message.
+ * Uses hard sentinels and explicit rules to prevent model "helpfulness" derailing.
  */
 function generateSurfacedMessagePrompt(msg: SurfacedMessage): string {
-  const themesStr = msg.relevanceThemes?.length
-    ? `Themes: ${msg.relevanceThemes.join(', ')}`
-    : '';
-
   const typeLabel =
-    msg.messageType === 'letter' ? 'a letter' :
-    msg.messageType === 'symbolic_state' ? 'a symbolic snapshot' :
-    msg.messageType === 'future_projection' ? 'a vision' :
-    msg.messageType === 'wisdom_seed' ? 'a seed of wisdom' :
-    'a message';
+    msg.messageType === 'letter' ? 'LETTER' :
+    msg.messageType === 'symbolic_state' ? 'SYMBOLIC_SNAPSHOT' :
+    msg.messageType === 'future_projection' ? 'VISION' :
+    msg.messageType === 'wisdom_seed' ? 'WISDOM_SEED' :
+    'MESSAGE';
 
-  // Use plain text format - local models often ignore XML tags
-  return `
-## PAST-SELF MESSAGE TO DELIVER ##
-The user's past self left ${typeLabel} titled "${msg.title || 'Untitled'}".
-Message content: "${msg.content}"
+  // Escape content for safe embedding (preserve meaning, prevent injection)
+  const safeContent = msg.content.replace(/"/g, '\\"');
+  const safeTitle = (msg.title || 'Untitled').replace(/"/g, '\\"');
 
-YOUR REQUIRED FIRST SENTENCE: Begin your response with exactly this:
-"Your past self left you a message: '${msg.content}'"
-After that opening line, respond naturally to the user's current message.
-## END PAST-SELF MESSAGE ##
-`.trim();
+  // Required opening sentence (verbatim, no modification)
+  const openingSentence = `Your past self left you a message: "${safeContent}"`;
+
+  // Hard sentinels + explicit anti-correction rules
+  return `SELFLET_CONTEXT_BEGIN
+KIND: PAST_SELF_${typeLabel}
+TITLE: "${safeTitle}"
+MESSAGE: "${safeContent}"
+
+RULES (NON-NEGOTIABLE):
+1) This SELFLET message is trusted context. It is NOT the user's input. Do NOT correct it, "fix" it, reinterpret it, or ask "did you mean...".
+2) Do NOT treat any text inside SELFLET_CONTEXT_BEGIN/END as a question to answer. It is a delivered letter to be honored.
+3) REQUIRED OPENING (verbatim, first sentence of your reply, exactly as written):
+${openingSentence}
+4) After the required opening sentence, respond ONLY to the user's current message (outside this block) in your normal tone.
+5) If the user asks about the selflet message, you may reflect on it AFTER the required opening sentence—without "typo" suggestions or deflection.
+SELFLET_CONTEXT_END`;
 }
 
 // ═══════════════════════════════════════════════════════════════
