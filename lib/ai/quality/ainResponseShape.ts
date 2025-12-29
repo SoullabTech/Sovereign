@@ -123,6 +123,8 @@ export type MenuModeSignals = {
   hasMenuPhrases: boolean;
   listMenu: boolean;
   ifLadderMenu: boolean;
+  phraseWithItems: boolean;
+  numberedStrategies: boolean;
 };
 
 function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSignals } {
@@ -146,7 +148,7 @@ function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSign
 
   return {
     menuMode,
-    signals: { listItems, ifCount, hasMenuPhrases, listMenu, ifLadderMenu }
+    signals: { listItems, ifCount, hasMenuPhrases, listMenu, ifLadderMenu, phraseWithItems, numberedStrategies }
   };
 }
 
@@ -186,7 +188,9 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
     const triggers: string[] = [];
     if (signals.listMenu) triggers.push(`${signals.listItems} list items`);
     if (signals.ifLadderMenu) triggers.push(`${signals.ifCount} If-ladder options`);
-    if (signals.hasMenuPhrases) triggers.push('menu phrases');
+    if (signals.phraseWithItems) triggers.push('menu phrases + items');
+    else if (signals.hasMenuPhrases) triggers.push('menu phrases');
+    if (signals.numberedStrategies) triggers.push('numbered strategies pattern');
     notes.push(`Menu mode detected: ${triggers.join(', ')}.`);
   }
 
