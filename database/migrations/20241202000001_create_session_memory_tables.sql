@@ -48,10 +48,10 @@ CREATE TABLE IF NOT EXISTS user_session_patterns (
 );
 
 -- Create indexes for session patterns
-CREATE INDEX idx_user_sessions ON user_session_patterns(user_id, session_start DESC);
-CREATE INDEX idx_session_embeddings ON user_session_patterns USING ivfflat (session_embedding vector_cosine_ops);
-CREATE INDEX idx_session_themes ON user_session_patterns USING GIN(conversation_themes);
-CREATE INDEX idx_consciousness_markers ON user_session_patterns USING GIN(consciousness_expansion_markers);
+CREATE INDEX IF NOT EXISTS idx_user_sessions ON user_session_patterns(user_id, session_start DESC);
+CREATE INDEX IF NOT EXISTS idx_session_embeddings ON user_session_patterns USING ivfflat (session_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_session_themes ON user_session_patterns USING GIN(conversation_themes);
+CREATE INDEX IF NOT EXISTS idx_consciousness_markers ON user_session_patterns USING GIN(consciousness_expansion_markers);
 
 -- =====================================================
 -- 2. CONVERSATION INSIGHTS
@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS conversation_insights (
 );
 
 -- Create indexes for insights
-CREATE INDEX idx_user_insights ON conversation_insights(user_id, created_at DESC);
-CREATE INDEX idx_insight_embeddings ON conversation_insights USING ivfflat (insight_embedding vector_cosine_ops);
-CREATE INDEX idx_insight_type ON conversation_insights(insight_type);
-CREATE INDEX idx_connected_insights ON conversation_insights USING GIN(connected_insights);
+CREATE INDEX IF NOT EXISTS idx_user_insights ON conversation_insights(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_insight_embeddings ON conversation_insights USING ivfflat (insight_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_insight_type ON conversation_insights(insight_type);
+CREATE INDEX IF NOT EXISTS idx_connected_insights ON conversation_insights USING GIN(connected_insights);
 
 -- =====================================================
 -- 3. USER RELATIONSHIP CONTEXT (Enhanced)
@@ -134,8 +134,8 @@ CREATE TABLE IF NOT EXISTS user_relationship_context (
 );
 
 -- Create indexes for user context
-CREATE INDEX idx_user_context_embedding ON user_relationship_context USING ivfflat (relationship_embedding vector_cosine_ops);
-CREATE INDEX idx_consciousness_stage ON user_relationship_context(consciousness_journey_stage);
+CREATE INDEX IF NOT EXISTS idx_user_context_embedding ON user_relationship_context USING ivfflat (relationship_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_consciousness_stage ON user_relationship_context(consciousness_journey_stage);
 
 -- =====================================================
 -- 4. PATTERN CONNECTIONS
@@ -173,9 +173,9 @@ CREATE TABLE IF NOT EXISTS pattern_connections (
 );
 
 -- Create indexes for pattern connections
-CREATE INDEX idx_pattern_connections ON pattern_connections(user_id, connection_strength DESC);
-CREATE INDEX idx_pattern_embeddings ON pattern_connections USING ivfflat (pattern_embedding vector_cosine_ops);
-CREATE INDEX idx_pattern_type ON pattern_connections(pattern_type);
+CREATE INDEX IF NOT EXISTS idx_pattern_connections ON pattern_connections(user_id, connection_strength DESC);
+CREATE INDEX IF NOT EXISTS idx_pattern_embeddings ON pattern_connections USING ivfflat (pattern_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_pattern_type ON pattern_connections(pattern_type);
 
 -- =====================================================
 -- 5. CONSCIOUSNESS EXPANSION EVENTS
@@ -209,9 +209,9 @@ CREATE TABLE IF NOT EXISTS consciousness_expansion_events (
 );
 
 -- Create indexes for expansion events
-CREATE INDEX idx_expansion_events ON consciousness_expansion_events(user_id, created_at DESC);
-CREATE INDEX idx_expansion_type ON consciousness_expansion_events(expansion_type);
-CREATE INDEX idx_expansion_embeddings ON consciousness_expansion_events USING ivfflat (expansion_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_expansion_events ON consciousness_expansion_events(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_expansion_type ON consciousness_expansion_events(expansion_type);
+CREATE INDEX IF NOT EXISTS idx_expansion_embeddings ON consciousness_expansion_events USING ivfflat (expansion_embedding vector_cosine_ops);
 
 -- =====================================================
 -- 6. SPIRAL STAGE TRANSITIONS
@@ -248,8 +248,8 @@ CREATE TABLE IF NOT EXISTS spiral_stage_transitions (
 );
 
 -- Create indexes for spiral transitions
-CREATE INDEX idx_spiral_transitions ON spiral_stage_transitions(user_id, transition_start DESC);
-CREATE INDEX idx_spiral_stages ON spiral_stage_transitions(from_stage, to_stage);
+CREATE INDEX IF NOT EXISTS idx_spiral_transitions ON spiral_stage_transitions(user_id, transition_start DESC);
+CREATE INDEX IF NOT EXISTS idx_spiral_stages ON spiral_stage_transitions(from_stage, to_stage);
 
 -- =====================================================
 -- TRIGGERS FOR AUTOMATIC UPDATES

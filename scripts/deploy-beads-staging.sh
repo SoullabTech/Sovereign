@@ -149,6 +149,11 @@ else
   echo -e "${YELLOW}↷${NC}  Skipping selflet migration (file not present yet)"
 fi
 
+# AIN shape telemetry migrations
+psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/020_ain_shape_telemetry.sql" 2>&1 | grep -v "already exists" || true
+psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/021_add_menu_mode_to_telemetry.sql" 2>&1 | grep -v "already exists" || true
+psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/022_add_menu_signals_to_telemetry.sql" 2>&1 | grep -v "already exists" || true
+
 echo -e "${GREEN}✓${NC} Migration complete"
 
 # 4. Start services

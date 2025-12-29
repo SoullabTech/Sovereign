@@ -1,12 +1,15 @@
-# Dependencies
-node_modules
+# Dependencies (recursive)
+node_modules/
+**/node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
 # Next.js build output
-.next
+.next/
+**/.next/
 out/
+dist/
 
 # Production build
 build
@@ -90,3 +93,13 @@ Downloads/
 MAIA-ARCHIVE/
 MAIA-LAB/
 soullab-platform/
+web/
+compact-companion/
+dist-desktop/
+desktop-app/
+books/
+artifacts/
+beta-deployment/
+data/
+tmp/
+.DS_Store

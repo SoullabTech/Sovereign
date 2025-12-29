@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS community_channels (
 );
 
 -- Create indexes for channels
-CREATE INDEX idx_community_channels_slug ON community_channels(slug);
-CREATE INDEX idx_community_channels_active ON community_channels(is_active);
-CREATE INDEX idx_community_channels_sort ON community_channels(sort_order);
+CREATE INDEX IF NOT EXISTS idx_community_channels_slug ON community_channels(slug);
+CREATE INDEX IF NOT EXISTS idx_community_channels_active ON community_channels(is_active);
+CREATE INDEX IF NOT EXISTS idx_community_channels_sort ON community_channels(sort_order);
 
 -- =====================================================
 -- 2. COMMUNITY THREADS (Forum Posts)
@@ -78,14 +78,14 @@ CREATE TABLE IF NOT EXISTS community_threads (
 );
 
 -- Create indexes for threads
-CREATE INDEX idx_community_threads_channel ON community_threads(channel_id);
-CREATE INDEX idx_community_threads_author ON community_threads(author_id);
-CREATE INDEX idx_community_threads_type ON community_threads(thread_type);
-CREATE INDEX idx_community_threads_created ON community_threads(created_at DESC);
-CREATE INDEX idx_community_threads_pinned ON community_threads(is_pinned, created_at DESC);
-CREATE INDEX idx_community_threads_breakthrough ON community_threads(is_breakthrough, created_at DESC);
-CREATE INDEX idx_community_threads_tags ON community_threads USING GIN(tags);
-CREATE INDEX idx_community_threads_session_elements ON community_threads USING GIN(session_elements);
+CREATE INDEX IF NOT EXISTS idx_community_threads_channel ON community_threads(channel_id);
+CREATE INDEX IF NOT EXISTS idx_community_threads_author ON community_threads(author_id);
+CREATE INDEX IF NOT EXISTS idx_community_threads_type ON community_threads(thread_type);
+CREATE INDEX IF NOT EXISTS idx_community_threads_created ON community_threads(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_threads_pinned ON community_threads(is_pinned, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_threads_breakthrough ON community_threads(is_breakthrough, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_threads_tags ON community_threads USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_community_threads_session_elements ON community_threads USING GIN(session_elements);
 
 -- =====================================================
 -- 3. COMMUNITY REPLIES (Comments)
@@ -114,9 +114,9 @@ CREATE TABLE IF NOT EXISTS community_replies (
 );
 
 -- Create indexes for replies
-CREATE INDEX idx_community_replies_thread ON community_replies(thread_id, created_at);
-CREATE INDEX idx_community_replies_author ON community_replies(author_id);
-CREATE INDEX idx_community_replies_parent ON community_replies(parent_reply_id);
+CREATE INDEX IF NOT EXISTS idx_community_replies_thread ON community_replies(thread_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_community_replies_author ON community_replies(author_id);
+CREATE INDEX IF NOT EXISTS idx_community_replies_parent ON community_replies(parent_reply_id);
 
 -- =====================================================
 -- 4. COMMUNITY REACTIONS (Hearts & Elemental Reactions)
@@ -151,10 +151,10 @@ CREATE TABLE IF NOT EXISTS community_reactions (
 );
 
 -- Create indexes for reactions
-CREATE INDEX idx_community_reactions_user ON community_reactions(user_id);
-CREATE INDEX idx_community_reactions_thread ON community_reactions(thread_id, reaction_type);
-CREATE INDEX idx_community_reactions_reply ON community_reactions(reply_id, reaction_type);
-CREATE INDEX idx_community_reactions_type ON community_reactions(reaction_type);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_user ON community_reactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_thread ON community_reactions(thread_id, reaction_type);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_reply ON community_reactions(reply_id, reaction_type);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_type ON community_reactions(reaction_type);
 
 -- =====================================================
 -- 5. COMMUNITY FIELD STATE (Channel Atmosphere)
@@ -186,8 +186,8 @@ CREATE TABLE IF NOT EXISTS community_field_state (
 );
 
 -- Create indexes for field state
-CREATE INDEX idx_community_field_state_channel ON community_field_state(channel_id);
-CREATE INDEX idx_community_field_state_calculated ON community_field_state(calculated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_field_state_channel ON community_field_state(channel_id);
+CREATE INDEX IF NOT EXISTS idx_community_field_state_calculated ON community_field_state(calculated_at DESC);
 
 -- =====================================================
 -- 6. COMMUNITY PRESENCE (User Activity)
@@ -217,10 +217,10 @@ CREATE TABLE IF NOT EXISTS community_presence (
 );
 
 -- Create indexes for presence
-CREATE INDEX idx_community_presence_user ON community_presence(user_id);
-CREATE INDEX idx_community_presence_status ON community_presence(status);
-CREATE INDEX idx_community_presence_channel ON community_presence(current_channel_id);
-CREATE INDEX idx_community_presence_last_seen ON community_presence(last_seen_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_presence_user ON community_presence(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_presence_status ON community_presence(status);
+CREATE INDEX IF NOT EXISTS idx_community_presence_channel ON community_presence(current_channel_id);
+CREATE INDEX IF NOT EXISTS idx_community_presence_last_seen ON community_presence(last_seen_at DESC);
 
 -- =====================================================
 -- 7. COMMUNITY PROFILES (User Stats & Preferences)
@@ -259,9 +259,9 @@ CREATE TABLE IF NOT EXISTS community_profiles (
 );
 
 -- Create indexes for profiles
-CREATE INDEX idx_community_profiles_user ON community_profiles(user_id);
-CREATE INDEX idx_community_profiles_cohort ON community_profiles(beta_cohort);
-CREATE INDEX idx_community_profiles_joined ON community_profiles(joined_date);
+CREATE INDEX IF NOT EXISTS idx_community_profiles_user ON community_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_profiles_cohort ON community_profiles(beta_cohort);
+CREATE INDEX IF NOT EXISTS idx_community_profiles_joined ON community_profiles(joined_date);
 
 -- =====================================================
 -- TRIGGERS FOR AUTOMATIC UPDATES
