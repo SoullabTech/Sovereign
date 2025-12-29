@@ -73,6 +73,7 @@ function inferEmotionalShiftFromText(userText: string): { from?: string; to: str
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
+const INCLUDE_PROVIDER_META = process.env.MAIA_INCLUDE_PROVIDER_META === '1';
 
 // Boot log: warn if simulation headers are enabled (helps debug unexpected behavior)
 if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
@@ -570,7 +571,7 @@ export async function POST(req: NextRequest) {
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
 
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
-    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
+    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
       mode: identityMode,
       explorerId,
@@ -907,7 +908,13 @@ export async function POST(req: NextRequest) {
             type: ruptureDetection.ruptureType,
             confidence: ruptureDetection.confidence,
             enhanced: ruptureProcessingResult?.consultationUsed || false
-          } : undefined
+          } : undefined,
+          // 🔮 Sovereignty auditing: actual provider info when enabled
+          ...(INCLUDE_PROVIDER_META && simpleResult.metadata?.provider ? {
+            sovereignty: {
+              provider: simpleResult.metadata.provider
+            }
+          } : {})
         },
       }), sessionCookie);
     }
@@ -1196,7 +1203,13 @@ export async function POST(req: NextRequest) {
           type: ruptureDetection.ruptureType,
           confidence: ruptureDetection.confidence,
           enhanced: ruptureProcessingResult?.consultationUsed || false
-        } : undefined
+        } : undefined,
+        // 🔮 Sovereignty auditing: actual provider info when enabled
+        ...(INCLUDE_PROVIDER_META && orchestratorResult.metadata?.provider ? {
+          sovereignty: {
+            provider: orchestratorResult.metadata.provider
+          }
+        } : {})
       }
     }), sessionCookie);
   } catch (err: any) {
