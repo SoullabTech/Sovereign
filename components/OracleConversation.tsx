@@ -167,7 +167,11 @@ interface ConversationMessage {
 }
 
 // 🌀 SELFLET: Strip past-self preface when card is shown (prevent duplicate)
-function stripPastSelfPreface(text: string, pastSelf?: PastSelfPayload): string {
+function stripPastSelfPreface(
+  text: string | undefined | null,
+  pastSelf?: PastSelfPayload
+): string | undefined {
+  if (!text) return text ?? undefined;
   if (!pastSelf?.content) return text;
 
   // Match the exact format from the delivery guard
@@ -178,11 +182,8 @@ function stripPastSelfPreface(text: string, pastSelf?: PastSelfPayload): string 
   ];
 
   for (const v of variants) {
-    if (text.startsWith(v)) {
-      return text.slice(v.length).trimStart();
-    }
+    if (text.startsWith(v)) return text.slice(v.length).trimStart();
   }
-
   return text;
 }
 
