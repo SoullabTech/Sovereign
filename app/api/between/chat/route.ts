@@ -522,7 +522,12 @@ export async function POST(req: NextRequest) {
 
     // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
     const explorerId = meta?.explorerId;
-    const devTrustBodyId = process.env.MAIA_DEV_TRUST_BODY_ID === '1';
+
+    // 🔐 TWO-KEY SAFETY: Trust body ID requires explicit opt-in
+    // In production, BOTH flags must be set to allow body ID trust (prevents accidental exposure)
+    const TRUST_BODY_ID =
+      process.env.MAIA_DEV_TRUST_BODY_ID === '1' &&
+      (!IS_PROD || process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1');
 
     // TODO: When auth is implemented, authUserId should come from verified session/token
     const authUserId: string | null = null; // Placeholder for future auth integration
@@ -531,8 +536,8 @@ export async function POST(req: NextRequest) {
     if (authUserId) {
       // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
       effectiveUserId = authUserId;
-    } else if (devTrustBodyId) {
-      // 🧪 Trust enabled (takes precedence for local Docker testing)
+    } else if (TRUST_BODY_ID) {
+      // 🧪 Trust enabled (local dev OR explicit prod opt-in for testing)
       effectiveUserId = explorerId
         ? explorerId
         : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
