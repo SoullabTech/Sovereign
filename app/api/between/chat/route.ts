@@ -1044,6 +1044,23 @@ export async function POST(req: NextRequest) {
       path: 'orchestrator',
     });
 
+    // 🌀 SELFLET POST: boundary detection + message delivery (non-blocking)
+    const SELFLET_WRITE_ENABLED =
+      process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
+      !effectiveUserId.startsWith('anon:');
+
+    if (SELFLET_WRITE_ENABLED) {
+      processSelfletAfterResponse(effectiveUserId, {
+        userMessage: message,
+        assistantResponse: outboundText2,
+        // Optional: wire consciousness signals when available
+        // currentElement: orchestratorResult.consciousness?.element,
+        // breakthroughDetected: orchestratorResult.consciousness?.breakthrough,
+      }).catch(err => {
+        console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
+      });
+    }
+
     return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
