@@ -48,6 +48,7 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
 import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
+import PastSelfCard, { type PastSelfPayload } from './selflet/PastSelfCard';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { ModeSwitcher } from './ui/ModeSwitcher';
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
@@ -162,6 +163,7 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  pastSelf?: PastSelfPayload;
 }
 
 // Component to clean messages by removing stage directions
@@ -1843,6 +1845,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       let element = 'aether'; // Default element, will be updated from metadata if available
       let opusAxioms: any = undefined; // Opus Axioms evaluation results
       let turnId: number | undefined = undefined; // Turn ID for feedback tracking
+      let pastSelf: PastSelfPayload | undefined = undefined; // Past-self message for temporal identity
 
       if (isStreaming) {
         // Handle streaming response (voice mode - fastest)
@@ -2026,6 +2029,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         if (opusAxioms) {
           console.log(`🜔 Opus Axioms received: ${opusAxioms.isGold ? 'GOLD' : 'Standard'} | ${opusAxioms.passed}/8 passed`);
         }
+
+        // 🌀 SELFLET PHASE 2H: Extract past-self message for UI card
+        if (responseData.pastSelf?.id && responseData.pastSelf?.content) {
+          pastSelf = responseData.pastSelf as PastSelfPayload;
+          console.log(`⏳ Past-Self message surfaced: "${pastSelf.title || 'untitled'}"`);
+        }
       }
 
       const apiTime = Date.now() - startTime;
@@ -2115,7 +2124,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         coherenceLevel: responseData.metadata?.confidence || 0.85,
         source: 'maia',
         opusAxioms,
-        turnId
+        turnId,
+        pastSelf  // 🌀 SELFLET: Past-self message for UI card
       };
 
       // Store MAIA's response for echo detection
@@ -3739,6 +3749,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           <span className="sm:hidden text-amber-400">Tap to copy</span>
                         </div>
                       </div>
+
+                      {/* 🌀 SELFLET: Past-Self Card - shown above MAIA's response */}
+                      {message.role === 'oracle' && message.pastSelf && (
+                        <PastSelfCard pastSelf={message.pastSelf} />
+                      )}
+
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
                           <FormattedMessage text={message.text} />
