@@ -1,4 +1,5 @@
 // backend: lib/ai/localModelClient.ts
+import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 
 type LocalProvider = 'ollama' | 'consciousness_engine';
 
@@ -45,6 +46,15 @@ async function generateWithOllama(
 
   try {
     console.log('🔮 Using local Ollama consciousness processing');
+
+    // 🧪 AIN DEBUG: Verify prompt path
+    if (process.env.NODE_ENV !== 'production') {
+      const hasAIN = systemPrompt.includes(AIN_INTEGRATIVE_ALCHEMY_SENTINEL);
+      console.log('[AIN DEBUG] localModelClient systemPrompt has AIN?', hasAIN);
+      if (hasAIN) {
+        console.log('[AIN DEBUG] systemPrompt tail:', systemPrompt.slice(-400));
+      }
+    }
 
     const messages = [
       { role: 'system', content: systemPrompt },

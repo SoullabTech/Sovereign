@@ -52,9 +52,15 @@ function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
 /**
  * Filter mode-inappropriate language from responses
  * DeepSeek-R1 often ignores system prompts, so we post-process
+ *
+ * IMPORTANT: Never override substantive content (>60 chars) - only filter
+ * empty/short responses or obvious service language in greetings.
  */
 function filterModeLanguage(response: string, userInput: string, mode: 'dialogue' | 'counsel' | 'scribe'): string {
-  const lower = response.toLowerCase();
+  // Guard: never override substantive content
+  if (!userInput?.trim()) return "Hey — what's on your mind?";
+  if (response?.trim().length > 60) return response;
+
   const userLower = userInput.toLowerCase().trim();
   const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening)\b/.test(userLower);
 
@@ -71,22 +77,18 @@ function filterModeLanguage(response: string, userInput: string, mode: 'dialogue
 
     const hasServiceLanguage = servicePatterns.some(pattern => pattern.test(response));
 
-    if (hasServiceLanguage) {
-      if (isGreeting) {
-        // Natural conversational greetings (Talk mode style - elegant but no service language)
-        const nlpGreetings = [
-          "Hey there. Good to see you.",
-          "Hi. How's it going?",
-          "Hey. Nice to connect.",
-          "Hi there. What's on your mind?",
-          "Hey. How are things?",
-          "Good to see you. What's happening?",
-          "Hi. How have you been?"
-        ];
-        return nlpGreetings[Math.floor(Math.random() * nlpGreetings.length)];
-      }
-      // For non-greetings, try to extract the essence and reflect
-      return "I'm here. Tell me more.";
+    if (hasServiceLanguage && isGreeting) {
+      // Natural conversational greetings (Talk mode style - elegant but no service language)
+      const nlpGreetings = [
+        "Hey there. Good to see you.",
+        "Hi. How's it going?",
+        "Hey. Nice to connect.",
+        "Hi there. What's on your mind?",
+        "Hey. How are things?",
+        "Good to see you. What's happening?",
+        "Hi. How have you been?"
+      ];
+      return nlpGreetings[Math.floor(Math.random() * nlpGreetings.length)];
     }
   }
 
@@ -101,7 +103,7 @@ function filterModeLanguage(response: string, userInput: string, mode: 'dialogue
 
     const hasGenericGreeting = genericGreetingPatterns.some(pattern => pattern.test(response));
 
-    if (hasGenericGreeting || isGreeting) {
+    if (hasGenericGreeting && isGreeting) {
       // Witnessing presence responses (Note mode style)
       const witnessingGreetings = [
         "I'm here. Ready when you are.",
@@ -1513,8 +1515,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         break;
     }
 
-    // Apply MAIA's voice sanitization
-    const text = sanitizeMaiaOutput(rawResponse);
+    // Apply MAIA's voice sanitization (let for AIN rewrite reflex)
+    // eslint-disable-next-line prefer-const
+    let text = sanitizeMaiaOutput(rawResponse);
     let audioResponse: Buffer | undefined;
 
     // 🎤 VOICE SYNTHESIS: MAIA's mind (Claude/local) vs MAIA's voice (OpenAI TTS)
@@ -1745,13 +1748,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     console.log(`✅ MAIA ${processingProfile} response complete: ${processingTimeMs}ms | ${text.length} chars${audioResponse ? ` + audio (${audioResponse.voiceProfile})` : ''}`);
 
-    // 🧪 AIN SHAPE CHECK: Dev-time warning + optional telemetry
+    // 🧪 AIN SHAPE CHECK: Dev-time warning + optional telemetry + rewrite reflex
     const telemetryEnabled =
       process.env.AIN_SHAPE_TELEMETRY === '1' ||
       process.env.NODE_ENV !== 'production';
 
-    if (telemetryEnabled) {
-      const shape = assessAINResponseShape(input, text);
+    // Guard: prevent recursive rewrites
+    const isRewritePass =
+      meta?.rewritePass === true || meta?.ainRewritePass === true;
+
+    if (telemetryEnabled && !isRewritePass) {
+      let shape = assessAINResponseShape(input, text);
 
       if (!shape.pass) {
         console.warn('[AIN SHAPE WARNING]', {
@@ -1759,9 +1766,47 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           flags: shape.flags,
           notes: shape.notes
         });
+
+        // 🔄 AIN SHAPE REWRITE: If menu mode detected, rewrite the response
+        const rewriteEnabled =
+          process.env.AIN_SHAPE_REWRITE === '1' ||
+          process.env.NODE_ENV !== 'production';
+
+        if (rewriteEnabled && shape.flags.menuMode) {
+          try {
+            const rewriteSystem = `Rewrite the assistant response into this shape:
+1) Mirror (1–2 sentences reflecting user's experience)
+2) Bridge (1 sentence offering a complementary lens)
+3) Permission (one gentle question before going deeper)
+4) Next step (ONE concrete action, 30–90 seconds)
+
+Hard constraints:
+- No bullet points
+- No numbered lists
+- No "here are options" or "strategies"
+- Choose ONE best next step
+- Keep it under 1400 characters
+- Write as flowing paragraphs, not sections`;
+
+            const rewritten = await generateText({
+              systemPrompt: rewriteSystem,
+              userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
+              meta: { ...meta, ainRewritePass: true }
+            });
+
+            if (rewritten && rewritten.trim().length > 50) {
+              console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
+              text = rewritten.trim();
+              // Recompute shape for accurate telemetry
+              shape = assessAINResponseShape(input, text);
+            }
+          } catch (rewriteErr) {
+            console.warn('[AIN SHAPE REWRITE ERROR]', rewriteErr);
+          }
+        }
       }
 
-      // Persist structure-only telemetry (no text)
+      // Persist structure-only telemetry (no text) - reflects final delivered shape
       try {
         await logAINShapeTelemetry({
           pass: shape.pass,

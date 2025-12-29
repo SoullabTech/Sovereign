@@ -14,6 +14,7 @@ export type AINShapeFlags = {
   bridge: boolean;
   permission: boolean;
   nextStep: boolean;
+  menuMode: boolean;
 };
 
 export type AINShapeResult = {
@@ -49,6 +50,41 @@ function overlapScore(a: string, b: string): number {
   return inter / Math.max(1, Math.min(A.size, 10)); // cap denominator a bit
 }
 
+function countInlineBullets(text: string): number {
+  const m = text.match(/(?:^|\s)•\s+\S+/g);
+  return m ? m.length : 0;
+}
+
+function countInlineNumbered(text: string): number {
+  const m = text.match(/(?:^|\s)\d{1,2}[\).]\s+\S+/g);
+  return m ? m.length : 0;
+}
+
+function countListItems(text: string): number {
+  const lines = text.split('\n');
+  let n = 0;
+
+  for (const line of lines) {
+    if (/^\s*[-*]\s+\S/.test(line)) n++;
+    if (/^\s*\d+[\).]\s+\S/.test(line)) n++;
+    if (/^\s*•\s+\S/.test(line)) n++;
+  }
+
+  n += countInlineBullets(text);
+  n += countInlineNumbered(text);
+
+  return n;
+}
+
+function looksMenuMode(text: string): boolean {
+  const t = text.toLowerCase();
+  const listCount = countListItems(text);
+  if (listCount >= 3) return true;
+  if (/(here are|try these|some ways|strategies|options|steps|things you can|consider these)\b/.test(t) && listCount >= 2) return true;
+  if (/\d+\s*(strategies|options|ways|things|steps)\b/.test(t)) return true;
+  return false;
+}
+
 export function assessAINResponseShape(input: string, output: string): AINShapeResult {
   const notes: string[] = [];
   const out = (output || '').trim();
@@ -79,10 +115,16 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   const nextStep = nextStepPhrases.test(out) || hasActionList;
   if (!nextStep) notes.push('Missing next step: no clear action, practice, or prompt.');
 
-  const score = [mirror, bridge, permission, nextStep].filter(Boolean).length;
+  // 5) MENU MODE: penalize list-heavy, options-heavy responses
+  const menuMode = looksMenuMode(out);
+  if (menuMode) notes.push('Menu mode detected: response contains multi-option/list strategy pattern.');
+
+  let score = [mirror, bridge, permission, nextStep].filter(Boolean).length;
+  if (menuMode) score = Math.max(0, score - 1);
+
   return {
-    pass: score >= 3 && mirror && nextStep, // require mirror + next step, and at least 3/4 overall
-    flags: { mirror, bridge, permission, nextStep },
+    pass: score >= 3 && mirror && nextStep && !menuMode,
+    flags: { mirror, bridge, permission, nextStep, menuMode },
     score,
     notes
   };

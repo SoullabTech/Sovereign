@@ -17,6 +17,7 @@ export type AINShapeTelemetryRow = {
     bridge: boolean;
     permission: boolean;
     nextStep: boolean;
+    menuMode: boolean;
   };
   route?: string;
   processingProfile?: string;
@@ -40,9 +41,9 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
   await query(
     `
     INSERT INTO ain_shape_telemetry
-      (pass, score, mirror, bridge, permission, next_step, route, processing_profile, model, explorer_id, session_id)
+      (pass, score, mirror, bridge, permission, next_step, menu_mode, route, processing_profile, model, explorer_id, session_id)
     VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
     `,
     [
       pass,
@@ -51,6 +52,7 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
       flags.bridge,
       flags.permission,
       flags.nextStep,
+      flags.menuMode,
       route,
       processingProfile ?? null,
       model ?? null,
