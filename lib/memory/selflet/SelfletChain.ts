@@ -595,6 +595,178 @@ export class SelfletChainService {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // MESSAGE OPERATIONS (Phase 2C)
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Create a selflet message (future-self note on major/metamorphosis boundaries)
+   */
+  async createSelfletMessage(input: {
+    fromSelfletId: string;
+    messageType: string;
+    title: string;
+    content: string;
+    relevanceThemes?: string[];
+    ritualTrigger?: string | null;
+    deliveryContext?: Record<string, unknown>;
+  }): Promise<string> {
+    const query = `
+      INSERT INTO selflet_messages (
+        from_selflet_id,
+        message_type,
+        title,
+        content,
+        relevance_themes,
+        ritual_trigger,
+        delivery_context
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb)
+      RETURNING id
+    `;
+    const result = await dbQuery(query, [
+      input.fromSelfletId,
+      input.messageType,
+      input.title,
+      input.content,
+      input.relevanceThemes ?? null,
+      input.ritualTrigger ?? null,
+      JSON.stringify(input.deliveryContext ?? {}),
+    ]);
+    const id = result.rows[0]?.id;
+    console.log(`📨 [SELFLET MESSAGE] Created ${input.messageType} message: ${id}`);
+    return id;
+  }
+
+  /**
+   * Get pending message for current context (theme-based relevance matching)
+   */
+  async getPendingMessageForContext(input: {
+    userId: string;
+    currentThemes: string[];
+    limit?: number;
+  }): Promise<null | {
+    id: string;
+    fromSelfletId: string;
+    messageType: string;
+    title: string;
+    content: string;
+    relevanceThemes: string[] | null;
+    deliveryContext: Record<string, unknown> | null;
+    createdAt: Date;
+  }> {
+    const limit = input.limit ?? 1;
+
+    const query = `
+      SELECT
+        m.id,
+        m.from_selflet_id,
+        m.message_type,
+        m.title,
+        m.content,
+        m.relevance_themes,
+        m.delivery_context,
+        m.created_at
+      FROM selflet_messages m
+      JOIN selflet_nodes n ON n.id = m.from_selflet_id
+      WHERE n.user_id = $1
+        AND m.delivered_at IS NULL
+        AND (
+          $2::text[] IS NULL
+          OR array_length($2::text[], 1) IS NULL
+          OR m.relevance_themes && $2::text[]
+        )
+      ORDER BY m.created_at DESC
+      LIMIT $3
+    `;
+
+    const themes = (input.currentThemes?.length ?? 0) > 0 ? input.currentThemes : null;
+    const result = await dbQuery(query, [input.userId, themes, limit]);
+    const row = result.rows[0];
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      fromSelfletId: row.from_selflet_id,
+      messageType: row.message_type,
+      title: row.title,
+      content: row.content,
+      relevanceThemes: row.relevance_themes ?? null,
+      deliveryContext: row.delivery_context ?? null,
+      createdAt: new Date(row.created_at),
+    };
+  }
+
+  /**
+   * Mark a message as delivered (called when surfaced in conversation)
+   */
+  async markMessageDeliveredById(input: {
+    messageId: string;
+    deliveryContext?: Record<string, unknown>;
+  }): Promise<void> {
+    const query = `
+      UPDATE selflet_messages
+      SET delivered_at = NOW(),
+          delivery_context = COALESCE(delivery_context, '{}'::jsonb) || $2::jsonb
+      WHERE id = $1
+        AND delivered_at IS NULL
+    `;
+    await dbQuery(query, [input.messageId, JSON.stringify(input.deliveryContext ?? {})]);
+    console.log(`✅ [SELFLET MESSAGE] Marked delivered: ${input.messageId}`);
+  }
+
+  /**
+   * Insert a reinterpretation (how current self interpreted past-self message)
+   */
+  async insertReinterpretationFromDelivery(input: {
+    messageId: string;
+    userId: string;
+    interpretation: string;
+    integrationDepth: number;
+    emotionalResonance?: string | null;
+    translationNotes?: string | null;
+  }): Promise<string> {
+    // Get the source selflet from the message
+    const msgResult = await dbQuery(
+      `SELECT from_selflet_id FROM selflet_messages WHERE id = $1`,
+      [input.messageId]
+    );
+    const sourceSelfletId = msgResult.rows[0]?.from_selflet_id;
+    if (!sourceSelfletId) {
+      throw new Error(`Message ${input.messageId} not found`);
+    }
+
+    // Get current selflet for interpreting_selflet_id
+    const currentSelflet = await this.getCurrentSelflet(input.userId);
+    if (!currentSelflet) {
+      throw new Error(`No current selflet for user ${input.userId}`);
+    }
+
+    const query = `
+      INSERT INTO selflet_reinterpretations (
+        interpreting_selflet_id,
+        source_selflet_id,
+        source_message_id,
+        interpretation,
+        integration_depth,
+        emotional_resonance,
+        translation_notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+      RETURNING id
+    `;
+    const result = await dbQuery(query, [
+      currentSelflet.id,
+      sourceSelfletId,
+      input.messageId,
+      input.interpretation,
+      input.integrationDepth,
+      input.emotionalResonance ?? null,
+      input.translationNotes ?? null,
+    ]);
+    const id = result.rows[0]?.id;
+    console.log(`📝 [SELFLET REINTERPRETATION] Created: ${id}`);
+    return id;
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // PRIVATE HELPERS
   // ─────────────────────────────────────────────────────────────
 

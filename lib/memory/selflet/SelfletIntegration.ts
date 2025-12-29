@@ -39,6 +39,9 @@ export interface SelfletLoadResult {
   promptInjection: string;
   pendingReflection: ReflectionPrompt | null;
   shouldSurfaceReflection: boolean;
+  // Phase 2C: Track surfaced message for delivery marking
+  surfacedMessageId?: string;
+  surfacedDeliveryContext?: Record<string, unknown>;
 }
 
 /**
@@ -65,6 +68,10 @@ export async function loadSelfletContext(
     let pendingReflection: ReflectionPrompt | null = null;
     let shouldSurfaceReflection = false;
 
+    // Phase 2C: Track surfaced message for delivery marking
+    let surfacedMessageId: string | undefined;
+    let surfacedDeliveryContext: Record<string, unknown> | undefined;
+
     if (userMessage && context.pendingMessages.length > 0) {
       const shouldSurface = await selfletRituals.shouldSurfaceReflection(
         userId,
@@ -79,11 +86,33 @@ export async function loadSelfletContext(
       }
     }
 
+    // Phase 2C: Fetch pending message by theme relevance (if themes provided)
+    if (currentThemes && currentThemes.length > 0) {
+      const pendingMsg = await selfletChain.getPendingMessageForContext({
+        userId,
+        currentThemes,
+        limit: 1,
+      });
+      if (pendingMsg) {
+        surfacedMessageId = pendingMsg.id;
+        surfacedDeliveryContext = {
+          messageTitle: pendingMsg.title,
+          messageType: pendingMsg.messageType,
+          fromSelfletId: pendingMsg.fromSelfletId,
+          relevanceThemes: pendingMsg.relevanceThemes,
+          surfacedAt: new Date().toISOString(),
+        };
+        console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
+      }
+    }
+
     return {
       context,
       promptInjection,
       pendingReflection,
       shouldSurfaceReflection,
+      surfacedMessageId,
+      surfacedDeliveryContext,
     };
   } catch (error) {
     // Graceful degradation - selflet system is optional
@@ -108,6 +137,7 @@ export interface PostResponseInput {
   // Current state
   currentElement?: Element;
   currentArchetypes?: string[];
+  currentThemes?: string[];
 
   // Signals from interaction
   breakthroughDetected?: boolean;
@@ -121,6 +151,10 @@ export interface PostResponseInput {
   // Session context
   sessionDurationMinutes?: number;
   breakthroughCountThisSession?: number;
+
+  // Message that was surfaced during loadSelfletContext()
+  surfacedSelfletMessageId?: string;
+  surfacedDeliveryContext?: Record<string, unknown>;
 }
 
 export interface PostResponseResult {
@@ -229,6 +263,57 @@ export async function processSelfletAfterResponse(
         detectionInput.elementalShift.to,
         symbol
       );
+    }
+
+    // Phase 2C: Create message on major/metamorphosis boundaries
+    if ((boundaryKind === 'major' || boundaryKind === 'metamorphosis') && currentSelflet) {
+      try {
+        await selfletChain.createSelfletMessage({
+          fromSelfletId: currentSelflet.id,
+          messageType: boundaryKind === 'metamorphosis' ? 'metamorphosis_note' : 'breakthrough_letter',
+          title: `${boundary.type} insight: ${boundary.trigger}`,
+          content: `At this moment of ${boundary.type}, I wanted to preserve this: ${input.assistantResponse.slice(0, 500)}...`,
+          relevanceThemes: input.currentThemes,
+          ritualTrigger: null,
+          deliveryContext: {
+            boundaryKind,
+            boundaryStrength: boundary.strength,
+            element: currentSelflet.element,
+            phase: currentSelflet.phase,
+          },
+        });
+        console.log(`[SELFLET] 📝 Created ${boundaryKind} message from selflet ${currentSelflet.id}`);
+      } catch (msgErr) {
+        console.log('[SELFLET] Failed to create boundary message (non-fatal):', msgErr);
+      }
+    }
+
+    // Phase 2C: Mark surfaced message as delivered + store reinterpretation
+    if (input.surfacedSelfletMessageId) {
+      try {
+        // Mark the message as delivered
+        await selfletChain.markMessageDeliveredById({
+          messageId: input.surfacedSelfletMessageId,
+          deliveryContext: {
+            ...(input.surfacedDeliveryContext || {}),
+            deliveredAt: new Date().toISOString(),
+            assistantResponseExcerpt: input.assistantResponse.slice(0, 300),
+          },
+        });
+
+        // Insert a basic reinterpretation record
+        await selfletChain.insertReinterpretationFromDelivery({
+          messageId: input.surfacedSelfletMessageId,
+          userId,
+          interpretation: `Message surfaced during: ${boundary.trigger}`,
+          integrationDepth: boundary.strength,
+          emotionalResonance: input.emotionalShift?.to ?? null,
+          translationNotes: null,
+        });
+        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered`);
+      } catch (deliveryErr) {
+        console.log('[SELFLET] Failed to mark message delivered (non-fatal):', deliveryErr);
+      }
     }
 
     return {

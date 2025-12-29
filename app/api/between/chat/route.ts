@@ -1053,6 +1053,9 @@ export async function POST(req: NextRequest) {
       processSelfletAfterResponse(effectiveUserId, {
         userMessage: message,
         assistantResponse: outboundText2,
+        // Phase 2C: Pass surfaced message info for delivery tracking
+        surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
+        surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
         // Optional: wire consciousness signals when available
         // currentElement: orchestratorResult.consciousness?.element,
         // breakthroughDetected: orchestratorResult.consciousness?.breakthrough,
