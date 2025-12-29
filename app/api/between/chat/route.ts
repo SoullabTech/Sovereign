@@ -79,6 +79,19 @@ if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
   console.warn('[Boot] ⚠️ MAIA_MEMORY_SIM_HEADERS=1 — simulation headers are ENABLED');
 }
 
+// 🚨 LOUD WARNING: Body ID trust is enabled in production
+// This allows clients to spoof userId - only for local Docker testing!
+if (IS_PROD && process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1') {
+  console.error('');
+  console.error('╔══════════════════════════════════════════════════════════════╗');
+  console.error('║  🚨 SECURITY WARNING: MAIA_TRUST_BODY_ID_IN_PROD=1           ║');
+  console.error('║  Client-supplied userId will be TRUSTED in production.       ║');
+  console.error('║  This enables userId spoofing — use ONLY for local testing!  ║');
+  console.error('║  If this is real production, REMOVE this env var immediately.║');
+  console.error('╚══════════════════════════════════════════════════════════════╝');
+  console.error('');
+}
+
 // Audit fingerprint secret - must be set in production for secure correlation
 const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
