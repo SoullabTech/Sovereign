@@ -32,8 +32,10 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    env_file:
+      - .env.production
     environment:
-      - DOMAIN=${BASE_URL:-localhost}
+      - DOMAIN=${DOMAIN:-localhost}
     depends_on:
       maia:
         condition: service_healthy
