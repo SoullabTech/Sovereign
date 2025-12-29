@@ -1,18 +1,19 @@
 #!/bin/sh
 # SQL Migration Runner for MAIA Production
 # Called by: docker compose --profile migrate run --rm migrate
-#
-# Expects:
-#   - DATABASE_URL environment variable
-#   - /app/database/migrations/*.sql files mounted
 
 set -eu
 
+: "${DATABASE_URL:?DATABASE_URL is required}"
+
 echo "=== SQL migrations ==="
 
+count=0
 for f in /app/database/migrations/*.sql; do
+  [ -e "$f" ] || continue  # handles empty-glob case
   echo "→ $(basename "$f")"
-  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+  psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$f"
+  count=$((count + 1))
 done
 
-echo "=== Migrations complete ==="
+echo "=== $count migrations complete ==="
