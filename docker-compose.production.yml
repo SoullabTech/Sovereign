@@ -123,7 +123,7 @@ services:
       postgres:
         condition: service_healthy
 
-    command: ["sh", "-c", "npx prisma migrate deploy && for f in /app/database/migrations/*.sql; do psql $$DATABASE_URL -f $$f || true; done"]
+    command: ["sh", "-c", "set -e; npx prisma migrate deploy && for f in /app/database/migrations/*.sql; do psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f \"$f\"; done"]
 
     volumes:
       - ./database/migrations:/app/database/migrations:ro
