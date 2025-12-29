@@ -325,3 +325,10 @@ backups/
 !.env.production.template
 !docker-compose.production.yml
 !Caddyfile
+
+# local build artifacts
+api/backend/
+app/api/backend/public/
+app/beta/
+docs/public/
+web/
