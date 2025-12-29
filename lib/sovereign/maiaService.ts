@@ -870,6 +870,9 @@ async function corePathResponse(
   const mode = normalizeMode(meta.mode);
   validatedResponse = filterModeLanguage(validatedResponse, input, mode);
 
+  // 🌀 SELFLET PHASE 2F: Apply delivery guard
+  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
+
   return validatedResponse;
 }
 
@@ -1159,8 +1162,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     }
   );
 
+  // 🌀 SELFLET PHASE 2F: Apply delivery guard
+  const guardedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
+
   return {
-    response: validatedResponse,
+    response: guardedResponse,
     socraticValidation: validation,
     consciousnessData: {
       layersActivated: consciousnessResponse.layersActivated,
