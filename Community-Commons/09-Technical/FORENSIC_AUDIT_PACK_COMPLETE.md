@@ -3,6 +3,7 @@
 **Status:** COMPLETE
 **Branch of record:** `clean-main-no-secrets`
 **Impact:** Infrastructure / Observability / Debuggability (content-free metrics)
+**Indexed in:** [Community Commons → Infrastructure & Observability](../INDEX_CONSCIOUSNESS_BREAKTHROUGHS.md#infrastructure--observability)
 
 ---
 
