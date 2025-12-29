@@ -147,16 +147,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS update_journal_updated_at ON holoflower_journal_entries;
 CREATE TRIGGER update_journal_updated_at
   BEFORE UPDATE ON holoflower_journal_entries
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_patterns_updated_at ON soul_patterns;
 CREATE TRIGGER update_patterns_updated_at
   BEFORE UPDATE ON soul_patterns
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_essence_updated_at ON relationship_essences;
 CREATE TRIGGER update_essence_updated_at
   BEFORE UPDATE ON relationship_essences
   FOR EACH ROW

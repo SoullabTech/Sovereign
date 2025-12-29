@@ -136,14 +136,17 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+DROP TRIGGER IF EXISTS update_conversation_themes_updated_at ON conversation_themes;
 CREATE TRIGGER update_conversation_themes_updated_at
   BEFORE UPDATE ON conversation_themes
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_breakthrough_moments_updated_at ON breakthrough_moments;
 CREATE TRIGGER update_breakthrough_moments_updated_at
   BEFORE UPDATE ON breakthrough_moments
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_relationship_patterns_updated_at ON relationship_patterns;
 CREATE TRIGGER update_relationship_patterns_updated_at
   BEFORE UPDATE ON relationship_patterns
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

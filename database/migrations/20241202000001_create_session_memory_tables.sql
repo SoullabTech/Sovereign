@@ -264,11 +264,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply timestamp triggers
+-- Apply timestamp triggers (idempotent)
+DROP TRIGGER IF EXISTS update_user_session_patterns_updated_at ON user_session_patterns;
 CREATE TRIGGER update_user_session_patterns_updated_at
 BEFORE UPDATE ON user_session_patterns
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_user_relationship_context_updated_at ON user_relationship_context;
 CREATE TRIGGER update_user_relationship_context_updated_at
 BEFORE UPDATE ON user_relationship_context
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -291,7 +293,8 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply session count trigger
+-- Apply session count trigger (idempotent)
+DROP TRIGGER IF EXISTS update_session_count_on_insert ON user_session_patterns;
 CREATE TRIGGER update_session_count_on_insert
 AFTER INSERT ON user_session_patterns
 FOR EACH ROW EXECUTE FUNCTION update_session_count();
@@ -388,32 +391,38 @@ ALTER TABLE pattern_connections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consciousness_expansion_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spiral_stage_transitions ENABLE ROW LEVEL SECURITY;
 
--- Session patterns policies - users can only access their own data
+-- Session patterns policies - users can only access their own data (idempotent)
+DROP POLICY IF EXISTS "Users can access their own session patterns" ON user_session_patterns;
 CREATE POLICY "Users can access their own session patterns"
 ON user_session_patterns FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Insights policies
+-- Insights policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own insights" ON conversation_insights;
 CREATE POLICY "Users can access their own insights"
 ON conversation_insights FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- User context policies
+-- User context policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own context" ON user_relationship_context;
 CREATE POLICY "Users can access their own context"
 ON user_relationship_context FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Pattern connections policies
+-- Pattern connections policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own patterns" ON pattern_connections;
 CREATE POLICY "Users can access their own patterns"
 ON pattern_connections FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Expansion events policies
+-- Expansion events policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own expansion events" ON consciousness_expansion_events;
 CREATE POLICY "Users can access their own expansion events"
 ON consciousness_expansion_events FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Spiral transitions policies
+-- Spiral transitions policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own spiral transitions" ON spiral_stage_transitions;
 CREATE POLICY "Users can access their own spiral transitions"
 ON spiral_stage_transitions FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');

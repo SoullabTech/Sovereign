@@ -100,6 +100,7 @@ desktop-app/
 books/
 artifacts/
 beta-deployment/
-data/
+data/qdrant/
+data/ain/
 tmp/
 .DS_Store

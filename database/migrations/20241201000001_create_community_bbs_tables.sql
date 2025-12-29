@@ -276,11 +276,16 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply timestamp triggers
+-- Apply timestamp triggers (idempotent: drop-if-exists then create)
+DROP TRIGGER IF EXISTS update_community_channels_updated_at ON community_channels;
 CREATE TRIGGER update_community_channels_updated_at BEFORE UPDATE ON community_channels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_threads_updated_at ON community_threads;
 CREATE TRIGGER update_community_threads_updated_at BEFORE UPDATE ON community_threads FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_replies_updated_at ON community_replies;
 CREATE TRIGGER update_community_replies_updated_at BEFORE UPDATE ON community_replies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_profiles_updated_at ON community_profiles;
 CREATE TRIGGER update_community_profiles_updated_at BEFORE UPDATE ON community_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_presence_updated_at ON community_presence;
 CREATE TRIGGER update_community_presence_updated_at BEFORE UPDATE ON community_presence FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update reply counts
@@ -303,8 +308,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply reply count triggers
+-- Apply reply count triggers (idempotent)
+DROP TRIGGER IF EXISTS update_thread_reply_count_on_insert ON community_replies;
 CREATE TRIGGER update_thread_reply_count_on_insert AFTER INSERT ON community_replies FOR EACH ROW EXECUTE FUNCTION update_thread_reply_count();
+DROP TRIGGER IF EXISTS update_thread_reply_count_on_delete ON community_replies;
 CREATE TRIGGER update_thread_reply_count_on_delete AFTER DELETE ON community_replies FOR EACH ROW EXECUTE FUNCTION update_thread_reply_count();
 
 -- Function to update reaction counts
@@ -352,8 +359,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply reaction count triggers
+-- Apply reaction count triggers (idempotent)
+DROP TRIGGER IF EXISTS update_reaction_counts_on_insert ON community_reactions;
 CREATE TRIGGER update_reaction_counts_on_insert AFTER INSERT ON community_reactions FOR EACH ROW EXECUTE FUNCTION update_reaction_counts();
+DROP TRIGGER IF EXISTS update_reaction_counts_on_delete ON community_reactions;
 CREATE TRIGGER update_reaction_counts_on_delete AFTER DELETE ON community_reactions FOR EACH ROW EXECUTE FUNCTION update_reaction_counts();
 
 -- Function to update channel post counts and activity
@@ -376,8 +385,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply channel stats triggers
+-- Apply channel stats triggers (idempotent)
+DROP TRIGGER IF EXISTS update_channel_stats_on_insert ON community_threads;
 CREATE TRIGGER update_channel_stats_on_insert AFTER INSERT ON community_threads FOR EACH ROW EXECUTE FUNCTION update_channel_stats();
+DROP TRIGGER IF EXISTS update_channel_stats_on_delete ON community_threads;
 CREATE TRIGGER update_channel_stats_on_delete AFTER DELETE ON community_threads FOR EACH ROW EXECUTE FUNCTION update_channel_stats();
 
 -- =====================================================
@@ -393,32 +404,46 @@ ALTER TABLE community_field_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_presence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_profiles ENABLE ROW LEVEL SECURITY;
 
--- Public read access for channels (forum categories)
+-- Public read access for channels (forum categories) - idempotent
+DROP POLICY IF EXISTS "Public channels are viewable by everyone" ON community_channels;
 CREATE POLICY "Public channels are viewable by everyone" ON community_channels FOR SELECT USING (is_active = true);
 
--- Thread policies
+-- Thread policies (idempotent)
+DROP POLICY IF EXISTS "Public threads are viewable by everyone" ON community_threads;
 CREATE POLICY "Public threads are viewable by everyone" ON community_threads FOR SELECT USING (is_public = true);
+DROP POLICY IF EXISTS "Users can create threads" ON community_threads;
 CREATE POLICY "Users can create threads" ON community_threads FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can update their own threads" ON community_threads;
 CREATE POLICY "Users can update their own threads" ON community_threads FOR UPDATE USING (author_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Reply policies
+-- Reply policies (idempotent)
+DROP POLICY IF EXISTS "Replies are viewable by everyone" ON community_replies;
 CREATE POLICY "Replies are viewable by everyone" ON community_replies FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can create replies" ON community_replies;
 CREATE POLICY "Users can create replies" ON community_replies FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can update their own replies" ON community_replies;
 CREATE POLICY "Users can update their own replies" ON community_replies FOR UPDATE USING (author_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Reaction policies
+-- Reaction policies (idempotent)
+DROP POLICY IF EXISTS "Reactions are viewable by everyone" ON community_reactions;
 CREATE POLICY "Reactions are viewable by everyone" ON community_reactions FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage their own reactions" ON community_reactions;
 CREATE POLICY "Users can manage their own reactions" ON community_reactions FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Field state is publicly readable
+-- Field state is publicly readable (idempotent)
+DROP POLICY IF EXISTS "Field state is viewable by everyone" ON community_field_state;
 CREATE POLICY "Field state is viewable by everyone" ON community_field_state FOR SELECT USING (true);
 
--- Presence policies
+-- Presence policies (idempotent)
+DROP POLICY IF EXISTS "Presence is viewable by everyone" ON community_presence;
 CREATE POLICY "Presence is viewable by everyone" ON community_presence FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage their own presence" ON community_presence;
 CREATE POLICY "Users can manage their own presence" ON community_presence FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Profile policies
+-- Profile policies (idempotent)
+DROP POLICY IF EXISTS "Profiles are viewable by everyone" ON community_profiles;
 CREATE POLICY "Profiles are viewable by everyone" ON community_profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage their own profile" ON community_profiles;
 CREATE POLICY "Users can manage their own profile" ON community_profiles FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
 -- =====================================================
