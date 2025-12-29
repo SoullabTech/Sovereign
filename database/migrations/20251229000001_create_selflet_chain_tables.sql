@@ -253,6 +253,6 @@ GRANT USAGE ON SCHEMA public TO maia;
 GRANT ALL PRIVILEGES ON TABLE public.selflet_nodes TO maia;
 GRANT ALL PRIVILEGES ON TABLE public.selflet_messages TO maia;
 GRANT ALL PRIVILEGES ON TABLE public.selflet_reinterpretations TO maia;
-GRANT EXECUTE ON FUNCTION public.get_active_selflet(TEXT) TO maia;
-GRANT EXECUTE ON FUNCTION public.get_recent_selflets(TEXT, INT) TO maia;
+GRANT EXECUTE ON FUNCTION public.get_current_selflet(TEXT) TO maia;
+GRANT EXECUTE ON FUNCTION public.get_pending_selflet_messages(TEXT) TO maia;
 GRANT EXECUTE ON FUNCTION public.calculate_chain_continuity(TEXT) TO maia;
