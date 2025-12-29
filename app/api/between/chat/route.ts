@@ -102,10 +102,17 @@ const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
   (IS_PROD ? '' : 'dev-only-secret'); // Dev fallback OK, prod requires real secret
 
-// Fail-closed: production MUST have fingerprint secret configured
+// Log warning at boot if missing (but don't throw - check inside handler instead)
 if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
-  console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
-  throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+  console.error('🚨 WARNING: MAIA_AUDIT_FINGERPRINT_SECRET not set - will return 500 on requests');
+}
+
+// Helper to check required env vars inside handlers (avoids module-load crashes)
+function checkRequiredEnvVars(): { ok: true } | { ok: false; error: string } {
+  if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
+    return { ok: false, error: 'MAIA_AUDIT_FINGERPRINT_SECRET is required in production' };
+  }
+  return { ok: true };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -484,6 +491,15 @@ async function queryCanonBeads(message: string): Promise<string | null> {
 export async function POST(req: NextRequest) {
   const reqId = generateReqId();
   const startTime = Date.now();
+
+  // 🔒 Fail-closed: check required env vars INSIDE handler (no module-load crash)
+  const envCheck = checkRequiredEnvVars();
+  if (envCheck.ok === false) {
+    return NextResponse.json(
+      { error: envCheck.error, errorCode: 'MISSING_ENV_VAR' },
+      { status: 500 }
+    );
+  }
 
   try {
     // Initialize database tables if needed
