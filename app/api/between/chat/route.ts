@@ -546,6 +546,11 @@ export async function POST(req: NextRequest) {
       effectiveUserId = `anon:${safeSessionId}`;
     }
 
+    // 🌀 SELFLET eligibility (allow override for local testing)
+    const SELFLET_ALLOW_ANON = process.env.MAIA_SELFLET_ALLOW_ANON === '1';
+    const isAnon = effectiveUserId.startsWith('anon:');
+    const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
     const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
@@ -622,7 +627,7 @@ export async function POST(req: NextRequest) {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
       // Ensure user has initial selflet (creates on first interaction if needed)
-      if (!effectiveUserId.startsWith('anon:')) {
+      if (selfletEligible) {
         console.log('[Chat API] 🌀 SELFLET: Calling ensureInitialSelflet for:', effectiveUserId);
         await ensureInitialSelflet(effectiveUserId);
       }
@@ -1102,7 +1107,7 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET POST: boundary detection + message delivery (non-blocking)
     const SELFLET_WRITE_ENABLED =
       process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
-      !effectiveUserId.startsWith('anon:');
+      selfletEligible;
 
     if (SELFLET_WRITE_ENABLED) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

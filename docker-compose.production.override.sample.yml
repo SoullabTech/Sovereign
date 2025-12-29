@@ -1,0 +1,11 @@
+# Local override for Phase 2E selflet testing
+# Usage: docker compose -f docker-compose.production.yml -f docker-compose.production.override.yml up -d --build
+#
+# This file enables selflet features for anonymous users during local development/testing.
+# DO NOT use this override in production deployments.
+
+services:
+  maia:
+    environment:
+      MAIA_SELFLET_WRITE_ENABLED: "1"
+      MAIA_SELFLET_ALLOW_ANON: "1"
