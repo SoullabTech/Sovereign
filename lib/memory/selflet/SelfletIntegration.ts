@@ -181,6 +181,35 @@ export async function processSelfletAfterResponse(
 
     console.log(`[SELFLET] 🌀 Boundary detected: ${boundary.type} (strength: ${boundary.strength})`);
 
+    // 📍 Persist boundary event to database
+    const boundaryKind = boundary.type === 'transformation' ? 'metamorphosis' :
+                         boundary.type === 'evolution' || boundary.type === 'breakthrough' ? 'major' :
+                         'micro';
+    try {
+      await selfletChain.insertBoundaryEvent({
+        userId,
+        fromSelfletId: currentSelflet?.id,
+        boundaryKind,
+        elementFrom: currentSelflet?.element,
+        elementTo: detectionInput.elementalShift?.to,
+        phaseFrom: currentSelflet?.phase,
+        intensity: boundary.strength,
+        continuityScoreBefore: currentSelflet?.continuityScore,
+        signal: {
+          type: boundary.type,
+          trigger: boundary.trigger,
+          strength: boundary.strength,
+          requiresConfirmation: boundary.requiresConfirmation,
+          suggestedElement: boundary.suggestedElement,
+          suggestedArchetypes: boundary.suggestedArchetypes,
+        },
+        inputExcerpt: input.userMessage,
+        assistantExcerpt: input.assistantResponse,
+      });
+    } catch (err) {
+      console.log('[SELFLET] Failed to persist boundary event (non-fatal):', err);
+    }
+
     // Generate prompts if confirmation needed
     let confirmationPrompt: string | undefined;
     let metamorphosisPrompt: string | undefined;

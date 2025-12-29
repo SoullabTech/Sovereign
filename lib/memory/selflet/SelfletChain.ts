@@ -501,6 +501,95 @@ export class SelfletChainService {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // BOUNDARY EVENT OPERATIONS
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Insert a boundary event into the database
+   * Called when a transition is detected (micro, major, metamorphosis, manual)
+   */
+  async insertBoundaryEvent(input: {
+    userId: string;
+    sessionId?: string;
+    fromSelfletId?: string;
+    toSelfletId?: string;
+    boundaryKind: 'micro' | 'major' | 'metamorphosis' | 'manual';
+    elementFrom?: Element;
+    elementTo?: Element;
+    phaseFrom?: string;
+    phaseTo?: string;
+    intensity?: number;
+    continuityScoreBefore?: number;
+    continuityScoreAfter?: number;
+    signal: Record<string, unknown>;
+    inputExcerpt?: string;
+    assistantExcerpt?: string;
+  }): Promise<string> {
+    const query = `
+      INSERT INTO selflet_boundaries (
+        user_id, session_id, from_selflet_id, to_selflet_id,
+        boundary_kind, element_from, element_to, phase_from, phase_to,
+        intensity, continuity_score_before, continuity_score_after,
+        signal, input_excerpt, assistant_excerpt
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING id
+    `;
+
+    const result = await dbQuery(query, [
+      input.userId,
+      input.sessionId ?? null,
+      input.fromSelfletId ?? null,
+      input.toSelfletId ?? null,
+      input.boundaryKind,
+      input.elementFrom ?? null,
+      input.elementTo ?? null,
+      input.phaseFrom ?? null,
+      input.phaseTo ?? null,
+      input.intensity ?? null,
+      input.continuityScoreBefore ?? null,
+      input.continuityScoreAfter ?? null,
+      JSON.stringify(input.signal),
+      input.inputExcerpt?.slice(0, 500) ?? null,  // Truncate for storage
+      input.assistantExcerpt?.slice(0, 500) ?? null,
+    ]);
+
+    const id = result.rows[0]?.id;
+    console.log(`📍 [SELFLET BOUNDARY] Recorded ${input.boundaryKind} boundary: ${id}`);
+    return id;
+  }
+
+  /**
+   * Get recent boundaries for a user (for debugging/visualization)
+   */
+  async getRecentBoundaries(userId: string, limit = 10): Promise<Array<{
+    id: string;
+    boundaryKind: string;
+    intensity: number | null;
+    signal: Record<string, unknown>;
+    detectedAt: Date;
+  }>> {
+    try {
+      const result = await dbQuery(
+        `SELECT id, boundary_kind, intensity, signal, detected_at
+         FROM selflet_boundaries
+         WHERE user_id = $1
+         ORDER BY detected_at DESC
+         LIMIT $2`,
+        [userId, limit]
+      );
+      return result.rows.map(row => ({
+        id: row.id,
+        boundaryKind: row.boundary_kind,
+        intensity: row.intensity ? parseFloat(row.intensity) : null,
+        signal: typeof row.signal === 'string' ? JSON.parse(row.signal) : row.signal,
+        detectedAt: new Date(row.detected_at),
+      }));
+    } catch (error) {
+      return [];
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // PRIVATE HELPERS
   // ─────────────────────────────────────────────────────────────
 
