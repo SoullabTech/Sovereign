@@ -788,10 +788,13 @@ export async function POST(req: NextRequest) {
     ].filter(h => req.headers.get(h) === '1');
 
     if (!simHeadersEnabled && simHeadersAttempted.length > 0) {
+      const isProd = process.env.NODE_ENV === 'production';
+      const simEnvSet = process.env.MAIA_MEMORY_SIM_HEADERS === '1';
       console.log('[Audit:MemoryPipeline:SIM_IGNORED]', {
         reqId,
         headers: simHeadersAttempted,
-        reason: process.env.NODE_ENV === 'production' ? 'production' : 'gate_disabled',
+        reason: isProd ? 'production' : 'gate_disabled',
+        gate: { nodeEnv: !isProd, simEnvEnabled: simEnvSet },
       });
     }
 
