@@ -124,15 +124,11 @@ services:
       postgres:
         condition: service_healthy
 
-    command:
-      [
-        "sh",
-        "-c",
-        "set -eu; echo '=== SQL migrations ==='; for f in /app/database/migrations/*.sql; do echo \"→ $(basename \"$f\")\"; psql \"$DATABASE_URL\" -v ON_ERROR_STOP=1 -f \"$f\"; done"
-      ]
+    command: ["sh", "/app/scripts/run-sql-migrations.sh"]
 
     volumes:
       - ./database/migrations:/app/database/migrations:ro
+      - ./scripts/run-sql-migrations.sh:/app/scripts/run-sql-migrations.sh:ro
 
     profiles: ["migrate"]
 
