@@ -93,4 +93,21 @@ Remember, I am not a therapist, but these are evidence-based approaches.
     expect(res.pass).toBe(false);
     expect(res.score).toBeLessThan(3);
   });
+
+  it('detects menu mode for inline dash-option chains', () => {
+    const input = `I feel blocked right before success.`;
+
+    const output =
+      `I hear how frustrating it is to feel a "protector" slam the brakes right as momentum builds. ` +
+      `One way to look at it is that this part is trying to prevent an old kind of danger, even if it's misfiring now. ` +
+      `Would you be open to meeting it with curiosity for 60 seconds? ` +
+      `Next step: put one hand on your chest and quietly ask, "What are you protecting me from right now?" then write the first honest sentence that comes. ` +
+      ` — If it's fear of being seen, name the image that flashes. ` +
+      ` — If it's fear of loss, name what success might cost. ` +
+      ` — If it's fear of failure, name the punishment you expect.`;
+
+    const shape = assessAINResponseShape(input, output);
+    expect(shape.flags.menuMode).toBe(true);
+    expect(shape.pass).toBe(false);
+  });
 });
