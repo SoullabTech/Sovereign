@@ -234,3 +234,14 @@ BEGIN
   RETURN LEAST(1.0, v_total_score);
 END;
 $$ LANGUAGE plpgsql;
+
+-- =============================================================================
+-- PERMISSIONS
+-- Grant access to maia application role
+-- =============================================================================
+GRANT ALL PRIVILEGES ON TABLE selflet_nodes TO maia;
+GRANT ALL PRIVILEGES ON TABLE selflet_messages TO maia;
+GRANT ALL PRIVILEGES ON TABLE selflet_reinterpretations TO maia;
+GRANT EXECUTE ON FUNCTION get_active_selflet(TEXT) TO maia;
+GRANT EXECUTE ON FUNCTION get_recent_selflets(TEXT, INT) TO maia;
+GRANT EXECUTE ON FUNCTION calculate_chain_continuity(TEXT) TO maia;
