@@ -19,6 +19,7 @@ export type AINShapeTelemetryRow = {
     nextStep: boolean;
     menuMode: boolean;
   };
+  menuSignals?: Record<string, boolean | number> | null; // Detailed menu detection signals
   route?: string;
   processingProfile?: string;
   model?: string;
@@ -31,6 +32,7 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
     pass,
     score,
     flags,
+    menuSignals,
     route = 'maiaService',
     processingProfile,
     model,
@@ -41,9 +43,9 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
   await query(
     `
     INSERT INTO ain_shape_telemetry
-      (pass, score, mirror, bridge, permission, next_step, menu_mode, route, processing_profile, model, explorer_id, session_id)
+      (pass, score, mirror, bridge, permission, next_step, menu_mode, menu_signals, route, processing_profile, model, explorer_id, session_id)
     VALUES
-      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
     `,
     [
       pass,
@@ -53,6 +55,7 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
       flags.permission,
       flags.nextStep,
       flags.menuMode,
+      menuSignals ? JSON.stringify(menuSignals) : null,
       route,
       processingProfile ?? null,
       model ?? null,

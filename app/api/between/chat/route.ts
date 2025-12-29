@@ -14,7 +14,7 @@ import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
-import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet } from '@/lib/memory/selflet';
+import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult } from '@/lib/memory/selflet';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -562,7 +562,7 @@ export async function POST(req: NextRequest) {
 
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
-    let selfletContext = null;
+    let selfletContext: SelfletLoadResult | null = null;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
@@ -1043,6 +1043,26 @@ export async function POST(req: NextRequest) {
       safeMode: false,
       path: 'orchestrator',
     });
+
+    // 🌀 SELFLET POST: boundary detection + message delivery (non-blocking)
+    const SELFLET_WRITE_ENABLED =
+      process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
+      !effectiveUserId.startsWith('anon:');
+
+    if (SELFLET_WRITE_ENABLED) {
+      processSelfletAfterResponse(effectiveUserId, {
+        userMessage: message,
+        assistantResponse: outboundText2,
+        // Phase 2C: Pass surfaced message info for delivery tracking
+        surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
+        surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
+        // Optional: wire consciousness signals when available
+        // currentElement: orchestratorResult.consciousness?.element,
+        // breakthroughDetected: orchestratorResult.consciousness?.breakthrough,
+      }).catch(err => {
+        console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
+      });
+    }
 
     return withSessionCookie(NextResponse.json({
       message: outboundText2,

@@ -31,9 +31,9 @@ CREATE TABLE IF NOT EXISTS community_channels (
 );
 
 -- Create indexes for channels
-CREATE INDEX idx_community_channels_slug ON community_channels(slug);
-CREATE INDEX idx_community_channels_active ON community_channels(is_active);
-CREATE INDEX idx_community_channels_sort ON community_channels(sort_order);
+CREATE INDEX IF NOT EXISTS idx_community_channels_slug ON community_channels(slug);
+CREATE INDEX IF NOT EXISTS idx_community_channels_active ON community_channels(is_active);
+CREATE INDEX IF NOT EXISTS idx_community_channels_sort ON community_channels(sort_order);
 
 -- =====================================================
 -- 2. COMMUNITY THREADS (Forum Posts)
@@ -78,14 +78,14 @@ CREATE TABLE IF NOT EXISTS community_threads (
 );
 
 -- Create indexes for threads
-CREATE INDEX idx_community_threads_channel ON community_threads(channel_id);
-CREATE INDEX idx_community_threads_author ON community_threads(author_id);
-CREATE INDEX idx_community_threads_type ON community_threads(thread_type);
-CREATE INDEX idx_community_threads_created ON community_threads(created_at DESC);
-CREATE INDEX idx_community_threads_pinned ON community_threads(is_pinned, created_at DESC);
-CREATE INDEX idx_community_threads_breakthrough ON community_threads(is_breakthrough, created_at DESC);
-CREATE INDEX idx_community_threads_tags ON community_threads USING GIN(tags);
-CREATE INDEX idx_community_threads_session_elements ON community_threads USING GIN(session_elements);
+CREATE INDEX IF NOT EXISTS idx_community_threads_channel ON community_threads(channel_id);
+CREATE INDEX IF NOT EXISTS idx_community_threads_author ON community_threads(author_id);
+CREATE INDEX IF NOT EXISTS idx_community_threads_type ON community_threads(thread_type);
+CREATE INDEX IF NOT EXISTS idx_community_threads_created ON community_threads(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_threads_pinned ON community_threads(is_pinned, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_threads_breakthrough ON community_threads(is_breakthrough, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_threads_tags ON community_threads USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_community_threads_session_elements ON community_threads USING GIN(session_elements);
 
 -- =====================================================
 -- 3. COMMUNITY REPLIES (Comments)
@@ -114,9 +114,9 @@ CREATE TABLE IF NOT EXISTS community_replies (
 );
 
 -- Create indexes for replies
-CREATE INDEX idx_community_replies_thread ON community_replies(thread_id, created_at);
-CREATE INDEX idx_community_replies_author ON community_replies(author_id);
-CREATE INDEX idx_community_replies_parent ON community_replies(parent_reply_id);
+CREATE INDEX IF NOT EXISTS idx_community_replies_thread ON community_replies(thread_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_community_replies_author ON community_replies(author_id);
+CREATE INDEX IF NOT EXISTS idx_community_replies_parent ON community_replies(parent_reply_id);
 
 -- =====================================================
 -- 4. COMMUNITY REACTIONS (Hearts & Elemental Reactions)
@@ -151,10 +151,10 @@ CREATE TABLE IF NOT EXISTS community_reactions (
 );
 
 -- Create indexes for reactions
-CREATE INDEX idx_community_reactions_user ON community_reactions(user_id);
-CREATE INDEX idx_community_reactions_thread ON community_reactions(thread_id, reaction_type);
-CREATE INDEX idx_community_reactions_reply ON community_reactions(reply_id, reaction_type);
-CREATE INDEX idx_community_reactions_type ON community_reactions(reaction_type);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_user ON community_reactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_thread ON community_reactions(thread_id, reaction_type);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_reply ON community_reactions(reply_id, reaction_type);
+CREATE INDEX IF NOT EXISTS idx_community_reactions_type ON community_reactions(reaction_type);
 
 -- =====================================================
 -- 5. COMMUNITY FIELD STATE (Channel Atmosphere)
@@ -186,8 +186,8 @@ CREATE TABLE IF NOT EXISTS community_field_state (
 );
 
 -- Create indexes for field state
-CREATE INDEX idx_community_field_state_channel ON community_field_state(channel_id);
-CREATE INDEX idx_community_field_state_calculated ON community_field_state(calculated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_field_state_channel ON community_field_state(channel_id);
+CREATE INDEX IF NOT EXISTS idx_community_field_state_calculated ON community_field_state(calculated_at DESC);
 
 -- =====================================================
 -- 6. COMMUNITY PRESENCE (User Activity)
@@ -217,10 +217,10 @@ CREATE TABLE IF NOT EXISTS community_presence (
 );
 
 -- Create indexes for presence
-CREATE INDEX idx_community_presence_user ON community_presence(user_id);
-CREATE INDEX idx_community_presence_status ON community_presence(status);
-CREATE INDEX idx_community_presence_channel ON community_presence(current_channel_id);
-CREATE INDEX idx_community_presence_last_seen ON community_presence(last_seen_at DESC);
+CREATE INDEX IF NOT EXISTS idx_community_presence_user ON community_presence(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_presence_status ON community_presence(status);
+CREATE INDEX IF NOT EXISTS idx_community_presence_channel ON community_presence(current_channel_id);
+CREATE INDEX IF NOT EXISTS idx_community_presence_last_seen ON community_presence(last_seen_at DESC);
 
 -- =====================================================
 -- 7. COMMUNITY PROFILES (User Stats & Preferences)
@@ -259,9 +259,9 @@ CREATE TABLE IF NOT EXISTS community_profiles (
 );
 
 -- Create indexes for profiles
-CREATE INDEX idx_community_profiles_user ON community_profiles(user_id);
-CREATE INDEX idx_community_profiles_cohort ON community_profiles(beta_cohort);
-CREATE INDEX idx_community_profiles_joined ON community_profiles(joined_date);
+CREATE INDEX IF NOT EXISTS idx_community_profiles_user ON community_profiles(user_id);
+CREATE INDEX IF NOT EXISTS idx_community_profiles_cohort ON community_profiles(beta_cohort);
+CREATE INDEX IF NOT EXISTS idx_community_profiles_joined ON community_profiles(joined_date);
 
 -- =====================================================
 -- TRIGGERS FOR AUTOMATIC UPDATES
@@ -276,11 +276,16 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply timestamp triggers
+-- Apply timestamp triggers (idempotent: drop-if-exists then create)
+DROP TRIGGER IF EXISTS update_community_channels_updated_at ON community_channels;
 CREATE TRIGGER update_community_channels_updated_at BEFORE UPDATE ON community_channels FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_threads_updated_at ON community_threads;
 CREATE TRIGGER update_community_threads_updated_at BEFORE UPDATE ON community_threads FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_replies_updated_at ON community_replies;
 CREATE TRIGGER update_community_replies_updated_at BEFORE UPDATE ON community_replies FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_profiles_updated_at ON community_profiles;
 CREATE TRIGGER update_community_profiles_updated_at BEFORE UPDATE ON community_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DROP TRIGGER IF EXISTS update_community_presence_updated_at ON community_presence;
 CREATE TRIGGER update_community_presence_updated_at BEFORE UPDATE ON community_presence FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- Function to update reply counts
@@ -303,8 +308,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply reply count triggers
+-- Apply reply count triggers (idempotent)
+DROP TRIGGER IF EXISTS update_thread_reply_count_on_insert ON community_replies;
 CREATE TRIGGER update_thread_reply_count_on_insert AFTER INSERT ON community_replies FOR EACH ROW EXECUTE FUNCTION update_thread_reply_count();
+DROP TRIGGER IF EXISTS update_thread_reply_count_on_delete ON community_replies;
 CREATE TRIGGER update_thread_reply_count_on_delete AFTER DELETE ON community_replies FOR EACH ROW EXECUTE FUNCTION update_thread_reply_count();
 
 -- Function to update reaction counts
@@ -352,8 +359,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply reaction count triggers
+-- Apply reaction count triggers (idempotent)
+DROP TRIGGER IF EXISTS update_reaction_counts_on_insert ON community_reactions;
 CREATE TRIGGER update_reaction_counts_on_insert AFTER INSERT ON community_reactions FOR EACH ROW EXECUTE FUNCTION update_reaction_counts();
+DROP TRIGGER IF EXISTS update_reaction_counts_on_delete ON community_reactions;
 CREATE TRIGGER update_reaction_counts_on_delete AFTER DELETE ON community_reactions FOR EACH ROW EXECUTE FUNCTION update_reaction_counts();
 
 -- Function to update channel post counts and activity
@@ -376,8 +385,10 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply channel stats triggers
+-- Apply channel stats triggers (idempotent)
+DROP TRIGGER IF EXISTS update_channel_stats_on_insert ON community_threads;
 CREATE TRIGGER update_channel_stats_on_insert AFTER INSERT ON community_threads FOR EACH ROW EXECUTE FUNCTION update_channel_stats();
+DROP TRIGGER IF EXISTS update_channel_stats_on_delete ON community_threads;
 CREATE TRIGGER update_channel_stats_on_delete AFTER DELETE ON community_threads FOR EACH ROW EXECUTE FUNCTION update_channel_stats();
 
 -- =====================================================
@@ -393,32 +404,46 @@ ALTER TABLE community_field_state ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_presence ENABLE ROW LEVEL SECURITY;
 ALTER TABLE community_profiles ENABLE ROW LEVEL SECURITY;
 
--- Public read access for channels (forum categories)
+-- Public read access for channels (forum categories) - idempotent
+DROP POLICY IF EXISTS "Public channels are viewable by everyone" ON community_channels;
 CREATE POLICY "Public channels are viewable by everyone" ON community_channels FOR SELECT USING (is_active = true);
 
--- Thread policies
+-- Thread policies (idempotent)
+DROP POLICY IF EXISTS "Public threads are viewable by everyone" ON community_threads;
 CREATE POLICY "Public threads are viewable by everyone" ON community_threads FOR SELECT USING (is_public = true);
+DROP POLICY IF EXISTS "Users can create threads" ON community_threads;
 CREATE POLICY "Users can create threads" ON community_threads FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can update their own threads" ON community_threads;
 CREATE POLICY "Users can update their own threads" ON community_threads FOR UPDATE USING (author_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Reply policies
+-- Reply policies (idempotent)
+DROP POLICY IF EXISTS "Replies are viewable by everyone" ON community_replies;
 CREATE POLICY "Replies are viewable by everyone" ON community_replies FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can create replies" ON community_replies;
 CREATE POLICY "Users can create replies" ON community_replies FOR INSERT WITH CHECK (true);
+DROP POLICY IF EXISTS "Users can update their own replies" ON community_replies;
 CREATE POLICY "Users can update their own replies" ON community_replies FOR UPDATE USING (author_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Reaction policies
+-- Reaction policies (idempotent)
+DROP POLICY IF EXISTS "Reactions are viewable by everyone" ON community_reactions;
 CREATE POLICY "Reactions are viewable by everyone" ON community_reactions FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage their own reactions" ON community_reactions;
 CREATE POLICY "Users can manage their own reactions" ON community_reactions FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Field state is publicly readable
+-- Field state is publicly readable (idempotent)
+DROP POLICY IF EXISTS "Field state is viewable by everyone" ON community_field_state;
 CREATE POLICY "Field state is viewable by everyone" ON community_field_state FOR SELECT USING (true);
 
--- Presence policies
+-- Presence policies (idempotent)
+DROP POLICY IF EXISTS "Presence is viewable by everyone" ON community_presence;
 CREATE POLICY "Presence is viewable by everyone" ON community_presence FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage their own presence" ON community_presence;
 CREATE POLICY "Users can manage their own presence" ON community_presence FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Profile policies
+-- Profile policies (idempotent)
+DROP POLICY IF EXISTS "Profiles are viewable by everyone" ON community_profiles;
 CREATE POLICY "Profiles are viewable by everyone" ON community_profiles FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Users can manage their own profile" ON community_profiles;
 CREATE POLICY "Users can manage their own profile" ON community_profiles FOR ALL USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
 -- =====================================================

@@ -136,20 +136,27 @@ echo -e "${BLUE}2/6${NC} Building images..."
 docker-compose -f docker-compose.beads.yml build --no-cache
 echo -e "${GREEN}✓${NC} Images built"
 
-# 3. Run database migration
-echo -e "${BLUE}3/6${NC} Running database migration..."
-psql "$DATABASE_URL" < "${PROJECT_ROOT}/db/migrations/20251220_beads_integration.sql" 2>&1 | grep -v "already exists" || true
-psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/20251223_create_episodes_table.sql" 2>&1 | grep -v "already exists" || true
-psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/20251223_create_holoflower_tables.sql" 2>&1 | grep -v "already exists" || true
+# 3. Run database migrations (fail-fast with ON_ERROR_STOP)
+echo -e "${BLUE}3/6${NC} Running database migrations..."
+
+# Core migrations
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/db/migrations/20251220_beads_integration.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/database/migrations/20251223_create_episodes_table.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/database/migrations/20251223_create_holoflower_tables.sql"
 
 # Selflet chains (only runs once the migration exists in the repo)
 if [ -f "${PROJECT_ROOT}/database/migrations/20251229000001_create_selflet_chain_tables.sql" ]; then
-  psql "$DATABASE_URL" < "${PROJECT_ROOT}/database/migrations/20251229000001_create_selflet_chain_tables.sql" 2>&1 | grep -v "already exists" || true
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/database/migrations/20251229000001_create_selflet_chain_tables.sql"
 else
   echo -e "${YELLOW}↷${NC}  Skipping selflet migration (file not present yet)"
 fi
 
-echo -e "${GREEN}✓${NC} Migration complete"
+# AIN shape telemetry migrations
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/database/migrations/020_ain_shape_telemetry.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/database/migrations/021_add_menu_mode_to_telemetry.sql"
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 < "${PROJECT_ROOT}/database/migrations/022_add_menu_signals_to_telemetry.sql"
+
+echo -e "${GREEN}✓${NC} Migrations complete"
 
 # 4. Start services
 echo -e "${BLUE}4/6${NC} Starting services..."

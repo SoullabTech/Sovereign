@@ -23,6 +23,9 @@ ENV OPENAI_API_KEY=dummy-build-key
 ENV ANTHROPIC_API_KEY=dummy-build-key
 ENV MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder
 
+# Install psql for SQL migrations (used by migrate service)
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client && rm -rf /var/lib/apt/lists/*
+
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 

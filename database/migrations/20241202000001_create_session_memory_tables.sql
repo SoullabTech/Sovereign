@@ -48,10 +48,10 @@ CREATE TABLE IF NOT EXISTS user_session_patterns (
 );
 
 -- Create indexes for session patterns
-CREATE INDEX idx_user_sessions ON user_session_patterns(user_id, session_start DESC);
-CREATE INDEX idx_session_embeddings ON user_session_patterns USING ivfflat (session_embedding vector_cosine_ops);
-CREATE INDEX idx_session_themes ON user_session_patterns USING GIN(conversation_themes);
-CREATE INDEX idx_consciousness_markers ON user_session_patterns USING GIN(consciousness_expansion_markers);
+CREATE INDEX IF NOT EXISTS idx_user_sessions ON user_session_patterns(user_id, session_start DESC);
+CREATE INDEX IF NOT EXISTS idx_session_embeddings ON user_session_patterns USING ivfflat (session_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_session_themes ON user_session_patterns USING GIN(conversation_themes);
+CREATE INDEX IF NOT EXISTS idx_consciousness_markers ON user_session_patterns USING GIN(consciousness_expansion_markers);
 
 -- =====================================================
 -- 2. CONVERSATION INSIGHTS
@@ -90,10 +90,10 @@ CREATE TABLE IF NOT EXISTS conversation_insights (
 );
 
 -- Create indexes for insights
-CREATE INDEX idx_user_insights ON conversation_insights(user_id, created_at DESC);
-CREATE INDEX idx_insight_embeddings ON conversation_insights USING ivfflat (insight_embedding vector_cosine_ops);
-CREATE INDEX idx_insight_type ON conversation_insights(insight_type);
-CREATE INDEX idx_connected_insights ON conversation_insights USING GIN(connected_insights);
+CREATE INDEX IF NOT EXISTS idx_user_insights ON conversation_insights(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_insight_embeddings ON conversation_insights USING ivfflat (insight_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_insight_type ON conversation_insights(insight_type);
+CREATE INDEX IF NOT EXISTS idx_connected_insights ON conversation_insights USING GIN(connected_insights);
 
 -- =====================================================
 -- 3. USER RELATIONSHIP CONTEXT (Enhanced)
@@ -134,8 +134,8 @@ CREATE TABLE IF NOT EXISTS user_relationship_context (
 );
 
 -- Create indexes for user context
-CREATE INDEX idx_user_context_embedding ON user_relationship_context USING ivfflat (relationship_embedding vector_cosine_ops);
-CREATE INDEX idx_consciousness_stage ON user_relationship_context(consciousness_journey_stage);
+CREATE INDEX IF NOT EXISTS idx_user_context_embedding ON user_relationship_context USING ivfflat (relationship_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_consciousness_stage ON user_relationship_context(consciousness_journey_stage);
 
 -- =====================================================
 -- 4. PATTERN CONNECTIONS
@@ -173,9 +173,9 @@ CREATE TABLE IF NOT EXISTS pattern_connections (
 );
 
 -- Create indexes for pattern connections
-CREATE INDEX idx_pattern_connections ON pattern_connections(user_id, connection_strength DESC);
-CREATE INDEX idx_pattern_embeddings ON pattern_connections USING ivfflat (pattern_embedding vector_cosine_ops);
-CREATE INDEX idx_pattern_type ON pattern_connections(pattern_type);
+CREATE INDEX IF NOT EXISTS idx_pattern_connections ON pattern_connections(user_id, connection_strength DESC);
+CREATE INDEX IF NOT EXISTS idx_pattern_embeddings ON pattern_connections USING ivfflat (pattern_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_pattern_type ON pattern_connections(pattern_type);
 
 -- =====================================================
 -- 5. CONSCIOUSNESS EXPANSION EVENTS
@@ -209,9 +209,9 @@ CREATE TABLE IF NOT EXISTS consciousness_expansion_events (
 );
 
 -- Create indexes for expansion events
-CREATE INDEX idx_expansion_events ON consciousness_expansion_events(user_id, created_at DESC);
-CREATE INDEX idx_expansion_type ON consciousness_expansion_events(expansion_type);
-CREATE INDEX idx_expansion_embeddings ON consciousness_expansion_events USING ivfflat (expansion_embedding vector_cosine_ops);
+CREATE INDEX IF NOT EXISTS idx_expansion_events ON consciousness_expansion_events(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_expansion_type ON consciousness_expansion_events(expansion_type);
+CREATE INDEX IF NOT EXISTS idx_expansion_embeddings ON consciousness_expansion_events USING ivfflat (expansion_embedding vector_cosine_ops);
 
 -- =====================================================
 -- 6. SPIRAL STAGE TRANSITIONS
@@ -248,8 +248,8 @@ CREATE TABLE IF NOT EXISTS spiral_stage_transitions (
 );
 
 -- Create indexes for spiral transitions
-CREATE INDEX idx_spiral_transitions ON spiral_stage_transitions(user_id, transition_start DESC);
-CREATE INDEX idx_spiral_stages ON spiral_stage_transitions(from_stage, to_stage);
+CREATE INDEX IF NOT EXISTS idx_spiral_transitions ON spiral_stage_transitions(user_id, transition_start DESC);
+CREATE INDEX IF NOT EXISTS idx_spiral_stages ON spiral_stage_transitions(from_stage, to_stage);
 
 -- =====================================================
 -- TRIGGERS FOR AUTOMATIC UPDATES
@@ -264,11 +264,13 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply timestamp triggers
+-- Apply timestamp triggers (idempotent)
+DROP TRIGGER IF EXISTS update_user_session_patterns_updated_at ON user_session_patterns;
 CREATE TRIGGER update_user_session_patterns_updated_at
 BEFORE UPDATE ON user_session_patterns
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_user_relationship_context_updated_at ON user_relationship_context;
 CREATE TRIGGER update_user_relationship_context_updated_at
 BEFORE UPDATE ON user_relationship_context
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -291,7 +293,8 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
--- Apply session count trigger
+-- Apply session count trigger (idempotent)
+DROP TRIGGER IF EXISTS update_session_count_on_insert ON user_session_patterns;
 CREATE TRIGGER update_session_count_on_insert
 AFTER INSERT ON user_session_patterns
 FOR EACH ROW EXECUTE FUNCTION update_session_count();
@@ -388,32 +391,38 @@ ALTER TABLE pattern_connections ENABLE ROW LEVEL SECURITY;
 ALTER TABLE consciousness_expansion_events ENABLE ROW LEVEL SECURITY;
 ALTER TABLE spiral_stage_transitions ENABLE ROW LEVEL SECURITY;
 
--- Session patterns policies - users can only access their own data
+-- Session patterns policies - users can only access their own data (idempotent)
+DROP POLICY IF EXISTS "Users can access their own session patterns" ON user_session_patterns;
 CREATE POLICY "Users can access their own session patterns"
 ON user_session_patterns FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Insights policies
+-- Insights policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own insights" ON conversation_insights;
 CREATE POLICY "Users can access their own insights"
 ON conversation_insights FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- User context policies
+-- User context policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own context" ON user_relationship_context;
 CREATE POLICY "Users can access their own context"
 ON user_relationship_context FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Pattern connections policies
+-- Pattern connections policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own patterns" ON pattern_connections;
 CREATE POLICY "Users can access their own patterns"
 ON pattern_connections FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Expansion events policies
+-- Expansion events policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own expansion events" ON consciousness_expansion_events;
 CREATE POLICY "Users can access their own expansion events"
 ON consciousness_expansion_events FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');
 
--- Spiral transitions policies
+-- Spiral transitions policies (idempotent)
+DROP POLICY IF EXISTS "Users can access their own spiral transitions" ON spiral_stage_transitions;
 CREATE POLICY "Users can access their own spiral transitions"
 ON spiral_stage_transitions FOR ALL
 USING (user_id = current_setting('request.jwt.claims', true)::json->>'user_id');

@@ -46,6 +46,7 @@ export type AINShapeFlags = {
 export type AINShapeResult = {
   pass: boolean;
   flags: AINShapeFlags;
+  signals?: MenuModeSignals; // Detailed menu detection signals
   score: number; // 0..4
   notes: string[];
 };
@@ -281,6 +282,7 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   return {
     pass: score >= 3 && mirror && nextStep && !menuMode,
     flags: { mirror, bridge, permission, nextStep, menuMode },
+    signals,
     score,
     notes
   };

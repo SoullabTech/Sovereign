@@ -41,7 +41,7 @@ import {
   type RelationshipMemoryContext
 } from '../memory/RelationshipMemoryService';
 import { TurnsStore } from '../memory/stores/TurnsStore';
-import { assessAINResponseShape } from '../ai/quality/ainResponseShape';
+import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 
 // Mode-aware memory gating helpers
@@ -1772,21 +1772,16 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           process.env.AIN_SHAPE_REWRITE === '1' ||
           process.env.NODE_ENV !== 'production';
 
-        if (rewriteEnabled && shape.flags.menuMode) {
-          try {
-            const rewriteSystem = `Rewrite the assistant response into this shape:
-1) Mirror (1–2 sentences reflecting user's experience)
-2) Bridge (1 sentence offering a complementary lens)
-3) Permission (one gentle question before going deeper)
-4) Next step (ONE concrete action, 30–90 seconds)
+        // Hard prose-menu triggers (catch "sneaky" menus hidden in smooth prose)
+        const hardProseMenu =
+          !!shape.signals?.colonRunMenu ||
+          !!shape.signals?.semicolonRunMenu ||
+          !!shape.signals?.eitherOrMenu ||
+          !!shape.signals?.optionABMenu;
 
-Hard constraints:
-- No bullet points
-- No numbered lists
-- No "here are options" or "strategies"
-- Choose ONE best next step
-- Keep it under 1400 characters
-- Write as flowing paragraphs, not sections`;
+        if (rewriteEnabled && (shape.flags.menuMode || hardProseMenu)) {
+          try {
+            const rewriteSystem = AIN_NO_MENU_REWRITE_PROMPT;
 
             const rewritten = await generateText({
               systemPrompt: rewriteSystem,
@@ -1812,6 +1807,7 @@ Hard constraints:
           pass: shape.pass,
           score: shape.score,
           flags: shape.flags,
+          menuSignals: shape.signals ?? null,
           route: 'maiaService',
           processingProfile,
           explorerId: effectiveUserId ?? undefined,
