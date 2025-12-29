@@ -86,24 +86,23 @@ export async function loadSelfletContext(
       }
     }
 
-    // Phase 2C: Fetch pending message by theme relevance (if themes provided)
-    if (currentThemes && currentThemes.length > 0) {
-      const pendingMsg = await selfletChain.getPendingMessageForContext({
-        userId,
-        currentThemes,
-        limit: 1,
-      });
-      if (pendingMsg) {
-        surfacedMessageId = pendingMsg.id;
-        surfacedDeliveryContext = {
-          messageTitle: pendingMsg.title,
-          messageType: pendingMsg.messageType,
-          fromSelfletId: pendingMsg.fromSelfletId,
-          relevanceThemes: pendingMsg.relevanceThemes,
-          surfacedAt: new Date().toISOString(),
-        };
-        console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
-      }
+    // Phase 2C: Fetch pending message for context
+    // Always try to surface - themes help relevance matching, but empty = latest undelivered
+    const pendingMsg = await selfletChain.getPendingMessageForContext({
+      userId,
+      currentThemes: currentThemes ?? [],
+      limit: 1,
+    });
+    if (pendingMsg) {
+      surfacedMessageId = pendingMsg.id;
+      surfacedDeliveryContext = {
+        messageTitle: pendingMsg.title,
+        messageType: pendingMsg.messageType,
+        fromSelfletId: pendingMsg.fromSelfletId,
+        relevanceThemes: pendingMsg.relevanceThemes,
+        surfacedAt: new Date().toISOString(),
+      };
+      console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
     }
 
     return {
@@ -206,6 +205,24 @@ export async function processSelfletAfterResponse(
       }
     }
 
+    // Phase 2C: Mark surfaced message as delivered (BEFORE boundary detection)
+    // This ensures messages are marked delivered once surfaced, regardless of boundary
+    if (input.surfacedSelfletMessageId) {
+      try {
+        await selfletChain.markMessageDeliveredById({
+          messageId: input.surfacedSelfletMessageId,
+          deliveryContext: {
+            ...(input.surfacedDeliveryContext || {}),
+            deliveredAt: new Date().toISOString(),
+            assistantResponseExcerpt: input.assistantResponse.slice(0, 300),
+          },
+        });
+        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered`);
+      } catch (deliveryErr) {
+        console.log('[SELFLET] Failed to mark message delivered (non-fatal):', deliveryErr);
+      }
+    }
+
     // Detect boundary
     const boundary = await selfletBoundaryDetector.detectBoundary(detectionInput);
 
@@ -289,20 +306,9 @@ export async function processSelfletAfterResponse(
       }
     }
 
-    // Phase 2C: Mark surfaced message as delivered + store reinterpretation
+    // Phase 2C: Store reinterpretation record (only when boundary detected)
     if (input.surfacedSelfletMessageId) {
       try {
-        // Mark the message as delivered
-        await selfletChain.markMessageDeliveredById({
-          messageId: input.surfacedSelfletMessageId,
-          deliveryContext: {
-            ...(input.surfacedDeliveryContext || {}),
-            deliveredAt: new Date().toISOString(),
-            assistantResponseExcerpt: input.assistantResponse.slice(0, 300),
-          },
-        });
-
-        // Insert a basic reinterpretation record
         await selfletChain.insertReinterpretationFromDelivery({
           messageId: input.surfacedSelfletMessageId,
           userId,
@@ -311,9 +317,9 @@ export async function processSelfletAfterResponse(
           emotionalResonance: input.emotionalShift?.to ?? null,
           translationNotes: null,
         });
-        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered`);
-      } catch (deliveryErr) {
-        console.log('[SELFLET] Failed to mark message delivered (non-fatal):', deliveryErr);
+        console.log(`[SELFLET] 📝 Recorded reinterpretation for message ${input.surfacedSelfletMessageId}`);
+      } catch (reinterpErr) {
+        console.log('[SELFLET] Failed to record reinterpretation (non-fatal):', reinterpErr);
       }
     }
 
