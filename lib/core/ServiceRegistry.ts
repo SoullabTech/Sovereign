@@ -12,6 +12,7 @@ export interface ServiceRegistrationOptions {
   enableCaching: boolean;
   enableAnalytics: boolean;
   enableVoice: boolean;
+  enableMCP: boolean;
   databaseUrl?: string;
   redisUrl?: string;
 }
@@ -24,15 +25,20 @@ export class ServiceRegistry {
     
     // Core Infrastructure Services
     await this.registerInfrastructureServices(container, options);
-    
+
     // Domain Services
     await this.registerDomainServices(container, options);
-    
-    // Application Services  
+
+    // Application Services
     await this.registerApplicationServices(container, options);
-    
+
+    // MCP Services (if enabled)
+    if (options.enableMCP) {
+      await this.registerMCPServices(container, options);
+    }
+
     // Health Checks
-    await this.registerHealthChecks(container);
+    await this.registerHealthChecks(container, options);
   }
 
   private static async registerInfrastructureServices(
@@ -176,7 +182,42 @@ export class ServiceRegistry {
     });
   }
 
-  private static async registerHealthChecks(container: ServiceContainer): Promise<void> {
+  private static async registerMCPServices(
+    container: ServiceContainer,
+    options: ServiceRegistrationOptions
+  ): Promise<void> {
+    console.log('🔌 Registering MCP services...');
+
+    // MCP Client Service
+    container.registerSingleton(ServiceTokens.MCPClientService, async (c) => {
+      const { MCPClientService } = await import('../mcp/MCPClientService');
+      const service = new MCPClientService();
+      await service.initialize();
+      return service;
+    });
+
+    // MCP Event Bridge (connects MCP to EventBus)
+    // This is set up after MCP service is initialized
+    container.registerSingleton(
+      { key: 'MCPEventBridge' },
+      async (c) => {
+        const { getMCPEventBridge } = await import('../mcp/MCPEventBridge');
+        const { getMCPClientManager } = await import('../mcp/MCPClientManager');
+        const eventBus = await c.resolve(ServiceTokens.EventBusService);
+        const manager = getMCPClientManager();
+        const bridge = getMCPEventBridge(manager, eventBus);
+        bridge.subscribe();
+        return bridge;
+      }
+    );
+
+    console.log('✅ MCP services registered');
+  }
+
+  private static async registerHealthChecks(
+    container: ServiceContainer,
+    options: ServiceRegistrationOptions
+  ): Promise<void> {
     
     // Database health check
     container.registerHealthCheck(ServiceTokens.DatabaseService, async () => {
@@ -212,6 +253,24 @@ export class ServiceRegistry {
         return false;
       }
     });
+
+    // MCP service health check (if enabled)
+    if (options.enableMCP) {
+      container.registerHealthCheck(ServiceTokens.MCPClientService, async () => {
+        try {
+          const mcpService = await container.resolve(ServiceTokens.MCPClientService);
+          const status = mcpService.getStatus();
+          // Consider healthy if at least one server is connected
+          for (const [, conn] of status) {
+            if (conn.status === 'connected') return true;
+          }
+          // No servers connected - still consider healthy if none are enabled
+          return status.size === 0;
+        } catch {
+          return false;
+        }
+      });
+    }
   }
 }
 
@@ -238,20 +297,23 @@ export const DefaultConfigurations = {
     environment: 'development' as const,
     enableCaching: true,
     enableAnalytics: true,
-    enableVoice: true
+    enableVoice: true,
+    enableMCP: true,
   },
-  
+
   production: {
     environment: 'production' as const,
     enableCaching: true,
     enableAnalytics: true,
-    enableVoice: true
+    enableVoice: true,
+    enableMCP: true,
   },
-  
+
   test: {
     environment: 'test' as const,
     enableCaching: false,
     enableAnalytics: false,
-    enableVoice: false
-  }
+    enableVoice: false,
+    enableMCP: false,
+  },
 } as const;

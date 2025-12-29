@@ -24,6 +24,7 @@ import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundl
 import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWriteback';
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
+import { getMCPConsciousnessIntegration, type OracleContextEnrichment } from '@/lib/mcp/integrations';
 
 // ─── Recall Quality Helpers ───────────────────────────────────────────────────
 function clamp01(n: number) {
@@ -361,6 +362,34 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     console.log('📦 [MemoryBundle] Skipped - ephemeral mode');
   }
 
+  // 🌐 MCP CONTEXT: Gather real-time context from external data sources
+  let mcpEnrichment: OracleContextEnrichment | null = null;
+  try {
+    const mcpStartTime = Date.now();
+    const mcpIntegration = getMCPConsciousnessIntegration();
+    mcpEnrichment = await mcpIntegration.generateOracleEnrichment(userId, message);
+    layerTimings['mcp-context'] = Date.now() - mcpStartTime;
+
+    if (mcpEnrichment.contextBlock) {
+      console.log(`🌐 [MCPContext] Enrichment gathered: ${mcpEnrichment.contextBlock.length} chars`);
+      if (mcpEnrichment.biometricCorrelation) {
+        console.log(`   Health: ${mcpEnrichment.biometricCorrelation.energyState} energy, ${mcpEnrichment.biometricCorrelation.sleepQuality} sleep`);
+      }
+      if (mcpEnrichment.timingGuidance) {
+        console.log(`   Schedule: ${mcpEnrichment.timingGuidance.suggestedPace} pace suggested`);
+      }
+      if (mcpEnrichment.taskContext) {
+        console.log(`   Tasks: ${mcpEnrichment.taskContext.workloadLevel} workload, ${mcpEnrichment.taskContext.highPriorityCount} urgent`);
+      }
+      layersSuccessful.push('mcp-context');
+    } else {
+      console.log('🌐 [MCPContext] No external sources available');
+    }
+  } catch (error) {
+    console.warn('[MCPContext] Context gathering failed (continuing without):', error);
+    layersFailed.push('mcp-context');
+  }
+
   // 1️⃣ ALWAYS: Get base MAIA response first (core functionality) with conversation context
   let maiaResult;
   try {
@@ -379,6 +408,14 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           bulletCount: memoryBundle.memoryBullets.length,
           encounterCount: memoryBundle.relationshipSnapshot.encounterCount,
           breakthroughCount: memoryBundle.relationshipSnapshot.breakthroughCount,
+        } : undefined,
+        // 🌐 MCP CONTEXT: External data source enrichment
+        mcpContext: mcpEnrichment?.contextBlock || undefined,
+        mcpEnrichment: mcpEnrichment ? {
+          biometricCorrelation: mcpEnrichment.biometricCorrelation,
+          timingGuidance: mcpEnrichment.timingGuidance,
+          taskContext: mcpEnrichment.taskContext,
+          consciousnessMarkers: mcpEnrichment.consciousnessMarkers,
         } : undefined,
         // MAIA-PAI conversational kernel context
         conversationContext: {
@@ -606,6 +643,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     },
     metadata: {
       ...maiaResult.metadata,
+      // 🔮 Sovereignty auditing: which provider served this response
+      provider: maiaResult.provider,
       consciousnessLayers: {
         successful: layersSuccessful,
         failed: layersFailed,

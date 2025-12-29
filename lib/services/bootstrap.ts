@@ -11,6 +11,7 @@ export interface BootstrapOptions {
   enableCaching?: boolean;
   enableAnalytics?: boolean;
   enableVoice?: boolean;
+  enableMCP?: boolean;
   databaseUrl?: string;
   redisUrl?: string;
 }
