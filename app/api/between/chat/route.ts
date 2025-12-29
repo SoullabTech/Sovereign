@@ -794,7 +794,7 @@ export async function POST(req: NextRequest) {
         reqId,
         headers: simHeadersAttempted,
         reason: isProd ? 'production' : 'gate_disabled',
-        gate: { nodeEnv: !isProd, simEnvEnabled: simEnvSet },
+        gate: { nonProd: !isProd, simEnvEnabled: simEnvSet },
       });
     }
 
