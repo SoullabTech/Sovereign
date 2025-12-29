@@ -427,8 +427,21 @@ export async function POST(req: NextRequest) {
     const allowCanonWrap = serverAllowsCanonWrap && body?.allowCanonWrap === true;
 
     // 🔒 SESSION: Get server-issued session ID from cookie (prevents spoofing)
-    const { sid: safeSessionId, setCookie: sessionCookie } = getOrCreateSessionId(req);
-    // Note: body.sessionId is now ignored for identity - server controls session assignment
+    const { sid: generatedSessionId, setCookie: sessionCookie } = getOrCreateSessionId(req);
+
+    // DEV/E2E override: allow explicit body.sessionId only when you opt-in.
+    // (Prod stays server-owned.)
+    const allowBodySessionId =
+      process.env.NODE_ENV !== 'production' &&
+      process.env.MAIA_ALLOW_BODY_SESSION_ID === '1';
+
+    const requestedSessionId =
+      typeof sessionId === 'string' ? sessionId.trim() : '';
+
+    const safeSessionId =
+      allowBodySessionId && requestedSessionId
+        ? requestedSessionId
+        : generatedSessionId;
 
     if (!message || typeof message !== 'string') {
       return withSessionCookie(
