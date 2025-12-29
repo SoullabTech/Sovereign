@@ -14,7 +14,61 @@ import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
-import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult } from '@/lib/memory/selflet';
+import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
+
+// ═══════════════════════════════════════════════════════════════
+// SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
+// ═══════════════════════════════════════════════════════════════
+
+function inferElementFromText(text: string): Element | undefined {
+  const t = text.toLowerCase();
+
+  const scores: Record<Element, number> = {
+    fire: 0,
+    water: 0,
+    earth: 0,
+    air: 0,
+    aether: 0,
+  };
+
+  const bump = (el: Element, words: string[]) => {
+    for (const w of words) if (t.includes(w)) scores[el] += 1;
+  };
+
+  bump('fire', ['decide', 'will', 'courage', 'anger', 'rage', 'passion', 'ignite', 'purpose', 'vision', 'drive']);
+  bump('water', ['feel', 'feeling', 'grief', 'sad', 'cry', 'tears', 'heartbreak', 'longing', 'love', 'shame']);
+  bump('earth', ['body', 'health', 'money', 'home', 'work', 'schedule', 'plan', 'practical', 'ground', 'stable']);
+  bump('air', ['think', 'thought', 'mind', 'analyze', 'understand', 'logic', 'words', 'communicate', 'clarity']);
+  bump('aether', ['soul', 'spirit', 'meaning', 'synchronic', 'dream', 'archetype', 'initiation', 'mystery']);
+
+  const best = (Object.entries(scores) as Array<[Element, number]>)
+    .sort((a, b) => b[1] - a[1])[0];
+
+  // require at least one hit to avoid random element assignment
+  return best && best[1] > 0 ? best[0] : undefined;
+}
+
+function inferBreakthroughFromText(userText: string, assistantText: string): boolean {
+  const t = `${userText}\n${assistantText}`.toLowerCase();
+  return /(it (just )?clicked|i realize|i realised|now i see|this makes sense|breakthrough|something shifted|aha\b)/i.test(t);
+}
+
+function inferEmotionalShiftFromText(userText: string): { from?: string; to: string; intensity: number } | undefined {
+  const t = userText.toLowerCase();
+
+  // lightweight: detect "to" state + intensity by keywords
+  const high = ['overwhelmed', 'panicked', 'terrified', 'devastated', 'furious', 'desperate'];
+  const mid = ['sad', 'anxious', 'stressed', 'angry', 'confused', 'hurt'];
+  const low = ['uneasy', 'uncertain', 'tired', 'flat', 'off'];
+
+  const hit = (arr: string[]) => arr.find(w => t.includes(w));
+
+  if (hit(high)) return { to: hit(high)!, intensity: 0.85 };
+  if (hit(mid)) return { to: hit(mid)!, intensity: 0.55 };
+  if (hit(low)) return { to: hit(low)!, intensity: 0.30 };
+
+  return undefined;
+}
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -1050,15 +1104,32 @@ export async function POST(req: NextRequest) {
       !effectiveUserId.startsWith('anon:');
 
     if (SELFLET_WRITE_ENABLED) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const c = orchestratorResult?.consciousness as any;
+
+      // Derive signals: prefer orchestrator values, fallback to text inference
+      const derivedElement =
+        (c?.conversationalElemental?.dominant as Element | undefined) ??
+        (c?.elementalField?.dominant as Element | undefined) ??
+        inferElementFromText(message);
+
+      const derivedBreakthrough =
+        Boolean(c?.breakthrough) || inferBreakthroughFromText(message, outboundText2);
+
+      const derivedEmotionalShift =
+        (c?.emotionalShift as { from?: string; to: string; intensity: number } | undefined) ??
+        inferEmotionalShiftFromText(message);
+
       processSelfletAfterResponse(effectiveUserId, {
         userMessage: message,
         assistantResponse: outboundText2,
         // Phase 2C: Pass surfaced message info for delivery tracking
         surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
         surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
-        // Optional: wire consciousness signals when available
-        // currentElement: orchestratorResult.consciousness?.element,
-        // breakthroughDetected: orchestratorResult.consciousness?.breakthrough,
+        // Derived consciousness signals (orchestrator + text inference fallback)
+        currentElement: derivedElement,
+        breakthroughDetected: derivedBreakthrough,
+        emotionalShift: derivedEmotionalShift,
       }).catch(err => {
         console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
       });
