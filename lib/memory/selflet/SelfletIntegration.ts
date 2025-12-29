@@ -44,6 +44,8 @@ export interface SelfletLoadResult {
   surfacedDeliveryContext?: Record<string, unknown>;
   // Phase 2E: Structured prompt injection for surfaced messages
   surfacedMessagePrompt?: string;
+  // Phase 2E fallback: If model doesn't naturally include acknowledgment, prepend this
+  requiredAcknowledgment?: string;
 }
 
 /**
@@ -113,6 +115,11 @@ export async function loadSelfletContext(
       console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
     }
 
+    // Phase 2E fallback: Generate required acknowledgment for post-processing
+    const requiredAcknowledgment = pendingMsg
+      ? `Your past self left you a message: "${pendingMsg.content}"\n\n`
+      : undefined;
+
     return {
       context,
       promptInjection,
@@ -121,6 +128,7 @@ export async function loadSelfletContext(
       surfacedMessageId,
       surfacedDeliveryContext,
       surfacedMessagePrompt,
+      requiredAcknowledgment,
     };
   } catch (error) {
     // Graceful degradation - selflet system is optional
@@ -165,21 +173,16 @@ function generateSurfacedMessagePrompt(msg: SurfacedMessage): string {
     msg.messageType === 'wisdom_seed' ? 'a seed of wisdom' :
     'a message';
 
+  // Use plain text format - local models often ignore XML tags
   return `
-<selflet-surfaced-message>
-A past version of the user left ${typeLabel} for their future self.
-Title: "${msg.title || 'Untitled'}"
-${themesStr}
+## PAST-SELF MESSAGE TO DELIVER ##
+The user's past self left ${typeLabel} titled "${msg.title || 'Untitled'}".
+Message content: "${msg.content}"
 
---- BEGIN PAST-SELF MESSAGE ---
-${msg.content}
---- END PAST-SELF MESSAGE ---
-
-Guidance: Naturally weave acknowledgment of this message into your response.
-You might say something like "Your past self left you a message..." or
-"There's something here from an earlier version of you..." — adapt to the
-conversational moment. Don't force it if it doesn't fit, but honor it when it does.
-</selflet-surfaced-message>
+YOUR REQUIRED FIRST SENTENCE: Begin your response with exactly this:
+"Your past self left you a message: '${msg.content}'"
+After that opening line, respond naturally to the user's current message.
+## END PAST-SELF MESSAGE ##
 `.trim();
 }
 
