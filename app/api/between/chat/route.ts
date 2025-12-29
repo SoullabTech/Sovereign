@@ -8,7 +8,7 @@ import {
   enhanceResponseIfRuptureDetected,
   type RuptureDetectionResult
 } from '@/lib/consultation/rupture-detection-middleware';
-import { getConversationHistory, initializeSessionTable } from '@/lib/sovereign/sessionManager';
+import { getConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
@@ -189,6 +189,16 @@ function logRequestComplete(reqId: string, data: {
 const SESSION_COOKIE_NAME = process.env.NODE_ENV === 'production' ? '__Host-maia_sid' : 'maia_sid';
 
 /**
+ * Build a session cookie string for the given session ID.
+ * Extracted helper so we can set cookies for both generated and overridden sessions.
+ */
+function buildSessionCookie(sid: string): string {
+  const isProd = process.env.NODE_ENV === 'production';
+  const secure = isProd ? '; Secure' : '';
+  return `${SESSION_COOKIE_NAME}=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 30}`;
+}
+
+/**
  * Get session ID from cookie or create a new one.
  * This prevents clients from spoofing session IDs via request body.
  * Uses NextRequest cookies API (more robust than regex parsing).
@@ -202,10 +212,7 @@ function getOrCreateSessionId(req: NextRequest): { sid: string; setCookie?: stri
 
   // Create new server-issued session ID
   const sid = `sid_${crypto.randomBytes(16).toString('hex')}`;
-  const isProd = process.env.NODE_ENV === 'production';
-  const secure = isProd ? '; Secure' : '';
-  // Note: __Host- prefix requires Path=/ and no Domain attribute (which we comply with)
-  const setCookie = `${SESSION_COOKIE_NAME}=${encodeURIComponent(sid)}; Path=/; HttpOnly; SameSite=Lax${secure}; Max-Age=${60 * 60 * 24 * 30}`;
+  const setCookie = buildSessionCookie(sid);
   return { sid, setCookie };
 }
 
@@ -427,7 +434,7 @@ export async function POST(req: NextRequest) {
     const allowCanonWrap = serverAllowsCanonWrap && body?.allowCanonWrap === true;
 
     // 🔒 SESSION: Get server-issued session ID from cookie (prevents spoofing)
-    const { sid: generatedSessionId, setCookie: sessionCookie } = getOrCreateSessionId(req);
+    const { sid: generatedSessionId, setCookie: generatedCookie } = getOrCreateSessionId(req);
 
     // DEV/E2E override: allow explicit body.sessionId only when you opt-in.
     // (Prod stays server-owned.)
@@ -442,6 +449,13 @@ export async function POST(req: NextRequest) {
       allowBodySessionId && requestedSessionId
         ? requestedSessionId
         : generatedSessionId;
+
+    // If we override, ALSO set cookie to match safeSessionId
+    // so subsequent requests without sessionId stay in the same session.
+    const sessionCookie =
+      allowBodySessionId && requestedSessionId
+        ? buildSessionCookie(safeSessionId)
+        : generatedCookie;
 
     if (!message || typeof message !== 'string') {
       return withSessionCookie(
@@ -501,6 +515,10 @@ export async function POST(req: NextRequest) {
     console.log('[Chat API] Mode parameter:', mode || 'not provided (will default to dialogue)');
     console.log('[Chat API] Effective userId:', effectiveUserId);
     console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
+
+    // 💾 ENSURE SESSION EXISTS: Create or update session record for persistence
+    await ensureSession(safeSessionId);
+    console.log(`[Chat API] Session ensured: ${safeSessionId}`);
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     const conversationHistory = await getConversationHistory(safeSessionId, 20);
@@ -579,6 +597,13 @@ export async function POST(req: NextRequest) {
               wrapOnly: true,
             });
 
+            // 💾 PERSIST CONVERSATION: Save to database
+            await addConversationExchange(safeSessionId, message, wrapped.renderedText, {
+              type: 'canon-wrap',
+              voiceMode: normalizedMode,
+              userId: effectiveUserId,
+            });
+
             logRequestComplete(reqId, {
               ok: true,
               status: 200,
@@ -613,6 +638,12 @@ export async function POST(req: NextRequest) {
           }
 
           // NO WRAP: Return canon bead directly
+          // 💾 PERSIST CONVERSATION: Save to database
+          await addConversationExchange(safeSessionId, message, canonResponse, {
+            type: 'canon-direct',
+            userId: effectiveUserId,
+          });
+
           logRequestComplete(reqId, {
             ok: true,
             status: 200,
@@ -730,6 +761,13 @@ export async function POST(req: NextRequest) {
         compliance: voiceOutput.compliance,
         metrics: voiceOutput.metrics,
       };
+
+      // 💾 PERSIST CONVERSATION: Save to database
+      await addConversationExchange(safeSessionId, message, outboundText, {
+        type: 'safe-mode',
+        mode: mode || 'dialogue',
+        userId: effectiveUserId,
+      });
 
       // Audit: request complete (simple path)
       logRequestComplete(reqId, {
@@ -957,6 +995,14 @@ export async function POST(req: NextRequest) {
       compliance: voiceOutput2.compliance,
       metrics: voiceOutput2.metrics,
     };
+
+    // 💾 PERSIST CONVERSATION: Save to database
+    await addConversationExchange(safeSessionId, message, outboundText2, {
+      type: 'orchestrator',
+      mode: mode || 'dialogue',
+      userId: effectiveUserId,
+      layers: orchestratorResult.metadata?.consciousnessLayers?.successful || [],
+    });
 
     // Audit: request complete (orchestrator path)
     logRequestComplete(reqId, {
