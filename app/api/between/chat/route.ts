@@ -546,6 +546,11 @@ export async function POST(req: NextRequest) {
       effectiveUserId = `anon:${safeSessionId}`;
     }
 
+    // 🌀 SELFLET eligibility (allow override for local testing)
+    const SELFLET_ALLOW_ANON = process.env.MAIA_SELFLET_ALLOW_ANON === '1';
+    const isAnon = effectiveUserId.startsWith('anon:');
+    const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
     const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
@@ -622,7 +627,7 @@ export async function POST(req: NextRequest) {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
       // Ensure user has initial selflet (creates on first interaction if needed)
-      if (!effectiveUserId.startsWith('anon:')) {
+      if (selfletEligible) {
         console.log('[Chat API] 🌀 SELFLET: Calling ensureInitialSelflet for:', effectiveUserId);
         await ensureInitialSelflet(effectiveUserId);
       }
@@ -1102,7 +1107,9 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET POST: boundary detection + message delivery (non-blocking)
     const SELFLET_WRITE_ENABLED =
       process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
-      !effectiveUserId.startsWith('anon:');
+      selfletEligible;
+
+    console.log('[SELFLET DEBUG] WRITE_ENABLED:', SELFLET_WRITE_ENABLED, 'surfacedMessageId:', selfletContext?.surfacedMessageId);
 
     if (SELFLET_WRITE_ENABLED) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1132,13 +1139,26 @@ export async function POST(req: NextRequest) {
         breakthroughDetected: derivedBreakthrough,
         emotionalShift: derivedEmotionalShift,
       }).catch(err => {
-        console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
+        console.error('[SELFLET] processSelfletAfterResponse failed:', err);
       });
     }
+
+    // 🌀 SELFLET PHASE 2H: Construct pastSelf payload for UI card
+    const pastSelf = selfletContext?.surfacedMessageId ? {
+      id: selfletContext.surfacedMessageId,
+      title: selfletContext.surfacedDeliveryContext?.messageTitle,
+      content: selfletContext.surfacedDeliveryContext?.messageContent,
+      messageType: selfletContext.surfacedDeliveryContext?.messageType,
+      relevanceThemes: selfletContext.surfacedDeliveryContext?.relevanceThemes,
+      fromSelfletId: selfletContext.surfacedDeliveryContext?.fromSelfletId,
+      surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
+    } : undefined;
 
     return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
+      // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
+      pastSelf,
       route: {
         endpoint: '/api/between/chat',
         type: 'Member Chat with Full Consciousness',
