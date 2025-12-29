@@ -50,13 +50,29 @@ function overlapScore(a: string, b: string): number {
   return inter / Math.max(1, Math.min(A.size, 10)); // cap denominator a bit
 }
 
+function countInlineBullets(text: string): number {
+  const m = text.match(/(?:^|\s)•\s+\S+/g);
+  return m ? m.length : 0;
+}
+
+function countInlineNumbered(text: string): number {
+  const m = text.match(/(?:^|\s)\d{1,2}[\).]\s+\S+/g);
+  return m ? m.length : 0;
+}
+
 function countListItems(text: string): number {
   const lines = text.split('\n');
   let n = 0;
+
   for (const line of lines) {
     if (/^\s*[-*]\s+\S/.test(line)) n++;
     if (/^\s*\d+[\).]\s+\S/.test(line)) n++;
+    if (/^\s*•\s+\S/.test(line)) n++;
   }
+
+  n += countInlineBullets(text);
+  n += countInlineNumbered(text);
+
   return n;
 }
 
