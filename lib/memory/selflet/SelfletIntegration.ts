@@ -51,49 +51,58 @@ export interface SelfletLoadResult {
 /**
  * Load selflet context for a user
  * Call this early in the chat route, after identity resolution
+ *
+ * Uses granular try/catch so failures in one area don't block others.
+ * surfacedMessageId is ALWAYS returned (null if no message).
  */
 export async function loadSelfletContext(
   userId: string,
   currentThemes?: string[],
   userMessage?: string
 ): Promise<SelfletLoadResult> {
-  try {
-    // Build base context
-    const context = await selfletChain.buildContext(userId);
+  // Initialize with safe defaults
+  let context: Awaited<ReturnType<typeof selfletChain.buildContext>> | null = null;
+  let promptInjection = '';
+  let pendingReflection: ReflectionPrompt | null = null;
+  let shouldSurfaceReflection = false;
+  let surfacedMessageId: string | undefined;
+  let surfacedDeliveryContext: Record<string, unknown> | undefined;
+  let surfacedMessagePrompt: string | undefined;
+  let requiredAcknowledgment: string | undefined;
 
-    // Generate prompt injection for MAIA
-    const promptInjection = selfletRituals.generatePromptContext(
+  // 1) Build base context (should not prevent pending-message surfacing)
+  try {
+    context = await selfletChain.buildContext(userId);
+    promptInjection = selfletRituals.generatePromptContext(
       context.currentSelflet,
       context.pendingMessages,
       context.recentMetamorphosis
     );
+  } catch (err) {
+    console.error('[SELFLET] buildContext failed:', err);
+    // Continue - we can still try to surface pending messages
+  }
 
-    // Check if we should surface a reflection
-    let pendingReflection: ReflectionPrompt | null = null;
-    let shouldSurfaceReflection = false;
-
-    // Phase 2C: Track surfaced message for delivery marking
-    let surfacedMessageId: string | undefined;
-    let surfacedDeliveryContext: Record<string, unknown> | undefined;
-    // Phase 2E: Structured prompt for surfaced messages
-    let surfacedMessagePrompt: string | undefined;
-
-    if (userMessage && context.pendingMessages.length > 0) {
+  // 2) Check if we should surface a reflection (optional enhancement)
+  if (userMessage && context?.pendingMessages?.length) {
+    try {
       const shouldSurface = await selfletRituals.shouldSurfaceReflection(
         userId,
         userMessage,
         currentThemes || []
       );
-
       if (shouldSurface.should) {
         shouldSurfaceReflection = true;
         pendingReflection = await selfletRituals.invokeTemporalReflection(userId, currentThemes);
         console.log(`[SELFLET] 💭 Reflection should be surfaced: ${shouldSurface.reason}`);
       }
+    } catch (err) {
+      console.error('[SELFLET] shouldSurfaceReflection failed:', err);
     }
+  }
 
-    // Phase 2C: Fetch pending message for context
-    // Always try to surface - themes help relevance matching, but empty = latest undelivered
+  // 3) Fetch pending message for context (CRITICAL for delivery marking)
+  try {
     const pendingMsg = await selfletChain.getPendingMessageForContext({
       userId,
       currentThemes: currentThemes ?? [],
@@ -108,38 +117,24 @@ export async function loadSelfletContext(
         relevanceThemes: pendingMsg.relevanceThemes,
         surfacedAt: new Date().toISOString(),
       };
-
-      // Phase 2E: Generate structured prompt injection for the model
       surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
-
+      requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;
       console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
     }
-
-    // Phase 2E fallback: Generate required acknowledgment for post-processing
-    const requiredAcknowledgment = pendingMsg
-      ? `Your past self left you a message: "${pendingMsg.content}"\n\n`
-      : undefined;
-
-    return {
-      context,
-      promptInjection,
-      pendingReflection,
-      shouldSurfaceReflection,
-      surfacedMessageId,
-      surfacedDeliveryContext,
-      surfacedMessagePrompt,
-      requiredAcknowledgment,
-    };
-  } catch (error) {
-    // Graceful degradation - selflet system is optional
-    console.log('[SELFLET] Could not load context (table may not exist):', error);
-    return {
-      context: null,
-      promptInjection: '',
-      pendingReflection: null,
-      shouldSurfaceReflection: false,
-    };
+  } catch (err) {
+    console.error('[SELFLET] getPendingMessageForContext failed:', err);
   }
+
+  return {
+    context,
+    promptInjection,
+    pendingReflection,
+    shouldSurfaceReflection,
+    surfacedMessageId,
+    surfacedDeliveryContext,
+    surfacedMessagePrompt,
+    requiredAcknowledgment,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
