@@ -2,8 +2,18 @@
 -- Implements Michael Levin's "selflet" concept - treating identity as a chain
 -- of distinct selves sending messages across time
 
--- Enable required extensions
-CREATE EXTENSION IF NOT EXISTS vector;
+-- Enable required extensions (guarded for managed Postgres compatibility)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'vector') THEN
+    EXECUTE 'CREATE EXTENSION IF NOT EXISTS vector';
+  ELSE
+    RAISE NOTICE 'pgvector not available; skipping CREATE EXTENSION vector';
+  END IF;
+EXCEPTION
+  WHEN insufficient_privilege THEN
+    RAISE NOTICE 'No privilege to CREATE EXTENSION vector; skipping';
+END $$;
 
 -- =============================================================================
 -- SELFLET NODES
@@ -239,9 +249,10 @@ $$ LANGUAGE plpgsql;
 -- PERMISSIONS
 -- Grant access to maia application role
 -- =============================================================================
-GRANT ALL PRIVILEGES ON TABLE selflet_nodes TO maia;
-GRANT ALL PRIVILEGES ON TABLE selflet_messages TO maia;
-GRANT ALL PRIVILEGES ON TABLE selflet_reinterpretations TO maia;
-GRANT EXECUTE ON FUNCTION get_active_selflet(TEXT) TO maia;
-GRANT EXECUTE ON FUNCTION get_recent_selflets(TEXT, INT) TO maia;
-GRANT EXECUTE ON FUNCTION calculate_chain_continuity(TEXT) TO maia;
+GRANT USAGE ON SCHEMA public TO maia;
+GRANT ALL PRIVILEGES ON TABLE public.selflet_nodes TO maia;
+GRANT ALL PRIVILEGES ON TABLE public.selflet_messages TO maia;
+GRANT ALL PRIVILEGES ON TABLE public.selflet_reinterpretations TO maia;
+GRANT EXECUTE ON FUNCTION public.get_active_selflet(TEXT) TO maia;
+GRANT EXECUTE ON FUNCTION public.get_recent_selflets(TEXT, INT) TO maia;
+GRANT EXECUTE ON FUNCTION public.calculate_chain_continuity(TEXT) TO maia;
