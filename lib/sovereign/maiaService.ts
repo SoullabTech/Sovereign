@@ -1745,7 +1745,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     console.log(`✅ MAIA ${processingProfile} response complete: ${processingTimeMs}ms | ${text.length} chars${audioResponse ? ` + audio (${audioResponse.voiceProfile})` : ''}`);
 
-    // 🧪 AIN SHAPE CHECK: Dev-time warning + optional telemetry
+    // 🧪 AIN SHAPE CHECK: Dev-time warning + optional telemetry + rewrite reflex
     const telemetryEnabled =
       process.env.AIN_SHAPE_TELEMETRY === '1' ||
       process.env.NODE_ENV !== 'production';
@@ -1759,6 +1759,42 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           flags: shape.flags,
           notes: shape.notes
         });
+
+        // 🔄 AIN SHAPE REWRITE: If menu mode detected, rewrite the response
+        const rewriteEnabled =
+          process.env.AIN_SHAPE_REWRITE === '1' ||
+          process.env.NODE_ENV !== 'production';
+
+        if (rewriteEnabled && shape.flags.menuMode) {
+          try {
+            const rewriteSystem = `Rewrite the assistant response into this shape:
+1) Mirror (1–2 sentences reflecting user's experience)
+2) Bridge (1 sentence offering a complementary lens)
+3) Permission (one gentle question before going deeper)
+4) Next step (ONE concrete action, 30–90 seconds)
+
+Hard constraints:
+- No bullet points
+- No numbered lists
+- No "here are options" or "strategies"
+- Choose ONE best next step
+- Keep it under 1400 characters
+- Write as flowing paragraphs, not sections`;
+
+            const rewritten = await generateText({
+              systemPrompt: rewriteSystem,
+              userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
+              meta: { rewritePass: true }
+            });
+
+            if (rewritten && rewritten.trim().length > 50) {
+              console.log('[AIN SHAPE REWRITE] Menu mode response rewritten');
+              text = rewritten.trim();
+            }
+          } catch (rewriteErr) {
+            console.warn('[AIN SHAPE REWRITE ERROR]', rewriteErr);
+          }
+        }
       }
 
       // Persist structure-only telemetry (no text)
