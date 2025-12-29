@@ -72,7 +72,7 @@ function overlapScore(a: string, b: string): number {
   const B = new Set(tokenize(b));
   if (A.size === 0 || B.size === 0) return 0;
   let inter = 0;
-  for (const w of A) if (B.has(w)) inter++;
+  A.forEach((w) => { if (B.has(w)) inter++; });
   return inter / Math.max(1, Math.min(A.size, 10)); // cap denominator a bit
 }
 
