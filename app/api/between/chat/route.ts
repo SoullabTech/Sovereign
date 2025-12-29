@@ -18,6 +18,11 @@ import { renderVoice } from '@/lib/voice/voiceRenderer';
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
 
+// Boot log: warn if simulation headers are enabled (helps debug unexpected behavior)
+if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
+  console.warn('[Boot] ⚠️ MAIA_MEMORY_SIM_HEADERS=1 — simulation headers are ENABLED');
+}
+
 // Audit fingerprint secret - must be set in production for secure correlation
 const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
