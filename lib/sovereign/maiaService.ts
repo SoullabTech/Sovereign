@@ -433,6 +433,10 @@ async function fastPathResponse(
     }
   }
 
+  // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
+  const selfletContext = (meta as any)?.selfletContext;
+  const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
+
   // Build minimal context for fast processing
   // 🔄 CROSS-SESSION RECALL: If current session is empty, load from cross-session turns
   let recentContext = '';
@@ -621,7 +625,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}
+${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -709,6 +713,10 @@ async function corePathResponse(
     }
   }
 
+  // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
+  const selfletContext = (meta as any)?.selfletContext;
+  const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
+
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
   let effectiveHistory = conversationHistory;
   if (conversationHistory.length === 0 && effectiveUserId) {
@@ -769,6 +777,11 @@ async function corePathResponse(
   // Use MAIA wise prompt with conversation awareness
   let adaptivePrompt = buildMaiaWisePrompt(context, input, effectiveHistory);
   console.log(`🎭 Core voice adaptation applied`);
+
+  // 🌀 SELFLET TEMPORAL MESSAGE: Inject past-self message into prompt (Phase 2E)
+  if (selfletPromptBlock) {
+    adaptivePrompt = adaptivePrompt + '\n\n' + selfletPromptBlock;
+  }
 
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
   if (policy) {
@@ -878,6 +891,10 @@ async function deepPathResponse(
       console.warn('⚠️ Could not load relationship memory for DEEP path:', error);
     }
   }
+
+  // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
+  const selfletContext = (meta as any)?.selfletContext;
+  const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
   let effectiveHistory = conversationHistory;

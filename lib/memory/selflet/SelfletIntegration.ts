@@ -42,6 +42,8 @@ export interface SelfletLoadResult {
   // Phase 2C: Track surfaced message for delivery marking
   surfacedMessageId?: string;
   surfacedDeliveryContext?: Record<string, unknown>;
+  // Phase 2E: Structured prompt injection for surfaced messages
+  surfacedMessagePrompt?: string;
 }
 
 /**
@@ -71,6 +73,8 @@ export async function loadSelfletContext(
     // Phase 2C: Track surfaced message for delivery marking
     let surfacedMessageId: string | undefined;
     let surfacedDeliveryContext: Record<string, unknown> | undefined;
+    // Phase 2E: Structured prompt for surfaced messages
+    let surfacedMessagePrompt: string | undefined;
 
     if (userMessage && context.pendingMessages.length > 0) {
       const shouldSurface = await selfletRituals.shouldSurfaceReflection(
@@ -102,6 +106,10 @@ export async function loadSelfletContext(
         relevanceThemes: pendingMsg.relevanceThemes,
         surfacedAt: new Date().toISOString(),
       };
+
+      // Phase 2E: Generate structured prompt injection for the model
+      surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
+
       console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
     }
 
@@ -112,6 +120,7 @@ export async function loadSelfletContext(
       shouldSurfaceReflection,
       surfacedMessageId,
       surfacedDeliveryContext,
+      surfacedMessagePrompt,
     };
   } catch (error) {
     // Graceful degradation - selflet system is optional
@@ -123,6 +132,55 @@ export async function loadSelfletContext(
       shouldSurfaceReflection: false,
     };
   }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// PHASE 2E: SURFACED MESSAGE PROMPT GENERATION
+// ═══════════════════════════════════════════════════════════════
+
+interface SurfacedMessage {
+  id: string;
+  fromSelfletId: string;
+  messageType: string;
+  title: string;
+  content: string;
+  relevanceThemes: string[] | null;
+  deliveryContext: Record<string, unknown> | null;
+  createdAt: Date;
+}
+
+/**
+ * Generate a structured prompt block for a surfaced past-self message.
+ * This guides the model to naturally acknowledge and weave in the message.
+ */
+function generateSurfacedMessagePrompt(msg: SurfacedMessage): string {
+  const themesStr = msg.relevanceThemes?.length
+    ? `Themes: ${msg.relevanceThemes.join(', ')}`
+    : '';
+
+  const typeLabel =
+    msg.messageType === 'letter' ? 'a letter' :
+    msg.messageType === 'symbolic_state' ? 'a symbolic snapshot' :
+    msg.messageType === 'future_projection' ? 'a vision' :
+    msg.messageType === 'wisdom_seed' ? 'a seed of wisdom' :
+    'a message';
+
+  return `
+<selflet-surfaced-message>
+A past version of the user left ${typeLabel} for their future self.
+Title: "${msg.title || 'Untitled'}"
+${themesStr}
+
+--- BEGIN PAST-SELF MESSAGE ---
+${msg.content}
+--- END PAST-SELF MESSAGE ---
+
+Guidance: Naturally weave acknowledgment of this message into your response.
+You might say something like "Your past self left you a message..." or
+"There's something here from an earlier version of you..." — adapt to the
+conversational moment. Don't force it if it doesn't fit, but honor it when it does.
+</selflet-surfaced-message>
+`.trim();
 }
 
 // ═══════════════════════════════════════════════════════════════
