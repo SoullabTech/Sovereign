@@ -14,7 +14,7 @@ import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
-import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet } from '@/lib/memory/selflet';
+import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult } from '@/lib/memory/selflet';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -562,7 +562,7 @@ export async function POST(req: NextRequest) {
 
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
-    let selfletContext = null;
+    let selfletContext: SelfletLoadResult | null = null;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 

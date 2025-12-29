@@ -531,7 +531,12 @@ export class SelfletChainService {
         boundary_kind, element_from, element_to, phase_from, phase_to,
         intensity, continuity_score_before, continuity_score_after,
         signal, input_excerpt, assistant_excerpt
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      ) VALUES (
+        $1, $2, $3, $4,
+        $5, $6, $7, $8, $9,
+        $10, $11, $12,
+        $13::jsonb, $14, $15
+      )
       RETURNING id
     `;
 

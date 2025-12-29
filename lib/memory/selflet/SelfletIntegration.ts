@@ -191,8 +191,9 @@ export async function processSelfletAfterResponse(
         fromSelfletId: currentSelflet?.id,
         boundaryKind,
         elementFrom: currentSelflet?.element,
-        elementTo: detectionInput.elementalShift?.to,
+        elementTo: boundary.suggestedElement ?? detectionInput.elementalShift?.to,
         phaseFrom: currentSelflet?.phase,
+        phaseTo: boundary.suggestedPhase,
         intensity: boundary.strength,
         continuityScoreBefore: currentSelflet?.continuityScore,
         signal: {
