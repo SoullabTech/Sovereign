@@ -126,4 +126,14 @@ Remember, I am not a therapist, but these are evidence-based approaches.
     expect(shape.flags.menuMode).toBe(true);
     expect(shape.pass).toBe(false);
   });
+
+  it('does not flag menu mode for a single If', () => {
+    const input = `I feel anxious.`;
+    const output =
+      `I hear you. If you're up for it, take one slow breath and notice where the anxiety sits. ` +
+      `Would you like to name what it's guarding? ` +
+      `Next step: exhale longer than you inhale for 30 seconds.`;
+    const shape = assessAINResponseShape(input, output);
+    expect(shape.flags.menuMode).toBe(false);
+  });
 });

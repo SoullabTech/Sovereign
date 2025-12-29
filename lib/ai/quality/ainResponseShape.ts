@@ -99,6 +99,8 @@ function countIfLadderOptions(text: string): number {
 }
 
 function countListItems(text: string): number {
+  // Counts literal list-ish tokens only (bullets, numbered, inline dashes)
+  // Does NOT count If-ladders - those are handled separately
   const lines = text.split('\n');
   let n = 0;
 
@@ -112,22 +114,40 @@ function countListItems(text: string): number {
   n += countInlineNumbered(text);
   n += countInlineDashOptions(text);
 
-  // "If X... If Y... If Z..." ladder
-  // Subtract 1 so a single "If..." doesn't get treated as menu-ish
-  // But 3+ Ifs is definitively menu mode, so ensure it crosses threshold
-  const ifCount = countIfLadderOptions(text);
-  n += ifCount >= 3 ? ifCount : Math.max(0, ifCount - 1);
-
   return n;
 }
 
-function looksMenuMode(text: string): boolean {
-  const t = text.toLowerCase();
-  const listCount = countListItems(text);
-  if (listCount >= 3) return true;
-  if (/(here are|try these|some ways|strategies|options|steps|things you can|consider these)\b/.test(t) && listCount >= 2) return true;
-  if (/\d+\s*(strategies|options|ways|things|steps)\b/.test(t)) return true;
-  return false;
+export type MenuModeSignals = {
+  listItems: number;
+  ifCount: number;
+  hasMenuPhrases: boolean;
+  listMenu: boolean;
+  ifLadderMenu: boolean;
+};
+
+function looksMenuMode(text: string): { menuMode: boolean; signals: MenuModeSignals } {
+  const listItems = countListItems(text);
+  const ifCount = countIfLadderOptions(text);
+
+  // Phrase-based triggers
+  const hasMenuPhrases = /\b(here are|try these|some ways|a few ways|several ways|strategies|options|steps|things you can|consider these|frameworks to consider)\b/i.test(text);
+
+  // Explicit menu triggers
+  const ifLadderMenu = ifCount >= 3;
+  const listMenu = listItems >= 3;
+
+  // Also trigger if menu phrases + some list items
+  const phraseWithItems = hasMenuPhrases && listItems >= 2;
+
+  // "5 strategies" pattern
+  const numberedStrategies = /\d+\s*(strategies|options|ways|things|steps)\b/i.test(text);
+
+  const menuMode = listMenu || ifLadderMenu || phraseWithItems || numberedStrategies;
+
+  return {
+    menuMode,
+    signals: { listItems, ifCount, hasMenuPhrases, listMenu, ifLadderMenu }
+  };
 }
 
 export function assessAINResponseShape(input: string, output: string): AINShapeResult {
@@ -161,8 +181,14 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   if (!nextStep) notes.push('Missing next step: no clear action, practice, or prompt.');
 
   // 5) MENU MODE: penalize list-heavy, options-heavy responses
-  const menuMode = looksMenuMode(out);
-  if (menuMode) notes.push('Menu mode detected: response contains multi-option/list strategy pattern.');
+  const { menuMode, signals } = looksMenuMode(out);
+  if (menuMode) {
+    const triggers: string[] = [];
+    if (signals.listMenu) triggers.push(`${signals.listItems} list items`);
+    if (signals.ifLadderMenu) triggers.push(`${signals.ifCount} If-ladder options`);
+    if (signals.hasMenuPhrases) triggers.push('menu phrases');
+    notes.push(`Menu mode detected: ${triggers.join(', ')}.`);
+  }
 
   let score = [mirror, bridge, permission, nextStep].filter(Boolean).length;
   if (menuMode) score = Math.max(0, score - 1);
