@@ -1,6 +1,8 @@
 // backend: app/api/bardic/capture-episode/route.ts
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 import { getConversationMemory, type CrystallizationDetection } from '@/lib/memory/bardic/ConversationMemoryIntegration';
 
 type CaptureEpisodeBody = {
