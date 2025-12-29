@@ -60,6 +60,28 @@ function countInlineNumbered(text: string): number {
   return m ? m.length : 0;
 }
 
+function countInlineDashOptions(text: string): number {
+  // Counts inline " - thing" / " – thing" / " — thing" patterns
+  // Avoids double-counting lines that already begin as bullets.
+  let n = 0;
+
+  for (const line of text.split('\n')) {
+    // If the line is already a real bullet/numbered item, the line-based counter handles it.
+    if (/^\s*[-*•]\s+\S/.test(line)) continue;
+    if (/^\s*\d{1,2}[\).]\s+\S/.test(line)) continue;
+
+    const hyphen = line.match(/\s-\s+\S+/g);
+    const enDash = line.match(/\s–\s+\S+/g);
+    const emDash = line.match(/\s—\s+\S+/g);
+
+    if (hyphen) n += hyphen.length;
+    if (enDash) n += enDash.length;
+    if (emDash) n += emDash.length;
+  }
+
+  return n;
+}
+
 function countListItems(text: string): number {
   const lines = text.split('\n');
   let n = 0;
@@ -72,6 +94,7 @@ function countListItems(text: string): number {
 
   n += countInlineBullets(text);
   n += countInlineNumbered(text);
+  n += countInlineDashOptions(text);
 
   return n;
 }
