@@ -339,4 +339,3 @@ mobile-app/ios/Podfile.lock
 mobile-app/ios/.symlinks/
 mobile-app/ios/build/
 .aetheric-consciousness-verification.json
-app/api/backend/node_modules/

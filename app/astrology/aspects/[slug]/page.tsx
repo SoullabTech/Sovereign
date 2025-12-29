@@ -7,13 +7,8 @@
 
 import AspectDetailClient from './AspectDetailClient';
 
-// Force dynamic to avoid static generation issues during build
-export const dynamic = 'force-dynamic';
-
-// Generate static params for all available aspect interpretations (disabled for now)
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
-  // Return empty to skip static generation - will be rendered on-demand
-  return [];
+// Generate static params for all available aspect interpretations
+export async function generateStaticParams() {
   // Define all aspects we have interpretations for
   const aspectSlugs = [
     'sun-saturn-square',

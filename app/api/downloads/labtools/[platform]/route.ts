@@ -3,8 +3,15 @@ import fs from 'fs/promises';
 import path from 'path';
 import { headers } from 'next/headers';
 
-// Force dynamic - API routes should not be statically generated
-export const dynamic = 'force-dynamic';
+// Generate static params for all supported platforms
+export async function generateStaticParams() {
+  return [
+    { platform: 'mac-arm' },
+    { platform: 'mac-intel' },
+    { platform: 'windows' },
+    { platform: 'linux' }
+  ];
+}
 
 /**
  * MAIA LabTools + IPP Download API
