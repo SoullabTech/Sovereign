@@ -16,4 +16,9 @@ for f in /app/database/migrations/*.sql; do
   count=$((count + 1))
 done
 
+if [ "$count" -eq 0 ]; then
+  echo "ERROR: No migrations found in /app/database/migrations/" >&2
+  exit 1
+fi
+
 echo "=== $count migrations complete ==="

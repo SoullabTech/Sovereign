@@ -1,7 +1,5 @@
 'use client';
 
-export const dynamic = 'force-dynamic';
-
 /**
  * MAIA Compact Companion - Desktop Widget Mode
  * Inspired by Tolan's small friend interface
