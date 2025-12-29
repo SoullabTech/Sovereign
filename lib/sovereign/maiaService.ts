@@ -1872,6 +1872,10 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
     }
 
+    // 🌀 SELFLET PHASE 2G: Strip internal marker before response leaves server
+    // The marker is only for idempotency within the pipeline - never expose to clients
+    text = text.replaceAll(SELFLET_MARKER, '');
+
     return {
       text,
       processingProfile,
