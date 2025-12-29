@@ -110,4 +110,20 @@ Remember, I am not a therapist, but these are evidence-based approaches.
     expect(shape.flags.menuMode).toBe(true);
     expect(shape.pass).toBe(false);
   });
+
+  it('detects menu mode for If-ladder options without bullets', () => {
+    const input = `I feel blocked right before success.`;
+
+    const output =
+      `I hear how discouraging it is to feel momentum rise and then hit an invisible wall. ` +
+      `A helpful lens is that a protective strategy is trying to keep you safe from an older threat. ` +
+      `Would you be open to meeting it gently for a minute? ` +
+      `If it's fear of being seen, name the image that flashes. ` +
+      `If it's fear of loss, name what success might cost. ` +
+      `If it's fear of failure, name the punishment you expect.`;
+
+    const shape = assessAINResponseShape(input, output);
+    expect(shape.flags.menuMode).toBe(true);
+    expect(shape.pass).toBe(false);
+  });
 });

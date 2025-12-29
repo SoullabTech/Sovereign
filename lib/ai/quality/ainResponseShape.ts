@@ -82,6 +82,22 @@ function countInlineDashOptions(text: string): number {
   return n;
 }
 
+function countIfLadderOptions(text: string): number {
+  // Counts sentence-start "If ..." patterns that look like option ladders:
+  // "If X..., If Y..., If Z..."
+  //
+  // We count only when "if" starts a new sentence/segment, to avoid
+  // normal mid-sentence conditionals.
+
+  const re = /(?:^|[.!?]\s+|\n\s+|^\s*)(?:if)\s+\S+/gim;
+  const matches = text.match(re) ?? [];
+
+  // Reduce false positives by ignoring very short fragments like "if so"
+  const filtered = matches.filter(m => m.replace(/\s+/g, ' ').trim().length >= 8);
+
+  return filtered.length;
+}
+
 function countListItems(text: string): number {
   const lines = text.split('\n');
   let n = 0;
@@ -95,6 +111,12 @@ function countListItems(text: string): number {
   n += countInlineBullets(text);
   n += countInlineNumbered(text);
   n += countInlineDashOptions(text);
+
+  // "If X... If Y... If Z..." ladder
+  // Subtract 1 so a single "If..." doesn't get treated as menu-ish
+  // But 3+ Ifs is definitively menu mode, so ensure it crosses threshold
+  const ifCount = countIfLadderOptions(text);
+  n += ifCount >= 3 ? ifCount : Math.max(0, ifCount - 1);
 
   return n;
 }
