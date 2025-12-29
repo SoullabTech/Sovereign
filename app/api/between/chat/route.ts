@@ -48,8 +48,9 @@ function inferElementFromText(text: string): Element | undefined {
   return best && best[1] > 0 ? best[0] : undefined;
 }
 
-function inferBreakthroughFromText(userText: string, assistantText: string): boolean {
-  const t = `${userText}\n${assistantText}`.toLowerCase();
+function inferBreakthroughFromText(userText: string): boolean {
+  // Only check USER text to avoid false positives from MAIA's own response language
+  const t = userText.toLowerCase();
   return /(it (just )?clicked|i realize|i realised|now i see|this makes sense|breakthrough|something shifted|aha\b)/i.test(t);
 }
 
@@ -1114,7 +1115,7 @@ export async function POST(req: NextRequest) {
         inferElementFromText(message);
 
       const derivedBreakthrough =
-        Boolean(c?.breakthrough) || inferBreakthroughFromText(message, outboundText2);
+        Boolean(c?.breakthrough) || inferBreakthroughFromText(message);
 
       const derivedEmotionalShift =
         (c?.emotionalShift as { from?: string; to: string; intensity: number } | undefined) ??
