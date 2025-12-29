@@ -531,16 +531,16 @@ export async function POST(req: NextRequest) {
     if (authUserId) {
       // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
       effectiveUserId = authUserId;
-    } else if (IS_PROD) {
-      // 🔒 Production: Always session-scoped, never trust client body
-      effectiveUserId = `anon:${safeSessionId}`;
     } else if (devTrustBodyId) {
-      // 🧪 Dev mode with trust enabled: Allow client-supplied IDs for testing
+      // 🧪 Trust enabled (takes precedence for local Docker testing)
       effectiveUserId = explorerId
         ? explorerId
         : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
           ? bodyUserId.trim()
           : `anon:${safeSessionId}`;
+    } else if (IS_PROD) {
+      // 🔒 Production: Always session-scoped, never trust client body
+      effectiveUserId = `anon:${safeSessionId}`;
     } else {
       // 🔒 Dev mode without trust: Session-scoped (safe default)
       effectiveUserId = `anon:${safeSessionId}`;
@@ -644,7 +644,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       // Graceful degradation - selflet system is optional
-      console.log('[Chat API] Selflet context not available (tables may not exist)', err);
+      console.error('[SELFLET ERROR] loadSelfletContext failed:', err);
     }
 
     // 🔮 CANON BYPASS: Check if this is an identity/canon question
@@ -1141,9 +1141,22 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // 🌀 SELFLET PHASE 2H: Construct pastSelf payload for UI card
+    const pastSelf = selfletContext?.surfacedMessageId ? {
+      id: selfletContext.surfacedMessageId,
+      title: selfletContext.surfacedDeliveryContext?.messageTitle,
+      content: selfletContext.surfacedDeliveryContext?.messageContent,
+      messageType: selfletContext.surfacedDeliveryContext?.messageType,
+      relevanceThemes: selfletContext.surfacedDeliveryContext?.relevanceThemes,
+      fromSelfletId: selfletContext.surfacedDeliveryContext?.fromSelfletId,
+      surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
+    } : undefined;
+
     return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
+      // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
+      pastSelf,
       route: {
         endpoint: '/api/between/chat',
         type: 'Member Chat with Full Consciousness',

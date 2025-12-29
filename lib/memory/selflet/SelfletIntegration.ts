@@ -112,6 +112,7 @@ export async function loadSelfletContext(
       surfacedMessageId = pendingMsg.id;
       surfacedDeliveryContext = {
         messageTitle: pendingMsg.title,
+        messageContent: pendingMsg.content, // Phase 2H: Expose for UI card
         messageType: pendingMsg.messageType,
         fromSelfletId: pendingMsg.fromSelfletId,
         relevanceThemes: pendingMsg.relevanceThemes,
