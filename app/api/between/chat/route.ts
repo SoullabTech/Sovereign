@@ -14,7 +14,7 @@ import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
-import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult } from '@/lib/memory/selflet';
+import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
@@ -1050,15 +1050,20 @@ export async function POST(req: NextRequest) {
       !effectiveUserId.startsWith('anon:');
 
     if (SELFLET_WRITE_ENABLED) {
+      // Extract consciousness signals (when available from orchestrator)
+      const consciousness = orchestratorResult?.consciousness;
       processSelfletAfterResponse(effectiveUserId, {
         userMessage: message,
         assistantResponse: outboundText2,
         // Phase 2C: Pass surfaced message info for delivery tracking
         surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
         surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
-        // Optional: wire consciousness signals when available
-        // currentElement: orchestratorResult.consciousness?.element,
-        // breakthroughDetected: orchestratorResult.consciousness?.breakthrough,
+        // Wire consciousness signals (null-safe, will enable once orchestrator computes them)
+        currentElement: consciousness?.conversationalElemental?.dominant as Element | undefined,
+        breakthroughDetected: Boolean(consciousness?.breakthrough),
+        // Future: wire these when orchestrator produces them
+        // emotionalShift: consciousness?.emotionalShift,
+        // consciousnessLevelDelta: consciousness?.levelDelta,
       }).catch(err => {
         console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
       });
