@@ -2,17 +2,22 @@
 -- Implements Michael Levin's "selflet" concept - treating identity as a chain
 -- of distinct selves sending messages across time
 
--- Enable required extensions (guarded for managed Postgres compatibility)
+-- Enable required extensions (REQUIRED: migration uses VECTOR + gen_random_uuid)
+
+-- pgcrypto is required for gen_random_uuid()
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- pgvector is required for VECTOR(...) columns below
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'vector') THEN
     EXECUTE 'CREATE EXTENSION IF NOT EXISTS vector';
   ELSE
-    RAISE NOTICE 'pgvector not available; skipping CREATE EXTENSION vector';
+    RAISE EXCEPTION 'pgvector extension is not available on this Postgres instance (required by selflet schema).';
   END IF;
 EXCEPTION
   WHEN insufficient_privilege THEN
-    RAISE NOTICE 'No privilege to CREATE EXTENSION vector; skipping';
+    RAISE EXCEPTION 'Insufficient privilege to CREATE EXTENSION vector (required by selflet schema). Enable pgvector and rerun migrations.';
 END $$;
 
 -- =============================================================================
