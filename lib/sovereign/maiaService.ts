@@ -1513,8 +1513,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         break;
     }
 
-    // Apply MAIA's voice sanitization
-    const text = sanitizeMaiaOutput(rawResponse);
+    // Apply MAIA's voice sanitization (let for AIN rewrite reflex)
+    let text = sanitizeMaiaOutput(rawResponse);
     let audioResponse: Buffer | undefined;
 
     // 🎤 VOICE SYNTHESIS: MAIA's mind (Claude/local) vs MAIA's voice (OpenAI TTS)
