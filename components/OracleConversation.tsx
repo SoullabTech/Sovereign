@@ -166,6 +166,26 @@ interface ConversationMessage {
   pastSelf?: PastSelfPayload;
 }
 
+// 🌀 SELFLET: Strip past-self preface when card is shown (prevent duplicate)
+function stripPastSelfPreface(text: string, pastSelf?: PastSelfPayload): string {
+  if (!pastSelf?.content) return text;
+
+  // Match the exact format from the delivery guard
+  const variants = [
+    `Your past self left you a message: "${pastSelf.content}"`,
+    `Your past self left you a message: '${pastSelf.content}'`,
+    `Your past self left you a message: ${pastSelf.content}`,
+  ];
+
+  for (const v of variants) {
+    if (text.startsWith(v)) {
+      return text.slice(v.length).trimStart();
+    }
+  }
+
+  return text;
+}
+
 // Component to clean messages by removing stage directions
 const FormattedMessage: React.FC<{ text: string | undefined }> = ({ text }) => {
   // Handle undefined or null text
@@ -3757,7 +3777,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
-                          <FormattedMessage text={message.text} />
+                          <FormattedMessage text={stripPastSelfPreface(message.text, message.pastSelf)} />
                         ) : (
                           message.text
                         )}
