@@ -339,3 +339,4 @@ mobile-app/ios/Podfile.lock
 mobile-app/ios/.symlinks/
 mobile-app/ios/build/
 .aetheric-consciousness-verification.json
+\!docker-compose.production.override.sample.yml
