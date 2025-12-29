@@ -13,8 +13,6 @@
 #   3. docker compose -f docker-compose.production.yml up -d
 # ═══════════════════════════════════════════════════════════════════════════════
 
-version: '3.8'
-
 services:
   # ═════════════════════════════════════════════════════════════════════════════
   # Caddy - Automatic HTTPS Reverse Proxy
@@ -123,7 +121,7 @@ services:
       postgres:
         condition: service_healthy
 
-    command: ["sh", "-c", "npx prisma migrate deploy && for f in /app/database/migrations/*.sql; do psql $DATABASE_URL -f $f || true; done"]
+    command: ["sh", "-c", "npx prisma migrate deploy && for f in /app/database/migrations/*.sql; do psql $$DATABASE_URL -f $$f || true; done"]
 
     volumes:
       - ./database/migrations:/app/database/migrations:ro
