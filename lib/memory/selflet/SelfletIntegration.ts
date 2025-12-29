@@ -223,8 +223,40 @@ export async function processSelfletAfterResponse(
       }
     }
 
-    // Detect boundary
+    // Detect boundary (may be null)
     const boundary = await selfletBoundaryDetector.detectBoundary(detectionInput);
+
+    // Always write reinterpretation when a message was surfaced (idempotent)
+    if (input.surfacedSelfletMessageId) {
+      try {
+        const depth = Math.min(
+          1,
+          Math.max(
+            boundary?.strength ?? 0,
+            input.emotionalShift?.intensity ?? 0,
+            input.breakthroughDetected ? 0.6 : 0.2
+          )
+        );
+
+        const interpretation = boundary
+          ? `Delivered during ${boundary.type}: ${boundary.trigger}`
+          : `Delivered during normal conversation flow.`;
+
+        await selfletChain.insertReinterpretationFromDelivery({
+          messageId: input.surfacedSelfletMessageId,
+          userId,
+          interpretation,
+          integrationDepth: depth,
+          emotionalResonance: input.emotionalShift?.to ?? null,
+          translationNotes: input.surfacedDeliveryContext
+            ? JSON.stringify(input.surfacedDeliveryContext).slice(0, 800)
+            : null,
+          origin: 'auto_delivery',
+        });
+      } catch (e) {
+        console.log('[SELFLET] Failed to record delivery reinterpretation (non-fatal):', e);
+      }
+    }
 
     if (!boundary) {
       return { boundaryDetected: false };
@@ -306,22 +338,7 @@ export async function processSelfletAfterResponse(
       }
     }
 
-    // Phase 2C: Store reinterpretation record (only when boundary detected)
-    if (input.surfacedSelfletMessageId) {
-      try {
-        await selfletChain.insertReinterpretationFromDelivery({
-          messageId: input.surfacedSelfletMessageId,
-          userId,
-          interpretation: `Message surfaced during: ${boundary.trigger}`,
-          integrationDepth: boundary.strength,
-          emotionalResonance: input.emotionalShift?.to ?? null,
-          translationNotes: null,
-        });
-        console.log(`[SELFLET] 📝 Recorded reinterpretation for message ${input.surfacedSelfletMessageId}`);
-      } catch (reinterpErr) {
-        console.log('[SELFLET] Failed to record reinterpretation (non-fatal):', reinterpErr);
-      }
-    }
+    // Note: Reinterpretation now written earlier (before boundary detection) via auto_delivery origin
 
     return {
       boundaryDetected: true,
