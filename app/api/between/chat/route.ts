@@ -779,6 +779,22 @@ export async function POST(req: NextRequest) {
       process.env.NODE_ENV !== 'production' &&
       process.env.MAIA_MEMORY_SIM_HEADERS === '1';
 
+    // Detect sim header attempts when gate is disabled (audit breadcrumb)
+    const simHeadersAttempted = [
+      'x-maia-simulate-pipeline-missing',
+      'x-maia-simulate-zero-semantic',
+      'x-maia-simulate-big-bundle',
+      'x-maia-simulate-low-thresholds',
+    ].filter(h => req.headers.get(h) === '1');
+
+    if (!simHeadersEnabled && simHeadersAttempted.length > 0) {
+      console.log('[Audit:MemoryPipeline:SIM_IGNORED]', {
+        reqId,
+        headers: simHeadersAttempted,
+        reason: process.env.NODE_ENV === 'production' ? 'production' : 'gate_disabled',
+      });
+    }
+
     const simulatePipelineMissing =
       simHeadersEnabled &&
       req.headers.get('x-maia-simulate-pipeline-missing') === '1';
@@ -791,14 +807,20 @@ export async function POST(req: NextRequest) {
       simHeadersEnabled &&
       req.headers.get('x-maia-simulate-big-bundle') === '1';
 
+    // Threshold override: force low thresholds to trigger bloat_high_recall_low
+    const simulateLowThresholds =
+      simHeadersEnabled &&
+      req.headers.get('x-maia-simulate-low-thresholds') === '1';
+
     const memPipeline = simulatePipelineMissing
       ? null
       : orchestratorResult.metadata?.memoryPipeline;
     const memRetrieval = memPipeline?.retrieval;
 
     // Configurable thresholds (tune via env without code changes)
-    const WARN_BLOAT = parseInt(process.env.MAIA_MEMORY_WARN_BLOAT || '70', 10);
-    const WARN_RECALL = parseInt(process.env.MAIA_MEMORY_WARN_RECALL || '40', 10);
+    // simulateLowThresholds: WARN_BLOAT=0, WARN_RECALL=100 → any real data triggers flag
+    const WARN_BLOAT = simulateLowThresholds ? 0 : parseInt(process.env.MAIA_MEMORY_WARN_BLOAT || '70', 10);
+    const WARN_RECALL = simulateLowThresholds ? 100 : parseInt(process.env.MAIA_MEMORY_WARN_RECALL || '40', 10);
 
     // Compute health flags (content-free signals for grep-able alerting)
     const rq = memPipeline?.recallQuality ?? 0;
