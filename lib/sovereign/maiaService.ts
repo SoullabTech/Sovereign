@@ -2,7 +2,7 @@
 import { randomUUID } from 'crypto';
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';
 import { buildMaiaWisePrompt, buildMaiaComprehensivePrompt, sanitizeMaiaOutput, MaiaContext } from './maiaVoice';
-import { generateText } from '../ai/modelService';
+import { generateText, type ProviderMeta } from '../ai/modelService';
 import { consciousnessOrchestrator } from '../orchestration/consciousness-orchestrator';
 import { consciousnessWrapper, type ConsciousnessContext } from '../consciousness/consciousness-layer-wrapper';
 import { elementalRouter } from '../consciousness/elemental-context-router';
@@ -300,6 +300,7 @@ export type MaiaResponse = {
   processingProfile?: ProcessingProfile;
   processingTimeMs?: number;
   audio?: Buffer;
+  provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
 };
 
 type MaiaRequest = {
@@ -421,7 +422,7 @@ async function fastPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>
-): Promise<string> {
+): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
   // 🧬 CONSCIOUSNESS POLICY (lightweight for FAST path)
@@ -664,7 +665,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   }
 
   // Use single model call with complete MAIA intelligence stack
-  const response = await generateText({
+  const { text: response, provider } = await generateText({
     systemPrompt: baseSystemPrompt,
     userInput: contextPrompt,
     meta: {
@@ -674,6 +675,11 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
       responseTarget: 'conversational'
     }
   });
+
+  // 🔮 Log provider for sovereignty auditing
+  if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+    console.log(`🔮 [FAST] Provider: ${provider.provider}/${provider.model} (${provider.mode})`);
+  }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate before delivery (FAST path - no regeneration to maintain speed)
   let { response: validatedResponse } = await validateAndRepairResponse(
@@ -691,7 +697,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return validatedResponse;
+  return { response: validatedResponse, provider };
 }
 
 /**
@@ -703,7 +709,7 @@ async function corePathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>
-): Promise<string> {
+): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
 
   // 🧬 CONSCIOUSNESS POLICY (CORE path with full context)
@@ -820,7 +826,7 @@ async function corePathResponse(
     }
   }
 
-  const response = await generateText({
+  const { text: response, provider: coreProvider } = await generateText({
     systemPrompt: adaptivePrompt,
     userInput: input,
     meta: {
@@ -830,6 +836,11 @@ async function corePathResponse(
       inputComplexity: 'moderate'
     }
   });
+
+  // 🔮 Log provider for sovereignty auditing (returned request-locally, not module-level)
+  if (process.env.DEBUG_CONSCIOUSNESS === '1') {
+    console.log(`🔮 [CORE] Provider: ${coreProvider.provider}/${coreProvider.model} (${coreProvider.mode})`);
+  }
 
   // 🛡️ SOCRATIC VALIDATOR: Validate with regeneration capability
   let { response: validatedResponse } = await validateAndRepairResponse(
@@ -853,7 +864,7 @@ async function corePathResponse(
 
       repairedPrompt = repairedPrompt + '\n\n' + repairPrompt;
 
-      return await generateText({
+      const { text } = await generateText({
         systemPrompt: repairedPrompt,
         userInput: input,
         meta: {
@@ -863,6 +874,7 @@ async function corePathResponse(
           conversationProfile: conversationContext.profile
         }
       });
+      return text;
     }
   );
 
@@ -873,7 +885,7 @@ async function corePathResponse(
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
-  return validatedResponse;
+  return { response: validatedResponse, provider: coreProvider };
 }
 
 /**
@@ -885,7 +897,7 @@ async function deepPathResponse(
   input: string,
   conversationHistory: any[],
   meta: Record<string, unknown>
-): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any }> {
+): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
   // 🧬 CONSCIOUSNESS POLICY (full depth for DEEP path)
@@ -1148,7 +1160,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         }
       }
 
-      return await generateText({
+      const { text } = await generateText({
         systemPrompt: repairedPrompt + '\n\n' + repairPrompt,
         userInput: input,
         meta: {
@@ -1159,6 +1171,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
           consciousnessDepth: 'full'
         }
       });
+      return text;
     }
   );
 
@@ -1169,12 +1182,20 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     response: guardedResponse,
     socraticValidation: validation,
     consciousnessData: {
-      layersActivated: consciousnessResponse.layersActivated,
-      depth: consciousnessResponse.depth,
-      observerInsights: consciousnessResponse.observerInsights,
-      evolutionTriggers: consciousnessResponse.evolutionTriggers,
+      layersActivated: consciousnessResponse?.layersActivated,
+      depth: consciousnessResponse?.depth,
+      observerInsights: consciousnessResponse?.observerInsights,
+      evolutionTriggers: consciousnessResponse?.evolutionTriggers,
       claudeConsultation: consultationData
-    }
+    },
+    // DEEP path uses consciousnessWrapper which doesn't yet track provider
+    // Explicit placeholder for audit completeness (not undefined)
+    provider: {
+      provider: 'unknown',
+      model: 'consciousness-wrapper',
+      mode: 'full',
+      reason: 'provider_not_threaded_in_deep_path',
+    } as ProviderMeta
   };
 }
 
@@ -1545,27 +1566,40 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
 
     let rawResponse: string;
     let consciousnessData: any = null;
+    // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
+    let provider: ProviderMeta | undefined;
 
     // Route to appropriate processing path
     switch (processingProfile) {
-      case 'FAST':
-        rawResponse = await fastPathResponse(sessionId, input, conversationHistory, meta);
+      case 'FAST': {
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta);
+        rawResponse = fastResult.response;
+        provider = fastResult.provider;
         break;
+      }
 
-      case 'CORE':
-        rawResponse = await corePathResponse(sessionId, input, conversationHistory, meta);
+      case 'CORE': {
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta);
+        rawResponse = coreResult.response;
+        provider = coreResult.provider;
         break;
+      }
 
-      case 'DEEP':
+      case 'DEEP': {
         const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
+        provider = deepResult.provider; // May be undefined for DEEP path
         break;
+      }
 
-      default:
+      default: {
         // Fallback to FAST
-        rawResponse = await fastPathResponse(sessionId, input, conversationHistory, meta);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta);
+        rawResponse = fallbackResult.response;
+        provider = fallbackResult.provider;
         break;
+      }
     }
 
     // Apply MAIA's voice sanitization (let for AIN rewrite reflex)
@@ -1836,7 +1870,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           try {
             const rewriteSystem = AIN_NO_MENU_REWRITE_PROMPT;
 
-            const rewritten = await generateText({
+            const { text: rewritten } = await generateText({
               systemPrompt: rewriteSystem,
               userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
               meta: { ...meta, ainRewritePass: true }
@@ -1880,7 +1914,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       text,
       processingProfile,
       processingTimeMs,
-      audio: audioResponse
+      audio: audioResponse,
+      provider  // 🔮 Sovereignty auditing: request-local, concurrency-safe
     };
 
   } catch (error) {
@@ -1892,7 +1927,9 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     return {
       text,
       processingProfile: 'FAST',
-      processingTimeMs
+      processingTimeMs,
+      // 🔮 Sovereignty: error path has no provider info (don't inherit from previous request)
+      provider: undefined
     };
   }
 }
