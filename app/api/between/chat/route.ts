@@ -1137,7 +1137,7 @@ export async function POST(req: NextRequest) {
         breakthroughDetected: derivedBreakthrough,
         emotionalShift: derivedEmotionalShift,
       }).catch(err => {
-        console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
+        console.error('[SELFLET] processSelfletAfterResponse failed:', err);
       });
     }
 

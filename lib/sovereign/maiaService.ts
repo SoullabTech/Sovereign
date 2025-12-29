@@ -120,6 +120,32 @@ function filterModeLanguage(response: string, userInput: string, mode: 'dialogue
   return response;
 }
 
+// 🌀 SELFLET PHASE 2F: Unified delivery guard (all paths)
+const SELFLET_MARKER = '\u2063\u2063\u2063'; // invisible marker (prevents double-prepend)
+
+interface SelfletDeliveryContext {
+  requiredAcknowledgment?: string;
+  surfacedMessagePrompt?: string;
+}
+
+/**
+ * Apply selflet delivery guard - ensures past-self message acknowledgment appears exactly once.
+ * Used at FAST, CORE, and DEEP path exit points.
+ */
+function applySelfletDeliveryGuard(
+  response: string,
+  selfletContext?: SelfletDeliveryContext
+): string {
+  const requiredAck = selfletContext?.requiredAcknowledgment;
+  if (!requiredAck) return response;
+
+  // Already has marker or acknowledgment → no change
+  if (response.includes(SELFLET_MARKER) || response.includes(requiredAck)) return response;
+
+  console.log('[SELFLET] Prepending past-self acknowledgment');
+  return requiredAck + SELFLET_MARKER + response;
+}
+
 // Helper: Convert relationship depth (number) to ConsciousnessDepth name
 function depthFromRelationship(depth: number): 'surface' | 'medium' | 'deep' | 'archetypal' | 'transcendent' {
   if (depth >= 0.8) return 'transcendent';
@@ -662,6 +688,9 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
   validatedResponse = filterModeLanguage(validatedResponse, input, mode);
 
+  // 🌀 SELFLET PHASE 2F: Apply delivery guard
+  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
+
   return validatedResponse;
 }
 
@@ -840,6 +869,9 @@ async function corePathResponse(
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
   const mode = normalizeMode(meta.mode);
   validatedResponse = filterModeLanguage(validatedResponse, input, mode);
+
+  // 🌀 SELFLET PHASE 2F: Apply delivery guard
+  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
   return validatedResponse;
 }
@@ -1130,8 +1162,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     }
   );
 
+  // 🌀 SELFLET PHASE 2F: Apply delivery guard
+  const guardedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
+
   return {
-    response: validatedResponse,
+    response: guardedResponse,
     socraticValidation: validation,
     consciousnessData: {
       layersActivated: consciousnessResponse.layersActivated,
