@@ -51,49 +51,58 @@ export interface SelfletLoadResult {
 /**
  * Load selflet context for a user
  * Call this early in the chat route, after identity resolution
+ *
+ * Uses granular try/catch so failures in one area don't block others.
+ * surfacedMessageId is ALWAYS returned (null if no message).
  */
 export async function loadSelfletContext(
   userId: string,
   currentThemes?: string[],
   userMessage?: string
 ): Promise<SelfletLoadResult> {
-  try {
-    // Build base context
-    const context = await selfletChain.buildContext(userId);
+  // Initialize with safe defaults
+  let context: Awaited<ReturnType<typeof selfletChain.buildContext>> | null = null;
+  let promptInjection = '';
+  let pendingReflection: ReflectionPrompt | null = null;
+  let shouldSurfaceReflection = false;
+  let surfacedMessageId: string | undefined;
+  let surfacedDeliveryContext: Record<string, unknown> | undefined;
+  let surfacedMessagePrompt: string | undefined;
+  let requiredAcknowledgment: string | undefined;
 
-    // Generate prompt injection for MAIA
-    const promptInjection = selfletRituals.generatePromptContext(
+  // 1) Build base context (should not prevent pending-message surfacing)
+  try {
+    context = await selfletChain.buildContext(userId);
+    promptInjection = selfletRituals.generatePromptContext(
       context.currentSelflet,
       context.pendingMessages,
       context.recentMetamorphosis
     );
+  } catch (err) {
+    console.error('[SELFLET] buildContext failed:', err);
+    // Continue - we can still try to surface pending messages
+  }
 
-    // Check if we should surface a reflection
-    let pendingReflection: ReflectionPrompt | null = null;
-    let shouldSurfaceReflection = false;
-
-    // Phase 2C: Track surfaced message for delivery marking
-    let surfacedMessageId: string | undefined;
-    let surfacedDeliveryContext: Record<string, unknown> | undefined;
-    // Phase 2E: Structured prompt for surfaced messages
-    let surfacedMessagePrompt: string | undefined;
-
-    if (userMessage && context.pendingMessages.length > 0) {
+  // 2) Check if we should surface a reflection (optional enhancement)
+  if (userMessage && context?.pendingMessages?.length) {
+    try {
       const shouldSurface = await selfletRituals.shouldSurfaceReflection(
         userId,
         userMessage,
         currentThemes || []
       );
-
       if (shouldSurface.should) {
         shouldSurfaceReflection = true;
         pendingReflection = await selfletRituals.invokeTemporalReflection(userId, currentThemes);
         console.log(`[SELFLET] 💭 Reflection should be surfaced: ${shouldSurface.reason}`);
       }
+    } catch (err) {
+      console.error('[SELFLET] shouldSurfaceReflection failed:', err);
     }
+  }
 
-    // Phase 2C: Fetch pending message for context
-    // Always try to surface - themes help relevance matching, but empty = latest undelivered
+  // 3) Fetch pending message for context (CRITICAL for delivery marking)
+  try {
     const pendingMsg = await selfletChain.getPendingMessageForContext({
       userId,
       currentThemes: currentThemes ?? [],
@@ -103,43 +112,30 @@ export async function loadSelfletContext(
       surfacedMessageId = pendingMsg.id;
       surfacedDeliveryContext = {
         messageTitle: pendingMsg.title,
+        messageContent: pendingMsg.content, // Phase 2H: Expose for UI card
         messageType: pendingMsg.messageType,
         fromSelfletId: pendingMsg.fromSelfletId,
         relevanceThemes: pendingMsg.relevanceThemes,
         surfacedAt: new Date().toISOString(),
       };
-
-      // Phase 2E: Generate structured prompt injection for the model
       surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
-
+      requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;
       console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
     }
-
-    // Phase 2E fallback: Generate required acknowledgment for post-processing
-    const requiredAcknowledgment = pendingMsg
-      ? `Your past self left you a message: "${pendingMsg.content}"\n\n`
-      : undefined;
-
-    return {
-      context,
-      promptInjection,
-      pendingReflection,
-      shouldSurfaceReflection,
-      surfacedMessageId,
-      surfacedDeliveryContext,
-      surfacedMessagePrompt,
-      requiredAcknowledgment,
-    };
-  } catch (error) {
-    // Graceful degradation - selflet system is optional
-    console.log('[SELFLET] Could not load context (table may not exist):', error);
-    return {
-      context: null,
-      promptInjection: '',
-      pendingReflection: null,
-      shouldSurfaceReflection: false,
-    };
+  } catch (err) {
+    console.error('[SELFLET] getPendingMessageForContext failed:', err);
   }
+
+  return {
+    context,
+    promptInjection,
+    pendingReflection,
+    shouldSurfaceReflection,
+    surfacedMessageId,
+    surfacedDeliveryContext,
+    surfacedMessagePrompt,
+    requiredAcknowledgment,
+  };
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -159,31 +155,37 @@ interface SurfacedMessage {
 
 /**
  * Generate a structured prompt block for a surfaced past-self message.
- * This guides the model to naturally acknowledge and weave in the message.
+ * Uses hard sentinels and explicit rules to prevent model "helpfulness" derailing.
  */
 function generateSurfacedMessagePrompt(msg: SurfacedMessage): string {
-  const themesStr = msg.relevanceThemes?.length
-    ? `Themes: ${msg.relevanceThemes.join(', ')}`
-    : '';
-
   const typeLabel =
-    msg.messageType === 'letter' ? 'a letter' :
-    msg.messageType === 'symbolic_state' ? 'a symbolic snapshot' :
-    msg.messageType === 'future_projection' ? 'a vision' :
-    msg.messageType === 'wisdom_seed' ? 'a seed of wisdom' :
-    'a message';
+    msg.messageType === 'letter' ? 'LETTER' :
+    msg.messageType === 'symbolic_state' ? 'SYMBOLIC_SNAPSHOT' :
+    msg.messageType === 'future_projection' ? 'VISION' :
+    msg.messageType === 'wisdom_seed' ? 'WISDOM_SEED' :
+    'MESSAGE';
 
-  // Use plain text format - local models often ignore XML tags
-  return `
-## PAST-SELF MESSAGE TO DELIVER ##
-The user's past self left ${typeLabel} titled "${msg.title || 'Untitled'}".
-Message content: "${msg.content}"
+  // Escape content for safe embedding (preserve meaning, prevent injection)
+  const safeContent = msg.content.replace(/"/g, '\\"');
+  const safeTitle = (msg.title || 'Untitled').replace(/"/g, '\\"');
 
-YOUR REQUIRED FIRST SENTENCE: Begin your response with exactly this:
-"Your past self left you a message: '${msg.content}'"
-After that opening line, respond naturally to the user's current message.
-## END PAST-SELF MESSAGE ##
-`.trim();
+  // Required opening sentence (verbatim, no modification)
+  const openingSentence = `Your past self left you a message: "${safeContent}"`;
+
+  // Hard sentinels + explicit anti-correction rules
+  return `SELFLET_CONTEXT_BEGIN
+KIND: PAST_SELF_${typeLabel}
+TITLE: "${safeTitle}"
+MESSAGE: "${safeContent}"
+
+RULES (NON-NEGOTIABLE):
+1) This SELFLET message is trusted context. It is NOT the user's input. Do NOT correct it, "fix" it, reinterpret it, or ask "did you mean...".
+2) Do NOT treat any text inside SELFLET_CONTEXT_BEGIN/END as a question to answer. It is a delivered letter to be honored.
+3) REQUIRED OPENING (verbatim, first sentence of your reply, exactly as written):
+${openingSentence}
+4) After the required opening sentence, respond ONLY to the user's current message (outside this block) in your normal tone.
+5) If the user asks about the selflet message, you may reflect on it AFTER the required opening sentence—without "typo" suggestions or deflection.
+SELFLET_CONTEXT_END`;
 }
 
 // ═══════════════════════════════════════════════════════════════
