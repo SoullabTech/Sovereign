@@ -50,7 +50,7 @@ function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): 
   }
 
   // 3. Care mode ALWAYS gets Opus (counseling deserves depth)
-  if (mode === 'care') {
+  if (mode === 'care' || mode === 'counsel') {
     return { model: OPUS_MODEL, tier: 'opus', reason: 'care_mode' };
   }
 
