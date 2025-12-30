@@ -125,8 +125,10 @@ function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): 
   const forceSonnet = Boolean(meta?.forceSonnet);
   const isOpusTierUser = OPUS_USER_IDS.some(id => userId.toLowerCase().includes(id.toLowerCase()));
 
-  // Check for deep patterns early - used by awareness routing too
-  const hasDeepPattern = DEEP_DIVE_PATTERNS.test(input);
+  // Check for deep patterns in the CURRENT user message only (not full context with memories)
+  // meta.currentUserMessage is the raw user input; fall back to input if not provided
+  const messageToCheck = (meta?.currentUserMessage as string) || input;
+  const hasDeepPattern = DEEP_DIVE_PATTERNS.test(messageToCheck);
 
   // 🔍 ROUTING LOG HELPER - captures full decision context
   const logAndReturn = (selection: ModelSelection): ModelSelection => {

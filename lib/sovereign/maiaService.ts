@@ -681,6 +681,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
     userInput: contextPrompt,
     meta: {
       ...meta,
+      currentUserMessage: input, // Raw user input for routing (not full context)
       fastProcessing: true,
       engine: 'deepseek-r1', // Single reliable engine
       responseTarget: 'conversational'
@@ -842,6 +843,7 @@ async function corePathResponse(
     userInput: input,
     meta: {
       ...meta,
+      currentUserMessage: input, // Raw user input for routing (consistent with FAST path)
       coreProcessing: true,
       conversationProfile: conversationContext.profile,
       inputComplexity: 'moderate'
@@ -880,6 +882,7 @@ async function corePathResponse(
         userInput: input,
         meta: {
           ...meta,
+          currentUserMessage: input,
           coreProcessing: true,
           regeneration: true,
           conversationProfile: conversationContext.profile
@@ -1176,6 +1179,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         userInput: input,
         meta: {
           ...meta,
+          currentUserMessage: input,
           deepProcessing: true,
           regeneration: true,
           conversationProfile: conversationContext.profile,
@@ -1879,7 +1883,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             const { text: rewritten } = await generateText({
               systemPrompt: rewriteSystem,
               userInput: `USER INPUT:\n${input}\n\nASSISTANT RESPONSE TO REWRITE:\n${text}`,
-              meta: { ...meta, ainRewritePass: true }
+              meta: { ...meta, currentUserMessage: input, ainRewritePass: true }
             });
 
             if (rewritten && rewritten.trim().length > 50) {
