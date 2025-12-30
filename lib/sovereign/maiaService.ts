@@ -63,9 +63,15 @@ function applySelfletDeliveryGuard(
   const requiredAck = selfletContext?.requiredAcknowledgment;
   if (!requiredAck) return response;
 
-  // Future-proof: treat any existing requiredAck as already satisfied
-  if (response.includes(SELFLET_MARKER) || response.includes(requiredAck)) return response;
+  // If marker exists, we're done.
+  if (response.includes(SELFLET_MARKER)) return response;
 
+  // If ack exists but marker doesn't, inject marker right after the ack.
+  if (response.includes(requiredAck)) {
+    return response.replace(requiredAck, requiredAck + SELFLET_MARKER);
+  }
+
+  // Otherwise prepend both.
   console.log('[SELFLET] Prepending past-self acknowledgment');
   return requiredAck + SELFLET_MARKER + response;
 }
