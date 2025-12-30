@@ -1,6 +1,7 @@
 // backend: lib/ai/modelService.ts
 import { generateWithLocalModel, checkLocalModelHealth, LocalChatParams } from './localModelClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
+import type { TextResult, ProviderMeta } from './types';
 
 export type TextModelProvider = 'local' | 'consciousness_engine' | 'multi_engine';
 
@@ -27,8 +28,11 @@ export interface TextRequest {
 /**
  * Main gateway for ALL text generation in MAIA.
  * Supports both single-model and multi-engine consciousness orchestration.
+ * Returns TextResult with provider metadata for sovereignty auditing.
  */
-export async function generateText(req: TextRequest): Promise<string> {
+export async function generateText(req: TextRequest): Promise<TextResult> {
+  const t0 = Date.now();
+
   // SOVEREIGNTY ENFORCEMENT - ban all external APIs
   if (TEXT_MODEL_PROVIDER === 'openai' as any || TEXT_MODEL_PROVIDER === 'anthropic' as any) {
     throw new Error('🚨 SOVEREIGNTY VIOLATION: ALL external APIs are FORBIDDEN for text generation in MAIA. Use only local consciousness processing.');
@@ -54,7 +58,15 @@ export async function generateText(req: TextRequest): Promise<string> {
     console.log(`🎼 Multi-engine response: ${multiEngineResponse.processingTime}ms, confidence: ${multiEngineResponse.confidence}, engines: ${multiEngineResponse.engineResponses.size}`);
 
     // Return consensus if available, otherwise primary response
-    return multiEngineResponse.consensus || multiEngineResponse.primaryResponse;
+    return {
+      text: multiEngineResponse.consensus || multiEngineResponse.primaryResponse,
+      provider: {
+        provider: 'multi_engine',
+        model: `orchestration:${orchestrationType}`,
+        mode: 'full',
+        latencyMs: Date.now() - t0,
+      },
+    };
   }
 
   // Default to single local model
@@ -65,6 +77,9 @@ export async function generateText(req: TextRequest): Promise<string> {
     meta: req.meta,
   });
 }
+
+// Re-export types for convenience
+export type { TextResult, ProviderMeta };
 
 /**
  * Health check for model service using the local client

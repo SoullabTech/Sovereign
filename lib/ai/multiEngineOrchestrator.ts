@@ -186,7 +186,7 @@ export class MultiEngineOrchestrator {
       console.error('Multi-engine orchestration failed:', error);
 
       // Fallback to single engine
-      const fallbackResponse = await generateWithLocalModel(params);
+      const { text: fallbackResponse } = await generateWithLocalModel(params);
 
       return {
         primaryResponse: fallbackResponse,

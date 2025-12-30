@@ -1,5 +1,6 @@
 // backend: lib/ai/localModelClient.ts
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
+import type { TextResult, ProviderMeta } from './types';
 
 type LocalProvider = 'ollama' | 'consciousness_engine';
 
@@ -18,30 +19,49 @@ export interface LocalChatParams {
   meta?: Record<string, unknown>;
 }
 
+// Helper to extract error reason for tracking
+function errReason(err: unknown): string {
+  if (!err) return 'unknown_error';
+  if (typeof err === 'string') return err.slice(0, 120);
+  const anyErr = err as Record<string, unknown>;
+  const msg = anyErr?.message || anyErr?.toString?.() || 'unknown_error';
+  return String(msg).slice(0, 120);
+}
+
 /**
  * Main entry for MAIA local text generation.
- * Based on proven test-sovereignty.js architecture.
+ * Returns text + provider metadata for sovereignty auditing.
  */
 export async function generateWithLocalModel(
   params: LocalChatParams,
-): Promise<string> {
+): Promise<TextResult> {
+  const t0 = Date.now();
+
   switch (LOCAL_PROVIDER) {
     case 'ollama':
-      return generateWithOllama(params);
+      return generateWithOllamaTracked(params, t0);
     case 'consciousness_engine':
-      return generateWithConsciousnessEngine(params);
+      return {
+        text: await generateWithConsciousnessEngine(params),
+        provider: {
+          provider: 'consciousness_engine',
+          model: 'template-engine',
+          mode: 'full', // When explicitly configured, it's "full" mode
+          latencyMs: Date.now() - t0,
+        },
+      };
     default:
       throw new Error(`Unsupported LOCAL_PROVIDER: ${LOCAL_PROVIDER}`);
   }
 }
 
 /**
- * Generate with Ollama (DeepSeek-R1, Llama, etc)
- * Uses the same chat format as proven test-sovereignty.js
+ * Generate with Ollama (DeepSeek-R1, Llama, etc) with tracking
  */
-async function generateWithOllama(
+async function generateWithOllamaTracked(
   params: LocalChatParams,
-): Promise<string> {
+  t0: number,
+): Promise<TextResult> {
   const { systemPrompt, userInput } = params;
 
   try {
@@ -81,10 +101,9 @@ async function generateWithOllama(
 
     const data = await response.json() as {
       message?: { content?: string };
-      response?: string; // fallback for generate API
+      response?: string;
     };
 
-    // Handle both chat API and generate API responses
     const content = data.message?.content || data.response || '';
 
     if (!content.trim()) {
@@ -92,11 +111,33 @@ async function generateWithOllama(
     }
 
     console.log('✅ Local model response generated:', content.length, 'chars');
-    return content.trim();
+
+    return {
+      text: content.trim(),
+      provider: {
+        provider: 'ollama',
+        model: OLLAMA_MODEL,
+        mode: 'full',
+        latencyMs: Date.now() - t0,
+      },
+    };
 
   } catch (error) {
     console.warn('Local Ollama model failed, falling back to consciousness engine:', error);
-    return generateWithConsciousnessEngine(params);
+
+    // Fallback to template engine
+    const fallbackText = await generateWithConsciousnessEngine(params);
+
+    return {
+      text: fallbackText,
+      provider: {
+        provider: 'consciousness_engine',
+        model: 'template-engine',
+        mode: 'fallback',
+        reason: errReason(error),
+        latencyMs: Date.now() - t0,
+      },
+    };
   }
 }
 
@@ -155,7 +196,7 @@ async function generateWithConsciousnessEngine(
       "🌱 You have access to all the clarity you need. Your perspective is valuable.",
     ];
     const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
-    response += `\n\n${randomAffirmation}`;
+    response += ` ${randomAffirmation}`;
   }
 
   return response;
@@ -170,16 +211,20 @@ export async function checkLocalModelHealth(): Promise<{
   status: 'healthy' | 'degraded' | 'offline';
   endpoint: string;
 }> {
-  const health = {
+  const health: {
+    provider: string;
+    model: string;
+    status: 'healthy' | 'degraded' | 'offline';
+    endpoint: string;
+  } = {
     provider: LOCAL_PROVIDER,
     model: OLLAMA_MODEL,
-    status: 'offline' as const,
+    status: 'offline',
     endpoint: OLLAMA_BASE_URL
   };
 
   try {
     if (LOCAL_PROVIDER === 'ollama') {
-      // Check Ollama health using the same pattern as test-sovereignty.js
       const response = await fetch(`${OLLAMA_BASE_URL}/api/version`, {
         signal: AbortSignal.timeout(5000)
       });

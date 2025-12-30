@@ -225,7 +225,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
       // Use full MAIA context if available + Spiralogic
       const adaptivePrompt = buildMaiaWisePrompt(context, userMessage, conversationHistory);
 
-      return await generateText({
+      const { text } = await generateText({
         systemPrompt: `${enhancedSystemPrompt}\n\n${adaptivePrompt}`,
         userInput: userMessage,
         meta: {
@@ -236,9 +236,10 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
           archetypalPatterns: spiralogicAnalysis.archetypalPatterns
         }
       });
+      return text;
     } else {
       // Enhanced Claude call with Spiralogic intelligence
-      return await generateText({
+      const { text } = await generateText({
         systemPrompt: enhancedSystemPrompt,
         userInput: userMessage,
         meta: {
@@ -249,6 +250,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
           archetypalPatterns: spiralogicAnalysis.archetypalPatterns
         }
       });
+      return text;
     }
   }
 
@@ -278,7 +280,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
       enhancedPrompt += `\n\nTraining examples for similar situations:\n${examplesText}\n\nNow respond to the current user:`;
     }
 
-    return await generateText({
+    const { text } = await generateText({
       systemPrompt: enhancedPrompt,
       userInput: userMessage,
       meta: {
@@ -287,6 +289,7 @@ As Claude Sonnet 4+ serving as MAIA's primary conversational intelligence, integ
         trainingExamplesUsed: trainingExamples.length
       }
     });
+    return text;
   }
 
   // Spiralogic Phenomenological Intelligence Analysis
