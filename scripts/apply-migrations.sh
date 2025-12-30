@@ -28,79 +28,66 @@ hash_file() {
   fi
 }
 
-tmp="$(mktemp -t maia-migrations.XXXXXX.psql)"
-cleanup(){ rm -f "$tmp"; }
+echo ""
+echo "🔎 DB identity:"
+psql "$DATABASE_URL" -tA -c "SELECT 'db=' || current_database() || ' host=' || COALESCE(inet_server_addr()::text, 'local') || ' port=' || inet_server_port() || ' user=' || current_user;"
+echo ""
+
+# Try to acquire advisory lock
+echo "🔒 Acquiring migration lock (${LOCK_ID})..."
+got_lock=$(psql "$DATABASE_URL" -tA -c "SELECT pg_try_advisory_lock(${LOCK_ID})::text;")
+if [[ "$got_lock" != "true" ]]; then
+  echo "❌ Another migration run is in progress (lock not acquired)."
+  exit 2
+fi
+echo "✅ Lock acquired."
+echo ""
+
+# Ensure cleanup releases lock
+cleanup() {
+  psql "$DATABASE_URL" -tA -c "SELECT pg_advisory_unlock(${LOCK_ID});" >/dev/null 2>&1 || true
+}
 trap cleanup EXIT
 
-# Build a single psql script so the advisory lock stays held
-{
-  echo '\set ON_ERROR_STOP on'
-  echo '\echo'
-  echo '\echo 🔎 DB identity:'
-  echo "SELECT current_database() AS db, inet_server_addr() AS host, inet_server_port() AS port, current_user AS user;"
-  echo '\echo'
+# Ensure schema_migrations table exists
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+CREATE TABLE IF NOT EXISTS schema_migrations (
+  filename text PRIMARY KEY,
+  checksum text,
+  applied_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS checksum text;
+SQL
 
-  echo "\echo 🔒 Acquiring migration lock (${LOCK_ID})..."
-  echo "SELECT pg_try_advisory_lock(${LOCK_ID}) AS got_lock; \\gset"
-  echo "\\if :got_lock != 't'"
-  echo "  \\echo '❌ Another migration run is in progress (lock not acquired).'"
-  echo "  \\quit 2"
-  echo "\\endif"
-  echo '\echo ✅ Lock acquired.'
-  echo '\echo'
-
-  # Track applied migrations (+ checksum to detect edits)
-  echo "CREATE TABLE IF NOT EXISTS schema_migrations ("
-  echo "  filename text PRIMARY KEY,"
-  echo "  checksum text,"
-  echo "  applied_at timestamptz NOT NULL DEFAULT now()"
-  echo ");"
-  echo "ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS checksum text;"
-} > "$tmp"
-
-# Append per-migration blocks
+# Apply each migration
 for f in "${files[@]}"; do
-  abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
   base="$(basename "$f")"
   sum="$(hash_file "$f")"
 
-  # escape single quotes
-  base_esc="${base//\'/\'\'}"
-  sum_esc="${sum//\'/\'\'}"
-  abs_esc="${abs//\'/\'\'}"
+  echo "— $base"
 
-  {
-    echo '\echo'
-    echo "\\echo '— ${base_esc}'"
-    echo "\\set filename '${base_esc}'"
-    echo "\\set checksum '${sum_esc}'"
+  # Check if already applied
+  already=$(psql "$DATABASE_URL" -tA -c "SELECT 1 FROM schema_migrations WHERE filename = '$base' LIMIT 1;")
 
-    # already applied?
-    echo "SELECT count(*)::int AS already FROM schema_migrations WHERE filename = :'filename'; \\gset"
-    echo "\\if :already > 0"
-    echo "  SELECT COALESCE(checksum,'') AS applied_checksum FROM schema_migrations WHERE filename = :'filename'; \\gset"
-    echo "  \\if :'applied_checksum' != '' AND :'applied_checksum' != :'checksum'"
-    echo "    \\echo '❌ Migration file changed after it was applied: ' :filename"
-    echo "    \\echo '   applied checksum: ' :'applied_checksum'"
-    echo "    \\echo '   current checksum: ' :'checksum'"
-    echo "    \\quit 3"
-    echo "  \\endif"
-    echo "  \\echo '↪︎ Skipping (already applied)'"
-    echo "\\else"
-    echo "  \\echo '➡️  Applying...'"
-    echo "  \\i '${abs_esc}'"
-    echo "  INSERT INTO schema_migrations(filename, checksum) VALUES (:'filename', :'checksum');"
-    echo "  \\echo '✅ Applied'"
-    echo "\\endif"
-  } >> "$tmp"
+  if [[ "$already" == "1" ]]; then
+    # Check checksum
+    applied_checksum=$(psql "$DATABASE_URL" -tA -c "SELECT COALESCE(checksum, '') FROM schema_migrations WHERE filename = '$base';")
+    if [[ -n "$applied_checksum" && "$applied_checksum" != "$sum" ]]; then
+      echo "❌ Migration file changed after it was applied: $base"
+      echo "   applied checksum: $applied_checksum"
+      echo "   current checksum: $sum"
+      exit 3
+    fi
+    echo "↪︎ Skipping (already applied)"
+  else
+    echo "➡️  Applying..."
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+    psql "$DATABASE_URL" -c "INSERT INTO schema_migrations(filename, checksum) VALUES ('$base', '$sum');"
+    echo "✅ Applied"
+  fi
+  echo ""
 done
 
-# Unlock at the end
-{
-  echo '\echo'
-  echo '\echo 🔓 Releasing migration lock...'
-  echo "SELECT pg_advisory_unlock(${LOCK_ID});"
-  echo '\echo ✅ All migrations applied'
-} >> "$tmp"
-
-psql "$DATABASE_URL" -f "$tmp"
+echo "🔓 Releasing migration lock..."
+# Lock released by trap
+echo "✅ All migrations applied"
