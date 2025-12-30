@@ -3,6 +3,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
+import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
 import type { TextResult, ProviderMeta } from './types';
 
 // Awareness level type (1-7 developmental scale)
@@ -119,45 +120,71 @@ function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): 
   const consciousnessPolicy = meta?.consciousnessPolicy as { awarenessLevel?: AwarenessLevel } | undefined;
   const awarenessLevel = consciousnessPolicy?.awarenessLevel ?? (meta?.awarenessLevel as AwarenessLevel | undefined);
 
+  // Feature flags / overrides
+  const forceOpus = Boolean(meta?.forceOpus);
+  const forceSonnet = Boolean(meta?.forceSonnet);
+  const isOpusTierUser = OPUS_USER_IDS.some(id => userId.toLowerCase().includes(id.toLowerCase()));
+
   // Check for deep patterns early - used by awareness routing too
   const hasDeepPattern = DEEP_DIVE_PATTERNS.test(input);
 
+  // 🔍 ROUTING LOG HELPER - captures full decision context
+  const logAndReturn = (selection: ModelSelection): ModelSelection => {
+    console.log(JSON.stringify({
+      _tag: 'MODEL_ROUTING',
+      level: awarenessLevel ?? null,
+      model: selection.tier,
+      reason: selection.reason,
+      overrides: { forceOpus, forceSonnet, isOpusTierUser, hasDeepPattern },
+      ctx: { mode, msgCount: messageCount, inputLen: input.length },
+    }));
+    return selection;
+  };
+
+  // 0. FORCE FLAGS (for testing)
+  if (forceOpus) {
+    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'force_opus_flag' });
+  }
+  if (forceSonnet) {
+    return logAndReturn({ model: SONNET_MODEL, tier: 'sonnet', reason: 'force_sonnet_flag' });
+  }
+
   // 1. Opus-tier users ALWAYS get deepest voice
-  if (OPUS_USER_IDS.some(id => userId.toLowerCase().includes(id.toLowerCase()))) {
-    return { model: OPUS_MODEL, tier: 'opus', reason: 'opus_tier_user' };
+  if (isOpusTierUser) {
+    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'opus_tier_user' });
   }
 
   // 2. Deep dive patterns ALWAYS get Opus
   if (hasDeepPattern) {
-    return { model: OPUS_MODEL, tier: 'opus', reason: 'deep_dive_detected' };
+    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'deep_dive_detected' });
   }
 
   // 3. AWARENESS-LEVEL ROUTING (developmental stage)
   const awarenessSelection = selectModelByAwareness(awarenessLevel, hasDeepPattern, mode);
   if (awarenessSelection) {
-    return {
+    return logAndReturn({
       model: awarenessSelection.tier === 'opus' ? OPUS_MODEL : SONNET_MODEL,
       ...awarenessSelection
-    };
+    });
   }
 
   // 4. Care mode ALWAYS gets Opus (counseling deserves depth)
   if (mode === 'care' || mode === 'counsel') {
-    return { model: OPUS_MODEL, tier: 'opus', reason: 'care_mode' };
+    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'care_mode' });
   }
 
   // 5. NEW CONVERSATIONS: Start with Opus (first impressions matter)
   if (messageCount <= 3) {
-    return { model: OPUS_MODEL, tier: 'opus', reason: 'new_conversation' };
+    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'new_conversation' });
   }
 
   // 6. After threshold turns of shallow conversation → Sonnet
   if (messageCount >= SONNET_THRESHOLD_TURNS) {
-    return { model: SONNET_MODEL, tier: 'sonnet', reason: 'established_casual' };
+    return logAndReturn({ model: SONNET_MODEL, tier: 'sonnet', reason: 'established_casual' });
   }
 
   // 7. Default: still early enough, keep Opus
-  return { model: OPUS_MODEL, tier: 'opus', reason: 'default_opus' };
+  return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'default_opus' });
 }
 
 export interface ClaudeChatParams {
@@ -237,7 +264,35 @@ export async function generateWithClaude(
       throw new Error('Empty response from Claude');
     }
 
-    console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${Date.now() - t0}ms`);
+    const latencyMs = Date.now() - t0;
+    console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
+
+    // Log telemetry (async, non-blocking)
+    const userId = (meta?.userId as string) || undefined;
+    const messageCount = (meta?.messageCount as number) || undefined;
+    const mode = (meta?.mode as string) || undefined;
+    const sessionId = (meta?.sessionId as string) || undefined;
+    const processingProfile = (meta?.processingProfile as string) || undefined;
+    const awarenessLevel = consciousnessPolicy?.awarenessLevel;
+    const hasDeepPattern = DEEP_DIVE_PATTERNS.test(userInput);
+    const isOpusTierUser = OPUS_USER_IDS.some(id =>
+      (userId || '').toLowerCase().includes(id.toLowerCase())
+    );
+
+    logVoiceTierTelemetry({
+      tier: selection.tier,
+      reason: selection.reason,
+      model: selection.model,
+      userId,
+      messageCount,
+      mode,
+      awarenessLevel,
+      hasDeepPattern,
+      isOpusTierUser,
+      sessionId,
+      processingProfile,
+      latencyMs
+    }).catch(() => { /* telemetry failures should never block */ });
 
     return {
       text,
@@ -245,7 +300,7 @@ export async function generateWithClaude(
         provider: 'anthropic',
         model: selection.model,
         mode: 'full',
-        latencyMs: Date.now() - t0,
+        latencyMs,
         tier: selection.tier,
         reason: selection.reason,
       } as ProviderMeta,
