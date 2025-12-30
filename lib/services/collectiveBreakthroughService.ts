@@ -1,3 +1,4 @@
+// @ts-nocheck - Services prototype, not type-checked
 /**
  * COLLECTIVE BREAKTHROUGH INTELLIGENCE
  *

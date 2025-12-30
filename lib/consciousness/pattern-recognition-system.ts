@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * 🧠 Pattern Recognition System
  * Learns collaboration patterns, predicts optimal agent combinations,

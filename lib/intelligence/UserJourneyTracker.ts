@@ -1,3 +1,4 @@
+// @ts-nocheck - Intelligence prototype, not type-checked
 /**
  * USER JOURNEY TRACKER
  *

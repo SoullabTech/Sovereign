@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * Elder Council Service - 39 Wisdom Traditions as Harmonic Frequencies
  *

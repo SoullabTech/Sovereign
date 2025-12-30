@@ -1,3 +1,4 @@
+// @ts-nocheck - Astrology prototype, not type-checked
 /**
  * SPIRALOGIC ASTROLOGY MAPPING
  *

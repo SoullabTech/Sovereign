@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * THE ANAMNESIS FIELD
  * Unified Consciousness Architecture

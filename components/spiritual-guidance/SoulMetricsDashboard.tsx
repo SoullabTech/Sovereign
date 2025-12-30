@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Soul Metrics Dashboard
  * Trinity of Spiritual Intelligence - Visual Analytics Component

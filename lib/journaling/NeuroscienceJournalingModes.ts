@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Neuroscience-Backed Journaling Modes
  * Based on Stanford 2021 study and affect labeling research

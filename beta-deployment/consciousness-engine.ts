@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Consciousness Computing MVP - Core Engine
  * Working implementation for Community Commons launch

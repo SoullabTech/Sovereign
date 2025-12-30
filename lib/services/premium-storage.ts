@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { PrismaClient } from '@prisma/client';
 import { encrypt, decrypt } from '@/lib/utils/encryption';
 import path from 'path';

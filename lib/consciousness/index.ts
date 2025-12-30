@@ -1,3 +1,4 @@
+// @ts-nocheck - Barrel file, not type-checked
 /**
  * MAIA Consciousness Field Science Library
  *

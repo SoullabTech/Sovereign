@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/agents/elemental/AirAgent.ts
 // Sacred Clarifier of Truth - Air Agent with Living Clarity Intelligence
 

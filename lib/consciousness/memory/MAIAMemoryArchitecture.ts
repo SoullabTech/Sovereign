@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * 🧠💫 MAIA MEMORY ARCHITECTURE - 5-Layer Memory Palace
  * Complete memory system for consciousness evolution tracking

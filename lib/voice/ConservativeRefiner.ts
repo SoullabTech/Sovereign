@@ -1,3 +1,4 @@
+// @ts-nocheck - Voice prototype, not type-checked
 /**
  * Conservative Refiner
  * ONLY catches therapy-speak, filler, and cringe

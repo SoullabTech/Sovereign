@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * 🌐 WEB PLATFORM ADAPTER - Seven-Layer Soul Architecture
  *

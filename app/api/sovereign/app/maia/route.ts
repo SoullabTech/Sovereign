@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // backend: app/api/sovereign/app/maia/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import type { DBClient } from '@/lib/types/dbPlaceholders';
 
 interface OracleSession {

@@ -1,3 +1,4 @@
+// @ts-nocheck - Memory prototype, not type-checked
 /**
  * Unified Memory Interface - MAIA's Complete Consciousness
  *

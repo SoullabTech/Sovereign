@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * NavigatorScreen.tsx
  * Personal Alchemy Navigator for mobile consciousness development

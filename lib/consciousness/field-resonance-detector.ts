@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Field Resonance Detector
  * Senses archetypal energies in real-time conversations

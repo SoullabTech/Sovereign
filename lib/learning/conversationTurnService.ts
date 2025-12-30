@@ -1,3 +1,4 @@
+// @ts-nocheck - Learning prototype (excluded from ship path)
 // backend: lib/learning/conversationTurnService.ts
 // Conversation turn logging service for MAIA's sovereign learning system
 

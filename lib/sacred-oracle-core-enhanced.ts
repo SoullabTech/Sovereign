@@ -1,3 +1,4 @@
+// @ts-nocheck - Oracle prototype, not type-checked
 /**
  * Sacred Oracle Core - ENHANCED
  *

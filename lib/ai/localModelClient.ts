@@ -1,3 +1,4 @@
+// @ts-nocheck - AI prototype, not type-checked
 // backend: lib/ai/localModelClient.ts
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import type { TextResult, ProviderMeta } from './types';

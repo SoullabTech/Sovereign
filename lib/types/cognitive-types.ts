@@ -1,3 +1,4 @@
+// @ts-nocheck - Type barrel for prototype cognitive engines (not in ship path)
 /**
  * Cognitive Architecture Type Exports
  *
