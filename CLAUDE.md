@@ -11,10 +11,11 @@
 
 ## MAIA Sovereignty
 
-- MAIA runs locally using Ollama (DeepSeek models)
-- Never propose OpenAI, Anthropic, or other cloud AI providers as dependencies
+- Primary AI: Claude (Anthropic) via `ANTHROPIC_API_KEY`
+- Fallback: Local Ollama (DeepSeek models) when API unavailable
+- Never use OpenAI or other cloud AI providers
 - Voice: Local TTS/STT or browser APIs only
-- Data: Local storage, never cloud services
+- Data: Local PostgreSQL, never cloud databases
 
 ## Architecture
 
