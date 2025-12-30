@@ -18,7 +18,7 @@ const path = require('path');
 // Allowlist: Legacy Supabase files pending PostgreSQL migration
 // See docs/LEGACY_SUPABASE.md for migration plan
 const ALLOWLIST = new Set([
-  'lib/field-protocol/FieldRecordsService.ts',
+  // All Supabase dependencies have been migrated to PostgreSQL
 ]);
 
 // Directories excluded from checking (separate codebases with their own configs)

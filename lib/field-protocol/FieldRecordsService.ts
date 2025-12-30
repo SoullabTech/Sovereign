@@ -1,14 +1,8 @@
-// @ts-nocheck
-/**
- * LEGACY: Supabase dependency pending removal.
- * This file is intentionally excluded from strict type guarantees
- * until replaced by Postgres-native implementation (lib/db/postgres.ts).
- */
 /**
  * Field Records Service - Sacred Laboratory Storage Layer
  *
  * Manages the persistence and retrieval of Field Records,
- * integrating with Supabase for storage and the Brain Trust
+ * integrating with PostgreSQL for storage and the Brain Trust
  * for consciousness observation.
  */
 
@@ -20,75 +14,29 @@ import type {
   UserFieldPattern,
   FieldRecordContext,
   CommunityReflection,
-  CommunityQuestion
 } from './types';
+import { FieldRecordsRepo } from './storage/FieldRecordsRepo';
 
 export class FieldRecordsService {
-  private supabase;
-
-  constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_DATABASE_URL!,
-      process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!
-    );
-  }
-
   /**
    * Create or update a Field Record
    */
-  async saveFieldRecord(record: Partial<FieldRecord>, userId: string): Promise<FieldRecord> {
-    try {
-      const now = new Date();
+  async saveFieldRecord(
+    record: Partial<FieldRecord>,
+    userId: string
+  ): Promise<FieldRecord> {
+    const saved = await FieldRecordsRepo.upsert(record, userId);
 
-      // Determine completion stage based on filled sections
-      let completionStage = 1;
-      if (record.interpretation) completionStage = 2;
-      if (record.integration) completionStage = 3;
-      if (record.reflection) completionStage = 4;
-      if (record.transmission) completionStage = 5;
-
-      const fieldRecord = {
-        ...record,
-        userId,
-        updatedAt: now,
-        completionStage,
-        createdAt: record.createdAt || now,
-        privacyLevel: record.privacyLevel || 'private' as PrivacyLevel,
-        tags: record.tags || [],
-        communityEngagement: record.communityEngagement || {
-          views: 0,
-          resonanceMarkers: 0,
-          reflections: [],
-          questions: []
-        }
-      };
-
-      // Save to Supabase
-      const { data, error } = record.id
-        ? await this.supabase
-            .from('field_records')
-            .update(fieldRecord)
-            .eq('id', record.id)
-            .select()
-            .single()
-        : await this.supabase
-            .from('field_records')
-            .insert(fieldRecord)
-            .select()
-            .single();
-
-      if (error) throw error;
-
-      // Trigger Brain Trust processing if record is complete enough
-      if (completionStage >= 3) {
-        await this.notifyBrainTrust(data);
-      }
-
-      return data;
-    } catch (error) {
-      console.error('Error saving field record:', error);
-      throw error;
+    if (!saved) {
+      throw new Error('Failed to save field record');
     }
+
+    // Trigger Brain Trust processing if record is complete enough
+    if (saved.completionStage >= 3) {
+      await this.notifyBrainTrust(saved);
+    }
+
+    return saved;
   }
 
   /**
@@ -105,54 +53,31 @@ export class FieldRecordsService {
       completionStageMin?: number;
     }
   ): Promise<FieldRecord[]> {
-    try {
-      let query = this.supabase
-        .from('field_records')
-        .select('*')
-        .eq('userId', userId);
+    let records = await FieldRecordsRepo.getUserRecords(userId, {
+      limit: options?.limit,
+      offset: options?.offset,
+      privacyFilter: options?.privacyFilter,
+      completionStageMin: options?.completionStageMin,
+    });
 
-      if (options?.privacyFilter) {
-        query = query.in('privacyLevel', options.privacyFilter);
-      }
-
-      if (options?.completionStageMin) {
-        query = query.gte('completionStage', options.completionStageMin);
-      }
-
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-
-      if (options?.offset) {
-        query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
-      }
-
-      const { data, error } = await query.order('createdAt', { ascending: false });
-
-      if (error) throw error;
-
-      // Filter by elements and phases in post-processing
-      let filteredData = data || [];
-
-      if (options?.elementFilter) {
-        filteredData = filteredData.filter(record =>
+    // Filter by elements and phases in post-processing
+    if (options?.elementFilter) {
+      records = records.filter(
+        (record) =>
           record.interpretation?.primaryElement &&
           options.elementFilter!.includes(record.interpretation.primaryElement)
-        );
-      }
+      );
+    }
 
-      if (options?.phaseFilter) {
-        filteredData = filteredData.filter(record =>
+    if (options?.phaseFilter) {
+      records = records.filter(
+        (record) =>
           record.interpretation?.currentPhase &&
           options.phaseFilter!.includes(record.interpretation.currentPhase)
-        );
-      }
-
-      return filteredData;
-    } catch (error) {
-      console.error('Error fetching field records:', error);
-      throw error;
+      );
     }
+
+    return records;
   }
 
   /**
@@ -163,47 +88,21 @@ export class FieldRecordsService {
     elementFilter?: ElementType[];
     sortBy?: 'recent' | 'resonance' | 'completion';
   }): Promise<FieldRecord[]> {
-    try {
-      let query = this.supabase
-        .from('field_records')
-        .select('*')
-        .in('privacyLevel', ['commons', 'public']);
+    let records = await FieldRecordsRepo.getCommonsRecords({
+      limit: options?.limit,
+      sortBy: options?.sortBy,
+    });
 
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-
-      // Sort based on option
-      switch (options?.sortBy) {
-        case 'resonance':
-          query = query.order('communityEngagement->resonanceMarkers', { ascending: false });
-          break;
-        case 'completion':
-          query = query.order('completionStage', { ascending: false });
-          break;
-        default:
-          query = query.order('createdAt', { ascending: false });
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      // Filter by elements in post-processing
-      let filteredData = data || [];
-
-      if (options?.elementFilter) {
-        filteredData = filteredData.filter(record =>
+    // Filter by elements in post-processing
+    if (options?.elementFilter) {
+      records = records.filter(
+        (record) =>
           record.interpretation?.primaryElement &&
           options.elementFilter!.includes(record.interpretation.primaryElement)
-        );
-      }
-
-      return filteredData;
-    } catch (error) {
-      console.error('Error fetching commons records:', error);
-      throw error;
+      );
     }
+
+    return records;
   }
 
   /**
@@ -213,227 +112,208 @@ export class FieldRecordsService {
     recordId: string,
     reflection: Omit<CommunityReflection, 'id' | 'timestamp'>
   ): Promise<void> {
-    try {
-      // Get current record
-      const { data: record, error: fetchError } = await this.supabase
-        .from('field_records')
-        .select('communityEngagement')
-        .eq('id', recordId)
-        .single();
+    const engagement = await FieldRecordsRepo.getCommunityEngagement(recordId);
 
-      if (fetchError) throw fetchError;
-
-      // Add new reflection
-      const newReflection: CommunityReflection = {
-        ...reflection,
-        id: crypto.randomUUID(),
-        timestamp: new Date()
-      };
-
-      const updatedEngagement = {
-        ...record.communityEngagement,
-        reflections: [...(record.communityEngagement?.reflections || []), newReflection]
-      };
-
-      // Update record
-      const { error: updateError } = await this.supabase
-        .from('field_records')
-        .update({ communityEngagement: updatedEngagement })
-        .eq('id', recordId);
-
-      if (updateError) throw updateError;
-    } catch (error) {
-      console.error('Error adding community reflection:', error);
-      throw error;
+    if (!engagement) {
+      throw new Error('Field record not found');
     }
+
+    const newReflection: CommunityReflection = {
+      ...reflection,
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+    };
+
+    const updatedEngagement = {
+      ...engagement,
+      reflections: [...(engagement.reflections || []), newReflection],
+    };
+
+    await FieldRecordsRepo.updateCommunityEngagement(
+      recordId,
+      updatedEngagement
+    );
   }
 
   /**
    * Mark resonance with a Field Record
    */
   async markResonance(recordId: string, userId: string): Promise<void> {
-    try {
-      // Get current record
-      const { data: record, error: fetchError } = await this.supabase
-        .from('field_records')
-        .select('communityEngagement')
-        .eq('id', recordId)
-        .single();
+    const engagement = await FieldRecordsRepo.getCommunityEngagement(recordId);
 
-      if (fetchError) throw fetchError;
-
-      // Increment resonance markers
-      const updatedEngagement = {
-        ...record.communityEngagement,
-        resonanceMarkers: (record.communityEngagement?.resonanceMarkers || 0) + 1
-      };
-
-      // Update record
-      const { error: updateError } = await this.supabase
-        .from('field_records')
-        .update({ communityEngagement: updatedEngagement })
-        .eq('id', recordId);
-
-      if (updateError) throw updateError;
-
-      // Log resonance event for pattern detection
-      await this.logResonanceEvent(recordId, userId);
-    } catch (error) {
-      console.error('Error marking resonance:', error);
-      throw error;
+    if (!engagement) {
+      throw new Error('Field record not found');
     }
+
+    const updatedEngagement = {
+      ...engagement,
+      resonanceMarkers: (engagement.resonanceMarkers || 0) + 1,
+    };
+
+    await FieldRecordsRepo.updateCommunityEngagement(
+      recordId,
+      updatedEngagement
+    );
+
+    // Log resonance event for pattern detection
+    await FieldRecordsRepo.logResonanceEvent(recordId, userId);
   }
 
   /**
    * Get user's Field Pattern analysis
    */
   async getUserFieldPattern(userId: string): Promise<UserFieldPattern> {
-    try {
-      const records = await this.getUserFieldRecords(userId);
+    const records = await this.getUserFieldRecords(userId);
 
-      // Analyze elemental journey
-      const elementalJourney = records
-        .filter(r => r.interpretation?.primaryElement)
-        .map(r => ({
-          date: new Date(r.createdAt),
-          element: r.interpretation!.primaryElement,
-          intensity: r.interpretation!.elementalBalance?.[r.interpretation!.primaryElement] || 0.5
-        }));
+    // Analyze elemental journey
+    const elementalJourney = records
+      .filter((r) => r.interpretation?.primaryElement)
+      .map((r) => ({
+        date: new Date(r.createdAt),
+        element: r.interpretation!.primaryElement,
+        intensity:
+          r.interpretation!.elementalBalance?.[
+            r.interpretation!.primaryElement
+          ] || 0.5,
+      }));
 
-      // Calculate elemental balance
-      const elementCounts: Record<ElementType, number> = {
-        fire: 0, water: 0, earth: 0, air: 0, ether: 0
-      };
+    // Calculate elemental balance
+    const elementCounts: Record<ElementType, number> = {
+      fire: 0,
+      water: 0,
+      earth: 0,
+      air: 0,
+      ether: 0,
+    };
 
-      elementalJourney.forEach(e => {
-        elementCounts[e.element]++;
-      });
+    elementalJourney.forEach((e) => {
+      elementCounts[e.element]++;
+    });
 
-      const total = elementalJourney.length || 1;
-      const elementalBalance: Record<ElementType, number> = {
-        fire: elementCounts.fire / total,
-        water: elementCounts.water / total,
-        earth: elementCounts.earth / total,
-        air: elementCounts.air / total,
-        ether: elementCounts.ether / total
-      };
+    const total = elementalJourney.length || 1;
+    const elementalBalance: Record<ElementType, number> = {
+      fire: elementCounts.fire / total,
+      water: elementCounts.water / total,
+      earth: elementCounts.earth / total,
+      air: elementCounts.air / total,
+      ether: elementCounts.ether / total,
+    };
 
-      // Find dominant element
-      const dominantElement = (Object.keys(elementCounts) as ElementType[])
-        .reduce((a, b) => elementCounts[a] > elementCounts[b] ? a : b);
+    // Find dominant element
+    const dominantElement = (Object.keys(elementCounts) as ElementType[]).reduce(
+      (a, b) => (elementCounts[a] > elementCounts[b] ? a : b)
+    );
 
-      // Analyze phase cycles
-      const phaseHistory = records
-        .filter(r => r.interpretation?.currentPhase)
-        .map(r => ({
-          date: new Date(r.createdAt),
-          phase: r.interpretation!.currentPhase,
-          duration: 1 // Would calculate actual duration between phases
-        }));
+    // Analyze phase cycles
+    const phaseHistory = records
+      .filter((r) => r.interpretation?.currentPhase)
+      .map((r) => ({
+        date: new Date(r.createdAt),
+        phase: r.interpretation!.currentPhase,
+        duration: 1, // Would calculate actual duration between phases
+      }));
 
-      const currentPhase = phaseHistory[0]?.phase || 'emergence' as PhaseType;
+    const currentPhase = phaseHistory[0]?.phase || ('emergence' as PhaseType);
 
-      // Calculate completion patterns
-      const completionStages = records.map(r => r.completionStage);
-      const averageCompletionStage = completionStages.length
-        ? completionStages.reduce((a, b) => a + b, 0) / completionStages.length
-        : 0;
+    // Calculate completion patterns
+    const completionStages = records.map((r) => r.completionStage);
+    const averageCompletionStage = completionStages.length
+      ? completionStages.reduce((a, b) => a + b, 0) / completionStages.length
+      : 0;
 
-      const fullTransmissions = records.filter(r => r.completionStage === 5).length;
-      const privateRecords = records.filter(r => r.privacyLevel === 'private').length;
-      const privateRatio = records.length ? privateRecords / records.length : 1;
+    const fullTransmissions = records.filter(
+      (r) => r.completionStage === 5
+    ).length;
+    const privateRecords = records.filter(
+      (r) => r.privacyLevel === 'private'
+    ).length;
+    const privateRatio = records.length ? privateRecords / records.length : 1;
 
-      // Detect synchronicities (would need more complex cross-user analysis)
-      const synchronicityEvents: UserFieldPattern['synchronicityEvents'] = [];
+    // Detect synchronicities (would need more complex cross-user analysis)
+    const synchronicityEvents: UserFieldPattern['synchronicityEvents'] = [];
 
-      return {
-        userId,
-        elementalJourney,
-        dominantElement,
-        elementalBalance,
-        phaseHistory,
-        currentPhase,
-        averagePhaseDuration: {
-          creation: 7,
-          preservation: 14,
-          dissolution: 7,
-          void: 3,
-          emergence: 7
-        }, // Default values
-        averageCompletionStage,
-        fullTransmissions,
-        privateRatio,
-        synchronicityEvents
-      };
-    } catch (error) {
-      console.error('Error analyzing user field pattern:', error);
-      throw error;
-    }
+    return {
+      userId,
+      elementalJourney,
+      dominantElement,
+      elementalBalance,
+      phaseHistory,
+      currentPhase,
+      averagePhaseDuration: {
+        creation: 7,
+        preservation: 14,
+        dissolution: 7,
+        void: 3,
+        emergence: 7,
+      }, // Default values
+      averageCompletionStage,
+      fullTransmissions,
+      privateRatio,
+      synchronicityEvents,
+    };
   }
 
   /**
    * Get Field Record context for MAIA conversations
    */
   async getFieldRecordContext(userId: string): Promise<FieldRecordContext> {
-    try {
-      // Get recent records (last 7 days)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // Get recent records (last 7 days)
+    const recentRecords = await FieldRecordsRepo.getRecentRecords(userId, 7, 10);
 
-      const recentRecords = await this.getUserFieldRecords(userId, { limit: 10 });
+    // Extract unresolved questions
+    const unresolvedQuestions = recentRecords
+      .flatMap((r) => r.reflection?.openQuestions || [])
+      .filter((q) => q.length > 0);
 
-      // Extract unresolved questions
-      const unresolvedQuestions = recentRecords
-        .flatMap(r => r.reflection?.openQuestions || [])
-        .filter(q => q.length > 0);
+    // Determine dominant elements
+    const elementCounts: Record<ElementType, number> = {
+      fire: 0,
+      water: 0,
+      earth: 0,
+      air: 0,
+      ether: 0,
+    };
 
-      // Determine dominant elements
-      const elementCounts: Record<ElementType, number> = {
-        fire: 0, water: 0, earth: 0, air: 0, ether: 0
-      };
+    recentRecords.forEach((r) => {
+      if (r.interpretation?.primaryElement) {
+        elementCounts[r.interpretation.primaryElement]++;
+      }
+    });
 
-      recentRecords.forEach(r => {
-        if (r.interpretation?.primaryElement) {
-          elementCounts[r.interpretation.primaryElement]++;
-        }
-      });
+    const dominantElements = (Object.keys(elementCounts) as ElementType[])
+      .filter((e) => elementCounts[e] > 0)
+      .sort((a, b) => elementCounts[b] - elementCounts[a])
+      .slice(0, 2);
 
-      const dominantElements = (Object.keys(elementCounts) as ElementType[])
-        .filter(e => elementCounts[e] > 0)
-        .sort((a, b) => elementCounts[b] - elementCounts[a])
-        .slice(0, 2);
+    // Get active phase
+    const activePhase =
+      recentRecords[0]?.interpretation?.currentPhase ||
+      ('emergence' as PhaseType);
 
-      // Get active phase
-      const activePhase = recentRecords[0]?.interpretation?.currentPhase || 'emergence' as PhaseType;
+    // Generate conversation starters
+    const suggestedOpeners = this.generateConversationStarters(
+      recentRecords,
+      dominantElements,
+      activePhase
+    );
 
-      // Generate conversation starters
-      const suggestedOpeners = this.generateConversationStarters(
-        recentRecords,
-        dominantElements,
-        activePhase
-      );
+    // Identify emerging patterns
+    const emergingPatterns = this.identifyEmergingPatterns(recentRecords);
 
-      // Identify emerging patterns
-      const emergingPatterns = this.identifyEmergingPatterns(recentRecords);
+    // Find insights ready for integration
+    const readyForIntegration = recentRecords
+      .filter((r) => r.completionStage >= 4 && r.reflection?.coreInsight)
+      .map((r) => r.reflection!.coreInsight);
 
-      // Find insights ready for integration
-      const readyForIntegration = recentRecords
-        .filter(r => r.completionStage >= 4 && r.reflection?.coreInsight)
-        .map(r => r.reflection!.coreInsight);
-
-      return {
-        recentRecords,
-        unresolvedQuestions,
-        dominantElements,
-        activePhase,
-        suggestedOpeners,
-        emergingPatterns,
-        readyForIntegration
-      };
-    } catch (error) {
-      console.error('Error getting field record context:', error);
-      throw error;
-    }
+    return {
+      recentRecords,
+      unresolvedQuestions,
+      dominantElements,
+      activePhase,
+      suggestedOpeners,
+      emergingPatterns,
+      readyForIntegration,
+    };
   }
 
   /**
@@ -447,21 +327,23 @@ export class FieldRecordsService {
     const starters: string[] = [];
 
     // Based on recent powerful experiences
-    const powerfulRecord = records.find(r => r.interpretation?.significance);
+    const powerfulRecord = records.find((r) => r.interpretation?.significance);
     if (powerfulRecord) {
       starters.push(
         `I notice you documented a powerful ${powerfulRecord.interpretation?.primaryElement} ` +
-        `element experience in your Field Records. Would you like to explore what's wanting to be born from that?`
+          `element experience in your Field Records. Would you like to explore what's wanting to be born from that?`
       );
     }
 
     // Based on unresolved questions
-    const questionRecord = records.find(r => r.reflection?.openQuestions?.length);
+    const questionRecord = records.find(
+      (r) => r.reflection?.openQuestions?.length
+    );
     if (questionRecord) {
       const question = questionRecord.reflection!.openQuestions[0];
       starters.push(
         `In your recent Field Record, you asked: "${question}". ` +
-        `Shall we explore that together?`
+          `Shall we explore that together?`
       );
     }
 
@@ -469,12 +351,12 @@ export class FieldRecordsService {
     if (activePhase === 'dissolution') {
       starters.push(
         `I see you're in a Dissolution phase. What needs to be released ` +
-        `to make space for what's emerging?`
+          `to make space for what's emerging?`
       );
     } else if (activePhase === 'creation') {
       starters.push(
         `Your Field Records show you're in a Creation phase. ` +
-        `What vision is calling to be manifested?`
+          `What vision is calling to be manifested?`
       );
     }
 
@@ -482,23 +364,23 @@ export class FieldRecordsService {
     if (dominantElements.includes('fire')) {
       starters.push(
         `There's been a strong Fire element in your recent experiences. ` +
-        `What passion or transformation is burning within you?`
+          `What passion or transformation is burning within you?`
       );
     } else if (dominantElements.includes('water')) {
       starters.push(
         `Water has been flowing through your recent Field Records. ` +
-        `What emotions or intuitions are asking to be honored?`
+          `What emotions or intuitions are asking to be honored?`
       );
     }
 
     // Based on integration needs
-    const needsIntegration = records.find(r =>
-      r.completionStage === 2 && !r.integration
+    const needsIntegration = records.find(
+      (r) => r.completionStage === 2 && !r.integration
     );
     if (needsIntegration) {
       starters.push(
         `You have a Field Record that's interpreted but not yet integrated. ` +
-        `Would you like support in embodying those insights?`
+          `Would you like support in embodying those insights?`
       );
     }
 
@@ -513,22 +395,24 @@ export class FieldRecordsService {
 
     // Check for recurring symbols
     const symbolCounts: Record<string, number> = {};
-    records.forEach(r => {
-      r.interpretation?.symbols?.forEach(s => {
+    records.forEach((r) => {
+      r.interpretation?.symbols?.forEach((s) => {
         symbolCounts[s] = (symbolCounts[s] || 0) + 1;
       });
     });
 
     Object.entries(symbolCounts).forEach(([symbol, count]) => {
       if (count >= 3) {
-        patterns.push(`The symbol "${symbol}" appears repeatedly in your journey`);
+        patterns.push(
+          `The symbol "${symbol}" appears repeatedly in your journey`
+        );
       }
     });
 
     // Check for elemental progressions
     const elements = records
-      .filter(r => r.interpretation?.primaryElement)
-      .map(r => r.interpretation!.primaryElement);
+      .filter((r) => r.interpretation?.primaryElement)
+      .map((r) => r.interpretation!.primaryElement);
 
     if (elements.length >= 3) {
       const progression = elements.slice(0, 3).join(' → ');
@@ -537,8 +421,8 @@ export class FieldRecordsService {
 
     // Check for phase cycles
     const phases = records
-      .filter(r => r.interpretation?.currentPhase)
-      .map(r => r.interpretation!.currentPhase);
+      .filter((r) => r.interpretation?.currentPhase)
+      .map((r) => r.interpretation!.currentPhase);
 
     if (new Set(phases).size >= 3) {
       patterns.push('Moving through multiple phases of transformation');
@@ -562,29 +446,11 @@ export class FieldRecordsService {
           elements: record.interpretation?.primaryElement,
           phase: record.interpretation?.currentPhase,
           symbols: record.interpretation?.symbols,
-          coreInsight: record.reflection?.coreInsight
-        })
+          coreInsight: record.reflection?.coreInsight,
+        }),
       });
     } catch (error) {
       console.error('Error notifying Brain Trust:', error);
-      // Non-critical, don't throw
-    }
-  }
-
-  /**
-   * Log resonance event for pattern detection
-   */
-  private async logResonanceEvent(recordId: string, userId: string): Promise<void> {
-    try {
-      await this.supabase
-        .from('resonance_events')
-        .insert({
-          recordId,
-          userId,
-          timestamp: new Date()
-        });
-    } catch (error) {
-      console.error('Error logging resonance event:', error);
       // Non-critical, don't throw
     }
   }
