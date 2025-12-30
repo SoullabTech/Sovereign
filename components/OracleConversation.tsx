@@ -167,6 +167,7 @@ interface ConversationMessage {
 }
 
 // 🌀 SELFLET: Strip past-self preface when card is shown (prevent duplicate)
+// Tolerant to whitespace variations and quote styles
 function stripPastSelfPreface(
   text: string | undefined | null,
   pastSelf?: PastSelfPayload
@@ -174,17 +175,24 @@ function stripPastSelfPreface(
   if (!text) return text ?? undefined;
   if (!pastSelf?.content) return text;
 
-  // Match the exact format from the delivery guard
-  const variants = [
-    `Your past self left you a message: "${pastSelf.content}"`,
-    `Your past self left you a message: '${pastSelf.content}'`,
-    `Your past self left you a message: ${pastSelf.content}`,
-  ];
+  const prefix = 'Your past self left you a message:';
+  if (!text.startsWith(prefix)) return text;
 
-  for (const v of variants) {
-    if (text.startsWith(v)) return text.slice(v.length).trimStart();
-  }
-  return text;
+  // Find the first occurrence of the content after the prefix
+  const afterPrefix = text.slice(prefix.length);
+  const idx = afterPrefix.indexOf(pastSelf.content);
+  if (idx === -1) return text;
+
+  // Move cursor to end of content
+  let cut = prefix.length + idx + pastSelf.content.length;
+
+  // If there's a closing quote right after, include it (handles smart quotes)
+  const QUOTES = new Set(['"', "'", '\u201C', '\u201D', '\u2018', '\u2019']);
+  const nextChar = text[cut];
+  if (nextChar && QUOTES.has(nextChar)) cut += 1;
+
+  // Strip whitespace/newlines after the preface
+  return text.slice(cut).trimStart();
 }
 
 // Component to clean messages by removing stage directions

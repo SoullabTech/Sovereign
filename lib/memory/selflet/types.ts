@@ -6,6 +6,15 @@ export type Element = 'fire' | 'water' | 'earth' | 'air' | 'aether';
 export type MessageType = 'letter' | 'symbolic_state' | 'future_projection' | 'wisdom_seed';
 export type BoundaryType = 'micro' | 'breakthrough' | 'evolution' | 'transformation' | 'collective';
 
+/**
+ * Phase 2I: State for surfacing gating (cooldown, per-session limits)
+ */
+export interface UserSelfletState {
+  lastSelfletTime: Date | null;
+  lastSelfletTurn: number | null;
+  countThisSession: number;
+}
+
 export interface SelfletNode {
   id: string;
   userId: string;

@@ -22,6 +22,8 @@
 import { selfletChain } from './SelfletChain';
 import { selfletBoundaryDetector } from './SelfletBoundaryDetector';
 import { selfletRituals } from './SelfletRituals';
+import { calculateSurfacingScore, type SurfacingResult } from './SelfletSurfacingScore';
+import { SELFLET_SURFACING_CONFIG } from './SelfletSurfacingConfig';
 import {
   SelfletContext,
   BoundarySignal,
@@ -29,6 +31,74 @@ import {
   Element,
   ReflectionPrompt,
 } from './types';
+
+// ═══════════════════════════════════════════════════════════════
+// THEME INFERENCE (fallback when relationship memory is empty)
+// ═══════════════════════════════════════════════════════════════
+
+const THEME_KEYWORDS: Record<string, string[]> = {
+  earth: ['ground', 'grounding', 'stable', 'stability', 'root', 'body', 'practical', 'secure', 'safety', 'home'],
+  water: ['feel', 'feeling', 'emotion', 'grief', 'love', 'heart', 'flow', 'tears', 'sad', 'relationship'],
+  fire: ['passion', 'action', 'will', 'courage', 'anger', 'drive', 'purpose', 'vision', 'decide', 'transform'],
+  air: ['think', 'thought', 'mind', 'clarity', 'understand', 'communicate', 'idea', 'analyze', 'perspective'],
+  aether: ['soul', 'spirit', 'meaning', 'mystery', 'dream', 'synchronicity', 'sacred', 'wisdom', 'archetype'],
+};
+
+/**
+ * Extract themes from user message text (fallback for new users)
+ */
+function inferThemesFromMessage(message: string): string[] {
+  if (!message) return [];
+  const t = message.toLowerCase();
+  const themes: string[] = [];
+
+  for (const [theme, keywords] of Object.entries(THEME_KEYWORDS)) {
+    if (keywords.some(kw => t.includes(kw))) {
+      themes.push(theme);
+    }
+  }
+
+  return themes;
+}
+
+/**
+ * Word-boundary-aware literal theme matching.
+ * Prevents false positives like "distrust" matching "trust".
+ * Handles both single words (token match) and phrases (padded substring).
+ * Punctuation-safe: "inner wisdom," still matches "inner wisdom".
+ */
+function literalThemeMatches(msgText: string, themes: string[]): string[] {
+  // Clean text once: remove punctuation, normalize whitespace
+  const cleaned = msgText
+    .toLowerCase()
+    .replace(/[^a-z0-9\s'-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Early return for empty input
+  if (!cleaned) return [];
+
+  const norm = ` ${cleaned} `;
+  const tokens = new Set(cleaned.split(' ').filter(Boolean));
+
+  return (themes ?? []).filter(t => {
+    // Normalize theme: strip quotes, then clean same way as message
+    const themeClean = (t ?? '')
+      .toLowerCase()
+      .trim()
+      .replace(/^["']|["']$/g, '')
+      .replace(/[^a-z0-9\s'-]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!themeClean) return false;
+
+    // single word → token match (prevents distrust/thrust false positives)
+    if (!themeClean.includes(' ')) return tokens.has(themeClean);
+
+    // phrase → whitespace-padded substring match
+    return norm.includes(` ${themeClean} `);
+  });
+}
 
 // ═══════════════════════════════════════════════════════════════
 // CONTEXT LOADING
@@ -49,17 +119,37 @@ export interface SelfletLoadResult {
 }
 
 /**
+ * Phase 2I: Extended options for surfacing gating
+ */
+export interface SelfletLoadOptions {
+  currentThemes?: string[];
+  userMessage?: string;
+  sessionId?: string;
+  turnNumber?: number;
+  emotionalIntensity?: number;
+  contextMode?: string;
+}
+
+/**
  * Load selflet context for a user
  * Call this early in the chat route, after identity resolution
  *
  * Uses granular try/catch so failures in one area don't block others.
  * surfacedMessageId is ALWAYS returned (null if no message).
+ *
+ * Phase 2I: Now includes surfacing gating (cooldowns, limits, intensity checks)
  */
 export async function loadSelfletContext(
   userId: string,
-  currentThemes?: string[],
+  currentThemesOrOptions?: string[] | SelfletLoadOptions,
   userMessage?: string
 ): Promise<SelfletLoadResult> {
+  // Normalize arguments (backward compatible)
+  const opts: SelfletLoadOptions = Array.isArray(currentThemesOrOptions)
+    ? { currentThemes: currentThemesOrOptions, userMessage }
+    : (currentThemesOrOptions ?? {});
+
+  const currentThemes = opts.currentThemes;
   // Initialize with safe defaults
   let context: Awaited<ReturnType<typeof selfletChain.buildContext>> | null = null;
   let promptInjection = '';
@@ -102,25 +192,96 @@ export async function loadSelfletContext(
   }
 
   // 3) Fetch pending message for context (CRITICAL for delivery marking)
+  // Phase 2I: Apply surfacing gating before choosing to surface
   try {
     const pendingMsg = await selfletChain.getPendingMessageForContext({
       userId,
       currentThemes: currentThemes ?? [],
       limit: 1,
     });
+
     if (pendingMsg) {
-      surfacedMessageId = pendingMsg.id;
-      surfacedDeliveryContext = {
-        messageTitle: pendingMsg.title,
-        messageContent: pendingMsg.content, // Phase 2H: Expose for UI card
-        messageType: pendingMsg.messageType,
-        fromSelfletId: pendingMsg.fromSelfletId,
-        relevanceThemes: pendingMsg.relevanceThemes,
-        surfacedAt: new Date().toISOString(),
-      };
-      surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
-      requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;
-      console.log(`[SELFLET] 📬 Surfacing pending message: ${pendingMsg.title} (${pendingMsg.id})`);
+      // Phase 2I: Check gating rules before surfacing
+      const userState = await selfletChain.getUserSelfletState(
+        userId,
+        opts.sessionId
+      );
+
+      // Combine relationship themes with inferred themes from user message
+      const relationshipThemes = currentThemes ?? [];
+      const inferredThemes = opts.userMessage ? inferThemesFromMessage(opts.userMessage) : [];
+
+      // Second pass: word-boundary-aware literal theme matching
+      // This catches human themes like 'trust', 'patience', 'growth' that elemental inference misses
+      // Uses token matching to prevent false positives (e.g., "distrust" won't match "trust")
+      const literalMatches = literalThemeMatches(
+        opts.userMessage ?? '',
+        pendingMsg.relevanceThemes ?? []
+      );
+
+      const detectedThemes = [...new Set([...relationshipThemes, ...inferredThemes, ...literalMatches])];
+
+      const surfacingResult: SurfacingResult = calculateSurfacingScore(
+        pendingMsg,
+        {
+          sessionId: opts.sessionId,
+          turnNumber: opts.turnNumber,
+          detectedThemes,
+          emotionalIntensity: opts.emotionalIntensity ?? 0,
+          contextMode: opts.contextMode,
+          lastSelfletTurn: userState.lastSelfletTurn,
+          lastSelfletTime: userState.lastSelfletTime,
+          selfletsSurfacedThisSession: userState.countThisSession,
+        },
+        SELFLET_SURFACING_CONFIG
+      );
+
+      if (!surfacingResult.shouldSurface) {
+        // Structured gating log for debugging
+        console.log('[SELFLET] ⏸️ Gated:', JSON.stringify({
+          userId,
+          messageId: pendingMsg.id,
+          sessionId: opts.sessionId,
+          turnNumber: opts.turnNumber,
+          reason: surfacingResult.reason,
+          blockedBy: surfacingResult.blockedBy,
+          score: surfacingResult.score,
+          detectedThemes,
+          messageThemes: pendingMsg.relevanceThemes,
+          cooldownTurns: SELFLET_SURFACING_CONFIG.cooldownTurns,
+          cooldownMinutes: SELFLET_SURFACING_CONFIG.cooldownMinutes,
+          sessionCount: userState.countThisSession,
+          lastSelfletTurn: userState.lastSelfletTurn,
+        }));
+        // Skip surfacing - leave pendingMsg undelivered for later
+      } else {
+        surfacedMessageId = pendingMsg.id;
+        surfacedDeliveryContext = {
+          messageTitle: pendingMsg.title,
+          messageContent: pendingMsg.content, // Phase 2H: Expose for UI card
+          messageType: pendingMsg.messageType,
+          fromSelfletId: pendingMsg.fromSelfletId,
+          relevanceThemes: pendingMsg.relevanceThemes,
+          surfacedAt: new Date().toISOString(),
+          // Phase 2I: Include session/turn for delivery tracking
+          sessionId: opts.sessionId,
+          turnNumber: opts.turnNumber,
+          surfacingScore: surfacingResult.score,
+        };
+        surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
+        requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;
+        // Structured surfacing log
+        console.log('[SELFLET] 📬 Surfaced:', JSON.stringify({
+          userId,
+          sessionId: opts.sessionId,
+          turnNumber: opts.turnNumber,
+          messageId: pendingMsg.id,
+          title: pendingMsg.title,
+          score: surfacingResult.score,
+          detectedThemes,
+          messageThemes: pendingMsg.relevanceThemes,
+        }));
+      }
     }
   } catch (err) {
     console.error('[SELFLET] getPendingMessageForContext failed:', err);
@@ -214,6 +375,10 @@ export interface PostResponseInput {
   sessionDurationMinutes?: number;
   breakthroughCountThisSession?: number;
 
+  // Phase 2I: Session/turn tracking for delivery gating
+  sessionId?: string;
+  turnNumber?: number;
+
   // Message that was surfaced during loadSelfletContext()
   surfacedSelfletMessageId?: string;
   surfacedDeliveryContext?: Record<string, unknown>;
@@ -270,17 +435,20 @@ export async function processSelfletAfterResponse(
 
     // Phase 2C: Mark surfaced message as delivered (BEFORE boundary detection)
     // This ensures messages are marked delivered once surfaced, regardless of boundary
+    // Phase 2I: Include session/turn for cooldown gating
     if (input.surfacedSelfletMessageId) {
       try {
         await selfletChain.markMessageDeliveredById({
           messageId: input.surfacedSelfletMessageId,
+          deliveredSessionId: input.sessionId,
+          deliveredTurnId: input.turnNumber,
           deliveryContext: {
             ...(input.surfacedDeliveryContext || {}),
             deliveredAt: new Date().toISOString(),
             assistantResponseExcerpt: input.assistantResponse.slice(0, 300),
           },
         });
-        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered`);
+        console.log(`[SELFLET] ✅ Marked message ${input.surfacedSelfletMessageId} as delivered (session=${input.sessionId}, turn=${input.turnNumber})`);
       } catch (deliveryErr) {
         console.log('[SELFLET] Failed to mark message delivered (non-fatal):', deliveryErr);
       }
