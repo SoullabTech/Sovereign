@@ -621,6 +621,9 @@ export async function POST(req: NextRequest) {
     const conversationHistory = await getConversationHistory(safeSessionId, 20);
     console.log(`[Chat API] Loaded ${conversationHistory.length} conversation turns`);
 
+    // Add messageCount to meta for voice tier selection (Opus vs Sonnet)
+    (normalizedMeta as Record<string, unknown>).messageCount = conversationHistory.length;
+
     // 🧠 LOAD RELATIONSHIP MEMORY: Get relational context (skip for anonymous users)
     let relationshipMemory: Awaited<ReturnType<typeof loadRelationshipMemory>> | null = null;
     if (!effectiveUserId.startsWith('anon:')) {
