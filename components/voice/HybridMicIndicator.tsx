@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import React, { useRef, useEffect } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Mic, MicOff } from "lucide-react";

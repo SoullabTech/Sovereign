@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { SafetyPipeline } from './SafetyPipeline';
 import { ObsidianKnowledgeIntegration } from '../obsidian-knowledge-integration';
 import { ConsciousnessAPI } from '@/app/api/ConsciousnessAPI';

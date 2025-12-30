@@ -37,11 +37,17 @@ interface SacredLabDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   onNavigate: (path: string) => void;
-  onAction?: (action: string) => void;
+  onAction?: (action: string) => void | Promise<void>;
   showVoiceText?: boolean;
   isFieldRecording?: boolean;
   isScribing?: boolean;
   hasScribeSession?: boolean;
+  // Additional props from OracleConversation
+  isMuted?: boolean;
+  isResponding?: boolean;
+  isAudioPlaying?: boolean;
+  showChatInterface?: boolean;
+  voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
 }
 
 export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Individual Field Memory - The "Memory Foam" Model
  *

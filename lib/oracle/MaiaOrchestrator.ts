@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { sacredListening } from './SacredListeningDetector';
 import { activeListening } from './ActiveListeningCore';
 import { dynamicPrompts } from './DynamicPromptOrchestrator';

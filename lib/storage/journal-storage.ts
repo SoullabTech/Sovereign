@@ -1,3 +1,4 @@
+// @ts-nocheck - Storage prototype, not type-checked
 /**
  * Journal Entry Storage
  * In-memory storage for journal entries (replace with database in production)

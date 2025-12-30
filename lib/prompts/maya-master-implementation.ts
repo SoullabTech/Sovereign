@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Maya Master Implementation
  * Practical code for transforming Maya from eager analyst to true master

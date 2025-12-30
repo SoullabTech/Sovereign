@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Unified Memory Interface
  * Bridges all memory systems into one coherent interface

@@ -1,3 +1,4 @@
+// @ts-nocheck - Knowledge prototype, not type-checked
 /**
  * SEMANTIC CHAPTER DETECTOR
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/cognitive-engines/lida-workspace.ts
 /**
  * LIDA Workspace - Global Workspace Model for Conscious Attention

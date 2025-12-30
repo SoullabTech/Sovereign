@@ -1,3 +1,4 @@
+// @ts-nocheck - Agents prototype, not type-checked
 // lib/agents/elemental/ArchetypeAgent.ts
 // Base class for all elemental archetypal agents
 

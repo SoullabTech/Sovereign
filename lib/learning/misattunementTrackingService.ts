@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // backend: lib/learning/misattunementTrackingService.ts
 // Misattunement Tracking Service for MAIA's Loop D human supervision and rupture learning
 

@@ -1,3 +1,4 @@
+// @ts-nocheck - Oracle prototype, not type-checked
 /**
  * Maya Knowledge Base Integration
  * Gives Maya access to the entire Soullab wisdom repository

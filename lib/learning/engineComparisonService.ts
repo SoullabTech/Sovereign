@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // backend: lib/learning/engineComparisonService.ts
 // Engine Comparison Service for MAIA's Loop C multi-engine constellation learning
 

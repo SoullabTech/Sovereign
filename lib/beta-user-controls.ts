@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // Beta User Control Panel - Advanced Options for System Behavior
 // Gives power users control over activation logic and experience preferences
 

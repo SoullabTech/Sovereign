@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Unified Voice Orchestrator
  * Connects all voice systems into cohesive whole

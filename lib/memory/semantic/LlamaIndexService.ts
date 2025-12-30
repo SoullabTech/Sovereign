@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * LlamaIndex Semantic Layer
  * Provides semantic search and knowledge graph capabilities

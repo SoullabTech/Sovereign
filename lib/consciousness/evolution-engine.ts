@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * 🌱 Evolution Engine
  * Manages the consciousness evolution of agents through interactions

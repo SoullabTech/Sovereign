@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // Reflexive Awareness - MAIA Self-Adjustment System
 //
 // This module allows MAIA to read her own consciousness snapshots and

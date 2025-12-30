@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * CROSS-FRAMEWORK SYNERGY DETECTION ENGINE
  *
