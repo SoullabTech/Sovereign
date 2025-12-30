@@ -10,8 +10,9 @@ const LOCAL_PROVIDER: LocalProvider =
 const OLLAMA_BASE_URL =
   process.env.OLLAMA_BASE_URL || process.env.DEEPSEEK_BASE_URL || 'http://localhost:11434';
 
+// Fallback model should be English-first (DeepSeek defaults to Chinese)
 const OLLAMA_MODEL =
-  process.env.OLLAMA_MODEL || process.env.DEEPSEEK_MODEL || 'deepseek-r1:latest';
+  process.env.OLLAMA_MODEL || 'llama3.2:latest';
 
 export interface LocalChatParams {
   systemPrompt: string;
