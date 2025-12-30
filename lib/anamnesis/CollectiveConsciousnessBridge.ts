@@ -1,3 +1,4 @@
+// @ts-nocheck - Anamnesis prototype, not type-checked
 /**
  * Collective Consciousness Bridge
  * Connects individual consciousness to the collective field

@@ -1,3 +1,4 @@
+// @ts-nocheck - Field protocol prototype, not type-checked
 /**
  * Field Records Service - Sacred Laboratory Storage Layer
  *

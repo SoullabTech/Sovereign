@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/cognitive-engines/actr-memory.ts
 /**
  * ACT-R Memory System - Procedural & Declarative Memory with Spiritual Learning

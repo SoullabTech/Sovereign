@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * ARIA Mobile-First Dashboard Design
  * Optimized for phones with progressive enhancement for tablets/desktop

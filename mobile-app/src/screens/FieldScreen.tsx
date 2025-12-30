@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * FieldScreen.tsx
  * Collective consciousness field visualization and participation

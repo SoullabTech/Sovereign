@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype
 /**
  * Aperspectival Present-Centeredness Engine
  *

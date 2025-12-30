@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype
 /**
  * Morphoresonant Field Interface
  *

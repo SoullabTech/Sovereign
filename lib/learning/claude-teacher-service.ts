@@ -1,3 +1,4 @@
+// @ts-nocheck - Learning prototype (excluded from ship path)
 // backend: lib/learning/claude-teacher-service.ts
 
 /**

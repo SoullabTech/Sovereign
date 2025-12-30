@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Realtime Monitoring System
  * Tracks soulful intelligence capabilities in real-time

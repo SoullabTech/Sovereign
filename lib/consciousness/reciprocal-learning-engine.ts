@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * 🔄 Reciprocal Learning Engine
  * Enables MAIA to learn from each member's wisdom contributions

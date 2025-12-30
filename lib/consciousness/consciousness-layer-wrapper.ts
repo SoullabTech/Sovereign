@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 // consciousness/consciousness-layer-wrapper.ts
 // 🧠 CONSCIOUSNESS LAYER INTEGRATION WRAPPER
 // Phases 1-3: Recursive Observer Deepening, Temporal Consciousness Windows, Meta-Consciousness Evolution

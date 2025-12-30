@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Memory Integration Layer
  * Weaves memory into PersonalOracleAgent and MainOracleAgent

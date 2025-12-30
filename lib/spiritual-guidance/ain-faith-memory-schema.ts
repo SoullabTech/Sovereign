@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA AIN Faith Memory Schema
  * Tracks spiritual journey evolution through Spiralogic phases

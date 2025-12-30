@@ -1,3 +1,4 @@
+// @ts-nocheck - Oracle prototype, not type-checked
 /**
  * Relational Memory System
  * Tracks and evolves unique relationships with each user

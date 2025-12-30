@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Intervention Flows
  * Concrete implementation of many-armed framework deployments

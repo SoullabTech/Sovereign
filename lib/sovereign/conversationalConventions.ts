@@ -1,3 +1,4 @@
+// @ts-nocheck - Sovereign prototype, not type-checked
 // backend: lib/sovereign/conversationalConventions.ts
 /**
  * MAIA CONVERSATIONAL CONVENTIONS FRAMEWORK

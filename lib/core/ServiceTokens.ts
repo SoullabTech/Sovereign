@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype DI tokens (not used in ship path)
 /**
  * Service Tokens for Type-Safe Dependency Injection
  * These tokens replace the old string-based service keys

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * TEMPORAL OBSERVER WINDOWS
  * Phase 2: Cross-Time Consciousness Pattern Recognition

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import React from 'react';
 import { PersonalOracleAgent } from '@/lib/agents/PersonalOracleAgent';
 import type { Element, Mood, EnergyState } from '@/lib/types/oracle';

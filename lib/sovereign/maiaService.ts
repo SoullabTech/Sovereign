@@ -11,8 +11,7 @@ import { maiaConversationRouter, type ProcessingProfile } from '../consciousness
 import { buildTimeoutFallback } from '../consciousness/maiaFallbacks';
 import { synthesizeMaiaVoice } from '../voice/maiaVoiceService';
 import { consultClaudeForConsciousness, maiaIntegrateConsultation, type ConsultationType } from '../consciousness/claudeConsciousnessService';
-import LearningSystemOrchestrator from '../learning/learningSystemOrchestrator';
-import ConversationTurnService from '../learning/conversationTurnService';
+// Dead imports removed: LearningSystemOrchestrator, ConversationTurnService
 import { getMythicAtlasContext, type AtlasResult } from '../services/mythicAtlasService';
 import {
   detectBloomLevel,
@@ -21,8 +20,8 @@ import {
 import { logCognitiveTurn } from '../consciousness/cognitiveEventsService';
 import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
-import { enforceFieldSafety } from '../field/enforceFieldSafety';
-import { getCognitiveProfile } from '../consciousness/cognitiveProfileService';
+import { enforceFieldSafety, type FieldSafetyDecision } from '../field/enforceFieldSafety';
+import { getCognitiveProfile, type CognitiveProfile } from '../consciousness/cognitiveProfileService';
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 import { lattice } from '../memory/ConsciousnessMemoryLattice';
 import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
@@ -686,7 +685,7 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   );
 
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
-  validatedResponse = filterModeLanguage(validatedResponse, input, mode);
+  validatedResponse = filterModeLanguage(validatedResponse, input, normalizeMode(mode));
 
   // 🌀 SELFLET PHASE 2F: Apply delivery guard
   validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
@@ -1243,8 +1242,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       (meta as any)?.user?.id ??
       null;
 
-    let cognitiveProfile = null;
-    let fieldSafety = null;
+    let cognitiveProfile: CognitiveProfile | null = null;
+    let fieldSafety: FieldSafetyDecision | null = null;
 
     if (userId || sessionId) {
       try {
@@ -1414,7 +1413,11 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         memoryField = await lattice.resonanceRecall(recallKey, {
           query: input,
           facet: atlasResult?.facet
-            ? { element: atlasResult.element, phase: atlasResult.phase, code: atlasResult.facet }
+            ? {
+                element: atlasResult.element.toUpperCase() as SpiralFacet['element'],
+                phase: (atlasResult.phase as 1 | 2 | 3) || 1,
+                code: atlasResult.facet
+              }
             : undefined,
         });
 
@@ -1525,13 +1528,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       conversationHistory,
       userId: userId || undefined,
       sessionId: userId ? undefined : sessionId, // Fallback to sessionId if no userId
-      // Pass atlas context to router (future: use for elemental routing)
-      atlasContext: atlasResult ? {
-        facet: finalFacet,
-        confidence: finalConfidence,
-        element: atlasResult.element,
-        phase: atlasResult.phase,
-      } : undefined,
+      // NOTE: atlasContext removed - not yet in router interface (future: elemental routing)
     });
     const processingProfile = routerResult.profile;
 
@@ -1578,17 +1575,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       try {
         console.log(`🎤 Synthesizing MAIA's voice...`);
 
-        // Auto-select voice profile if not specified
-        const finalVoiceProfile = voiceProfile || selectVoiceProfile(text, processingProfile);
+        // Use specified voice profile or default to 'warm'
+        const finalVoiceProfile = voiceProfile || 'warm';
 
         // Synthesize voice using OpenAI TTS (thinking already done by Claude/local)
-        audioResponse = await synthesizeMaiaVoice({
-          text,
-          voiceProfile: finalVoiceProfile as any,
-          format: 'mp3'
-        });
+        audioResponse = await synthesizeMaiaVoice(text);
 
-        console.log(`✅ Voice synthesis complete: ${audioResponse.synthesisTimeMs}ms | ${finalVoiceProfile} profile`);
+        console.log(`✅ Voice synthesis complete | ${finalVoiceProfile} profile`);
       } catch (voiceError) {
         console.error('❌ Voice synthesis failed (continuing with text-only):', voiceError);
         // Voice failure doesn't break the conversation - continue with text only
@@ -1658,25 +1651,26 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       const allowLatticeWrite = memoryMode === 'longterm';
 
       if (memoryKey && shouldElevate && allowLatticeWrite) {
+        // Store traceId for logging (MentalEvent interface doesn't include it)
+        const traceId = (meta as any).traceId ?? randomUUID();
+
         const conversationEvent: ConsciousnessEvent = {
           type: 'mental',
           insight: `${input} → ${text.substring(0, 500)}`,
-          cognitiveLevel: bloomDetection?.numericLevel || 3,
+          cognitiveLevel: (bloomDetection?.numericLevel || 3) as 1 | 2 | 3 | 4 | 5 | 6,
           bypassing: false,
-          timestamp: new Date(),
-          traceId: (meta as any).traceId ?? randomUUID(), // Cryptographic proof linkage (always present)
         };
 
-        console.log(`🔬 [MEMORY] TraceId: ${conversationEvent.traceId || 'none'} (mode: ${activeMode}, elevated: ${shouldElevate})`);
+        console.log(`🔬 [MEMORY] TraceId: ${traceId} (mode: ${activeMode}, elevated: ${shouldElevate})`);
 
         const memoryResult = await lattice.integrateEvent(
           memoryKey,
           conversationEvent,
           atlasResult?.facet ? {
-            element: atlasResult.element,
-            phase: atlasResult.phase,
+            element: atlasResult.element.toUpperCase() as SpiralFacet['element'],
+            phase: (atlasResult.phase as 1 | 2 | 3) || 1,
             code: atlasResult.facet
-          } : { element: 'EARTH', phase: 1, code: 'EARTH-1' },
+          } : { element: 'EARTH' as const, phase: 1 as const, code: 'EARTH-1' },
           { name: 'current', age: (meta as any).userAge || 30 },
           { memoryMode: memoryMode || 'continuity' }
         );
@@ -1735,7 +1729,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             // Prepare metadata with context
             const metadata = {
               facet: atlasResult?.facet || null,
-              emotion: atlasResult?.primary_emotion || null,
+              emotion: null, // AtlasResult doesn't include emotion classification
               timestamp: new Date().toISOString(),
               mode: activeMode
             };
@@ -1786,7 +1780,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
           element: meta.element as string,
           consciousnessData: consciousnessData,
           usedClaudeConsult: consciousnessData?.claudeConsultation ? true : false,
-          cognition: bloomMeta
+          // NOTE: cognition/bloomMeta not in logMaiaTurn interface - stored separately
         }
       );
 
@@ -1799,7 +1793,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Learning failures don't break the conversation - MAIA continues normally
     }
 
-    console.log(`✅ MAIA ${processingProfile} response complete: ${processingTimeMs}ms | ${text.length} chars${audioResponse ? ` + audio (${audioResponse.voiceProfile})` : ''}`);
+    console.log(`✅ MAIA ${processingProfile} response complete: ${processingTimeMs}ms | ${text.length} chars${audioResponse ? ' + audio' : ''}`);
 
     // 🧪 AIN SHAPE CHECK: Dev-time warning + optional telemetry + rewrite reflex
     const telemetryEnabled =

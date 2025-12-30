@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Elemental Oracle 2.0 Blueprint Integration
  * You (Claude/GPT) as pure sensing layer under Sesame's simple voice

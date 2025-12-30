@@ -99,21 +99,6 @@ export {
 } from './usage-tracking';
 
 // ============================================================================
-// RE-EXPORT FOR CONVENIENCE
-// ============================================================================
-
-/**
- * Most commonly used types for quick import
- */
-export type {
-  Episode,
-  Telos,
-  Microact,
-  UserQuota,
-  UsageLogEntry,
-} from './bardic-memory';
-
-// ============================================================================
 // CONSCIOUSNESS & SPIRITUAL TYPES (Phase 4.2B Step 5)
 // ============================================================================
 

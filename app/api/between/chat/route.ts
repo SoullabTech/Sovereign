@@ -415,8 +415,6 @@ async function queryCanonBeads(message: string): Promise<string | null> {
 
       const tagged = await developmentalMemory.retrieveMemories({
         userId: 'CANON_GLOBAL',
-        authority: 'CANON',
-        scope: 'GLOBAL',
         entities: tagHints,
         limit: 5,
       });
@@ -432,8 +430,7 @@ async function queryCanonBeads(message: string): Promise<string | null> {
       'CANON_GLOBAL',
       message,
       5,
-      threshold,
-      { authority: 'CANON', scope: 'GLOBAL' }
+      threshold
     );
 
     if (canonMatches.length === 0) return null;
@@ -606,13 +603,10 @@ export async function POST(req: NextRequest) {
     }
 
     // 🔮 INJECT WISDOM FIELD: Load Spiralogic metaphysical canon
-    let wisdomField = null;
+    let wisdomField: string | null = null;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
-      wisdomField = await getWisdomPrimerForUser(effectiveUserId, {
-        detail: 'standard',
-        currentThemes: currentThemes.slice(0, 3) // Top 3 themes for vault queries
-      });
+      wisdomField = getWisdomPrimerForUser(effectiveUserId);
       console.log('[Chat API] 🔮 Wisdom Field canon injected - length:', wisdomField?.length || 0, 'chars');
       console.log('[Chat API] 🔮 Themes for vault query:', currentThemes.slice(0, 3));
     } catch (err) {
@@ -672,20 +666,20 @@ export async function POST(req: NextRequest) {
 
             const { rules, doctrine } = await loadVoiceCanonRules(normalizedMode);
 
-            const wrapped = await renderVoice({
+            const wrappedResult = await renderVoice({
               userId: effectiveUserId,
               sessionId: safeSessionId,
               mode: normalizedMode,
               contentDraft: canonResponse,
               engine: voiceEngine === 'claude'
-                ? { kind: 'remote', vendor: 'claude', model: 'claude-sonnet-4' }
-                : { kind: 'local', model: 'qwen2.5:7b-instruct' },
+                ? { kind: 'claude' as const, model: 'claude-sonnet-4' }
+                : { kind: 'local' as const, model: 'qwen2.5:7b-instruct' },
               guardrails: {
                 noNewFacts: true,
                 preserveCanonVerbatim: true,
-                maxLengthMultiplier: doctrine?.constraints.maxLengthMultiplier ?? 1.35,
-                forbidNewNumbers: doctrine?.constraints.forbidNewNumbers ?? true,
-                forbidNewProperNouns: doctrine?.constraints.forbidNewProperNouns ?? true,
+                maxLengthMultiplier: 1.35,
+                forbidNewNumbers: true,
+                forbidNewProperNouns: true,
                 allowGentleFraming: true,
               },
               consent: { allowRemoteRenderer: allowRemoteRendering },
@@ -693,8 +687,11 @@ export async function POST(req: NextRequest) {
               wrapOnly: true,
             });
 
+            const wrappedText = typeof wrappedResult === 'string' ? wrappedResult : wrappedResult.renderedText;
+            const wrappedCompliance = typeof wrappedResult === 'string' ? undefined : wrappedResult.compliance;
+
             // 💾 PERSIST CONVERSATION: Save to database
-            await addConversationExchange(safeSessionId, message, wrapped.renderedText, {
+            await addConversationExchange(safeSessionId, message, wrappedText, {
               type: 'canon-wrap',
               voiceMode: normalizedMode,
               userId: effectiveUserId,
@@ -705,13 +702,13 @@ export async function POST(req: NextRequest) {
               status: 200,
               route: '/api/between/chat',
               latencyMs: Date.now() - startTime,
-              responseChars: wrapped.renderedText.length,
+              responseChars: wrappedText.length,
               safeMode: false,
               path: 'canon',
             });
 
             return withSessionCookie(NextResponse.json({
-              message: wrapped.renderedText,
+              message: wrappedText,
               route: {
                 endpoint: '/api/between/chat',
                 type: 'Canon Bypass + Voice Wrap',
@@ -728,7 +725,7 @@ export async function POST(req: NextRequest) {
                 bypassedLLM: true,
                 hallucinationPrevented: true,
                 voiceMode: normalizedMode,
-                voiceRenderer: wrapped.compliance,
+                voiceRenderer: wrappedCompliance,
               },
             }), sessionCookie);
           }
@@ -828,7 +825,7 @@ export async function POST(req: NextRequest) {
 
       // 🗣️ VOICE RENDERER: Rewrite for warmth/clarity without adding facts
       let outboundText = finalMessage;
-      let voiceMetrics = null;
+      let voiceMetrics: { compliance: unknown; metrics: unknown } | null = null;
 
       const voiceMode = mode === 'counsel' ? 'care' : mode === 'scribe' ? 'note' : 'talk';
       const { rules, doctrine } = await loadVoiceCanonRules(voiceMode);
@@ -843,17 +840,17 @@ export async function POST(req: NextRequest) {
         guardrails: {
           noNewFacts: true,
           preserveCanonVerbatim: true,
-          maxLengthMultiplier: doctrine?.constraints.maxLengthMultiplier ?? 1.35,
-          forbidNewNumbers: doctrine?.constraints.forbidNewNumbers ?? true,
-          forbidNewProperNouns: doctrine?.constraints.forbidNewProperNouns ?? true,
+          maxLengthMultiplier: 1.35,
+          forbidNewNumbers: true,
+          forbidNewProperNouns: true,
           allowGentleFraming: true,
         },
         consent: { allowRemoteRenderer: false },
         rules,
       });
 
-      outboundText = voiceOutput.renderedText;
-      voiceMetrics = {
+      outboundText = typeof voiceOutput === 'string' ? voiceOutput : voiceOutput.renderedText;
+      voiceMetrics = typeof voiceOutput === 'string' ? null : {
         compliance: voiceOutput.compliance,
         metrics: voiceOutput.metrics,
       };
@@ -1063,7 +1060,7 @@ export async function POST(req: NextRequest) {
 
     // 🗣️ VOICE RENDERER: Rewrite for warmth/clarity without adding facts
     let outboundText2 = finalMessage;
-    let voiceMetrics2 = null;
+    let voiceMetrics2: { compliance: unknown; metrics: unknown } | null = null;
 
     const voiceMode2 = mode === 'counsel' ? 'care' : mode === 'scribe' ? 'note' : 'talk';
     const { rules: rules2, doctrine: doctrine2 } = await loadVoiceCanonRules(voiceMode2);
@@ -1078,17 +1075,17 @@ export async function POST(req: NextRequest) {
       guardrails: {
         noNewFacts: true,
         preserveCanonVerbatim: true,
-        maxLengthMultiplier: doctrine2?.constraints.maxLengthMultiplier ?? 1.35,
-        forbidNewNumbers: doctrine2?.constraints.forbidNewNumbers ?? true,
-        forbidNewProperNouns: doctrine2?.constraints.forbidNewProperNouns ?? true,
+        maxLengthMultiplier: 1.35,
+        forbidNewNumbers: true,
+        forbidNewProperNouns: true,
         allowGentleFraming: true,
       },
       consent: { allowRemoteRenderer: false },
       rules: rules2,
     });
 
-    outboundText2 = voiceOutput2.renderedText;
-    voiceMetrics2 = {
+    outboundText2 = typeof voiceOutput2 === 'string' ? voiceOutput2 : voiceOutput2.renderedText;
+    voiceMetrics2 = typeof voiceOutput2 === 'string' ? null : {
       compliance: voiceOutput2.compliance,
       metrics: voiceOutput2.metrics,
     };

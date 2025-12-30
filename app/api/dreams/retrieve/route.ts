@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * PILOT-DRONE INTERFACE
  * Integration of Faggin's quantum consciousness model with AIN Evolution

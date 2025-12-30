@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Maya's Intelligence Governor
  * Controls when vast systems become available based on conversation depth

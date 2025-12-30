@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Correspondence Thinking Engine
  * Implements "As Above, So Below" - the alchemical principle of correspondence

@@ -1,3 +1,4 @@
+// @ts-nocheck - Broken file preserved for reference
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";

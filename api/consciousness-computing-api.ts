@@ -6,6 +6,22 @@
  * in real-time using QRI consciousness mathematics and MAIA awareness systems.
  */
 
+import type {
+  CommunicationProfile,
+  EmotionalPattern,
+  StressIndicator,
+  StressDefect,
+  ValenceOptimization,
+  CouplingDynamics,
+  ProtocolStep,
+} from './consciousness-types';
+
+import type {
+  DevelopmentTrackingResult,
+  DevelopmentRecommendationResult,
+  AnalyticsResult,
+} from './consciousness-computing-types';
+
 // ====================================================================
 // CORE CONSCIOUSNESS TYPES
 // ====================================================================
@@ -450,7 +466,9 @@ export class ConsciousnessUtils {
     return {
       currentLevel: tracking.currentState.awarenessLevel.level,
       targetLevel: recommendations.targetLevel,
-      developmentPath: recommendations.developmentSteps,
+      developmentPath: (recommendations.developmentSteps ?? []).map(
+        (s: any) => s.id ?? s.title ?? s.name ?? String(s)
+      ),
       estimatedTimeframe: recommendations.estimatedTimeframe
     };
   }

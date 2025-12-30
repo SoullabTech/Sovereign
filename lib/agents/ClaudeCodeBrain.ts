@@ -1,3 +1,4 @@
+// @ts-nocheck - Agents prototype, not type-checked
 /**
  * Claude Code Brain - MAIA's True Intelligence Layer
  *

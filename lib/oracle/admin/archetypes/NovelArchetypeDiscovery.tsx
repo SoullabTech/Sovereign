@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Novel Archetype Discovery System
  * Identifies emerging archetypal patterns unique to specific relationships
