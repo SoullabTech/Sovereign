@@ -49,6 +49,7 @@ import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/
 import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import PastSelfCard, { type PastSelfPayload } from './selflet/PastSelfCard';
+import { SelfletArchiveDrawer } from './selflet/SelfletArchiveDrawer';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { ModeSwitcher } from './ui/ModeSwitcher';
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
@@ -309,6 +310,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [showAudioSettings, setShowAudioSettings] = useState(false);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
+  const [showSelfletArchive, setShowSelfletArchive] = useState(false); // Phase 2K-a
 
   // Sync local state with parent when prop changes
   useEffect(() => {
@@ -3781,7 +3783,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
                       {/* 🌀 SELFLET: Past-Self Card - shown above MAIA's response */}
                       {message.role === 'oracle' && message.pastSelf && (
-                        <PastSelfCard pastSelf={message.pastSelf} />
+                        <PastSelfCard
+                          pastSelf={message.pastSelf}
+                          userId={userId}
+                          onOpenArchive={() => setShowSelfletArchive(true)}
+                        />
                       )}
 
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
@@ -4269,6 +4275,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         isAudioPlaying={isAudioPlaying}
         showChatInterface={showChatInterface}
         voice={voice}
+      />
+
+      {/* 🌀 SELFLET: Archive Drawer - Phase 2K-a */}
+      <SelfletArchiveDrawer
+        open={showSelfletArchive}
+        onClose={() => setShowSelfletArchive(false)}
+        userId={userId}
       />
 
       {/* 🌊 LIQUID AI - Rhythm Metrics Debug Overlay */}
