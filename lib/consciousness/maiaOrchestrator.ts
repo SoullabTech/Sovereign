@@ -448,7 +448,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   }
 
   // 2️⃣ CONSCIOUSNESS LAYER 1: Gebser Structure Analysis (ADAPTIVE)
-  let gebserStructure = null;
+  let gebserStructure: any = null;
   if (complexityAnalysis.requiredLayers.includes('gebser-analysis')) {
     const gebserStartTime = Date.now();
     try {
@@ -478,7 +478,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   }
 
   // 3️⃣ CONSCIOUSNESS LAYER 2: Elemental Field Analysis (ADAPTIVE)
-  let elementalField = null;
+  let elementalField: any = null;
   if (complexityAnalysis.requiredLayers.includes('elemental-field')) {
     const elementalStartTime = Date.now();
     try {
@@ -508,7 +508,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   }
 
   // 4️⃣ CONSCIOUSNESS LAYER 3: Elemental Field Summary (ADAPTIVE)
-  let elementalFieldSummary = null;
+  let elementalFieldSummary: any = null;
   if (complexityAnalysis.requiredLayers.includes('elemental-field-summary')) {
     const summaryStartTime = Date.now();
     try {
@@ -533,7 +533,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   }
 
   // 5️⃣ CONSCIOUSNESS LAYER 4: Conversational Elemental Intelligence (ADAPTIVE)
-  let conversationalElemental = null;
+  let conversationalElemental: any = null;
   if (complexityAnalysis.requiredLayers.includes('conversational-elemental')) {
     const conversationalStartTime = Date.now();
     try {
@@ -799,9 +799,10 @@ export async function generateSimpleMaiaResponse(
     return {
       message: maiaResult.text,
       metadata: {
-        ...maiaResult.metadata,
         mode: 'simple-response',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        processingTimeMs: maiaResult.processingTimeMs,
+        provider: maiaResult.provider,
       }
     };
   } catch (error) {
@@ -828,7 +829,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   const layersFailed: string[] = [];
 
   // Gebser analysis
-  let gebserStructure = null;
+  let gebserStructure: any = null;
   try {
     gebserStructure = await safeGebserAnalysis({
       message,
@@ -842,7 +843,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   }
 
   // Elemental field analysis
-  let elementalField = null;
+  let elementalField: any = null;
   try {
     elementalField = await safeElementalFieldState({
       message,
@@ -855,7 +856,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   }
 
   // Elemental field summary
-  let elementalFieldSummary = null;
+  let elementalFieldSummary: any = null;
   try {
     elementalFieldSummary = await safeElementalFieldSummary(userId);
     elementalFieldSummary ? layersSuccessful.push('elemental-field-summary') : layersFailed.push('elemental-field-summary');
@@ -864,7 +865,7 @@ export async function analyzeConsciousnessOnly(input: MaiaConsciousnessInput): P
   }
 
   // Conversational elemental intelligence
-  let conversationalElemental = null;
+  let conversationalElemental: any = null;
   try {
     const cei = getConversationalElementalIntelligence();
     const elementalContext = await cei.getConversationalElementalContext(
