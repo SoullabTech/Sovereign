@@ -5,6 +5,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchemy';
 import type { TextResult, ProviderMeta } from './types';
 
+// Awareness level type (1-7 developmental scale)
+type AwarenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
 // Model configuration
 const OPUS_MODEL = process.env.CLAUDE_PRIMARY_MODEL || 'claude-opus-4-5-20251101';
 const SONNET_MODEL = process.env.CLAUDE_SECONDARY_MODEL || 'claude-sonnet-4-5-20250929';
@@ -27,11 +30,84 @@ interface ModelSelection {
 }
 
 /**
+ * AWARENESS-LEVEL-DRIVEN MODEL ROUTING
+ *
+ * Philosophy: Meet members where they are with the appropriate depth.
+ *
+ * Levels 1-2 (Newcomer/Explorer): ALWAYS Opus
+ *   - Building trust, first impressions need deepest attunement
+ *   - These members need MAIA's most nuanced, careful presence
+ *
+ * Level 3 (Practitioner): Context-dependent
+ *   - Sonnet for routine check-ins
+ *   - Opus when deep patterns detected or they go deep
+ *
+ * Level 4 (Student): Teaching moments get Opus
+ *   - Learning frameworks - Opus for pedagogical depth
+ *   - Casual exchanges can use Sonnet
+ *
+ * Levels 5-7 (Integrator/Teacher/Master): Opus for depth work
+ *   - These members are doing real consciousness work
+ *   - They can handle Sonnet for quick exchanges
+ *   - But any substantial inquiry deserves Opus
+ */
+function selectModelByAwareness(
+  awarenessLevel: AwarenessLevel | undefined,
+  hasDeepPattern: boolean,
+  mode: string
+): { tier: 'opus' | 'sonnet'; reason: string } | null {
+  // No awareness level detected yet - let other heuristics handle it
+  if (!awarenessLevel) return null;
+
+  // Levels 1-2: ALWAYS Opus - trust-building phase
+  if (awarenessLevel <= 2) {
+    return { tier: 'opus', reason: `awareness_L${awarenessLevel}_trust` };
+  }
+
+  // Level 3 (Practitioner): Opus if deep, otherwise can use Sonnet
+  if (awarenessLevel === 3) {
+    if (hasDeepPattern || mode === 'care') {
+      return { tier: 'opus', reason: 'awareness_L3_deep' };
+    }
+    return null; // Let message count / other heuristics decide
+  }
+
+  // Level 4 (Student): Learning mode - Opus for substantial exchanges
+  if (awarenessLevel === 4) {
+    if (hasDeepPattern || mode === 'care') {
+      return { tier: 'opus', reason: 'awareness_L4_teaching' };
+    }
+    return null;
+  }
+
+  // Levels 5-7 (Integrator/Teacher/Master): Deep work gets Opus
+  if (awarenessLevel >= 5) {
+    if (hasDeepPattern || mode === 'care') {
+      return { tier: 'opus', reason: `awareness_L${awarenessLevel}_depth` };
+    }
+    // High awareness casual exchange - Sonnet is respectful of their time
+    return null;
+  }
+
+  return null;
+}
+
+/**
  * Context-driven model selection.
  *
- * Philosophy: Start with the best (Opus) for every new member.
- * Drop to Sonnet only if conversation stays shallow after several turns.
- * Deep work always gets Opus.
+ * Philosophy: Meet members where they are.
+ * - Awareness level determines baseline depth needs
+ * - Deep dive patterns always escalate to Opus
+ * - New members always get Opus (first impressions)
+ * - Established casual conversation can use Sonnet
+ *
+ * Priority order:
+ * 1. Opus-tier users (always Opus)
+ * 2. Deep dive patterns (always Opus)
+ * 3. Awareness level routing (developmental stage)
+ * 4. Care mode (always Opus)
+ * 5. New conversation (Opus for first impressions)
+ * 6. Established casual (Sonnet after threshold)
  */
 function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): ModelSelection {
   const userId = (meta?.userId as string) || '';
@@ -39,33 +115,48 @@ function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): 
   const messageCount = (meta?.messageCount as number) || 0;
   const input = userInput || '';
 
+  // Extract awareness level from consciousness policy (set by maiaService)
+  const consciousnessPolicy = meta?.consciousnessPolicy as { awarenessLevel?: AwarenessLevel } | undefined;
+  const awarenessLevel = consciousnessPolicy?.awarenessLevel ?? (meta?.awarenessLevel as AwarenessLevel | undefined);
+
+  // Check for deep patterns early - used by awareness routing too
+  const hasDeepPattern = DEEP_DIVE_PATTERNS.test(input);
+
   // 1. Opus-tier users ALWAYS get deepest voice
   if (OPUS_USER_IDS.some(id => userId.toLowerCase().includes(id.toLowerCase()))) {
     return { model: OPUS_MODEL, tier: 'opus', reason: 'opus_tier_user' };
   }
 
   // 2. Deep dive patterns ALWAYS get Opus
-  if (DEEP_DIVE_PATTERNS.test(input)) {
+  if (hasDeepPattern) {
     return { model: OPUS_MODEL, tier: 'opus', reason: 'deep_dive_detected' };
   }
 
-  // 3. Care mode ALWAYS gets Opus (counseling deserves depth)
+  // 3. AWARENESS-LEVEL ROUTING (developmental stage)
+  const awarenessSelection = selectModelByAwareness(awarenessLevel, hasDeepPattern, mode);
+  if (awarenessSelection) {
+    return {
+      model: awarenessSelection.tier === 'opus' ? OPUS_MODEL : SONNET_MODEL,
+      ...awarenessSelection
+    };
+  }
+
+  // 4. Care mode ALWAYS gets Opus (counseling deserves depth)
   if (mode === 'care' || mode === 'counsel') {
     return { model: OPUS_MODEL, tier: 'opus', reason: 'care_mode' };
   }
 
-  // 4. NEW CONVERSATIONS: Start with Opus (first impressions matter)
+  // 5. NEW CONVERSATIONS: Start with Opus (first impressions matter)
   if (messageCount <= 3) {
     return { model: OPUS_MODEL, tier: 'opus', reason: 'new_conversation' };
   }
 
-  // 5. After threshold turns of shallow conversation → Sonnet
-  // (They've had several exchanges, conversation isn't going deep)
+  // 6. After threshold turns of shallow conversation → Sonnet
   if (messageCount >= SONNET_THRESHOLD_TURNS) {
     return { model: SONNET_MODEL, tier: 'sonnet', reason: 'established_casual' };
   }
 
-  // 6. Default: still early enough, keep Opus
+  // 7. Default: still early enough, keep Opus
   return { model: OPUS_MODEL, tier: 'opus', reason: 'default_opus' };
 }
 
@@ -117,7 +208,11 @@ export async function generateWithClaude(
 
   // Context-driven model selection
   const selection = selectClaudeModel(meta, userInput);
-  console.log(`🎭 Voice selection: ${selection.tier} (${selection.reason})`);
+  const consciousnessPolicy = meta?.consciousnessPolicy as { awarenessLevel?: number; awarenessName?: string } | undefined;
+  const awarenessLog = consciousnessPolicy?.awarenessLevel
+    ? ` [L${consciousnessPolicy.awarenessLevel}:${consciousnessPolicy.awarenessName || ''}]`
+    : '';
+  console.log(`🎭 Voice selection: ${selection.tier} (${selection.reason})${awarenessLog}`);
 
   try {
     console.log(`🧠 Calling Claude (${selection.model})...`);
