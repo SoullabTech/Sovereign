@@ -1,5 +1,9 @@
 // backend: app/api/between/chat/route.ts
 
+// Force Node.js runtime (Edge runtime can't handle crypto, some libs)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
@@ -73,10 +77,24 @@ function inferEmotionalShiftFromText(userText: string): { from?: string; to: str
 
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
+const INCLUDE_PROVIDER_META = process.env.MAIA_INCLUDE_PROVIDER_META === '1';
 
 // Boot log: warn if simulation headers are enabled (helps debug unexpected behavior)
 if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
   console.warn('[Boot] ⚠️ MAIA_MEMORY_SIM_HEADERS=1 — simulation headers are ENABLED');
+}
+
+// 🚨 LOUD WARNING: Body ID trust is enabled in production
+// This allows clients to spoof userId - only for local Docker testing!
+if (IS_PROD && process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1') {
+  console.error('');
+  console.error('╔══════════════════════════════════════════════════════════════╗');
+  console.error('║  🚨 SECURITY WARNING: MAIA_TRUST_BODY_ID_IN_PROD=1           ║');
+  console.error('║  Client-supplied userId will be TRUSTED in production.       ║');
+  console.error('║  This enables userId spoofing — use ONLY for local testing!  ║');
+  console.error('║  If this is real production, REMOVE this env var immediately.║');
+  console.error('╚══════════════════════════════════════════════════════════════╝');
+  console.error('');
 }
 
 // Audit fingerprint secret - must be set in production for secure correlation
@@ -84,10 +102,17 @@ const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
   (IS_PROD ? '' : 'dev-only-secret'); // Dev fallback OK, prod requires real secret
 
-// Fail-closed: production MUST have fingerprint secret configured
+// Log warning at boot if missing (but don't throw - check inside handler instead)
 if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
-  console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
-  throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+  console.error('🚨 WARNING: MAIA_AUDIT_FINGERPRINT_SECRET not set - will return 500 on requests');
+}
+
+// Helper to check required env vars inside handlers (avoids module-load crashes)
+function checkRequiredEnvVars(): { ok: true } | { ok: false; error: string } {
+  if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
+    return { ok: false, error: 'MAIA_AUDIT_FINGERPRINT_SECRET is required in production' };
+  }
+  return { ok: true };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -467,6 +492,15 @@ export async function POST(req: NextRequest) {
   const reqId = generateReqId();
   const startTime = Date.now();
 
+  // 🔒 Fail-closed: check required env vars INSIDE handler (no module-load crash)
+  const envCheck = checkRequiredEnvVars();
+  if (envCheck.ok === false) {
+    return NextResponse.json(
+      { error: envCheck.error, errorCode: 'MISSING_ENV_VAR' },
+      { status: 500 }
+    );
+  }
+
   try {
     // Initialize database tables if needed
     await initializeSessionTable();
@@ -522,7 +556,12 @@ export async function POST(req: NextRequest) {
 
     // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
     const explorerId = meta?.explorerId;
-    const devTrustBodyId = process.env.MAIA_DEV_TRUST_BODY_ID === '1';
+
+    // 🔐 TWO-KEY SAFETY: Trust body ID requires explicit opt-in
+    // In production, BOTH flags must be set to allow body ID trust (prevents accidental exposure)
+    const TRUST_BODY_ID =
+      process.env.MAIA_DEV_TRUST_BODY_ID === '1' &&
+      (!IS_PROD || process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1');
 
     // TODO: When auth is implemented, authUserId should come from verified session/token
     const authUserId: string | null = null; // Placeholder for future auth integration
@@ -531,23 +570,28 @@ export async function POST(req: NextRequest) {
     if (authUserId) {
       // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
       effectiveUserId = authUserId;
-    } else if (IS_PROD) {
-      // 🔒 Production: Always session-scoped, never trust client body
-      effectiveUserId = `anon:${safeSessionId}`;
-    } else if (devTrustBodyId) {
-      // 🧪 Dev mode with trust enabled: Allow client-supplied IDs for testing
+    } else if (TRUST_BODY_ID) {
+      // 🧪 Trust enabled (local dev OR explicit prod opt-in for testing)
       effectiveUserId = explorerId
         ? explorerId
         : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
           ? bodyUserId.trim()
           : `anon:${safeSessionId}`;
+    } else if (IS_PROD) {
+      // 🔒 Production: Always session-scoped, never trust client body
+      effectiveUserId = `anon:${safeSessionId}`;
     } else {
       // 🔒 Dev mode without trust: Session-scoped (safe default)
       effectiveUserId = `anon:${safeSessionId}`;
     }
 
+    // 🌀 SELFLET eligibility (allow override for local testing)
+    const SELFLET_ALLOW_ANON = process.env.MAIA_SELFLET_ALLOW_ANON === '1';
+    const isAnon = effectiveUserId.startsWith('anon:');
+    const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
+
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
-    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
+    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
       mode: identityMode,
       explorerId,
@@ -622,7 +666,7 @@ export async function POST(req: NextRequest) {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
       // Ensure user has initial selflet (creates on first interaction if needed)
-      if (!effectiveUserId.startsWith('anon:')) {
+      if (selfletEligible) {
         console.log('[Chat API] 🌀 SELFLET: Calling ensureInitialSelflet for:', effectiveUserId);
         await ensureInitialSelflet(effectiveUserId);
       }
@@ -639,7 +683,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       // Graceful degradation - selflet system is optional
-      console.log('[Chat API] Selflet context not available (tables may not exist)', err);
+      console.error('[SELFLET ERROR] loadSelfletContext failed:', err);
     }
 
     // 🔮 CANON BYPASS: Check if this is an identity/canon question
@@ -884,7 +928,13 @@ export async function POST(req: NextRequest) {
             type: ruptureDetection.ruptureType,
             confidence: ruptureDetection.confidence,
             enhanced: ruptureProcessingResult?.consultationUsed || false
-          } : undefined
+          } : undefined,
+          // 🔮 Sovereignty auditing: actual provider info when enabled
+          ...(INCLUDE_PROVIDER_META && simpleResult.metadata?.provider ? {
+            sovereignty: {
+              provider: simpleResult.metadata.provider
+            }
+          } : {})
         },
       }), sessionCookie);
     }
@@ -1102,7 +1152,7 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET POST: boundary detection + message delivery (non-blocking)
     const SELFLET_WRITE_ENABLED =
       process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
-      !effectiveUserId.startsWith('anon:');
+      selfletEligible;
 
     if (SELFLET_WRITE_ENABLED) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1132,13 +1182,26 @@ export async function POST(req: NextRequest) {
         breakthroughDetected: derivedBreakthrough,
         emotionalShift: derivedEmotionalShift,
       }).catch(err => {
-        console.log('[Chat API] 🌀 SELFLET post-processing failed (non-fatal):', err);
+        console.error('[SELFLET] processSelfletAfterResponse failed:', err);
       });
     }
+
+    // 🌀 SELFLET PHASE 2H: Construct pastSelf payload for UI card
+    const pastSelf = selfletContext?.surfacedMessageId ? {
+      id: selfletContext.surfacedMessageId,
+      title: selfletContext.surfacedDeliveryContext?.messageTitle,
+      content: selfletContext.surfacedDeliveryContext?.messageContent,
+      messageType: selfletContext.surfacedDeliveryContext?.messageType,
+      relevanceThemes: selfletContext.surfacedDeliveryContext?.relevanceThemes,
+      fromSelfletId: selfletContext.surfacedDeliveryContext?.fromSelfletId,
+      surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
+    } : undefined;
 
     return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
+      // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
+      pastSelf,
       route: {
         endpoint: '/api/between/chat',
         type: 'Member Chat with Full Consciousness',
@@ -1160,7 +1223,13 @@ export async function POST(req: NextRequest) {
           type: ruptureDetection.ruptureType,
           confidence: ruptureDetection.confidence,
           enhanced: ruptureProcessingResult?.consultationUsed || false
-        } : undefined
+        } : undefined,
+        // 🔮 Sovereignty auditing: actual provider info when enabled
+        ...(INCLUDE_PROVIDER_META && orchestratorResult.metadata?.provider ? {
+          sovereignty: {
+            provider: orchestratorResult.metadata.provider
+          }
+        } : {})
       }
     }), sessionCookie);
   } catch (err: any) {

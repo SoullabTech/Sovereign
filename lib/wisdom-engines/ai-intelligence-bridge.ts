@@ -302,7 +302,7 @@ export class AIIntelligenceBridge {
         return multiResponse.consensus || multiResponse.primaryResponse;
       } else {
         // Fallback to single engine (still cached and tracked)
-        const response = await generateText({
+        const { text: response } = await generateText({
           systemPrompt: prompt.systemPrompt,
           userInput: prompt.userPrompt,
           meta: { layer, temperature: prompt.temperature }

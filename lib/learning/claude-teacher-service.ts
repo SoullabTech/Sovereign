@@ -63,7 +63,7 @@ RESPONSE: [your MAIA response]
 
 REASONING: [detailed trace]`;
 
-  const rawOutput = await generateText({
+  const { text: rawOutput } = await generateText({
     systemPrompt: teacherPrompt,
     userInput: userMessage,
     meta: {
@@ -127,7 +127,7 @@ WHAT_WORKED: [specific strengths]
 IMPROVEMENTS: [specific changes needed]
 SHOULD_USE_CLAUDE: [yes/no with reason]`;
 
-  const evaluation = await generateText({
+  const { text: evaluation } = await generateText({
     systemPrompt: feedbackPrompt,
     userInput: `User: ${userMessage}\nLocal: ${localResponse}`,
     meta: {

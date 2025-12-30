@@ -264,7 +264,7 @@ async function generateOriginalMaiaResponse(
 
       const { MAIA_RUNTIME_PROMPT, MAIA_RELATIONAL_SPEC, MAIA_LINEAGES_AND_FIELD, MAIA_CENTER_OF_GRAVITY } = await import('../consciousness/MAIA_RUNTIME_PROMPT');
 
-      const response = await generateText({
+      const { text: response } = await generateText({
         systemPrompt: `${MAIA_RELATIONAL_SPEC}\n\n${MAIA_LINEAGES_AND_FIELD}\n\n${MAIA_CENTER_OF_GRAVITY}\n\n${MAIA_RUNTIME_PROMPT}\n\nCurrent context: Simple conversation turn - respond naturally and warmly.`,
         userInput: contextPrompt,
         meta: {
@@ -296,7 +296,7 @@ async function generateOriginalMaiaResponse(
 
       const adaptivePrompt = buildMaiaWisePrompt(context, input, conversationHistory);
 
-      const coreResponse = await generateText({
+      const { text: coreResponse } = await generateText({
         systemPrompt: adaptivePrompt,
         userInput: input,
         meta: {

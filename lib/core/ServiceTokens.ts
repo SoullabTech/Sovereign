@@ -47,7 +47,10 @@ export const ServiceTokens = {
   CacheService: createServiceToken<ICacheService>('CacheService'),
   
   // Database Access
-  DatabaseService: createServiceToken<IDatabaseService>('DatabaseService')
+  DatabaseService: createServiceToken<IDatabaseService>('DatabaseService'),
+
+  // MCP (Model Context Protocol)
+  MCPClientService: createServiceToken<IMCPClientService>('MCPClientService')
 } as const;
 
 // Service Interfaces
@@ -151,6 +154,50 @@ export interface IDatabaseService {
   execute(sql: string, params?: any[]): Promise<void>;
   transaction<T>(callback: (tx: DatabaseTransaction) => Promise<T>): Promise<T>;
   dispose?(): Promise<void>;
+}
+
+export interface IMCPClientService {
+  initialize(): Promise<void>;
+  isConnected(serverName: string): boolean;
+  callTool(serverName: string, toolCall: MCPToolCall): Promise<MCPToolResult>;
+  readResource(serverName: string, uri: string): Promise<MCPToolResult>;
+  getAllTools(): Map<string, MCPTool[]>;
+  getStatus(): Map<string, MCPConnection>;
+  reconnect(serverName: string): Promise<void>;
+  shutdown(): Promise<void>;
+  dispose?(): Promise<void>;
+}
+
+// MCP Types (referenced by IMCPClientService)
+export interface MCPToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
+export interface MCPToolResult {
+  content: Array<{
+    type: 'text' | 'image' | 'resource';
+    text?: string;
+    data?: string;
+    mimeType?: string;
+    uri?: string;
+  }>;
+  isError?: boolean;
+}
+
+export interface MCPTool {
+  name: string;
+  description: string;
+  inputSchema: Record<string, unknown>;
+}
+
+export interface MCPConnection {
+  id: string;
+  serverName: string;
+  status: 'disconnected' | 'connecting' | 'connected' | 'error' | 'reconnecting';
+  connectedAt?: Date;
+  lastActivity?: Date;
+  tools: MCPTool[];
 }
 
 // Domain Types
