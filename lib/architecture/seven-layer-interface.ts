@@ -10,6 +10,7 @@
  */
 
 import type { Platform } from '@capacitor/core';
+export type { Platform };
 
 // ==============================================================================
 // CORE ARCHITECTURE TYPES

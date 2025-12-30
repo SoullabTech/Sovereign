@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Spiralogic Report Generator</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Inter:wght@300;400;600&display=swap");
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Inter", sans-serif;
+        background: radial-gradient(circle at 50% 50%, #fdfdfd, #eaeaea);
+        min-height: 100vh;
+        color: #2d3748;
+        line-height: 1.6;
+      }
+
+      .container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+
+      .header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .header h1 {
+        font-family: "DM Serif Text", serif;
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        background: linear-gradient(135deg, #5b67ca, #d69e2e);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .header p {
+        color: #718096;
+        font-size: 1.1rem;
+      }
+
+      .form-container {
+        background: white;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        border: 1px solid #e2e8f0;
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #2d3748;
+      }
+
+      .form-group input,
+      .form-group select {
+        width: 100%;
+        padding: 12px 16px;
+        border: 2px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus {
+        outline: none;
+        border-color: #5b67ca;
+        box-shadow: 0 0 0 3px rgba(91, 103, 202, 0.1);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .location-search {
+        position: relative;
+      }
+
+      .location-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        max-height: 200px;
+        overflow-y: auto;
+        z-index: 10;
+        display: none;
+      }
+
+      .location-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #f7fafc;
+      }
+
+      .location-item:hover {
+        background: #f7fafc;
+      }
+
+      .elemental-preview {
+        margin: 24px 0;
+        padding: 20px;
+        background: #f7fafc;
+        border-radius: 8px;
+        border-left: 4px solid #9f7aea;
+      }
+
+      .elemental-symbols {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin: 20px 0;
+      }
+
+      .element-symbol {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: white;
+        font-weight: bold;
+      }
+
+      .fire {
+        background: #d69e2e;
+      }
+      .water {
+        background: #5b67ca;
+      }
+      .earth {
+        background: #38a169;
+      }
+      .air {
+        background: #4a5568;
+      }
+
+      .submit-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #5b67ca, #9f7aea);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+
+      .submit-btn:hover {
+        transform: translateY(-2px);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 4px solid #e2e8f0;
+        border-top: 4px solid #5b67ca;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .result {
+        display: none;
+        margin-top: 30px;
+        padding: 30px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      }
+
+      .download-btn {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #38a169;
+        color: white;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        margin-top: 16px;
+      }
+
+      .error {
+        color: #e53e3e;
+        background: #fed7d7;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin: 16px 0;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>Spiralogic Report</h1>
+        <p>Generate your personalized astrological evolution map</p>
+      </div>
+
+      <div class="form-container">
+        <form id="birthDataForm">
+          <div class="elemental-symbols">
+            <div class="element-symbol fire">△</div>
+            <div class="element-symbol water">▽</div>
+            <div class="element-symbol earth">□</div>
+            <div class="element-symbol air">○</div>
+          </div>
+
+          <div class="form-group">
+            <label for="birthDate">Birth Date</label>
+            <input type="date" id="birthDate" name="birthDate" required />
+          </div>
+
+          <div class="form-group">
+            <label for="birthTime">Birth Time</label>
+            <input type="time" id="birthTime" name="birthTime" required />
+          </div>
+
+          <div class="form-group">
+            <label for="locationSearch">Birth Location</label>
+            <div class="location-search">
+              <input
+                type="text"
+                id="locationSearch"
+                placeholder="Enter city, state/country"
+                required
+              />
+              <div class="location-results" id="locationResults"></div>
+            </div>
+            <input type="hidden" id="latitude" name="latitude" />
+            <input type="hidden" id="longitude" name="longitude" />
+            <input type="hidden" id="timezone" name="timezone" />
+            <input type="hidden" id="placeName" name="placeName" />
+          </div>
+
+          <div class="elemental-preview">
+            <h3>Your Cosmic Blueprint Awaits</h3>
+            <p>
+              This report will map your planetary positions to the four sacred
+              elements, revealing your being and becoming archetypes, karmic
+              lessons, and personalized spiritual practices.
+            </p>
+          </div>
+
+          <button type="submit" class="submit-btn" id="submitBtn">
+            Generate My Spiralogic Report
+          </button>
+        </form>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p>Calculating your cosmic mandala...</p>
+        </div>
+
+        <div class="error" id="error"></div>
+
+        <div class="result" id="result">
+          <h3>Your Report is Ready!</h3>
+          <div id="reportSummary"></div>
+          <a href="#" id="downloadLink" class="download-btn" target="_blank">
+            Download PDF Report
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let selectedLocation = null;
+
+      // Location search functionality
+      const locationSearch = document.getElementById("locationSearch");
+      const locationResults = document.getElementById("locationResults");
+
+      locationSearch.addEventListener("input", async (e) => {
+        const query = e.target.value;
+        if (query.length < 3) {
+          locationResults.style.display = "none";
+          return;
+        }
+
+        try {
+          // Using a mock geocoding service - replace with actual service
+          const response = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?access_token=YOUR_MAPBOX_TOKEN`,
+          );
+          const data = await response.json();
+
+          locationResults.innerHTML = "";
+          data.features?.slice(0, 5).forEach((feature) => {
+            const item = document.createElement("div");
+            item.className = "location-item";
+            item.textContent = feature.place_name;
+            item.addEventListener("click", () => selectLocation(feature));
+            locationResults.appendChild(item);
+          });
+
+          locationResults.style.display = "block";
+        } catch (error) {
+          console.error("Geocoding error:", error);
+          // Fallback to manual entry
+          locationResults.style.display = "none";
+        }
+      });
+
+      function selectLocation(feature) {
+        selectedLocation = feature;
+        locationSearch.value = feature.place_name;
+        document.getElementById("latitude").value = feature.center[1];
+        document.getElementById("longitude").value = feature.center[0];
+        document.getElementById("placeName").value = feature.place_name;
+
+        // Estimate timezone (simplified)
+        const lng = feature.center[0];
+        const estimatedTz = Math.round(lng / 15);
+        document.getElementById("timezone").value =
+          `UTC${estimatedTz >= 0 ? "+" : ""}${estimatedTz}`;
+
+        locationResults.style.display = "none";
+      }
+
+      // Form submission
+      document
+        .getElementById("birthDataForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          if (!selectedLocation) {
+            showError("Please select a location from the search results");
+            return;
+          }
+
+          const formData = new FormData(e.target);
+          const birthData = {
+            date: formData.get("birthDate"),
+            time: formData.get("birthTime"),
+            location: {
+              lat: parseFloat(formData.get("latitude")),
+              lng: parseFloat(formData.get("longitude")),
+              timezone: formData.get("timezone"),
+              placeName: formData.get("placeName"),
+            },
+          };
+
+          showLoading(true);
+          hideError();
+
+          try {
+            const response = await fetch("/api/spiralogic-report/generate", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${localStorage.getItem("token")}`, // Assume JWT token
+              },
+              body: JSON.stringify(birthData),
+            });
+
+            const result = await response.json();
+
+            if (!result.success) {
+              throw new Error(result.error || "Failed to generate report");
+            }
+
+            showResult(result.data);
+          } catch (error) {
+            console.error("Report generation error:", error);
+            showError(
+              error.message || "Failed to generate report. Please try again.",
+            );
+          } finally {
+            showLoading(false);
+          }
+        });
+
+      function showLoading(show) {
+        document.getElementById("loading").style.display = show
+          ? "block"
+          : "none";
+        document.getElementById("submitBtn").disabled = show;
+      }
+
+      function showError(message) {
+        const errorEl = document.getElementById("error");
+        errorEl.textContent = message;
+        errorEl.style.display = "block";
+      }
+
+      function hideError() {
+        document.getElementById("error").style.display = "none";
+      }
+
+      function showResult(data) {
+        const resultEl = document.getElementById("result");
+        const summaryEl = document.getElementById("reportSummary");
+        const downloadLink = document.getElementById("downloadLink");
+
+        summaryEl.innerHTML = `
+                <p><strong>Being Archetype:</strong> ${data.report.beingArchetype}</p>
+                <p><strong>Becoming Archetype:</strong> ${data.report.becomingArchetype}</p>
+                <p><strong>Elemental Strengths:</strong></p>
+                <ul>
+                    ${data.report.elementalStrengths
+                      .map((e) => `<li>${e.element}: ${e.strength}%</li>`)
+                      .join("")}
+                </ul>
+            `;
+
+        downloadLink.href = data.pdfUrl;
+        resultEl.style.display = "block";
+      }
+
+      // Hide location results when clicking outside
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".location-search")) {
+          locationResults.style.display = "none";
+        }
+      });
+    </script>
+  </body>
+</html>

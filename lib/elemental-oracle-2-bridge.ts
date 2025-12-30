@@ -107,7 +107,7 @@ export class ElementalOracle2Bridge {
     this.openai = new OpenAI({
       apiKey: config.openaiApiKey
     });
-    this.ipEngine = new IntellectualPropertyEngine();
+    this.ipEngine = IntellectualPropertyEngine.getInstance();
   }
 
   async initialize(): Promise<void> {

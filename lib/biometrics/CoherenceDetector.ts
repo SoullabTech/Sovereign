@@ -167,7 +167,8 @@ export class CoherenceDetector {
     }
 
     // High coherence + stable/rising → Scribe
-    if (level === 'high' && trend !== 'falling') {
+    // (At this point, trend can only be 'rising' or 'stable' since 'falling' returned early)
+    if (level === 'high') {
       return 'scribe';
     }
 

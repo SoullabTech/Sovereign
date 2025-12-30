@@ -15,16 +15,19 @@
  * 2. Log alignment deltas (how episodes relate to teloi)
  * 3. Calculate telos strength (based on alignment history)
  * 4. Detect Fire-Air imbalance (projection outruns continuity)
+ *
+ * Architecture:
+ * - Uses Postgres-native storage via TeleologyRepo
+ * - Uses Anthropic for semantic analysis (telos extraction)
  */
 
 import Anthropic from '@anthropic-ai/sdk';
 import type {
   Telos,
-  TelosAlignment,
   TeleologyExtraction,
   BalanceCheck,
-  Episode
 } from './types';
+import { TeleologyRepo, type TelosRow } from './storage/TeleologyRepo';
 
 export interface ExtractTeloiInput {
   userId: string;
@@ -46,7 +49,6 @@ export interface CheckBalanceInput {
 
 export class TeleologyService {
   private anthropic: Anthropic;
-  private supabase = createClientComponentClient();
 
   constructor(apiKey?: string) {
     this.anthropic = new Anthropic({
@@ -111,28 +113,24 @@ export class TeleologyService {
     signals?: string[];
   }): Promise<Telos | null> {
     try {
-      const { data, error } = await this.supabase
-        .from('teloi')
-        .insert({
-          user_id: input.userId,
-          phrase: input.phrase,
-          origin_episode: input.originEpisodeId,
-          strength: input.strength ?? 0.5,
-          horizon_days: input.horizonDays,
-          signals: input.signals || []
-        })
-        .select()
-        .single();
+      const row = await TeleologyRepo.createTelos({
+        userId: input.userId,
+        phrase: input.phrase,
+        originEpisodeId: input.originEpisodeId,
+        strength: input.strength,
+        horizonDays: input.horizonDays,
+        signals: input.signals,
+      });
 
-      if (error) {
-        console.error('[TeleologyService] Error creating telos:', error);
+      if (!row) {
+        console.error('[TeleologyService] Failed to create telos');
         return null;
       }
 
       console.log(`[TeleologyService] Created telos: "${input.phrase}"`);
-      return this.parseTelos(data);
+      return this.parseTelos(row);
     } catch (error) {
-      console.error('[TeleologyService] Error:', error);
+      console.error('[TeleologyService] Error creating telos:', error);
       return null;
     }
   }
@@ -149,19 +147,12 @@ export class TeleologyService {
    */
   async logAlignment(input: LogAlignmentInput): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('telos_alignment_log')
-        .insert({
-          episode_id: input.episodeId,
-          telos_id: input.telosId,
-          delta: input.delta,
-          notes: input.notes
-        });
-
-      if (error) {
-        console.error('[TeleologyService] Error logging alignment:', error);
-        return false;
-      }
+      await TeleologyRepo.logAlignment({
+        episodeId: input.episodeId,
+        telosId: input.telosId,
+        delta: input.delta,
+        notes: input.notes,
+      });
 
       // Update telos strength based on recent alignment
       await this.updateTelosStrength(input.telosId);
@@ -169,7 +160,7 @@ export class TeleologyService {
       console.log(`[TeleologyService] Logged alignment for telos ${input.telosId}: ${input.delta}`);
       return true;
     } catch (error) {
-      console.error('[TeleologyService] Error:', error);
+      console.error('[TeleologyService] Error logging alignment:', error);
       return false;
     }
   }
@@ -185,14 +176,9 @@ export class TeleologyService {
   private async updateTelosStrength(telosId: string): Promise<void> {
     try {
       // Get last 10 alignment logs
-      const { data, error } = await this.supabase
-        .from('telos_alignment_log')
-        .select('delta, created_at')
-        .eq('telos_id', telosId)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const logs = await TeleologyRepo.getRecentAlignments(telosId, 10);
 
-      if (error || !data || data.length === 0) {
+      if (logs.length === 0) {
         return;
       }
 
@@ -200,7 +186,7 @@ export class TeleologyService {
       let totalWeight = 0;
       let weightedSum = 0;
 
-      data.forEach((log, index) => {
+      logs.forEach((log, index) => {
         const weight = Math.pow(0.9, index); // Exponential decay
         weightedSum += log.delta * weight;
         totalWeight += weight;
@@ -211,10 +197,7 @@ export class TeleologyService {
       ));
 
       // Update telos strength
-      await this.supabase
-        .from('teloi')
-        .update({ strength: newStrength })
-        .eq('id', telosId);
+      await TeleologyRepo.updateStrength(telosId, newStrength);
 
       console.log(`[TeleologyService] Updated telos ${telosId} strength to ${newStrength.toFixed(2)}`);
     } catch (error) {
@@ -229,21 +212,10 @@ export class TeleologyService {
    */
   async getActive(userId: string): Promise<Telos[]> {
     try {
-      const { data, error } = await this.supabase
-        .from('teloi')
-        .select('*')
-        .eq('user_id', userId)
-        .gte('strength', 0.3) // Only teloi with meaningful pull
-        .order('strength', { ascending: false });
-
-      if (error || !data) {
-        console.error('[TeleologyService] Error getting active teloi:', error);
-        return [];
-      }
-
-      return data.map(row => this.parseTelos(row));
+      const rows = await TeleologyRepo.getActiveTeloi(userId);
+      return rows.map(row => this.parseTelos(row));
     } catch (error) {
-      console.error('[TeleologyService] Error:', error);
+      console.error('[TeleologyService] Error getting active teloi:', error);
       return [];
     }
   }
@@ -268,32 +240,15 @@ export class TeleologyService {
 
       // Get active teloi
       const teloi = await this.getActive(input.userId);
-
-      // Get recent episodes
-      const { data: episodes, error: episodesError } = await this.supabase
-        .from('episodes')
-        .select('id')
-        .eq('user_id', input.userId)
-        .gte('occurred_at', cutoff.toISOString());
-
-      if (episodesError || !episodes) {
-        return {};
-      }
-
-      // Count alignment logs in recent period
-      const { data: alignments, error: alignmentsError } = await this.supabase
-        .from('telos_alignment_log')
-        .select('telos_id, delta')
-        .in('episode_id', episodes.map(ep => ep.id))
-        .gte('created_at', cutoff.toISOString());
-
-      if (alignmentsError || !alignments) {
-        return {};
-      }
-
-      const episodeCount = episodes.length;
-      const alignmentCount = alignments.length;
       const telosCount = teloi.length;
+
+      // Get recent episode IDs
+      const episodeIds = await TeleologyRepo.getEpisodeIdsInRange(input.userId, cutoff);
+      const episodeCount = episodeIds.length;
+
+      // Count alignments for those episodes
+      const alignments = await TeleologyRepo.getAlignmentsForEpisodes(episodeIds);
+      const alignmentCount = alignments.length;
 
       // IMBALANCE 1: Projection outruns continuity
       // Many strong teloi but few episodes aligning with them
@@ -399,14 +354,14 @@ ${text.substring(0, 2000)}
   /**
    * Parse database row to Telos type
    */
-  private parseTelos(row: any): Telos {
+  private parseTelos(row: TelosRow): Telos {
     return {
       id: row.id,
       user_id: row.user_id,
       phrase: row.phrase,
-      origin_episode: row.origin_episode,
+      origin_episode: row.origin_episode ?? undefined,
       strength: row.strength,
-      horizon_days: row.horizon_days,
+      horizon_days: row.horizon_days ?? undefined,
       signals: row.signals || [],
       created_at: new Date(row.created_at),
       updated_at: new Date(row.updated_at)

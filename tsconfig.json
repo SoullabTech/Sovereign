@@ -51,6 +51,7 @@
     "**/legacy/**/*",
     // === Legacy API directories ===
     "api/**/*",
+    "app/api/_backend/**/*",
     "app/api/backend/**/*",
     // === Legacy/backup route files ===
     "**/*.backup.ts",

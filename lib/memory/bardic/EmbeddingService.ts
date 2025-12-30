@@ -5,15 +5,14 @@
  * Enables semantic similarity search for recognition
  *
  * Architecture:
- * - Generate embeddings from episode text + stanza
- * - Store in episode_vectors table (pgvector)
+ * - Generate embeddings via server-side /api/memory/embed route
+ * - Store in bardic_episode_embeddings table (pgvector)
  * - Use for fast approximate nearest neighbor search
- * - Calculate LSH/SimHash for even faster matching
  *
- * SECURITY: Calls server-side /api/memory/embed route (never exposes API keys)
+ * SECURITY: Calls server-side API route (never exposes API keys)
  */
 
-import type { Episode } from './types';
+import { EmbeddingRepo, type SimilarEpisode } from './storage/EmbeddingRepo';
 
 export interface GenerateEmbeddingInput {
   text: string;
@@ -28,7 +27,7 @@ export interface EmbeddingResult {
 }
 
 export class EmbeddingService {
-  private supabase = createClientComponentClient();
+  private model = 'text-embedding-ada-002';
 
   /**
    * Generate embedding for episode
@@ -48,14 +47,14 @@ export class EmbeddingService {
       const response = await fetch('/api/memory/embed', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           text: input.text,
           stanza: input.stanza,
           placeCue: input.placeCue,
-          senseCues: input.senseCues
-        })
+          senseCues: input.senseCues,
+        }),
       });
 
       if (!response.ok) {
@@ -65,7 +64,7 @@ export class EmbeddingService {
       const data = await response.json();
       return {
         embedding: data.embedding,
-        similarityHash: data.similarityHash
+        similarityHash: data.similarityHash,
       };
     } catch (error) {
       console.error('[EmbeddingService] Error generating embedding:', error);
@@ -76,28 +75,22 @@ export class EmbeddingService {
   /**
    * Store embedding for episode
    *
-   * Inserts into episode_vectors table with pgvector support
+   * Uses Postgres-native storage via EmbeddingRepo
    */
   async store(episodeId: string, result: EmbeddingResult): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('episode_vectors')
-        .insert({
-          episode_id: episodeId,
-          embedding: result.embedding,
-          similarity_hash: result.similarityHash,
-          decay_rate: 0.0 // Future: implement memory decay
-        });
-
-      if (error) {
-        console.error('[EmbeddingService] Error storing embedding:', error);
-        return false;
-      }
+      await EmbeddingRepo.upsertEmbedding({
+        episodeId,
+        model: this.model,
+        embedding: result.embedding,
+        similarityHash: result.similarityHash,
+        decayRate: 0.0, // Future: implement memory decay
+      });
 
       console.log(`[EmbeddingService] Stored embedding for episode ${episodeId}`);
       return true;
     } catch (error) {
-      console.error('[EmbeddingService] Error:', error);
+      console.error('[EmbeddingService] Error storing embedding:', error);
       return false;
     }
   }
@@ -107,7 +100,10 @@ export class EmbeddingService {
    *
    * Convenience method combining generate + store
    */
-  async embedEpisode(episodeId: string, input: GenerateEmbeddingInput): Promise<boolean> {
+  async embedEpisode(
+    episodeId: string,
+    input: GenerateEmbeddingInput
+  ): Promise<boolean> {
     try {
       const result = await this.generate(input);
       return await this.store(episodeId, result);
@@ -127,31 +123,42 @@ export class EmbeddingService {
     embedding: number[],
     limit: number = 10,
     minSimilarity: number = 0.7
-  ): Promise<Array<{ episodeId: string; similarity: number }>> {
+  ): Promise<SimilarEpisode[]> {
     try {
-      // Use pgvector's cosine similarity operator (<=>)
-      // Note: This requires proper pgvector setup and RPC function
-      const { data, error } = await this.supabase.rpc('match_episodes', {
-        query_embedding: embedding,
-        match_threshold: 1 - minSimilarity, // Convert to distance
-        match_count: limit
+      return await EmbeddingRepo.findSimilar({
+        embedding,
+        limit,
+        minSimilarity,
       });
-
-      if (error) {
-        console.error('[EmbeddingService] Error finding similar:', error);
-        return [];
-      }
-
-      return data.map((row: any) => ({
-        episodeId: row.episode_id,
-        similarity: 1 - row.distance // Convert distance back to similarity
-      }));
     } catch (error) {
-      console.error('[EmbeddingService] Error:', error);
+      console.error('[EmbeddingService] Error finding similar:', error);
       return [];
     }
   }
 
+  /**
+   * Check if an episode has an embedding stored
+   */
+  async hasEmbedding(episodeId: string): Promise<boolean> {
+    try {
+      return await EmbeddingRepo.hasEmbedding(episodeId);
+    } catch (error) {
+      console.error('[EmbeddingService] Error checking embedding:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Delete embedding for an episode
+   */
+  async deleteEmbedding(episodeId: string): Promise<boolean> {
+    try {
+      return await EmbeddingRepo.deleteEmbedding(episodeId);
+    } catch (error) {
+      console.error('[EmbeddingService] Error deleting embedding:', error);
+      return false;
+    }
+  }
 }
 
 /**

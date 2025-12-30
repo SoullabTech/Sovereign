@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import path from "path";
-import { memoryStore } from "../../backend/src/services/memory/MemoryStore";
-import { logger } from "../../backend/src/utils/logger";
+import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
+import { logger } from "../../_backend/src/utils/logger";
 
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
 export const dynamic = 'force-dynamic';

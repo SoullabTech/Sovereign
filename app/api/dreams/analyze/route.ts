@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
-import { DreamWeaverEngine } from '@/app/api/backend/src/oracle/core/DreamWeaverEngine';
+import { DreamWeaverEngine } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
 
 const prisma = new PrismaClient();
 

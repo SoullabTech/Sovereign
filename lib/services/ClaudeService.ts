@@ -41,7 +41,7 @@ export class ClaudeService {
       apiKey: config.apiKey,
       timeout: 8000, // 8 second timeout to fit within Vercel's 10 second limit
     });
-    this.model = config.model || 'claude-3-haiku-20240307'; // Use faster Haiku model
+    this.model = config.model || 'claude-haiku-4-5-20251001'; // Use faster Haiku model
     this.maxTokens = config.maxTokens || 600; // Increased for soul metadata output
     this.temperature = config.temperature || 0.8;
   }
@@ -796,7 +796,7 @@ export function initializeClaudeService(apiKey: string): ClaudeService {
   if (!claudeService) {
     claudeService = new ClaudeService({
       apiKey,
-      model: 'claude-3-haiku-20240307', // Use faster Haiku model
+      model: 'claude-haiku-4-5-20251001', // Use faster Haiku model
       temperature: 0.8,
       maxTokens: 500
     });

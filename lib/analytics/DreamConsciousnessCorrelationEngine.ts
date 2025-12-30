@@ -12,7 +12,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { DreamWeaverEngine, WisdomEmergenceSignals } from '@/app/api/backend/src/oracle/core/DreamWeaverEngine';
+import { DreamWeaverEngine, WisdomEmergenceSignals } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
 import { CircadianRhythmOptimizer, CircadianAnalysis } from '@/lib/biometrics/CircadianRhythmOptimizer';
 import { ConversationPatternAnalyzer } from '@/lib/consciousness/ConversationPatternAnalyzer';
 

@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
+    // Use core tsconfig for build - real ship entrypoints (app/**, components, hooks)
+    // Excludes _backend, labtools, and tests
+    tsconfigPath: 'tsconfig.core.json',
+    // TODO: Enable strict checking after fixing pre-existing type errors
     ignoreBuildErrors: true,
   },
   // ESLint configuration moved to .eslintrc.json - no longer supported in Next.js 16

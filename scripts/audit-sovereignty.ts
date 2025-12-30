@@ -141,7 +141,7 @@ function loadConfig(): AuditConfig {
     legacyQuarantinePatterns: [
       'lib/db/legacy/',
       'utils/supabase/',
-      'app/api/backend/dist/',
+      'app/api/_backend/dist/',
       'dist-minimal/'
     ],
     output: {
@@ -310,7 +310,7 @@ async function checkImportsWithAST() {
                   severity: 'critical',
                   location: `${file}:${lineNumber}`,
                   details: `Cloud provider import detected: ${importPath}`,
-                  recommendation: 'Move import to app/api/backend/src/integrations/cloud/ chokepoint',
+                  recommendation: 'Move import to app/api/_backend/src/integrations/cloud/ chokepoint',
                   code: sourceCode.split('\n')[lineNumber - 1]?.trim()
                 });
                 importViolations++;
@@ -384,7 +384,7 @@ async function checkNetworkCallsWithAST() {
                       severity: 'critical',
                       location: `${file}:${lineNumber}`,
                       details: `Network call to cloud endpoint: ${url}`,
-                      recommendation: 'Move to app/api/backend/src/integrations/cloud/ chokepoint',
+                      recommendation: 'Move to app/api/_backend/src/integrations/cloud/ chokepoint',
                       code: sourceCode.split('\n')[lineNumber - 1]?.trim()
                     });
                     networkViolations++;

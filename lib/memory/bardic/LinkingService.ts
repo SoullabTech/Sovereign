@@ -7,15 +7,17 @@
  * - Fulfills: resolution/completion
  * - Co-occurs: temporal proximity
  *
- * This builds the mycelial memory graph automatically
+ * This builds the mycelial memory graph automatically.
+ *
+ * Architecture:
+ * - Uses Postgres-native storage via EpisodeRepo + LinkingRepo
+ * - Uses Anthropic for semantic analysis (fulfillment patterns)
  */
 
 import Anthropic from '@anthropic-ai/sdk';
-import type {
-  Episode,
-  EpisodeRelation,
-  EpisodeLink
-} from './types';
+import { EpisodeRepo } from './storage/EpisodeRepo';
+import { LinkingRepo, type StoredLink } from './storage/LinkingRepo';
+import type { Episode, EpisodeRelation } from './types';
 
 export interface LinkSuggestion {
   targetEpisodeId: string;
@@ -26,11 +28,10 @@ export interface LinkSuggestion {
 
 export class LinkingService {
   private anthropic: Anthropic;
-  private supabase = createClientComponentClient();
 
   constructor(apiKey?: string) {
     this.anthropic = new Anthropic({
-      apiKey: apiKey || process.env.ANTHROPIC_API_KEY || ''
+      apiKey: apiKey || process.env.ANTHROPIC_API_KEY || '',
     });
   }
 
@@ -42,15 +43,10 @@ export class LinkingService {
   async generateLinks(episodeId: string, userId: string): Promise<number> {
     try {
       // Get the episode
-      const { data: episode, error } = await this.supabase
-        .from('episodes')
-        .select('*')
-        .eq('id', episodeId)
-        .eq('user_id', userId)
-        .single();
+      const episode = await EpisodeRepo.getEpisode(episodeId, userId);
 
-      if (error || !episode) {
-        console.error('[LinkingService] Episode not found:', error);
+      if (!episode) {
+        console.error('[LinkingService] Episode not found:', episodeId);
         return 0;
       }
 
@@ -63,17 +59,15 @@ export class LinkingService {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 30);
 
-      const { data: recentEpisodes, error: recentError } = await this.supabase
-        .from('episodes')
-        .select('*')
-        .eq('user_id', userId)
-        .neq('id', episodeId)
-        .eq('sacred_flag', false)
-        .gte('occurred_at', cutoff.toISOString())
-        .order('occurred_at', { ascending: false })
-        .limit(20);
+      const recentEpisodes = await EpisodeRepo.listRecentEpisodes({
+        userId,
+        limit: 20,
+        excludeEpisodeId: episodeId,
+        includeSacred: false,
+        sinceDate: cutoff,
+      });
 
-      if (recentError || !recentEpisodes || recentEpisodes.length === 0) {
+      if (recentEpisodes.length === 0) {
         return 0;
       }
 
@@ -81,30 +75,37 @@ export class LinkingService {
       const suggestions: LinkSuggestion[] = [];
 
       // 1. Affect-based linking (echoes/contrasts)
-      const affectLinks = await this.findAffectLinks(episode, recentEpisodes);
+      const affectLinks = this.findAffectLinks(episode, recentEpisodes);
       suggestions.push(...affectLinks);
 
       // 2. Temporal co-occurrence
-      const coOccurLinks = await this.findCoOccurLinks(episode, recentEpisodes);
+      const coOccurLinks = this.findCoOccurLinks(episode, recentEpisodes);
       suggestions.push(...coOccurLinks);
 
       // 3. Semantic analysis via Claude (fulfillment patterns)
-      const semanticLinks = await this.findSemanticLinks(episode, recentEpisodes);
+      const semanticLinks = await this.findSemanticLinks(
+        episode,
+        recentEpisodes
+      );
       suggestions.push(...semanticLinks);
 
       // Store links
       let createdCount = 0;
       for (const suggestion of suggestions) {
         const success = await this.createLink(
+          userId,
           episodeId,
           suggestion.targetEpisodeId,
           suggestion.relation,
-          suggestion.weight
+          suggestion.weight,
+          suggestion.reasoning
         );
         if (success) createdCount++;
       }
 
-      console.log(`[LinkingService] Created ${createdCount} links for episode ${episodeId}`);
+      console.log(
+        `[LinkingService] Created ${createdCount} links for episode ${episodeId}`
+      );
       return createdCount;
     } catch (error) {
       console.error('[LinkingService] Error generating links:', error);
@@ -115,23 +116,30 @@ export class LinkingService {
   /**
    * Find affect-based links (echoes/contrasts)
    */
-  private async findAffectLinks(
-    episode: any,
-    candidates: any[]
-  ): Promise<LinkSuggestion[]> {
+  private findAffectLinks(
+    episode: Episode,
+    candidates: Episode[]
+  ): LinkSuggestion[] {
     const suggestions: LinkSuggestion[] = [];
 
-    if (!episode.affect_valence || !episode.affect_arousal) {
+    if (episode.affect_valence == null || episode.affect_arousal == null) {
       return suggestions;
     }
 
     for (const candidate of candidates) {
-      if (!candidate.affect_valence || !candidate.affect_arousal) {
+      if (
+        candidate.affect_valence == null ||
+        candidate.affect_arousal == null
+      ) {
         continue;
       }
 
-      const valenceDiff = Math.abs(episode.affect_valence - candidate.affect_valence);
-      const arousalDiff = Math.abs(episode.affect_arousal - candidate.affect_arousal);
+      const valenceDiff = Math.abs(
+        episode.affect_valence - candidate.affect_valence
+      );
+      const arousalDiff = Math.abs(
+        episode.affect_arousal - candidate.affect_arousal
+      );
 
       // ECHOES: Similar affect (small differences)
       if (valenceDiff <= 2 && arousalDiff <= 2) {
@@ -141,7 +149,7 @@ export class LinkingService {
           targetEpisodeId: candidate.id,
           relation: 'echoes',
           weight: similarity * 0.8, // Scale weight
-          reasoning: 'Similar emotional signature'
+          reasoning: 'Similar emotional signature',
         });
       }
 
@@ -154,7 +162,7 @@ export class LinkingService {
           targetEpisodeId: candidate.id,
           relation: 'contrasts',
           weight: 0.7,
-          reasoning: 'Opposite emotional polarity'
+          reasoning: 'Opposite emotional polarity',
         });
       }
     }
@@ -165,26 +173,27 @@ export class LinkingService {
   /**
    * Find temporal co-occurrence links
    */
-  private async findCoOccurLinks(
-    episode: any,
-    candidates: any[]
-  ): Promise<LinkSuggestion[]> {
+  private findCoOccurLinks(
+    episode: Episode,
+    candidates: Episode[]
+  ): LinkSuggestion[] {
     const suggestions: LinkSuggestion[] = [];
     const episodeTime = new Date(episode.occurred_at).getTime();
 
     for (const candidate of candidates) {
       const candidateTime = new Date(candidate.occurred_at).getTime();
-      const hoursDiff = Math.abs(episodeTime - candidateTime) / (1000 * 60 * 60);
+      const hoursDiff =
+        Math.abs(episodeTime - candidateTime) / (1000 * 60 * 60);
 
       // CO_OCCURS: Within 24 hours
       if (hoursDiff <= 24) {
-        const weight = 1 - (hoursDiff / 24); // Closer in time = higher weight
+        const weight = 1 - hoursDiff / 24; // Closer in time = higher weight
 
         suggestions.push({
           targetEpisodeId: candidate.id,
           relation: 'co_occurs',
           weight: weight * 0.6,
-          reasoning: `Occurred within ${Math.round(hoursDiff)} hours`
+          reasoning: `Occurred within ${Math.round(hoursDiff)} hours`,
         });
       }
     }
@@ -196,10 +205,10 @@ export class LinkingService {
    * Find semantic links using Claude (fulfillment patterns)
    */
   private async findSemanticLinks(
-    episode: any,
-    candidates: any[]
+    episode: Episode,
+    candidates: Episode[]
   ): Promise<LinkSuggestion[]> {
-    // This is expensive, so only check top 5 candidates by vector similarity
+    // This is expensive, so only check top 5 candidates
     const topCandidates = candidates.slice(0, 5);
 
     if (topCandidates.length === 0) {
@@ -212,15 +221,16 @@ export class LinkingService {
       const response = await this.anthropic.messages.create({
         model: 'claude-3-5-haiku-20241022', // Fast model for this task
         max_tokens: 500,
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
+        messages: [
+          {
+            role: 'user',
+            content: prompt,
+          },
+        ],
       });
 
-      const content = response.content[0].type === 'text'
-        ? response.content[0].text
-        : '';
+      const content =
+        response.content[0].type === 'text' ? response.content[0].text : '';
 
       return this.parseSemanticResponse(content);
     } catch (error) {
@@ -232,7 +242,7 @@ export class LinkingService {
   /**
    * Craft prompt for semantic analysis
    */
-  private craftSemanticPrompt(episode: any, candidates: any[]): string {
+  private craftSemanticPrompt(episode: Episode, candidates: Episode[]): string {
     return `
 Analyze if this new episode FULFILLS any of these recent episodes.
 
@@ -244,11 +254,15 @@ Place: ${episode.place_cue || 'Unknown'}
 Occurred: ${episode.occurred_at}
 
 RECENT EPISODES:
-${candidates.map((c, i) => `
+${candidates
+  .map(
+    (c, i) => `
 [${i}] ${c.scene_stanza || 'No stanza'}
 Place: ${c.place_cue || 'Unknown'}
 ID: ${c.id}
-`).join('\n')}
+`
+  )
+  .join('\n')}
 
 Return ONLY valid JSON:
 {
@@ -266,7 +280,9 @@ If no fulfillment detected, return: {"fulfills": []}
    */
   private parseSemanticResponse(content: string): LinkSuggestion[] {
     try {
-      const jsonMatch = content.match(/\{[\s\S]*\}/) || content.match(/```json\s*(\{[\s\S]*?\})\s*```/);
+      const jsonMatch =
+        content.match(/\{[\s\S]*\}/) ||
+        content.match(/```json\s*(\{[\s\S]*?\})\s*```/);
       if (!jsonMatch) return [];
 
       const parsed = JSON.parse(jsonMatch[0]);
@@ -278,7 +294,7 @@ If no fulfillment detected, return: {"fulfills": []}
             targetEpisodeId: item.episodeId,
             relation: 'fulfills',
             weight: item.weight || 0.7,
-            reasoning: item.reasoning || 'Completes a pattern'
+            reasoning: item.reasoning || 'Completes a pattern',
           });
         }
       }
@@ -294,34 +310,47 @@ If no fulfillment detected, return: {"fulfills": []}
    * Create a link between episodes
    */
   private async createLink(
+    userId: string,
     srcId: string,
     dstId: string,
     relation: EpisodeRelation,
-    weight: number
+    weight: number,
+    reasoning?: string
   ): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('episode_links')
-        .insert({
-          src_episode_id: srcId,
-          dst_episode_id: dstId,
-          relation,
-          weight
-        });
-
-      if (error) {
-        // Might fail on unique constraint if link exists - that's OK
-        if (!error.message.includes('duplicate')) {
-          console.error('[LinkingService] Error creating link:', error);
-        }
-        return false;
-      }
-
-      return true;
+      return await LinkingRepo.createLink({
+        userId,
+        srcEpisodeId: srcId,
+        dstEpisodeId: dstId,
+        relation,
+        weight,
+        reasoning,
+      });
     } catch (error) {
-      console.error('[LinkingService] Error:', error);
+      console.error('[LinkingService] Error creating link:', error);
       return false;
     }
+  }
+
+  /**
+   * Get all links from an episode
+   */
+  async getLinksFrom(episodeId: string): Promise<StoredLink[]> {
+    return LinkingRepo.getLinksFrom(episodeId);
+  }
+
+  /**
+   * Get all links to an episode
+   */
+  async getLinksTo(episodeId: string): Promise<StoredLink[]> {
+    return LinkingRepo.getLinksTo(episodeId);
+  }
+
+  /**
+   * Delete a link
+   */
+  async deleteLink(linkId: string): Promise<boolean> {
+    return LinkingRepo.deleteLink(linkId);
   }
 }
 

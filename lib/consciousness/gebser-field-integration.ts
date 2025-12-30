@@ -25,7 +25,7 @@ import {
 } from './aperspectival-presence-engine';
 
 import { ConsciousnessProfile, ElementalPattern } from '@/lib/types/consciousness-evolution-types';
-import { OracleStage } from '@/app/api/backend/src/core/types/oracleStateMachine';
+import { OracleStage } from '@/app/api/_backend/src/core/types/oracleStateMachine';
 
 // Enhanced conversation processing that integrates Gebser framework
 export interface GebserEnhancedConversationProcessing {

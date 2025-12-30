@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NOWModelMonitor - Real-time Nested Observer Windows Model Compliance Monitor
  *

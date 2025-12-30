@@ -8,6 +8,9 @@
  * - Titration (gradual, not overwhelming)
  *
  * Principle: Memory as RE-ENTRY (ritual reconstitution) not RETRIEVAL (extraction)
+ *
+ * Architecture:
+ * - Uses Postgres-native storage via ReentryRepo
  */
 
 import type {
@@ -15,10 +18,9 @@ import type {
   Episode,
   Cue
 } from './types';
+import { ReentryRepo, type EpisodeRow, type CueRow } from './storage/ReentryRepo';
 
 export class ReentryService {
-  private supabase = createClientComponentClient();
-
   /**
    * Attempt to re-enter an episode
    *
@@ -33,15 +35,10 @@ export class ReentryService {
     currentArousal?: number
   ): Promise<ReentryResult> {
     try {
-      // 1. Fetch episode
-      const { data: episode, error } = await this.supabase
-        .from('episodes')
-        .select('*')
-        .eq('id', episodeId)
-        .eq('user_id', userId)
-        .single();
+      // 1. Fetch episode via ReentryRepo
+      const episodeRow = await ReentryRepo.getEpisode(userId, episodeId);
 
-      if (error || !episode) {
+      if (!episodeRow) {
         return {
           allowed: false,
           reason: 'Episode not found'
@@ -49,23 +46,23 @@ export class ReentryService {
       }
 
       // 2. Sacred gate
-      if (episode.sacred_flag) {
+      if (episodeRow.sacred_flag) {
         return {
           allowed: false,
           reason: 'sacred',
-          episode: this.parseEpisode(episode)
+          episode: this.parseEpisode(episodeRow)
         };
       }
 
       // 3. Capacity gate (affect arousal check)
       const arousal = currentArousal ?? 5; // Default to moderate
-      const capacityOk = await this.capacityGate(arousal);
+      const capacityOk = this.capacityGate(arousal);
 
       if (!capacityOk) {
         return {
           allowed: false,
           reason: 'capacity',
-          episode: this.parseEpisode(episode)
+          episode: this.parseEpisode(episodeRow)
         };
       }
 
@@ -75,9 +72,9 @@ export class ReentryService {
       // 5. Return stanza + cue for ritual re-entry
       return {
         allowed: true,
-        stanza: episode.scene_stanza,
+        stanza: episodeRow.scene_stanza ?? undefined,
         cue,
-        episode: this.parseEpisode(episode)
+        episode: this.parseEpisode(episodeRow)
       };
     } catch (error) {
       console.error('[ReentryService] Error:', error);
@@ -96,7 +93,7 @@ export class ReentryService {
    *
    * Principle: Titration - don't overwhelm
    */
-  private async capacityGate(arousal: number): Promise<boolean> {
+  private capacityGate(arousal: number): boolean {
     // If arousal is very high (>= 8), not safe to re-enter potentially intense memory
     // User needs grounding first
     const threshold = 8;
@@ -111,26 +108,13 @@ export class ReentryService {
    * Potency: how strong this cue is for reconstituting the scene
    */
   private async pickCue(episodeId: string): Promise<Cue | undefined> {
-    const { data, error } = await this.supabase
-      .from('episode_cues')
-      .select('cue_id, potency, cues(*)')
-      .eq('episode_id', episodeId)
-      .order('potency', { ascending: false })
-      .limit(1)
-      .single();
+    const cueRow = await ReentryRepo.getStrongestCue(episodeId);
 
-    if (error || !data) {
+    if (!cueRow) {
       return undefined;
     }
 
-    return {
-      id: data.cues.id,
-      user_id: data.cues.user_id,
-      type: data.cues.type,
-      media_ref: data.cues.media_ref,
-      user_words: data.cues.user_words,
-      created_at: new Date(data.cues.created_at)
-    };
+    return this.parseCue(cueRow);
   }
 
   /**
@@ -147,79 +131,62 @@ export class ReentryService {
    * - Moments that feel too vulnerable to analyze
    */
   async markSacred(userId: string, episodeId: string): Promise<boolean> {
-    try {
-      const { error } = await this.supabase
-        .from('episodes')
-        .update({ sacred_flag: true })
-        .eq('id', episodeId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      // Also delete any embeddings/links (respect the sacred)
-      await this.supabase
-        .from('episode_vectors')
-        .delete()
-        .eq('episode_id', episodeId);
-
-      await this.supabase
-        .from('episode_links')
-        .delete()
-        .or(`src_episode_id.eq.${episodeId},dst_episode_id.eq.${episodeId}`);
-
+    const success = await ReentryRepo.markSacred(userId, episodeId);
+    if (success) {
       console.log(`[ReentryService] Episode ${episodeId} marked sacred`);
-      return true;
-    } catch (error) {
-      console.error('[ReentryService] Error marking sacred:', error);
-      return false;
     }
+    return success;
   }
 
   /**
    * Unmark episode as sacred (if user chooses)
    */
   async unmarkSacred(userId: string, episodeId: string): Promise<boolean> {
-    try {
-      const { error } = await this.supabase
-        .from('episodes')
-        .update({ sacred_flag: false })
-        .eq('id', episodeId)
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
+    const success = await ReentryRepo.unmarkSacred(userId, episodeId);
+    if (success) {
       console.log(`[ReentryService] Episode ${episodeId} unmarked sacred`);
-      return true;
-    } catch (error) {
-      console.error('[ReentryService] Error unmarking sacred:', error);
-      return false;
     }
+    return success;
   }
 
   /**
    * Parse database row to Episode type
    */
-  private parseEpisode(row: any): Episode {
+  private parseEpisode(row: EpisodeRow): Episode {
     return {
       id: row.id,
       user_id: row.user_id,
       occurred_at: new Date(row.occurred_at),
-      place_cue: row.place_cue,
-      sense_cues: row.sense_cues,
-      people: row.people,
-      affect_valence: row.affect_valence,
-      affect_arousal: row.affect_arousal,
-      elemental_state: row.elemental_state || {
+      place_cue: row.place_cue ?? undefined,
+      sense_cues: row.sense_cues as string[] | undefined,
+      people: row.people as string[] | undefined,
+      affect_valence: row.affect_valence ?? undefined,
+      affect_arousal: row.affect_arousal ?? undefined,
+      elemental_state: (row.elemental_state as Episode['elemental_state']) || {
         fire: 0.5,
         air: 0.5,
         water: 0.5,
         earth: 0.5,
         aether: 0.5
       },
-      scene_stanza: row.scene_stanza,
-      sacred_flag: row.sacred_flag,
+      scene_stanza: row.scene_stanza ?? undefined,
+      sacred_flag: row.sacred_flag ?? false,
       created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at)
+      updated_at: row.updated_at ? new Date(row.updated_at) : new Date(row.created_at)
+    };
+  }
+
+  /**
+   * Parse database row to Cue type
+   */
+  private parseCue(row: CueRow): Cue {
+    return {
+      id: row.id,
+      user_id: row.user_id,
+      type: row.type as Cue['type'],
+      media_ref: row.media_ref ?? undefined,
+      user_words: row.user_words ?? undefined,
+      created_at: new Date(row.created_at)
     };
   }
 }

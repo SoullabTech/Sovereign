@@ -10,14 +10,14 @@
  *
  * Cues are not just metadata - they are portals for reconstitution.
  * A cue's potency measures how strongly it evokes the episode.
+ *
+ * Architecture:
+ * - Uses Postgres-native storage via CueRepo
+ * - Cues are user-scoped (same cue may mean different things to different users)
  */
 
-import type {
-  Cue,
-  CueType,
-  EpisodeCue,
-  Episode
-} from './types';
+import { CueRepo, type StoredCue } from './storage/CueRepo';
+import type { Cue, CueType, Episode } from './types';
 
 export interface CreateCueInput {
   userId: string;
@@ -39,8 +39,6 @@ export interface FindByCueInput {
 }
 
 export class CueService {
-  private supabase = createClientComponentClient();
-
   /**
    * Create a new cue
    *
@@ -48,25 +46,16 @@ export class CueService {
    */
   async create(input: CreateCueInput): Promise<Cue | null> {
     try {
-      const { data, error } = await this.supabase
-        .from('cues')
-        .insert({
-          user_id: input.userId,
-          type: input.type,
-          media_ref: input.mediaRef,
-          user_words: input.userWords
-        })
-        .select()
-        .single();
+      const stored = await CueRepo.upsertCue({
+        userId: input.userId,
+        cueType: input.type,
+        userWords: input.userWords,
+        mediaRef: input.mediaRef,
+      });
 
-      if (error) {
-        console.error('[CueService] Error creating cue:', error);
-        return null;
-      }
-
-      return this.parseCue(data);
+      return this.storedToCue(stored);
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error creating cue:', error);
       return null;
     }
   }
@@ -82,23 +71,18 @@ export class CueService {
    */
   async associate(input: AssociateCueInput): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('episode_cues')
-        .insert({
-          episode_id: input.episodeId,
-          cue_id: input.cueId,
-          potency: input.potency
-        });
+      await CueRepo.attachCueToEpisode({
+        episodeId: input.episodeId,
+        cueId: input.cueId,
+        potency: input.potency,
+      });
 
-      if (error) {
-        console.error('[CueService] Error associating cue:', error);
-        return false;
-      }
-
-      console.log(`[CueService] Associated cue ${input.cueId} with episode ${input.episodeId} (potency: ${input.potency})`);
+      console.log(
+        `[CueService] Associated cue ${input.cueId} with episode ${input.episodeId} (potency: ${input.potency})`
+      );
       return true;
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error associating cue:', error);
       return false;
     }
   }
@@ -109,23 +93,23 @@ export class CueService {
    * Use this when you learn a cue is stronger/weaker than initially thought.
    * For example, after successful re-entry, boost potency.
    */
-  async updatePotency(episodeId: string, cueId: string, newPotency: number): Promise<boolean> {
+  async updatePotency(
+    episodeId: string,
+    cueId: string,
+    newPotency: number
+  ): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('episode_cues')
-        .update({ potency: newPotency })
-        .eq('episode_id', episodeId)
-        .eq('cue_id', cueId);
+      const success = await CueRepo.updatePotency(episodeId, cueId, newPotency);
 
-      if (error) {
-        console.error('[CueService] Error updating potency:', error);
-        return false;
+      if (success) {
+        console.log(
+          `[CueService] Updated potency for cue ${cueId} on episode ${episodeId} to ${newPotency}`
+        );
       }
 
-      console.log(`[CueService] Updated potency for cue ${cueId} on episode ${episodeId} to ${newPotency}`);
-      return true;
+      return success;
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error updating potency:', error);
       return false;
     }
   }
@@ -133,34 +117,51 @@ export class CueService {
   /**
    * Find episodes associated with a cue
    *
-   * Returns episodes sorted by potency (strongest first)
+   * Returns episodes sorted by potency (strongest first).
+   *
+   * NOTE: Returns minimal Episode stubs with only `id` and `user_id` populated.
+   * Full Episode hydration will be available once EpisodeRepo is migrated.
+   * For now, callers needing full Episode data should fetch separately.
    */
   async findEpisodesByCue(input: FindByCueInput): Promise<Episode[]> {
     try {
-      const minPotency = input.minPotency ?? 0.5;
+      const results = await CueRepo.findEpisodeIdsByCue({
+        cueId: input.cueId,
+        minPotency: input.minPotency ?? 0.5,
+      });
 
-      const { data, error } = await this.supabase
-        .from('episode_cues')
-        .select('episode_id, potency, episodes(*)')
-        .eq('cue_id', input.cueId)
-        .gte('potency', minPotency)
-        .order('potency', { ascending: false });
-
-      if (error || !data) {
-        console.error('[CueService] Error finding episodes by cue:', error);
-        return [];
+      // Log for telemetry
+      if (results.length > 0) {
+        const cue = await CueRepo.getCue(input.cueId);
+        if (cue) {
+          await CueRepo.logCueEvent({
+            cueType: cue.cueType,
+            cueKey: cue.cueKey,
+            eventType: 'search',
+            score: results.length,
+            metadata: { userId: input.userId, resultCount: results.length },
+          });
+        }
       }
 
-      // Filter to ensure user_id matches and not sacred
-      return data
-        .filter(row =>
-          row.episodes &&
-          row.episodes.user_id === input.userId &&
-          !row.episodes.sacred_flag
-        )
-        .map(row => this.parseEpisode(row.episodes));
+      // Return minimal Episode stubs (API-stable, full hydration pending EpisodeRepo)
+      return results.map((hit) => ({
+        id: hit.episodeId,
+        user_id: input.userId,
+        occurred_at: new Date(0),
+        place_cue: undefined,
+        sense_cues: [],
+        people: [],
+        affect_valence: 0,
+        affect_arousal: 0,
+        elemental_state: { fire: 0.5, air: 0.5, water: 0.5, earth: 0.5, aether: 0.5 },
+        scene_stanza: undefined,
+        sacred_flag: false,
+        created_at: new Date(0),
+        updated_at: new Date(0),
+      }));
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error finding episodes by cue:', error);
       return [];
     }
   }
@@ -172,26 +173,10 @@ export class CueService {
    */
   async findUserCues(userId: string, type?: CueType): Promise<Cue[]> {
     try {
-      let query = this.supabase
-        .from('cues')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (type) {
-        query = query.eq('type', type);
-      }
-
-      const { data, error } = await query;
-
-      if (error || !data) {
-        console.error('[CueService] Error finding user cues:', error);
-        return [];
-      }
-
-      return data.map(row => this.parseCue(row));
+      const stored = await CueRepo.listUserCues(userId, type);
+      return stored.map((s) => this.storedToCue(s));
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error finding user cues:', error);
       return [];
     }
   }
@@ -201,27 +186,17 @@ export class CueService {
    *
    * Returns cues sorted by potency (strongest first)
    */
-  async findCuesForEpisode(episodeId: string): Promise<Array<Cue & { potency: number }>> {
+  async findCuesForEpisode(
+    episodeId: string
+  ): Promise<Array<Cue & { potency: number }>> {
     try {
-      const { data, error } = await this.supabase
-        .from('episode_cues')
-        .select('cue_id, potency, cues(*)')
-        .eq('episode_id', episodeId)
-        .order('potency', { ascending: false });
-
-      if (error || !data) {
-        console.error('[CueService] Error finding cues for episode:', error);
-        return [];
-      }
-
-      return data
-        .filter(row => row.cues)
-        .map(row => ({
-          ...this.parseCue(row.cues),
-          potency: row.potency
-        }));
+      const stored = await CueRepo.listEpisodeCues(episodeId);
+      return stored.map((s) => ({
+        ...this.storedToCue(s),
+        potency: s.potency,
+      }));
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error finding cues for episode:', error);
       return [];
     }
   }
@@ -233,21 +208,15 @@ export class CueService {
    */
   async delete(cueId: string, userId: string): Promise<boolean> {
     try {
-      const { error } = await this.supabase
-        .from('cues')
-        .delete()
-        .eq('id', cueId)
-        .eq('user_id', userId);
+      const success = await CueRepo.deleteCue(cueId, userId);
 
-      if (error) {
-        console.error('[CueService] Error deleting cue:', error);
-        return false;
+      if (success) {
+        console.log(`[CueService] Deleted cue ${cueId}`);
       }
 
-      console.log(`[CueService] Deleted cue ${cueId}`);
-      return true;
+      return success;
     } catch (error) {
-      console.error('[CueService] Error:', error);
+      console.error('[CueService] Error deleting cue:', error);
       return false;
     }
   }
@@ -266,30 +235,32 @@ export class CueService {
   async suggestCuesFromText(text: string): Promise<string[]> {
     // Simple keyword extraction
     // In production, use Claude for better extraction
-    const lowerText = text.toLowerCase();
-
     const suggestions: string[] = [];
 
     // Place patterns
     const placePatterns = [
-      /\b(kitchen|bedroom|office|park|beach|lake|mountain|cafe|restaurant|home|garden)\b/gi
+      /\b(kitchen|bedroom|office|park|beach|lake|mountain|cafe|restaurant|home|garden)\b/gi,
     ];
 
     // Scent patterns
     const scentPatterns = [
-      /\b(coffee|rain|pine|cedar|ocean|flowers|bread|smoke|vanilla|citrus)\b/gi
+      /\b(coffee|rain|pine|cedar|ocean|flowers|bread|smoke|vanilla|citrus)\b/gi,
     ];
 
     // Time/threshold patterns
     const thresholdPatterns = [
-      /\b(dawn|dusk|sunrise|sunset|midnight|afternoon|morning|evening|twilight)\b/gi
+      /\b(dawn|dusk|sunrise|sunset|midnight|afternoon|morning|evening|twilight)\b/gi,
     ];
 
     // Extract matches
-    for (const pattern of [...placePatterns, ...scentPatterns, ...thresholdPatterns]) {
+    for (const pattern of [
+      ...placePatterns,
+      ...scentPatterns,
+      ...thresholdPatterns,
+    ]) {
       const matches = text.match(pattern);
       if (matches) {
-        suggestions.push(...matches.map(m => m.toLowerCase()));
+        suggestions.push(...matches.map((m) => m.toLowerCase()));
       }
     }
 
@@ -298,43 +269,16 @@ export class CueService {
   }
 
   /**
-   * Parse database row to Cue type
+   * Convert StoredCue to Cue type for backward compatibility
    */
-  private parseCue(row: any): Cue {
+  private storedToCue(stored: StoredCue): Cue {
     return {
-      id: row.id,
-      user_id: row.user_id,
-      type: row.type,
-      media_ref: row.media_ref,
-      user_words: row.user_words,
-      created_at: new Date(row.created_at)
-    };
-  }
-
-  /**
-   * Parse database row to Episode type
-   */
-  private parseEpisode(row: any): Episode {
-    return {
-      id: row.id,
-      user_id: row.user_id,
-      occurred_at: new Date(row.occurred_at),
-      place_cue: row.place_cue,
-      sense_cues: row.sense_cues,
-      people: row.people,
-      affect_valence: row.affect_valence,
-      affect_arousal: row.affect_arousal,
-      elemental_state: row.elemental_state || {
-        fire: 0.5,
-        air: 0.5,
-        water: 0.5,
-        earth: 0.5,
-        aether: 0.5
-      },
-      scene_stanza: row.scene_stanza,
-      sacred_flag: row.sacred_flag,
-      created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at)
+      id: stored.id,
+      user_id: stored.userId,
+      type: stored.cueType,
+      media_ref: stored.mediaRef ?? undefined,
+      user_words: stored.userWords ?? undefined,
+      created_at: stored.createdAt ? new Date(stored.createdAt) : new Date(),
     };
   }
 }

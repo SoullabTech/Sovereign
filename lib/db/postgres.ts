@@ -15,7 +15,7 @@ let pool: Pool | null = null;
 
 if (isServer) {
   const { Pool: PgPool } = require('pg');
-  pool = new PgPool({
+  const newPool = new PgPool({
     connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
     max: 20,
     idleTimeoutMillis: 30000,
@@ -23,9 +23,11 @@ if (isServer) {
   });
 
   // Handle pool errors
-  pool!.on('error', (err) => {
+  newPool.on('error', (err: Error) => {
     console.error('❌ [POSTGRES] Unexpected pool error:', err);
   });
+
+  pool = newPool;
 }
 
 /**

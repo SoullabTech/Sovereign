@@ -14,13 +14,13 @@
  * - Relevance: Filter for what matters to current context
  * - Respect: Sacred episodes remain held (no artifacts)
  * - Reconstitution: Present artifacts in way that evokes, not just lists
+ *
+ * Architecture:
+ * - Uses Postgres-native storage via RecallRepo
  */
 
-import type {
-  RecallResult,
-  Episode,
-  Microact
-} from './types';
+import { RecallRepo, type EpisodeRow, type MicroactRow } from './storage/RecallRepo';
+import type { RecallResult, Episode, Microact } from './types';
 
 export interface RecallInput {
   userId: string;
@@ -35,8 +35,6 @@ export interface RecallInput {
 }
 
 export class RecallService {
-  private supabase = createClientComponentClient();
-
   /**
    * Recall an episode with artifacts
    *
@@ -45,22 +43,17 @@ export class RecallService {
   async recall(input: RecallInput): Promise<RecallResult | null> {
     try {
       // 1. Load episode
-      const { data: episode, error } = await this.supabase
-        .from('episodes')
-        .select('*')
-        .eq('id', input.episodeId)
-        .eq('user_id', input.userId)
-        .single();
+      const episodeRow = await RecallRepo.getEpisode(input.userId, input.episodeId);
 
-      if (error || !episode) {
-        console.error('[RecallService] Episode not found:', error);
+      if (!episodeRow) {
+        console.error('[RecallService] Episode not found');
         return null;
       }
 
       // 2. Sacred check - return episode only, no artifacts
-      if (episode.sacred_flag) {
+      if (episodeRow.sacred_flag) {
         return {
-          episode: this.parseEpisode(episode),
+          episode: this.parseEpisode(episodeRow),
           artifacts: undefined
         };
       }
@@ -69,26 +62,32 @@ export class RecallService {
       const artifacts: RecallResult['artifacts'] = {};
 
       if (input.includeTranscripts) {
-        artifacts.transcript = await this.loadTranscript(input.episodeId);
+        artifacts.transcript = await RecallRepo.getTranscriptForEpisode(input.episodeId);
       }
 
       if (input.includeInsights) {
-        artifacts.insights = await this.loadInsights(
+        const insights = await RecallRepo.getInsightsForEpisode(
           input.episodeId,
           input.maxInsights ?? 5
         );
+        if (insights.length > 0) {
+          artifacts.insights = insights;
+        }
       }
 
       if (input.includeMicroacts) {
-        artifacts.microacts = await this.loadMicroacts(
+        const microactRows = await RecallRepo.getMicroactsForEpisode(
           input.episodeId,
           input.maxMicroacts ?? 3
         );
+        if (microactRows.length > 0) {
+          artifacts.microacts = microactRows.map(row => this.parseMicroact(row));
+        }
       }
 
       return {
-        episode: this.parseEpisode(episode),
-        artifacts
+        episode: this.parseEpisode(episodeRow),
+        artifacts: Object.keys(artifacts).length > 0 ? artifacts : undefined
       };
     } catch (error) {
       console.error('[RecallService] Error:', error);
@@ -97,107 +96,108 @@ export class RecallService {
   }
 
   /**
-   * Load conversation transcript for episode
-   *
-   * In future, this will load from conversation_logs table
-   * For now, placeholder
+   * Create a new microact
    */
-  private async loadTranscript(episodeId: string): Promise<string | undefined> {
-    // TODO: Implement when conversation logging is in place
-    // For now, return undefined
-    return undefined;
-  }
-
-  /**
-   * Load insights extracted from episode
-   *
-   * Insights are key realizations, patterns noticed, or meaningful shifts
-   * Stored as short phrases or sentences
-   */
-  private async loadInsights(
-    episodeId: string,
-    maxCount: number
-  ): Promise<string[] | undefined> {
-    // TODO: Implement when insights extraction is in place
-    // This would query an insights table or extract from episode metadata
-    // For now, return undefined
-    return undefined;
-  }
-
-  /**
-   * Load microacts generated from episode
-   *
-   * Microacts are tiny embodied practices suggested based on this episode
-   */
-  private async loadMicroacts(
-    episodeId: string,
-    maxCount: number
-  ): Promise<Microact[] | undefined> {
+  async createMicroact(params: {
+    userId: string;
+    description: string;
+    context?: string;
+    elementBias?: string;
+  }): Promise<Microact | null> {
     try {
-      // Find microacts linked to this episode via logs
-      const { data, error } = await this.supabase
-        .from('microact_logs')
-        .select('microact_id, microacts(*)')
-        .eq('episode_id', episodeId)
-        .order('timestamp', { ascending: false })
-        .limit(maxCount);
-
-      if (error || !data || data.length === 0) {
-        return undefined;
-      }
-
-      // Parse unique microacts
-      const microactMap = new Map<string, Microact>();
-      for (const log of data) {
-        if (log.microacts && !microactMap.has(log.microacts.id)) {
-          microactMap.set(log.microacts.id, this.parseMicroact(log.microacts));
-        }
-      }
-
-      return Array.from(microactMap.values());
+      const row = await RecallRepo.createMicroact({
+        userId: params.userId,
+        description: params.description,
+        context: params.context,
+        elementBias: params.elementBias,
+      });
+      return this.parseMicroact(row);
     } catch (error) {
-      console.error('[RecallService] Error loading microacts:', error);
-      return undefined;
+      console.error('[RecallService] Error creating microact:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Log a microact event
+   */
+  async logMicroactEvent(params: {
+    userId: string;
+    microactId: string;
+    episodeId?: string;
+    eventType: 'suggested' | 'started' | 'completed' | 'skipped';
+    notes?: string;
+  }): Promise<boolean> {
+    try {
+      await RecallRepo.logMicroactEvent({
+        userId: params.userId,
+        microactId: params.microactId,
+        episodeId: params.episodeId,
+        eventType: params.eventType,
+        notes: params.notes,
+      });
+      return true;
+    } catch (error) {
+      console.error('[RecallService] Error logging microact event:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Get user's microacts
+   */
+  async getUserMicroacts(userId: string, limit?: number): Promise<Microact[]> {
+    try {
+      const rows = await RecallRepo.getUserMicroacts(userId, limit);
+      return rows.map(row => this.parseMicroact(row));
+    } catch (error) {
+      console.error('[RecallService] Error getting user microacts:', error);
+      return [];
     }
   }
 
   /**
    * Parse database row to Episode type
    */
-  private parseEpisode(row: any): Episode {
+  private parseEpisode(row: EpisodeRow): Episode {
     return {
       id: row.id,
       user_id: row.user_id,
       occurred_at: new Date(row.occurred_at),
-      place_cue: row.place_cue,
-      sense_cues: row.sense_cues,
-      people: row.people,
-      affect_valence: row.affect_valence,
-      affect_arousal: row.affect_arousal,
-      elemental_state: row.elemental_state || {
+      place_cue: row.place_cue ?? undefined,
+      sense_cues: row.sense_cues as string[] | undefined,
+      people: row.people as string[] | undefined,
+      affect_valence: row.affect_valence ?? undefined,
+      affect_arousal: row.affect_arousal ?? undefined,
+      elemental_state: (row.elemental_state as Episode['elemental_state']) || {
         fire: 0.5,
         air: 0.5,
         water: 0.5,
         earth: 0.5,
         aether: 0.5
       },
-      scene_stanza: row.scene_stanza,
-      sacred_flag: row.sacred_flag,
+      scene_stanza: row.scene_stanza ?? undefined,
+      sacred_flag: row.sacred_flag ?? false,
       created_at: new Date(row.created_at),
-      updated_at: new Date(row.updated_at)
+      updated_at: row.updated_at ? new Date(row.updated_at) : new Date(row.created_at)
     };
   }
 
   /**
    * Parse database row to Microact type
    */
-  private parseMicroact(row: any): Microact {
+  private parseMicroact(row: MicroactRow): Microact {
+    const validElements = ['fire', 'air', 'water', 'earth', 'aether'] as const;
+    const elementBias = row.element_bias && validElements.includes(row.element_bias as typeof validElements[number])
+      ? row.element_bias as 'fire' | 'air' | 'water' | 'earth' | 'aether'
+      : undefined;
+
     return {
       id: row.id,
       user_id: row.user_id,
       description: row.description,
-      context: row.context,
-      element_bias: row.element_bias,
+      context: row.context ?? undefined,
+      element_bias: elementBias,
       created_at: new Date(row.created_at)
     };
   }
