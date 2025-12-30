@@ -1042,6 +1042,78 @@ export class SelfletChainService {
     console.log(`[SELFLET] 📦 Archived message ${input.messageId} (reason: ${reason})`);
     return { ok: true, messageId: rows[0].id, action: 'archive' };
   }
+
+  /**
+   * Phase 2K-a: Get archived messages for user (for archive drawer)
+   * Returns messages ordered by archived_at DESC (newest first)
+   */
+  async getArchivedMessagesForUser(input: {
+    userId: string;
+    limit?: number;
+    cursor?: string; // ISO timestamp for pagination
+  }): Promise<{
+    items: Array<SelfletMessage & { archivedAt: Date; archivedReason?: string }>;
+    nextCursor: string | null;
+  }> {
+    const limit = Math.min(input.limit ?? 25, 100);
+    const cursorClause = input.cursor
+      ? `AND sm.archived_at < $3`
+      : '';
+    const params: (string | number)[] = [input.userId, limit + 1];
+    if (input.cursor) {
+      params.push(input.cursor);
+    }
+
+    const { rows } = await dbQuery(
+      `
+      SELECT
+        sm.id,
+        sm.from_selflet_id AS "fromSelfletId",
+        sm.to_selflet_id AS "toSelfletId",
+        sm.message_type AS "messageType",
+        sm.title,
+        sm.content,
+        sm.symbolic_objects AS "symbolicObjects",
+        sm.ritual_trigger AS "ritualTrigger",
+        sm.relevance_themes AS "relevanceThemes",
+        sm.delivered_at AS "deliveredAt",
+        sm.created_at AS "createdAt",
+        sm.archived_at AS "archivedAt",
+        sm.archived_reason AS "archivedReason"
+      FROM selflet_messages sm
+      JOIN selflet_nodes sn ON sm.from_selflet_id = sn.id
+      WHERE sn.user_id = $1
+        AND sm.archived_at IS NOT NULL
+        ${cursorClause}
+      ORDER BY sm.archived_at DESC
+      LIMIT $2
+      `,
+      params
+    );
+
+    const hasMore = rows.length > limit;
+    const items = rows.slice(0, limit).map((row) => ({
+      id: row.id,
+      fromSelfletId: row.fromSelfletId,
+      toSelfletId: row.toSelfletId ?? undefined,
+      messageType: row.messageType,
+      title: row.title ?? undefined,
+      content: row.content,
+      symbolicObjects: row.symbolicObjects ?? undefined,
+      ritualTrigger: row.ritualTrigger ?? undefined,
+      relevanceThemes: row.relevanceThemes ?? undefined,
+      deliveredAt: row.deliveredAt ? new Date(row.deliveredAt) : undefined,
+      createdAt: new Date(row.createdAt),
+      archivedAt: new Date(row.archivedAt),
+      archivedReason: row.archivedReason ?? undefined,
+    }));
+
+    const nextCursor = hasMore && items.length > 0
+      ? items[items.length - 1].archivedAt.toISOString()
+      : null;
+
+    return { items, nextCursor };
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════
