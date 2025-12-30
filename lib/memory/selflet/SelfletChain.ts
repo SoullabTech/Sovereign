@@ -30,6 +30,7 @@ import {
   Element,
   getMetamorphosisSymbol,
   UserSelfletState,
+  SelfletActionResult,
 } from './types';
 
 // ═══════════════════════════════════════════════════════════════
@@ -201,6 +202,8 @@ export class SelfletChainService {
          JOIN selflet_nodes sn ON sm.from_selflet_id = sn.id
          WHERE sn.user_id = $1
            AND sm.delivered_at IS NULL
+           AND sm.archived_at IS NULL
+           AND (sm.snoozed_until IS NULL OR sm.snoozed_until <= NOW())
            AND sm.to_selflet_id IS NULL
          ORDER BY sn.created_at DESC`,
         [userId]
@@ -229,6 +232,8 @@ export class SelfletChainService {
         JOIN selflet_nodes sn ON sm.from_selflet_id = sn.id
         WHERE sn.user_id = $1
           AND sm.delivered_at IS NULL
+          AND sm.archived_at IS NULL
+          AND (sm.snoozed_until IS NULL OR sm.snoozed_until <= NOW())
       `;
       const params: any[] = [userId];
 
@@ -670,6 +675,8 @@ export class SelfletChainService {
       JOIN selflet_nodes n ON n.id = m.from_selflet_id
       WHERE n.user_id = $1
         AND m.delivered_at IS NULL
+        AND m.archived_at IS NULL
+        AND (m.snoozed_until IS NULL OR m.snoozed_until <= NOW())
         AND (
           $2::text[] IS NULL
           OR array_length($2::text[], 1) IS NULL
@@ -950,6 +957,90 @@ export class SelfletChainService {
       triggerContext: row.trigger_context,
       createdAt: new Date(row.created_at),
     };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // PHASE 2J: SNOOZE / ARCHIVE CONTROLS
+  // ─────────────────────────────────────────────────────────────
+
+  /**
+   * Snooze a message - clears delivery tracking and sets snooze timer
+   * Message will resurface after snooze expires
+   */
+  async snoozeMessageById(input: {
+    userId: string;
+    messageId: string;
+    snoozeMinutes: number;
+    reason?: string;
+  }): Promise<SelfletActionResult> {
+    const snoozedUntil = new Date(Date.now() + input.snoozeMinutes * 60_000);
+
+    const { rows } = await dbQuery(
+      `
+      UPDATE selflet_messages sm
+      SET
+        snoozed_until = $1,
+        delivered_at = NULL,
+        delivered_session_id = NULL,
+        delivered_turn_id = NULL
+      FROM selflet_nodes sn
+      WHERE
+        sm.id = $2
+        AND sm.from_selflet_id = sn.id
+        AND sn.user_id = $3
+        AND sm.archived_at IS NULL
+      RETURNING sm.id, sm.snoozed_until
+      `,
+      [snoozedUntil.toISOString(), input.messageId, input.userId]
+    );
+
+    if (!rows?.length) {
+      console.log(`[SELFLET] Snooze failed for message ${input.messageId} (not found or archived)`);
+      return { ok: false, messageId: input.messageId, action: 'snooze' };
+    }
+
+    console.log(`[SELFLET] ⏰ Snoozed message ${input.messageId} until ${snoozedUntil.toISOString()}`);
+    return {
+      ok: true,
+      messageId: rows[0].id,
+      action: 'snooze',
+      snoozedUntil: rows[0].snoozed_until,
+    };
+  }
+
+  /**
+   * Archive a message - permanently removes from surfacing queue
+   */
+  async archiveMessageById(input: {
+    userId: string;
+    messageId: string;
+    reason?: string;
+  }): Promise<SelfletActionResult> {
+    const reason = input.reason ?? 'user_archive';
+
+    const { rows } = await dbQuery(
+      `
+      UPDATE selflet_messages sm
+      SET
+        archived_at = NOW(),
+        archived_reason = $1
+      FROM selflet_nodes sn
+      WHERE
+        sm.id = $2
+        AND sm.from_selflet_id = sn.id
+        AND sn.user_id = $3
+      RETURNING sm.id
+      `,
+      [reason, input.messageId, input.userId]
+    );
+
+    if (!rows?.length) {
+      console.log(`[SELFLET] Archive failed for message ${input.messageId} (not found)`);
+      return { ok: false, messageId: input.messageId, action: 'archive' };
+    }
+
+    console.log(`[SELFLET] 📦 Archived message ${input.messageId} (reason: ${reason})`);
+    return { ok: true, messageId: rows[0].id, action: 'archive' };
   }
 }
 

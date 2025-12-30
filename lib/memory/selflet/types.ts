@@ -15,6 +15,16 @@ export interface UserSelfletState {
   countThisSession: number;
 }
 
+/**
+ * Phase 2J: Result type for snooze/archive actions
+ */
+export type SelfletActionResult = {
+  ok: boolean;
+  messageId: string;
+  action: 'snooze' | 'archive';
+  snoozedUntil?: string | null;
+};
+
 export interface SelfletNode {
   id: string;
   userId: string;
