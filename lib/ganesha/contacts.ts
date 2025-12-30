@@ -1,5 +1,3 @@
-// @ts-nocheck
-// TODO: Interface mismatches need refactoring
 /**
  * Ganesha Contact Management System
  * Organized, scalable contact management for consciousness community
@@ -18,6 +16,7 @@ export interface GaneshaContact {
     source?: string; // How they joined (website, referral, etc.)
     contribution?: string;
     lastActive?: string;
+    passcode?: string; // Beta tester access code
     preferences?: {
       newsletters: boolean;
       updates: boolean;

@@ -64,6 +64,9 @@
     "lib/consciousness/AccountabilityResponsibilityProtocols.ts",
     "lib/voice/consciousness/CollectiveIntelligenceProtocols.ts",
     "app/api/empowerment/**/*",
+    // === Premium features with Prisma dependency (not set up) ===
+    "app/api/premium-storage/**/*",
+    "lib/services/cloud-backup.ts",
     // === Supabase Legacy Files (Phase 4.2B Step 6.1) ===
     "app/api/backend/src/lib/supabase.ts",
     "app/api/backend/src/lib/supabaseClient.ts",

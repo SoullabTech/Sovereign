@@ -1,5 +1,3 @@
-// @ts-nocheck
-// TODO: Interface mismatches need refactoring
 import { soullabColors } from './soullabColors'
 
 /**

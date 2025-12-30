@@ -12,6 +12,24 @@ export const soullabColors = {
   black: '#000000',    // Pure black - text, strong contrast
   gray: '#777777',     // Neutral gray - secondary text, dividers
   brown: '#33251d',    // Dark earth - accents, depth
+
+  // Extended color palettes (for gradients)
+  terracotta: {
+    100: '#f9ede8', 200: '#f0d4c8', 300: '#d9a089',
+    400: '#c27550', 500: '#a94724', 800: '#5a2614',
+  },
+  sage: {
+    100: '#f0f2e8', 200: '#dce1c8', 300: '#b5bf8f',
+    400: '#8f9b60', 500: '#6d7934', 800: '#3a411c',
+  },
+  ocean: {
+    100: '#e6f0f5', 200: '#c3dae6', 300: '#6da4be',
+    400: '#3d7f9f', 500: '#236586', 800: '#123648',
+  },
+  amber: {
+    100: '#faf5e6', 200: '#f3e6c0', 300: '#e2c76d',
+    400: '#d6ab40', 500: '#cea22c', 800: '#6d5617',
+  },
   
   // Extended palette for charts
   chart: {
