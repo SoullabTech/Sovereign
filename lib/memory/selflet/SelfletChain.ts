@@ -718,6 +718,7 @@ export class SelfletChainService {
     deliveredTurnId?: number | null;
   }): Promise<void> {
     // Phase 2K-b: Track delivery count for "Returning" badge
+    // Guard: only increment if this is a new turn (prevents double-bump on race/double-render)
     const query = `
       UPDATE selflet_messages
       SET delivered_at = NOW(),
@@ -728,6 +729,7 @@ export class SelfletChainService {
           delivered_session_id = COALESCE($3, delivered_session_id),
           delivered_turn_id = COALESCE($4, delivered_turn_id)
       WHERE id = $1
+        AND (delivered_turn_id IS DISTINCT FROM $4)
     `;
     await dbQuery(query, [
       input.messageId,
