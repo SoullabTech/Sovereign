@@ -1,0 +1,69 @@
+# Type Debt Ledger
+# Files that need type reclamation (removed from @ts-nocheck or structural fixes)
+#
+# Current state (2025-12-29):
+#   - Build passes: YES
+#   - Files with @ts-nocheck: 771
+#   - Strategy: Relaxed tsconfig.core.json (strict: false, noImplicitAny: false)
+#
+# Track progress: rg -l "^//\s*@ts-nocheck\b" app components lib hooks | wc -l
+
+# === HIGH PRIORITY (auth/data paths) ===
+# lib/db/postgres.ts - CLEAN (canonical DB client)
+# lib/db/pgvector.ts - CLEAN (vector operations)
+# lib/auth.ts - RECLAIMED (placeholder, needs real auth)
+
+# === BARDIC (Postgres-native) ===
+# lib/memory/bardic/storage/CueRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/storage/EmbeddingRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/storage/LinkingRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/CueService.ts - CLEAN (uses CueRepo, no Supabase)
+# lib/memory/bardic/EmbeddingService.ts - CLEAN (uses EmbeddingRepo)
+# lib/memory/bardic/LinkingService.ts - CLEAN (uses LinkingRepo, no Supabase)
+# lib/memory/bardic/storage/RecallRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/RecallService.ts - CLEAN (uses RecallRepo, no Supabase)
+# lib/memory/bardic/storage/RecognitionRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/RecognitionService.ts - CLEAN (uses RecognitionRepo, no Supabase)
+# lib/memory/bardic/storage/ReentryRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/ReentryService.ts - CLEAN (uses ReentryRepo, no Supabase)
+# lib/memory/bardic/storage/TeleologyRepo.ts - CLEAN (Postgres storage)
+# lib/memory/bardic/TeleologyService.ts - CLEAN (uses TeleologyRepo, no Supabase)
+
+# === MEDIUM PRIORITY (oracle routes) ===
+app/api/oracle/conversation/route.ts
+app/api/oracle/memory/route.ts
+app/api/oracle/trust/route.ts
+app/api/between/chat/route.ts
+
+# === QUARANTINED (labtools - experimental) ===
+# Excluded from tsconfig.core.json via app/maia/labtools/**
+app/maia/labtools/components/AdvancedMeditationConsole.tsx
+app/maia/labtools/components/BiometricStream.tsx
+app/maia/labtools/components/ConsciousnessFieldMap.tsx
+app/maia/labtools/components/EmergencyControls.tsx
+app/maia/labtools/components/FrequencySpectrum.tsx
+app/maia/labtools/components/GuardianStatus.tsx
+
+# === LEGACY (supabase remnants - should be deleted/replaced) ===
+lib/db/legacy/supabase.ts
+lib/db/legacy/supabase-hooks.ts
+lib/db/legacy/supabaseAdminClient.ts
+lib/db/legacy/supabase/*.ts
+
+# === EXCLUDED FROM BUILD (app/api/_backend) ===
+# All files in app/api/_backend/** and app/api/backend/** are excluded
+# These are backend modules that shouldn't be in Next.js build
+
+# === BULK @ts-nocheck (771 files) ===
+# Many component and lib files have @ts-nocheck added to enable build
+# These should be gradually reclaimed by:
+#   1. Fixing transitive type errors
+#   2. Updating type definitions
+#   3. Removing Supabase dependencies
+#   4. Fixing @capacitor/core Platform import
+
+# === NOTES ===
+# - The linter actively removes @ts-nocheck on save
+# - Build uses tsconfig.core.json with strict: false
+# - typecheck:core currently won't pass due to transitive errors
+# - Focus on build passing, reclaim types incrementally
