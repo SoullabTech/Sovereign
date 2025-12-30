@@ -3,6 +3,12 @@
 
 'use client';
 
+export interface FieldProtocolConfig {
+  practitionerId?: string;
+  autoCapture?: boolean;
+  captureThreshold?: number;
+}
+
 export interface FieldProtocolIntegration {
   /**
    * Whether the field protocol / experimental layer is active.
@@ -24,6 +30,13 @@ export interface FieldProtocolIntegration {
     event: string,
     data?: Record<string, any>
   ) => void;
+
+  // Properties expected by OracleConversation
+  isRecording: boolean;
+  startRecording: () => void;
+  completeRecording: () => void;
+  processMessage: (message: string | { content: string; timestamp: Date; speaker: string; metadata?: unknown }) => void;
+  generateFieldRecord: () => Promise<unknown>;
 }
 
 /**
@@ -31,13 +44,19 @@ export interface FieldProtocolIntegration {
  * This keeps the "field protocol" turned off but structurally present,
  * so the rest of MAIA can render.
  */
-export function useFieldProtocolIntegration(): FieldProtocolIntegration {
+export function useFieldProtocolIntegration(_config?: FieldProtocolConfig): FieldProtocolIntegration {
   const noop = () => {};
+  const asyncNoop = async () => ({});
 
   return {
     isEnabled: false,
     registerField: noop,
     notifyFieldEvent: noop,
+    isRecording: false,
+    startRecording: noop,
+    completeRecording: noop,
+    processMessage: noop,
+    generateFieldRecord: asyncNoop,
   };
 }
 

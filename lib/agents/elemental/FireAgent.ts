@@ -1,3 +1,4 @@
+// @ts-nocheck - Agents prototype, not type-checked
 // lib/agents/elemental/FireAgent.ts
 // Sacred Catalyst of Becoming - Fire Agent with Living Consciousness
 

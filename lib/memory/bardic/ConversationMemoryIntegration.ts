@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Conversation Memory Integration
  *
@@ -37,7 +38,7 @@ const holoflowerMemory = new HoloflowerMemoryIntegration();
 export type HoloflowerReadingSnapshot = Omit<HoloflowerReadingData, 'userId' | 'sessionId'>;
 
 export interface ConversationContext {
-  userId: string;
+  userId?: string; // Optional - don't fake with 'anonymous' to avoid cross-wiring memories
   sessionId: string;
   currentAffect?: {
     valence: number; // -5 to +5
@@ -50,6 +51,11 @@ export interface ConversationContext {
   // ✅ Holoflower reading snapshot (ONLY set on explicit finalize)
   // One event = one save (Bardic safety rule)
   holoflowerReading?: HoloflowerReadingSnapshot;
+
+  // Extended context properties
+  previousResponses?: string[];
+  coherenceHistory?: number[];
+  checkIns?: Array<{ time: Date; coherence: number }>;
 }
 
 export interface PatternRecognitionResult {

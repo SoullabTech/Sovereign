@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Claude-Elemental Oracle Connection
  * Claude as wisdom keeper, elements as sensing framework

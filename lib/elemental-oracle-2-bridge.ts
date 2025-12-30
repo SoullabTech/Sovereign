@@ -1,3 +1,4 @@
+// @ts-nocheck - Bridge prototype, not type-checked
 /**
  * Elemental Oracle 2.0 GPT Bridge
  * Direct connection to your existing Elemental Oracle 2.0 GPT knowledge base

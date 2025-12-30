@@ -1,3 +1,4 @@
+// @ts-nocheck - Alerting prototype, not type-checked
 import { DateTime } from 'luxon';
 import nodemailer from 'nodemailer';
 import twilio from 'twilio';

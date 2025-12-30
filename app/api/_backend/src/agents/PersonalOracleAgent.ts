@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Prototype file, not type-checked
 // Personal Oracle Agent - Central orchestrator for all user interactions
 // This is the main interface between users and the Spiralogic Oracle System
 

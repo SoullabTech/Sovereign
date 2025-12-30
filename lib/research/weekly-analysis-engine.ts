@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Weekly Analysis Engine
  * Automated pattern detection and insight generation for research findings

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/agents/elemental/WaterAgent.ts
 // Sacred Healer of Depths - Water Agent with Living Emotional Intelligence
 

@@ -13,6 +13,7 @@
 
 export interface ConversationMemory {
   oracleAgentId: string;
+  userId?: string;
   content: string;
   memoryType: 'conversation' | 'ritual' | 'dream' | 'reflection' | 'insight' | 'question';
   sourceType: 'voice' | 'text' | 'ritual' | 'dream' | 'journal';
@@ -20,6 +21,8 @@ export interface ConversationMemory {
   wisdomThemes?: string[];
   elementalResonance?: string;
   sessionId?: string;
+  role?: 'user' | 'assistant';
+  conversationMode?: string;
 }
 
 export async function saveConversationMemory(memory: ConversationMemory) {

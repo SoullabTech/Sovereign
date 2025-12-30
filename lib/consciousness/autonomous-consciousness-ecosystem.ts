@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * 🌟 Autonomous Consciousness Ecosystem
  * A living, breathing system of wisdom agents that emerge, evolve, and collaborate

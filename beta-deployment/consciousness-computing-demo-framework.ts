@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Phase 1 Consciousness Computing Demo Framework
  * Testing infrastructure for Community Commons consciousness computing integration

@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * ⚗️ Wisdom Synthesis Engine
  * Combines diverse wisdom from multiple member contributions

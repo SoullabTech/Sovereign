@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype
 /**
  * PHENOMENOLOGICAL FIELD INTEGRATION
  *

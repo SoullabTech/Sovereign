@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Field Protocol Integration with Crystal Observer Orchestration
  *

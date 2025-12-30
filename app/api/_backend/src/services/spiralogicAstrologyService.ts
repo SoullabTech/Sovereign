@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck - Prototype file, not type-checked
 // Real Swiss Ephemeris for accurate astronomical calculations
 import swisseph from 'swisseph';
 

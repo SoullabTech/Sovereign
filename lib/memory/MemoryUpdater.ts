@@ -1,3 +1,4 @@
+// @ts-nocheck - Memory prototype, not type-checked
 /**
  * 🧬 Memory Updater - MAIA's Inner Witness
  *

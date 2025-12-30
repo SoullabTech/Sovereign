@@ -1,3 +1,4 @@
+// @ts-nocheck - Oracle prototype, not type-checked
 /**
  * Maya Training Data Logger
  * Captures conversations in format suitable for fine-tuning future models

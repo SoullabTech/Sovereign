@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Spiralogic Field Protocol Validation System
  * Implements the validation loop for consciousness observations

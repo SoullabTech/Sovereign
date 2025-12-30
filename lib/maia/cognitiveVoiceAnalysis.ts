@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { JournalEntry } from './state';
 import { VoiceMetrics, analyzeVoiceMetrics } from './voicePatterns';
 

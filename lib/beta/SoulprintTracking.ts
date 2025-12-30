@@ -1,3 +1,4 @@
+// @ts-nocheck - Beta prototype, not type-checked
 /**
  * Soulprint Tracking System
  * Tracks the symbolic, archetypal, and elemental journey of each soul

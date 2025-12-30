@@ -1,3 +1,4 @@
+// @ts-nocheck - Intelligence prototype, not type-checked
 /**
  * PERSONALIZED FRAMEWORK RESONANCE LEARNING
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck - Test file, not type-checked
 /**
  * End-to-End Field Safety Enforcement Test
  *

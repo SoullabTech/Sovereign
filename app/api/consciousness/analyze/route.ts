@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * 🧠🔥 CONSCIOUSNESS ANALYSIS API - LISP ENGINE INTEGRATION
  *

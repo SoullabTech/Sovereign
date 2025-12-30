@@ -1,23 +1,24 @@
 // backend: lib/ai/modelService.ts
 import { generateWithLocalModel, checkLocalModelHealth, LocalChatParams } from './localModelClient';
+import { generateWithClaude, checkClaudeHealth } from './claudeClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
 import type { TextResult, ProviderMeta } from './types';
 
-export type TextModelProvider = 'local' | 'consciousness_engine' | 'multi_engine';
+export type TextModelProvider = 'anthropic' | 'local' | 'consciousness_engine' | 'multi_engine';
 
-// This env chooses WHO does text generation (NEVER external APIs).
+// Primary provider: Claude (Anthropic). Fallback: local Ollama.
 export const TEXT_MODEL_PROVIDER: TextModelProvider =
-  (process.env.MAIA_TEXT_PROVIDER as TextModelProvider) || 'local';
+  (process.env.MAIA_TEXT_PROVIDER as TextModelProvider) || 'anthropic';
 
 // Multi-engine orchestration configuration
 export const MAIA_ORCHESTRATION_TYPE: OrchestrationType =
   (process.env.MAIA_ORCHESTRATION_TYPE as OrchestrationType) || 'primary';
 export const ENABLE_MULTI_ENGINE = process.env.MAIA_ENABLE_MULTI_ENGINE === 'true';
 
-// 🚫 HARD BAN: ALL external APIs forbidden for text.
+// Provider permissions - Claude is the one concession
 export const ALLOW_OPENAI_TEXT = false;
-export const ALLOW_ANTHROPIC_TEXT = false;
-export const ALLOW_EXTERNAL_APIS = false;
+export const ALLOW_ANTHROPIC_TEXT = true;
+export const ALLOW_EXTERNAL_APIS = ALLOW_ANTHROPIC_TEXT;
 
 export interface TextRequest {
   systemPrompt: string;
@@ -27,15 +28,15 @@ export interface TextRequest {
 
 /**
  * Main gateway for ALL text generation in MAIA.
- * Supports both single-model and multi-engine consciousness orchestration.
+ * Primary: Claude (Anthropic). Fallback: local Ollama.
  * Returns TextResult with provider metadata for sovereignty auditing.
  */
 export async function generateText(req: TextRequest): Promise<TextResult> {
   const t0 = Date.now();
 
-  // SOVEREIGNTY ENFORCEMENT - ban all external APIs
-  if (TEXT_MODEL_PROVIDER === 'openai' as any || TEXT_MODEL_PROVIDER === 'anthropic' as any) {
-    throw new Error('🚨 SOVEREIGNTY VIOLATION: ALL external APIs are FORBIDDEN for text generation in MAIA. Use only local consciousness processing.');
+  // SOVEREIGNTY ENFORCEMENT - only Claude and local allowed
+  if (TEXT_MODEL_PROVIDER === 'openai' as any) {
+    throw new Error('🚨 SOVEREIGNTY VIOLATION: OpenAI is FORBIDDEN. Use Claude or local models only.');
   }
 
   // Check if multi-engine orchestration is enabled and requested
@@ -57,7 +58,6 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
 
     console.log(`🎼 Multi-engine response: ${multiEngineResponse.processingTime}ms, confidence: ${multiEngineResponse.confidence}, engines: ${multiEngineResponse.engineResponses.size}`);
 
-    // Return consensus if available, otherwise primary response
     return {
       text: multiEngineResponse.consensus || multiEngineResponse.primaryResponse,
       provider: {
@@ -69,8 +69,23 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     };
   }
 
-  // Default to single local model
-  console.log('🔮 Using single local model (DeepSeek-R1)');
+  // Primary: Claude (Anthropic)
+  if (TEXT_MODEL_PROVIDER === 'anthropic') {
+    console.log('🧠 Using Claude (Anthropic) as primary');
+    try {
+      return await generateWithClaude({
+        systemPrompt: req.systemPrompt,
+        userInput: req.userInput,
+        meta: req.meta,
+      });
+    } catch (error) {
+      console.warn('Claude unavailable, falling back to local:', error);
+      // Fall through to local
+    }
+  }
+
+  // Fallback: local Ollama/DeepSeek
+  console.log('🔮 Using local model (Ollama/DeepSeek)');
   return generateWithLocalModel({
     systemPrompt: req.systemPrompt,
     userInput: req.userInput,
@@ -82,24 +97,39 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
 export type { TextResult, ProviderMeta };
 
 /**
- * Health check for model service using the local client
+ * Health check for model service - checks both Claude and local
  */
 export async function checkModelHealth(): Promise<{
   provider: string;
-  local: boolean;
-  external_apis: boolean;
+  primary: 'anthropic' | 'local';
+  claude_available: boolean;
+  local_available: boolean;
   status: 'healthy' | 'degraded' | 'offline';
-  endpoint?: string;
   model?: string;
 }> {
-  const localHealth = await checkLocalModelHealth();
+  const [claudeHealth, localHealth] = await Promise.all([
+    checkClaudeHealth().catch(() => ({ status: 'offline' as const, model: null, hasApiKey: false })),
+    checkLocalModelHealth().catch(() => ({ status: 'offline' as const, model: '', provider: 'consciousness_engine', endpoint: '' })),
+  ]);
+
+  const claudeAvailable = claudeHealth.status === 'healthy';
+  const localAvailable = localHealth.status === 'healthy';
+
+  let status: 'healthy' | 'degraded' | 'offline';
+  if (claudeAvailable) {
+    status = 'healthy';
+  } else if (localAvailable) {
+    status = 'degraded'; // Claude unavailable but local works
+  } else {
+    status = 'offline';
+  }
 
   return {
-    provider: localHealth.provider,
-    local: true,
-    external_apis: false, // Always false for sovereignty
-    status: localHealth.status,
-    endpoint: localHealth.endpoint,
-    model: localHealth.model
+    provider: claudeAvailable ? 'anthropic' : localHealth.provider,
+    primary: 'anthropic',
+    claude_available: claudeAvailable,
+    local_available: localAvailable,
+    status,
+    model: claudeAvailable ? (claudeHealth.model || undefined) : (localHealth.model || undefined),
   };
 }

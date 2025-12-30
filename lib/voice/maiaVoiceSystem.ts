@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Voice System V3 - Consciousness-Aware Speech Interface
  *

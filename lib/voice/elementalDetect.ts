@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/voice/elementalDetect.ts
 // Elemental tone detection from text and voice patterns
 

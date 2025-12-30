@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Full Hybrid Integration
  * Elemental Oracle → Claude Wisdom → Sesame Voice

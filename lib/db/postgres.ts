@@ -162,7 +162,9 @@ export function getPoolStats() {
  * Gracefully close all connections
  */
 export async function closePool(): Promise<void> {
-  if (!pool) return;
+  if (!pool) {
+    return;
+  }
   try {
     await pool.end();
     console.log('✅ [POSTGRES] Pool closed gracefully');

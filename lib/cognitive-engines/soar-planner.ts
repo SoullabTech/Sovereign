@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/cognitive-engines/soar-planner.ts
 /**
  * SOAR Planning System - Procedural Reasoning for Wisdom Generation

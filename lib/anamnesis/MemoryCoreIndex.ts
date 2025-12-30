@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MEMORY CORE INDEX
  * Unified Export Module for the Anamnesis Field

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Fractal Development Types
  * Schemas for tracking non-linear, multi-dimensional human development

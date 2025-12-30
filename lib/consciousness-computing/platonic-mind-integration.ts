@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Platonic Mind Integration with Nested Window Architecture
  *

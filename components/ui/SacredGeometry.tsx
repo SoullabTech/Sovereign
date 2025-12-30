@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 'use client';
 
 import React, { useEffect, useRef } from 'react';

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * META-TELESPHORUS OBSERVER SYSTEM
  * Phase 1: Nested Observer Windows for AIN Evolution

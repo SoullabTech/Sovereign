@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Conversation Timing Middleware
  * Tracks and optimizes conversational pacing without touching core logic

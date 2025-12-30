@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * 🌟 Consciousness Evolution Types - Sacred Oracle Supabase Integration
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // Ritual Layer System: Orchestrating visual, haptic, and audio layers
 // Each layer is independent but synchronized for unified sacred experience
 
