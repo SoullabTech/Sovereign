@@ -34,6 +34,7 @@
     "check:private-routes": "node scripts/check-private-routes.js",
     "check:backend-imports": "node scripts/check-backend-imports.js",
     "guardrails": "node scripts/check-nocheck-allowlist.js && node scripts/check-private-routes.js && node scripts/check-backend-imports.js",
+    "db:migrate": "bash scripts/apply-migrations.sh",
     "leak-guard": "bash scripts/ci/leak-guard.sh",
     "validate:critical": "node scripts/validate-critical-files.js",
     "verify:claude": "bash scripts/verify-claude-project.sh",
