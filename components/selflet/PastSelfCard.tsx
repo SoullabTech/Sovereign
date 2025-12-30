@@ -27,9 +27,10 @@ function labelForType(t?: string | null) {
 interface PastSelfCardProps {
   pastSelf: PastSelfPayload;
   userId?: string; // Required for dev mode API calls
+  onOpenArchive?: () => void; // Phase 2K-a: Opens the archive drawer
 }
 
-export default function PastSelfCard({ pastSelf, userId }: PastSelfCardProps) {
+export default function PastSelfCard({ pastSelf, userId, onOpenArchive }: PastSelfCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [working, setWorking] = useState<'snooze' | 'archive' | null>(null);
   const [dismissed, setDismissed] = useState(false);
@@ -175,6 +176,18 @@ export default function PastSelfCard({ pastSelf, userId }: PastSelfCardProps) {
       {error && (
         <div className="mt-2 text-xs text-red-600 dark:text-red-400">
           {error}
+        </div>
+      )}
+
+      {/* Phase 2K-a: View Archive link */}
+      {onOpenArchive && (
+        <div className="mt-3 pt-2 border-t border-amber-200/40 dark:border-amber-700/30">
+          <button
+            onClick={onOpenArchive}
+            className="text-xs text-amber-600/70 hover:text-amber-700 dark:text-amber-500/70 dark:hover:text-amber-400 transition-colors"
+          >
+            View archived messages →
+          </button>
         </div>
       )}
     </div>
