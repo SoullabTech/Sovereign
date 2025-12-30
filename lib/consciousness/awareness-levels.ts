@@ -1,11 +1,25 @@
 /**
- * Developmental Awareness Levels
+ * Developmental Awareness Levels (CANONICAL 7-LEVEL SYSTEM)
  *
- * Maps member's consciousness development along a 7-point scale.
+ * This is the SINGLE SOURCE OF TRUTH for awareness levels in MAIA.
+ *
+ * Maps member's consciousness development along a 7-point scale:
+ *   1: Newcomer    - Just beginning consciousness work
+ *   2: Explorer    - Exploring inner world, building trust
+ *   3: Practitioner - Developing practices, gaining autonomy
+ *   4: Student     - Learning systems, understanding patterns
+ *   5: Integrator  - Integrating multiple models, seeing connections
+ *   6: Teacher     - Embodying wisdom, ready to guide others
+ *   7: Master      - Meta-awareness, holding paradox, transcending frameworks
+ *
  * MAIA adapts her response style (implicit vs explicit) based on awareness level.
  *
  * CRITICAL: Most personalization should be IMPLICIT (she just does it).
  * Only make frameworks EXPLICIT when asked or developmentally appropriate.
+ *
+ * Related modules:
+ * - awareness-adapters.ts: Convert 7-level ↔ 4/5-level for legacy consumers
+ * - awareness-detection.ts: Unified detection pipeline with confidence scoring
  */
 
 export type AwarenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7;
@@ -508,3 +522,40 @@ function getRHInterpretation(rhPercent: number): string {
   if (rhPercent > 20) return "precision-oriented, analytical";
   return "highly focused on constraint and execution";
 }
+
+// ═══════════════════════════════════════════════════════════════
+// BARREL EXPORTS (for consolidated access)
+// ═══════════════════════════════════════════════════════════════
+
+// Re-export adapters for legacy system compatibility
+export {
+  to5Level,
+  from5Level,
+  to4Level,
+  from4Level,
+  toNamedLevel,
+  fromNamedLevel,
+  toLanguageLevel,
+  fromLanguageLevel,
+  clampToAwarenessLevel,
+  getAwarenessLevelName,
+  hasMetaAwareness,
+  frameworksVisible,
+  getModelTierForAwareness,
+  type AwarenessLevel5,
+  type AwarenessLevel4,
+  type NamedAwarenessLevel,
+  type LanguageLevel
+} from './awareness-adapters';
+
+// Re-export unified detection pipeline
+export {
+  detectAwarenessLevel,
+  detectFromRelationship,
+  detectFromInput,
+  type AwarenessDetectionInput,
+  type AwarenessDetectionResult,
+  type AwarenessSource,
+  type SpiralogicProfileInput,
+  type RelationshipMemoryInput
+} from './awareness-detection';
