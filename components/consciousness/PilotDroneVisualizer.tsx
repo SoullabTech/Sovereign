@@ -298,12 +298,11 @@ export function PilotDroneVisualizer({
         <div className="flex justify-center">
           <div className="w-64 h-64">
             <Holoflower
-              elements={{
-                fire: pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'fire')?.flow / 100 || 0.7,
-                water: pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'water')?.flow / 100 || 0.6,
-                earth: pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'earth')?.flow / 100 || 0.75,
-                air: pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'air')?.flow / 100 || 0.9,
-                aether: pilotDroneState.pilotField.coherenceLevel
+              elementalBalance={{
+                fire: (pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'fire')?.flow ?? 70) / 100,
+                water: (pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'water')?.flow ?? 60) / 100,
+                earth: (pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'earth')?.flow ?? 75) / 100,
+                air: (pilotDroneState.pilotField.quantumChannels.find(c => c.element === 'air')?.flow ?? 90) / 100
               }}
             />
           </div>
