@@ -15,11 +15,9 @@
 const { execSync } = require('child_process');
 const path = require('path');
 
-// Allowlist: Legacy Supabase files pending PostgreSQL migration
-// See docs/LEGACY_SUPABASE.md for migration plan
-const ALLOWLIST = new Set([
-  // All Supabase dependencies have been migrated to PostgreSQL
-]);
+// Allowlist: Legacy files excluded from strict type guarantees
+// Empty = all files must be type-checked (mission accomplished 2025-12-30)
+const ALLOWLIST = new Set([]);
 
 // Directories excluded from checking (separate codebases with their own configs)
 const EXCLUDED_DIRS = [
