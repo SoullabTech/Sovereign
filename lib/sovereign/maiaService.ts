@@ -49,6 +49,27 @@ function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
   return mode === 'counsel' || mode === 'scribe' || mode === 'dialogue' ? mode : 'dialogue';
 }
 
+// 🌀 SELFLET PHASE 2F: Unified delivery guard (all paths)
+const SELFLET_MARKER = '\u2063\u2063\u2063'; // invisible marker (prevents double-prepend)
+
+interface SelfletDeliveryContext {
+  requiredAcknowledgment?: string;
+}
+
+function applySelfletDeliveryGuard(
+  response: string,
+  selfletContext?: SelfletDeliveryContext
+): string {
+  const requiredAck = selfletContext?.requiredAcknowledgment;
+  if (!requiredAck) return response;
+
+  // Future-proof: treat any existing requiredAck as already satisfied
+  if (response.includes(SELFLET_MARKER) || response.includes(requiredAck)) return response;
+
+  console.log('[SELFLET] Prepending past-self acknowledgment');
+  return requiredAck + SELFLET_MARKER + response;
+}
+
 /**
  * Filter mode-inappropriate language from responses
  * DeepSeek-R1 often ignores system prompts, so we post-process
@@ -662,13 +683,8 @@ Current context: Simple conversation turn - respond naturally and warmly.`;
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
   validatedResponse = filterModeLanguage(validatedResponse, input, mode);
 
-  // 🌀 SELFLET PHASE 2E: Prepend past-self message if model didn't include it
-  const SELFLET_MARKER = '\u2063\u2063\u2063'; // invisible marker (prevents double-prepend)
-  const requiredAck = selfletContext?.requiredAcknowledgment;
-  if (requiredAck && !validatedResponse.includes(SELFLET_MARKER) && !validatedResponse.startsWith(requiredAck)) {
-    console.log('[SELFLET FAST] Model ignored instruction - prepending acknowledgment');
-    validatedResponse = requiredAck + SELFLET_MARKER + validatedResponse;
-  }
+  // 🌀 SELFLET: Apply unified delivery guard
+  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
   return validatedResponse;
 }
@@ -848,6 +864,9 @@ async function corePathResponse(
   // 🎭 MODE-AWARE POST-PROCESSING: Filter mode-inappropriate language
   const mode = normalizeMode(meta.mode);
   validatedResponse = filterModeLanguage(validatedResponse, input, mode);
+
+  // 🌀 SELFLET: Apply unified delivery guard
+  validatedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
 
   return validatedResponse;
 }
@@ -1138,8 +1157,11 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     }
   );
 
+  // 🌀 SELFLET: Apply unified delivery guard
+  const guardedResponse = applySelfletDeliveryGuard(validatedResponse, selfletContext);
+
   return {
-    response: validatedResponse,
+    response: guardedResponse,
     socraticValidation: validation,
     consciousnessData: {
       layersActivated: consciousnessResponse.layersActivated,
