@@ -6,6 +6,8 @@
  * for the current member across all platforms.
  */
 
+export const dynamic = 'force-dynamic';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 

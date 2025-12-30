@@ -71,7 +71,6 @@ find . -name ".!*" -delete
 ├── app/          # Next.js app directory (pages and API routes)
 ├── components/   # React components
 ├── lib/          # Shared libraries and utilities
-<<<<<<< HEAD
 ├── public/       # Static assets (deprecated - use /docs/assets/)
 ├── styles/       # Global styles
 └── docs/         # All documentation and assets
@@ -83,10 +82,6 @@ find . -name ".!*" -delete
     │   ├── diagrams/    # Architecture & schemas
     │   └── misc/        # Uncategorized assets
     └── *.md      # All markdown documentation
-=======
-├── public/       # Static assets
-└── styles/       # Global styles
->>>>>>> f172a101063c5c79f1c63145b7c12589cf89ae26
 ```
 
 ### Code Style
@@ -107,7 +102,6 @@ When backend services are unavailable, use stubs from `lib/stubs/`:
 import { CollectiveIntelligence } from '@/lib/stubs/CollectiveIntelligence';
 ```
 
-<<<<<<< HEAD
 ### 📂 Assets Guidelines
 
 #### Image Placement Rules
@@ -143,8 +137,6 @@ The Holoflower and Aether state visualizations are sacred assets:
 - Never compressed or altered
 - Maintain original resolution and quality
 
-=======
->>>>>>> f172a101063c5c79f1c63145b7c12589cf89ae26
 ## 🐛 Reporting Issues
 
 ### Before Reporting
