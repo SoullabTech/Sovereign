@@ -5,7 +5,7 @@
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
 # ═══════════════════════════════════════════════════════════════════════════════
 
-{$DOMAIN:localhost} {
+{$DOMAIN:localhost}, www.{$DOMAIN:localhost} {
     # Reverse proxy to MAIA container
     reverse_proxy maia:3000 {
         # Health checks
@@ -20,8 +20,10 @@
         header_up X-Forwarded-Proto {scheme}
     }
 
-    # Security headers
+    # Security headers + origin marker
     header {
+        # Origin marker (proves request came from sovereign origin)
+        X-MAIA-Origin "caddy-sovereign"
         # HSTS
         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
         # Prevent clickjacking
