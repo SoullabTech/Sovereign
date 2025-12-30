@@ -9,6 +9,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { headers } from 'next/headers';
 
+export const dynamic = 'force-dynamic';
+
 // Placeholder for actual implementation - in production this would
 // connect to the unified consciousness manager and platform adapters
 async function getArchitectureSnapshot(memberId: string) {
