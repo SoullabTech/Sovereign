@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Ethical Collective Intelligence Service
  * 

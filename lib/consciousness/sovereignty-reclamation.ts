@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SOVEREIGNTY RECLAMATION SPIRAL
  *

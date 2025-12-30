@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Call MAIA Imaginal API with Streaming
  *

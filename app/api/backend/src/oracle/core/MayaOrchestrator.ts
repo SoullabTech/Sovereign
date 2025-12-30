@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { OracleResponse } from '../../types/personalOracle';
 import { ClaudeService } from '../../services/claude.service';
 

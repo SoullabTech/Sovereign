@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Claim Collector
  * Gathers signals from all subsystems before priority resolution

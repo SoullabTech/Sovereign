@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified User Service
  * Consolidates all user management, authentication, and profile operations

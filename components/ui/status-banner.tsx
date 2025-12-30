@@ -116,7 +116,7 @@ export function StatusBanner({
       .filter(([_, enabled]) => enabled)
       .map(([feature, _]) => feature);
     
-    const issues = [];
+    const issues: string[] = [];
     if (!health.apiKeys.anthropic) issues.push('Claude unavailable');
     if (!health.apiKeys.openai) issues.push('OpenAI unavailable');
     

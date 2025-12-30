@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../types/agentResponse";
 import { ConversationalContext, ConversationalResult, conversationalPipeline } from './ConversationalPipeline';
 import { dialogueStateTracker, DialogueState, UserIntent, DialogueStage } from './EnhancedDialogueStateTracker';

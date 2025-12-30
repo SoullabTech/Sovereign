@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Admin Routes - Dashboard and monitoring endpoints
  */

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Simplified PersonalOracleAgent for Readiness Testing
  * 

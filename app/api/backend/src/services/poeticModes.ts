@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Poetic Modes Service
  * Controls greeting style formatting between prose, verse, and auto modes

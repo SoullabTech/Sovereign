@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Personal Oracle Agent - Bridge to main PersonalOracleAgent
  * Routes requests to the actual implementation

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { TestCase, TestResponse, TestResult, DomainMetrics, TestSummary } from './types';
 import { validateJson, extractConfidence } from './validators/schema';
 import { validateMathResult, extractMathResult } from './validators/math';

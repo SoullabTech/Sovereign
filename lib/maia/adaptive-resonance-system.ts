@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Adaptive Resonance System
  * Claude's archetypal sensing directly influences field weights

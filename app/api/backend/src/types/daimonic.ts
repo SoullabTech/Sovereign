@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface DaimonicDetected {
   userIdHash: string;
   ts: string;

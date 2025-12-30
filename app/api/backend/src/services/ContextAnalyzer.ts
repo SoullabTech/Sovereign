@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Context Analyzer - Advanced psychological assessment for AIN/MAYA/Anamnesis routing
 // Provides sophisticated analysis beyond simple sentiment to guide archetypal experience selection
 

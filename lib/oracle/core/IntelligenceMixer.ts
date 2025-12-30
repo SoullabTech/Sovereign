@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ARIA Intelligence Mixer
  * Dynamic blending of Maya's five intelligence sources

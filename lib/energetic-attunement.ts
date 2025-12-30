@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Energetic Attunement System
  * Dynamically adjusts Maya/Anthony's presence to match and dance with user energy

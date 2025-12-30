@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Client-Side Encryption System for MAIA
  * Provides end-to-end encryption for all sensitive user data

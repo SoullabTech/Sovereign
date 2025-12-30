@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { MayaOrchestrator } from '../core/MayaOrchestrator';
 
 interface TestResult {

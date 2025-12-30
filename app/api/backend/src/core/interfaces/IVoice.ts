@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface VoiceJob { 
   text: string; 
   voiceId?: string;

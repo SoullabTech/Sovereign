@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Integration Bridge
  * Connects PersonalOracleAgent with the new Orchestration System

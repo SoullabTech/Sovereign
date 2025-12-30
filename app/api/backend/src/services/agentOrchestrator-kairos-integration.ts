@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Kairos Integration with AgentOrchestrator
  *

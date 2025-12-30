@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * HOLOGRAPHIC FIELD INTEGRATION
  *

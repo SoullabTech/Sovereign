@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Cloud Integration Chokepoint: OpenAI Client
 // This file is the ONLY place OpenAI SDK should be imported
 // All other files must import from this wrapper

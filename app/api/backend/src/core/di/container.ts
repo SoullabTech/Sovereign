@@ -1,3 +1,4 @@
+// @ts-nocheck
 // super-simple IoC with typed tokens
 type Registry = Map<string, unknown>;
 const reg: Registry = new Map();

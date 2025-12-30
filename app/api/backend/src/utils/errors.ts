@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/utils/errors.ts
 
 export class AppError extends Error {

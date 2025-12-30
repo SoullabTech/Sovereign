@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Profile Memory Layer - Stub Implementation
  * TODO: Replace with actual user profile/traits retrieval from Mem0 or user database

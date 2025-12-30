@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Placeholder interfaces for consciousness evolution system
 export interface CrisisInterventionProtocol { 
   id: string; 

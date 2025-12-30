@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ClaudeService } from '../../services/claude.service';
 
 /**

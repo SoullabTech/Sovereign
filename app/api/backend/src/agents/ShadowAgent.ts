@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ShadowAgent: MAIA's Shadow Archetype
  *

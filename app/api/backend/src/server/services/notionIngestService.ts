@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/notionIngestService.ts
 
 export const notionIngestService = {

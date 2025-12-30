@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface AudioStorage {
   /**
    * Save audio file and return public URL

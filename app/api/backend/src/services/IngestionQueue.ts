@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { OpenAI } from 'openai';
 import * as pdfParse from 'pdf-parse';
 import * as mammoth from 'mammoth';

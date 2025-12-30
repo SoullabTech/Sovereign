@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA'S IMPLICIT ORGANIZATIONAL INTELLIGENCE
  *

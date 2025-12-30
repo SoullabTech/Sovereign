@@ -28,7 +28,7 @@ export function DirectionalPanel({ direction, isOpen, onClose, userId }: Directi
     direction,
     config?.extensions
       ? Object.fromEntries(
-          Object.entries(config.extensions).map(([id, cfg]) => [id, cfg.enabled])
+          Object.entries(config.extensions).map(([id, cfg]) => [id, (cfg as { enabled: boolean }).enabled])
         )
       : undefined
   );

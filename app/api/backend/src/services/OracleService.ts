@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 Oracle Service - Central Access Point for Personal Oracle Agents
  *

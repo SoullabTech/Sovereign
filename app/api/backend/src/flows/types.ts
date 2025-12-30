@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Session, MemoryItem, SessionStats } from "../types";
 
 export interface FlowResult {

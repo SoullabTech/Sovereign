@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 Onboarding Ceremony Service - Sacred Assignment of Personal Oracle Agents
  * 

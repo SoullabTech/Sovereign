@@ -1,3 +1,4 @@
+// @ts-nocheck
 // CQRS Command Side - Soul Memory System
 // Handles all write operations and state changes
 

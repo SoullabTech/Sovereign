@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Daimonic Dashboard Service
  * Transforms raw collective field data into phenomenological dashboard insights

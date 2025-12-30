@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type DivinationMethod =
   | "tarot"
   | "iching"

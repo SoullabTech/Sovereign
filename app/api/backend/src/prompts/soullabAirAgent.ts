@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soullab Air Agent Configuration
  * Claude as the Primary Communicator

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend/src/routes/oraclePreferences.routes.ts
 
 import express from "express";

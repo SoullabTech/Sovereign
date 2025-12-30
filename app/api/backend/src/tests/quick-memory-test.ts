@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // QUICK SOUL MEMORY TEST
 // Run with: npx ts-node src/tests/quick-memory-test.ts

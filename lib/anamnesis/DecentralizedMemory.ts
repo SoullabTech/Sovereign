@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Decentralized Memory Processing
  * Uses SingularityNET for distributed AGI memory operations

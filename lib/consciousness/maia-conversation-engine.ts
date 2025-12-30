@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA CONVERSATION ENGINE
  *

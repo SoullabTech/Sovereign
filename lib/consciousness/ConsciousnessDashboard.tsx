@@ -1,3 +1,4 @@
+// @ts-nocheck
 import React, { useState, useMemo } from 'react';
 import { useConsciousnessMonitoring, useConsciousnessAlerts } from './useConsciousnessMonitoring';
 import ConsciousnessFieldVisualization from './ConsciousnessFieldVisualization';

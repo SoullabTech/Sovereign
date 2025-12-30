@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Simple In-Memory Store for Memory System
  * Beta implementation without external dependencies

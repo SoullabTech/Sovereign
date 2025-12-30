@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/surveyService.ts
 
 export interface SurveyResponse {

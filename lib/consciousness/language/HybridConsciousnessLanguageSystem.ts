@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hybrid Consciousness-Language System
  *

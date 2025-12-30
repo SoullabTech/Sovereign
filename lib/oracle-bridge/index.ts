@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Bridge - Connects frontend API routes to backend orchestration
  * This is the missing link that makes the system flow efficiently

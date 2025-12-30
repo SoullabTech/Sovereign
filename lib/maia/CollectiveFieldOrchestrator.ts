@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Field Orchestrator
  * Manages the toroidal field dynamics of multiple consciousness spirals

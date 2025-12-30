@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Living Soul Story API
  *

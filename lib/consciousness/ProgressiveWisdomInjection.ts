@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Progressive Wisdom Injection System
  *

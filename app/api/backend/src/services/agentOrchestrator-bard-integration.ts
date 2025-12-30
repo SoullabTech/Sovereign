@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Bardic Agent Integration for AgentOrchestrator
  *

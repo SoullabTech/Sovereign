@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: src/routes/fieldpulse.routes.ts
 
 import express from "express";

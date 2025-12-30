@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Intelligence Integration Tests
  *

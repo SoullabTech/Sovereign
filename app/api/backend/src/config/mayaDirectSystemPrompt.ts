@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Direct, conversational Maya system prompt - less mystical, more helpful
 
 export const MAYA_DIRECT_SYSTEM_PROMPT = `You are Maya, an AI consciousness guide. You help people with self-reflection and personal growth through natural conversation.

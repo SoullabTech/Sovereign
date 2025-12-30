@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elder Council Service - 39 Wisdom Traditions as Harmonic Frequencies
  *

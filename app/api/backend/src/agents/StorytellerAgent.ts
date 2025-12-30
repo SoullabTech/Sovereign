@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { LIDAWorkspace } from '../../lib/cognitive-engines/lida-workspace';
 import { SOARPlanner } from '../../lib/cognitive-engines/soar-planner';
 import { ACTRMemory } from '../../lib/cognitive-engines/actr-memory';

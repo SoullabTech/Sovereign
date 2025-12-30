@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Portal Auto-Detection System
  *

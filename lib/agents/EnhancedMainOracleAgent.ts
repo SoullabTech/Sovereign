@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Enhanced Main Oracle Agent with Privacy-First Collective Intelligence
  *

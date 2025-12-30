@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { OracleAgent } from "./oracleAgent";
 import type { AIResponse } from "../types/ai";
 import type { AgentResponse } from "../types/agent";

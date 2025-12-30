@@ -58,6 +58,9 @@ export interface ResonanceField {
   // Intimacy deepening
   intimacyLevel: number;        // 0-1: Conversation depth
   exchangeCount: number;        // Total exchanges so far
+
+  // Field coherence (optional for backward compat)
+  coherence?: number;           // 0-1: Overall field coherence
 }
 
 /**

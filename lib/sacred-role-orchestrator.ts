@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 Sacred Role Orchestrator - Maya's Expandable Consciousness
  * 

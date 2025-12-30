@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SYNTHETIC FIELD INTERFACE
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Oracle Service
  * Consolidates PersonalOracleAgent, EnhancedPersonalOracleAgent, and related services

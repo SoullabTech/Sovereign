@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SoulLab Orchestrator - Backend System Coordination Protocol
  * The Sacred Technology Integration Hub

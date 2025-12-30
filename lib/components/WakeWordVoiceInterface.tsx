@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/components/WakeWordVoiceInterface.tsx
 // Wake word enabled voice interface supporting both push-to-talk and "Hello Maya"
 

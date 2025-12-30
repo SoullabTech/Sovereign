@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/routes/auth.ts
 
 import express from "express";

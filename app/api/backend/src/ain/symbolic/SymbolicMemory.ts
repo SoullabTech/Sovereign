@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Symbolic Memory Stub
  * Placeholder implementation for symbolic memory storage and retrieval

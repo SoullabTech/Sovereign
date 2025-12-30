@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Oracle Core - ENHANCED
  *

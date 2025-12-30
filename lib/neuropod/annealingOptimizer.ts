@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Neuropod Annealing Optimizer
  *

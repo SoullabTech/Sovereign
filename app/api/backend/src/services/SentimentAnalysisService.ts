@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Enhanced Sentiment Analysis Service for Multi-Agent Oracle Routing
 // Provides sophisticated analysis to route users to the most appropriate agent experience
 

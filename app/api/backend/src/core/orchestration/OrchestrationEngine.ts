@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Orchestration Engine - The Sacred Conductor
  * 

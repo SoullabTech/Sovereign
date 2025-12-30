@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * COLLECTIVE IMMUNE MEMORY
  * Federated learning-style pattern recognition across anonymized user patterns

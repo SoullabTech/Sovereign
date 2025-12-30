@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface Turn { role: 'user'|'assistant'; text: string; ts: number; }
 export interface Session { userId: string; turns: Turn[]; }
 

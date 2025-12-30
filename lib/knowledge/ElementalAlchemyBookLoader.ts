@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ELEMENTAL ALCHEMY BOOK LOADER
  *

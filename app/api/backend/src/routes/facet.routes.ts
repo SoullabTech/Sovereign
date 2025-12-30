@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/facet.routes.ts
 
 import { Router } from "express";

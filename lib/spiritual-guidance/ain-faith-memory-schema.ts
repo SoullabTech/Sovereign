@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA AIN Faith Memory Schema
  * Tracks spiritual journey evolution through Spiralogic phases

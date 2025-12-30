@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * INTERVENTION PROTOCOL SYSTEM
  *

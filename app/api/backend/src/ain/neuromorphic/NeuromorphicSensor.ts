@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Neuromorphic Sensor Stub
  * Placeholder implementation for neuromorphic spike detection

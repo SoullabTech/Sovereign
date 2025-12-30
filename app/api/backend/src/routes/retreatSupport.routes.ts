@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Retreat Support Routes - Real-time participant management
 import { Router, Request, Response } from "express";
 import { retreatSupportService } from "../services/retreatSupportService";

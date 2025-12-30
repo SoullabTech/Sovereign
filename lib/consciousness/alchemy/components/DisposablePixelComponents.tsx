@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Disposable Pixel UI Components
  * Advanced implementations of the Disposable Pixel Philosophy

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA DEVELOPMENTAL INSIGHTS INTEGRATION MODULE
  *

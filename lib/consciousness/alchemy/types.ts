@@ -31,6 +31,7 @@ export interface AlchemicalQualities {
 // User's Alchemical Profile
 export interface AlchemicalProfile {
   primaryMetal: AlchemicalMetal;
+  metal?: AlchemicalMetal; // Alias for primaryMetal used by CorrespondenceThinkingEngine
   currentOperation: AlchemicalOperation;
   qualities: AlchemicalQualities;
   developmentEdge: string;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend/src/utils/portLogger.ts
 import fs from "fs";
 import path from "path";

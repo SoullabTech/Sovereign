@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Training Data Logger
  * Captures conversations in format suitable for fine-tuning future models

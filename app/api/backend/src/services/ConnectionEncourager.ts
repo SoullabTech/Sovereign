@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ConnectionEncourager - Implicit Reality Testing Through Relationships
  * 

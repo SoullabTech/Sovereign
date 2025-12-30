@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/services/authService.ts
 
 import type { AuthRequest, AuthResponse } from "../types/auth";

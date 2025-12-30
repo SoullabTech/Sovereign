@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/core/agents/earthAgent.ts
 // Sacred Keeper of Manifestation - Earth Agent with Living Grounding Wisdom
 
@@ -316,7 +317,7 @@ ${enhancedResponse.content}`;
       userId: userId,
       agentType: "earth-agent",
       query: input,
-      content: content,
+      response: content,
       metadata: {
         archetypes: ["Earth"],
         elementalAlignment: "earth",

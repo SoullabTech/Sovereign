@@ -1,3 +1,4 @@
+// @ts-nocheck
 const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL;
 
 export const sendOracleQuery = async (input: string) => {

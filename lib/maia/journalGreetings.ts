@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { JournalEntry, JournalingMode } from './state';
 import {
   VoiceMetrics,

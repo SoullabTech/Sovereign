@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌀 Dialectical AI Core
  * The revolutionary architecture that enables honest archetypal translation

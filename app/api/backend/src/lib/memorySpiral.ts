@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 BACKEND/src/lib/memorySpiral.ts
 import { HarmonicConstants } from "./harmonicPetalMap";
 

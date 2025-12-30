@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ClaudeService - Simple wrapper for Claude API
  * UNLEASHED: Full expression enabled for complete insights

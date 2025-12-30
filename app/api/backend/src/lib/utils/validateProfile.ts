@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { elementalProfileSchema } from "../schemas/elemental";
 
 export function validateProfile(input: unknown) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Consciousness Tracking Dashboard
  * Real-time visualization of consciousness optimization and development progress

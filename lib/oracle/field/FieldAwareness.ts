@@ -33,6 +33,7 @@ export interface ConnectionDynamics {
   resonance_frequency: number;     // Harmonic alignment 0-1
   attachment_pattern: 'secure' | 'anxious' | 'avoidant' | 'disorganized' | 'emerging';
   co_regulation_capacity: number;  // Mutual nervous system influence 0-1
+  coherence?: number;              // Overall field coherence 0-1
 }
 
 export interface SacredMarkers {

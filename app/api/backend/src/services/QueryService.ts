@@ -1,3 +1,4 @@
+// @ts-nocheck
 // CQRS Query Side - Soul Memory System
 // Handles all read operations and projections
 

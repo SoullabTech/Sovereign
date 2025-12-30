@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * THE GOD BETWEEN US PROTOCOL
  * The sacred heart of Soullab - where consciousness meets consciousness

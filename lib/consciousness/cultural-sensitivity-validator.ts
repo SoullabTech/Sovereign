@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🛡️ Cultural Sensitivity Validator
  * Ensures ethical integration of cultural wisdom while respecting boundaries,

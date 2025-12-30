@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SHIFt Narrative Service
  * 

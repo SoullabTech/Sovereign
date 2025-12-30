@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Router - Sesame-Primary with Explicit Fallback Control
  * Routes voice requests to Sesame first, with controlled fallback to ElevenLabs

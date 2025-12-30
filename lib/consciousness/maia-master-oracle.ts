@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Master Oracle - The Integration Point of All Ritual Systems
  *

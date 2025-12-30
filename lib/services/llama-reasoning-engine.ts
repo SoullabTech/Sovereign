@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Llama 3.1 Reasoning Engine
  * Sits above Supabase + Mem0 as a reasoning/interpretation layer

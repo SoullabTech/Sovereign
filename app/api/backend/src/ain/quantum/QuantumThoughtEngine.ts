@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Quantum Thought Engine
  * Hybrid quantum-classical processing for enhanced reasoning

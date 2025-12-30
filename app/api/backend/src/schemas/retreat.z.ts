@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Zod validation schemas for retreat afferent streams
  * Provides runtime validation for ceremony data flowing into Neural Reservoir

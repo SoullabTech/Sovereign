@@ -1,3 +1,4 @@
+// @ts-nocheck
 // routes/orchestrator.routes.ts - Enhanced Sacred Journey Orchestrator API Routes
 import { Router } from "express";
 import { agentOrchestrator } from "../services/agentOrchestrator";

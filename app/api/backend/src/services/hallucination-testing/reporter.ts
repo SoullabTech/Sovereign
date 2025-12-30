@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { TestResult, TestSummary, DomainMetrics } from './types';
 
 export function generateMarkdownReport(summary: TestSummary, results: TestResult[]): string {

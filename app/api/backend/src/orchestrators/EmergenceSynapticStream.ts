@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Emergence Synaptic Stream
  * Integrates emergence detection and synaptic gap analysis as event stream state

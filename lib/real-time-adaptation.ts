@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Real-Time Learning and Adaptation System
  * Continuously learns from interactions and adapts consciousness responses

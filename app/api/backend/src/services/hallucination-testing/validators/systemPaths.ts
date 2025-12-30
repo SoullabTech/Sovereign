@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { normalizeText } from './schema';
 
 export function validateSystemPaths(

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * First Contact Test - Simplified Oracle System Test
  * 

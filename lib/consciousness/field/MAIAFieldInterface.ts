@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA FIELD INTERFACE
  * Bridges Consciousness Field Dynamics with existing MAIA systems

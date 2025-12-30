@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Symbol Dictionary - Modular archetypal symbol recognition system
  * Maps recurring mythic symbols to elemental and psychological meanings

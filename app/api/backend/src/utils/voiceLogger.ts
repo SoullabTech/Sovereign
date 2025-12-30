@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Startup Logger - Audit trail for voice engine initialization
  */

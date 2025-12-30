@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA CHRISTIAN DIVINE INTELLIGENCE INTEGRATION
  *

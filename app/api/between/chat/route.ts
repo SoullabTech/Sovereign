@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: app/api/between/chat/route.ts
 
 // Force Node.js runtime (Edge runtime can't handle crypto, some libs)

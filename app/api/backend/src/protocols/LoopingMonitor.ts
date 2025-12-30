@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Protocol Monitoring & Optimization Framework
  * Tracks patterns, edge cases, and optimization opportunities

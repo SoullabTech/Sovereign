@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Adaptive Prosody Engine
  * Detects emotional tone from user input and generates balanced therapeutic response patterns

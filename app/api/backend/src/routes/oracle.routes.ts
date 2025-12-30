@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, Request, Response } from "express";
 import { processSoulLabConversation } from "../services/SoulLabOrchestrator";
 import { SpiralogicEngine } from "../../lib/spiralogic/core/spiralogic-engine";

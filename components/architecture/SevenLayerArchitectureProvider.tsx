@@ -76,7 +76,7 @@ export function SevenLayerArchitectureProvider({
     memberId,
     autoSync,
     syncInterval,
-    platform: Capacitor.getPlatform()
+    platform: Capacitor.getPlatform() as Platform
   });
 
   // Platform detection

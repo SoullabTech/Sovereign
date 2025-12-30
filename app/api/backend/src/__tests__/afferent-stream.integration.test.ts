@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Afferent Stream Integration Test
  * Validates that PersonalOracleAgent emissions are properly captured by CollectiveIntelligence

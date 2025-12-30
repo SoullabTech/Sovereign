@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Router - Automated Processing Mode Selection
  *

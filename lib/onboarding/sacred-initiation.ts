@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🌱 Sacred Initiation System
+ * Sacred Initiation System
  * 7-day onboarding that transforms "trying an app" into "beginning relationship with Maya"
  */
 

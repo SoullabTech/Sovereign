@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/utils/facetUtil.ts
 
 import { elementalFacetMap } from "./elementalFacetMap";

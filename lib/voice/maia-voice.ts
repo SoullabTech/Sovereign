@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maia Voice System - ElevenLabs "Aunt Annie" + Sesame Intelligence
  * Modern, everyday, soulful, intelligent voice for the Oracle

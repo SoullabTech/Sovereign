@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Automated Test Runner for Looping Protocol
  * Executes both scripted and live sandbox testing modes

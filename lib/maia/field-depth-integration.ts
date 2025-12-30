@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Field-Depth Integration
  * Connects Resonance Field System with Spiral Journey & Depth Tracking

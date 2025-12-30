@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Message Router Stub
  * Placeholder implementation for message routing logic

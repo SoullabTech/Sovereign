@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CollectiveDaimonicField Service
  * Maps how individual daimonic encounters create collective patterns

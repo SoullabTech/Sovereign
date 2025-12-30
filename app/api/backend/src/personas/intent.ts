@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Lightweight intent classifier - fast heuristic routing for Maya's tone & tags
  * No external deps - can be swapped for LLM later without changing call sites

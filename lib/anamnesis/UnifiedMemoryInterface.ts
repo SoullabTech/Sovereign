@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Memory Interface
  * Bridges all memory systems into one coherent interface

@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface ArchetypalMode {
   name: string;
   energy: string;

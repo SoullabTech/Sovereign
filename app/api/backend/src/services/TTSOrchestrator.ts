@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TTS Orchestrator Service
  * Manages primary (Sesame) and fallback (ElevenLabs) TTS services

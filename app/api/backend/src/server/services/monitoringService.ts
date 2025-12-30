@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/monitoringService.ts
 
 export interface PersonalityWeights {

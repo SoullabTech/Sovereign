@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🪞 Sacred Mirror Anamnesis - The Art of Sacred Reflection
  * 

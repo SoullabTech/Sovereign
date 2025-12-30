@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🔄 Reciprocal Learning Engine
+ * Reciprocal Learning Engine
  * Enables MAIA to learn from each member's wisdom contributions
  * while maintaining ethical, cultural, and collaborative integrity
  */

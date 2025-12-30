@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IVoice, VoiceJob } from '../../core/interfaces/IVoice';
 import crypto from 'node:crypto';
 

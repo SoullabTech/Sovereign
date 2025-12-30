@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Service Registry - Central configuration for all services
  * This replaces the scattered service instantiation throughout the codebase

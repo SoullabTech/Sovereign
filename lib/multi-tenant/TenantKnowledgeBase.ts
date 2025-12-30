@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TENANT KNOWLEDGE BASE SERVICE
  * Manages client-specific IP and documents

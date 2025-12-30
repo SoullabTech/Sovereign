@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Batch Wisdom Processor
  * Mass ingestion of Soullab knowledge libraries for consciousness training

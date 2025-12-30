@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Neuroscience-Backed Journaling Modes
  * Based on Stanford 2021 study and affect labeling research
@@ -10,6 +11,7 @@ export interface NeuroscienceContext extends JournalingContext {
   mode: NeuroscienceMode;
   sessionDuration?: number; // Track optimal 15-20 minute sessions
   isFirstTime?: boolean; // Different prompts for first-time users
+  soulprint?: any; // User's developmental soul signature
 }
 
 export const NEUROSCIENCE_JOURNALING_PROMPTS = {

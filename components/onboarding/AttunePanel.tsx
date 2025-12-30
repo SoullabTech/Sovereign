@@ -34,6 +34,8 @@ const sampleMessages = {
   }
 }
 
+const SETTINGS_KEY = 'soullab-attune-settings'
+
 export default function AttunePanel({ showPreview = true, onSettingsChange }: AttunePanelProps) {
   const [settings, setSettings] = useState<UserSettings>({
     tone: 50, // 0=grounded, 100=poetic
@@ -41,29 +43,21 @@ export default function AttunePanel({ showPreview = true, onSettingsChange }: At
     theme: 'system'
   })
   const [isSaving, setIsSaving] = useState(false)
-  const supabase = createClientComponentClient()
 
   // Load saved settings on mount
   useEffect(() => {
     loadSettings()
   }, [])
 
-  const loadSettings = async () => {
+  const loadSettings = () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
-      const { data } = await supabase
-        .from('user_preferences')
-        .select('tone, style, theme')
-        .eq('user_id', user.id)
-        .single()
-
-      if (data) {
+      const stored = localStorage.getItem(SETTINGS_KEY)
+      if (stored) {
+        const data = JSON.parse(stored)
         setSettings({
-          tone: data.tone || 50,
-          style: data.style || 'auto',
-          theme: data.theme || 'system'
+          tone: data.tone ?? 50,
+          style: data.style ?? 'auto',
+          theme: data.theme ?? 'system'
         })
       }
     } catch (error) {
@@ -71,30 +65,22 @@ export default function AttunePanel({ showPreview = true, onSettingsChange }: At
     }
   }
 
-  const saveSettings = async (newSettings: UserSettings) => {
+  const saveSettings = (newSettings: UserSettings) => {
     setSettings(newSettings)
     onSettingsChange?.(newSettings)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) return
-
       setIsSaving(true)
-      const { error } = await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: user.id,
-          tone: newSettings.tone,
-          style: newSettings.style,
-          theme: newSettings.theme,
-          updated_at: new Date().toISOString()
-        })
+      localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+        tone: newSettings.tone,
+        style: newSettings.style,
+        theme: newSettings.theme,
+        updated_at: new Date().toISOString()
+      }))
 
-      if (error) throw error
-      
       // Apply theme immediately
       applyTheme(newSettings.theme)
-      
+
     } catch (error) {
       console.error('[Attune] Error saving settings:', error)
     } finally {

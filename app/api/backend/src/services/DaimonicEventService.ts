@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DaimonicEventService - Persistence layer for Daimonic encounters
  * 

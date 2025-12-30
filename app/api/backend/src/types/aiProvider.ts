@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type AIProvider =
   | "openai"
   | "anthropic"

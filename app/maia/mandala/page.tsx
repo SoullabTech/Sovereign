@@ -34,7 +34,11 @@ export default function MaiaMandalaDemoPage() {
   const [currentElement, setCurrentElement] = useState<Element>('Air');
   const [currentPhase, setCurrentPhase] = useState<SpiralogicCell>({
     element: 'Air',
-    phase: 1
+    phase: 1,
+    arc: 'progressive',
+    quality: 'Cardinal',
+    context: 'exploration',
+    confidence: 0.8
   });
   const [showInstructions, setShowInstructions] = useState(true);
   const [userPresence, setUserPresence] = useState(true);
@@ -71,16 +75,16 @@ export default function MaiaMandalaDemoPage() {
     const currentIndex = elements.indexOf(currentElement);
     const nextEl = elements[(currentIndex + 1) % elements.length];
     setCurrentElement(nextEl);
-    setCurrentPhase({ element: nextEl, phase: currentPhase.phase });
+    setCurrentPhase(prev => ({ ...prev, element: nextEl }));
   };
 
   // Cycle through phases
   const nextPhase = () => {
     const nextPhaseNum = currentPhase.phase < 3 ? currentPhase.phase + 1 : 1;
-    setCurrentPhase({
-      element: currentElement,
+    setCurrentPhase(prev => ({
+      ...prev,
       phase: nextPhaseNum as 1 | 2 | 3
-    });
+    }));
   };
 
   const getAwarenessDescription = (level: AwarenessLevel): string => {

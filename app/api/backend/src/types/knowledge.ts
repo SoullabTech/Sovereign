@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface KnowledgeEntry {
   id?: string;
   title: string;

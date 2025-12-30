@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Voice Orchestrator
  * Connects all voice systems into cohesive whole

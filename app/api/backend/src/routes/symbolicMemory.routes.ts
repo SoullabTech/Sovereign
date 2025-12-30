@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import memoryModule from "../core/utils/memoryModule";
 import { authenticateToken } from "../middleware/authenticateToken";

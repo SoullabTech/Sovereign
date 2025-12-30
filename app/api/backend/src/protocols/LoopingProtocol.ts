@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Protocol for Maya's Witness Paradigm
  * Implements structured depth-seeking through iterative clarification

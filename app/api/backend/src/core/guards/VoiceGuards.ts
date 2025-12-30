@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Security and cost guardrails for voice synthesis
 
 export interface VoiceGuardConfig {

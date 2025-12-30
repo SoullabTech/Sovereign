@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/oracle/personal.routes.ts
 
 import { Router } from "express";

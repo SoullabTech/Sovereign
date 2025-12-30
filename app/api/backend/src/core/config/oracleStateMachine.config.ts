@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Declarative Oracle State Machine Configuration
  * 

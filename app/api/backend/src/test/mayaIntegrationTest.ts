@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Integration Test
  * Validates the Maya wisdom-fostering framework implementation

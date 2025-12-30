@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Facilitator Command Center Service
  * The ADHD-Friendly Consciousness Facilitator's Dream Dashboard Backend

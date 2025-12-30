@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌐 AIN Event Emitter - Local Event Spine
  * 

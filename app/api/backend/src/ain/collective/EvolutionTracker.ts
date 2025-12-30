@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Evolution Tracker for User Consciousness Development
  * Tracks individual and collective evolution patterns across the AIN system

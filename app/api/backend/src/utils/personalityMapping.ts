@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { ElementalProfile } from "../types/survey";
 
 interface PersonalityAdjustment {

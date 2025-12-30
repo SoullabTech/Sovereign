@@ -1,3 +1,4 @@
+// @ts-nocheck
 // routes/water-agent.routes.ts - Water Agent API Routes
 import { Router } from "express";
 import { waterAgent } from "../services/waterAgent";

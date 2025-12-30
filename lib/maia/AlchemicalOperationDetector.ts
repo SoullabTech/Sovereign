@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Alchemical Operation Detector
  * Detects which alchemical operation a member is currently experiencing

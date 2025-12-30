@@ -20,6 +20,10 @@ export interface ConversationMemory {
   wisdomThemes?: string[];
   elementalResonance?: string;
   sessionId?: string;
+  // OracleConversation-expected properties
+  userId?: string;
+  role?: 'user' | 'oracle' | 'assistant' | 'system';
+  conversationMode?: string;
 }
 
 export async function saveConversationMemory(memory: ConversationMemory) {

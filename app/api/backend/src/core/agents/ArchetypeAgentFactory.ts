@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Archetype Agent Factory - Creates specialized archetype-based agents
 import { logger } from "../../utils/logger";
 

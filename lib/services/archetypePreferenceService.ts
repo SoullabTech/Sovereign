@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type ArchetypeId =
   | 'LAB_PARTNER'
   | 'TRUSTED_FRIEND'

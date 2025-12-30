@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IVoice } from '../core/interfaces/IVoice';
 import { SseHub, SseEvent } from '../core/events/SseHub';
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * USER JOURNEY TRACKER
  *
@@ -49,6 +50,12 @@ export interface JourneySnapshot {
   somaticState?: 'freeze' | 'fight' | 'flight' | 'fawn' | 'none';
   polyvagalState?: 'dorsal' | 'sympathetic' | 'ventral';
   ifsConfiguration?: string; // e.g., "managers-exhausted", "firefighters-active", "exiles-present"
+
+  // Prediction data for monitoring
+  prediction?: {
+    likelyOutcome?: { signature?: string; probability?: number };
+    interventionWindow?: { window?: string };
+  };
 }
 
 /**

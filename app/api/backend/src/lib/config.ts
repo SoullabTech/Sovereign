@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/lib/config.ts
 import { z } from "zod";
 

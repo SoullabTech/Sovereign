@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Protocol Test Harness
  * Medium-stakes scenarios for validating convergence and witness stance

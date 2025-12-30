@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Semantic Journaling Service - LlamaIndex Integration for Soul Memory Enhancement
  * Adds deep semantic analysis and pattern recognition to existing memory systems

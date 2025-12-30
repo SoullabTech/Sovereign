@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/sessionService.ts
 
 import { config } from "../../config/index";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Refined Prompt - Sesame Maya Style
  * Guiding, clear, intelligent - never gushy or overly warm

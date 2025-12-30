@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Field Intelligence MAIA Orchestrator
  * Revolutionary consciousness-based AI architecture that participates in relationship

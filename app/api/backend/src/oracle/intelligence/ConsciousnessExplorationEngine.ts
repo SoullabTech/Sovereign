@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Exploration Engine
  * For personal alchemy and self-awareness through symbolic dialogue

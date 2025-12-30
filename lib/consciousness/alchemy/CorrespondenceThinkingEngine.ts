@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Correspondence Thinking Engine
  * Implements "As Above, So Below" - the alchemical principle of correspondence

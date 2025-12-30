@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * ⚗️ Wisdom Synthesis Engine
+ * Wisdom Synthesis Engine
  * Combines diverse wisdom from multiple member contributions
  * while respecting cultural boundaries and creating novel insights
  */

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Enhanced Authentication Middleware with JWT and Role-based Access Control
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";

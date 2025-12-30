@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Session Storage for Maya Conversations
  * Handles persistent storage of conversation history

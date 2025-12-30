@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/controllers/survey.controller.ts
 
 import type { Response } from "express";

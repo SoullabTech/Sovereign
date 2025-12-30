@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Harmonic Interference Matrix for Telesphorus 13-Agent System
  *

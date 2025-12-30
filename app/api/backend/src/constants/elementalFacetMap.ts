@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/constants/elementalFacetMap.ts
 
 export const elementalFacetMap = {

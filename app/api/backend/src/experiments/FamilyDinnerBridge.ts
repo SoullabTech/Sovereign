@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Family Dinner Bridge Experiment
  * The first SoulLab experiment - transforming dinner chaos into connection

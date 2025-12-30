@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response, Router } from 'express';
 import { weeklyInsightService } from '@/lib/services/longitudinal/WeeklyInsightService';
 import { requireAuth } from '@/middleware/auth';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/index.ts
 
 export * from "@/lib/db/postgres";

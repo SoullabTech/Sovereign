@@ -69,7 +69,7 @@ export function DailyReflectionRitual({
   const [responses, setResponses] = useState<Record<string, string>>(previousReflections);
   const [inputValue, setInputValue] = useState('');
   const [showElemental, setShowElemental] = useState(userLevel >= 7);
-  const [ritualMode, setRitualMode] = useState<'quick' | 'elemental' | 'deep'>('quick');
+  const [ritualMode, setRitualMode] = useState<'quick' | 'elemental' | 'deep' | null>('quick');
 
   const currentPrompt = elementalPrompts[currentPromptIndex];
 

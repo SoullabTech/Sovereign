@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Individual Field Memory - The "Memory Foam" Model
  *

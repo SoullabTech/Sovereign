@@ -107,7 +107,7 @@ export class MeditationService extends EventEmitter {
       // Start monitoring session
       this.startSessionMonitoring();
 
-      return this.currentSession;
+      return data.session;
     } catch (error) {
       console.error('Error creating meditation session:', error);
       throw error;
@@ -161,7 +161,7 @@ export class MeditationService extends EventEmitter {
       this.currentSession = data.session;
       this.emit('sessionUpdated', this.currentSession);
 
-      return this.currentSession;
+      return data.session;
     } catch (error) {
       console.error('Error updating meditation session:', error);
       throw error;
@@ -362,38 +362,39 @@ export class MeditationService extends EventEmitter {
 
         if (statusData.session) {
           const previousStatus = this.currentSession.status;
-          this.currentSession = statusData.session;
+          const session = statusData.session;
+          this.currentSession = session;
 
           // Emit events for status changes
-          if (previousStatus !== this.currentSession.status) {
+          if (previousStatus !== session.status) {
             this.emit('sessionStatusChanged', {
-              session: this.currentSession,
+              session,
               previousStatus,
-              newStatus: this.currentSession.status
+              newStatus: session.status
             });
 
             // Special handling for breakthrough detection
-            if (this.currentSession.status === 'breakthrough') {
+            if (session.status === 'breakthrough') {
               this.emit('breakthroughDetected', {
-                session: this.currentSession,
-                metrics: this.currentSession.metrics
+                session,
+                metrics: session.metrics
               });
             }
           }
 
           // Emit metrics update
           this.emit('metricsUpdated', {
-            session: this.currentSession,
-            metrics: this.currentSession.metrics,
+            session,
+            metrics: session.metrics,
             elapsed: statusData.elapsed,
             remaining: statusData.remaining
           });
 
           // Check for automatic session completion
-          if (this.currentSession.status === 'completed') {
+          if (session.status === 'completed') {
             this.currentSession = null;
             this.stopSessionMonitoring();
-            this.emit('sessionCompleted', statusData.session);
+            this.emit('sessionCompleted', session);
           }
         }
       } catch (error) {

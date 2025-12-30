@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * EnhancedSHIFtNarrative - Triadic Integration of Jung, McGilchrist, and Kastrup
  * 

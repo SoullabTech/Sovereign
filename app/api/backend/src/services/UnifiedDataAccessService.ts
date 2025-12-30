@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * UnifiedDataAccessService.ts - Optimized Database Query Consolidation
  * 

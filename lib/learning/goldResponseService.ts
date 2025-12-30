@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/learning/goldResponseService.ts
 // Gold Response System for MAIA's Loop B dreaming and consultation learning
 

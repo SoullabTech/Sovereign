@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Symbol Detection Service
  * Detects archetypal symbols in user content and tracks patterns

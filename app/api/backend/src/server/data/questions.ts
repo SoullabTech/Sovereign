@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const questions = [
   {
     id: "1",

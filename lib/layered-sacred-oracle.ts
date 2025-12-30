@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Layered Sacred Oracle - Preserving Sophistication with Performance
 // Layer 1: Instant witness response (sub-1s)
 // Layer 2: Depth processing (looping, elemental, consciousness tracking)

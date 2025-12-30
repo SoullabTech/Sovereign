@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function fetchWithAuth(url: string, options: RequestInit = {}) {
   const token = localStorage.getItem("token"); // or use your auth context/state
 

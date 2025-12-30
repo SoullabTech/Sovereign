@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Archetypal Field Implementation
  * "Reading the community's psyche, not just the individual's"

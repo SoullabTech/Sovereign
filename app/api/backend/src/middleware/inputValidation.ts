@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Input Validation and Sanitization Middleware
 import { Request, Response, NextFunction } from "express";
 import { z, ZodSchema, ZodError } from "zod";

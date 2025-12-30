@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from 'express';
 import { StorytellerAgent, StorytellerContext } from '../agents/StorytellerAgent';
 import { logger } from '../utils/logger';

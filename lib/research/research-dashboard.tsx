@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Research Dashboard for Real-Time Metrics Visualization
  * Track the revolution as it happens

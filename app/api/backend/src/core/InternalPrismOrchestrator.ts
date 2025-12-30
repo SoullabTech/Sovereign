@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { DaimonicAgentChoreographer } from './implementations/AgentChoreographer';
 import { InternalComplexityService } from '../services/InternalComplexityService';
 import { ProtectiveFrameworkService } from '../services/ProtectiveFramework';

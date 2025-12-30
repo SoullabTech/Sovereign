@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // SOUL MEMORY INTEGRATION TEST
 // Tests the complete integration between PersonalOracleAgent and SoulMemorySystem

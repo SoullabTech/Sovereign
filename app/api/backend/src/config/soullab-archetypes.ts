@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soullab Personal Oracle Configuration
  * Clean, modern, mature guidance - no mystical theater

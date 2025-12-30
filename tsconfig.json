@@ -40,6 +40,13 @@
   ],
   "exclude": [
     "node_modules",
+    "**/node_modules/**",
+    "web/**/*",
+    "mobile-app/**/*",
+    "beta-deployment/**/*",
+    "desktop-app/**/*",
+    "compact-companion/**/*",
+    "mcp-servers/**/*",
     "apps/**/*",
     "**/backup*/**/*",
     "**/maia.sov-backup*/**/*",

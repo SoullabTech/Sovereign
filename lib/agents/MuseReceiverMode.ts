@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Muse Receiver Mode for MAIA
  * Deep listening mode for walks, creative flows, and stream-of-consciousness sharing

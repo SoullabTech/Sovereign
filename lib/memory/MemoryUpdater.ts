@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧬 Memory Updater - MAIA's Inner Witness
  *

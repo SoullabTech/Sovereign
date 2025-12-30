@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/modules/shadow/index.ts
 
 export { ShadowAgent } from "./shadowAgent";

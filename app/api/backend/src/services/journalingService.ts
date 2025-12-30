@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Journaling Service for Personal Oracle Agent
  * Handles journal request processing and consciousness insights

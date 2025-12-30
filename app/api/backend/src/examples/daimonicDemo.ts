@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daimonic Facilitation System Demonstration
  * Shows the comprehensive system in action

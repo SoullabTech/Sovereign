@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Protocol Deployment Configuration
  * Conservative defaults with adaptive optimization

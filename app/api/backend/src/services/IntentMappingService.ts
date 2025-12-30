@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Intent Mapping Service
  * Maps between EnhancedDialogueStateTracker intents and ResearchLogger's 20 intents

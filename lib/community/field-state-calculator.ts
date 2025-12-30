@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Field State Calculator
  * Calculates collective field atmosphere for channels

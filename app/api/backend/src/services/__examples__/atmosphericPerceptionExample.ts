@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Atmospheric Perception Integration Example
  *

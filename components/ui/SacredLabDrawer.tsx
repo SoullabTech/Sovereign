@@ -36,12 +36,21 @@ import { LanguageSelector } from '@/components/LanguageSelector';
 interface SacredLabDrawerProps {
   isOpen: boolean;
   onClose: () => void;
-  onNavigate: (path: string) => void;
+  onNavigate?: (path: string) => void;
   onAction?: (action: string) => void;
   showVoiceText?: boolean;
   isFieldRecording?: boolean;
   isScribing?: boolean;
   hasScribeSession?: boolean;
+  // OracleConversation-expected properties
+  isMuted?: boolean;
+  isResponding?: boolean;
+  isAudioPlaying?: boolean;
+  showChatInterface?: boolean;
+  voice?: string;
+  // Generic drawer properties for custom content
+  title?: string;
+  children?: React.ReactNode;
 }
 
 export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
@@ -53,6 +62,8 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
   isFieldRecording,
   isScribing,
   hasScribeSession,
+  title,
+  children,
 }) => {
   const menuSections = [
     {
@@ -62,7 +73,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Sparkles,
           label: 'Choose Your Guide',
-          action: () => onNavigate('/elder-council'),
+          action: () => onNavigate?.('/elder-council'),
           description: '39 wisdom traditions as harmonic frequencies'
         },
         {
@@ -80,13 +91,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Sparkles,
           label: 'Story Creator',
-          action: () => onNavigate('/story-creator'),
+          action: () => onNavigate?.('/story-creator'),
           description: 'Personalized wisdom from 46+ traditions'
         },
         {
           icon: Compass,
           label: 'Oracle Consultation',
-          action: () => onNavigate('/oracle'),
+          action: () => onNavigate?.('/oracle'),
           description: 'Intuitive guidance & insight'
         },
       ],
@@ -98,19 +109,19 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Library,
           label: 'Personal Library',
-          action: () => onNavigate('/library'),
+          action: () => onNavigate?.('/library'),
           description: 'Your curated knowledge collection'
         },
         {
           icon: BookOpen,
           label: 'Soul Journal',
-          action: () => onNavigate('/journal'),
+          action: () => onNavigate?.('/journal'),
           description: 'Capture your transformative moments'
         },
         {
           icon: FileText,
           label: 'Research Notes',
-          action: () => onNavigate('/lab-notes'),
+          action: () => onNavigate?.('/lab-notes'),
           description: 'Discoveries and investigations'
         },
       ],
@@ -129,13 +140,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Cpu,
           label: 'Lab Tools',
-          action: () => onNavigate('/labtools'),
+          action: () => onNavigate?.('/labtools'),
           description: 'Complete consciousness computing & research lab interface'
         },
         {
           icon: Brain,
           label: 'Pilot-Drone Interface',
-          action: () => onNavigate('/labtools#pilot-drone'),
+          action: () => onNavigate?.('/labtools#pilot-drone'),
           description: 'Faggin\'s quantum consciousness field visualization - live demo'
         },
         {
@@ -147,19 +158,19 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Brain,
           label: 'Guardian Console',
-          action: () => onNavigate('/GuardianConsole'),
+          action: () => onNavigate?.('/GuardianConsole'),
           description: 'Multi-model consciousness weaver'
         },
         {
           icon: Zap,
           label: 'Claude Code',
-          action: () => onNavigate('/consciousness/claude-code'),
+          action: () => onNavigate?.('/consciousness/claude-code'),
           description: 'Co-creator & consciousness explorer'
         },
         {
           icon: Brain,
           label: 'Symbolic Consciousness',
-          action: () => onNavigate('/maia/symbolic'),
+          action: () => onNavigate?.('/maia/symbolic'),
           description: 'LISP-inspired meta-circular consciousness computation'
         },
       ],
@@ -217,19 +228,19 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Compass,
           label: 'Archetypal Journey',
-          action: () => onNavigate('/journey'),
+          action: () => onNavigate?.('/journey'),
           description: 'Your cosmic spiral & elemental blueprint'
         },
         {
           icon: BookOpen,
           label: 'Conversation Threads',
-          action: () => onNavigate('/maia?panel=journey'),
+          action: () => onNavigate?.('/maia?panel=journey'),
           description: 'Voice settings, patterns & trajectory'
         },
         {
           icon: Sparkles,
           label: 'Weaving Visualization',
-          action: () => onNavigate('/maia?panel=journey'),
+          action: () => onNavigate?.('/maia?panel=journey'),
           description: 'Watch your wisdom threads unfold'
         },
       ],
@@ -241,19 +252,19 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: User,
           label: 'Profile',
-          action: () => onNavigate('/profile'),
+          action: () => onNavigate?.('/profile'),
           description: 'Your soul signature'
         },
         {
           icon: Sparkles,
           label: 'Cosmic Blueprint',
-          action: () => onNavigate('/birth-chart'),
+          action: () => onNavigate?.('/birth-chart'),
           description: 'Your birth chart & astrology'
         },
         {
           icon: Heart,
           label: 'Favorites',
-          action: () => onNavigate('/favorites'),
+          action: () => onNavigate?.('/favorites'),
           description: 'Cherished moments & insights'
         },
       ],
@@ -299,11 +310,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
               <div className="flex items-center justify-between px-6 py-4 border-b border-[#D4B896]/10">
                 <div>
                   <h2 className="text-xl font-light text-[#D4B896] tracking-wide">
-                    Lab Tools
+                    {title || 'Lab Tools'}
                   </h2>
-                  <p className="text-xs text-white/50 mt-0.5">
-                    Your research workspace
-                  </p>
+                  {!title && (
+                    <p className="text-xs text-white/50 mt-0.5">
+                      Your research workspace
+                    </p>
+                  )}
                 </div>
                 <button
                   onClick={onClose}
@@ -313,7 +326,10 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
                 </button>
               </div>
 
-              {/* Menu Sections */}
+              {/* Content - either children or default menu sections */}
+              {children ? (
+                <div className="px-6 py-6">{children}</div>
+              ) : (
               <div className="px-6 py-6 space-y-8">
                 {menuSections.map((section, sectionIdx) => (
                   <motion.div
@@ -407,6 +423,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
                 {/* Spacer for safe area */}
                 <div className="h-8" />
               </div>
+              )}
             </div>
           </motion.div>
         </>

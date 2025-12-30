@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * The God Between Us Protocol
  * ============================

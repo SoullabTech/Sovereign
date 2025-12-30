@@ -9,6 +9,26 @@ export interface TeenProfile {
   pronouns?: string;
   supportsNeeded: string[];
   neurodivergentSupports?: string[];
+  // OracleConversation-expected properties
+  isNeurodivergent?: boolean;
+  hasEatingDisorder?: boolean;
+  familyDynamics?: string;
+  supportNeeds?: string[];
+}
+
+export interface AbuseResult {
+  detected: boolean;
+  severity?: 'low' | 'medium' | 'high' | 'critical' | 'crisis';
+  supportResources?: string[];
+  interventionNeeded?: boolean;
+  patterns?: string[];
+}
+
+export interface EDResult {
+  detected: boolean;
+  severity?: 'low' | 'medium' | 'high' | 'critical' | 'crisis';
+  supportResources?: string[];
+  requiresProfessional?: boolean;
 }
 
 export interface TeenSafetyCheck {
@@ -18,6 +38,15 @@ export interface TeenSafetyCheck {
   isBurnout: boolean;
   needsSupport: boolean;
   supportType?: string;
+  // OracleConversation-expected properties
+  blockConversation?: boolean;
+  isAbuse?: boolean;
+  interventionMessage?: string;
+  abuseResult?: AbuseResult;
+  crisisMode?: boolean;
+  edResult?: EDResult;
+  scaffoldSuggestions?: string[];
+  contextForAI?: string;
 }
 
 export function performTeenSafetyCheck(
@@ -26,10 +55,13 @@ export function performTeenSafetyCheck(
 ): TeenSafetyCheck {
   return {
     isED: false,
-    isNeurodivergent: false,
+    isNeurodivergent: profile.isNeurodivergent ?? false,
     isCrisis: false,
     isBurnout: false,
-    needsSupport: false
+    needsSupport: false,
+    blockConversation: false,
+    isAbuse: false,
+    crisisMode: false,
   };
 }
 
@@ -40,12 +72,23 @@ export function getTeenSystemPrompt(
   return '';
 }
 
+export interface TeenSupportResponse {
+  blockConversation?: boolean;
+  interventionMessage?: string;
+  crisisMode?: boolean;
+  scaffoldSuggestions?: string[];
+  contextForAI?: string;
+}
+
 export function generateTeenSupportResponse(
   message: string,
   safetyCheck: TeenSafetyCheck,
   profile: TeenProfile
-): string {
-  return '';
+): TeenSupportResponse {
+  return {
+    blockConversation: false,
+    crisisMode: false,
+  };
 }
 
 export function requiresTeenSupport(profile: TeenProfile): boolean {
@@ -57,4 +100,23 @@ export function getTeenResources(
   safetyCheck: TeenSafetyCheck
 ): Array<{title: string; description: string; url: string}> {
   return [];
+}
+
+/**
+ * Alert Soullab team for critical teen safety situations (stub)
+ */
+export function alertSoullabTeam(params: {
+  userId: string;
+  userName?: string;
+  profile?: TeenProfile;
+  safetyCheck?: TeenSafetyCheck;
+  message: string;
+  // OracleConversation-expected properties
+  age?: number;
+  crisisType?: string;
+  sessionId?: string;
+  timestamp?: Date;
+}): Promise<void> {
+  console.warn('[TeenSupport] alertSoullabTeam called (stub)', params.userId);
+  return Promise.resolve();
 }

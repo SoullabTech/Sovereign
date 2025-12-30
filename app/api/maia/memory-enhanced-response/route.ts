@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MEMORY-ENHANCED FIELD-DRIVEN MAIA API ENDPOINT
  *

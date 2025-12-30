@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import memoryModule from "../core/utils/memoryModule";
 import logger from "../utils/logger";

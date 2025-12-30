@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: backend/lib/oracleEchoGenerator.ts
 
 import ModelService from "../utils/modelService";

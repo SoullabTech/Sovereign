@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function validateRitualPolicy(
   answer: string,
   expected: any

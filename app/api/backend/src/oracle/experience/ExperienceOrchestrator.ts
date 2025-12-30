@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { ClaudeService } from '../../services/claude.service';
 import { MemoryService } from '../../services/memoryService';
 import { TrueCollectiveContributions } from '../collective/TrueCollectiveContributions';

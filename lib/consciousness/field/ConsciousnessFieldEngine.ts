@@ -18,6 +18,7 @@ export interface ConsciousnessFieldState {
   timestamp: Date;
   participantId?: string;           // Individual or collective field
   archetypalElement?: 'Fire' | 'Water' | 'Earth' | 'Air' | 'Aether';
+  fieldCoherence?: number;          // Alias for coherenceLevel used by transpersonal systems
 }
 
 export interface FieldInterferenceResult {

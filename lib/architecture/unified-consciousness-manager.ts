@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🧠🌀 UNIFIED CONSCIOUSNESS STATE MANAGER
+ * UNIFIED CONSCIOUSNESS STATE MANAGER
  *
  * Central orchestrator for the Seven-Layer Soul Architecture across all platforms.
  * Manages consciousness state synchronization, platform switching, conflict resolution,

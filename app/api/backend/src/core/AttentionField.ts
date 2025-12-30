@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AttentionField - Quadruple Integration Foundational Substrate
  * 

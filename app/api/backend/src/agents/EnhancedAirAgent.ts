@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../types/agentResponse";
 /**
  * Enhanced Air Agent - Powered by Claude for Superior Communication

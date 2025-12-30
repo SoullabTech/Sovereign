@@ -78,8 +78,8 @@ interface AlertResponse {
 
 export class RealTimeAlertService {
   private config: AlertConfig;
-  private emailTransporter?: nodemailer.Transporter;
-  private twilioClient?: twilio.Twilio;
+  private emailTransporter?: ReturnType<typeof nodemailer.createTransport>;
+  private twilioClient?: ReturnType<typeof twilio>;
   private deliveryRetries: Map<string, number> = new Map();
 
   constructor(config: AlertConfig) {
@@ -90,7 +90,7 @@ export class RealTimeAlertService {
   private initializeServices(): void {
     // Email setup
     if (this.config.email) {
-      this.emailTransporter = nodemailer.createTransporter({
+      this.emailTransporter = nodemailer.createTransport({
         host: this.config.email.smtp_host,
         port: this.config.email.smtp_port,
         secure: this.config.email.use_tls,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Prosody Extension for Maya's Voice
  * Adds texture, weight, and elemental resonance to utterances

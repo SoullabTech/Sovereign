@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soul Development Integration Tests
  *

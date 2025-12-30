@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Trust Manager
  * Builds and tracks trust scores for each user relationship

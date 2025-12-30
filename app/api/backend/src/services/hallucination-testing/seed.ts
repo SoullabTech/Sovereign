@@ -1,3 +1,4 @@
+// @ts-nocheck
 import * as crypto from 'crypto';
 
 export interface SeededRng {

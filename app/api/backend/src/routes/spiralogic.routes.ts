@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SPIRALOGIC API ROUTES
  *

@@ -73,7 +73,7 @@ export function useSevenLayerArchitecture(
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [activePlatform, setActivePlatform] = useState<Platform>(platform || Capacitor.getPlatform());
+  const [activePlatform, setActivePlatform] = useState<Platform>(platform || Capacitor.getPlatform() as Platform);
   const [error, setError] = useState<Error | null>(null);
 
   // Refs

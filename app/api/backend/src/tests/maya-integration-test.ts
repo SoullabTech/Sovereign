@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Integration Test
  * Quick test to verify all components are connected

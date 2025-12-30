@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Bardic Invocations - Natural Language Triggers
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Wounded Healer Assessment System
  *

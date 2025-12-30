@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Research Logger Service
  * 

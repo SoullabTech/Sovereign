@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Appraisal, PsiState, PsiStepInput, PsiStepOutput, LearningParams, PsiEpisode, NeedDelta } from "./types";
 
 const clamp = (x:number,min=0,max=1)=>Math.max(min,Math.min(max,x));

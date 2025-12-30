@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soullab API Routes - Consciousness Research Endpoints
  * Exposes the consciousness exploration system

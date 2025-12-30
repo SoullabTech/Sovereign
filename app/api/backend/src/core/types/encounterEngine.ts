@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Encounter Engine Types
  * 

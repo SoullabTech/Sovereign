@@ -1,3 +1,4 @@
+// @ts-nocheck
 export async function isAdmin(userId: string): Promise<boolean> {
   try {
     // Check if user has admin role

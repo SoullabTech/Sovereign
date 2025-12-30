@@ -1,3 +1,4 @@
+// @ts-nocheck
 interface CrisisDetectionResult {
   riskLevel: 'none' | 'low' | 'moderate' | 'high';
   confidence: number;

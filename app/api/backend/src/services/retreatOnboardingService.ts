@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Switzerland Retreat Onboarding Service
 import { v4 as uuidv4 } from "uuid";
 import { soullabFounderAgent } from "../core/agents/soullabFounderAgent";

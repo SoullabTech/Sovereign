@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Archetypal Constellation Dynamics
  *

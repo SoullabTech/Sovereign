@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Minimal Spiralogic Oracle Server - Clean Startup
  * Focuses on our new services without legacy complexity

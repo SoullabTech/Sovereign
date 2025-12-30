@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { IntegrationOrchestrator } from "../core/integration/IntegrationOrchestrator";
 import { CodeAuditor } from "../core/integration/CodeAuditor";

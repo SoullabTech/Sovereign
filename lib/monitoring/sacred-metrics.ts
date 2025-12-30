@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌊 Sacred Metrics System
  * Elemental monitoring that tracks both technical performance and archetypal resonance

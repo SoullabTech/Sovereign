@@ -23,6 +23,12 @@ export interface JournalingResponse {
   reflection: string;
   prompt: string;
   closing: string;
+  transformationScore?: {
+    overall: number;
+    awareness: number;
+    integration: number;
+    growth: number;
+  };
   metadata?: {
     dominantEmotion?: string;
     shadowElement?: string;

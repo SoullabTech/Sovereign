@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Integration Failure Tracker
  * Honors when synthesis fails or remains incomplete

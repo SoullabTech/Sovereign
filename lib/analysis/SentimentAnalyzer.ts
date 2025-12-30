@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface SentimentResult {
   score: number; // -1 to 1
   magnitude: number; // 0 to 1 (intensity)

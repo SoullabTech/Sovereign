@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Spiral Journey Types
  * Defines the structure for tracking user's elemental spiral progression

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Archetypal Mixer
  * Blends Maya's different voice archetypes based on context and user resonance

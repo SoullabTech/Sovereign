@@ -32,6 +32,9 @@ export interface ElementalBalance {
   deficient?: string;
 }
 
+// Type for numeric element keys only (excludes dominant/deficient)
+type NumericElementKey = 'fire' | 'water' | 'earth' | 'air' | 'aether';
+
 export interface SoulJourneyMilestone {
   timestamp: Date;
   type: 'breakthrough' | 'threshold' | 'integration' | 'shadow-encounter' | 'awakening';
@@ -255,38 +258,34 @@ export class SoulprintTracker {
     if (!soulprint) return;
 
     // Update the specific element
-    const elementKey = element.toLowerCase() as keyof ElementalBalance;
-    if (elementKey in soulprint.elementalBalance) {
+    const numericElements: NumericElementKey[] = ['fire', 'water', 'earth', 'air', 'aether'];
+    const elementKey = element.toLowerCase() as NumericElementKey;
+    if (numericElements.includes(elementKey)) {
       soulprint.elementalBalance[elementKey] = Math.min(
-        (soulprint.elementalBalance[elementKey] as number) + intensity,
+        soulprint.elementalBalance[elementKey] + intensity,
         1.0
       );
     }
 
     // Normalize to sum to ~1
-    const sum = Object.entries(soulprint.elementalBalance)
-      .filter(([k]) => k !== 'dominant' && k !== 'deficient')
-      .reduce((acc, [, v]) => acc + (v as number), 0);
+    const sum = numericElements
+      .reduce((acc, el) => acc + soulprint.elementalBalance[el], 0);
 
     if (sum > 0) {
-      ['fire', 'water', 'earth', 'air', 'aether'].forEach(el => {
-        soulprint.elementalBalance[el as keyof ElementalBalance] =
-          (soulprint.elementalBalance[el as keyof ElementalBalance] as number) / sum;
+      numericElements.forEach(el => {
+        soulprint.elementalBalance[el] = soulprint.elementalBalance[el] / sum;
       });
     }
 
     // Identify dominant and deficient
-    const elements = ['fire', 'water', 'earth', 'air', 'aether'];
-    let maxElement = elements[0];
-    let minElement = elements[0];
+    let maxElement: NumericElementKey = 'fire';
+    let minElement: NumericElementKey = 'fire';
 
-    elements.forEach(el => {
-      if ((soulprint.elementalBalance[el as keyof ElementalBalance] as number) >
-          (soulprint.elementalBalance[maxElement as keyof ElementalBalance] as number)) {
+    numericElements.forEach(el => {
+      if (soulprint.elementalBalance[el] > soulprint.elementalBalance[maxElement]) {
         maxElement = el;
       }
-      if ((soulprint.elementalBalance[el as keyof ElementalBalance] as number) <
-          (soulprint.elementalBalance[minElement as keyof ElementalBalance] as number)) {
+      if (soulprint.elementalBalance[el] < soulprint.elementalBalance[minElement]) {
         minElement = el;
       }
     });
@@ -426,11 +425,9 @@ export class SoulprintTracker {
     }
 
     // Elemental imbalance alert
-    const deficientValue = soulprint.elementalBalance[
-      soulprint.elementalBalance.deficient as keyof ElementalBalance
-    ] as number;
-    if (deficientValue < 0.1) {
-      alerts.push(`Significant ${soulprint.elementalBalance.deficient} deficiency detected`);
+    const deficientKey = soulprint.elementalBalance.deficient as NumericElementKey | undefined;
+    if (deficientKey && soulprint.elementalBalance[deficientKey] < 0.1) {
+      alerts.push(`Significant ${deficientKey} deficiency detected`);
     }
 
     // Stagnation alert (no milestones in 7+ days)

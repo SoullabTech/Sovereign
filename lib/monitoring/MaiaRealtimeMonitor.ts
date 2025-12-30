@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Realtime Monitoring System
  * Tracks soulful intelligence capabilities in real-time

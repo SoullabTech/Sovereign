@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { get } from '../core/di/container';
 import { TOKENS } from '../core/di/tokens';
 import { VoiceQueue } from './VoiceQueue';

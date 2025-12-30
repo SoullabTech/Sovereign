@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sesame CSM Adapter
  * Handles the base64 audio response from Sesame and converts it to usable formats

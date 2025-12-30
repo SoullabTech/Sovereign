@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
-    ignoreBuildErrors: true,
+    // Use scoped tsconfig for build - excludes tests, scripts, legacy code
+    tsconfigPath: 'tsconfig.build.json',
+    ignoreBuildErrors: false,
   },
   // ESLint configuration moved to .eslintrc.json - no longer supported in Next.js 16
   // eslint config removed per Next.js 16 requirements

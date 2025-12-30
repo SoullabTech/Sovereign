@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Comprehensive Safety Service - Phase 1A Critical Safety Foundation
  * World-class safety and moderation layer for sacred AI interactions

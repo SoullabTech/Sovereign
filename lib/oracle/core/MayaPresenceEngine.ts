@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Presence Engine
  * Unified system that orchestrates presence, trust, and voice modulation

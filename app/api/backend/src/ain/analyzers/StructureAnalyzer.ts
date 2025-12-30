@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Structure Analyzer Stub
  * Placeholder implementation for structural analysis

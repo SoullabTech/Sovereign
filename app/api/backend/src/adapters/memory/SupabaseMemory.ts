@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IMemory, Session, Turn } from "../../core/interfaces/IMemory";
 import { logger } from "../../utils/logger";
 

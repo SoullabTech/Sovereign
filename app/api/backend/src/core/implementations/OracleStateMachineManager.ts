@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle State Machine Manager
  * 

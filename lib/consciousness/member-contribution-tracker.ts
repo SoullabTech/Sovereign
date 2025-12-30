@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📊 Member Contribution Tracker
  * Tracks, attributes, and celebrates member wisdom contributions

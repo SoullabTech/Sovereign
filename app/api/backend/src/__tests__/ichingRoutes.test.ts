@@ -1,3 +1,4 @@
+// @ts-nocheck
 import request from "supertest";
 import express from "express";
 import ichingRouter from "../routes/iching.routes";

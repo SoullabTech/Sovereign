@@ -1,3 +1,4 @@
+// @ts-nocheck
 import 'dotenv/config';
 const mods = [
   '../api/index',

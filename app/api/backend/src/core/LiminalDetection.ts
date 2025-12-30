@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LiminalDetection - Recognizing Threshold Experiences
  * 

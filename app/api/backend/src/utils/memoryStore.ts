@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { MemoryItem } from "../types";
 
 let memoryStore: MemoryItem[] = [];

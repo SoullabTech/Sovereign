@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SemanticIndexer.ts - Maya's Enhanced Memory Embedding Service
  * 

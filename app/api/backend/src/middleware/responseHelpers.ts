@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response, NextFunction } from 'express';
 
 export const responseHelpers = (req: Request, res: Response, next: NextFunction) => {

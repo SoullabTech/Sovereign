@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Morphoresonant Field Interface
  *

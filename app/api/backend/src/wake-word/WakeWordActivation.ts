@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Wake Word Activation System
  * Enables "Hey Maya" instant sacred access

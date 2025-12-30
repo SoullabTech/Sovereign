@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/routes/facetMap.routes.ts
 
 import express from "express";

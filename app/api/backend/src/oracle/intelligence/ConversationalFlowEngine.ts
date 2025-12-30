@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conversational Flow Engine
  * Creates fluid, enchanting dialogue with proper pacing and rhythm

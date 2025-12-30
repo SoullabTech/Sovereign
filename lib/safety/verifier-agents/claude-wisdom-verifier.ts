@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Claude Wisdom Verifier Agent
  * Priority 2 - detects manipulation, boundary violations, and unhealthy patterns

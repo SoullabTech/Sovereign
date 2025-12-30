@@ -420,7 +420,7 @@ export function RealTimeBiometricMeditationConsole({ service }: Props) {
       harmonicGain.gain.value = 0.12 / (index + 2); // Slightly enhanced for biometric sessions
 
       harmonicOsc.connect(harmonicGain);
-      harmonicGain.connect(gainRef.current);
+      harmonicGain.connect(gainRef.current!);
       harmonicOsc.start();
       oscillatorRef.current.push(harmonicOsc);
     });
@@ -438,7 +438,7 @@ export function RealTimeBiometricMeditationConsole({ service }: Props) {
       pinealGain.gain.value = 0.08; // Subtle but present
 
       pinealOsc.connect(pinealGain);
-      pinealGain.connect(gainRef.current);
+      pinealGain.connect(gainRef.current!);
       pinealOsc.start();
       oscillatorRef.current.push(pinealOsc);
 
@@ -451,7 +451,7 @@ export function RealTimeBiometricMeditationConsole({ service }: Props) {
       quantumGain.gain.value = 0.06; // Very subtle
 
       quantumOsc.connect(quantumGain);
-      quantumGain.connect(gainRef.current);
+      quantumGain.connect(gainRef.current!);
       quantumOsc.start();
       oscillatorRef.current.push(quantumOsc);
     }
@@ -699,7 +699,7 @@ export function RealTimeBiometricMeditationConsole({ service }: Props) {
                         <div className="text-xs text-purple-300 mt-1">
                           Target: θ{(config.eeg_target.theta * 100).toFixed(0)}%
                           α{(config.eeg_target.alpha * 100).toFixed(0)}%
-                          {config.eeg_target.gamma && `γ${(config.eeg_target.gamma * 100).toFixed(0)}%`}
+                          {'gamma' in config.eeg_target && `γ${((config.eeg_target as { gamma: number }).gamma * 100).toFixed(0)}%`}
                         </div>
                       )}
                     </div>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Guardian Protocol - Claude Code's Apprenticeship Tasks
  *

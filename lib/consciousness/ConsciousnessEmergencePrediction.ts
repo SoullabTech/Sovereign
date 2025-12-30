@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Real-time Consciousness Emergence Prediction System
  * Advanced prediction system for consciousness emergence patterns and breakthrough moments

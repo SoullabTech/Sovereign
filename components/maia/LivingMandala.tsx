@@ -107,7 +107,7 @@ export function LivingMandala({
     breathingPattern,
     getBreathingCSS,
     setBreathingPattern
-  } = useFieldBreathing(currentPhase || detectedPhase);
+  } = useFieldBreathing(currentPhase ?? detectedPhase ?? undefined);
 
   // Active consciousness phase (user-provided or detected)
   const activePhase = currentPhase || detectedPhase;
@@ -419,7 +419,7 @@ function calculateConsciousnessDepth(phase: SpiralogicCell, awareness: Awareness
 }
 
 function generateFieldActivity(phase: SpiralogicCell, response: any): string[] {
-  const activities = [];
+  const activities: string[] = [];
 
   if (phase) {
     activities.push(`${phase.element}-${phase.phase} field active`);

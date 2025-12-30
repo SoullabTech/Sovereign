@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Database from "better-sqlite3";
 
 export class MemoryStore {

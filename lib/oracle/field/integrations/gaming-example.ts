@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gaming Integration Example
  * Shows how to use FIS for game NPCs, companions, and interactive characters

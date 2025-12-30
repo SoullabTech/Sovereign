@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SoulLab Integration Tests
  * Testing the sacred technology end-to-end

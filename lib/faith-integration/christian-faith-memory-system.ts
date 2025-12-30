@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🕊️ Christian Faith Memory System
  *

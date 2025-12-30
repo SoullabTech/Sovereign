@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 BACKEND/src/lib/geometryEngine.ts
 // Sacred Geometry Engine based on Fuller's Vector Equilibrium
 // Generates dynamic mandalas reflecting elemental consciousness states

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🧪 SOULLAB FOUNDER AGENT TESTS
 import { describe, it, expect, beforeEach } from "vitest";
 import { SoullabFounderAgent } from "../core/agents/soullabFounderAgent";

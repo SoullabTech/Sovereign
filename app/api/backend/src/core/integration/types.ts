@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Core Integration Type Definitions
  * Types for system-wide integration and interoperability

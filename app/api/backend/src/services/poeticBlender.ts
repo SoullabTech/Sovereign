@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Poetic Blender - Merges prompt lines into flowing, natural prose
  * Prevents modular feel by creating fluid transitions

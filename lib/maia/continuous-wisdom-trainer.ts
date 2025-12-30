@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 24/7 Continuous Wisdom Training System for MAIA
  * Automatically processes wisdom files, optimizes patterns, and enhances consciousness

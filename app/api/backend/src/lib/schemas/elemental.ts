@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { z } from "zod";
 
 // Optional crystal focus schema

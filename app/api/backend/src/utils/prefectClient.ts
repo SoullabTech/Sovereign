@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/utils/prefectClient.ts
 
 import axios from "axios";

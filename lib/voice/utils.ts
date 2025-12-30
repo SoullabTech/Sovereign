@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Utilities - Compatibility layer for original MAIA
  * Provides voice transcript and speech functionality

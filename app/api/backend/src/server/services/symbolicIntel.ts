@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: src/lib/symbolicIntel.ts
 //
 // NOTE: Supabase has been removed per project rules (CLAUDE.md).

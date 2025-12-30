@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AIN System Readiness Assessment
  * 

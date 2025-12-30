@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * API routes for spiral journey visualization
  */

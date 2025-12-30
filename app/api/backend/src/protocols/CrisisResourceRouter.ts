@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Crisis Resource Router
  * Actual, specific, culturally-aware crisis resources

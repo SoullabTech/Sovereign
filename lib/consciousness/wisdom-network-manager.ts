@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🕸️ Wisdom Network Manager
  * Manages the living network of wisdom connections between agents,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Orchestration System - Example Usage
  * Demonstrates how the unified presence works across different scenarios

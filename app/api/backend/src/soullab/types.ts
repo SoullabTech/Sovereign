@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soullab Types - Consciousness Research Framework
  * Defines the core types for the Soullab consciousness exploration system

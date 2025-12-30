@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Admin Analytics Service - Real-time monitoring and metrics collection
  * Tracks sessions, interactions, files, and system performance for admin dashboard

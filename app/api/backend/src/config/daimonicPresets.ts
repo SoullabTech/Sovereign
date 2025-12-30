@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { VoicePreset } from '../types/daimonic';
 
 export const DAIMONIC_VOICE_PRESETS: Record<string, VoicePreset> = {

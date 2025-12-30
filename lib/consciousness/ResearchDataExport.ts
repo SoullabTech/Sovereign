@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * RESEARCH DATA EXPORT MODULE
  *

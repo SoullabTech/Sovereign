@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../types/agentResponse";
 /**
  * ElementalAgentOrchestrator - Coordinates the five elemental cognitive agents

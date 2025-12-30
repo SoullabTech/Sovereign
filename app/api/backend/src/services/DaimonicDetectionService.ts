@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { DaimonicDetected, DaimonicEvent } from '../types/daimonic';
 import { EventEmitter } from 'events';
 

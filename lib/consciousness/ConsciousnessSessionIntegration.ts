@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Session Integration Service
  * Connects consciousness research system to existing MAIA session management

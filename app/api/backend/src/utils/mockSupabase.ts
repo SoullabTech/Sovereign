@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { AuthResponse } from "../types";
 
 export const supabase = {

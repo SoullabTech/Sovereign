@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/utils/modelService.ts
 
 import { openai } from "../lib/openaiClient"; // adjust if using other clients

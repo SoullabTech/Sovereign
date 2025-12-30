@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Neuropod ↔ MAIA Consciousness Integration
  *

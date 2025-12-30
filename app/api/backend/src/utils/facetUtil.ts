@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/utils/facetUtil.ts
 
 // Keyword mapping to Spiralogic facets

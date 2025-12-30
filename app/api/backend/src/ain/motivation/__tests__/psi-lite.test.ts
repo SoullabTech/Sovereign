@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { defaultPsiState, runPsiStep } from "../../../services/psiService";
 
 describe("psi-lite loop", () => {

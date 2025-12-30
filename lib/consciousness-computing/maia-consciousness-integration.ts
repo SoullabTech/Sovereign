@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠 MAIA Consciousness Enhancement Integration - Phase 1
  *

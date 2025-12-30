@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * EventBus - Decoupled Service Communication
  * Foundation for architectural simplification

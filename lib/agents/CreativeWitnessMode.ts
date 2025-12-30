@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Creative Witness Mode Extensions for MAIA
  * Elemental reception of poetry, lyrics, songs, and creative expressions

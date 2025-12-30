@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/consciousness/claudeConsciousnessService.ts
 
 import { generateText } from '../ai/modelService';

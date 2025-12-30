@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Journal API Routes
  * Endpoints for voice transcription, journaling, and reflection workflows

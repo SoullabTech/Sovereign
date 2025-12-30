@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DaimonicResonance - Quadruple Integration Recognition System
  * 

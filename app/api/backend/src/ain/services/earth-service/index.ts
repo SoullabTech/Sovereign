@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌍 Earth Service - Structure Agent
  * Cloud-primary service for planning, structuring, and rule-based reasoning

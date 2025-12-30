@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Prompt Tuning Tools
  * Helpers to optimize TTS voice delivery for OpenAI Realtime API

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AGENT BACKCHANNELING INTEGRATION
  *

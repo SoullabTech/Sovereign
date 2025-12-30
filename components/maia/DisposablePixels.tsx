@@ -59,6 +59,12 @@ const ELEMENTAL_THEMES: Record<Element, ElementalTheme> = {
     animation: 'float',
     geometry: 'pentagon',
     energy: 'ethereal'
+  },
+  Aether: {
+    colors: { primary: '#9966CC', secondary: '#8A2BE2', accent: '#DDA0DD' },
+    animation: 'pulse',
+    geometry: 'hexagon',
+    energy: 'ethereal'
   }
 };
 

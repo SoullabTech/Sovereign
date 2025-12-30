@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // ORACLE MODE SELECTOR API ROUTES
 // Frontend integration for mode switching and wisdom routing

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LOOPING PROTOCOL - Field Intelligence Implementation
  * Based on Friedman & Himmelstein's deep listening methodology

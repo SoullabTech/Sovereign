@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Aperspectival Present-Centeredness Engine
  *

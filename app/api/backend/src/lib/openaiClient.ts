@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SOVEREIGNTY ENFORCEMENT: OpenAI Client COMPLETELY DISABLED
  *

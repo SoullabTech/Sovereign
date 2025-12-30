@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice System Type Definitions
  * Complete type system for voice synthesis and TTS

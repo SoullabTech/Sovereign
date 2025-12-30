@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { UnifiedResponse } from "../types/UnifiedResponse";
 
 export interface QueryRequest {

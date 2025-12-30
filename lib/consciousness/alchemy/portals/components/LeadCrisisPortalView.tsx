@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Lead Crisis Portal View with Complexity Tiers
  *

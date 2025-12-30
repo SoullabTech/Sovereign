@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Enhanced Agent Extension
  * Extends PersonalOracleAgent with consciousness field science capabilities

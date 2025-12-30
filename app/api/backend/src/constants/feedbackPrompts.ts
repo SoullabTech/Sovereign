@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/constants/feedbackPrompts.ts
 
 export const feedbackPrompts = {

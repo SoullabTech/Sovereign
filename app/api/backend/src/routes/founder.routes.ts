@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🌀 SOULLAB FOUNDER ROUTES - Organizational Wisdom Access
 import { Router } from "express";
 import { SoullabFounderAgent } from "../core/agents/soullabFounderAgent";

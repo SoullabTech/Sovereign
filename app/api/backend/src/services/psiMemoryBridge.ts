@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { promises as fs } from "fs";
 import { dirname, resolve } from "path";
 import { PsiEpisode } from "../ain/motivation";

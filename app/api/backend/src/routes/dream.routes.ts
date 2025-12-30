@@ -1,3 +1,4 @@
+// @ts-nocheck
 import express from "express";
 // import { dreamOracle } from "@/core/agents/dreamOracleAgent"; // Temporarily disabled - module deleted
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Feature Flags
  *

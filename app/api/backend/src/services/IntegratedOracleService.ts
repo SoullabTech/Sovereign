@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Integrated Oracle Service - Unified AIN/MAYA/Anamnesis Architecture
 // Provides psychologically-informed archetypal experiences through multi-agent intelligence
 

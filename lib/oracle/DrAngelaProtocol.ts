@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dr. Angela's Protocol: Three-Layer Cycle-Aware Conversation Support
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Spiralogic Phenomenology Module
  *

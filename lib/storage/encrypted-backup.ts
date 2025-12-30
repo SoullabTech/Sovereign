@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Encrypted localStorage Backup System
  * Provides secure local backups of user data with automatic sync

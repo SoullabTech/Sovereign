@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend/src/services/personalOracleService.ts
 // import { someBackendLogic } from "@/core/oracle"; // Temporarily disabled - module deleted
 

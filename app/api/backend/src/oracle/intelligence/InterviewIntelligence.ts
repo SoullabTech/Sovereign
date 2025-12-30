@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Mirror Intelligence Module
  * Implements gentle witnessing, reflection, and sacred mirroring

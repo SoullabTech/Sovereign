@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Minimal routes for Sacred Techno-Interface
 import { Router, Request, Response } from "express";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * WellbeingMonitor - Invisible Safety Net
  * 

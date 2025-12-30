@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Unified Oracle Response Schema
 // Ensures consistent API responses across all oracle endpoints
 

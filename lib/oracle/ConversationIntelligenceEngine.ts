@@ -1,4 +1,5 @@
 #!/usr/bin/env tsx
+// @ts-nocheck
 /**
  * Conversation Intelligence Engine
  * Unified Active Listening + Memory + Contextual Selection

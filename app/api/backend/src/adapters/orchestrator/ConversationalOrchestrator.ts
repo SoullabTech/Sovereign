@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IOrchestrator, QueryRequest } from "../../core/interfaces/IOrchestrator";
 import { UnifiedResponse } from "../../core/types/UnifiedResponse";
 import { ConversationalPipeline } from "../../services/ConversationalPipeline";

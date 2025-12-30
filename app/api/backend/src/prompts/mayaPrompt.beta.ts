@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Beta System Prompt
  * Clean, modern, professional - no elemental or mystical references

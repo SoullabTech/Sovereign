@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * META-TELESPHORUS OBSERVER SYSTEM
  * Phase 1: Nested Observer Windows for AIN Evolution

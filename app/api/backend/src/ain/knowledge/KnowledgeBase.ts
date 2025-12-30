@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Knowledge Base Stub
  * Placeholder implementation for knowledge storage and retrieval

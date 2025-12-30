@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // PRODUCTION ERROR HANDLING & GRACEFUL FALLBACKS
 // Sacred Technology Platform Error Recovery

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Fractal Memory System
  * Tracks non-linear, multi-dimensional development

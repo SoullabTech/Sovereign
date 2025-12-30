@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Mode Configuration
  * Controls whether Maya operates in beta (simplified) or full (archetypal) mode

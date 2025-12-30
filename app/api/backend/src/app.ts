@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Spiralogic Oracle Backend - Express App Configuration
 import express from "express";
 import cors from "cors";

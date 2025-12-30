@@ -5,6 +5,16 @@
 
 import { useState, useCallback } from 'react';
 
+export interface ScribeSession {
+  id: string;
+  startTime: Date;
+  transcript: string;
+  consultations: string[];
+  // OracleConversation-expected properties
+  voiceTranscripts?: Array<{ content: string; timestamp: Date; speaker: string }>;
+  consultationMessages?: string[];
+}
+
 export interface ScribeModeState {
   isActive: boolean;
   transcript: string;
@@ -21,7 +31,19 @@ export interface ScribeModeActions {
   clearTranscript: () => void;
 }
 
-export interface ScribeModeHook extends ScribeModeState, ScribeModeActions {}
+// Extended interface for OracleConversation compatibility
+export interface ScribeModeHook extends ScribeModeState, ScribeModeActions {
+  // OracleConversation-expected aliases
+  isScribing: boolean;
+  currentSession: ScribeSession | null;
+  startScribing: () => void;
+  stopScribing: () => void;
+  recordVoiceTranscript: (text: string | { content: string; timestamp: Date; speaker: string; metadata?: Record<string, unknown> }) => void;
+  recordConsultation: (speaker: string, text?: string) => void;
+  generateSynopsis: () => Promise<string>;
+  downloadTranscript: () => void;
+  getTranscriptForReview: () => string;
+}
 
 /**
  * Hook for managing scribe mode functionality in OracleConversation.
@@ -32,6 +54,7 @@ export function useScribeMode(): ScribeModeHook {
   const [transcript, setTranscriptState] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [lastActivity, setLastActivity] = useState<Date | undefined>();
+  const [currentSession, setCurrentSession] = useState<ScribeSession | null>(null);
 
   const toggleScribeMode = useCallback(() => {
     setIsActive(prev => !prev);
@@ -39,6 +62,7 @@ export function useScribeMode(): ScribeModeHook {
     // If turning off, stop any recording
     if (isActive) {
       setIsRecording(false);
+      setCurrentSession(null);
     }
   }, [isActive]);
 
@@ -46,6 +70,12 @@ export function useScribeMode(): ScribeModeHook {
     setIsActive(true);
     setIsRecording(true);
     setLastActivity(new Date());
+    setCurrentSession({
+      id: `scribe-${Date.now()}`,
+      startTime: new Date(),
+      transcript: '',
+      consultations: [],
+    });
   }, []);
 
   const stopScribe = useCallback(() => {
@@ -68,6 +98,38 @@ export function useScribeMode(): ScribeModeHook {
     setLastActivity(new Date());
   }, []);
 
+  // OracleConversation-expected functions (stubs/aliases)
+  const recordVoiceTranscript = useCallback((text: string | { content: string; timestamp: Date; speaker: string; metadata?: Record<string, unknown> }) => {
+    const textContent = typeof text === 'string' ? text : text.content;
+    appendTranscript(textContent);
+  }, [appendTranscript]);
+
+  const recordConsultation = useCallback((speaker: string, text?: string) => {
+    const consultationText = text ?? speaker;
+    setCurrentSession(prev => prev ? {
+      ...prev,
+      consultations: [...prev.consultations, consultationText]
+    } : null);
+  }, []);
+
+  const generateSynopsis = useCallback(async (): Promise<string> => {
+    return transcript || 'No transcript recorded.';
+  }, [transcript]);
+
+  const downloadTranscript = useCallback(() => {
+    const blob = new Blob([transcript], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `scribe-transcript-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [transcript]);
+
+  const getTranscriptForReview = useCallback(() => {
+    return transcript;
+  }, [transcript]);
+
   return {
     // State
     isActive,
@@ -82,6 +144,17 @@ export function useScribeMode(): ScribeModeHook {
     setTranscript,
     appendTranscript,
     clearTranscript,
+
+    // OracleConversation aliases
+    isScribing: isActive,
+    currentSession,
+    startScribing: startScribe,
+    stopScribing: stopScribe,
+    recordVoiceTranscript,
+    recordConsultation,
+    generateSynopsis,
+    downloadTranscript,
+    getTranscriptForReview,
   };
 }
 

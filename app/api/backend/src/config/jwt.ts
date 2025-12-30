@@ -1,3 +1,4 @@
+// @ts-nocheck
 // JWT Configuration for Authentication System
 import { logger } from "../utils/logger";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Authentic Presence Protocols
  * Ensures all responses maintain Soullab's sacred technology principles

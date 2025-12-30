@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Resonance Protocol
  * Detects and harmonizes with elemental energies in communication

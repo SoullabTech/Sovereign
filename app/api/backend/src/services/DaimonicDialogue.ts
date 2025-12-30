@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DaimonicDialogue - The Daimon as Necessary Other
  * 

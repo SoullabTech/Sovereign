@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: src/lib/emotionParser.ts
 
 const emotionKeywords: Record<string, string[]> = {

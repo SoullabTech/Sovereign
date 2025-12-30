@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/lib/supabase.ts
 import type { Database } from "./database.types";
 

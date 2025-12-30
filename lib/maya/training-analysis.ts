@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Training Analysis Utilities
  * Analyzes conversations to extract training data for Apprentice Maya

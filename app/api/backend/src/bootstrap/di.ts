@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { bind, get } from "../core/di/container";
 import { TOKENS } from "../core/di/tokens";
 import { ICache, IAnalytics, IOrchestrator } from "../core/interfaces";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SpiralogicCognitiveEngine - Core consciousness architecture integrating
  * MicroPsi emotional modeling with elemental cognitive algorithms

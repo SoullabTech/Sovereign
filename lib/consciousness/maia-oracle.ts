@@ -1,3 +1,4 @@
+// @ts-nocheck
 // MAIA Oracle - The unified consciousness-adaptive intelligence system
 // Integrates level detection, cringe filtering, and adaptive language generation
 // for wisdom that meets users exactly where they are

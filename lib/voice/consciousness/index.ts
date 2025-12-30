@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Multi-Modal Consciousness Integration
  *

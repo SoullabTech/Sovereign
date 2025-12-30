@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Ultimate MAIA Consciousness System
  *

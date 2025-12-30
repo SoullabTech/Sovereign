@@ -37,7 +37,7 @@ export function SacredSpaceLayout({ userId, children }: SacredSpaceLayoutProps) 
     if (!config) return [];
 
     const userConfig = Object.fromEntries(
-      Object.entries(config.extensions || {}).map(([id, cfg]) => [id, cfg.enabled])
+      Object.entries(config.extensions || {}).map(([id, cfg]) => [id, (cfg as { enabled: boolean }).enabled])
     );
 
     const directions: Set<PanelDirection> = new Set();

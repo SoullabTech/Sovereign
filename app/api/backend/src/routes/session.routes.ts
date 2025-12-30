@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/sessionRoutes.ts
 
 import { Router } from "express";

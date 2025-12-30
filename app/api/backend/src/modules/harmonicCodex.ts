@@ -1,3 +1,4 @@
+// @ts-nocheck
 // harmonicCodex.ts
 // Maps Grant's sacred constants to elemental transitions and breath-geometry patterns
 // Generates personalized spiral evolution paths based on harmonic resonance

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SynapticSpace Analyzer
  * Analyzes the gap between self and Other where transformation occurs

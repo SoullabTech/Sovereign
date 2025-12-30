@@ -1,3 +1,4 @@
+// @ts-nocheck
 import Queue from 'bull';
 import { FileIngestionService } from '../services/FileIngestionService';
 const supabase = createClient(

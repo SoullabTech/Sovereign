@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Minimal app configuration for Sacred Techno-Interface
 import express from "express";
 import cors from "cors";

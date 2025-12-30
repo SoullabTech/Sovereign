@@ -52,7 +52,7 @@ export const VectorEquilibrium: React.FC<GeometryProps> = ({
       ctx.globalAlpha = 0.95;
 
       // Draw 12 vertices with enhanced density
-      const vertices = [];
+      const vertices: { x: number; y: number }[] = [];
       for (let i = 0; i < 12; i++) {
         const angle = (i * Math.PI * 2) / 12;
         const x = Math.cos(angle) * radius;

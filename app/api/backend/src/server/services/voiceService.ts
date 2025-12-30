@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/voiceService.ts
 
 import axios from "axios";

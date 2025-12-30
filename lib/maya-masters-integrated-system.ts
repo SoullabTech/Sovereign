@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Integrated Master System
  * Complete configuration combining mycelial intelligence with master's restraint

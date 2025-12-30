@@ -1,3 +1,4 @@
+// @ts-nocheck
 const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL || '';
 const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY || '';
 

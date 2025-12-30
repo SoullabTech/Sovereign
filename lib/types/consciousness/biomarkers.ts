@@ -47,6 +47,7 @@ export interface AlchemicalStage {
   intensity: number; // 0-1: Intensity of current phase experience
   completionPercentage: number; // 0-100: Progress through current phase
   nextPhase?: AlchemicalPhase;
+  coherence?: number; // 0-1: Stage coherence level
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

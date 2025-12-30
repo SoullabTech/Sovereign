@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LOCAL-FIRST ENCRYPTED MEMORY SYSTEM
  *

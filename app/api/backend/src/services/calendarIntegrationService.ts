@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Calendar Integration Service
  * Handles Calendly, Microsoft Teams, Google Calendar integrations

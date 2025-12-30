@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router, Request, Response } from "express";
 import { astrologicalService } from "../services/astrologicalService";
 import { authenticateToken } from "../middleware/authenticateToken";

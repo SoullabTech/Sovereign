@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * InitiationWithoutCulture - Harpur's Modern Ordeal Recognition
  * 

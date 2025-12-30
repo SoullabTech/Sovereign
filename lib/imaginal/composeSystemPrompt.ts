@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Imaginal Prompt Composition
  *

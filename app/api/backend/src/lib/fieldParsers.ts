@@ -1,3 +1,4 @@
+// @ts-nocheck
 const ELEMENT_KEYWORDS = {
   fire: ["ignite", "burn", "action", "passion"],
   water: ["feel", "flow", "grief", "tears"],

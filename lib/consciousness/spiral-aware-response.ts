@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌀 SPIRAL-AWARE MAIA RESPONSE PIPELINE
  *

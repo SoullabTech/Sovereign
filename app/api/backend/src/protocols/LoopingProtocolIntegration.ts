@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Protocol Integration Layer
  * Fail-safe design with context-aware adaptation

@@ -43,6 +43,7 @@ export interface ArchetypalSignal {
 export interface ConsciousnessProfile {
   level: ConsciousnessLevel;
   developmentalPhase: DevelopmentalPhase;
+  developmentalLevel?: number; // Alias for numeric developmental tracking
   readinessForTruth: number; // 0–1 scale
   shadowIndicators?: string[]; // e.g., ["avoidance", "projection", "denial"]
   integrationMarkers?: string[]; // e.g., ["acceptance", "compassion", "presence"]

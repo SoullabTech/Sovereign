@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌬️ Air Service - Communication Agent
  * Edge-cloud service for message routing and multi-agent coordination

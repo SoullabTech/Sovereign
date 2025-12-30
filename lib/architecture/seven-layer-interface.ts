@@ -9,7 +9,8 @@
  * maintaining consciousness continuity while leveraging platform strengths.
  */
 
-import type { Platform } from '@capacitor/core';
+// Platform type (compatible with Capacitor)
+export type Platform = 'web' | 'ios' | 'android' | 'electron';
 
 // ==============================================================================
 // CORE ARCHITECTURE TYPES
@@ -109,7 +110,7 @@ export interface WisdomData {
   wisdomIntegrationLevel: number;
 }
 
-type ArchitectureLayerData =
+export type ArchitectureLayerData =
   | EpisodicData
   | SymbolicData
   | ProfileData
@@ -136,6 +137,7 @@ export interface FieldResonanceData {
   collectivePatternResonance: number;
   fieldContributionPotential: number;
   communityThemeAlignment: Record<string, number>;
+  fieldCoherence?: number;
 }
 
 export interface ArchitectureHealthMetrics {

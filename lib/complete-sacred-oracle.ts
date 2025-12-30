@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Complete Sacred Oracle - Full Depth Experience with Natural Flow
 // Priority: Transformative conversation quality over raw speed
 // All sophisticated features integrated with intelligent activation

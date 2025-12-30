@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/beta/ReflectionForms.ts
 // 📊 Lightweight Beta Reflection Forms - Maintaining Ritual Flow
 

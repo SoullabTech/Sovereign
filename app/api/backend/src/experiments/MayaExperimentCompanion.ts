@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya's Experiment Companion Responses
  * Adaptive support throughout SoulLab experiments

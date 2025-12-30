@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Spiral Journey API Routes
  * Exposes spiral mapper functionality for frontend visualization

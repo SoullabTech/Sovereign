@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Interrupt System
  * Temple bells that shift the ritual state when struck

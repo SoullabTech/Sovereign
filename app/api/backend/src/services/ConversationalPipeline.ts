@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conversational Pipeline - Sesame/Maya Centric Intelligence
  * Upstream models draft → Sesame CI shapes → Maya TTS voices

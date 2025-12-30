@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * mem0 integration adapter for MAIA Consciousness Lattice
  * Provides compatibility with mem0's memory persistence and retrieval

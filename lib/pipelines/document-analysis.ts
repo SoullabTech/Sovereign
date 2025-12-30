@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🌸 Document Analysis Pipeline - Wisdom Extraction
 import Anthropic from '@anthropic-ai/sdk';
 

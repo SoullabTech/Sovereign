@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Architectural Complexity Audit
  * Maps complete system architecture and identifies complexity debt

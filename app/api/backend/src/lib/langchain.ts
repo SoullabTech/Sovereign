@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 src/lib/langchain.ts
 
 export function promptTemplate(

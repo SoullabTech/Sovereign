@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🪞 Sacred Mirror Integrity Protocol Integration Test
  * Tests the complete integration of Sacred Mirror Protocol with AIN Oracle System

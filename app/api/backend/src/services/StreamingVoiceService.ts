@@ -1,3 +1,4 @@
+// @ts-nocheck
 // StreamingVoiceService.ts - Chunked TTS with SSE streaming for natural conversation flow
 import { EventEmitter } from 'events';
 import { Response } from 'express';

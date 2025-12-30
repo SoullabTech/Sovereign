@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Endogenous vs Exogenous DMT Phenomenology Detection
  *

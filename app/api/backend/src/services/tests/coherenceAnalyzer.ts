@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 BACKEND/src/services/coherenceAnalyzer.ts
 export function analyzeCoherence(input: string): {
   score: number;

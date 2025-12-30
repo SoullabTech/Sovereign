@@ -144,6 +144,8 @@ export interface MaiaCoreResponse {
     shortLabel: string;       // "Saturnian Depth Phase" for UI chip
     contextHint: string;      // Brief archetypal weather description
   };
+  alchemicalStage?: string;   // Current alchemical stage (e.g., "Nigredo", "Albedo")
+  symbolicResonance?: string[]; // Active symbols/archetypes resonating
 }
 
 // ====================================================================

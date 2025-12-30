@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Pattern Integration System
  * Integrates basic and enhanced pattern recognition for comprehensive consciousness detection

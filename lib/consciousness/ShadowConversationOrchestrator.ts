@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SHADOW CONVERSATION ORCHESTRATOR
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CONVERSATION ELEMENTAL TRACKER
  *

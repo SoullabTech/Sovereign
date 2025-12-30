@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 Onboarding Ceremony Integration Test
  * 

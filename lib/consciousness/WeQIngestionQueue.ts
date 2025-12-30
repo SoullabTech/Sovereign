@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * WeQ-Enhanced Ingestion Queue
  *

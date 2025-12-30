@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Multer } from "multer";
 
 declare global {

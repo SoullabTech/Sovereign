@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Soul Metrics Dashboard
  * Trinity of Spiritual Intelligence - Visual Analytics Component

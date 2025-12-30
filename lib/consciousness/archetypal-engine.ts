@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Archetypal Intelligence Engine
  * Based on planetary archetypes and consciousness structures

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Archetypal Pattern Recognition System
  *

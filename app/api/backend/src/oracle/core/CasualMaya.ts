@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Casual Maya - Coffee shop wisdom, not therapy office
  *

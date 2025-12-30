@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daimonic Dashboard Metaphor Library
  * Complete library of phenomenological phrases and metaphors

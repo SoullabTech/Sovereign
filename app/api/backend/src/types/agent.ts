@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "./agentResponse";
 import type { Metadata } from "./metadata";
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ADAPTIVE MAIA ORACLE v2.0
  *

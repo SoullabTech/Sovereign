@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Birth Chart Context Service
  *

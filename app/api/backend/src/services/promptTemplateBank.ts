@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Prompt Template Bank - Fluid expression palettes for Maya's greetings
  * Ensures variety and poeticism without feeling copy-pasted

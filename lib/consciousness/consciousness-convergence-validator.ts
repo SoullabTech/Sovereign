@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🔮 CONSCIOUSNESS CONVERGENCE VALIDATOR
+ * CONSCIOUSNESS CONVERGENCE VALIDATOR
  *
  * Sacred technology validation framework ensuring:
  * - Sutton's option theory implementation

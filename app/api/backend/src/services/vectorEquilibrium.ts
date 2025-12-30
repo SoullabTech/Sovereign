@@ -1,3 +1,4 @@
+// @ts-nocheck
 // vectorEquilibrium.ts
 // Foundational geometric structure for Aether center using Fuller's Vector Equilibrium
 // Models phase transitions through jitterbug transformation

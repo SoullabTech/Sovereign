@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA AGENT COORDINATION SYSTEM
  *

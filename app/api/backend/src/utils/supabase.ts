@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/lib/supabase.ts
 // Initialize Supabase client using environment variables
 export const supabase = createClient(

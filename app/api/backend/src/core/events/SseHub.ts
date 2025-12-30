@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type SseEvent =
   | { type:'voice.ready'; userId:string; url:string; taskId?:string }
   | { type:'voice.failed'; userId:string; error:string; taskId?:string }

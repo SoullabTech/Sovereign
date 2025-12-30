@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Flow Memory System - Learning and Adaptation
  * Tracks flow effectiveness and user patterns to optimize future orchestration

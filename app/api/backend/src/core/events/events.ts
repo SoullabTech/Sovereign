@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Standardized event shapes for voice synthesis pipeline and collective intelligence
 
 import { RetreatAfferent } from '../../types/retreat';

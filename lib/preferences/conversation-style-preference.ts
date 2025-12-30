@@ -8,6 +8,9 @@ import { ConversationMode, DEFAULT_CONVERSATION_STYLE } from '@/lib/types/conver
 const STORAGE_KEY = 'maya_conversation_style';
 
 export class ConversationStylePreference {
+  // Type property for indexed type access (ConversationStylePreference['style'])
+  style?: string;
+
   /**
    * Get the user's preferred conversation style
    */

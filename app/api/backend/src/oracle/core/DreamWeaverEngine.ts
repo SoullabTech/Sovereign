@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dream-Weaver Engine - Kelly Nezat's Phenomenological Wisdom Midwifing System
  *

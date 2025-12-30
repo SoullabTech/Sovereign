@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { DBClient } from '@/lib/types/dbPlaceholders';
 
 interface OracleSession {

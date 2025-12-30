@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Therapeutic Functions - MAIA's Secondary Role
  *

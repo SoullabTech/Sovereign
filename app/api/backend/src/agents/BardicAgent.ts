@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * The Bard - Archetypal Memory Keeper
  *

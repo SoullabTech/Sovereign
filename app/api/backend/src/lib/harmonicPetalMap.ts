@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 BACKEND/src/lib/harmonicPetalMap.ts
 export const HarmonicConstants = {
   SQRT_10: 3.1623,

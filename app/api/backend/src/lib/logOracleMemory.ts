@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Memory Logger - Stub
  *

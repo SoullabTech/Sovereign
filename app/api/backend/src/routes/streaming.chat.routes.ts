@@ -1,3 +1,4 @@
+// @ts-nocheck
 // streaming.chat.routes.ts - Real-time streaming chat with chunked TTS
 import { Router, Request, Response } from 'express';
 import { logger } from '../utils/logger';

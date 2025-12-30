@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠 Pattern Recognition System
  * Learns collaboration patterns, predicts optimal agent combinations,

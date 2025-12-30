@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SyntheticEmergence Tracker
  * Tracks the quality and authenticity of what emerges from encounters

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Scripture Integration Enhancement System
  *

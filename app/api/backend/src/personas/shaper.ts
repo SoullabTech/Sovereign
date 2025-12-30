@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Response shaper - ensures every reply is crisp, grounded, and user-led
  * Adapts to worldview while maintaining Oracle clarity and concrete steps

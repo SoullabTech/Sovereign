@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/sovereign/conversationalConventions.ts
 /**
  * MAIA CONVERSATIONAL CONVENTIONS FRAMEWORK

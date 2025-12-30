@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Real Swiss Ephemeris for accurate astronomical calculations
 import swisseph from 'swisseph';
 

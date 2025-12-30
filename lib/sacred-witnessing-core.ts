@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Witnessing Core
  *

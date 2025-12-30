@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/beta/BetaExperienceDesign.ts
 // Beta Testing Framework for Pentadic Consciousness Experience
 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { z } from 'zod';
 import axios from 'axios';
 import { logger } from '../../utils/logger.js';

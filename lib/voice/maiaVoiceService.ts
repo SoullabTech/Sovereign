@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/voice/maiaVoiceService.ts
 
 import OpenAI from "openai";

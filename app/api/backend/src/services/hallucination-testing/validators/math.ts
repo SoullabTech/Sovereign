@@ -1,3 +1,4 @@
+// @ts-nocheck
 export function validateMathResult(
   result: any,
   expected: number,

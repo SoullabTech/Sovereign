@@ -90,7 +90,7 @@ export function Holoflower({
           <div
             className={`${sizes.glow} rounded-full`}
             style={{
-              background: `radial-gradient(circle, ${glow.color} 0%, rgba(212, 184, 150, 0.15) 30%, rgba(212, 184, 150, 0.1) 60%, rgba(212, 184, 150, 0.05) 80%, transparent 95%)`,
+              background: `radial-gradient(circle, ${glowColor} 0%, rgba(212, 184, 150, 0.15) 30%, rgba(212, 184, 150, 0.1) 60%, rgba(212, 184, 150, 0.05) 80%, transparent 95%)`,
               filter: `blur(${sizes.blur})`,
               opacity: glow.opacity[1]
             }}

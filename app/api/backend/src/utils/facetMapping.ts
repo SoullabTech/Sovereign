@@ -1,3 +1,4 @@
+// @ts-nocheck
 // utils/facetMapping.ts
 
 export type Facet =

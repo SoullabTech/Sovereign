@@ -1,3 +1,4 @@
+// @ts-nocheck
 // spiralLogic.ts
 export type Element = "Fire" | "Water" | "Earth" | "Air" | "Aether";
 

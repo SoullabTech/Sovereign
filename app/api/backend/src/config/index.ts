@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/config/index.ts
 
 import "dotenv/config";

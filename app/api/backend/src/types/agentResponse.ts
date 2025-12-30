@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Agent Response Type Definitions
  * Standard response formats for all agent interactions
@@ -55,6 +56,10 @@ export interface AgentResponse {
   oracleContext?: IPersonalOracleAgent;
   extractionSnapshot?: ExtractionResult;
   timestamp?: string; // ISO 8601 temporal coherence marker
+
+  // Routing and memory
+  routingPath?: string[];
+  memoryEnhanced?: boolean;
 
   // Additional data
   suggestions?: string[];

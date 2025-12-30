@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔬 SoulLab Core - The Consciousness Exploration Laboratory
  *

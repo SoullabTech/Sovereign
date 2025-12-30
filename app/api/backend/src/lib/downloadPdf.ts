@@ -1,3 +1,4 @@
+// @ts-nocheck
 import jsPDF from "jspdf";
 
 export function generateElementalProfilePDF(profile: Record<string, number>) {

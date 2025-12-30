@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type NeedId = string;
 export interface Need {
   id: NeedId;

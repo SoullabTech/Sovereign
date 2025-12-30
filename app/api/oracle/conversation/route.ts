@@ -10,8 +10,8 @@ import {
   type FieldEvent,
   type MaiaSuggestedAction
 } from '@/lib/consciousness/spiralogic-core';
-import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
-import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
+import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
 import { PARENTING_REPAIR_SYSTEM_PROMPT } from '../../../../backend/src/agents/prompts/parentingRepairPrompt';
 import {
@@ -22,6 +22,7 @@ import {
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
+import { ConsciousnessLevel } from '@/lib/consciousness/ConsciousnessLevelDetector';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
 import { logOracleUsage } from '@/lib/learning/oracleUsageLoggingService';
@@ -90,9 +91,22 @@ function rateLimitOrThrow(ip: string) {
 }
 
 export async function POST(request: NextRequest) {
+  // Request body interface for Oracle conversation
+  interface OracleRequestBody {
+    message: string;
+    userId: string;
+    sessionId: string;
+    conversationHistory?: Array<{ role: string; content: string }>;
+    element?: string;
+    userName?: string;
+    voiceMode?: boolean;
+    context?: Record<string, unknown>;
+  }
+
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
+  let body: OracleRequestBody | null = null;
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -144,7 +158,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    body = await request.json() as OracleRequestBody;
+    if (!body) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
     const { message, userId, sessionId } = body;
 
     // Validate required fields
@@ -168,8 +188,8 @@ export async function POST(request: NextRequest) {
     trustLevel = Math.min(conversationDepth / 10, 1);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
-    let cognitiveProfile = null;
-    let fieldSafety = null;
+    let cognitiveProfile: CognitiveProfile | null = null;
+    let fieldSafety: FieldSafetyDecision | null = null;
 
     try {
       cognitiveProfile = await getCognitiveProfile(userId);
@@ -247,6 +267,8 @@ export async function POST(request: NextRequest) {
 
     // SPIRALOGIC INTELLIGENCE: Detect element/phase/context
     const spiralogicCell = await inferSpiralogicCell(message, userId);
+    // Normalize element for case-insensitive comparisons (runtime safety)
+    const elementLower = String(spiralogicCell.element ?? '').toLowerCase();
 
     // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
     const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
@@ -258,7 +280,10 @@ export async function POST(request: NextRequest) {
     const symbolPatterns = PanconsciousFieldService.detectDegradedSymbols(message);
 
     // Check if Parsifal Protocol should be activated
-    const parsifal = PanconsciousFieldService.activateParsifal([...conversationHistory, message]);
+    const parsifal = PanconsciousFieldService.activateParsifal([
+      ...conversationHistory.map(turn => turn.content),
+      message
+    ]);
 
     // INTERVENTION DETECTION: Check for specific flow triggers
     const suggestedInterventions = detectInterventionTriggers(message, spiralogicCell, activeFrameworks);
@@ -333,7 +358,7 @@ export async function POST(request: NextRequest) {
         facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
         phase: spiralogicCell.phase,
         confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
-        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
         regulation: spiralogicCell.context.includes('grief') ? 'hypo' : undefined,
       });
 
@@ -390,7 +415,7 @@ export async function POST(request: NextRequest) {
             facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
             phase: spiralogicCell.phase,
             confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
-            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
           });
 
           validationResult = revalidation;
@@ -427,7 +452,7 @@ export async function POST(request: NextRequest) {
             facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
             phase: spiralogicCell.phase,
             confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : null,
-            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
             regenerated: regenerationAttempt > 0,
             regeneration_attempt: regenerationAttempt,
             summary: validationResult!.summary,
@@ -493,7 +518,12 @@ export async function POST(request: NextRequest) {
             violations: axiomSummary.violations,
             ruptureDetected,
             warningsDetected,
-            evaluations: axiomEvals,
+            evaluations: axiomEvals.map(e => ({
+              id: e.axiomId,
+              severity: e.severity || 'info',
+              ok: e.ok,
+              notes: e.notes ? [e.notes] : undefined
+            })),
             notes: axiomSummary.notes,
           },
         });
@@ -531,7 +561,7 @@ export async function POST(request: NextRequest) {
               frameworksActive: activeFrameworks,
               centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
             },
-            evolutionTriggers: suggestedInterventions.map(i => i.flow)
+            evolutionTriggers: suggestedInterventions.map(i => i.flowId)
           }
         }
       );
@@ -549,19 +579,19 @@ export async function POST(request: NextRequest) {
         {
           messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
           fieldStates: [{
-            fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-            water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-            earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-            air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-            aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4,
-            coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+            fire: elementLower === 'fire' ? 0.8 : 0.4,
+            water: elementLower === 'water' ? 0.8 : 0.4,
+            earth: elementLower === 'earth' ? 0.8 : 0.4,
+            air: elementLower === 'air' ? 0.8 : 0.4,
+            aether: elementLower === 'aether' ? 0.8 : 0.4,
+            coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
           }],
-          insights: symbolPatterns.map(p => p.description || p.archetype),
+          insights: symbolPatterns.map(p => p.modernManifestation || p.archetypalCore),
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
             phase: spiralogicCell.phase,
-            canonicalQuestion: spiralogicCell.canonicalQuestion,
+            canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
             trustLevel,
             conversationDepth
           }
@@ -588,26 +618,26 @@ export async function POST(request: NextRequest) {
         archetypalResonances: activeFrameworks,
         frameworksActive: activeFrameworks,
         elementalLevels: {
-          fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4
+          fire: elementLower === 'fire' ? 0.8 : 0.4,
+          water: elementLower === 'water' ? 0.8 : 0.4,
+          earth: elementLower === 'earth' ? 0.8 : 0.4,
+          air: elementLower === 'air' ? 0.8 : 0.4,
+          aether: elementLower === 'aether' ? 0.8 : 0.4
         },
         fieldStates: [{
-          fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4,
-          coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+          fire: elementLower === 'fire' ? 0.8 : 0.4,
+          water: elementLower === 'water' ? 0.8 : 0.4,
+          earth: elementLower === 'earth' ? 0.8 : 0.4,
+          air: elementLower === 'air' ? 0.8 : 0.4,
+          aether: elementLower === 'aether' ? 0.8 : 0.4,
+          coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
         }],
-        insights: symbolPatterns.map(p => p.description || p.archetype),
+        insights: symbolPatterns.map(p => p.modernManifestation || p.archetypalCore),
         themes: [spiralogicCell.context, ...activeFrameworks],
         spiralIndicators: {
           element: spiralogicCell.element,
           phase: spiralogicCell.phase,
-          canonicalQuestion: spiralogicCell.canonicalQuestion,
+          canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
           trustLevel,
           conversationDepth
         }
@@ -627,7 +657,7 @@ export async function POST(request: NextRequest) {
         conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
         spiralDynamics: {
           currentStage: memoryContext?.spiralDevelopmentContext?.currentPrimaryStage || null,
-          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.canonicalQuestion}`,
+          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${selectCanonicalQuestion(spiralogicCell)}`,
         },
         sessionThread: {
           emergingAwareness: memoryContext?.relatedInsights?.map((i: any) => i.insight_type) || []
@@ -757,8 +787,8 @@ export async function POST(request: NextRequest) {
     // Log error usage for tracking (fire-and-forget)
     logOracleUsage({
       requestId,
-      userId: typeof body === 'object' && body ? body.userId : undefined,
-      sessionId: typeof body === 'object' && body ? body.sessionId : undefined,
+      userId: body?.userId,
+      sessionId: body?.sessionId,
       ip,
       level: ORACLE_LEVEL,
       status: 'error',
@@ -786,6 +816,7 @@ function detectInterventionTriggers(
 ): Array<{flowId: string; name: string; description: string; confidence: number}> {
   const interventions: Array<{flowId: string; name: string; description: string; confidence: number}> = [];
   const messageText = message.toLowerCase();
+  const elementLower = String(spiralogicCell.element ?? '').toLowerCase();
 
   // IPP PARENTING REPAIR TRIGGERS
   if (activeFrameworks.includes('IPP') && spiralogicCell.context === 'parenting') {
@@ -799,7 +830,7 @@ function detectInterventionTriggers(
       messageText.includes(keyword)
     );
 
-    if (hasParentingShame && spiralogicCell.element === 'Water' && spiralogicCell.phase === 2) {
+    if (hasParentingShame && elementLower === 'water' && spiralogicCell.phase === 2) {
       interventions.push({
         flowId: 'ipp_parenting_repair_v1',
         name: 'Parenting Repair Moment',
@@ -830,7 +861,7 @@ async function generateSpiralogicResponseWithLLM(
   suggestedInterventions: Array<{flowId: string; name: string; description: string; confidence: number}>,
   conversationDepth: number,
   trustLevel: number,
-  consciousnessLevel: number,
+  consciousnessLevel: ConsciousnessLevel,
   memoryContext?: any,
   anamnesisPrompt?: string | null
 ): Promise<{

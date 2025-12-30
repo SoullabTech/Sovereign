@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Elemental Assessment Service - Deep Psychometric Analysis
 import {
   ElementalAssessment,

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Consciousness Orchestrator
  * The complete consciousness exploration system

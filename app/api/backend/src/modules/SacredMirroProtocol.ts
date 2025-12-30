@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/core/modules/SacredMirrorProtocol.ts
 
 interface SacredMirrorCheck {

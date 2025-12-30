@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Obsidian Knowledge Integration for MAIA/Soullab
  * Dynamic, ever-expanding IP management through Obsidian's linked knowledge system

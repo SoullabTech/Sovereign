@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Pattern Recognition Engine for Collective Intelligence
  * Detects emergent patterns in consciousness streams using the AIN design principles

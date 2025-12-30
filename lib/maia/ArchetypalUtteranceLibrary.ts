@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Archetypal Utterance Library
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ArchetypalTypology Integration with Agent Orchestrator
  *

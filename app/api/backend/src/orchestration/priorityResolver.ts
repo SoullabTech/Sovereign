@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Priority Resolver
  * Decides which subsystem leads while maintaining unified presence

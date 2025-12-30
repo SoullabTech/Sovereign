@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { EventEmitter } from 'events';
 // PersonalOracleAgent type - actual implementation in backend
 type PersonalOracleAgent = any;

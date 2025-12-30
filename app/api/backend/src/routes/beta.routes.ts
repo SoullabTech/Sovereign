@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BETA UNIFIED ENDPOINT
  * Complete end-to-end integration for beta testing

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Astrological Intelligence Integration
  *

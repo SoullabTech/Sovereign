@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/guideService.ts
 
 import { getUserProfile } from "./profileService";

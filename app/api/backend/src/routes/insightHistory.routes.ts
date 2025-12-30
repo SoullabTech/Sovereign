@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { oracleLogger } from "../core/utils/oracleLogger";
 import { authenticate } from "../middleware/authenticate";

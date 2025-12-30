@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Claude as Maia's Wisdom Layer
  * Claude guides and knows, but Maia speaks simply

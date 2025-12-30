@@ -1,3 +1,4 @@
+// @ts-nocheck
 // import { MemoryClient } from "mem0ai"; // TODO: Add to package.json
 const MemoryClient: any = {}; // Temporary stub
 

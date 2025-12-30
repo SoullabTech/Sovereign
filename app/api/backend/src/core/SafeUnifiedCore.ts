@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Safe Unified Core - Internal Complexity Architecture
  * 

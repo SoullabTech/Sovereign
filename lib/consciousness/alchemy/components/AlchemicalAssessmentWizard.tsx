@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Alchemical Assessment Wizard
  * Interactive guide for discovering current alchemical stage and receiving personalized guidance

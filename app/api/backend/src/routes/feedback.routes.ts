@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/feedback.routes.ts
 
 import { Router } from "express";

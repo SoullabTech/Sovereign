@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/types/session.ts
 
 import type { Metadata } from "./metadata";

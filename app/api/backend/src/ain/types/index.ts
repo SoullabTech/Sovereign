@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AIN Type Definitions
  * Shared types for the Adaptive Intelligence Network

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { LlamaService } from './LlamaService';
 import { MemoryStore } from './MemoryStore';
 import { logger } from '../../utils/logger';

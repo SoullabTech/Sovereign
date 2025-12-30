@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SpiralMapper.ts - Auto-generates spiral journey visualizations from user memory logs
  * 

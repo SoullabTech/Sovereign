@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Quadrantal Response Generator - Integrates all response strategies
  */

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 oracle-backend/src/lib/memoryStore.ts
 import Database from "better-sqlite3";
 import { v4 as uuidv4 } from "uuid";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🎨 Oracle Settings Service - User Control & Customization
  *

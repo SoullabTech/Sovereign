@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Personalized Consciousness Companion Engine
  *

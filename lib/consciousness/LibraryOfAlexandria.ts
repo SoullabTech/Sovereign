@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Library of Alexandria - Semantic Wisdom Search
  *

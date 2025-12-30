@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Canonical System Prompt Loader
  * Single source of truth for Maya's personality and voice

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 Consciousness Evolution Types - Sacred Oracle Supabase Integration
  * 

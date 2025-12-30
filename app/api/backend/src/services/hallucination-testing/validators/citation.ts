@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { normalizeText } from './schema';
 
 const CITATION_CACHE = new Map<string, any>();

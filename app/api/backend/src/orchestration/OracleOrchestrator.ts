@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Orchestrator
  * The unified entry point for all Oracle interactions

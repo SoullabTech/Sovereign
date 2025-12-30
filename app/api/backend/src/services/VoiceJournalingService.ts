@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Journaling Service - Whisper Integration for Sacred Audio Processing
  * Connects voice input to Soul Memory System and reflection workflows

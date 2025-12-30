@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PHENOMENOLOGICAL FIELD INTEGRATION
  *

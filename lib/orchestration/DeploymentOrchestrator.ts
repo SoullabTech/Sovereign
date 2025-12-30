@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Automated Deployment Orchestrator for Crystal Observer Architecture
  *

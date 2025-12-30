@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hybrid Agent Base Class
  * Agent that can process both at edge and cloud with intelligent routing

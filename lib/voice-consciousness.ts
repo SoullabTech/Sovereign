@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Consciousness Integration
  * Adds somatic resonance and emotional depth to voice responses

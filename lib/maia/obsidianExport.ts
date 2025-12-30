@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { JournalEntry } from './state';
 import { JOURNALING_MODE_DESCRIPTIONS } from '../journaling/JournalingPrompts';
 

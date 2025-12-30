@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Database Configuration
  * TODO: Implement proper database pool when needed

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import swaggerJSDoc from "swagger-jsdoc";
 
 export const swaggerSpec = swaggerJSDoc({

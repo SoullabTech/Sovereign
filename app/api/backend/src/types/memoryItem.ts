@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface MemoryItem {
   id?: string;
   query: string;

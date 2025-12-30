@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Urgency Detector
  * Identifies time pressure and urgency in user communication

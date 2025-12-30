@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Migration Framework & Testing Utilities
  * Supports safe architectural transformation

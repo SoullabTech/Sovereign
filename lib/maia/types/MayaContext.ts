@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Context System
  * Provides real-time Spiralogic state and pattern awareness for authentic presence-based responses

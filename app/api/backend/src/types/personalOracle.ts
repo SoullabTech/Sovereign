@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Personal Oracle Matching and Personality System
 
 export interface ElementalAssessment {

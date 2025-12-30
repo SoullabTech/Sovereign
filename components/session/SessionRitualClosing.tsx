@@ -5,6 +5,10 @@ import React, { useEffect } from 'react';
 interface SessionRitualClosingProps {
   onComplete?: () => void;
   sessionSummary?: string;
+  // OracleConversation-expected properties
+  isOpen?: boolean;
+  isReturningUser?: boolean;
+  onSkip?: () => void;
 }
 
 export function SessionRitualClosing({ onComplete, sessionSummary }: SessionRitualClosingProps) {

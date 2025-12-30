@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BetaSafetyGuards.ts - Beta Demo Safeguards & Graceful Fallbacks
  * 

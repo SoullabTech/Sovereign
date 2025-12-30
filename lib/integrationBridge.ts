@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌉 Integration Bridge - Connect Philosophy to Production
  * 

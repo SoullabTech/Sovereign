@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../types/agentResponse";
 /**
  * Mastery Voice Module

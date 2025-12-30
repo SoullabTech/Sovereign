@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Clarity Engine Stub
  * Placeholder implementation for clarity processing

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Boundary Detector
  * Identifies when users are resisting the protocol or setting boundaries

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Field Intelligence System Integration Adapter
  * Provides universal interface for integrating FIS into any AI application

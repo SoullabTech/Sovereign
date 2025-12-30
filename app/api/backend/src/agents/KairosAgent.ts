@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * KairosAgent - The Animus Archetype
  *

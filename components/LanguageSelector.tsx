@@ -3,7 +3,13 @@
 
 import React from 'react';
 
-export function LanguageSelector() {
+interface LanguageSelectorProps {
+  className?: string;
+  compact?: boolean;
+  showFlag?: boolean;
+}
+
+export function LanguageSelector({ className, compact, showFlag }: LanguageSelectorProps) {
   // Temporary no-op; you can wire real language selection later.
   return null;
 }

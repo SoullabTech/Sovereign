@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Signature Profiling System
  * Creates unique consciousness fingerprints for participants to enable personalized consciousness detection

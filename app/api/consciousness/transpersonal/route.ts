@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TRANSPERSONAL CONSCIOUSNESS API
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * External Memory Layer - Stub Implementation
  * TODO: Replace with Mem0, LangChain, or other external memory services

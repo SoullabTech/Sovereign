@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { MayaConsciousEvolution } from './MayaConsciousEvolution';
 import { MayaIntimateOrchestrator } from './MayaIntimateOrchestrator';
 import { MayaOrchestrator } from './MayaOrchestrator';

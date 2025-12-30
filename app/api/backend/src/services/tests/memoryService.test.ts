@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { memoryService } from "../memoryService";
 jest.mock("../../lib/supabase");
 

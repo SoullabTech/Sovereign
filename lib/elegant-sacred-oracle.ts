@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Elegant Sacred Oracle - Sub-1s Response System
 // Core principle: Pleasant companion first, sacred witness always
 // Performance target: <800ms total response time

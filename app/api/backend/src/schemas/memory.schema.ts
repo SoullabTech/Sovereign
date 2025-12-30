@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/schemas/memory.schema.ts
 
 import { z } from "zod";

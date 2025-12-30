@@ -349,49 +349,6 @@ export default function FacetRouter({ partnerContext = 'general', onComplete }: 
               </motion.div>
             )}
 
-            {/* Phase 3: Completion */}
-            {phase === 'complete' && (
-              <motion.div
-                key="complete"
-                initial={{ opacity: 1, scale: 1 }}
-                animate={{
-                  opacity: [1, 0.8, 0],
-                  scale: [1, 1.05, 1.1]
-                }}
-                transition={{ duration: 1.5 }}
-                className="text-center space-y-8"
-              >
-                <div className="w-24 h-24 mx-auto">
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.5, 1],
-                      rotateY: [0, 360],
-                      opacity: [1, 0.7, 0.3]
-                    }}
-                    transition={{
-                      duration: 1.5,
-                      ease: "easeInOut"
-                    }}
-                  >
-                    <img src="/elementalHoloflower.svg" alt="Sacred Symbol" className="w-full h-full drop-shadow-2xl" />
-                  </motion.div>
-                </div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.8 }}
-                >
-                  <h2 className="text-3xl font-light text-white mb-6 tracking-wider" style={{ textShadow: '0 0 20px rgba(212,175,55,0.3)' }}>
-                    Understanding your presence...
-                  </h2>
-                  <p className="text-[#d4af37]/90 text-lg font-light">
-                    Preparing your personalized experience
-                  </p>
-                </motion.div>
-              </motion.div>
-            )}
-
           </AnimatePresence>
         </div>
       </div>

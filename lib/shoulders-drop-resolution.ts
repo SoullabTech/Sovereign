@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 
-interface SomaticState {
+export interface SomaticState {
   tensionLevel: number;
   tensionLocations: Map<string, number>;
   breathDepth: number;
@@ -8,7 +8,11 @@ interface SomaticState {
   groundedness: number;
   embodiedPresence: number;
   openness: number;
+  presenceLevel?: number; // Alias for embodiedPresence, used by field-intelligence-system
 }
+
+// Alias for backward compatibility
+export type ShouldersDropState = SomaticState;
 
 interface PresenceInvitation {
   primary: string;

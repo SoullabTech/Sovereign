@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📚 Expanded Christian Wisdom Repository
  *

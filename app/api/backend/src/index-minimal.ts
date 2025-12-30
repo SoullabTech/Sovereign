@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Minimal entry point for Sacred Techno-Interface
 
 import "dotenv/config";

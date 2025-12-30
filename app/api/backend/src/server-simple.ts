@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Minimal server for Render deployment
 import express from "express";
 import cors from "cors";

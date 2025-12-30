@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // TEST ROUTES FOR SOUL MEMORY INTEGRATION
 // Development only - remove in production

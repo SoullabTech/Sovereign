@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daimonic Dashboard Copy Kit
  * Phenomenological phrases for each widget - never clinical or technical

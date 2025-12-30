@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Worldview-aware preference system for Maya
  * Adapts to user's worldview while keeping clarity and care

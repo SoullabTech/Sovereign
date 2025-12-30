@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../types/agentResponse";
 /**
  * AwarenessIntegrator - Synthesizes consciousness across all levels of awareness

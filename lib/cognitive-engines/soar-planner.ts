@@ -11,7 +11,7 @@ import { AttentionState } from './lida-workspace';
 
 import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
 
-interface WisdomGoal {
+export interface WisdomGoal {
   type: 'healing' | 'breakthrough' | 'integration' | 'transcendence' | 'grounding' | 'clarity';
   priority: number;
   context: string;
@@ -21,7 +21,7 @@ interface WisdomGoal {
   completionCriteria: string[];
 }
 
-interface WisdomOperator {
+export interface WisdomOperator {
   name: string;
   type: 'inquiry' | 'reflection' | 'ritual' | 'reframe' | 'action' | 'integration';
   conditions: string[];
@@ -32,7 +32,7 @@ interface WisdomOperator {
   consciousnessRequirement: number;
 }
 
-interface WisdomPlan {
+export interface WisdomPlan {
   primaryGoal: WisdomGoal;
   secondaryGoals: WisdomGoal[];
   operatorSequence: WisdomOperator[];
@@ -42,7 +42,7 @@ interface WisdomPlan {
   nextSteps: string[];
 }
 
-interface PredictedOutcome {
+export interface PredictedOutcome {
   type: 'insight' | 'healing' | 'breakthrough' | 'integration' | 'stability' | 'clarity';
   probability: number;
   description: string;
@@ -50,7 +50,7 @@ interface PredictedOutcome {
   consciousnessEvolution: number;
 }
 
-interface RitualGuidance {
+export interface RitualGuidance {
   type: 'meditation' | 'movement' | 'breath' | 'visualization' | 'journaling' | 'ceremony';
   description: string;
   duration: string;
@@ -59,7 +59,7 @@ interface RitualGuidance {
   steps: string[];
 }
 
-interface IntegrationPath {
+export interface IntegrationPath {
   immediateActions: string[];
   dailyPractices: string[];
   weeklyReflections: string[];

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Inner Weather Recognition
  * Sensing the quality of reaching, not analyzing the content

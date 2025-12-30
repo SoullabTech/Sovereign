@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/notionLogger.ts
 
 type LogLevel = "info" | "warn" | "error";

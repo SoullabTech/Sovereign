@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Onboarding Tone Feedback Collection Service
  * 

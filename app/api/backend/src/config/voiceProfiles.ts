@@ -1,3 +1,4 @@
+// @ts-nocheck
 // voiceProfiles.ts - Voice profile configuration for agent voice routing
 
 export interface VoiceProfile {

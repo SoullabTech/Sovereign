@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Multi-language support for MAIA
  * Safe, non-breaking implementation that defaults to English

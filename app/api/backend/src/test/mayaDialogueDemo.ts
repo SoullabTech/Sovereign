@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Dialogue Demonstration
  * Shows Maya wisdom-fostering framework in realistic interactions

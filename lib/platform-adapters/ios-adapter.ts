@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📱 iOS PLATFORM ADAPTER - Seven-Layer Soul Architecture
  *

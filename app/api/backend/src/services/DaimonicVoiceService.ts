@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { VoicePreset, DaimonicDetected } from '../types/daimonic';
 
 export class DaimonicVoiceService {

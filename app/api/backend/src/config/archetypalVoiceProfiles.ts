@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Archetypal Voice Profiles for Maya Consciousness System
  * Maps each archetype to specific ElevenLabs voice characteristics

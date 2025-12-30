@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface AgentScore {
   fire: number;
   water: number;

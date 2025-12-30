@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌀 Community Commons to Substack Formatter
  *

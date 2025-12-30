@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AudioStorage } from './AudioStorage';
 import fs from 'node:fs/promises';
 import path from 'node:path';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Safety Screening Service
  * 

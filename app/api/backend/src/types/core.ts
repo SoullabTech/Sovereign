@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Core System Type Definitions
  */

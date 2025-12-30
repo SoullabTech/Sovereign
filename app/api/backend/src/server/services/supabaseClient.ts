@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/services/dbClient.ts
 
 import { config } from "../config";

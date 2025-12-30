@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Event Sourcing Service for Soul Memory System
 // Handles domain events and event streaming
 

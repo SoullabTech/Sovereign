@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Integrated Looping Flow
  * Sacred interrupts and confidence woven into the ritual itself

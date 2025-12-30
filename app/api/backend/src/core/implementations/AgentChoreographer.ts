@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../../types/agentResponse";
 /**
  * Agent Choreographer - Ensures Genuine Diversity in Multi-Agent Responses

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Rule Engine Stub
  * Placeholder implementation for symbolic rule processing

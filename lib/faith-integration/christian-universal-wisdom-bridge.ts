@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🌍 Christian-Universal Wisdom Bridge
+ * Christian-Universal Wisdom Bridge
  *
  * Disposable pixel system for relating Christian principles to universal human experience
  * - Respectful interfaith dialogue capabilities

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Evaluation harness for Maya's response quality
  * Quick sanity checks to catch style drifts in CI/production

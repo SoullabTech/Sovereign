@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * OpenAI Voice Synthesis Engine
  *

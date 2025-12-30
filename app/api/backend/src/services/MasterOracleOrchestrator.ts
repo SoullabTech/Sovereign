@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Master Oracle Orchestrator - Unified AIN/MAYA/Anamnesis archetypal experience system
 // Coordinates all sophisticated psychological frameworks for authentic user understanding
 

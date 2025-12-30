@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { EventEmitter } from 'events';
 import { ShadowConversationOrchestrator, ShadowConversationPurpose, VisibilityLevel } from './ShadowConversationOrchestrator';
 import { AgentBackchannelingIntegration } from './AgentBackchannelingIntegration';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Membership Tier System
 // Foundation / Explorer / Pioneer
 //

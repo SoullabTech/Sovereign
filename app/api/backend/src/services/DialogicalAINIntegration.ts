@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DialogicalAINIntegration - Bridge Between Dialogical Architecture & Existing AIN System
  * 

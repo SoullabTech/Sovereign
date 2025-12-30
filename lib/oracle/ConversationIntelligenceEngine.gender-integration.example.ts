@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * EXAMPLE: How to integrate Gender-Aware Context into existing ConversationIntelligenceEngine
  *

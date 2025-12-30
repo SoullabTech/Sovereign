@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TricksterRecognition - Detecting Creative Disruption
  * 

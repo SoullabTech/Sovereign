@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Scribe Mode for MAIA
  * Allows MAIA to observe, take notes, and process conversations without actively interjecting

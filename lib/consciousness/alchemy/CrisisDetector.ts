@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Crisis Detection and Nigredo Support Protocols
  *

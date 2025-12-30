@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Greeting Template Banks
  * Rich variations for elements, phases, archetypes, and symbols

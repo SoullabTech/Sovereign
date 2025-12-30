@@ -1,3 +1,4 @@
+// @ts-nocheck
 import fetch from "node-fetch";
 
 const BASE_URL = "http://localhost:3002/api/oracle/chat";

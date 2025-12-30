@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Cloud Orchestrator Base Class
  * Extended base agent for cloud-based services with pub/sub capabilities

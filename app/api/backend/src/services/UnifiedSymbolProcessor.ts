@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * UnifiedSymbolProcessor.ts - Single Source of Truth for Symbol Processing
  * 

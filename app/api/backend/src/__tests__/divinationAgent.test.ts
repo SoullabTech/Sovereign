@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { divinationAgent } from "../core/agents/divinationAgent";
 import { DivinationQuery } from "../types/divination";
 

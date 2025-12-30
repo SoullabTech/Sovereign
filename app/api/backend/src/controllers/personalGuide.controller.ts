@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response } from "express";
 import { personalOracle } from "../core/agents/adjusterAgent";
 import { getUserProfile } from "../services/profileService";

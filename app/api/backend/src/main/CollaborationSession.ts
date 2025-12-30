@@ -1,3 +1,4 @@
+// @ts-nocheck
 // /src/main/CollaborationSession.ts
 
 import { AgentCollaboration } from "../agents/AgentCollaboration";

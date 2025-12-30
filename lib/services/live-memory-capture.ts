@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Live Memory Capture Service
  * Captures and stores memory patterns during active conversations

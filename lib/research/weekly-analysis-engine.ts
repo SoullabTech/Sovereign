@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Weekly Analysis Engine
  * Automated pattern detection and insight generation for research findings

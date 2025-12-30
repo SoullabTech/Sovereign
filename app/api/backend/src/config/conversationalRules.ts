@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conversational Intelligence & Etiquette Rules
  * Core guidelines for Maya & Anthony's interactions

@@ -4,8 +4,12 @@ import { MotionState, CoherenceShift } from '@/components/motion/MotionOrchestra
 export interface OracleResponse {
   text: string; // Claude's main response
   primaryFacetId: string; // e.g. "fire-ignite", "water-flow"
-  reflection: string;
-  practice: string;
+  reflection?: string;
+  practice?: string;
+  // OracleConversation-expected properties
+  element?: string;
+  voiceCharacteristics?: any;
+  confidence?: number;
   
   // Synthesis insights
   synthesis?: {

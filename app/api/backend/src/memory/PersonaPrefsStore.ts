@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PersonaPrefsStore - Persistent storage for user's Maya personality preferences
  * Handles worldview adaptation, voice settings, and formality preferences

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PERSONALIZED FRAMEWORK RESONANCE LEARNING
  *

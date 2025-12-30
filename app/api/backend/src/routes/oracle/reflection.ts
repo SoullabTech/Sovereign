@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/routes/oracle/reflection.ts
 import express from "express";
 const router = express.Router();

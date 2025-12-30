@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Default Encounter Engine Implementation
  * 

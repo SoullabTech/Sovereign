@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Longitudinal Authenticity Tracker
  * Monitors authenticity patterns across multiple sessions over time

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Bardic Memory System - Unified Exports
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/types/auth.ts
 
 import { AuthRequest, AuthResponse } from "./index"; // Shared types

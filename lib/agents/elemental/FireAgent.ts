@@ -72,11 +72,12 @@ Catalytic intensity: ${fireIntensity}
 
 Speak as sacred fire - brief, powerful, transformative. 2-3 sentences maximum.`;
 
-        enhancedInsight = await this.claudeService.generateOracleResponse(
+        const result = await this.claudeService.generateOracleResponse(
           ctx.moment.text,
           { element: 'fire' },
           firePrompt
         );
+        enhancedInsight = result.response;
       } catch (error) {
         console.log('Fire using base wisdom');
       }

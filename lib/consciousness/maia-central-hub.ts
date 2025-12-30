@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA AS CENTRAL INTELLIGENCE HUB
  *

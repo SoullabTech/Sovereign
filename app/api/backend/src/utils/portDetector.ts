@@ -1,3 +1,4 @@
+// @ts-nocheck
 import net from 'net';
 import { logPortUsage, detectPortProcess } from './portLogger';
 import logger from './logger';

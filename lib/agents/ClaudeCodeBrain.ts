@@ -191,7 +191,7 @@ export class ClaudeCodeBrain {
       systemAwareness: {
         ...this.context.codebaseKnowledge,
         currentUser: userName,
-        theirJourney: journalHistory?.map(j => j.title).slice(0, 5),
+        theirJourney: journalHistory?.map(j => j.mode).slice(0, 5),
         lastInteraction: this.context.sessionContext.previousExchanges.slice(-3)
       },
 
@@ -240,9 +240,7 @@ export class ClaudeCodeBrain {
         sessionId: `claude-code-${Date.now()}`,
         symbols: response.symbols,
         phase: this.context.sessionContext.currentPhase,
-        recommendations: response.recommendations,
-        brainTrust: true, // Flag that this came from Claude Code Brain
-        fullAwareness: true
+        recommendations: response.recommendations
       }
     };
   }

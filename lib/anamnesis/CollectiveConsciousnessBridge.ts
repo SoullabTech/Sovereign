@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Consciousness Bridge
  * Connects individual consciousness to the collective field

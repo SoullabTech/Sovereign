@@ -241,7 +241,7 @@ export default function MAIAConsciousnessComputingFeedbackPage() {
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                       className={`w-12 h-12 rounded-full font-medium transition-all ${
-                        feedback.developmentalSupport >= rating
+                        (feedback.developmentalSupport ?? 0) >= rating
                           ? 'bg-gradient-to-br from-[#6EE7B7] to-[#A0C4C7] text-black'
                           : 'bg-white/10 text-white/60 hover:bg-white/20'
                       }`}

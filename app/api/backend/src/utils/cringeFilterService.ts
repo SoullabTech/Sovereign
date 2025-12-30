@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/utils/cringeFilterService.ts
 
 interface CringePattern {

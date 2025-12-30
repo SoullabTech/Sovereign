@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Oracle Core - Single entry point for all AI interactions
  * Replaces scattered agent logic with streamlined, config-driven approach

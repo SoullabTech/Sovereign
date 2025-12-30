@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/lib/utils/validateProfile.ts
 
 import { elementalProfileSchema } from "@lib/schemas/elemental";

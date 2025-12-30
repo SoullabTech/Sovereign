@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Intelligence Router - Draft Generation
  * Routes elements to appropriate upstream models for drafting

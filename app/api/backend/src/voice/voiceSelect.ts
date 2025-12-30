@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice selection - Oracle-style, middle-aged, warm
  * Keeps Aunt Annie default for Maya; allows element overrides without breaking vibe

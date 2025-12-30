@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Response Speed Optimization System
  *

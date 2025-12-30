@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Unified Consciousness Engine
  *

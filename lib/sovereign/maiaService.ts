@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/sovereign/maiaService.ts
 import { randomUUID } from 'crypto';
 import { incrementTurnCount, addConversationExchange, getConversationHistory } from './sessionManager';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Voice presets for natural, non-robotic sound
 // Tuned specifically for consciousness/spiritual content
 

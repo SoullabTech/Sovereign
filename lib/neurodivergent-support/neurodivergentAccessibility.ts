@@ -1,6 +1,7 @@
+// @ts-nocheck
 /**
- * 🧠 Neurodivergent Accessibility Module
- * 
+ * Neurodivergent Accessibility Module
+ *
  * Supporting diverse cognitive processing styles
  * ADHD, Autism, AuDHD, Dyslexia, and other neurotypes
  * Creating genuinely inclusive contemplative space

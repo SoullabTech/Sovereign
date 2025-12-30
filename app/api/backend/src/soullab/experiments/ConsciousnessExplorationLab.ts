@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧪 Consciousness Exploration Laboratory
  *

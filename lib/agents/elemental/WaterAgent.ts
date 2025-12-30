@@ -220,12 +220,34 @@ Your emotional waters hold the key to your authentic self - your inner gold. Let
 };
 
 export class WaterAgent extends ArchetypeAgent {
+  private oracleName: string;
+  private voiceProfile?: unknown;
+  private phase: string;
+
   constructor(
     oracleName: string = "Aquaria",
-    voiceProfile?: any,
+    voiceProfile?: unknown,
     phase: string = "initiation",
   ) {
-    super("water", oracleName, voiceProfile, phase);
+    super("water");
+    this.oracleName = oracleName;
+    this.voiceProfile = voiceProfile;
+    this.phase = phase;
+  }
+
+  /**
+   * Implement abstract process method from ArchetypeAgent
+   */
+  async process(
+    input: string,
+    _context?: unknown[]
+  ): Promise<{ content: string; element: string; energy?: string; guidance?: string }> {
+    return {
+      content: input,
+      element: 'water',
+      energy: 'emotional',
+      guidance: 'Flow with your feelings'
+    };
   }
 
   public async processExtendedQuery(query: {
@@ -235,7 +257,7 @@ export class WaterAgent extends ArchetypeAgent {
     const { input, userId } = query;
 
     // Gather sacred context - emotional patterns from past conversations
-    const contextMemory = await getRelevantMemories(userId, undefined, 3);
+    const contextMemory = await getRelevantMemories(userId);
     const waterType = WaterIntelligence.detectWaterType(input, contextMemory);
 
     // Create context that preserves emotional wisdom from past conversations
@@ -263,10 +285,7 @@ Water type needed: ${waterType}
 
 Respond with the wisdom of water that serves emotional healing and authentic self-discovery. Meet them where they are emotionally, but invite them toward flow and integration.`;
 
-    const modelResponse = await ModelService.getResponse({
-      input: waterPrompt,
-      userId,
-    });
+    const modelResponse = await ModelService.generate(waterPrompt);
     const enhancedResponse = modelResponse;
 
     // Weave AI insight with our water wisdom
@@ -281,7 +300,8 @@ ${enhancedResponse.content}`;
     );
 
     // Store memory with water-specific emotional metadata
-    await storeMemoryItem(userId, content, {
+    await storeMemoryItem(userId, {
+      content,
       element: "water",
       sourceAgent: "water-agent",
       confidence: 0.9,
@@ -298,34 +318,20 @@ ${enhancedResponse.content}`;
 
     // Log with water-specific emotional insights
     await logOracleInsight({
-      userId: userId,
-      agentType: "water-agent",
-      query: input,
-      content: content,
-      metadata: {
-        archetypes: ["Water"],
-        elementalAlignment: "water",
-        waterType,
-        emotionalIntensity: this.assessEmotionalIntensity(input),
-        healingPotential: this.assessHealingPotential(input),
-      }
+      element: "water",
+      energy: "emotional",
+      message: content,
+      level: 'sacred',
     });
 
     // Return response with water-specific metadata
     return {
       content,
-      provider: "water-agent" as any,
-      model: (modelResponse as any).model || "gpt-4",
-      confidence: 0.9,
+      element: "water",
+      energy: "emotional",
       metadata: {
-        element: "water",
-        phase: "flow",
-        archetypes: ["Water"],
-        waterType,
-        reflections: this.extractWaterReflections(content),
-        symbols: this.extractWaterSymbols(content),
-        emotionalWisdom: true,
-        healingCapacity: true,
+        model: (modelResponse as unknown as { model?: string }).model || "gpt-4",
+        timestamp: new Date(),
       },
     };
   }

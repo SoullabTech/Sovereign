@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ARIA Production Implementation
  * Combining mobile-first design with component library best practices

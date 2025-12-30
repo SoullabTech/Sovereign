@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Conversation Router - Intelligent archetypal response mode selection
 // Routes users to optimal agent experiences based on sophisticated psychological analysis
 

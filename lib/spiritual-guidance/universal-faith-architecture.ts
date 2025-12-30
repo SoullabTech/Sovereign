@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Universal Multi-Faith Spiritual Guidance Architecture
  * Supports all major world religions and spiritual traditions

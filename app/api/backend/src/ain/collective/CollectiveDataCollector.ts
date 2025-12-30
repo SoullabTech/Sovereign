@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Data Collector for AIN System
  * Processes session data into afferent streams for collective intelligence analysis

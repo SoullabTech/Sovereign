@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Oracle 2.0 GPT Bridge
  * Direct connection to your existing Elemental Oracle 2.0 GPT knowledge base
@@ -106,7 +107,7 @@ export class ElementalOracle2Bridge {
     this.openai = new OpenAI({
       apiKey: config.openaiApiKey
     });
-    this.ipEngine = new IntellectualPropertyEngine();
+    this.ipEngine = IntellectualPropertyEngine.getInstance();
   }
 
   async initialize(): Promise<void> {

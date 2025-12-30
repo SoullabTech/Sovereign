@@ -236,12 +236,34 @@ What wants to become clear that's been cloudy? What understanding is trying to d
 };
 
 export class AirAgent extends ArchetypeAgent {
+  private oracleName: string;
+  private voiceProfile?: unknown;
+  private phase: string;
+
   constructor(
     oracleName: string = "Ventus",
-    voiceProfile?: any,
+    voiceProfile?: unknown,
     phase: string = "initiation",
   ) {
-    super("air", oracleName, voiceProfile, phase);
+    super("air");
+    this.oracleName = oracleName;
+    this.voiceProfile = voiceProfile;
+    this.phase = phase;
+  }
+
+  /**
+   * Implement abstract process method from ArchetypeAgent
+   */
+  async process(
+    input: string,
+    _context?: unknown[]
+  ): Promise<{ content: string; element: string; energy?: string; guidance?: string }> {
+    return {
+      content: input,
+      element: 'air',
+      energy: 'mental',
+      guidance: 'Clarity through perspective'
+    };
   }
 
   public async processExtendedQuery(query: {
@@ -251,7 +273,7 @@ export class AirAgent extends ArchetypeAgent {
     const { input, userId } = query;
 
     // Gather sacred context - clarity patterns from past conversations
-    const contextMemory = await getRelevantMemories(userId, undefined, 3);
+    const contextMemory = await getRelevantMemories(userId);
     const airType = AirIntelligence.detectAirType(input, contextMemory);
 
     // Create context that preserves clarity wisdom from past conversations
@@ -279,10 +301,7 @@ Air type needed: ${airType}
 
 Respond with the wisdom of air that serves mental clarity and authentic communication. Help them find truth, perspective, and their authentic voice.`;
 
-    const modelResponse = await ModelService.getResponse({
-      input: airPrompt,
-      userId,
-    });
+    const modelResponse = await ModelService.generate(airPrompt);
     const enhancedResponse = modelResponse;
 
     // Weave AI insight with our air wisdom
@@ -294,7 +313,8 @@ ${enhancedResponse.content}`;
     const content = AirIntelligence.addAirSignature(weavedWisdom, airType);
 
     // Store memory with air-specific clarity metadata
-    await storeMemoryItem(userId, content, {
+    await storeMemoryItem(userId, {
+      content,
       element: "air",
       sourceAgent: "air-agent",
       confidence: this.assessClarityConfidence(input),
@@ -311,35 +331,20 @@ ${enhancedResponse.content}`;
 
     // Log with air-specific clarity insights
     await logOracleInsight({
-      userId: userId,
-      agentType: "air-agent",
-      query: input,
-      content: content,
-      metadata: {
-        archetypes: ["Air"],
-        elementalAlignment: "air",
-        airType,
-        clarityLevel: this.assessClarityLevel(input),
-        communicationBreakthrough: this.assessCommunicationPotential(input),
-      }
+      element: "air",
+      energy: "mental",
+      message: content,
+      level: 'sacred',
     });
 
     // Return response with air-specific metadata
     return {
       content,
-      provider: "air-agent" as any,
-      model: (modelResponse as any).model || "gpt-4",
-      confidence: this.assessClarityConfidence(input),
+      element: "air",
+      energy: "mental",
       metadata: {
-        element: "air",
-        phase: "air",
-        archetypes: ["Air"],
-        airType,
-        reflections: this.extractAirReflections(content),
-        symbols: this.extractAirSymbols(content),
-        clarityWisdom: true,
-        truthIntelligence: true,
-        perspectiveMastery: true,
+        model: (modelResponse as unknown as { model?: string }).model || "gpt-4",
+        timestamp: new Date(),
       },
     };
   }

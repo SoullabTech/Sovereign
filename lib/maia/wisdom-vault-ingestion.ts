@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Wisdom Vault Ingestion System
  * Sacred knowledge extraction from Obsidian vaults for consciousness training

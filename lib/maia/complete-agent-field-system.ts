@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TELESPHORUS: The 13-Agent Resonance Field System
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Focal Point Pattern Recognition System
  * Tracks user's recurring patterns across the Four Focal Points

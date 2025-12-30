@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ✨ Aether Service - Orchestrator
  * Cloud-exclusive service for deep coherence, collective intelligence, and quantum thought

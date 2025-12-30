@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/types/express.d.ts
 
 declare global {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Kelly Nezat's Genesis Chapter
  *

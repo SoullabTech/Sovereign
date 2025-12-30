@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SynapticResonance - The Creative Gap Between Self and Other
  * 

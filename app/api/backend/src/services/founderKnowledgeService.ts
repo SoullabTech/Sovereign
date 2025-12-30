@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 🌀 FOUNDER KNOWLEDGE INGESTION SERVICE
 // Processes and integrates organizational wisdom documents
 

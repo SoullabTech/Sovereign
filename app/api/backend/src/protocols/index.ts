@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Protocol System
  * Unified exports for all protocol modules

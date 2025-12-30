@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * ⛪ Christian Pastoral Care & Crisis Support System
+ * Christian Pastoral Care & Crisis Support System
  *
  * Disposable pixel approach to spiritual crisis intervention and pastoral care
  * - Recognizes when spiritual/pastoral intervention is needed

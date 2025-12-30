@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Attending Quality Engine
  * Calculates metrics for presence, coherence, and conscious awareness quality

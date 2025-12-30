@@ -685,7 +685,7 @@ function DebugInfoOverlay({
  * Helper function to generate polygon points for sacred geometry
  */
 function generatePolygonPoints(sides: number, scale: number = 1): string {
-  const points = [];
+  const points: string[] = [];
   for (let i = 0; i < sides; i++) {
     const angle = (i * 2 * Math.PI) / sides - Math.PI / 2; // Start from top
     const x = 50 + Math.cos(angle) * 40 * scale;

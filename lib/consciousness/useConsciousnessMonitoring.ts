@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { LiveConsciousnessMetrics, ConsciousnessMonitoringEvent, MonitoringAlert } from './RealTimeConsciousnessMonitoring';
 

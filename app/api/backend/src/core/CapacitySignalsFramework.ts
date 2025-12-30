@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Capacity Signals Framework
  * Tracks user capacity to hold dialogue, ambiguity, and integration safely

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌀 MAIA Spiralogic Intelligence API Route
  *

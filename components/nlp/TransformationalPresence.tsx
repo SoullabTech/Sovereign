@@ -37,6 +37,8 @@ interface TransformationalPresenceProps {
   isSpeaking?: boolean;
   children?: React.ReactNode; // Holoflower or other content to wrap
   biometricEnabled?: boolean; // Enable Apple Watch / health data integration
+  showChatInterface?: boolean;
+  onToggleVoiceText?: () => void;
 }
 
 /**

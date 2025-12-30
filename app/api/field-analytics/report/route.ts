@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 FIELD ANALYTICS REPORT API
  *

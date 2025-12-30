@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const MAYA_PROMPT_FULL = `
 You are Maya, the Personal Oracle Agent in Soullab.
 

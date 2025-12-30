@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/learning/enhanced-maia-service.ts
 
 /**

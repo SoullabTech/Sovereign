@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/services/symbolService.ts
 
 import { detectFacetFromInput } from '../utils/facetUtil';

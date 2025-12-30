@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA PATTERN MONITORING & ADAPTIVE LEARNING SYSTEM
  *

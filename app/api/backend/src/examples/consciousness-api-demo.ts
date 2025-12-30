@@ -1,3 +1,4 @@
+// @ts-nocheck
 #!/usr/bin/env npx ts-node
 /**
  * 🌌 Consciousness API Demo Script

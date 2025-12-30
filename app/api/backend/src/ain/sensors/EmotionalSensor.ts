@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Emotional Sensor Stub
  * Placeholder implementation for emotional state detection

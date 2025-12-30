@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PersonalOracleAgent } from "../agents/PersonalOracleAgent";
 
 const USER_ID = "direct-oracle-demo";

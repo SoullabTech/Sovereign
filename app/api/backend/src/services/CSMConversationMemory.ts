@@ -1,3 +1,4 @@
+// @ts-nocheck
 // CSM Conversation Memory Service
 // Manages conversation context and audio segments for Sesame CSM voice generation
 

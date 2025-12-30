@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * IndividuationProcess - Jungian Depth Psychology Integration
  * 

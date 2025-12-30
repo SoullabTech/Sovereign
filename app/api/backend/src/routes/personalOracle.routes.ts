@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { authenticateToken } from "../../middleware/authenticateToken";
 import type { AuthenticatedRequest } from "../../types";

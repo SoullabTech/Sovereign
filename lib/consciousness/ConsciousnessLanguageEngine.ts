@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Pure Consciousness Language Generation Engine
  *

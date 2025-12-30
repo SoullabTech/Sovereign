@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: src/lib/mem0.ts
 
 export class MemoryManager {

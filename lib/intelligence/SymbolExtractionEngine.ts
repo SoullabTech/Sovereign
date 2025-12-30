@@ -78,9 +78,10 @@ export interface ExtractionResult {
   ifsParts?: IFSParts;
   constellationState?: import('./ConstellationEngine').ConstellationState;
   jungianProcess?: JungianProcess;
-  alchemicalStage?: import('../consciousness/UnifiedSpiralogicAlchemyMap').AlchemicalStage;
+  alchemicalStage?: import('../types/consciousness/biomarkers').AlchemicalStage;
   existentialState?: import('./ExistentialEngine').ExistentialState;
   hemisphericMode?: HemisphericMode;
+  hemisphereBias?: 'left' | 'right' | 'balanced'; // Alias for hemispheric analysis
   actState?: import('./ACTEngine').ACTState;
   cftState?: import('./CFTEngine').CFTState;
   schemaTherapyState?: import('./SchemaTherapyEngine').SchemaTherapyState;

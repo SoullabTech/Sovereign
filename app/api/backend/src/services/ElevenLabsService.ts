@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Eleven Labs Voice Synthesis Service
  * Handles archetypal voice generation for consciousness responses

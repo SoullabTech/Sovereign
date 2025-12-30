@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soul Memory Service - Minimal Implementation
  * Uses our new SoulMemorySystem

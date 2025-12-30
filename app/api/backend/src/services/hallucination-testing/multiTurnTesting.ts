@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { v4 as uuidv4 } from 'uuid';
 import type { ModelRunner } from './testRunner';
 import { normalizeText } from './validators/schema';

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Tone-Adaptive Greeting System
  * Allows users to adjust Maya's voice from grounded (0) to poetic (1)

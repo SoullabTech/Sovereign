@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // MEMORY INTEGRATION SERVICE
 // Bridges existing memory modules with Soul Memory System

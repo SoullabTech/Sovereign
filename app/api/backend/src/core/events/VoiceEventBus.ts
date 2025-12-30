@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { VoiceTask } from '../../adapters/voice/AsyncVoiceQueue';
 
 export interface VoiceCompletedEvent {

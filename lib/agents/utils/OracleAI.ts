@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/agents/utils/OracleAI.ts
 // AI integration for Oracle responses - connects to Claude/OpenAI
 

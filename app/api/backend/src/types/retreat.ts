@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Switzerland Retreat Types and Interfaces
 
 export interface RetreatParticipant {

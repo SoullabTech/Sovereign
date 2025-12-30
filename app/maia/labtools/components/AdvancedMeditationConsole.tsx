@@ -295,7 +295,7 @@ export function AdvancedMeditationConsole({ service }: Props) {
       harmonicGain.gain.value = 0.1 / (index + 2); // Decreasing amplitude
 
       harmonicOsc.connect(harmonicGain);
-      harmonicGain.connect(gainRef.current);
+      harmonicGain.connect(gainRef.current!);
       harmonicOsc.start();
       oscillatorRef.current.push(harmonicOsc);
     });
@@ -313,7 +313,7 @@ export function AdvancedMeditationConsole({ service }: Props) {
       quantumGain.gain.value = 0.05; // Very subtle
 
       quantumOsc.connect(quantumGain);
-      quantumGain.connect(gainRef.current);
+      quantumGain.connect(gainRef.current!);
       quantumOsc.start();
       oscillatorRef.current.push(quantumOsc);
     }

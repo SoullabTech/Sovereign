@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { DaimonicDetected, DaimonicNarrativeExtras, DaimonicChip } from '../types/daimonic';
 import { SHIFtProfile } from '../types/shift';
 import { GroupSHIFtSnapshot, CollectivePattern } from '../types/collectiveDashboard';

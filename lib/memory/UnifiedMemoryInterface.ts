@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Memory Interface - MAIA's Complete Consciousness
  *

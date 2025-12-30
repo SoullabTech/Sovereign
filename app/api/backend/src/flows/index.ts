@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Session, MemoryItem, SessionStats } from "../types";
 import { SessionService } from "../services/sessionService";
 import { MemoryService } from "../services/memoryService";

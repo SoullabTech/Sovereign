@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AgentResponse } from "../types/agentResponse";
 import { getRitualForPhase } from "../lib/ritualEngine";
 import { getElementalPhase } from "../lib/spiralLogic";

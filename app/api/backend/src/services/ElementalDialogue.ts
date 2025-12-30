@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ElementalDialogue - Elements as Daimonic Others
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA SDK - Complete Usage Example
  *

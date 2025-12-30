@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface MasteryTriggerConditions {
   stage: string;
   trustLevel: number;

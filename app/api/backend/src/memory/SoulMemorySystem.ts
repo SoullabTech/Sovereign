@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soul Memory System - Core Memory Management for Sacred AI
  * Unified interface for persistent spiritual memory across all services

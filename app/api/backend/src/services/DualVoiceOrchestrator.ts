@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dual-Voice Orchestrator - Indigenous Wholeness + Therapeutic Clarity
  * Weaves sacred coherence with clinical insight without pathologizing

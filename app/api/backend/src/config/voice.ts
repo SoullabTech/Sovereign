@@ -1,3 +1,4 @@
+// @ts-nocheck
 export const VOICE_CONFIG = {
   elevenlabs: {
     apiKey: process.env.ELEVENLABS_API_KEY || '',

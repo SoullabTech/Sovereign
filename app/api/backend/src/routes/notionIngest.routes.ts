@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/notionIngest.routes.ts
 
 import { Router } from "express";

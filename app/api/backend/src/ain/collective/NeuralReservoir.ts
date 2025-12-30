@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Neural Reservoir for Collective Intelligence Processing
  * Central pattern aggregation and field state computation for the AIN system

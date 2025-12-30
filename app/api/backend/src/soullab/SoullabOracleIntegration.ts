@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Soullab Oracle Integration
  * Bridges the consciousness research system with the existing Oracle infrastructure

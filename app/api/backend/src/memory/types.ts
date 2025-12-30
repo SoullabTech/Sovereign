@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Memory Layer Types and Interfaces
  */

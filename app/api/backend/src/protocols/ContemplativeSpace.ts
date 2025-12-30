@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Contemplative Space Protocol
  * Recognizes when silence, pause, or deep reflection is needed

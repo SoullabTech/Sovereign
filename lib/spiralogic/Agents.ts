@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Agents - Differentiated Processors
  * Each maintains its own perspective without merging

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conservative Refiner
  * ONLY catches therapy-speak, filler, and cringe

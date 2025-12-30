@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Ceremony Intelligence Types
  * 

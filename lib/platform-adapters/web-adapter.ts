@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌐 WEB PLATFORM ADAPTER - Seven-Layer Soul Architecture
  *

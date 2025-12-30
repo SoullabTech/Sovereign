@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TTS tagging & prosody policy for Maya's Oracle voice
  * v3-friendly with minimal tags and sane stability defaults

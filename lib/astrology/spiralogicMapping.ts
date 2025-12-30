@@ -249,10 +249,6 @@ export const ELEMENTAL_FACET_COMBINATIONS: Record<string, {
     facetName: 'Strategic Communication',
     description: 'Enhancing clarity in conveying ideas (Clear Communication + Higher Purpose)',
   },
-  'earth-aether': {
-    facetName: 'Unity and Purpose',
-    description: 'Creating collective purpose and interconnectedness (Spiritual Connection + Practical Grounding)',
-  },
 };
 
 /**

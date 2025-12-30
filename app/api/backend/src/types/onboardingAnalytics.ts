@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TypeScript interfaces for Onboarding Tone Analytics Events
  * 

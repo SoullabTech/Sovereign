@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌊 Water Service - Emotional Agent
  * Hybrid edge-cloud service for emotional sensing and intuitive guidance

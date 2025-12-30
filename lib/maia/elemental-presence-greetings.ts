@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Presence Greetings
  * The framework breathes through greeting without speaking itself

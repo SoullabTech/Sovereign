@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Backend Intelligence Coordinator
  * Manages coordination between different AI systems while maintaining

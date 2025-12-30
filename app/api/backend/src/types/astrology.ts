@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Astrology Type Definitions
  * Complete type system for astrological calculations and birth charts

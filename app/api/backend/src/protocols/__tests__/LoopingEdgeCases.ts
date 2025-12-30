@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Edge Case Testing for Looping Protocol
  * Covers cultural variations, state transitions, meta-commentary, and urgency

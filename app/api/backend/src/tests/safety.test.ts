@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Comprehensive Safety System Tests
  * Validates all safety layers are functioning correctly

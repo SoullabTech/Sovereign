@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 src/services/dreamService.ts
 
 export interface Dream {

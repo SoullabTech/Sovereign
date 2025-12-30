@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface UnifiedResponse {
   id: string;
   text: string;

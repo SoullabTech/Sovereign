@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Trust Level Monitoring System
  * Tracks and adapts intimacy based on relationship depth

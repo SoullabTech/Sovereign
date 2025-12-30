@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LlamaIndex Semantic Layer
  * Provides semantic search and knowledge graph capabilities

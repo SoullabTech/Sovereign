@@ -1,24 +1,23 @@
 /**
  * Shared Database Pool
  *
- * Centralized database connection for learning system services.
- * Currently implements a placeholder that can be replaced with actual
- * PostgreSQL or Supabase connection.
+ * Re-exports the main PostgreSQL connection from lib/db/postgres.ts
+ * This provides backward compatibility for files importing from lib/database/pool
  */
+
+import { query } from '../db/postgres';
+import type { QueryResult, QueryResultRow } from 'pg';
 
 /**
  * Database pool interface for PostgreSQL-style queries
- *
- * This is a placeholder implementation. In production, replace with:
- * - PostgreSQL pool (pg module)
- * - Supabase client with query adapter
- * - Prisma client
+ * Wraps the main postgres query function
  */
 export const pool = {
-  async query(text: string, params?: any[]) {
-    // This is a placeholder - replace with your actual database connection
-    // For example: return await yourPgPool.query(text, params);
-    throw new Error('Database connection not implemented - replace with your PostgreSQL setup');
+  async query<T extends QueryResultRow = any>(
+    text: string,
+    params?: any[]
+  ): Promise<QueryResult<T>> {
+    return query<T>(text, params);
   }
 };
 

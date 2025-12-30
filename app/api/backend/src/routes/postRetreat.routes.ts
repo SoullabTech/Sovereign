@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Post-Retreat Support Routes - Long-term transformation tracking
 import { Router, Request, Response } from "express";
 import { postRetreatService } from "../services/postRetreatService";

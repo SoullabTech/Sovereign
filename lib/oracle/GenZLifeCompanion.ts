@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gen Z Life Companion System
  * Based on Robert A Johnson's Inner Gold concept

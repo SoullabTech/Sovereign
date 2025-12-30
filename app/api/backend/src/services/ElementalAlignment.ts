@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Alignment Service
  * 

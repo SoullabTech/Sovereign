@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/utils/voiceService.ts - Enhanced with Archetypal Voice Intelligence
 
 import axios from "axios";

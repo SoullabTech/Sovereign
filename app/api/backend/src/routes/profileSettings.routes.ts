@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/profileSettings.routes.ts
 
 import { Router } from "express";

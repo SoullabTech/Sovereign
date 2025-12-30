@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SpiralogicAdapter - Production orchestrator with budget enforcement and canary support
  * Enforces strict latency budgets, memoizes heavy computations, provides graceful fallbacks

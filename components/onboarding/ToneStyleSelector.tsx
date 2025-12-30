@@ -25,7 +25,7 @@ export default function ToneStyleSelector({
   const [style, setStyle] = useState<'prose' | 'poetic' | 'auto'>(initialStyle);
 
   const handleSave = () => {
-    onFinish({ tone, style });
+    onFinish?.({ tone, style });
   };
 
   // Ceremonial ripple effect when switching modes

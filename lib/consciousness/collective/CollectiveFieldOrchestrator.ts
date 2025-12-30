@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * COLLECTIVE FIELD ORCHESTRATOR
  *

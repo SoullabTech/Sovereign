@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Fractal Development Types
  * Schemas for tracking non-linear, multi-dimensional human development

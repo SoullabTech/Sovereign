@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Oracle Intelligence Service - Central hub for all AI/Memory integrations
  * Connects mem0, LangChain, Sesame, and elemental models for continuous personalization

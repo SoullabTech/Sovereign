@@ -7,6 +7,12 @@ interface ResumeSessionPromptProps {
   onResume?: () => void;
   onNewSession?: () => void;
   lastSessionTime?: string;
+  // OracleConversation-expected properties
+  isOpen?: boolean;
+  remainingTime?: string;
+  phase?: any;
+  onStartNew?: () => void;
+  onDismiss?: () => void;
 }
 
 export function ResumeSessionPrompt({ onResume, onNewSession, lastSessionTime }: ResumeSessionPromptProps) {

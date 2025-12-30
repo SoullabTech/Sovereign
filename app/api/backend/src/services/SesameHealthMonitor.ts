@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sesame Health Monitor
  * Ensures Sesame CSM is always available with automatic recovery

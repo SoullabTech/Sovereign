@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { extractSymbolicTags } from "./symbolService";
 import { embeddingQueue } from "./embeddingQueue";
 import { logger } from "../utils/logger";

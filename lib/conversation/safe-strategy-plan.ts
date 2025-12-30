@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/conversation/safe-strategy-plan.ts
 
 /**

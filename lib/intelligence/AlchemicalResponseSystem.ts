@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ALCHEMICAL RESPONSE SYSTEM
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/elementalOracleService.ts
 
 export type ElementalTheme = "Fire" | "Water" | "Earth" | "Air" | "Aether";

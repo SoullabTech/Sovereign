@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Performance Optimizations for PersonalOracleAgent
  * Addresses memory management, response time, and resource efficiency

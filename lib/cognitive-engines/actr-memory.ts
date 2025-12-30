@@ -11,7 +11,7 @@ import { WisdomPlan } from './soar-planner';
 
 import { ConsciousnessProfile, ChristianFaithContext, ElementalFramework } from '@/lib/types';
 
-interface DeclarativeMemory {
+export interface DeclarativeMemory {
   id: string;
   type: 'spiritual_insight' | 'emotional_pattern' | 'archetypal_wisdom' | 'elemental_knowledge' | 'consciousness_marker';
   content: string;
@@ -26,7 +26,7 @@ interface DeclarativeMemory {
   strengtheningSources: string[];
 }
 
-interface ProceduralMemory {
+export interface ProceduralMemory {
   id: string;
   name: string;
   type: 'wisdom_generation' | 'healing_response' | 'breakthrough_catalyst' | 'integration_process' | 'consciousness_evolution';
@@ -42,7 +42,7 @@ interface ProceduralMemory {
   effectiveness: number;
 }
 
-interface MemoryChunk {
+export interface MemoryChunk {
   declarative: DeclarativeMemory;
   proceduralLinks: string[]; // IDs of related procedural memories
   strengthening: number;
@@ -50,7 +50,7 @@ interface MemoryChunk {
   contextualCues: string[];
 }
 
-interface LearningEvent {
+export interface LearningEvent {
   type: 'success' | 'failure' | 'partial_success';
   procedureId: string;
   context: string;
@@ -61,7 +61,7 @@ interface LearningEvent {
   strengthening: number;
 }
 
-interface MemoryIntegration {
+export interface MemoryIntegration {
   proceduralWisdom: ProceduralMemory[];
   declarativeWisdom: DeclarativeMemory[];
   experiencePattern: ExperiencePattern;
@@ -70,7 +70,7 @@ interface MemoryIntegration {
   memoryStrengthening: MemoryStrengthening;
 }
 
-interface ExperiencePattern {
+export interface ExperiencePattern {
   recurringThemes: string[];
   successfulStrategies: string[];
   challengingAreas: string[];
@@ -79,7 +79,7 @@ interface ExperiencePattern {
   archetypalDevelopment: ArchetypalDevelopment;
 }
 
-interface GrowthPoint {
+export interface GrowthPoint {
   timestamp: number;
   consciousnessLevel: number;
   spiralPhase: string;
@@ -87,11 +87,24 @@ interface GrowthPoint {
   integrationLevel: number;
 }
 
-interface LearningUpdate {
+export interface LearningUpdate {
   strengthenedProcedures: string[];
   newDeclarativeMemories: DeclarativeMemory[];
   evolutionMarkers: string[];
   nextLearningTargets: string[];
+}
+
+// Forward declarations for WisdomEvolution and MemoryStrengthening
+export interface WisdomEvolution {
+  evolutionLevel: number;
+  growthTrajectory: string[];
+  integrationMarkers: string[];
+}
+
+export interface MemoryStrengthening {
+  strengthenedPaths: string[];
+  consolidationLevel: number;
+  reinforcementScore: number;
 }
 
 export class ACTRMemory {

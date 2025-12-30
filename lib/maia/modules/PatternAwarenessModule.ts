@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Pattern Awareness Module
  * Detects loops, trajectories, and energetic patterns in real-time

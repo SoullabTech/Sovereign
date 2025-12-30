@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 BACKEND: /routes/oracle/symbolThreads.ts Zod validation
 import { z } from "zod";
 

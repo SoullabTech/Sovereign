@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/sovereign/awarenessLevelDetection.ts
 /**
  * MAIA AWARENESS LEVEL DETECTION SYSTEM

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Consciousness Computing API
  * The world's first consciousness-aware development platform

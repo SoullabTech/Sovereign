@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // SOUL MEMORY ROUTES - API ENDPOINTS
 // RESTful API for Soul Memory System

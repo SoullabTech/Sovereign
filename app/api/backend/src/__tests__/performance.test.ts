@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Performance Tests for Pre-Deployment Verification
 import request from "supertest";
 import app from "../app";

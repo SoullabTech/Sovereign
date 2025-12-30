@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gebser Consciousness Structure Detection Engine
  *

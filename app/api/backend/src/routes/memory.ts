@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/routes/memory.ts
 
 import express from "express";

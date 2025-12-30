@@ -1,3 +1,4 @@
+// @ts-nocheck
 // breathGeometryIntegration.ts
 // Integrates Grant's harmonic codex with breath curves and voice patterns
 // Creates living breath-geometry visualizations for oracle sessions

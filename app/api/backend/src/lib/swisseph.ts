@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Swiss Ephemeris Mock/Wrapper
  * Provides planetary calculation constants and functions

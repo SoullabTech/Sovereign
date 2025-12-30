@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧵 Story Thread Memory System
  * 

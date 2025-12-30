@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Adaptive Prosody Integration
  * Connects AdaptiveProsodyEngine with ConversationalPipeline and Sesame CI

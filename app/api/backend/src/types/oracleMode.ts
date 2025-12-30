@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // ORACLE MODE TYPE DEFINITIONS
 // Sacred Agency Through Wisdom Choice

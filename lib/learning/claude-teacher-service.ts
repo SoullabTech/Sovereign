@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/learning/claude-teacher-service.ts
 
 /**

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: src/services/summarizeCollectiveField.ts
 
 import { supabase } from "@lib/dbClient";

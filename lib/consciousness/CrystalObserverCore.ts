@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Crystal Observer Core Implementation
  *

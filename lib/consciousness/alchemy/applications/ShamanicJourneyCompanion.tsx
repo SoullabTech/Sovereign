@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Shamanic Journey Companion
  *

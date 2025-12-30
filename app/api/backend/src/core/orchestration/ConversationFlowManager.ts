@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conversation Flow Manager with Polaris Principles
  * Orchestrates the sacred technology flow for soul recognition

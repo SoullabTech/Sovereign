@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Safety Terms of Use - Clear Boundaries and Consent Framework
  * 

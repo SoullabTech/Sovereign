@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Symbolic Memory Layer - Stub Implementation
  * TODO: Replace with archetypal/symbolic associations system

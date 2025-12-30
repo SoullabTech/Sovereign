@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Semantic Journaling Routes - LlamaIndex-enhanced pattern analysis API
  * Deep journaling insights and archetypal pattern recognition

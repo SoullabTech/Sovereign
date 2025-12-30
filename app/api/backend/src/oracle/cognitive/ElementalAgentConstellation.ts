@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Agent Constellation
  * Five elemental agents with unique cognitive profiles

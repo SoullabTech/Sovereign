@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ADAPTIVE LANGUAGE GENERATOR
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // DEEP Path with Claude Consultation Service
 // MAIA always has sovereignty - Claude provides backstage coaching only
 // Integration point between local intelligence and consultation guidance

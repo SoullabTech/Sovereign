@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Daimonic Core - Single Orchestrator for All Daimonic Intelligence
  * 

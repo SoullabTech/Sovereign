@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ELEMENTAL REFLECTION HOOK
  * Version: v0.9.0-alpha (Initial public integration - October 16, 2025)

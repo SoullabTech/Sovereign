@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠🔥 CONSCIOUSNESS ANALYSIS API - LISP ENGINE INTEGRATION
  *

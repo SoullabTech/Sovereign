@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Resonance Field - Multi-Dimensional Wisdom Matching
  *

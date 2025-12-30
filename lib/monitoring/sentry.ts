@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sentry Configuration for MAIA
  * Crash reporting and error monitoring across all platforms

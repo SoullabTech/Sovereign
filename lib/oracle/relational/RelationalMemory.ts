@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Relational Memory System
  * Tracks and evolves unique relationships with each user

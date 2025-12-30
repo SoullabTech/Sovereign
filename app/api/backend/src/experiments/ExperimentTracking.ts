@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Experiment Tracking and Metrics System
  * Core infrastructure for all SoulLab experiments

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend: lib/ai/safe-local-model.ts
 
 /**

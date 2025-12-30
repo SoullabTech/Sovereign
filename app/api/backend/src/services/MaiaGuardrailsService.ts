@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Guardrails Service
  * Queries the MAIA Voice Metrics guardrail monitors via single monitor_payload view

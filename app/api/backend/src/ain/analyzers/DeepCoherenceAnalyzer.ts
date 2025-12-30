@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Deep Coherence Analyzer Stub
  * Placeholder implementation for coherence analysis

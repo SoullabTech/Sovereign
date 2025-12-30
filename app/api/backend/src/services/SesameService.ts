@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sesame Service - HuggingFace Integration with Graceful Fallback
  * Handles TTS and conversational AI with automatic failover

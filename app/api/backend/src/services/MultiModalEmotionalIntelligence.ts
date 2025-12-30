@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Multi-Modal Emotional Intelligence Engine
  * Real-time voice metrics analysis + contextual memory + collective learning

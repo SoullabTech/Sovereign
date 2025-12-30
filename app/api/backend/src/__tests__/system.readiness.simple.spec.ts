@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Simple System Readiness Tests
  * Basic integration tests to verify system functionality

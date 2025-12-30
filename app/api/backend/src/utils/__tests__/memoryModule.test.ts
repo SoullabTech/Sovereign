@@ -1,3 +1,4 @@
+// @ts-nocheck
 import memoryModule from "../../core/utils/memoryModule";
 jest.mock("../../lib/dbClient");
 

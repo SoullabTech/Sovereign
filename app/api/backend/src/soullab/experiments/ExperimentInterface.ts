@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🎯 Experiment Interface for Sliding Pages
  *

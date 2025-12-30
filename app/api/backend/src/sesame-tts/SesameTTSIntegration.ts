@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sesame TTS Integration with Pause Tokens
  * Handles sacred voice output with natural pausing

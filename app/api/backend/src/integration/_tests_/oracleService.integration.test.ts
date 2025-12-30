@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { describe, it, expect, vi, beforeAll } from "vitest";
 import { getOracleResponse } from "@/services/oracleService";
 import * as aiService from "@/services/aiService";

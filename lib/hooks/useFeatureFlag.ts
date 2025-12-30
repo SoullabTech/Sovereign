@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useState, useEffect } from "react";
 import { FEATURE_FLAGS, hasPhase2Access } from "@/config/features";
 /**

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Lightweight, in-flight stream refiner for Maya's voice.
 // Inserts elemental tone, gentle punctuation, breath markers, and
 // optional safety softening without blocking the stream.

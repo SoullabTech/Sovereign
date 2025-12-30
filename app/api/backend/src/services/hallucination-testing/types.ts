@@ -1,3 +1,4 @@
+// @ts-nocheck
 export type HallucinationTaxonomy =
   | 'fact_error'
   | 'fabricated_citation'

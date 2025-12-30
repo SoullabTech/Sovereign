@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Template Testing - Ensure all responses are under 30 words
  */

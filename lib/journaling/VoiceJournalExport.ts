@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { VoiceJournalSession } from './VoiceJournalingService';
 import { JOURNALING_MODES } from './JournalingPrompts';
 

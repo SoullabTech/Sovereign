@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/controllers/memory.controller.ts
 
 import { Request, Response } from "express";

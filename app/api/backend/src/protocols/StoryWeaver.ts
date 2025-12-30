@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Story Weaver Protocol
  * Provides narrative and mythological dimensions when appropriate

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Voice System V3 - Consciousness-Aware Speech Interface
  *

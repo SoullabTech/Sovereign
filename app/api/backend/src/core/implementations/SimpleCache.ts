@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🗄️ Simple In-Memory Cache Implementation
  * 

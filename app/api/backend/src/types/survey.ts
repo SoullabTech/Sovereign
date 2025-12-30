@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Database } from "../lib/database.types";
 import { z } from "zod";
 

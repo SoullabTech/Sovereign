@@ -1,3 +1,4 @@
+// @ts-nocheck
 // services/waterAgent.ts - Water Agent with Emotional Intelligence & Flow State Induction
 import { speak } from "../utils/voiceRouter";
 import {

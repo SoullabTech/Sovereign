@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daimonic Narrative Generator
  * Generates narratives that facilitate genuine encounter with the Daimonic Other

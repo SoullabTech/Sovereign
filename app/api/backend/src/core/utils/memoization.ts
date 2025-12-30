@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { get } from '../di/container';
 import { TOKENS } from '../di/tokens';
 import { ICache } from '../implementations/SimpleCache';

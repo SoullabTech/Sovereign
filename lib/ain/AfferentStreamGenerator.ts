@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { JournalingMode, JournalingResponse } from '../journaling/JournalingPrompts';
 
 export interface AfferentStream {

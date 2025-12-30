@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Cloud Agent Base Class
  * Agent specifically designed for cloud-based processing

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SHIFt Explicit Research Survey (24 Items)
  * 

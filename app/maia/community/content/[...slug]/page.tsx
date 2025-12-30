@@ -751,7 +751,7 @@ const typeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
 export default function ContentPage() {
   const params = useParams();
   const router = useRouter();
-  const slugArray = params.slug as string[];
+  const slugArray = params?.slug as string[] ?? [];
   const fullSlug = slugArray?.join('/') || '';
 
   const content = contentMap[fullSlug];

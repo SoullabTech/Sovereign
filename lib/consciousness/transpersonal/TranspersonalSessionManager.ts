@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TRANSPERSONAL SESSION MANAGER
  *

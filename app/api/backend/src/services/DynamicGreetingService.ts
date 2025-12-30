@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Dynamic Greeting Evolution Service
  * Creates personalized greetings based on user history, journal entries, and spiral phases

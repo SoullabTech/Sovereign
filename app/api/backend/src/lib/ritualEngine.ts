@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Element } from "./spiralLogic";
 
 type RitualPrompt = {

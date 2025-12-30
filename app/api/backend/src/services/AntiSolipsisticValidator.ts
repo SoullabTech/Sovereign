@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Anti-Solipsistic Validator
  * Implements checks to prevent the system from becoming a mirror

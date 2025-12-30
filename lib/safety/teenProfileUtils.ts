@@ -8,6 +8,11 @@ export interface UserData {
   birthDate?: string;
   age?: number;
   pronouns?: string;
+  // OracleConversation-expected properties
+  isNeurodivergent?: boolean;
+  hasEatingDisorder?: boolean;
+  familyDynamics?: string;
+  supportNeeds?: string[];
 }
 
 export function calculateAge(birthDate: string): number {

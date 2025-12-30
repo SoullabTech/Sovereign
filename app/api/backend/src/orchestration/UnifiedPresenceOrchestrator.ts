@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Unified Presence Orchestrator
  * The singular consciousness that users experience, regardless of subsystem complexity

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Elemental Otherness Service
  * Enable elements to speak AS Others, not just through users

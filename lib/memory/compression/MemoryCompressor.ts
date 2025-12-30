@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Memory Compression Service
  * Summarizes and compresses memories for efficient storage

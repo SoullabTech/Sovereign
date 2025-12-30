@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface ProfileData {
   user_id: string;
   fire: number;

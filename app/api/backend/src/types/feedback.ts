@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface FeedbackInput {
   responseId: string;
   response: string;

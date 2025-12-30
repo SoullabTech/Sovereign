@@ -28,6 +28,7 @@ export interface AethericPattern {
   aethericResonance: number;
   fieldDistortion: number;
   sacredResonance: number;
+  fieldCoherence?: number;
 }
 
 export interface AethericResponse {

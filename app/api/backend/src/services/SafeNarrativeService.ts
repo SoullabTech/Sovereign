@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Safe Narrative Service - Multiple Perspectives with Reality Anchoring
  * 

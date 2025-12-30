@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Mirror Archetypal Agent Configuration
  * Ensures adaptive, archetypal responses - never canned text

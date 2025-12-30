@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AIN Collective Intelligence System
  * Export all components for production-grade consciousness field

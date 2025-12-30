@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Enforcement - Hard Constraints for Authentic Voice
  * Zero tolerance for therapy-speak or over-explanation

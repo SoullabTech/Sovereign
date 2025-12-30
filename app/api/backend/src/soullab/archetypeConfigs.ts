@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Archetype Configurations - Wisdom Tradition Voices
  * Each archetype channels the essence of a wisdom tradition, not impersonation

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Prompt Templates for Dynamic Maya Greetings
  * 

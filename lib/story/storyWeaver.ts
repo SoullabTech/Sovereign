@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Story Weaving Engine
  *

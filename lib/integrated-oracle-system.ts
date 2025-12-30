@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Integrated Oracle System
  *

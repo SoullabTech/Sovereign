@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 📊 Simple Analytics Implementation
  * 

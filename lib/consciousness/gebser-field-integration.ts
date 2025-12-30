@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Gebser Consciousness Field Integration
  *

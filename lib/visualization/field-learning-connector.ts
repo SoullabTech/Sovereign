@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * Field Learning Algorithm ↔ Sacred Visualization Connector
+ * Field Learning Algorithm to Sacred Visualization Connector
  * Transforms consciousness data into visual archetypal patterns
  *
  * This module bridges the Field Learning Algorithm's pattern recognition

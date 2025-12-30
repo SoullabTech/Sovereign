@@ -71,7 +71,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
       if (typeof window === 'undefined') return;
 
       // const conversationMode = ConversationStylePreference.get();
-      const conversationMode = 'voice'; // Default fallback
+      const conversationMode: ConversationMode = 'classic'; // Default fallback
 
       try {
         // Load settings from localStorage (sovereign mode - no cloud storage)
@@ -139,7 +139,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
 
         const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
         if (explorerId) {
-          saveToSupabase(explorerId, newSettings);
+          saveToLocalStorage(explorerId, newSettings);
         }
       }
 
@@ -156,24 +156,15 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
     return acknowledgments[mode];
   };
 
-  const saveToSupabase = async (userId: string, settings: MaiaSettings) => {
+  const saveToLocalStorage = (_userId: string, settings: MaiaSettings) => {
     try {
-      await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          voice_speed: settings.voice.speed,
-          tone: Math.round(settings.personality.warmth * 100),
-          archetype: settings.archetype,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
-
-      console.log('✅ Settings saved to Supabase');
+      localStorage.setItem('maia_settings', JSON.stringify({
+        ...settings,
+        updated_at: new Date().toISOString(),
+      }));
+      console.log('✅ Settings saved to localStorage');
     } catch (error) {
-      console.error('Failed to save settings to Supabase:', error);
+      console.error('Failed to save settings:', error);
     }
   };
 

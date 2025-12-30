@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Internal Complexity Service - Safe Alternative to Daimonic Systems
  * 

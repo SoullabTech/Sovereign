@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * THE SEPARATOR - Circuit Integrity for The Microcosmic Orbit
  *

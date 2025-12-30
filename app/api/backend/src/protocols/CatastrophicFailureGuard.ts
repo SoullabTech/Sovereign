@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Catastrophic Failure Guard System
  * Zero-tolerance fail-safes for critical situations

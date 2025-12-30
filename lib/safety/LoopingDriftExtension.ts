@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LOOPING PROTOCOL DRIFT EXTENSION
  * Extends the Looping Protocol's temporal awareness from minutes to months

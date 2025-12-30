@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Alchemical Framework for MAIA-SOVEREIGN
  * Integrates Jungian Alchemy with Consciousness Field Infrastructure

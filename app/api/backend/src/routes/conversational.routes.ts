@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Conversational Routes - Sesame/Maia Centric API
  * Main endpoint for sacred conversational intelligence

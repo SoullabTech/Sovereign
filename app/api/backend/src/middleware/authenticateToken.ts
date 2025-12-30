@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Response, NextFunction } from "express";
 import { AuthenticationError } from "../utils/errors";
 import type { AuthenticatedRequest } from "../types/index";

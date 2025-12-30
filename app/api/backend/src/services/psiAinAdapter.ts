@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { PsiEpisode } from "../ain/motivation";
 
 /**

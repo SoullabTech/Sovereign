@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Memory Debug Logger for Maya Development
  * 

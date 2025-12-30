@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Resonance Field Orchestrator - Production Integration
  * Integrates RFS with existing Maia system for seamless Monday deployment

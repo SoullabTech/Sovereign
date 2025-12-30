@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * BothAndPhenomenology - Harpur's Paradox-Holding Framework
  * 

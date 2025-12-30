@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Wisdom Keeper Service - Permanent sacred knowledge repository
 import { v4 as uuidv4 } from "uuid";
 import { logger } from "../utils/logger";

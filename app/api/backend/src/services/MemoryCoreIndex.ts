@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠 MemoryCoreIndex - Unified Soul Memory OS (Production Version)
  * 

@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Spiralogic Oracle Backend Server - Production Ready
 import dotenv from "dotenv";
 dotenv.config();

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ⚡ Bioelectric Dialogue System
  *

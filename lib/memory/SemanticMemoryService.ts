@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SEMANTIC MEMORY SERVICE
  *

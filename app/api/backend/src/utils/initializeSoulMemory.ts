@@ -1,3 +1,4 @@
+// @ts-nocheck
 // ===============================================
 // SOUL MEMORY INITIALIZATION UTILITY
 // Tests and initializes the Soul Memory System

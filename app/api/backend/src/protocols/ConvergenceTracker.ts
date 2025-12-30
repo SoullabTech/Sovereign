@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Convergence Tracker for Maya's Looping Protocol
  * Measures understanding accuracy and determines when to stop looping

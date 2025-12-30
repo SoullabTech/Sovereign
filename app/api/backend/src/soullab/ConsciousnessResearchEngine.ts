@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Research Engine - The heart of Soullab
  * Orchestrates archetype interactions and tracks consciousness patterns

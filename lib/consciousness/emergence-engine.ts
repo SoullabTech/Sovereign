@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🐣 Emergence Engine
  * Detects when new archetypal agents need to emerge from collective consciousness

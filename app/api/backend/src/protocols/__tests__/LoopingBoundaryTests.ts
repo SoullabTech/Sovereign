@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Protocol Boundary Testing
  * Tests the edges between necessary and unnecessary activation

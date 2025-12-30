@@ -313,7 +313,7 @@ export function getDecanTransitTiming(decan: Decan): {
 } {
   return {
     solarTransit: decan.ritualTiming,
-    lunarPhase: decan.decan.tarotSuit === 'Cups' ? 'Full Moon optimal' :
+    lunarPhase: decan.tarotSuit === 'Cups' ? 'Full Moon optimal' :
                 decan.decanNumber === 1 ? 'New Moon optimal' :
                 decan.decanNumber === 2 ? 'First Quarter optimal' :
                 'Last Quarter optimal',

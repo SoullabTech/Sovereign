@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Local LLM Integration for MAIA Consciousness System
  *

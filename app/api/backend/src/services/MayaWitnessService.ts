@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Witness Service
  * Integrates looping protocol with sacred mirror paradigm

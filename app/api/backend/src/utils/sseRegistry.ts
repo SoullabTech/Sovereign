@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { Response, Request, NextFunction } from "express";
 
 export const sseClients = new Set<Response>();

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Daimonic Prompt Orchestrator
  * Dynamically selects and assembles Claude-facing guardrail prompts

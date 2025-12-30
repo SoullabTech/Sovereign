@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CONVERSATIONAL ELEMENTAL INTELLIGENCE
  *

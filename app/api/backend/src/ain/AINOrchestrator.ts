@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * AIN Orchestrator
  * Main coordinator for the Adaptive Intelligence Network

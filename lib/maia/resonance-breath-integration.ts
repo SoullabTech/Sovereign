@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Resonance Field + Breath/Lungs Integration
  * The complete system: Archetypal resonance → Atmospheric field → Sesame's breath

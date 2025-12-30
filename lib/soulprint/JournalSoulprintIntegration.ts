@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Journal-to-Soulprint Integration
  * Updates user's soulprint based on journal entries

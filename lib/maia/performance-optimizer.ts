@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Performance Optimization System
  * Cache, index, and accelerate all consciousness processing

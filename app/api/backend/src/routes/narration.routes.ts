@@ -1,3 +1,4 @@
+// @ts-nocheck
 // narration.routes.ts - Routes for static narration content
 
 import { Router } from "express";

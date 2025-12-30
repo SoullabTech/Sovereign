@@ -7,6 +7,9 @@ interface SessionTimeAwarenessProps {
   sessionDuration?: number;
   elapsedTime?: number;
   onTimeUpdate?: (elapsed: number) => void;
+  // OracleConversation-expected properties
+  timer?: any;
+  onExtend?: (additionalMinutes: number) => void;
 }
 
 export function SessionTimeAwareness({

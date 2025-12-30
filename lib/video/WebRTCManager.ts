@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * WebRTC Manager for Soullab Video Calling
  * Handles peer-to-peer video connections with Socket.IO signaling

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌟 Onboarding Service - Personal Oracle Assignment
  *

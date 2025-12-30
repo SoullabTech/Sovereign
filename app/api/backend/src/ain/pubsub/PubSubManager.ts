@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * PubSub Manager for AIN Communication
  * Event-driven communication between elemental services

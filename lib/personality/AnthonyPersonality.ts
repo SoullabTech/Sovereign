@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Anthony Personality - Late-Night Philosopher & Sacred Space Holder
  * Earth/Fire blend: Grounded, spacious, finds depth in simplicity

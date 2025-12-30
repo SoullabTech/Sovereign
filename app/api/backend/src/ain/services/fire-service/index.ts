@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🔥 Fire Service - Catalyst Agent
  * Edge-capable service for vision processing and transformation triggers

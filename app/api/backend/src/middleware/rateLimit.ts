@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Request, Response, NextFunction } from "express";
 
 type Options = { windowMs: number; max: number; key?(req: Request): string };

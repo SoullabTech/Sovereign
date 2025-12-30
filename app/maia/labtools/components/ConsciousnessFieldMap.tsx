@@ -83,7 +83,7 @@ export function ConsciousnessFieldMap({ service }: ConsciousnessFieldMapProps) {
         />
         <FieldMetric
           label="Coupling"
-          value={fieldData?.couplings?.reduce((avg, c) => avg + c.coupling, 0) / (fieldData?.couplings?.length || 1) || 0}
+          value={(fieldData?.couplings?.reduce((avg, c) => avg + c.coupling, 0) ?? 0) / (fieldData?.couplings?.length || 1)}
           icon="🔗"
         />
       </div>

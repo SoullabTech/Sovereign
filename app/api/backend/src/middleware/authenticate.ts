@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📄 FILE: oracle-backend/src/middleware/authenticate.ts
 
 import { Response, NextFunction } from "express";

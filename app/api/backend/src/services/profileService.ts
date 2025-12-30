@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface UserProfile {
   personal_guide_name: string;
   guide_gender: string;

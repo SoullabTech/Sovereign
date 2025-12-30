@@ -13,7 +13,7 @@ export function FrequencySpectrum({ service }: FrequencySpectrumProps) {
   useEffect(() => {
     const handleEEGUpdate = (data: EEGState) => setEEGData(data);
     service.on('eegUpdate', handleEEGUpdate);
-    return () => service.off('eegUpdate', handleEEGUpdate);
+    return () => { service.off('eegUpdate', handleEEGUpdate); };
   }, [service]);
 
   const bands = [

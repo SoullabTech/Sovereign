@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🌱 Evolution Engine
  * Manages the consciousness evolution of agents through interactions

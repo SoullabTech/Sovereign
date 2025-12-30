@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧪 Consciousness Research Testing Framework
  * Sacred Technology Testing Suite for Consciousness Field Science

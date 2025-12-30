@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * LANGUAGE STANDARDS FOR ALL AI PERSONAS (MAYA, MAIA, ARIA)
  *

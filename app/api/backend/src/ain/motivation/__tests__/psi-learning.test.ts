@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { defaultPsiState } from "../../../services/psiService";
 import { psiLiteStep } from "../../motivation/psi-lite";
 import type { ActionOption, LearningParams } from "../../motivation/types";

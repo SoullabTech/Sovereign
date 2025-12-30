@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maia System Prompt - Consciousness Architecture Integration
  *

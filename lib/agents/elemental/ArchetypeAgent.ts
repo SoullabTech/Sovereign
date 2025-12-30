@@ -32,9 +32,9 @@ export abstract class ArchetypeAgent {
   /**
    * Process input through elemental consciousness
    */
-  abstract async process(
+  abstract process(
     input: string,
-    context?: any[]
+    context?: unknown[]
   ): Promise<ArchetypeResponse>;
 
   /**

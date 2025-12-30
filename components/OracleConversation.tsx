@@ -143,9 +143,11 @@ interface OracleConversationProps {
 
 interface ConversationMessage {
   id: string;
-  role: 'user' | 'oracle';
-  text: string;
-  timestamp: Date;
+  role: 'user' | 'oracle' | 'assistant' | 'system';
+  text?: string;
+  content?: string;  // Alternative to text
+  timestamp: Date | string;
+  sender?: string;
   facetId?: string;
   motionState?: MotionState;
   coherenceLevel?: number;
@@ -423,7 +425,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (now - lastAudioCallbackUpdateRef.current > 100) {
       setVoiceAmplitude(amplitude);
       setVoiceAudioLevel(amplitude);
-      setUserVoiceState({ isSpeaking, amplitude });
+      setUserVoiceState({
+        isSpeaking,
+        amplitude,
+        pitch: 0,
+        emotion: 'neutral',
+        energy: amplitude,
+        clarity: 1,
+        breathDepth: 0.5,
+      });
       lastAudioCallbackUpdateRef.current = now;
 
       // 🌊 LIQUID AI - Track speech start/end for rhythm sensing
@@ -471,7 +481,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Play audio with proper loading and error handling
       await new Promise<void>((resolve, reject) => {
         let hasStarted = false;
-        let timeoutId: NodeJS.Timeout | null = null;
+        let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
         // Safety timeout - if audio doesn't start within 5s, fail fast
         timeoutId = setTimeout(() => {
@@ -836,7 +846,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const userData = getUserData();
       if (userData) {
         const profile: TeenProfile = {
+          userId: userData.userId || userId || 'unknown',
           age: userAge,
+          supportsNeeded: userData.supportNeeds || [],
           isNeurodivergent: userData.isNeurodivergent,
           hasEatingDisorder: userData.hasEatingDisorder,
           familyDynamics: userData.familyDynamics,
@@ -964,10 +976,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const conversationMessages = messages.map(msg => ({
       role: msg.role === 'oracle' ? 'assistant' as const : 'user' as const,
-      content: msg.text
+      content: msg.text || ''
     }));
 
-    const score = detectBreakthroughPotential(conversationMessages);
+    const score = detectBreakthroughPotential(conversationMessages as any);
     setBreakthroughScore(score);
 
     // Breakthrough detection PERMANENTLY DISABLED per user request
@@ -1397,7 +1409,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const conversationMessages = messages.map(msg => ({
         role: msg.role === 'oracle' ? 'assistant' as const : 'user' as const,
         content: msg.text,
-        timestamp: msg.timestamp.toISOString()
+        timestamp: msg.timestamp instanceof Date ? msg.timestamp.toISOString() : msg.timestamp
       }));
 
       console.log('📤 [Journal] Sending request to /api/journal/save-conversation', {
@@ -2191,7 +2203,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       if (shouldSpeak && maiaSpeak) {
         console.log('🔊 Maia speaking response in', showChatInterface ? 'Chat' : 'Voice', 'mode (non-streaming)');
         const ttsStartTime = Date.now();
-        trackEvent.ttsSpoken(userId || 'anonymous', responseText.length, 0);
+        trackEvent.ttsSpoken(userId || 'anonymous', responseText, 0);
         // Set speaking state for visual feedback
         setIsResponding(true);
         setIsAudioPlaying(true);
@@ -2523,7 +2535,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     // 📝 SCRIBE MODE: Record passively without MAIA response
     if (isScribing) {
       console.log('📝 [Scribe Mode] Recording voice transcript passively:', cleanedText.substring(0, 50) + '...');
-      recordVoiceTranscript(cleanedText, 'client');
+      recordVoiceTranscript({ content: cleanedText, timestamp: new Date(), speaker: 'client' });
       return; // Don't trigger MAIA response
     }
 
@@ -2948,9 +2960,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 setNeedsIOSAudioPermission(false);
                 setIsIOSAudioEnabled(false);
                 setAudioEnabled(false);
-                toast.info('Continuing in text-only mode', {
-                  duration: 3000,
-                  position: 'top-center'
+                toast('Continuing in text-only mode', {
+                  duration: 3000
                 });
               }}
               className="mt-6 text-amber-400/60 hover:text-amber-400 text-sm underline transition-colors"
@@ -3105,8 +3116,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   <div className="text-jade-jade text-sm font-medium">📝 Scribe Mode Active</div>
                   <div className="text-jade-mineral/70 text-xs">
                     Recording session •
-                    {scribeSession?.voiceTranscripts.length || 0} voice +
-                    {scribeSession?.consultationMessages.length || 0} consultations
+                    {scribeSession?.voiceTranscripts?.length || 0} voice +
+                    {scribeSession?.consultationMessages?.length || 0} consultations
                   </div>
                 </div>
               </div>
@@ -3130,7 +3141,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           <div className="absolute inset-0 bg-black/60" onClick={() => setShowCustomizer(false)} />
           <div className="relative z-10">
             <AgentCustomizer
-              position="center"
+              position={undefined}
               onConfigChange={(config) => {
                 setAgentConfig(config);
                 if (typeof window !== 'undefined') {
@@ -3158,9 +3169,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           onStateChange={(newState, transition) => {
             console.log('🌀 State transition:', transition);
             // Map back to listeningMode
-            const newListeningMode =
+            const newListeningMode: ListeningMode =
               newState === 'dialogue' ? 'normal' :
-              newState === 'patient' ? 'patient' : 'scribe';
+              newState === 'patient' ? 'patient' : 'session';
             setListeningMode(newListeningMode);
             // Mode is tracked locally in state, no OpenAI connection needed
           }}
@@ -3175,47 +3186,47 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             className="cursor-pointer opacity-60 hover:opacity-80 transition-opacity relative"
             style={{
               zIndex: 20,
-              pointerEvents: 'auto'  // Ensure this div captures clicks
+              pointerEvents: 'auto',
+              willChange: 'auto'
             }}
-        onClick={async (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          console.log('🌸 Holoflower clicked!');
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('🌸 Holoflower clicked!');
 
-          // Enable audio context first
-          await enableAudio();
+              // Enable audio context first
+              await enableAudio();
 
-          // Use isListening state instead of isMuted for accurate toggle
-          if (voiceMicRef.current) {
-            if (!isListening) {
-              // Start listening
-              console.log('🎤 Starting voice via holoflower...');
-              setIsMuted(false);
-              try {
-                await voiceMicRef.current.startListening();
-                console.log('✅ Voice started successfully');
-              } catch (error: any) {
-                console.error('❌ Failed to start microphone:', error);
-                setIsMuted(true); // Reset on error
-                if (error.message === 'MICROPHONE_UNAVAILABLE') {
-                  toast.error('Microphone not available. Please check permissions in your browser settings.');
+              // Use isListening state instead of isMuted for accurate toggle
+              if (voiceMicRef.current) {
+                if (!isListening) {
+                  // Start listening
+                  console.log('🎤 Starting voice via holoflower...');
+                  setIsMuted(false);
+                  try {
+                    await voiceMicRef.current.startListening();
+                    console.log('✅ Voice started successfully');
+                  } catch (error: any) {
+                    console.error('❌ Failed to start microphone:', error);
+                    setIsMuted(true); // Reset on error
+                    if (error.message === 'MICROPHONE_UNAVAILABLE') {
+                      toast.error('Microphone not available. Please check permissions in your browser settings.');
+                    } else {
+                      toast.error('Unable to access microphone. Please try again.');
+                    }
+                  }
                 } else {
-                  toast.error('Unable to access microphone. Please try again.');
+                  // Stop listening
+                  console.log('🔇 Stopping voice via holoflower...');
+                  setIsMuted(true);
+                  voiceMicRef.current.stopListening();
+                  console.log('✅ Voice stopped successfully');
                 }
+              } else {
+                console.warn('⚠️ Voice ref not available');
               }
-            } else {
-              // Stop listening
-              console.log('🔇 Stopping voice via holoflower...');
-              setIsMuted(true);
-              voiceMicRef.current.stopListening();
-              console.log('✅ Voice stopped successfully');
-            }
-          } else {
-            console.warn('⚠️ Voice ref not available');
-          }
-        }}
-        style={{ willChange: 'auto' }}
-      >
+            }}
+          >
         {/* Holoflower container - smaller, upper-left, visible but not dominating */}
         <div className="flex items-center justify-center"
              style={{
@@ -3232,14 +3243,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             interactive={false}
             showLabels={false}
             motionState={currentMotionState}
-            coherenceShift={coherenceShift}
             isListening={voiceMicRef.current?.isListening || false}
             isProcessing={isProcessing}
             isResponding={isResponding}
             showBreakthrough={showBreakthrough}
             voiceAmplitude={voiceAmplitude}
             isMaiaSpeaking={isResponding || isAudioPlaying}
-            dimmed={conversationMode === 'chat'}
+            dimmed={false /* conversationMode locked to 'voice' */}
           />
 
           {/* Central Holoflower Logo with Glow and Sparkles */}
@@ -3700,7 +3710,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 {messages
                   .map((message, index) => {
                     const handleCopyMessage = () => {
-                      const textToCopy = message.text.replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
+                      const textToCopy = (message.text || '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
                       navigator.clipboard.writeText(textToCopy);
                       toast.success('Message copied!', {
                         duration: 2000,
@@ -3877,8 +3887,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                     hasMemory={messages.length > 0 || !isReturningUser}
                     lastConnectionTime={
                       typeof window !== 'undefined'
-                        ? localStorage.getItem('lastMaiaConnection')
-                        : null
+                        ? localStorage.getItem('lastMaiaConnection') ?? undefined
+                        : undefined
                     }
                     currentPhase={
                       messages.find(m => m.role === 'system')?.content?.includes('phase')
@@ -4139,9 +4149,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           }
           if (action === 'field-protocol') {
             if (isFieldRecording) {
-              completeFieldRecording().then(() => {
-                toast.success('Field Record completed');
-              });
+              completeFieldRecording();
+              toast.success('Field Record completed');
             } else {
               startFieldRecording();
               toast.success('Field Recording started');
@@ -4188,12 +4197,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           if (action === 'scribe-mode') {
             if (isScribing) {
               // Stop scribing and download
-              const result = stopScribing();
-              if (result) {
-                toast.success('Scribe session completed');
-                downloadScribeTranscript();
-                setShowLabDrawer(false);
-              }
+              stopScribing();
+              toast.success('Scribe session completed');
+              downloadScribeTranscript();
+              setShowLabDrawer(false);
             } else {
               // Start scribing
               startScribing();

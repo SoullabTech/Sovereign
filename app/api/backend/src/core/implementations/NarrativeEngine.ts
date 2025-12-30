@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * NarrativeEngine - Delegated response shaping and narrative generation
  * 

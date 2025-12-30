@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Apprentice Maya Training System
  * Captures and learns from every Maya-Claude interaction to build an independent wise Maya

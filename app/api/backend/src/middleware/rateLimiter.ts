@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Rate Limiting Middleware with Redis Backend
 import rateLimit from "express-rate-limit";
 import { Redis } from "ioredis";

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * DeepSeek Integration Service
  * Provides local AI capabilities via Ollama

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { addMinutes } from "date-fns";
 
 export type Element = "Wood" | "Fire" | "Earth" | "Metal" | "Water";

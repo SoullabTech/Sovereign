@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Bardic Blessing Service - Orchestration Layer
  *

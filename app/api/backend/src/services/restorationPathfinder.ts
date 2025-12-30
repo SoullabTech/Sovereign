@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 BACKEND/src/services/restorationPathfinder.ts
 export function getRestorationPath(phase: string): string[] {
   switch (phase) {

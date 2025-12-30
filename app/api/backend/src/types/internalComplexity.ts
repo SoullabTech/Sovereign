@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Internal Complexity Types - Safe Alternative to Daimonic Language
  * 

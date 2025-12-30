@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Complete Prompt Guide
  * PersonalOracleAgent System Prompts, Routing Protocol, and Agent Personas

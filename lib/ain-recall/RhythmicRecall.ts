@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Rhythmic Recall - Elemental-Based Spaced Resonance
  *

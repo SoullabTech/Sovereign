@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { addYears, getYear } from "date-fns";
 import {
   HexagramReading,

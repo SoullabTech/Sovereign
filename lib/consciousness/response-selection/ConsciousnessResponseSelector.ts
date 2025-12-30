@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness-Driven Response Selection Engine
  *

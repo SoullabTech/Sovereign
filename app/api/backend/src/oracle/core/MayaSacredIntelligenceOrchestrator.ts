@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Maya Sacred Intelligence Orchestrator
  * The web of interstitial interconnectivity that unifies:

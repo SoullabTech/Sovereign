@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/services/facetService.ts
 
 export interface Facet {

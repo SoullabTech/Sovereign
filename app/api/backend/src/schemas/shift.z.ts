@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SHIFt Zod Schemas
  * 

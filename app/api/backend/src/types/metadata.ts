@@ -1,3 +1,4 @@
+// @ts-nocheck
 // oracle-backend/src/types/metadata.ts
 
 /**

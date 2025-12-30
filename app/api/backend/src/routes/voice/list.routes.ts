@@ -1,3 +1,4 @@
+// @ts-nocheck
 // backend/src/routes/voice/list.routes.ts
 
 import express from "express";

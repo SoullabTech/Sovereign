@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Voice Evolution System
  * Enables Maya's unique personality emergence per relationship

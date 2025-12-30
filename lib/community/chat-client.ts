@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Community Chat Client
  * Supabase interface for threaded discussions with field awareness

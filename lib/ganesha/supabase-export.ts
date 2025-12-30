@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Supabase Beta Tester Export Tool for Ganesha
  * Export your 50+ consciousness pioneers from Supabase to Ganesha contact system

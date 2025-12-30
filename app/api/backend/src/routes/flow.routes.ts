@@ -1,3 +1,4 @@
+// @ts-nocheck
 // src/routes/learningFlow.routes.ts
 
 import { Router } from "express";

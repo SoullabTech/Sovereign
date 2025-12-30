@@ -5,6 +5,11 @@ import React, { useEffect } from 'react';
 interface SessionRitualOpeningProps {
   onComplete?: () => void;
   userName?: string;
+  // OracleConversation-expected properties
+  isOpen?: boolean;
+  sessionDuration?: number;
+  isReturningUser?: boolean;
+  onSkip?: () => void;
 }
 
 export function SessionRitualOpening({ onComplete, userName }: SessionRitualOpeningProps) {

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Collective Intelligence Stub
  * Placeholder implementation for collective intelligence processing

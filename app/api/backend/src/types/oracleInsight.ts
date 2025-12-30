@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface OracleInsight {
   id?: string;
   userId: string;

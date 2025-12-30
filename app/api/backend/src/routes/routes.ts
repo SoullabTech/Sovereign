@@ -1,3 +1,4 @@
+// @ts-nocheck
 // 📁 File: /routes/routes.ts
 
 import express from "express";

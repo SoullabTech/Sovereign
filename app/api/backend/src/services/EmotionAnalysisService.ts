@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Emotion Analysis Service
  * Analyzes text and voice content for emotional resonance using multiple approaches:

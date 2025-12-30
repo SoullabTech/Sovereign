@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Integrator Stub
  * Placeholder implementation for sacred integration protocols

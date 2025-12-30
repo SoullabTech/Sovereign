@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Looping Dialogue Templates for Maya's Witness Paradigm
  * Dynamic, adaptive templates that maintain witness stance

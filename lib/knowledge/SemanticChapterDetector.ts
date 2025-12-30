@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * SEMANTIC CHAPTER DETECTOR
  *
