@@ -8,6 +8,7 @@ export type PastSelfPayload = {
   messageType?: string | null;
   content: string;
   relevanceThemes?: string[] | null;
+  deliveryCount?: number; // Phase 2K-b: for "Returning" badge
 };
 
 type ActionResp =
@@ -96,6 +97,12 @@ export default function PastSelfCard({ pastSelf, userId, onOpenArchive }: PastSe
           <span className="text-xs font-medium uppercase tracking-wider text-amber-700 dark:text-amber-400">
             {labelForType(pastSelf.messageType)}
           </span>
+          {/* Phase 2K-b: Returning badge when re-surfaced after snooze */}
+          {(pastSelf.deliveryCount ?? 0) >= 2 && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full border border-amber-200/40 dark:border-amber-700/30 text-amber-700/70 dark:text-amber-400/70">
+              Returning
+            </span>
+          )}
           {pastSelf.title && (
             <span className="text-sm font-medium text-amber-900 dark:text-amber-200">
               — {pastSelf.title}

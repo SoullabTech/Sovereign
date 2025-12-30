@@ -267,6 +267,8 @@ export async function loadSelfletContext(
           sessionId: opts.sessionId,
           turnNumber: opts.turnNumber,
           surfacingScore: surfacingResult.score,
+          // Phase 2K-b: delivery count for "Returning" badge
+          deliveryCount: pendingMsg.deliveryCount ?? 0,
         };
         surfacedMessagePrompt = generateSurfacedMessagePrompt(pendingMsg);
         requiredAcknowledgment = `Your past self left you a message: "${pendingMsg.content}"\n\n`;

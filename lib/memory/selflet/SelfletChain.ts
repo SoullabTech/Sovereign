@@ -658,9 +658,11 @@ export class SelfletChainService {
     relevanceThemes: string[] | null;
     deliveryContext: Record<string, unknown> | null;
     createdAt: Date;
+    deliveryCount: number; // Phase 2K-b
   }> {
     const limit = input.limit ?? 1;
 
+    // Phase 2K-b: Include delivery_count for "Returning" badge
     const query = `
       SELECT
         m.id,
@@ -670,7 +672,8 @@ export class SelfletChainService {
         m.content,
         m.relevance_themes,
         m.delivery_context,
-        m.created_at
+        m.created_at,
+        m.delivery_count
       FROM selflet_messages m
       JOIN selflet_nodes n ON n.id = m.from_selflet_id
       WHERE n.user_id = $1
@@ -700,6 +703,7 @@ export class SelfletChainService {
       relevanceThemes: row.relevance_themes ?? null,
       deliveryContext: row.delivery_context ?? null,
       createdAt: new Date(row.created_at),
+      deliveryCount: row.delivery_count ?? 0,
     };
   }
 
@@ -713,14 +717,17 @@ export class SelfletChainService {
     deliveredSessionId?: string | null;
     deliveredTurnId?: number | null;
   }): Promise<void> {
+    // Phase 2K-b: Track delivery count for "Returning" badge
     const query = `
       UPDATE selflet_messages
       SET delivered_at = NOW(),
+          delivery_count = COALESCE(delivery_count, 0) + 1,
+          first_delivered_at = COALESCE(first_delivered_at, NOW()),
+          last_delivered_at = NOW(),
           delivery_context = COALESCE(delivery_context, '{}'::jsonb) || $2::jsonb,
           delivered_session_id = COALESCE($3, delivered_session_id),
           delivered_turn_id = COALESCE($4, delivered_turn_id)
       WHERE id = $1
-        AND delivered_at IS NULL
     `;
     await dbQuery(query, [
       input.messageId,
@@ -975,11 +982,13 @@ export class SelfletChainService {
   }): Promise<SelfletActionResult> {
     const snoozedUntil = new Date(Date.now() + input.snoozeMinutes * 60_000);
 
+    // Phase 2K-b: Track last_snoozed_at for history
     const { rows } = await dbQuery(
       `
       UPDATE selflet_messages sm
       SET
         snoozed_until = $1,
+        last_snoozed_at = NOW(),
         delivered_at = NULL,
         delivered_session_id = NULL,
         delivered_turn_id = NULL
