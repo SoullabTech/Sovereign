@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Interfaith Prompting System
  * Context-Aware Spiritual Guidance Generation

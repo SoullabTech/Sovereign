@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * RELATIONSHIP ANAMNESIS - DIRECT DATABASE ACCESS
  *

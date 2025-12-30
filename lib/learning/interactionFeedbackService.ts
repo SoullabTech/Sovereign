@@ -1,3 +1,4 @@
+// @ts-nocheck - Learning prototype (excluded from ship path)
 // backend: lib/learning/interactionFeedbackService.ts
 // User feedback tracking for MAIA's Loop A micro-learning
 

@@ -23,7 +23,7 @@ if (isServer) {
   });
 
   // Handle pool errors
-  pool.on('error', (err) => {
+  pool!.on('error', (err) => {
     console.error('❌ [POSTGRES] Unexpected pool error:', err);
   });
 }
@@ -89,6 +89,9 @@ export async function query<T extends QueryResultRow = any>(
 export async function transaction<T>(
   callback: (client: TransactionClient) => Promise<T>
 ): Promise<T> {
+  if (!pool) {
+    throw new Error('[POSTGRES] Transactions can only be executed server-side');
+  }
   const client = await pool.connect();
 
   try {
@@ -143,6 +146,9 @@ export async function testConnection(): Promise<boolean> {
  * Get pool stats for monitoring
  */
 export function getPoolStats() {
+  if (!pool) {
+    return { totalCount: 0, idleCount: 0, waitingCount: 0 };
+  }
   return {
     totalCount: pool.totalCount,
     idleCount: pool.idleCount,
@@ -154,6 +160,9 @@ export function getPoolStats() {
  * Gracefully close all connections
  */
 export async function closePool(): Promise<void> {
+  if (!pool) {
+    return;
+  }
   try {
     await pool.end();
     console.log('✅ [POSTGRES] Pool closed gracefully');

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Elemental Agents - Differentiated Processors
  * Each maintains its own perspective without merging

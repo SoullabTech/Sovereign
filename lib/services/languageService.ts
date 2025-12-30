@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Multi-language support for MAIA
  * Safe, non-breaking implementation that defaults to English

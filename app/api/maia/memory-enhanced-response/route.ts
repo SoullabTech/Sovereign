@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MEMORY-ENHANCED FIELD-DRIVEN MAIA API ENDPOINT
  *

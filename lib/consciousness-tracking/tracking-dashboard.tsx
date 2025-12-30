@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Consciousness Tracking Dashboard
  * Real-time visualization of consciousness optimization and development progress

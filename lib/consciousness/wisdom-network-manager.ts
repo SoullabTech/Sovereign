@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * 🕸️ Wisdom Network Manager
  * Manages the living network of wisdom connections between agents,

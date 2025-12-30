@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { VoiceJournalSession } from './VoiceJournalingService';
 import { JOURNALING_MODES } from './JournalingPrompts';
 

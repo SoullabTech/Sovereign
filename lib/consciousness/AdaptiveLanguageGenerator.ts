@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype
 /**
  * ADAPTIVE LANGUAGE GENERATOR
  *

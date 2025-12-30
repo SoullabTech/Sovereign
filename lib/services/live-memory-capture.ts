@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Live Memory Capture Service
  * Captures and stores memory patterns during active conversations

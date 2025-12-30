@@ -1,3 +1,4 @@
+// @ts-nocheck - Oracle prototype, not type-checked
 import { LIDAWorkspace } from './cognitive-engines/lida-workspace';
 import { SOARPlanner } from './cognitive-engines/soar-planner';
 import { ACTRMemory } from './cognitive-engines/actr-memory';

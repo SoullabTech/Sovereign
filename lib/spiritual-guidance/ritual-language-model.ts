@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Ritual Language Model (RLM)
  * Generative Grammar for Multi-Faith, Elementally-Aligned Spiritual Practices

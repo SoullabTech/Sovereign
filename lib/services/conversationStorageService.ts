@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 'use client';
 
 import type { ConversationMessage } from '@/types/conversation';

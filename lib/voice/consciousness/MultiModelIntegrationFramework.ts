@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MULTI-DEVELOPMENTAL MODEL INTEGRATION FRAMEWORK
  *

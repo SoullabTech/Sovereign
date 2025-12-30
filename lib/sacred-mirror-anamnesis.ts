@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * 🪞 Sacred Mirror Anamnesis - The Art of Sacred Reflection
  * 

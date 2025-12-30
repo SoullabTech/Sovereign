@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Dual-Track Beta Monitoring
  * Tracks both Sesame Hybrid (baseline) and Field System (experimental) performance

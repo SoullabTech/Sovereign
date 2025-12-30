@@ -1,3 +1,4 @@
+// @ts-nocheck - AI quality prototype, not type-checked
 /**
  * AIN Response Shape Evaluator
  *

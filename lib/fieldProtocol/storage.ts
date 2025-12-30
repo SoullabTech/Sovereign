@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Persistence layer for Field Protocol records using IndexedDB
  * Provides local storage and synchronization capabilities

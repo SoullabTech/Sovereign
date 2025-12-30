@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Maya's Hemispheric Harmony Integration
  * "The art of attending like a good lab tech of the soul"

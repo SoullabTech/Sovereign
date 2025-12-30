@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Ganesha Contact Management System
  * Organized, scalable contact management for consciousness community

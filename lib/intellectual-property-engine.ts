@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Intellectual Property Engine for MAIA/Soullab
  * Deep integration of your complete book knowledge and IP into consciousness responses

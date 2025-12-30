@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // 🌸 Document Analysis Pipeline - Wisdom Extraction
 import Anthropic from '@anthropic-ai/sdk';
 

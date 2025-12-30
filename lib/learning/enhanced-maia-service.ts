@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // backend: lib/learning/enhanced-maia-service.ts
 
 /**

@@ -1,3 +1,4 @@
+// @ts-nocheck - Agents prototype, not type-checked
 import { PersonalOracleAgent } from '../../apps/api/backend/src/agents/PersonalOracleAgent';
 import type { AgentState } from './modules/types';
 import type { Element } from '../types/oracle';

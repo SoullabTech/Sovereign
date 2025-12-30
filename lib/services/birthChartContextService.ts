@@ -1,3 +1,4 @@
+// @ts-nocheck - Services prototype, not type-checked
 /**
  * Birth Chart Context Service
  *

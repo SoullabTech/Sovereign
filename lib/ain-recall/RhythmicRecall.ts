@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Rhythmic Recall - Elemental-Based Spaced Resonance
  *

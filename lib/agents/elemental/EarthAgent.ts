@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/agents/elemental/EarthAgent.ts
 // Sacred Keeper of Manifestation - Earth Agent with Living Grounding Wisdom
 

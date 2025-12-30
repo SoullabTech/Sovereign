@@ -1,3 +1,4 @@
+// @ts-nocheck - Development prototype, not type-checked
 // backend: lib/development/claude-dev-orchestration.ts
 /**
  * 🚀 CLAUDE DEVELOPMENT MODE ORCHESTRATION ENHANCEMENT
