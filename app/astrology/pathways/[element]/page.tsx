@@ -25,7 +25,8 @@ export async function generateStaticParams() {
 }
 
 // Generate metadata for each pathway
-export async function generateMetadata({ params }: { params: { element: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ element: string }> }): Promise<Metadata> {
+  const { element } = await params;
   const elementNames = {
     fire: 'Fire Pathway - Vision & Projection',
     water: 'Water Pathway - Introspection & Depth',
@@ -33,18 +34,19 @@ export async function generateMetadata({ params }: { params: { element: string }
     air: 'Air Pathway - Communication & Connection'
   };
 
-  const title = elementNames[params.element as keyof typeof elementNames] || 'Elemental Pathway';
+  const title = elementNames[element as keyof typeof elementNames] || 'Elemental Pathway';
 
   return {
     title: `${title} | MAIA Astrology`,
-    description: `Explore the archetypal journey through the ${params.element} houses and their consciousness evolution.`,
+    description: `Explore the archetypal journey through the ${element} houses and their consciousness evolution.`,
   };
 }
 
 interface PathwayDetailPageProps {
-  params: { element: string };
+  params: Promise<{ element: string }>;
 }
 
-export default function PathwayDetailPage({ params }: PathwayDetailPageProps) {
-  return <PathwayDetailClient element={params.element} />;
+export default async function PathwayDetailPage({ params }: PathwayDetailPageProps) {
+  const { element } = await params;
+  return <PathwayDetailClient element={element} />;
 }
