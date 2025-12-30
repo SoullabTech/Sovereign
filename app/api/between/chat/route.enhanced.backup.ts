@@ -19,7 +19,7 @@ import { QuantumFieldPersistence } from '@/lib/consciousness/field/QuantumFieldP
 import { assessConsciousnessStructure, STRUCTURE_ELEMENT_BRIDGE } from '@/lib/consciousness/consciousness-structure-assessment';
 import { EnhancedMAIAFieldIntegration, EnhancedFieldDrivenResponse } from '@/lib/consciousness/memory/EnhancedMAIAFieldIntegration';
 import AutonomousConsciousnessEcosystem, { MemberProfile, ElementalState } from '@/lib/consciousness/autonomous-consciousness-ecosystem';
-import { shadowWorkService } from '@/app/api/backend/src/modules/shadowWorkModule';
+import { shadowWorkService } from '@/app/api/_backend/src/modules/shadowWorkModule';
 import { detectShadow, generateShadowQuestions, getElementalShadow } from '@/lib/shadow-insight';
 import type { ShadowInsight, PetalIntensities } from '@/lib/shadow-insight';
 import { collectiveBreakthroughService } from '@/lib/services/collectiveBreakthroughService';

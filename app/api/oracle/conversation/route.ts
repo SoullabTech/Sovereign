@@ -10,10 +10,10 @@ import {
   type FieldEvent,
   type MaiaSuggestedAction
 } from '@/lib/consciousness/spiralogic-core';
-import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
-import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
+import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
-import { PARENTING_REPAIR_SYSTEM_PROMPT } from '../../../../backend/src/agents/prompts/parentingRepairPrompt';
+import { PARENTING_REPAIR_SYSTEM_PROMPT } from '@/backend/src/agents/prompts/parentingRepairPrompt';
 import {
   evaluateResponseAgainstAxioms,
   hasOpusRupture,
@@ -168,8 +168,8 @@ export async function POST(request: NextRequest) {
     trustLevel = Math.min(conversationDepth / 10, 1);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
-    let cognitiveProfile = null;
-    let fieldSafety = null;
+    let cognitiveProfile: CognitiveProfile | null = null;
+    let fieldSafety: FieldSafetyDecision | null = null;
 
     try {
       cognitiveProfile = await getCognitiveProfile(userId);
@@ -333,7 +333,7 @@ export async function POST(request: NextRequest) {
         facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
         phase: spiralogicCell.phase,
         confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
-        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
         regulation: spiralogicCell.context.includes('grief') ? 'hypo' : undefined,
       });
 
@@ -390,7 +390,7 @@ export async function POST(request: NextRequest) {
             facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
             phase: spiralogicCell.phase,
             confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
-            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
           });
 
           validationResult = revalidation;

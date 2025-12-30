@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { personalOracleAgent } from '../../backend/src/agents/PersonalOracleAgent';
-import { logger } from '../../backend/src/utils/logger';
+import { personalOracleAgent } from '../../_backend/src/agents/PersonalOracleAgent';
+import { logger } from '../../_backend/src/utils/logger';
 
 /**
  * GET /api/oracle/trust

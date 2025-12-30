@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   typescript: {
+    // Use scoped tsconfig for build - excludes tests, scripts, legacy code
+    tsconfigPath: 'tsconfig.build.json',
+    // TODO: Enable strict checking after fixing ~500 pre-existing type errors
+    // See docs/LEGACY_SUPABASE.md for migration plan
     ignoreBuildErrors: true,
   },
   // ESLint configuration moved to .eslintrc.json - no longer supported in Next.js 16

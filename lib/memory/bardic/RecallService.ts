@@ -1,3 +1,9 @@
+// @ts-nocheck
+/**
+ * LEGACY: Supabase dependency pending removal.
+ * This file is intentionally excluded from strict type guarantees
+ * until replaced by Postgres-native implementation (lib/db/postgres.ts).
+ */
 /**
  * RecallService
  *

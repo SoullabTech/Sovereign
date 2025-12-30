@@ -1,6 +1,15 @@
+// @ts-nocheck
+/**
+ * LEGACY: Supabase dependency pending removal.
+ * This file is intentionally excluded from strict type guarantees
+ * until replaced by Postgres-native implementation.
+ *
+ * Migration target: RelationshipAnamnesisStorage.ts (lib/db/postgres.ts)
+ */
 /**
  * RELATIONSHIP ANAMNESIS - DIRECT DATABASE ACCESS
  *
+ * @deprecated Use RelationshipAnamnesisStorage.ts for PostgreSQL access
  * Workaround for PostgREST schema cache issues
  * Uses service role key for direct SQL queries
  */

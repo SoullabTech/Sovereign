@@ -1,0 +1,39 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "app/api/auth/**/*",
+    "app/api/health/**/*",
+    "app/globals.css",
+    "app/layout.tsx",
+    "app/page.tsx",
+    "components/holoflower/**/*",
+    "components/navigation/**/*",
+    "components/session/**/*",
+    "components/subscription/**/*",
+    "hooks/useAuth.tsx",
+    "hooks/useScribeMode.ts",
+    "hooks/useSubscription.tsx",
+    "lib/db/postgres.ts",
+    "lib/ethics/**/*",
+    "lib/safety/**/*",
+    "lib/validation/**/*",
+    "middleware.ts",
+    "next-env.d.ts",
+    "types/**/*",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/__tests__/**",
+    ".next/**",
+    "out/**",
+    "dist/**",
+    "app/api/_backend/**",
+    "app/api/backend/**"
+  ]
+}

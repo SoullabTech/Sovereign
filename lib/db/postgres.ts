@@ -15,7 +15,7 @@ let pool: Pool | null = null;
 
 if (isServer) {
   const { Pool: PgPool } = require('pg');
-  pool = new PgPool({
+  const newPool = new PgPool({
     connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
     max: 20,
     idleTimeoutMillis: 30000,
@@ -23,9 +23,11 @@ if (isServer) {
   });
 
   // Handle pool errors
-  pool.on('error', (err) => {
+  newPool.on('error', (err: Error) => {
     console.error('❌ [POSTGRES] Unexpected pool error:', err);
   });
+
+  pool = newPool;
 }
 
 /**
@@ -89,6 +91,9 @@ export async function query<T extends QueryResultRow = any>(
 export async function transaction<T>(
   callback: (client: TransactionClient) => Promise<T>
 ): Promise<T> {
+  if (!pool) {
+    throw new Error('[POSTGRES] Transactions can only be executed server-side');
+  }
   const client = await pool.connect();
 
   try {
@@ -143,6 +148,9 @@ export async function testConnection(): Promise<boolean> {
  * Get pool stats for monitoring
  */
 export function getPoolStats() {
+  if (!pool) {
+    return { totalCount: 0, idleCount: 0, waitingCount: 0 };
+  }
   return {
     totalCount: pool.totalCount,
     idleCount: pool.idleCount,
@@ -154,6 +162,7 @@ export function getPoolStats() {
  * Gracefully close all connections
  */
 export async function closePool(): Promise<void> {
+  if (!pool) return;
   try {
     await pool.end();
     console.log('✅ [POSTGRES] Pool closed gracefully');

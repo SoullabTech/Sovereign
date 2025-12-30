@@ -13,8 +13,8 @@
  */
 
 import { MAIAPatternMonitoringSystem } from '@/lib/voice/consciousness/MAIAPatternMonitoringSystem';
-import { DreamWeaverEngine, WisdomEmergenceSignals } from '@/app/api/backend/src/oracle/core/DreamWeaverEngine';
-import { JungianArchetypeSchema } from '@/app/api/backend/src/schemas/dreamMemory.schema';
+import { DreamWeaverEngine, WisdomEmergenceSignals } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
+import { JungianArchetypeSchema } from '@/app/api/_backend/src/schemas/dreamMemory.schema';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONVERSATION PATTERN INTERFACES
