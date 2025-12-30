@@ -341,3 +341,4 @@ mobile-app/ios/Podfile.lock
 mobile-app/ios/.symlinks/
 mobile-app/ios/build/
 .aetheric-consciousness-verification.json
+scripts/test-selflet-load.ts
