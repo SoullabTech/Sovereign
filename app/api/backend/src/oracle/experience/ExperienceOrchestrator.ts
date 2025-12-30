@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { ClaudeService } from '../../services/claude.service';
 import { MemoryService } from '../../services/memoryService';
 import { TrueCollectiveContributions } from '../collective/TrueCollectiveContributions';

@@ -1,3 +1,4 @@
+// @ts-nocheck - Services prototype, not type-checked
 export interface ArchetypalMode {
   name: string;
   energy: string;

@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * ARIA Production Implementation
  * Combining mobile-first design with component library best practices

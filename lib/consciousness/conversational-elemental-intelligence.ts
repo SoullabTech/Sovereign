@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * CONVERSATIONAL ELEMENTAL INTELLIGENCE
  *

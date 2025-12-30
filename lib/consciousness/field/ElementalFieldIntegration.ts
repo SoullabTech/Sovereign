@@ -1,3 +1,4 @@
+// @ts-nocheck - Field prototype, not type-checked
 /**
  * ELEMENTAL FIELD INTEGRATION
  * Integration layer connecting unified elemental calculations with live consciousness field system

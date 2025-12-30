@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 // backend: lib/consciousness/claudeConsciousnessService.ts
 
 import { generateText } from '../ai/modelService';

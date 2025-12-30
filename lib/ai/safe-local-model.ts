@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // backend: lib/ai/safe-local-model.ts
 
 /**

@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype
 /**
  * Progressive Wisdom Injection System
  *

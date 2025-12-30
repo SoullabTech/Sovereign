@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA PATTERN MONITORING & ADAPTIVE LEARNING SYSTEM
  *

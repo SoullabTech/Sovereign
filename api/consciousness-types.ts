@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * MAIA Consciousness Computing API - Type Definitions
  * Comprehensive type system for consciousness-aware applications

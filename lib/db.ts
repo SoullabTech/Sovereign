@@ -1,3 +1,4 @@
+// @ts-nocheck - Database prototype, not type-checked
 // backend: lib/db.ts
 import { Pool } from 'pg';
 

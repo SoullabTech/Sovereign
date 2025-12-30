@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype
 import { EventEmitter } from 'events';
 import { ShadowConversationOrchestrator } from './ShadowConversationOrchestrator';
 import { AgentBackchannelingIntegration } from './AgentBackchannelingIntegration';

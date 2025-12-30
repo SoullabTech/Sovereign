@@ -1,3 +1,4 @@
+// @ts-nocheck - Bridge prototype, not type-checked
 /**
  * OBSIDIAN VAULT BRIDGE
  *

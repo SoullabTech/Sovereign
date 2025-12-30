@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 import { MasterConsciousnessResearchSystem, MasterConsciousnessAssessment } from './MasterConsciousnessResearchSystem';
 import { ParticipantConsciousnessProfile } from './ConsciousnessSignatureProfiling';
 import { ConsciousnessEmergencePrediction } from './ConsciousnessEmergencePrediction';

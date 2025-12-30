@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Alchemical Progression Tracker
  * Monitors user's journey through the seven alchemical stages

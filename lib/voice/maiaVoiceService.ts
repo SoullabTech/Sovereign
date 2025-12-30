@@ -31,7 +31,7 @@ export async function synthesizeMaiaVoice(
   const response = await openai.audio.speech.create({
     model: "tts-1", // TTS ONLY
     voice: "alloy",  // you can change later to another voice
-    format,
+    response_format: format,
     input: trimmed,
   });
 

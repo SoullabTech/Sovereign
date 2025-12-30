@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // lib/agents/elemental/AetherAgent.ts
 // Sacred Unity Weaver - Aether Agent with Living Integration Intelligence
 

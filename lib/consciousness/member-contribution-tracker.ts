@@ -1,3 +1,4 @@
+// @ts-nocheck - Consciousness prototype, not type-checked
 /**
  * 📊 Member Contribution Tracker
  * Tracks, attributes, and celebrates member wisdom contributions

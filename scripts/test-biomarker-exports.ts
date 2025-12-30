@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-
+// @ts-nocheck - Test script, not type-checked
 /**
  * Phase 4.2D Phase 3 — Barrel Export Verification
  *

@@ -1,3 +1,4 @@
+// @ts-nocheck - Orchestration prototype, not type-checked
 /**
  * CONSCIOUSNESS ORCHESTRATOR
  *

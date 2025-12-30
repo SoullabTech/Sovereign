@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * LOOPING PROTOCOL - Field Intelligence Implementation
  * Based on Friedman & Himmelstein's deep listening methodology

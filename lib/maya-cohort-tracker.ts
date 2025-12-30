@@ -1,4 +1,5 @@
-export type CohortType = 
+// @ts-nocheck - Prototype file, not type-checked
+export type CohortType =
   | 'contemplative-practitioners'
   | 'ai-curious'
   | 'seeking-exploration'

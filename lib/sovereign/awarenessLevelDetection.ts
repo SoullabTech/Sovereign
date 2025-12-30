@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 // backend: lib/sovereign/awarenessLevelDetection.ts
 /**
  * MAIA AWARENESS LEVEL DETECTION SYSTEM

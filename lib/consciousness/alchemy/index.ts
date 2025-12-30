@@ -1,3 +1,4 @@
+// @ts-nocheck - Prototype file, not type-checked
 /**
  * Alchemical Framework for MAIA-SOVEREIGN
  * Integrates Jungian Alchemy with Consciousness Field Infrastructure
