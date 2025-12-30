@@ -131,6 +131,11 @@ interface SelfletDeliveryContext {
 /**
  * Apply selflet delivery guard - ensures past-self message acknowledgment appears exactly once.
  * Used at FAST, CORE, and DEEP path exit points.
+ *
+ * Edge cases handled:
+ * 1. Marker already present → no change (idempotent)
+ * 2. Ack text present but no marker → inject marker after ack
+ * 3. Neither present → prepend both
  */
 function applySelfletDeliveryGuard(
   response: string,
@@ -139,9 +144,16 @@ function applySelfletDeliveryGuard(
   const requiredAck = selfletContext?.requiredAcknowledgment;
   if (!requiredAck) return response;
 
-  // Already has marker or acknowledgment → no change
-  if (response.includes(SELFLET_MARKER) || response.includes(requiredAck)) return response;
+  // If marker exists, we're done (idempotent).
+  if (response.includes(SELFLET_MARKER)) return response;
 
+  // If ack exists but marker doesn't, inject marker right after the ack.
+  // This handles models that incorporate the ack but skip the marker.
+  if (response.includes(requiredAck)) {
+    return response.replace(requiredAck, requiredAck + SELFLET_MARKER);
+  }
+
+  // Otherwise prepend both.
   console.log('[SELFLET] Prepending past-self acknowledgment');
   return requiredAck + SELFLET_MARKER + response;
 }
