@@ -93,6 +93,7 @@ export class LinkingService {
       let createdCount = 0;
       for (const suggestion of suggestions) {
         const success = await this.createLink(
+          userId,
           episodeId,
           suggestion.targetEpisodeId,
           suggestion.relation,
@@ -309,6 +310,7 @@ If no fulfillment detected, return: {"fulfills": []}
    * Create a link between episodes
    */
   private async createLink(
+    userId: string,
     srcId: string,
     dstId: string,
     relation: EpisodeRelation,
@@ -317,6 +319,7 @@ If no fulfillment detected, return: {"fulfills": []}
   ): Promise<boolean> {
     try {
       return await LinkingRepo.createLink({
+        userId,
         srcEpisodeId: srcId,
         dstEpisodeId: dstId,
         relation,

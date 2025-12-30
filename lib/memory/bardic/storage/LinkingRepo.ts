@@ -14,6 +14,7 @@ import { query } from '@/lib/db/postgres';
 import type { EpisodeRelation } from '../types';
 
 export interface CreateLinkInput {
+  userId: string;
   srcEpisodeId: string;
   dstEpisodeId: string;
   relation: EpisodeRelation;
@@ -50,20 +51,21 @@ export const LinkingRepo = {
   /**
    * Create a link between two episodes
    *
-   * Uses ON CONFLICT DO NOTHING to silently skip duplicates
-   * (same src → dst with same relation already exists)
+   * Inserts directly into bardic_links (canonical table).
+   * Uses ON CONFLICT DO NOTHING to silently skip duplicates.
    */
   async createLink(input: CreateLinkInput): Promise<boolean> {
     const weight = Math.max(0, Math.min(1, input.weight));
 
     const res = await query(
       `
-      INSERT INTO episode_links (src_episode_id, dst_episode_id, relation, weight, reasoning)
-      VALUES ($1, $2, $3, $4, $5)
-      ON CONFLICT (src_episode_id, dst_episode_id, relation) DO NOTHING
+      INSERT INTO bardic_links (user_id, from_kind, from_id, to_kind, to_id, relation, strength, reasoning)
+      VALUES ($1, 'episode', $2, 'episode', $3, $4, $5, $6)
+      ON CONFLICT (user_id, from_kind, from_id, to_kind, to_id, relation) DO NOTHING
       RETURNING id
       `,
       [
+        input.userId,
         input.srcEpisodeId,
         input.dstEpisodeId,
         input.relation,
