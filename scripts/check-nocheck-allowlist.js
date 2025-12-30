@@ -21,7 +21,6 @@ const ALLOWLIST = new Set([
   'lib/consciousness/RelationshipAnamnesis_Direct.ts',
   'lib/field-protocol/FieldRecordsService.ts',
   'lib/memory/bardic/CueService.ts',
-  'lib/memory/bardic/EmbeddingService.ts',
   'lib/memory/bardic/LinkingService.ts',
   'lib/memory/bardic/RecallService.ts',
   'lib/memory/bardic/ReentryService.ts',
