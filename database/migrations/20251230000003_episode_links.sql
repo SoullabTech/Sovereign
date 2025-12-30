@@ -4,6 +4,9 @@
 
 BEGIN;
 
+-- Ensure gen_random_uuid() is available (built-in on PostgreSQL 13+, needs pgcrypto on older)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Episode links table for the mycelial memory graph
 CREATE TABLE IF NOT EXISTS episode_links (
   id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),

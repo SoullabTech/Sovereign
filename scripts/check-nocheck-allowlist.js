@@ -20,9 +20,6 @@ const path = require('path');
 const ALLOWLIST = new Set([
   'lib/consciousness/RelationshipAnamnesis_Direct.ts',
   'lib/field-protocol/FieldRecordsService.ts',
-  'lib/memory/bardic/RecallService.ts',
-  'lib/memory/bardic/ReentryService.ts',
-  'lib/memory/bardic/TeleologyService.ts',
 ]);
 
 // Directories excluded from checking (separate codebases with their own configs)
