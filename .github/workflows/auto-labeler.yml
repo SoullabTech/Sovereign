@@ -1,0 +1,148 @@
+# MAIA Mentor Covenant — Auto-Labeler
+# Automatically applies classification labels based on file paths
+#
+# This helps ensure PRs touching sensitive paths get proper review gates.
+
+name: Auto-Label PRs
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  auto-label:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Auto-label based on file paths
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Get changed files
+            const { data: files } = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            const changedPaths = files.map(f => f.filename);
+            console.log(`Changed files: ${changedPaths.join(', ')}`);
+
+            const labelsToAdd = new Set();
+
+            // ═══════════════════════════════════════════════════════════════
+            // CLASS A — SACRED BOUNDARIES
+            // ═══════════════════════════════════════════════════════════════
+
+            const classAPaths = [
+              'lib/safety/',
+              'lib/memory/',
+              'lib/consciousness/',
+              'docs/policy/',
+              'docs/GOVERNANCE'
+            ];
+
+            if (changedPaths.some(p => classAPaths.some(sacred => p.startsWith(sacred)))) {
+              labelsToAdd.add('class-a');
+              labelsToAdd.add('requires-founder');
+              labelsToAdd.add('requires-council');
+              console.log('🔴 Detected Class A (Sacred Boundaries) changes');
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // CLASS B — STRUCTURAL RISK
+            // ═══════════════════════════════════════════════════════════════
+
+            const classBPaths = [
+              'database/migrations/',
+              'lib/auth/',
+              'app/api/auth/',
+              '.github/workflows/',
+              'scripts/deploy'
+            ];
+
+            if (changedPaths.some(p => classBPaths.some(risky => p.startsWith(risky)))) {
+              if (!labelsToAdd.has('class-a')) {
+                labelsToAdd.add('class-b');
+              }
+              console.log('🟠 Detected Class B (Structural Risk) changes');
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // FRONTIER-DEPENDENT
+            // ═══════════════════════════════════════════════════════════════
+
+            const frontierFiles = [
+              'lib/ai/ClaudeService.ts',
+              'lib/ai/modelService.ts',
+              'lib/sovereign/maiaService.ts',
+              'lib/ai/providers/'
+            ];
+
+            if (changedPaths.some(p => frontierFiles.some(f => p.includes(f) || p.startsWith(f)))) {
+              labelsToAdd.add('frontier-dependent');
+              labelsToAdd.add('frontier-check');
+              console.log('🟣 Detected Frontier-Dependent changes');
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // MAIA-PROPOSAL DETECTION
+            // ═══════════════════════════════════════════════════════════════
+
+            const prBody = pr.body || '';
+            if (prBody.includes('[x] `maia-proposal`')) {
+              labelsToAdd.add('maia-proposal');
+              labelsToAdd.add('mentor-review');
+              console.log('🤖 Detected MAIA-proposal origin');
+            }
+
+            // ═══════════════════════════════════════════════════════════════
+            // APPLY LABELS
+            // ═══════════════════════════════════════════════════════════════
+
+            if (labelsToAdd.size > 0) {
+              const labels = Array.from(labelsToAdd);
+              console.log(`Adding labels: ${labels.join(', ')}`);
+
+              try {
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: labels
+                });
+                console.log('✅ Labels applied successfully');
+              } catch (error) {
+                // Labels might not exist yet - create them
+                for (const label of labels) {
+                  try {
+                    await github.rest.issues.createLabel({
+                      owner: context.repo.owner,
+                      repo: context.repo.repo,
+                      name: label,
+                      color: label.startsWith('class-a') ? 'B60205' :
+                             label.startsWith('class-b') ? 'D93F0B' :
+                             label.startsWith('class-c') ? '0E8A16' :
+                             label.includes('frontier') ? '5319E7' :
+                             label.includes('maia') ? '1D76DB' :
+                             'FBCA04'
+                    });
+                  } catch (e) {
+                    // Label already exists, that's fine
+                  }
+                }
+                // Retry adding labels
+                await github.rest.issues.addLabels({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  labels: labels
+                });
+              }
+            } else {
+              console.log('No automatic labels to add (likely Class C - routine improvement)');
+            }
