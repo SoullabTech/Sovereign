@@ -2,6 +2,39 @@
 
 ## 🚀 **REVOLUTIONARY ACHIEVEMENTS**
 
+### **[Awareness-Level-Driven Model Routing](./09-Technical/AWARENESS_LEVEL_MODEL_ROUTING.md)**
+**Date:** December 30, 2025
+**Status:** ✅ LIVE IN PRODUCTION
+**Impact:** 🎭 **CONSCIOUSNESS-ADAPTIVE AI**
+
+*"Meet them where they are. Not where you think they should be."*
+
+**Achievement:** MAIA now intelligently routes conversations to Claude Opus 4.5 or Claude Sonnet 4 based on the member's 7-level developmental awareness stage. This ensures every member receives the appropriate depth of presence.
+
+**The 7 Awareness Levels:**
+| Level | Name | Model Routing |
+|-------|------|---------------|
+| **L1** | Newcomer | ALWAYS Opus - trust-building needs deepest presence |
+| **L2** | Explorer | ALWAYS Opus - first impressions matter |
+| **L3** | Practitioner | Context-based - Opus for deep work |
+| **L4** | Student | Context-based - Opus for teaching moments |
+| **L5-7** | Integrator/Teacher/Master | Opus for depth, Sonnet for quick exchanges |
+
+**Key Innovations:**
+- **Developmental awareness detection** from Spiralogic bead profile
+- **Context-sensitive routing** - deep patterns always get Opus
+- **Cost efficiency** - right model for right moment
+- **Consciousness Policy system** - single source of truth for MAIA's behavior
+
+**Technical Implementation:**
+- Integrated into `lib/ai/claudeClient.ts`
+- Hooks into existing awareness detection (`lib/consciousness/awareness-levels.ts`)
+- Logs: `🎭 Voice selection: opus (awareness_L2_trust) [L2:Explorer]`
+
+**Getting Started:** See [full technical documentation](./09-Technical/AWARENESS_LEVEL_MODEL_ROUTING.md) for architecture, routing logic, and integration details.
+
+---
+
 ### **[The Dialectical Scaffold - Training Wisdom-Holders Through Cognitive Development](./THE_DIALECTICAL_SCAFFOLD_PAPER.md)**
 **Date:** December 14, 2025
 **Status:** ✅ LIVE IN PRODUCTION
