@@ -29,6 +29,7 @@ import {
   RecordReinterpretationInput,
   Element,
   getMetamorphosisSymbol,
+  UserSelfletState,
 } from './types';
 
 // ═══════════════════════════════════════════════════════════════
@@ -697,20 +698,77 @@ export class SelfletChainService {
 
   /**
    * Mark a message as delivered (called when surfaced in conversation)
+   * Phase 2I: Also stores session/turn for cooldown gating
    */
   async markMessageDeliveredById(input: {
     messageId: string;
     deliveryContext?: Record<string, unknown>;
+    deliveredSessionId?: string | null;
+    deliveredTurnId?: number | null;
   }): Promise<void> {
     const query = `
       UPDATE selflet_messages
       SET delivered_at = NOW(),
-          delivery_context = COALESCE(delivery_context, '{}'::jsonb) || $2::jsonb
+          delivery_context = COALESCE(delivery_context, '{}'::jsonb) || $2::jsonb,
+          delivered_session_id = COALESCE($3, delivered_session_id),
+          delivered_turn_id = COALESCE($4, delivered_turn_id)
       WHERE id = $1
         AND delivered_at IS NULL
     `;
-    await dbQuery(query, [input.messageId, JSON.stringify(input.deliveryContext ?? {})]);
-    console.log(`✅ [SELFLET MESSAGE] Marked delivered: ${input.messageId}`);
+    await dbQuery(query, [
+      input.messageId,
+      JSON.stringify(input.deliveryContext ?? {}),
+      input.deliveredSessionId ?? null,
+      input.deliveredTurnId ?? null,
+    ]);
+    console.log(`✅ [SELFLET MESSAGE] Marked delivered: ${input.messageId} (session: ${input.deliveredSessionId ?? 'none'})`);
+  }
+
+  /**
+   * Phase 2I: Get user's selflet delivery state for surfacing gating
+   * Returns last delivery time, last turn, and count for current session
+   */
+  async getUserSelfletState(userId: string, sessionId?: string): Promise<UserSelfletState> {
+    const current = await this.getCurrentSelflet(userId);
+    if (!current) {
+      return { lastSelfletTime: null, lastSelfletTurn: null, countThisSession: 0 };
+    }
+
+    try {
+      // Get last delivery time across all sessions
+      const lastTimeRes = await dbQuery(
+        `SELECT MAX(delivered_at) AS last_time
+         FROM selflet_messages
+         WHERE to_selflet_id = $1 AND delivered_at IS NOT NULL`,
+        [current.id]
+      );
+      const lastSelfletTime = (lastTimeRes.rows[0]?.last_time as Date | null) ?? null;
+
+      if (!sessionId) {
+        return { lastSelfletTime, lastSelfletTurn: null, countThisSession: 0 };
+      }
+
+      // Get per-session stats
+      const perSessionRes = await dbQuery(
+        `SELECT
+            COUNT(*)::int AS count_session,
+            MAX(delivered_turn_id)::int AS last_turn
+         FROM selflet_messages
+         WHERE to_selflet_id = $1
+           AND delivered_session_id = $2
+           AND delivered_at IS NOT NULL`,
+        [current.id, sessionId]
+      );
+
+      return {
+        lastSelfletTime,
+        lastSelfletTurn: perSessionRes.rows[0]?.last_turn ?? null,
+        countThisSession: perSessionRes.rows[0]?.count_session ?? 0,
+      };
+    } catch (error) {
+      console.log(`[SELFLET] Error getting user state for ${userId}:`, error);
+      return { lastSelfletTime: null, lastSelfletTurn: null, countThisSession: 0 };
+    }
   }
 
   /**

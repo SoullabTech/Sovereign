@@ -623,6 +623,8 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
     let selfletContext: SelfletLoadResult | null = null;
+    // Phase 2I: Compute turn number once and reuse everywhere
+    const turnNumber = conversationHistory.length + 1;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
@@ -633,7 +635,13 @@ export async function POST(req: NextRequest) {
       }
 
       // Load selflet context for temporal awareness
-      const selfletLoad = await loadSelfletContext(effectiveUserId, currentThemes, message);
+      const selfletLoad = await loadSelfletContext(effectiveUserId, {
+        currentThemes,
+        userMessage: message,
+        sessionId: safeSessionId,
+        turnNumber,
+        // emotionalIntensity and contextMode can be added when orchestrator provides them
+      });
       selfletContext = selfletLoad;
 
       if (selfletLoad.promptInjection) {
@@ -1134,6 +1142,9 @@ export async function POST(req: NextRequest) {
         // Phase 2C: Pass surfaced message info for delivery tracking
         surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
         surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
+        // Phase 2I: Session/turn for delivery gating
+        sessionId: safeSessionId,
+        turnNumber,
         // Derived consciousness signals (orchestrator + text inference fallback)
         currentElement: derivedElement,
         breakthroughDetected: derivedBreakthrough,
