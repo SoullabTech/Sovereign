@@ -20,11 +20,23 @@ if ((${#files[@]} == 0)); then
   exit 0
 fi
 
+# SHA256 hash (modern standard)
 hash_file() {
   if command -v sha256sum >/dev/null 2>&1; then
     sha256sum "$1" | awk '{print $1}'
   else
     shasum -a 256 "$1" | awk '{print $1}'
+  fi
+}
+
+# MD5 hash (for legacy checksum upgrade)
+hash_file_md5() {
+  if command -v md5sum >/dev/null 2>&1; then
+    md5sum "$1" | awk '{print $1}'
+  elif command -v md5 >/dev/null 2>&1; then
+    md5 -q "$1"
+  else
+    openssl md5 "$1" | awk '{print $2}'
   fi
 }
 
@@ -42,11 +54,12 @@ trap cleanup EXIT
 
   echo "\echo 🔒 Acquiring migration lock (${LOCK_ID})..."
   echo "SELECT pg_try_advisory_lock(${LOCK_ID}) AS got_lock; \\gset"
-  echo "\\if :got_lock != 't'"
+  echo "\\if :got_lock"
+  echo "  \\echo '✅ Lock acquired.'"
+  echo "\\else"
   echo "  \\echo '❌ Another migration run is in progress (lock not acquired).'"
   echo "  \\quit 2"
   echo "\\endif"
-  echo '\echo ✅ Lock acquired.'
   echo '\echo'
 
   # Track applied migrations (+ checksum to detect edits)
@@ -63,10 +76,12 @@ for f in "${files[@]}"; do
   abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
   base="$(basename "$f")"
   sum="$(hash_file "$f")"
+  md5sum="$(hash_file_md5 "$f")"
 
   # escape single quotes
   base_esc="${base//\'/\'\'}"
   sum_esc="${sum//\'/\'\'}"
+  md5sum_esc="${md5sum//\'/\'\'}"
   abs_esc="${abs//\'/\'\'}"
 
   {
@@ -74,33 +89,73 @@ for f in "${files[@]}"; do
     echo "\\echo '— ${base_esc}'"
     echo "\\set filename '${base_esc}'"
     echo "\\set checksum '${sum_esc}'"
+    echo "\\set md5sum '${md5sum_esc}'"
 
-    # already applied?
-    echo "SELECT count(*)::int AS already FROM schema_migrations WHERE filename = :'filename'; \\gset"
-    echo "\\if :already > 0"
-    echo "  SELECT COALESCE(checksum,'') AS applied_checksum FROM schema_migrations WHERE filename = :'filename'; \\gset"
-    echo "  \\if :'applied_checksum' != '' AND :'applied_checksum' != :'checksum'"
-    echo "    \\echo '❌ Migration file changed after it was applied: ' :filename"
-    echo "    \\echo '   applied checksum: ' :'applied_checksum'"
-    echo "    \\echo '   current checksum: ' :'checksum'"
-    echo "    \\quit 3"
-    echo "  \\endif"
-    echo "  \\echo '↪︎ Skipping (already applied)'"
-    echo "\\else"
+    # Compute boolean flags in SQL (psql \if only understands t/f, not comparisons)
+    # not_applied: migration not in schema_migrations
+    # no_checksum: applied but checksum is NULL or empty
+    # sha_match: applied and checksum matches current SHA256
+    # md5_match: applied and checksum matches current MD5 (legacy)
+    cat << 'PSQL_BOOL_QUERY'
+SELECT
+  (NOT EXISTS (SELECT 1 FROM schema_migrations WHERE filename = :'filename')) AS not_applied,
+  COALESCE((SELECT checksum IS NULL OR checksum = '' FROM schema_migrations WHERE filename = :'filename'), false) AS no_checksum,
+  COALESCE((SELECT checksum = :'checksum' FROM schema_migrations WHERE filename = :'filename'), false) AS sha_match,
+  COALESCE((SELECT checksum = :'md5sum' FROM schema_migrations WHERE filename = :'filename'), false) AS md5_match;
+\gset
+PSQL_BOOL_QUERY
+
+    echo "\\if :not_applied"
     echo "  \\echo '➡️  Applying...'"
     echo "  \\i '${abs_esc}'"
     echo "  INSERT INTO schema_migrations(filename, checksum) VALUES (:'filename', :'checksum');"
     echo "  \\echo '✅ Applied'"
+    echo "\\elif :no_checksum"
+    echo "  \\echo '↪︎ Skipping (already applied, no checksum stored)'"
+    echo "\\elif :sha_match"
+    echo "  \\echo '↪︎ Skipping (already applied)'"
+    echo "\\elif :md5_match"
+    echo "  UPDATE schema_migrations SET checksum = :'checksum' WHERE filename = :'filename';"
+    echo "  \\echo '↪︎ Skipping (already applied; checksum upgraded MD5→SHA256)'"
+    echo "\\else"
+    echo "  SELECT checksum AS mismatch_checksum FROM schema_migrations WHERE filename = :'filename'; \\gset"
+    echo "  \\echo '❌ Migration file changed after it was applied: ' :'filename'"
+    echo "  \\echo '   applied checksum: ' :'mismatch_checksum'"
+    echo "  \\echo '   current checksum: ' :'checksum'"
+    echo "  SELECT 1/0; -- Force error to stop migration"
     echo "\\endif"
   } >> "$tmp"
 done
+
+# Post-migration invariant checks
+{
+  echo '\echo'
+  echo '\echo 🧪 Post-migration invariants...'
+
+  # Invariant: episode_links must be a VIEW (canonical state)
+  # Compute boolean: is_view = true if episode_links exists and is a view ('v')
+  cat << 'PSQL_INVARIANT'
+SELECT
+  COALESCE((SELECT relkind = 'v' FROM pg_class WHERE relname = 'episode_links'), false) AS is_view,
+  COALESCE((SELECT relkind::text FROM pg_class WHERE relname = 'episode_links'), 'missing') AS el_kind;
+\gset
+PSQL_INVARIANT
+
+  echo "\\if :is_view"
+  echo "  \\echo '✅ episode_links is a VIEW (canonical state)'"
+  echo "\\else"
+  echo "  \\echo '❌ Invariant failed: episode_links must be a VIEW (relkind=v). Got: ' :'el_kind'"
+  echo "  SELECT 1/0; -- Force error to stop migration"
+  echo "\\endif"
+} >> "$tmp"
 
 # Unlock at the end
 {
   echo '\echo'
   echo '\echo 🔓 Releasing migration lock...'
   echo "SELECT pg_advisory_unlock(${LOCK_ID});"
-  echo '\echo ✅ All migrations applied'
+  echo '\echo'
+  echo '\echo ✅ All migrations applied + invariants verified'
 } >> "$tmp"
 
 psql "$DATABASE_URL" -f "$tmp"
