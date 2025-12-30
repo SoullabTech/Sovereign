@@ -7,12 +7,17 @@ export const metadata = {
     "Join the MAIA Founding Patron Circle — a privacy-first sanctuary for journaling, story, and soul.",
 };
 
-// TODO: Replace with your actual Stripe payment links
+// Stripe Payment Links - set NEXT_PUBLIC_PATRON_JOIN_URL in env for a unified join link
+// Or replace individual tier links with actual Stripe payment links
+const PATRON_JOIN_URL =
+  process.env.NEXT_PUBLIC_PATRON_JOIN_URL ||
+  "mailto:Soullab1@gmail.com?subject=MAIA%20Patron%20Circle";
+
 const STRIPE_LINKS = {
-  seedkeeper: "/patrons/join?tier=seedkeeper", // https://buy.stripe.com/xxx
-  storyWeaver: "/patrons/join?tier=story-weaver", // https://buy.stripe.com/xxx
-  sanctuaryBuilder: "/patrons/join?tier=sanctuary-builder", // https://buy.stripe.com/xxx
-  founder: "/patrons/join?tier=founder", // https://buy.stripe.com/xxx
+  seedkeeper: process.env.NEXT_PUBLIC_STRIPE_SEEDKEEPER || PATRON_JOIN_URL,
+  storyWeaver: process.env.NEXT_PUBLIC_STRIPE_STORYWEAVER || PATRON_JOIN_URL,
+  sanctuaryBuilder: process.env.NEXT_PUBLIC_STRIPE_SANCTUARYBUILDER || PATRON_JOIN_URL,
+  founder: process.env.NEXT_PUBLIC_STRIPE_FOUNDER || PATRON_JOIN_URL,
 };
 
 const tiers = [
