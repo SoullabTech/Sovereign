@@ -758,13 +758,6 @@ export class MaiaVoiceSystem {
   }
 
   /**
-   * Get current state for external components
-   */
-  getState(): VoiceState {
-    return { ...this.state };
-  }
-
-  /**
    * Cleanup resources
    */
   dispose(): void {

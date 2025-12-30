@@ -45,12 +45,10 @@ export function isInVoiceBeta(userId?: string): boolean {
     return false;
   }
 
-  // Allowlist specific users for testing
-  const VOICE_BETA_ALLOWLIST = [
-    // Add specific user IDs here for testing
-    // 'user-123',
-    // 'user-456',
-  ];
+  // Allowlist specific users for testing (typed to avoid never[] inference)
+  const VOICE_BETA_ALLOWLIST = [] as string[];
+  // Add specific user IDs here for testing:
+  // VOICE_BETA_ALLOWLIST.push('user-123', 'user-456');
 
   if (VOICE_BETA_ALLOWLIST.includes(userId)) {
     return true;
