@@ -49,7 +49,7 @@ import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/
 import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
-import { ModeSwitcher } from './ui/ModeSwitcher';
+// import { ModeSwitcher } from './ui/ModeSwitcher'; // Module doesn't exist yet
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
@@ -77,7 +77,7 @@ import {
 // Air (contextual wisdom) serves Fire (present emergence)
 import {
   getConversationMemory,
-  type ConversationContext,
+  type ConversationContext as BardicConversationContext,
   type PatternRecognitionResult,
   type CrystallizationDetection
 } from '@/lib/memory/bardic/ConversationMemoryIntegration';

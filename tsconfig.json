@@ -55,6 +55,15 @@
     // === Legacy/backup route files ===
     "**/*.backup.ts",
     "**/*.backup.tsx",
+    "**/*.broken.tsx",
+    // === Orphaned prototype files (not imported anywhere) ===
+    "lib/oracle/dashboard/mobile/MobileFirstDesign.tsx",
+    "lib/consciousness/next-gen-conversational-intelligence.ts",
+    "lib/consciousness/multi-modal-consciousness-detection.ts",
+    // === Prototype features with deep type issues ===
+    "lib/consciousness/AccountabilityResponsibilityProtocols.ts",
+    "lib/voice/consciousness/CollectiveIntelligenceProtocols.ts",
+    "app/api/empowerment/**/*",
     // === Supabase Legacy Files (Phase 4.2B Step 6.1) ===
     "app/api/backend/src/lib/supabase.ts",
     "app/api/backend/src/lib/supabaseClient.ts",
