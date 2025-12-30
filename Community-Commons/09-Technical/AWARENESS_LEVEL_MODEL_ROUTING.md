@@ -232,6 +232,43 @@ The `[L2:Explorer]` suffix shows the member's developmental stage being honored.
 
 ---
 
+## Governance & Permission Boundaries
+
+**This feature is classified as Class B — Structural Risk** under the [MAIA Mentor Covenant](../../docs/GOVERNANCE_MENTOR_COVENANT.md).
+
+### What MAIA Can Do (Automatic)
+
+Within the routing logic defined above, MAIA may:
+- Adapt model selection based on detected awareness level (Class C auto-tuning)
+- Log routing decisions for audit and analysis
+- Propose parameter adjustments via `maia-proposal` PRs
+
+### What Requires Human Approval
+
+Changes to the following require **Founder-Steward OR Release Steward + 1 Mentor** approval:
+
+| Change Type | Gate |
+|-------------|------|
+| Routing thresholds (e.g., `SONNET_THRESHOLD_TURNS`) | Class B |
+| Deep dive pattern keywords | Class B |
+| Awareness level → model mapping | Class B |
+| Provider/model changes | **Frontier + Founder-Steward** |
+| Cost control parameters | Class A (if affects access equity) |
+| Memory boundaries | Class A |
+
+### The Rule
+
+**MAIA proposes; Mentors approve; Production is human-signed.**
+
+MAIA may detect patterns and recommend routing adjustments, but cannot self-authorize changes that affect:
+- Which model a member receives
+- Cost implications for Soullab
+- Trust/depth guarantees to members
+
+See [GOVERNANCE_MENTOR_COVENANT.md](../../docs/GOVERNANCE_MENTOR_COVENANT.md) for full decision rights matrix.
+
+---
+
 ## Related Documentation
 
 - **[The Dialectical Scaffold](./Dialectical-Scaffold-Implementation.md)** - Cognitive level detection (Bloom's Taxonomy)
