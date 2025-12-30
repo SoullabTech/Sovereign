@@ -1,3 +1,4 @@
+import * as React from 'react';
 import type { Element } from '@/lib/types/oracle';
 // Voice profiles mapped to archetypes and elements
 export interface VoiceProfile {
