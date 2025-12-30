@@ -14,6 +14,7 @@ import {
 } from '@/lib/consultation/rupture-detection-middleware';
 import { getConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
+import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
@@ -643,6 +644,21 @@ export async function POST(req: NextRequest) {
         // Graceful degradation - continue without relationship memory
       }
     }
+
+    // 🎭 AWARENESS LEVEL: Infer developmental stage for voice tier selection
+    let awarenessLevel: AwarenessLevel = 1; // Default: Newcomer
+    if (relationshipMemory) {
+      awarenessLevel = inferAwarenessFromRelationship({
+        totalEncounters: relationshipMemory.totalEncounters,
+        relationshipDuration: relationshipMemory.relationshipDuration,
+        relationshipPhase: relationshipMemory.relationshipPhase,
+        trustLevel: relationshipMemory.trustLevel,
+        breakthroughCount: relationshipMemory.breakthroughs?.length || 0
+      });
+      console.log(`[Chat API] 🎭 Awareness level: ${awarenessLevel} (based on ${relationshipMemory.totalEncounters} encounters, phase: ${relationshipMemory.relationshipPhase})`);
+    }
+    // Add awarenessLevel to meta for Opus/Sonnet routing
+    (normalizedMeta as Record<string, unknown>).awarenessLevel = awarenessLevel;
 
     // 🔮 INJECT WISDOM FIELD: Load Spiralogic metaphysical canon
     let wisdomField: string | null = null;

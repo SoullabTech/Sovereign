@@ -249,6 +249,63 @@ export function inferAwarenessLevel(spiralogicProfile: {
 }
 
 /**
+ * Infer awareness level from relationship memory context
+ * Used when Spiralogic profile isn't available but we have relationship data
+ *
+ * Philosophy: Meet members where they are based on:
+ * - How long they've been with MAIA (duration builds trust)
+ * - How many encounters (depth of engagement)
+ * - Relationship phase (qualitative progression)
+ */
+export function inferAwarenessFromRelationship(relationship: {
+  totalEncounters: number;
+  relationshipDuration: number; // days
+  relationshipPhase: 'new' | 'developing' | 'established' | 'deep';
+  trustLevel?: number; // 0-1
+  breakthroughCount?: number;
+}): AwarenessLevel {
+  const { totalEncounters, relationshipDuration, relationshipPhase, trustLevel = 0.5, breakthroughCount = 0 } = relationship;
+
+  // Phase-based starting point
+  const phaseBaseline: Record<string, AwarenessLevel> = {
+    'new': 1,
+    'developing': 2,
+    'established': 4,
+    'deep': 5
+  };
+
+  let level: number = phaseBaseline[relationshipPhase] || 1;
+
+  // Adjust based on encounter count
+  if (totalEncounters < 5) {
+    level = Math.min(level, 1); // New - still in Newcomer phase
+  } else if (totalEncounters < 20) {
+    level = Math.max(level, 2); // At least Explorer
+  } else if (totalEncounters < 50) {
+    level = Math.max(level, 3); // At least Practitioner
+  } else if (totalEncounters < 100) {
+    level = Math.max(level, 4); // At least Student
+  } else {
+    level = Math.max(level, 5); // At least Integrator
+  }
+
+  // Breakthroughs indicate deeper work
+  if (breakthroughCount >= 5) {
+    level = Math.max(level, 5); // Integrator
+  }
+  if (breakthroughCount >= 10) {
+    level = Math.max(level, 6); // Teacher
+  }
+
+  // High trust + long duration can bump to Master
+  if (trustLevel > 0.9 && relationshipDuration > 180 && totalEncounters > 150) {
+    level = 7;
+  }
+
+  return Math.min(Math.max(level, 1), 7) as AwarenessLevel;
+}
+
+/**
  * Detect if user explicitly requested framework explanations
  */
 export function userRequestedFrameworks(input: string): boolean {
