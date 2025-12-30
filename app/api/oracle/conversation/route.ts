@@ -10,8 +10,8 @@ import {
   type FieldEvent,
   type MaiaSuggestedAction
 } from '@/lib/consciousness/spiralogic-core';
-import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
-import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
+import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
 import { PARENTING_REPAIR_SYSTEM_PROMPT } from '../../../../backend/src/agents/prompts/parentingRepairPrompt';
 import {
@@ -21,6 +21,7 @@ import {
   getAxiomSummary
 } from '@/lib/consciousness/opus-axioms';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import type { ConsciousnessLevel } from '@/lib/consciousness/ConsciousnessLevelDetector';
 import { profileToConsciousnessLevel } from '@/lib/consciousness/processingProfiles';
 import { logMaiaTurn } from '@/lib/learning/maiaTrainingDataService';
 import { logOpusAxiomsForTurn } from '@/lib/learning/opusAxiomLoggingService';
@@ -46,7 +47,7 @@ export const runtime = 'nodejs';
 export const maxDuration = 60; // seconds
 
 const ORACLE_PROFILE = 'DEEP' as const;
-const ORACLE_LEVEL = 5 as const;
+const ORACLE_LEVEL: ConsciousnessLevel = 5;
 
 // Optional hard gate for the premium endpoint (recommended for beta)
 const ORACLE_API_KEY = process.env.ORACLE_API_KEY || '';
@@ -93,6 +94,8 @@ export async function POST(request: NextRequest) {
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: Record<string, unknown> | null = null; // Declared outside try for catch-block access
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -144,8 +147,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { message, userId, sessionId } = body;
+    body = await request.json() as Record<string, unknown>;
+    const { message, userId, sessionId } = body as { message?: string; userId?: string; sessionId?: string };
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -168,8 +171,8 @@ export async function POST(request: NextRequest) {
     trustLevel = Math.min(conversationDepth / 10, 1);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for oracle/symbolic work
-    let cognitiveProfile = null;
-    let fieldSafety = null;
+    let cognitiveProfile: CognitiveProfile | null = null;
+    let fieldSafety: FieldSafetyDecision | null = null;
 
     try {
       cognitiveProfile = await getCognitiveProfile(userId);
@@ -177,8 +180,8 @@ export async function POST(request: NextRequest) {
       if (cognitiveProfile) {
         fieldSafety = enforceFieldSafety({
           cognitiveProfile,
-          element: body.element,
-          userName: body.userName,
+          element: body?.element as string | null | undefined,
+          userName: body?.userName as string | null | undefined,
           context: 'oracle',
         });
 
@@ -333,7 +336,7 @@ export async function POST(request: NextRequest) {
         facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
         phase: spiralogicCell.phase,
         confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
-        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+        isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
         regulation: spiralogicCell.context.includes('grief') ? 'hypo' : undefined,
       });
 
@@ -390,7 +393,7 @@ export async function POST(request: NextRequest) {
             facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
             phase: spiralogicCell.phase,
             confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
-            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            isUncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
           });
 
           validationResult = revalidation;
@@ -427,7 +430,7 @@ export async function POST(request: NextRequest) {
             facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
             phase: spiralogicCell.phase,
             confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : null,
-            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
             regenerated: regenerationAttempt > 0,
             regeneration_attempt: regenerationAttempt,
             summary: validationResult!.summary,
@@ -493,7 +496,12 @@ export async function POST(request: NextRequest) {
             violations: axiomSummary.violations,
             ruptureDetected,
             warningsDetected,
-            evaluations: axiomEvals,
+            evaluations: axiomEvals.map(e => ({
+              id: e.axiomId,
+              severity: (e.severity ?? 'info') as 'gold' | 'warning' | 'violation' | 'info',
+              ok: e.ok,
+              notes: e.notes ? [e.notes] : undefined,
+            })),
             notes: axiomSummary.notes,
           },
         });
@@ -531,7 +539,7 @@ export async function POST(request: NextRequest) {
               frameworksActive: activeFrameworks,
               centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
             },
-            evolutionTriggers: suggestedInterventions.map(i => i.flow)
+            evolutionTriggers: suggestedInterventions.map(i => i.flowId)
           }
         }
       );
@@ -549,19 +557,18 @@ export async function POST(request: NextRequest) {
         {
           messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
           fieldStates: [{
-            fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-            water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-            earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-            air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-            aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4,
-            coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+            fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
+            water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
+            earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
+            air: spiralogicCell.element === 'Air' ? 0.8 : 0.4,
+            aether: spiralogicCell.element === 'Aether' ? 0.8 : 0.4,
+            coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
           }],
-          insights: symbolPatterns.map(p => p.description || p.archetype),
+          insights: symbolPatterns.map(p => p.archetypalCore || p.modernManifestation),
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
             phase: spiralogicCell.phase,
-            canonicalQuestion: spiralogicCell.canonicalQuestion,
             trustLevel,
             conversationDepth
           }
@@ -588,26 +595,25 @@ export async function POST(request: NextRequest) {
         archetypalResonances: activeFrameworks,
         frameworksActive: activeFrameworks,
         elementalLevels: {
-          fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4
+          fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
+          water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
+          earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
+          air: spiralogicCell.element === 'Air' ? 0.8 : 0.4,
+          aether: spiralogicCell.element === 'Aether' ? 0.8 : 0.4
         },
         fieldStates: [{
-          fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4,
-          coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
+          fire: spiralogicCell.element === 'Fire' ? 0.8 : 0.4,
+          water: spiralogicCell.element === 'Water' ? 0.8 : 0.4,
+          earth: spiralogicCell.element === 'Earth' ? 0.8 : 0.4,
+          air: spiralogicCell.element === 'Air' ? 0.8 : 0.4,
+          aether: spiralogicCell.element === 'Aether' ? 0.8 : 0.4,
+          coherence: panconsciousField.axisMundi.currentCenteringState.axisMundiStrength
         }],
-        insights: symbolPatterns.map(p => p.description || p.archetype),
+        insights: symbolPatterns.map(p => p.archetypalCore || p.modernManifestation),
         themes: [spiralogicCell.context, ...activeFrameworks],
         spiralIndicators: {
           element: spiralogicCell.element,
           phase: spiralogicCell.phase,
-          canonicalQuestion: spiralogicCell.canonicalQuestion,
           trustLevel,
           conversationDepth
         }
@@ -627,7 +633,7 @@ export async function POST(request: NextRequest) {
         conversationHistory: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
         spiralDynamics: {
           currentStage: memoryContext?.spiralDevelopmentContext?.currentPrimaryStage || null,
-          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.canonicalQuestion}`,
+          dynamics: `${spiralogicCell.element}-${spiralogicCell.phase}: ${spiralogicCell.context}`,
         },
         sessionThread: {
           emergingAwareness: memoryContext?.relatedInsights?.map((i: any) => i.insight_type) || []
@@ -757,8 +763,8 @@ export async function POST(request: NextRequest) {
     // Log error usage for tracking (fire-and-forget)
     logOracleUsage({
       requestId,
-      userId: typeof body === 'object' && body ? body.userId : undefined,
-      sessionId: typeof body === 'object' && body ? body.sessionId : undefined,
+      userId: body?.userId as string | undefined,
+      sessionId: body?.sessionId as string | undefined,
       ip,
       level: ORACLE_LEVEL,
       status: 'error',
@@ -830,7 +836,7 @@ async function generateSpiralogicResponseWithLLM(
   suggestedInterventions: Array<{flowId: string; name: string; description: string; confidence: number}>,
   conversationDepth: number,
   trustLevel: number,
-  consciousnessLevel: number,
+  consciousnessLevel: ConsciousnessLevel,
   memoryContext?: any,
   anamnesisPrompt?: string | null
 ): Promise<{
