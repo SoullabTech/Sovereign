@@ -1206,6 +1206,8 @@ export async function POST(req: NextRequest) {
       relevanceThemes: selfletContext.surfacedDeliveryContext?.relevanceThemes,
       fromSelfletId: selfletContext.surfacedDeliveryContext?.fromSelfletId,
       surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
+      // Phase 2K-b: delivery count for "Returning" badge
+      deliveryCount: selfletContext.surfacedDeliveryContext?.deliveryCount,
     } : undefined;
 
     return withSessionCookie(NextResponse.json({
