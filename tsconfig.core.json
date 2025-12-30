@@ -29,6 +29,10 @@
     "lib/**/__tests__/**",
     "**/*.test.*",
     "**/*.spec.*",
-    "**/*.backup.*"
+    "**/*.backup.*",
+    "lib/consciousness/next-gen-*.ts",
+    "lib/consciousness/multi-modal-*.ts",
+    "lib/consciousness/AccountabilityResponsibilityProtocols.ts",
+    "lib/cognitive-engines/**"
   ]
 }
