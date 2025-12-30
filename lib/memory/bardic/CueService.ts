@@ -17,7 +17,7 @@
  */
 
 import { CueRepo, type StoredCue } from './storage/CueRepo';
-import type { Cue, CueType } from './types';
+import type { Cue, CueType, Episode } from './types';
 
 export interface CreateCueInput {
   userId: string;
@@ -119,13 +119,11 @@ export class CueService {
    *
    * Returns episodes sorted by potency (strongest first).
    *
-   * NOTE: This method returns episode IDs with potency. Full Episode objects
-   * would require joining with an episodes table. Callers should fetch
-   * full Episode data separately if needed.
+   * NOTE: Returns minimal Episode stubs with only `id` and `user_id` populated.
+   * Full Episode hydration will be available once EpisodeRepo is migrated.
+   * For now, callers needing full Episode data should fetch separately.
    */
-  async findEpisodesByCue(
-    input: FindByCueInput
-  ): Promise<Array<{ episodeId: string; potency: number }>> {
+  async findEpisodesByCue(input: FindByCueInput): Promise<Episode[]> {
     try {
       const results = await CueRepo.findEpisodeIdsByCue({
         cueId: input.cueId,
@@ -146,7 +144,22 @@ export class CueService {
         }
       }
 
-      return results;
+      // Return minimal Episode stubs (API-stable, full hydration pending EpisodeRepo)
+      return results.map((hit) => ({
+        id: hit.episodeId,
+        user_id: input.userId,
+        occurred_at: new Date(0),
+        place_cue: undefined,
+        sense_cues: [],
+        people: [],
+        affect_valence: 0,
+        affect_arousal: 0,
+        elemental_state: { fire: 0.5, air: 0.5, water: 0.5, earth: 0.5, aether: 0.5 },
+        scene_stanza: undefined,
+        sacred_flag: false,
+        created_at: new Date(0),
+        updated_at: new Date(0),
+      }));
     } catch (error) {
       console.error('[CueService] Error finding episodes by cue:', error);
       return [];
