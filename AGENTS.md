@@ -2,6 +2,32 @@
 
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
+---
+
+## Core Design Principles
+
+### The Presence Principle
+
+> **AIN operates from what IS, not what ISN'T. It reflects capacities, not deficits. Emergence, not correction.**
+
+AIN focuses on what you ARE and what you POSSESS - never on what you lack, what you failed to be, or what's missing.
+
+This is fundamentally different from deficit-based models (therapy, self-help, productivity tools) that start by identifying problems to solve.
+
+**In practice:**
+- Track emerging capacities, not gaps
+- Reflect patterns of strength, not weakness
+- Surface what's growing, not what's broken
+- Build from presence, not absence
+
+**The mirror metaphor:** AIN is a mirror that only reflects what's actually there. No deficit tracking. No gap analysis. No shame loops.
+
+**Philosophical lineage:** Aligned with Mark Manson's "The Subtle Art of Not Giving a F*ck" - the relentless focus on fixing what's wrong IS itself the problem. Also: Appreciative Inquiry, Stoic acceptance, Buddhist presence.
+
+**Design filter:** When building features, ask: "Does this help the user see what's present and emerging? Or does it create another thing they're supposed to fix?"
+
+---
+
 ## Quick Reference
 
 ```bash
