@@ -35,6 +35,14 @@ export const betaTesters: BetaTester[] = [
     tags: ["beta-tester", "founder"],
     contribution: "Platform architecture and consciousness framework development"
   },
+  {
+    name: "Eric Stiller",
+    email: "erickayak@aol.com",
+    joinDate: "2024-12-31",
+    status: "active",
+    tags: ["beta-tester"],
+    contribution: "Beta pioneer"
+  },
 
   // 🚀 ADD YOUR 50+ CONSCIOUSNESS PIONEERS HERE 🚀
   // Uncomment and edit the section above, or add them one by one below
