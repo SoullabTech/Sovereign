@@ -129,6 +129,8 @@ interface OracleConversationProps {
   showAnalytics?: boolean;
   voiceEnabled?: boolean;
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'; // Voice selection for TTS
+  voiceSpeed?: number; // TTS speed (0.25 - 4.0, default 0.95)
+  voiceModel?: 'tts-1' | 'tts-1-hd'; // TTS model quality
   onVoiceChange?: (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => void; // Notify parent of voice changes
   initialMode?: 'normal' | 'patient' | 'session'; // Control mode from parent
   onModeChange?: (mode: 'normal' | 'patient' | 'session') => void; // Notify parent of mode changes
@@ -200,6 +202,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   showAnalytics = false,
   voiceEnabled = true,
   voice = 'alloy',
+  voiceSpeed = 0.95,
+  voiceModel = 'tts-1-hd',
   onVoiceChange,
   initialMode = 'normal',
   onModeChange,
@@ -373,9 +377,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const welcomeInputRef = useRef<HTMLTextAreaElement>(null); // Separate ref for welcome screen input
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const audioAnalyserRef = useRef<AnalyserNode | null>(null);
+  const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const isProcessingRef = useRef(false);
   const isRespondingRef = useRef(false);
   const isAudioPlayingRef = useRef(false);
+  const isMicrophonePausedRef = useRef(false);
   const lastVoiceErrorRef = useRef<number>(0);
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
@@ -445,6 +454,86 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // ==================== VOICE SYNTHESIS (OpenAI Alloy TTS) ====================
   // MAIA speaks with clear, natural OpenAI Alloy voice
+  // Real-time audio amplitude analysis for voice visualization
+  const startAudioAnalysis = useCallback((audio: HTMLAudioElement) => {
+    try {
+      // Create or reuse AudioContext
+      if (!audioContextRef.current) {
+        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      }
+
+      const ctx = audioContextRef.current;
+
+      // Resume if suspended
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      // Create analyser if not exists
+      if (!audioAnalyserRef.current) {
+        audioAnalyserRef.current = ctx.createAnalyser();
+        audioAnalyserRef.current.fftSize = 256;
+        audioAnalyserRef.current.smoothingTimeConstant = 0.8;
+      }
+
+      // Create new source for this audio element (only once per element)
+      if (currentAudioRef.current !== audio) {
+        // Disconnect old source if exists
+        if (audioSourceRef.current) {
+          try {
+            audioSourceRef.current.disconnect();
+          } catch (e) {
+            // Ignore disconnect errors
+          }
+        }
+
+        audioSourceRef.current = ctx.createMediaElementSource(audio);
+        audioSourceRef.current.connect(audioAnalyserRef.current);
+        audioAnalyserRef.current.connect(ctx.destination);
+        currentAudioRef.current = audio;
+      }
+
+      // Start amplitude reading loop
+      const dataArray = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
+
+      const readAmplitude = () => {
+        if (!audioAnalyserRef.current) return;
+
+        audioAnalyserRef.current.getByteFrequencyData(dataArray);
+
+        // Calculate average amplitude (0-1 range)
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length / 255;
+
+        // Apply some scaling for better visual effect
+        const scaledAmplitude = Math.min(1, average * 2.5);
+        setVoiceAmplitude(scaledAmplitude);
+
+        // Continue loop while audio is playing
+        if (!audio.paused && !audio.ended) {
+          animationFrameRef.current = requestAnimationFrame(readAmplitude);
+        }
+      };
+
+      readAmplitude();
+      console.log('🎵 Audio analysis started');
+
+    } catch (err) {
+      console.warn('⚠️ Could not start audio analysis:', err);
+    }
+  }, []);
+
+  const stopAudioAnalysis = useCallback(() => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    setVoiceAmplitude(0);
+  }, []);
+
   const maiaSpeak = useCallback(async (text: string, elementHint?: Element) => {
     if (!text || typeof window === 'undefined') return;
 
@@ -464,8 +553,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         body: JSON.stringify({
           text: text,
           voice: voice || 'alloy',  // Use the voice prop from parent
-          speed: 0.95,
-          model: 'tts-1-hd'
+          speed: voiceSpeed,
+          model: voiceModel
         })
       });
 
@@ -477,6 +566,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const audioUrl = URL.createObjectURL(audioBlob);
 
       const audio = new Audio(audioUrl);
+      // Enable cross-origin for audio analysis
+      audio.crossOrigin = 'anonymous';
 
       // Play audio with proper loading and error handling
       await new Promise<void>((resolve, reject) => {
@@ -487,6 +578,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         timeoutId = setTimeout(() => {
           if (!hasStarted) {
             audio.pause();
+            stopAudioAnalysis();
             URL.revokeObjectURL(audioUrl);
             reject(new Error('Audio failed to start within 5s'));
           }
@@ -504,13 +596,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           console.log('▶️ Audio started playing');
           hasStarted = true;
           if (timeoutId) clearTimeout(timeoutId);
+          // Start real-time audio analysis
+          startAudioAnalysis(audio);
         };
 
         audio.onended = () => {
           console.log('🔇 MAIA finished speaking');
+          stopAudioAnalysis();
           setIsResponding(false);
           setIsAudioPlaying(false);
-          setVoiceAmplitude(0);
           URL.revokeObjectURL(audioUrl);
           if (timeoutId) clearTimeout(timeoutId);
           resolve();
@@ -518,9 +612,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         audio.onerror = (e) => {
           console.error('❌ Audio playback error:', e);
+          stopAudioAnalysis();
           setIsResponding(false);
           setIsAudioPlaying(false);
-          setVoiceAmplitude(0);
           URL.revokeObjectURL(audioUrl);
           if (timeoutId) clearTimeout(timeoutId);
           reject(new Error('Audio playback failed'));
@@ -529,6 +623,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Start playback
         audio.play().catch(err => {
           console.error('❌ Audio.play() failed:', err);
+          stopAudioAnalysis();
           if (timeoutId) clearTimeout(timeoutId);
           reject(err);
         });
@@ -536,11 +631,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     } catch (err) {
       console.error('❌ OpenAI TTS error:', err);
+      stopAudioAnalysis();
       setIsResponding(false);
       setIsAudioPlaying(false);
-      setVoiceAmplitude(0);
     }
-  }, []);
+  }, [startAudioAnalysis, stopAudioAnalysis]);
 
   const maiaReady = true; // OpenAI TTS is always ready
 
@@ -1134,7 +1229,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     isProcessingRef.current = isProcessing;
     isRespondingRef.current = isResponding;
     isAudioPlayingRef.current = isAudioPlaying;
-  }, [isProcessing, isResponding, isAudioPlaying]);
+    isMicrophonePausedRef.current = isMicrophonePaused;
+  }, [isProcessing, isResponding, isAudioPlaying, isMicrophonePaused]);
 
   useEffect(() => {
     if (isProcessing || isResponding) {
@@ -1215,20 +1311,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   }, [userVoiceState]);
 
-  // Pulse voice amplitude when MAIA is speaking (only when no user voice input)
-  useEffect(() => {
-    if (isResponding || isAudioPlaying) {
-      // Pulse effect for MAIA speaking
-      const pulseInterval = setInterval(() => {
-        setVoiceAmplitude(prev => {
-          const target = 0.5 + Math.sin(Date.now() / 200) * 0.3;
-          return prev * 0.7 + target * 0.3; // Smooth lerp to pulsing target
-        });
-      }, 50);
-
-      return () => clearInterval(pulseInterval);
-    }
-  }, [isResponding, isAudioPlaying]);
+  // Note: Voice amplitude is now driven by real-time audio analysis in startAudioAnalysis()
 
   // iOS PWA: Resume AudioContext on visibility change and user interaction
   useEffect(() => {
@@ -1775,12 +1858,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const isCareMode = realtimeMode === 'counsel';
       const allowCanonWrap = isCareMode && getCanonWrapEnabled();
 
-      // Guard: Ensure stable identity is available for memory persistence
-      if (!explorerId) {
-        console.warn('🧠 [Identity] No explorerId yet - waiting for initialization');
-        setIsProcessing(false);
-        setCurrentMotionState('idle');
-        return;
+      // Ensure stable identity is available - generate on-the-fly if needed
+      let effectiveExplorerId = explorerId;
+      if (!effectiveExplorerId) {
+        // Generate synchronously rather than blocking
+        effectiveExplorerId = getOrCreateExplorerId();
+        setExplorerId(effectiveExplorerId);
+        console.log('🧠 [Identity] Explorer ID generated on-the-fly:', effectiveExplorerId);
       }
 
       // MAIA speaks through sovereign API - working consciousness system
@@ -1796,7 +1880,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           // Stable identity for cross-session memory persistence
           meta: {
-            explorerId, // ✅ Stable identity across sessions
+            explorerId: effectiveExplorerId, // ✅ Stable identity across sessions
             sessionId,  // Current session (changes per session)
             memoryMode: 'continuity', // Default: turns only, no long-term writeback
           },
@@ -2280,11 +2364,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           console.log('🎤 Microphone unpaused - ready for next input');
 
           // CRITICAL: Resume listening after cooldown to prevent echo
-          if (isInVoiceMode && !isMuted && voiceMicRef.current?.startListening) {
+          // Always restart in voice mode - user activated once, keep conversation flowing
+          if (isInVoiceMode && voiceMicRef.current?.startListening) {
+            console.log(`⏳ Scheduling mic restart in ${cooldownMs}ms...`);
             setTimeout(() => {
-              if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
+              // Double-check we're still in voice mode and not processing
+              if (voiceMicRef.current?.startListening && !isProcessingRef.current && !isRespondingRef.current) {
+                setIsMuted(false); // Ensure mic is unmuted
                 voiceMicRef.current.startListening();
-                console.log('🎤 Microphone resumed after Maia finished speaking');
+                console.log('🎤 Microphone auto-resumed after Maia finished speaking');
+              } else {
+                console.log('⏸️ Skipped mic restart - still processing or responding');
               }
             }, cooldownMs); // Wait for echo suppression cooldown
           }
@@ -2346,8 +2436,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
 
     // 🔇 CRITICAL: Reject ALL transcripts when MAIA is speaking or processing
-    if (isAudioPlaying || isResponding || isMicrophonePaused) {
-      console.warn('🔇 [Voice Feedback Prevention] Rejecting transcript - MAIA is speaking:', t);
+    // USE REFS for real-time values (state values can be stale in callbacks!)
+    if (isAudioPlayingRef.current || isRespondingRef.current || isMicrophonePausedRef.current) {
+      console.warn('🔇 [Voice Feedback Prevention] Rejecting transcript - MAIA is speaking:', t, {
+        isAudioPlaying: isAudioPlayingRef.current,
+        isResponding: isRespondingRef.current,
+        isMicrophonePaused: isMicrophonePausedRef.current
+      });
       return;
     }
 
@@ -2657,9 +2752,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: cleanText,
-          voice: agentConfig.voice || 'alloy',
-          speed: 0.95,
-          model: 'tts-1-hd'
+          voice: agentConfig.voice || voice || 'alloy',
+          speed: voiceSpeed,
+          model: voiceModel
         })
       });
 
@@ -3070,12 +3165,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                         }
                       }
                     }}
-                    className="flex-shrink-0 p-2.5 rounded-xl bg-amber-600/90 hover:bg-amber-500
-                             transition-all active:scale-95 shadow-lg shadow-amber-600/30"
+                    className="flex-shrink-0 p-2.5 rounded-xl transition-all active:scale-95"
+                    style={{ backgroundColor: '#F59E0B' }}
                     title="Send message"
                   >
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="#1A1513" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
                     </svg>
                   </button>
                 </div>
@@ -3173,7 +3268,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           }}
           userSilenceDuration={0} // TODO: Track actual silence duration
           userSpeechTempo={120} // TODO: Track actual speech tempo
-          isListening={false}
+          isListening={isListening}
           isSpeaking={isResponding}
           biometricEnabled={true} // ⌚ APPLE WATCH INTEGRATION ENABLED
         >
@@ -3199,13 +3294,27 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   // Start listening
                   console.log('🎤 Starting voice via holoflower...');
                   setIsMuted(false);
+                  setIsListening(true); // Immediately show visual indicator
                   try {
                     await voiceMicRef.current.startListening();
                     console.log('✅ Voice started successfully');
                   } catch (error: any) {
                     console.error('❌ Failed to start microphone:', error);
                     setIsMuted(true); // Reset on error
-                    if (error.message === 'MICROPHONE_UNAVAILABLE') {
+
+                    // Show specific error messages for different scenarios
+                    if (error.message === 'VOICE_UNAVAILABLE') {
+                      // Check if in simulator
+                      const isSimulator = window.navigator.userAgent.toLowerCase().includes('simulator') ||
+                                         window.navigator.userAgent.toLowerCase().includes('x86_64');
+                      if (isSimulator) {
+                        toast.error('Voice unavailable in simulator. Use text input or test on physical device.', { duration: 5000 });
+                      } else {
+                        toast.error('Voice not supported in iOS app. Use text input below.', { duration: 5000 });
+                      }
+                      // Show text input as fallback
+                      setShowChatInterface(true);
+                    } else if (error.message === 'MICROPHONE_UNAVAILABLE') {
                       toast.error('Microphone not available. Please check permissions in your browser settings.');
                     } else {
                       toast.error('Unable to access microphone. Please try again.');
@@ -3239,7 +3348,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             interactive={false}
             showLabels={false}
             motionState={currentMotionState}
-            isListening={voiceMicRef.current?.isListening || false}
+            isListening={isListening}
             isProcessing={isProcessing}
             isResponding={isResponding}
             showBreakthrough={showBreakthrough}
@@ -3433,46 +3542,76 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             </div>
             )}
 
-            {/* Voice Visualizer - User's voice (amber plasma field with radial gradients) */}
-            {isMounted && !showChatInterface && voiceEnabled && voiceMicRef.current?.isListening && (
+            {/* Voice Visualizer - ULTRAVIOLET AURA - Solid glow spreading behind holoflower */}
+            {isMounted && !showChatInterface && voiceEnabled && isListening && (
               <motion.div
                 className="absolute inset-0 pointer-events-none flex items-center justify-center"
+                style={{ zIndex: -1 }} // Behind holoflower
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Multiple amber plasma field layers - ENHANCED VISIBILITY */}
-                {[...Array(3)].map((_, i) => (
-                  <motion.div
-                    key={`voice-field-${i}`}
-                    className="absolute rounded-full"
-                    style={{
-                      width: `${300 + i * 150}px`,
-                      height: `${300 + i * 150}px`,
-                      background: i === 0
-                        ? 'radial-gradient(circle, rgba(251, 191, 36, 0.6) 0%, rgba(251, 191, 36, 0.25) 50%, transparent 100%)'
-                        : i === 1
-                        ? 'radial-gradient(circle, rgba(245, 158, 11, 0.45) 0%, rgba(245, 158, 11, 0.15) 50%, transparent 100%)'
-                        : 'radial-gradient(circle, rgba(217, 119, 6, 0.3) 0%, rgba(217, 119, 6, 0.08) 50%, transparent 100%)',
-                      filter: `blur(${12 + i * 6}px)`,
-                    }}
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      opacity: [0.85 - i * 0.15, 0.6, 0.85 - i * 0.15],
-                    }}
-                    transition={{
-                      duration: 5 + i * 2,
-                      repeat: Infinity,
-                      delay: i * 0.8,
-                      ease: [0.42, 0, 0.58, 1]
-                    }}
-                  />
-                ))}
+                {/* Core ultraviolet glow - solid spreading from center */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '400px',
+                    height: '400px',
+                    // Solid gradient from center, spreading outward
+                    background: 'radial-gradient(circle, rgba(138, 43, 226, 0.35) 0%, rgba(148, 0, 211, 0.25) 30%, rgba(106, 27, 154, 0.15) 55%, rgba(94, 53, 177, 0.08) 75%, transparent 100%)',
+                    filter: 'blur(20px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.6})`,
+                    opacity: 0.5 + voiceAmplitude * 0.5,
+                    transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                  }}
+                />
+
+                {/* Secondary spreading wave */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '500px',
+                    height: '500px',
+                    background: 'radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, rgba(123, 31, 162, 0.12) 40%, rgba(94, 53, 177, 0.06) 65%, transparent 100%)',
+                    filter: 'blur(30px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.8})`,
+                    opacity: 0.4 + voiceAmplitude * 0.4,
+                    transition: 'transform 0.06s ease-out, opacity 0.06s ease-out',
+                  }}
+                />
+
+                {/* Outer diffuse field - spreads far into background */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '650px',
+                    height: '650px',
+                    background: 'radial-gradient(circle, rgba(126, 87, 194, 0.12) 0%, rgba(149, 117, 205, 0.08) 35%, rgba(103, 58, 183, 0.04) 60%, transparent 100%)',
+                    filter: 'blur(40px)',
+                    transform: `scale(${1 + voiceAmplitude * 1.0})`,
+                    opacity: 0.35 + voiceAmplitude * 0.35,
+                    transition: 'transform 0.07s ease-out, opacity 0.07s ease-out',
+                  }}
+                />
+
+                {/* Brightest inner core - most reactive */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '250px',
+                    height: '250px',
+                    background: 'radial-gradient(circle, rgba(186, 85, 211, 0.4) 0%, rgba(138, 43, 226, 0.3) 40%, rgba(148, 0, 211, 0.15) 70%, transparent 100%)',
+                    filter: 'blur(12px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.5})`,
+                    opacity: 0.6 + voiceAmplitude * 0.4,
+                    transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
+                  }}
+                />
 
               </motion.div>
             )}
 
-            {/* Voice Visualizer - MAIA's voice - ENHANCED VISIBILITY */}
+            {/* Voice Visualizer - MAIA's voice - TEAL/TURQUOISE - Reactive to Audio */}
             {(isResponding || isAudioPlaying) && (
               <motion.div
                 className="absolute inset-0 pointer-events-none flex items-center justify-center"
@@ -3480,59 +3619,61 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                {/* Golden pulsing glow layers - MUCH MORE VISIBLE */}
+                {/* MAIA teal glow rings - reactive to audio amplitude */}
                 {[...Array(3)].map((_, i) => (
                   <motion.div
-                    key={`maya-glow-${i}`}
+                    key={`maia-voice-glow-${i}`}
                     className="absolute rounded-full"
                     style={{
                       width: `${280 + i * 120}px`,
                       height: `${280 + i * 120}px`,
                       background: i === 0
-                        ? 'radial-gradient(circle, rgba(212, 184, 150, 0.55) 0%, rgba(212, 184, 150, 0.2) 60%, transparent 100%)'
+                        ? 'radial-gradient(circle, rgba(45, 212, 191, 0.55) 0%, rgba(20, 184, 166, 0.2) 60%, transparent 100%)'
                         : i === 1
-                        ? 'radial-gradient(circle, rgba(196, 168, 134, 0.4) 0%, rgba(196, 168, 134, 0.12) 60%, transparent 100%)'
-                        : 'radial-gradient(circle, rgba(180, 152, 118, 0.25) 0%, rgba(180, 152, 118, 0.06) 60%, transparent 100%)',
+                        ? 'radial-gradient(circle, rgba(34, 197, 178, 0.4) 0%, rgba(45, 212, 191, 0.12) 60%, transparent 100%)'
+                        : 'radial-gradient(circle, rgba(94, 234, 212, 0.3) 0%, rgba(20, 184, 166, 0.08) 60%, transparent 100%)',
                       filter: `blur(${18 + i * 8}px)`,
-                    }}
-                    animate={{
-                      scale: [1, 1.15, 1],
-                      opacity: [0.4, 0.2, 0.4],
-                    }}
-                    transition={{
-                      duration: 2.5 + i * 0.5,
-                      repeat: Infinity,
-                      delay: i * 0.4,
-                      ease: "easeInOut"
+                      // Dynamic scale based on voice amplitude
+                      transform: `scale(${1 + voiceAmplitude * (0.3 + i * 0.15)})`,
+                      opacity: 0.3 + voiceAmplitude * 0.5,
+                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                     }}
                   />
                 ))}
 
-                {/* Subtle inner glow */}
+                {/* Inner teal glow - reactive to MAIA voice */}
                 <motion.div
                   className="absolute rounded-full"
                   style={{
                     width: '200px',
                     height: '200px',
-                    background: 'radial-gradient(circle, rgba(212, 184, 150, 0.15) 0%, transparent 60%)',
-                    filter: 'blur(30px)',
+                    background: 'radial-gradient(circle, rgba(45, 212, 191, 0.35) 0%, rgba(20, 184, 166, 0.15) 50%, transparent 70%)',
+                    filter: 'blur(25px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.5})`,
+                    opacity: 0.4 + voiceAmplitude * 0.6,
+                    transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                   }}
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.3, 0.5, 0.3],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "easeInOut"
+                />
+
+                {/* Bright center pulse - most reactive (bright teal) */}
+                <motion.div
+                  className="absolute rounded-full"
+                  style={{
+                    width: '120px',
+                    height: '120px',
+                    background: 'radial-gradient(circle, rgba(94, 234, 212, 0.5) 0%, rgba(45, 212, 191, 0.3) 40%, rgba(20, 184, 166, 0.15) 70%, transparent 100%)',
+                    filter: 'blur(15px)',
+                    transform: `scale(${1 + voiceAmplitude * 0.8})`,
+                    opacity: 0.5 + voiceAmplitude * 0.5,
+                    transition: 'transform 0.03s ease-out, opacity 0.03s ease-out',
                   }}
                 />
               </motion.div>
             )}
 
-            {/* Status text below holoflower */}
+            {/* Status text below holoflower - always show listening indicator */}
             {isMounted && !showChatInterface && voiceEnabled && (
-              <div className="absolute bottom-[-110px] left-1/2 transform -translate-x-1/2 text-center">
+              <div className="absolute bottom-[-110px] left-1/2 transform -translate-x-1/2 text-center pointer-events-none">
                 {/* Elemental Mode Indicator - TEMPORARILY DISABLED
                 {voiceMicRef.current?.elementalMode && (
                   <motion.div
@@ -3587,7 +3728,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                        '💫 Speaking...'}
                     </motion.div>
                   )}
-                  {voiceMicRef.current?.isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {isListening && !isResponding && !isAudioPlaying && !isProcessing && (
                     <div className="flex flex-col items-center gap-2">
                       <motion.div
                         initial={{ opacity: 0, y: -10 }}
@@ -3623,7 +3764,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       )}
                     </div>
                   )}
-                  {!voiceMicRef.current?.isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {!isListening && !isResponding && !isAudioPlaying && !isProcessing && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -3810,22 +3951,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   }}
                 >
                   <div className="w-20 h-20 relative">
-                    {/* Glow effect when speaking */}
+                    {/* Turquoise glow effect when MAIA is speaking - reactive to audio */}
                     {(isResponding || isAudioPlaying) && (
                       <motion.div
                         className="absolute inset-0 rounded-full"
                         style={{
-                          background: 'radial-gradient(circle, rgba(212, 184, 150, 0.6) 0%, transparent 70%)',
+                          background: 'radial-gradient(circle, rgba(64, 224, 208, 0.7) 0%, transparent 70%)',
                           filter: 'blur(20px)',
-                        }}
-                        animate={{
-                          scale: [1, 1.4, 1],
-                          opacity: [0.6, 0.3, 0.6],
-                        }}
-                        transition={{
-                          duration: 2,
-                          repeat: Infinity,
-                          ease: "easeInOut"
+                          transform: `scale(${1 + voiceAmplitude * 0.6})`,
+                          opacity: 0.4 + voiceAmplitude * 0.6,
+                          transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                         }}
                       />
                     )}
@@ -3908,8 +4043,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               className="fixed left-1/2 transform -translate-x-1/2 z-below-nav"
               style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
             >
-              <div className="bg-soul-surface/90 backdrop-blur-md rounded-lg px-4 py-2 border border-soul-border/40">
-                <p className="text-soul-textSecondary text-sm">Click the holoflower to activate voice</p>
+              <div className="bg-black/70 backdrop-blur-md rounded-lg px-4 py-2 border border-amber-400/40">
+                <p className="text-amber-200/90 text-sm">Click the holoflower to activate voice</p>
               </div>
             </motion.div>
           )}

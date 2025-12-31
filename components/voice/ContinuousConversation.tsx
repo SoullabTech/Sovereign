@@ -4,9 +4,11 @@ import React, { useState, useRef, useCallback, useEffect, forwardRef, useImperat
 import { Mic, MicOff, Loader2, Activity, Wifi, WifiOff, AlertCircle } from "lucide-react";
 import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
 import { getPlatformInfo, getVoiceUnavailableMessage, type PlatformInfo } from "@/lib/utils/platformDetection";
+import { Capacitor } from '@capacitor/core';
+import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
-interface ContinuousConversationProps {
+export interface ContinuousConversationProps {
   onTranscript: (text: string) => void;
   onInterimTranscript?: (text: string) => void;
   onRecordingStateChange?: (isRecording: boolean) => void;
@@ -48,6 +50,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
   const recognitionRef = useRef<any>(null);
+  const useNativeSpeechRef = useRef<boolean>(Capacitor.isNativePlatform()); // Use native speech on iOS/Android
+  const nativeListenerRef = useRef<any>(null); // Store native listener handle
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -674,9 +678,119 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Start listening
   const startListening = useCallback(async () => {
     console.log('🎤 [ContinuousConversation] startListening called');
+    console.log('📱 [ContinuousConversation] Platform:', Capacitor.getPlatform(), 'Native:', useNativeSpeechRef.current);
+
+    // 🎤 IMMEDIATE: Notify parent right away so visualizer shows instantly
+    setIsListening(true);
+    isListeningRef.current = true;
+    onRecordingStateChange?.(true);
+    console.log('📡 [Immediate] Notified parent: listening mode active');
 
     try {
-      // 🔍 Check platform capabilities first
+      // 🔄 Use native speech recognition on iOS/Android
+      if (useNativeSpeechRef.current) {
+        console.log('📱 [ContinuousConversation] Using NATIVE speech recognition');
+
+        // Request permission first
+        const permResult = await NativeSpeechRecognition.requestPermissions();
+        console.log('🔐 [ContinuousConversation] Permission result:', permResult);
+
+        if (permResult.speechRecognition !== 'granted') {
+          setVoiceError('Speech recognition permission denied. Please enable in Settings.');
+          throw new Error('VOICE_UNAVAILABLE');
+        }
+
+        // Check availability
+        const available = await NativeSpeechRecognition.available();
+        if (!available.available) {
+          setVoiceError('Speech recognition not available on this device.');
+          throw new Error('VOICE_UNAVAILABLE');
+        }
+
+        setVoiceError(null);
+        isProcessingRef.current = false;
+        consecutiveRestartCount.current = 0;
+
+        // 🎤 Initialize audio monitoring for voice visualization (also needed on native!)
+        const audioReady = await initializeAudioMonitoring();
+        if (!audioReady) {
+          console.warn('⚠️ [Native] Audio monitoring failed - visualization disabled');
+        } else {
+          console.log('✅ [Native] Audio monitoring ready for visualization');
+        }
+
+        // Set up listener for partial results
+        nativeListenerRef.current = await NativeSpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
+          if (data.matches && data.matches.length > 0) {
+            const transcript = data.matches[0];
+            console.log('📝 [Native] Partial:', transcript);
+            lastSpeechTime.current = Date.now();
+            setIsRecording(true);
+            isRecordingRef.current = true;
+            hasSpokenRef.current = true;
+
+            // Send interim transcript
+            if (onInterimTranscript) {
+              onInterimTranscript(transcript);
+            }
+
+            // Accumulate transcript
+            accumulatedTranscript.current = transcript;
+          }
+        });
+
+        // Start native speech recognition
+        await NativeSpeechRecognition.start({
+          language: 'en-US',
+          maxResults: 3,
+          prompt: 'Speak to MAIA',
+          partialResults: true,
+          popup: false
+        });
+
+        console.log('🎙️ [ContinuousConversation] Native recognition started');
+
+        // Handle when speech ends
+        NativeSpeechRecognition.addListener('listeningState', async (state: { status: string }) => {
+          console.log('🔊 [Native] State:', state.status);
+          if (state.status === 'stopped' && isListeningRef.current) {
+            // Process accumulated transcript
+            if (accumulatedTranscript.current.trim()) {
+              const finalTranscript = accumulatedTranscript.current.trim();
+              console.log('✅ [Native] Final transcript:', finalTranscript);
+              accumulatedTranscript.current = '';
+              setIsRecording(false);
+              isRecordingRef.current = false;
+              onTranscript(finalTranscript);
+            }
+            // Auto-restart if still in listening mode
+            if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+              console.log('🔄 [Native] Auto-restarting...');
+              setTimeout(async () => {
+                if (isListeningRef.current) {
+                  try {
+                    await NativeSpeechRecognition.start({
+                      language: 'en-US',
+                      maxResults: 3,
+                      partialResults: true,
+                      popup: false
+                    });
+                  } catch (e) {
+                    console.warn('⚠️ [Native] Restart failed:', e);
+                  }
+                }
+              }, 500);
+            }
+          }
+        });
+
+        return;
+      }
+
+      // 🌐 Web Speech API fallback for browsers
+      console.log('🌐 [ContinuousConversation] Using WEB speech recognition');
+
+      // Check platform capabilities first
       if (!platformInfo) {
         const info = await getPlatformInfo();
         setPlatformInfo(info);
@@ -711,8 +825,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
 
     if (recognitionRef.current) {
-      setIsListening(true);
-      isListeningRef.current = true; // Update ref immediately to avoid timing issues
       isProcessingRef.current = false;
 
       // Reset restart counter when user manually starts listening
@@ -739,15 +851,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
     } catch (error: any) {
       console.error('❌ [ContinuousConversation] Failed to start listening:', error);
-      // Reset state on error
+      // Reset state on error and notify parent
       setIsListening(false);
       isListeningRef.current = false;
+      onRecordingStateChange?.(false); // Hide visualizer on error
       throw error; // Re-throw so parent component can handle
     }
-  }, [initializeSpeechRecognition, initializeAudioMonitoring]);
+  }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange]);
 
   // Stop listening
-  const stopListening = useCallback(() => {
+  const stopListening = useCallback(async () => {
     console.log('🛑 [ContinuousConversation] stopListening called');
 
     setIsListening(false);
@@ -756,7 +869,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isRecordingRef.current = false; // Update ref immediately
     setAudioLevel(0);
 
-    // Stop speech recognition
+    // Stop native speech recognition on iOS/Android
+    if (useNativeSpeechRef.current) {
+      try {
+        await NativeSpeechRecognition.stop();
+        if (nativeListenerRef.current) {
+          await nativeListenerRef.current.remove();
+          nativeListenerRef.current = null;
+        }
+        await NativeSpeechRecognition.removeAllListeners();
+        console.log('🛑 [Native] Recognition stopped');
+      } catch (e) {
+        console.warn('⚠️ [Native] Error stopping:', e);
+      }
+    }
+
+    // Stop web speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;

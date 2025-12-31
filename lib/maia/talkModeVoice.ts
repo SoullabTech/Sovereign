@@ -174,7 +174,18 @@ export function getTalkModeVoiceInstructions(
 
   // Add user name if available and it's a real name (not Guest/Explorer/anonymous)
   if (userName && userName !== 'Guest' && userName !== 'Explorer' && userName !== 'anonymous') {
-    instructions += `\n\n**User's name:** ${userName}\nYou can use their name naturally in greetings or conversation. For example: "${userName}." or "Hey, ${userName}."\n\nIMPORTANT: Use their actual name (${userName}), NOT "Guest" or generic terms.`;
+    instructions += `\n\n**User's name:** ${userName}
+Use their name SPARINGLY - maybe once at the start of a conversation or to emphasize something important.
+DO NOT start every response with their name. That feels robotic and unnatural.
+Most responses should NOT include their name at all.
+
+Good examples:
+- First greeting: "Hey ${userName}!" or "${userName}."
+- Then just: "Ha!" or "Got it." or "Fair enough."
+- Occasionally: "That's interesting, ${userName}." (but rarely)
+
+BAD (too much):
+- "${userName}, ha!" then "${userName}, yeah" then "${userName}, got it" ← NEVER do this`;
   } else {
     instructions += `\n\n**User's name:** Unknown - do NOT call them "Guest" or invent a name. Just use "Hey." or "Hi there." without a name.`;
   }
