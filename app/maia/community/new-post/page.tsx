@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -103,7 +103,7 @@ const ELEMENTS = [
   { id: 'aether', name: 'Aether', icon: Sparkles, color: 'text-purple-400' },
 ];
 
-export default function NewPostPage() {
+function NewPostContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedTerritory = searchParams.get('territory');
@@ -466,5 +466,17 @@ export default function NewPostPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function NewPostPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-amber-950/20 flex items-center justify-center">
+        <div className="text-amber-300/60">Loading...</div>
+      </div>
+    }>
+      <NewPostContent />
+    </Suspense>
   );
 }
