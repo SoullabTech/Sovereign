@@ -42,6 +42,7 @@ import {
 import { TurnsStore } from '../memory/stores/TurnsStore';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
+import { query } from '../db/postgres';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -306,12 +307,22 @@ function shouldElevateToLattice(text: string, mode: 'dialogue' | 'counsel' | 'sc
   );
 }
 
+export type PatternMeta = {
+  id: string;
+  key: string;
+  sig?: number;
+  seen?: number;
+};
+
 export type MaiaResponse = {
   text: string;
   processingProfile?: ProcessingProfile;
   processingTimeMs?: number;
   audio?: Buffer;
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
+  metadata?: {
+    patterns?: PatternMeta[];
+  };
 };
 
 type MaiaRequest = {
@@ -1688,6 +1699,77 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       console.warn('⚠️ [TurnsStore] No effectiveUserId - skipping cross-session storage');
     }
 
+    // 📊 MEMORY AUDIT: Record which memories were used in this response
+    try {
+      const { randomUUID } = await import('crypto');
+      const { ConversationMemoryUsesStore } = await import('../memory/stores/ConversationMemoryUsesStore');
+
+      // Get the memory bundle that was used for this response (from meta)
+      const usedBundle = (meta as any)?.memoryBundle;
+
+      if (usedBundle?.memoryBullets?.length > 0 && effectiveUserId) {
+        const messageId = (meta as any)?.traceId || randomUUID();
+
+        await ConversationMemoryUsesStore.recordBatch(
+          effectiveUserId,
+          sessionId || 'no-session',
+          messageId,
+          usedBundle.memoryBullets.map((bullet: any, idx: number) => ({
+            memoryTable:
+              bullet.source === 'developmental' ? 'developmental_memories' : 'conversation_turns',
+            memoryId: bullet.id || `${bullet.source}-${idx}`,
+            usedAs:
+              bullet.source === 'breakthrough'
+                ? 'breakthrough'
+                : bullet.source === 'insight'
+                  ? 'pattern'
+                  : 'context',
+            retrievalScore: bullet.significance,
+            confidenceScore: bullet.significance,
+          }))
+        );
+
+        console.log(`📊 [MemoryAudit] Recorded ${usedBundle.memoryBullets.length} memory uses`);
+      }
+    } catch (auditErr) {
+      console.warn('⚠️ [MemoryAudit] Failed to record uses:', auditErr);
+      // Non-blocking
+    }
+
+    // 🔗 PATTERNS: Attach top patterns to message metadata for UI chips ("Show why")
+    let responsePatterns: PatternMeta[] = [];
+    try {
+      if (effectiveUserId) {
+        const patternRows = await query<{
+          id: string;
+          patternKey: string;
+          seenCount: number;
+          significance: number;
+        }>(
+          `SELECT id, entity_tags[1] AS "patternKey",
+           COALESCE((trigger_event->>'seenCount')::int, 1) AS "seenCount",
+           significance::float8 AS "significance"
+           FROM developmental_memories
+           WHERE user_id = $1 AND memory_type = 'emergent_pattern'
+           ORDER BY significance DESC, formed_at DESC LIMIT 5;`,
+          [effectiveUserId]
+        );
+
+        if (patternRows.rows.length > 0) {
+          responsePatterns = patternRows.rows.map((r) => ({
+            id: r.id,
+            key: r.patternKey || 'unknown',
+            sig: r.significance,
+            seen: r.seenCount,
+          }));
+          console.log(`🔗 [Patterns] Attached ${responsePatterns.length} patterns to response metadata`);
+        }
+      }
+    } catch (patternErr) {
+      console.warn('⚠️ [Patterns] Failed to attach patterns:', patternErr);
+      // Non-blocking - patterns are optional enhancement
+    }
+
     // ✨ MEMORY INTEGRATION: Form memory from this conversation (mode-aware)
     try {
       const activeMode = normalizeMode((meta as any)?.mode);
@@ -1925,7 +2007,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       processingProfile,
       processingTimeMs,
       audio: audioResponse,
-      provider  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
+      metadata: responsePatterns.length > 0 ? { patterns: responsePatterns } : undefined
     };
 
   } catch (error) {

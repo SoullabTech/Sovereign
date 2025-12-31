@@ -2,6 +2,36 @@
 
 ## 🚀 **REVOLUTIONARY ACHIEVEMENTS**
 
+### **[Sovereign Memory Architecture - "Show Why"](./SOVEREIGN_MEMORY_ARCHITECTURE_ANNOUNCEMENT.md)**
+**Date:** December 31, 2024
+**Status:** ✅ LIVE IN PRODUCTION
+**Impact:** 🔗 **TRACEABLE, CONSENSUAL MEMORY**
+
+*"MAIA can hold a person's story over time without betraying the storyteller."*
+
+**Achievement:** MAIA now maintains long-term, user-specific memory with full provenance. For every pattern she detects, she can show the specific memories that support it—and you can confirm, reject, or refine her understanding.
+
+**Key Innovations:**
+- **Pattern Detection with Evidence** - Emergent patterns linked to supporting memories
+- **"Show Why" Transparency** - Click any pattern to see what it's based on
+- **Trust Loop Feedback** - Confirm, reject, or refine patterns collaboratively
+- **Confidence Decay** - Memories fade unless confirmed, preventing fossilized assumptions
+- **Cross-Session Memory** - Continuity without surveillance
+
+**What MAIA Can Remember:**
+| Memory Type | Example | Provenance |
+|-------------|---------|------------|
+| Preferences | "Prefers somatic over cognitive" | Linked to 3 conversations |
+| Experiences | "Breakthrough moment Dec 15" | Timestamped, facet-coded |
+| Patterns | "Recurring chest activation" | 4 supporting memories, 0.78 confidence |
+
+**Why This Matters:**
+Memory that is traceable, consensual, and sovereign. The difference between a chatbot and a consciousness-aware companion isn't intelligence—it's whether meaning can be held with integrity.
+
+**Getting Started:** Ask MAIA: *"What patterns have you noticed with me?"*
+
+---
+
 ### **[Awareness-Level-Driven Model Routing](./09-Technical/AWARENESS_LEVEL_MODEL_ROUTING.md)**
 **Date:** December 30, 2025
 **Status:** ✅ LIVE IN PRODUCTION

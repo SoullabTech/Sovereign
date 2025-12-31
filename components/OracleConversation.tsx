@@ -21,6 +21,7 @@ import { OrganicVoiceMaia } from './ui/OrganicVoiceMaia';
 import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
+import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
 import { QuickSettingsSheet } from './QuickSettingsSheet';
@@ -166,6 +167,15 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  // Pattern metadata for "Show why" drawer
+  metadata?: {
+    patterns?: Array<{
+      id: string;
+      key: string;
+      sig?: number;
+      seen?: number;
+    }>;
+  };
 }
 
 // Component to clean messages by removing stage directions
@@ -303,6 +313,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showCaptions, setShowCaptions] = useState(true);
   const [showVoiceText, setShowVoiceText] = useState(true);
   const [showCustomizer, setShowCustomizer] = useState(false);
+
+  // Pattern drawer state (for "Show why" feature)
+  const [patternDrawerOpen, setPatternDrawerOpen] = useState(false);
+  const [activePattern, setActivePattern] = useState<PatternMeta | null>(null);
+
   const [enableVoiceInChat, setEnableVoiceInChat] = useState(() => {
     // Load saved preference from localStorage, default to true
     if (typeof window !== 'undefined') {
@@ -601,10 +616,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         };
 
         audio.onended = () => {
-          console.log('🔇 MAIA finished speaking');
+          console.log('🔇 MAIA finished speaking (audio.onended)');
           stopAudioAnalysis();
-          setIsResponding(false);
-          setIsAudioPlaying(false);
+          // 🔥 DON'T set isAudioPlaying/isResponding here!
+          // Let the caller handle state changes with proper cooldown timing
+          // to prevent mic from restarting before echo suppression window
           URL.revokeObjectURL(audioUrl);
           if (timeoutId) clearTimeout(timeoutId);
           resolve();
@@ -613,8 +629,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         audio.onerror = (e) => {
           console.error('❌ Audio playback error:', e);
           stopAudioAnalysis();
+          // For errors, reset states immediately (no audio to echo)
           setIsResponding(false);
           setIsAudioPlaying(false);
+          setIsMicrophonePaused(false);
           URL.revokeObjectURL(audioUrl);
           if (timeoutId) clearTimeout(timeoutId);
           reject(new Error('Audio playback failed'));
@@ -1173,10 +1191,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       hasVoiceMicRef: !!voiceMicRef.current
     });
 
-    if (isMounted && !showChatInterface && voiceEnabled && !isMuted && audioEnabled) {
+    if (isMounted && !showChatInterface && voiceEnabled && !isMuted && audioEnabled && !isAudioPlaying) {
       // Delay to ensure component is ready
       const timer = setTimeout(async () => {
-        if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
+        // Use refs for real-time state check (state values can be stale)
+        if (voiceMicRef.current?.startListening &&
+            !isProcessingRef.current &&
+            !isRespondingRef.current &&
+            !isAudioPlayingRef.current) {
           try {
             await voiceMicRef.current.startListening();
             console.log('✅ 🎤 Voice auto-started successfully');
@@ -1184,14 +1206,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             console.error('❌ Voice auto-start failed:', err);
           }
         } else {
-          console.log('⏸️ Voice auto-start skipped - conditions not met');
+          console.log('⏸️ Voice auto-start skipped - MAIA still active', {
+            isProcessing: isProcessingRef.current,
+            isResponding: isRespondingRef.current,
+            isAudioPlaying: isAudioPlayingRef.current
+          });
         }
       }, 500);
       return () => clearTimeout(timer);
     } else {
       console.log('⏸️ Voice auto-start blocked - checking all conditions...');
     }
-  }, [isMounted, showChatInterface, voiceEnabled, isMuted, isProcessing, isResponding, audioEnabled]);
+  }, [isMounted, showChatInterface, voiceEnabled, isMuted, isProcessing, isResponding, isAudioPlaying, audioEnabled]);
 
   // Conversation context
   const contextRef = useRef<ConversationContext>({
@@ -1879,10 +1905,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
 
           // Stable identity for cross-session memory persistence
+          // memoryMode: 'longterm' enables pattern formation + developmental memory
+          // Enable via: localStorage.setItem('maiaMemoryMode', 'longterm')
           meta: {
             explorerId: effectiveExplorerId, // ✅ Stable identity across sessions
             sessionId,  // Current session (changes per session)
-            memoryMode: 'continuity', // Default: turns only, no long-term writeback
+            memoryMode: (typeof window !== 'undefined' && localStorage.getItem('maiaMemoryMode') === 'longterm') ? 'longterm' : 'continuity',
           },
 
           // Canon Wrap (care-mode only)
@@ -1956,25 +1984,57 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Initialize audio queue for voice mode
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
+        // ECHO SUPPRESSION: Define cooldown for streaming audio path
+        const streamingCooldownMs = 3000; // 3 second cooldown - prevents mic catching MAIA's voice tail
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
+          // Set audio playing TRUE at start - only goes false when COMPLETE
+          setIsAudioPlaying(true);
+          setIsMicrophonePaused(true);
+
           audioQueue = new StreamingAudioQueue({
             onPlayingChange: (isPlaying) => {
-              setIsAudioPlaying(isPlaying);
-              setIsMicrophonePaused(isPlaying); // Pause mic while speaking
+              // DON'T set isAudioPlaying here - causes false negatives between chunks
+              // Only log for debugging
+              console.log('🎵 [STREAM] Chunk playing state:', isPlaying);
             },
             onTextChange: (text) => {
               setMaiaResponseText(text); // Update display with current sentence
             },
             onComplete: () => {
-              console.log('✅ [STREAM] All audio chunks played');
+              console.log('✅ [STREAM] All audio chunks played - starting cooldown');
               setIsResponding(false);
+              // ✅ Set isAudioPlaying FALSE now - audio ended, visualizer shows user color
               setIsAudioPlaying(false);
-              // Resume mic after cooldown
+              // 🔥 isMicrophonePaused stays TRUE to block mic during cooldown
+              // (ContinuousConversation checks: isSpeaking={isAudioPlaying || isMicrophonePaused})
+
+              // Resume mic after cooldown with auto-restart
+              console.log(`⏳ [STREAM] Cooldown ${streamingCooldownMs}ms (mic paused)...`);
               setTimeout(() => {
                 setIsMicrophonePaused(false);
-              }, 2000);
+                console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
+
+                // Auto-restart listening in voice mode
+                if (isInVoiceMode && voiceMicRef.current?.startListening) {
+                  // Triple-check: not processing, not responding, and audio has actually stopped
+                  const canRestart = !isProcessingRef.current &&
+                                     !isRespondingRef.current &&
+                                     !isAudioPlayingRef.current;
+                  if (canRestart) {
+                    setIsMuted(false);
+                    voiceMicRef.current.startListening();
+                    console.log('🎤 [STREAM] Microphone auto-resumed after streaming audio complete');
+                  } else {
+                    console.log('⏸️ [STREAM] Skipped mic restart - still processing', {
+                      isProcessing: isProcessingRef.current,
+                      isResponding: isRespondingRef.current,
+                      isAudioPlaying: isAudioPlayingRef.current
+                    });
+                  }
+                }
+              }, streamingCooldownMs);
             },
           });
 
@@ -2017,6 +2077,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 } catch (err) {
                   console.error('❌ [STREAM] Failed to generate audio for final sentence:', err);
                 }
+              }
+
+              // 🏁 Mark streaming complete - all sentences have been enqueued
+              // This tells the queue it can call onComplete when queue empties
+              if (audioQueue) {
+                audioQueue.markStreamingComplete();
               }
               break;
             }
@@ -2298,7 +2364,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('🧹 Cleaned for voice:', cleanVoiceText);
 
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
-        const cooldownMs = 2000; // 2 second cooldown (reduced from 3.5s for faster mic restart)
+        const cooldownMs = 3000; // 3 second cooldown - prevents mic catching MAIA's voice tail
 
         try {
           // Start speaking immediately
@@ -2356,28 +2422,42 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             onMessageAddedRef.current?.(oracleMessage);
           }
         } finally {
-          // Always reset states to prevent getting stuck
-          console.log('🧹 Voice response complete - resetting all states');
+          // Non-streaming path: Audio ended, update states appropriately
+          console.log('🧹 Voice response (non-streaming) complete - scheduling cooldown...');
           setIsResponding(false);
+          // ✅ Set isAudioPlaying FALSE now - audio has ended, visualizer should show user color
           setIsAudioPlaying(false);
-          setIsMicrophonePaused(false); // 🎤 RESUME MIC AFTER MAIA FINISHES
-          console.log('🎤 Microphone unpaused - ready for next input');
+          // 🔥 But KEEP isMicrophonePaused TRUE during cooldown to block mic restart
+          // (ContinuousConversation now checks: isSpeaking={isAudioPlaying || isMicrophonePaused})
+          // isMicrophonePaused was already set to true when MAIA started speaking
 
-          // CRITICAL: Resume listening after cooldown to prevent echo
-          // Always restart in voice mode - user activated once, keep conversation flowing
-          if (isInVoiceMode && voiceMicRef.current?.startListening) {
-            console.log(`⏳ Scheduling mic restart in ${cooldownMs}ms...`);
-            setTimeout(() => {
-              // Double-check we're still in voice mode and not processing
-              if (voiceMicRef.current?.startListening && !isProcessingRef.current && !isRespondingRef.current) {
+          // CRITICAL: Resume listening AFTER cooldown to prevent echo/feedback loop
+          console.log(`⏳ [NON-STREAM] Starting ${cooldownMs}ms cooldown (mic paused)...`);
+          setTimeout(() => {
+            console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic');
+
+            // NOW unpause mic - this allows ContinuousConversation to restart
+            setIsMicrophonePaused(false);
+            console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
+
+            // Always restart in voice mode - user activated once, keep conversation flowing
+            if (isInVoiceMode && voiceMicRef.current?.startListening) {
+              // Triple-check: not processing, not responding
+              const canRestart = voiceMicRef.current?.startListening &&
+                                 !isProcessingRef.current &&
+                                 !isRespondingRef.current;
+              if (canRestart) {
                 setIsMuted(false); // Ensure mic is unmuted
                 voiceMicRef.current.startListening();
-                console.log('🎤 Microphone auto-resumed after Maia finished speaking');
+                console.log('🎤 [NON-STREAM] Microphone auto-resumed after cooldown');
               } else {
-                console.log('⏸️ Skipped mic restart - still processing or responding');
+                console.log('⏸️ [NON-STREAM] Skipped mic restart - still processing', {
+                  isProcessing: isProcessingRef.current,
+                  isResponding: isRespondingRef.current
+                });
               }
-            }, cooldownMs); // Wait for echo suppression cooldown
-          }
+            }
+          }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
         console.log('⚠️ Not speaking because:', {
@@ -3291,6 +3371,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               // Use isListening state instead of isMuted for accurate toggle
               if (voiceMicRef.current) {
                 if (!isListening) {
+                  // SAFETY: Don't start mic while MAIA is speaking
+                  if (isAudioPlayingRef.current || isRespondingRef.current) {
+                    console.log('⏸️ Cannot start mic - MAIA is still speaking');
+                    return;
+                  }
                   // Start listening
                   console.log('🎤 Starting voice via holoflower...');
                   setIsMuted(false);
@@ -3904,6 +3989,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           />
                         </div>
                       )}
+
+                      {/* Pattern Chips - show detected patterns for MAIA responses */}
+                      {message.role === 'oracle' && message.metadata?.patterns && message.metadata.patterns.length > 0 && (
+                        <PatternChips
+                          patterns={message.metadata.patterns}
+                          onOpen={(p) => {
+                            setActivePattern(p);
+                            setPatternDrawerOpen(true);
+                          }}
+                        />
+                      )}
                     </motion.div>
                     );
                   })}
@@ -4227,7 +4323,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             onRecordingStateChange={handleRecordingStateChange}
             onAudioLevelChange={handleAudioLevelChange}
             isProcessing={isResponding}
-            isSpeaking={isAudioPlaying}
+            isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
             silenceThreshold={
               listeningMode === 'session' ? 999999 : // Session mode: never auto-send (effectively infinite)
@@ -4296,12 +4392,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 console.log('🔇 Microphone OFF');
               }
             } else {
-              // Turn mic ON
+              // Turn mic ON - but only if MAIA isn't speaking
+              if (isAudioPlayingRef.current) {
+                console.log('⏸️ Cannot turn mic ON - MAIA is speaking');
+                return;
+              }
               setShowChatInterface(false);
               setIsMuted(false);
               enableAudio().then(() => {
                 setTimeout(async () => {
-                  if (voiceMicRef.current?.startListening && !isProcessing && !isResponding) {
+                  if (voiceMicRef.current?.startListening &&
+                      !isProcessingRef.current &&
+                      !isRespondingRef.current &&
+                      !isAudioPlayingRef.current) {
                     await voiceMicRef.current.startListening();
                     console.log('🎤 Microphone ON');
                   }
@@ -4449,6 +4552,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       {/* 🧠 Consciousness Computing Feedback Prompt */}
       <ConsciousnessComputingPrompt
         messageCount={messages.length}
+      />
+
+      {/* 🔍 Pattern Drawer - "Show why" for detected patterns */}
+      <PatternDrawer
+        open={patternDrawerOpen}
+        onClose={() => {
+          setPatternDrawerOpen(false);
+          setActivePattern(null);
+        }}
+        pattern={activePattern}
+        userId={userId}
       />
 
     </div>
