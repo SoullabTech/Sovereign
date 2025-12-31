@@ -559,7 +559,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       rhythmTrackerRef.current?.onMAIAResponse();
 
       setIsResponding(true);
-      setIsAudioPlaying(true);
+      // 🔥 DON'T set isAudioPlaying here! It should only be true when audio ACTUALLY plays
+      // setIsAudioPlaying is now set in audio.onplay callback below
 
       // Call OpenAI TTS with selected voice (defaults to 'alloy')
       const response = await fetch('/api/voice/openai-tts', {
@@ -587,10 +588,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Play audio with proper loading and error handling
       await new Promise<void>((resolve, reject) => {
         let hasStarted = false;
-        let timeoutId: NodeJS.Timeout | null = null;
+        let startTimeoutId: NodeJS.Timeout | null = null;
+        let playbackTimeoutId: NodeJS.Timeout | null = null;
 
         // Safety timeout - if audio doesn't start within 5s, fail fast
-        timeoutId = setTimeout(() => {
+        startTimeoutId = setTimeout(() => {
           if (!hasStarted) {
             audio.pause();
             stopAudioAnalysis();
@@ -600,7 +602,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }, 5000);
 
         audio.onloadedmetadata = () => {
-          console.log('✅ Audio metadata loaded, duration:', audio.duration);
+          console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
+          console.log(`⏱️ [AUDIO] Expected playback: ${Math.round(audio.duration)}s for ${text.length} chars`);
+
+          // 🔥 FIX: Set playback timeout based on ACTUAL audio duration + 30s buffer
+          // This timeout only applies to playback, not TTS fetch
+          const playbackTimeout = (audio.duration + 30) * 1000;
+          console.log(`⏱️ [AUDIO] Setting playback timeout: ${playbackTimeout/1000}s`);
+          playbackTimeoutId = setTimeout(() => {
+            console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            audio.pause();
+            stopAudioAnalysis();
+            URL.revokeObjectURL(audioUrl);
+            reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
+          }, playbackTimeout);
         };
 
         audio.oncanplaythrough = () => {
@@ -610,19 +625,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         audio.onplay = () => {
           console.log('▶️ Audio started playing');
           hasStarted = true;
-          if (timeoutId) clearTimeout(timeoutId);
+          if (startTimeoutId) clearTimeout(startTimeoutId);
+          // 🔥 NOW set isAudioPlaying - audio is ACTUALLY playing
+          // This triggers the teal visualizer at the right moment
+          setIsAudioPlaying(true);
           // Start real-time audio analysis
           startAudioAnalysis(audio);
         };
 
+        // Debug: Track if audio gets paused unexpectedly
+        audio.onpause = () => {
+          if (!audio.ended) {
+            console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s (NOT ended yet!)`);
+          }
+        };
+
         audio.onended = () => {
-          console.log('🔇 MAIA finished speaking (audio.onended)');
+          const playedDuration = audio.currentTime;
+          const totalDuration = audio.duration;
+          console.log(`🔇 MAIA finished speaking (audio.onended) - played ${playedDuration.toFixed(1)}s of ${totalDuration.toFixed(1)}s`);
           stopAudioAnalysis();
           // 🔥 DON'T set isAudioPlaying/isResponding here!
           // Let the caller handle state changes with proper cooldown timing
           // to prevent mic from restarting before echo suppression window
           URL.revokeObjectURL(audioUrl);
-          if (timeoutId) clearTimeout(timeoutId);
+          if (startTimeoutId) clearTimeout(startTimeoutId);
+          if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
           resolve();
         };
 
@@ -634,7 +662,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           setIsAudioPlaying(false);
           setIsMicrophonePaused(false);
           URL.revokeObjectURL(audioUrl);
-          if (timeoutId) clearTimeout(timeoutId);
+          if (startTimeoutId) clearTimeout(startTimeoutId);
+          if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
           reject(new Error('Audio playback failed'));
         };
 
@@ -642,7 +671,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         audio.play().catch(err => {
           console.error('❌ Audio.play() failed:', err);
           stopAudioAnalysis();
-          if (timeoutId) clearTimeout(timeoutId);
+          if (startTimeoutId) clearTimeout(startTimeoutId);
+          if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
           reject(err);
         });
       });
@@ -2016,8 +2046,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 setIsMicrophonePaused(false);
                 console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
 
-                // Auto-restart listening in voice mode
-                if (isInVoiceMode && voiceMicRef.current?.startListening) {
+                // 🔥 FIX: Use voiceMicRef to determine voice mode at RUNTIME (not stale closure)
+                // If voiceMicRef.current exists with startListening, we're in voice mode
+                if (voiceMicRef.current?.startListening) {
                   // Triple-check: not processing, not responding, and audio has actually stopped
                   const canRestart = !isProcessingRef.current &&
                                      !isRespondingRef.current &&
@@ -2033,6 +2064,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       isAudioPlaying: isAudioPlayingRef.current
                     });
                   }
+                } else {
+                  console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
                 }
               }, streamingCooldownMs);
             },
@@ -2051,6 +2084,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           setIsResponding(true); // Start responding state immediately
         }
 
+        // 🔥 FIX: Track pending TTS requests to prevent premature onComplete
+        let pendingTTSCount = 0;
+        let streamEnded = false;
+        let finalizePromiseResolve: (() => void) | null = null;
+        const finalizePromise = new Promise<void>(resolve => {
+          finalizePromiseResolve = resolve;
+        });
+
+        // Helper to check if we can finalize
+        const checkFinalize = () => {
+          if (streamEnded && pendingTTSCount === 0 && audioQueue) {
+            console.log('✅ [STREAM] All TTS complete - NOW marking streaming complete');
+            audioQueue.markStreamingComplete();
+            finalizePromiseResolve?.();
+          } else if (streamEnded) {
+            console.log(`⏳ [STREAM] Stream ended but ${pendingTTSCount} TTS requests still pending...`);
+          }
+        };
+
         try {
           if (!reader) {
             throw new Error('No response body reader available');
@@ -2059,7 +2111,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           while (true) {
             const { done, value } = await reader.read();
             if (done) {
-              console.log('🏁 [STREAM] Stream complete');
+              console.log('🏁 [STREAM] Text stream complete');
 
               // Process any remaining partial sentence
               if (partialSentence.trim() && audioQueue) {
@@ -2079,11 +2131,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 }
               }
 
-              // 🏁 Mark streaming complete - all sentences have been enqueued
-              // This tells the queue it can call onComplete when queue empties
-              if (audioQueue) {
-                audioQueue.markStreamingComplete();
-              }
+              // 🔥 FIX: Mark stream as ended, but DON'T call markStreamingComplete yet!
+              // Wait for all pending TTS requests to complete first
+              streamEnded = true;
+              console.log(`🏁 [STREAM] Stream ended with ${pendingTTSCount} TTS requests still in flight`);
+              checkFinalize();
               break;
             }
 
@@ -2128,6 +2180,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                           if (sentence) {
                             console.log('🎤 [STREAM] Complete sentence, generating audio:', sentence.substring(0, 50));
 
+                            // 🔥 FIX: Track this pending TTS request
+                            pendingTTSCount++;
+                            console.log(`📤 [STREAM] TTS request started (pending: ${pendingTTSCount})`);
+
                             // Generate and queue audio asynchronously (don't await - let it run in background)
                             generateAudioChunk(sentence, {
                               agentVoice: 'maya',
@@ -2138,8 +2194,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                                 text: sentence,
                                 element,
                               });
+                              // 🔥 FIX: TTS completed successfully
+                              pendingTTSCount--;
+                              console.log(`📥 [STREAM] TTS request completed (pending: ${pendingTTSCount})`);
+                              checkFinalize();
                             }).catch(err => {
                               console.error('❌ [STREAM] Failed to generate audio:', err);
+                              // 🔥 FIX: TTS failed, still decrement counter
+                              pendingTTSCount--;
+                              console.log(`📥 [STREAM] TTS request failed (pending: ${pendingTTSCount})`);
+                              checkFinalize();
                             });
                           }
                         }
@@ -2355,7 +2419,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         trackEvent.ttsSpoken(userId || 'anonymous', responseText, 0);
         // Set speaking state for visual feedback
         setIsResponding(true);
-        setIsAudioPlaying(true);
+        // 🔥 DON'T set isAudioPlaying here - it's set in maiaSpeak's audio.onplay callback
+        // so teal visualizer only appears when audio ACTUALLY starts playing
         setIsMicrophonePaused(true); // 🔇 PAUSE MIC WHILE MAIA SPEAKS
         setMaiaResponseText(responseText); // Update display text
 
@@ -2368,25 +2433,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         try {
           // Start speaking immediately
-
           const startSpeakTime = Date.now();
           console.log('⏱️ Starting speech at:', startSpeakTime);
 
-          // Speak the cleaned response with timeout protection
+          // Speak the cleaned response
           // Pass element hint to select appropriate elemental voice
-          const speakPromise = maiaSpeak(cleanVoiceText, element as Element);
-
-          // Dynamic timeout based on text length (~150 words per minute reading pace)
-          // Minimum 15s, add 1s per 20 characters, max 45s
-          const estimatedDuration = Math.min(Math.max(15000, cleanVoiceText.length * 50), 45000);
-          const timeoutPromise = new Promise((_, reject) => {
-            setTimeout(() => reject(new Error(`Speech timeout after ${estimatedDuration/1000}s`)), estimatedDuration);
-          });
-
-          await Promise.race([speakPromise, timeoutPromise]);
+          // 🔥 FIX: No character-based timeout here! maiaSpeak now uses
+          // the ACTUAL audio duration from metadata for its timeout,
+          // which is much more reliable than estimating from text length.
+          await maiaSpeak(cleanVoiceText, element as Element);
 
           const speakDuration = Date.now() - startSpeakTime;
-          console.log(`🔇 Maia finished speaking after ${speakDuration}ms`);
+          console.log(`🔇 Maia finished speaking after ${speakDuration}ms (${cleanVoiceText.length} chars)`);
 
           // ECHO SUPPRESSION: Extended cooldown to prevent audio tail from being recorded
           setEchoSuppressUntil(Date.now() + cooldownMs);
@@ -2438,25 +2496,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
             // NOW unpause mic - this allows ContinuousConversation to restart
             setIsMicrophonePaused(false);
+            setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
 
-            // Always restart in voice mode - user activated once, keep conversation flowing
-            if (isInVoiceMode && voiceMicRef.current?.startListening) {
-              // Triple-check: not processing, not responding
-              const canRestart = voiceMicRef.current?.startListening &&
-                                 !isProcessingRef.current &&
-                                 !isRespondingRef.current;
-              if (canRestart) {
-                setIsMuted(false); // Ensure mic is unmuted
-                voiceMicRef.current.startListening();
-                console.log('🎤 [NON-STREAM] Microphone auto-resumed after cooldown');
+            // 🔥 FIX: React state updates are ASYNC! We need to wait for the next tick
+            // so ContinuousConversation's isSpeaking prop updates before calling startListening.
+            // Otherwise, its guard (isSpeakingRef.current) will block the call.
+            setTimeout(() => {
+              // Check voiceMicRef again after state has propagated
+              if (voiceMicRef.current?.startListening) {
+                // Triple-check: not processing, not responding
+                const canRestart = !isProcessingRef.current &&
+                                   !isRespondingRef.current;
+                if (canRestart) {
+                  console.log('🎤 [NON-STREAM] Attempting mic restart after state propagation...');
+                  voiceMicRef.current.startListening();
+                  console.log('🎤 [NON-STREAM] Microphone auto-resumed after cooldown');
+                } else {
+                  console.log('⏸️ [NON-STREAM] Skipped mic restart - still processing', {
+                    isProcessing: isProcessingRef.current,
+                    isResponding: isRespondingRef.current
+                  });
+                }
               } else {
-                console.log('⏸️ [NON-STREAM] Skipped mic restart - still processing', {
-                  isProcessing: isProcessingRef.current,
-                  isResponding: isRespondingRef.current
-                });
+                console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
               }
-            }
+            }, 100); // Small delay for React state to propagate
           }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
