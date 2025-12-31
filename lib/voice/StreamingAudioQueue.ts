@@ -28,6 +28,8 @@ export class StreamingAudioQueue {
   private feedbackPrevention: VoiceFeedbackPrevention;
   private audioContext: AudioContext | null = null;
   private audioUnlocked: boolean = false;
+  // Track whether all sentences have been enqueued (streaming complete)
+  private streamingComplete: boolean = false;
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -65,11 +67,19 @@ export class StreamingAudioQueue {
    */
   private async playNext(): Promise<void> {
     if (this.queue.length === 0) {
-      console.log('✅ [StreamingQueue] Queue empty - playback complete');
-      this.isPlaying = false;
-      this.currentAudio = null;
-      this.onPlayingChange?.(false);
-      this.onComplete?.();
+      // Only call onComplete if streaming is done (all sentences enqueued)
+      // Otherwise, more sentences may still be coming - wait for them
+      if (this.streamingComplete) {
+        console.log('✅ [StreamingQueue] Queue empty AND streaming complete - truly done');
+        this.isPlaying = false;
+        this.currentAudio = null;
+        this.onPlayingChange?.(false);
+        this.onComplete?.();
+      } else {
+        console.log('⏳ [StreamingQueue] Queue empty but streaming not complete - waiting for more sentences');
+        this.isPlaying = false;
+        // DON'T call onComplete - more sentences may be coming
+      }
       return;
     }
 
@@ -81,20 +91,25 @@ export class StreamingAudioQueue {
     console.log('🔊 [StreamingQueue] Playing chunk:', item.text.length, 'chars'); // Never log content
     this.onTextChange?.(item.text);
 
-    // Register audio with feedback prevention to pause microphone
-    this.feedbackPrevention.registerAudioElement(item.audio);
+    // ⚠️ DO NOT register with VoiceFeedbackPrevention for streaming chunks!
+    // VoiceFeedbackPrevention detects chunk endings and sets isMayaSpeaking=false
+    // between chunks, which triggers mic restart mid-response.
+    // We control isAudioPlaying state directly via onComplete callback instead.
+    // this.feedbackPrevention.registerAudioElement(item.audio);
 
     return new Promise((resolve) => {
       item.audio.onended = () => {
         console.log('✅ [StreamingQueue] Chunk finished');
-        this.feedbackPrevention.unregisterAudioElement(item.audio);
+        // DON'T unregister - we never registered it
+        // this.feedbackPrevention.unregisterAudioElement(item.audio);
         resolve();
         this.playNext(); // Play next chunk
       };
 
       item.audio.onerror = (error) => {
         console.error('❌ [StreamingQueue] Audio error:', error);
-        this.feedbackPrevention.unregisterAudioElement(item.audio);
+        // DON'T unregister - we never registered it
+        // this.feedbackPrevention.unregisterAudioElement(item.audio);
         resolve();
         this.playNext(); // Continue to next chunk even on error
       };
@@ -127,18 +142,48 @@ export class StreamingAudioQueue {
   stop(): void {
     console.log('🛑 [StreamingQueue] Stopping playback and clearing queue');
 
-    // Stop current audio and unregister from feedback prevention
+    // Stop current audio (no feedback prevention registration for streaming)
     if (this.currentAudio) {
       this.currentAudio.pause();
       this.currentAudio.currentTime = 0;
-      this.feedbackPrevention.unregisterAudioElement(this.currentAudio);
+      // DON'T unregister from feedbackPrevention - we never registered streaming chunks
+      // this.feedbackPrevention.unregisterAudioElement(this.currentAudio);
       this.currentAudio = null;
     }
 
     // Clear queue
     this.queue = [];
     this.isPlaying = false;
+    this.streamingComplete = false; // Reset for next use
     this.onPlayingChange?.(false);
+  }
+
+  /**
+   * Mark streaming as complete - no more sentences will be enqueued
+   * Call this when the text stream ends and all sentences have been sent to TTS
+   */
+  markStreamingComplete(): void {
+    console.log('🏁 [StreamingQueue] Streaming marked complete - no more sentences coming');
+    this.streamingComplete = true;
+
+    // If queue is already empty and not playing, trigger completion now
+    if (this.queue.length === 0 && !this.isPlaying) {
+      console.log('✅ [StreamingQueue] Queue already empty - triggering completion');
+      this.onPlayingChange?.(false);
+      this.onComplete?.();
+    }
+    // Otherwise, playNext() will handle completion when queue empties
+  }
+
+  /**
+   * Reset for new streaming session
+   */
+  reset(): void {
+    console.log('🔄 [StreamingQueue] Resetting for new session');
+    this.streamingComplete = false;
+    this.queue = [];
+    this.isPlaying = false;
+    this.currentAudio = null;
   }
 
   /**

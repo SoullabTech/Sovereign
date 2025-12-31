@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Required for Capacitor static export - API routes are handled at runtime
+export const dynamic = 'force-dynamic';
+
 // Beta passcode validation endpoint
 // Validates invitation codes for the transformational experience
 

@@ -1,14 +1,32 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
+// Build mode: 'dev' for local development, 'beta' for TestFlight/internal testing, 'prod' for release
+const BUILD_MODE = process.env.CAPACITOR_MODE || 'dev';
+
+const serverConfigs = {
+  dev: {
+    // Local development - use LAN IP for physical device testing
+    url: 'http://192.168.4.210:3000',
+    cleartext: true,
+  },
+  beta: {
+    // Beta testing - points to production backend
+    url: 'https://soullab.life',
+    cleartext: false,
+  },
+  prod: {
+    // Production release - points to production backend
+    url: 'https://soullab.life',
+    cleartext: false,
+  }
+};
+
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
-  webDir: 'out',
+  webDir: '.next/static', // For production builds, use built static assets
   server: {
-    // For simulator: use localhost (points to Mac)
-    // For physical device: change to LAN IP (192.168.4.210)
-    url: 'http://localhost:3000',
-    cleartext: true,
+    ...serverConfigs[BUILD_MODE as keyof typeof serverConfigs],
     androidScheme: 'https'
   },
   plugins: {

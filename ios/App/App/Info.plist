@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>MAIA Sovereign</string>
+        <string>MAIA Consciousness Computing</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -45,9 +45,9 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
-	<key>NSHealthShareUsageDescription</key>
-	<string>MAIA uses biometric data like heart rate and breathing patterns to create consciousness-responsive interfaces that adapt to your physiological state. This enables personalized meditation experiences and breathing synchronization features.</string>
-	<key>NSHealthUpdateUsageDescription</key>
-	<string>MAIA may record wellness session data including heart rate variability and breathing patterns to help track your meditation progress and optimize consciousness development practices.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>MAIA uses speech recognition to understand your voice for consciousness-computing conversations.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MAIA needs microphone access to hear your voice during conversations.</string>
 </dict>
 </plist>

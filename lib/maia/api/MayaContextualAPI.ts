@@ -5,6 +5,7 @@
 
 import { stateInjectionMiddleware } from '../middleware/StateInjectionMiddleware';
 import { MayaRequestContext, MayaResponse } from '../types/MayaContext';
+import { generateUUID } from '@/lib/utils/uuid';
 
 export class MayaContextualAPI {
   private readonly apiEndpoint: string;
@@ -176,7 +177,7 @@ Current Context:
         constraintsApplied: this.getAppliedConstraints(context.constraints)
       },
       stateUpdates: this.extractStateUpdates(content, context),
-      responseId: apiResponse.id || crypto.randomUUID(),
+      responseId: apiResponse.id || generateUUID(),
       timestamp: new Date()
     };
   }

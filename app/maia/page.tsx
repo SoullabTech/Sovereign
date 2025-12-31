@@ -24,9 +24,10 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
-import { useFeatureAccess } from '@/hooks/useSubscription';
-import { PREMIUM_FEATURES } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock } from 'lucide-react';
+import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
+import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
+import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
@@ -147,11 +148,16 @@ function MAIAPageContent() {
   const [showWelcome, setShowWelcome] = useState(false);
   const [showVoiceSettings, setShowVoiceSettings] = useState(false);
   const [selectedVoice, setSelectedVoice] = useState<'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer'>('alloy');  // Default to alloy - MAIA's OpenAI TTS voice
+  const [voiceSpeed, setVoiceSpeed] = useState(0.95);  // OpenAI TTS speed (0.25 - 4.0)
+  const [voiceModel, setVoiceModel] = useState<'tts-1' | 'tts-1-hd'>('tts-1-hd');  // TTS model quality
   const [showChatInterface, setShowChatInterface] = useState(false);
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [hasActiveSession, setHasActiveSession] = useState(false);
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const [contributionAmount, setContributionAmount] = useState(9); // Sliding scale amount
+  const [showSevaOptions, setShowSevaOptions] = useState(false);
 
   const hasCheckedAuth = useRef(false);
 
@@ -283,6 +289,23 @@ function MAIAPageContent() {
       return;
     }
 
+    // MOBILE BETA DEFAULT - For Capacitor/mobile apps during beta, default to Kelly
+    // This ensures the iOS/Android beta testers have the full experience
+    const isCapacitorApp = typeof window !== 'undefined' &&
+      (window.navigator.userAgent.includes('Capacitor') ||
+       window.location.protocol === 'capacitor:' ||
+       !storedName); // Fresh install = default to Kelly for beta
+
+    if (isCapacitorApp && !storedName && !storedId) {
+      localStorage.setItem('explorerName', 'Kelly');
+      localStorage.setItem('explorerId', 'kelly-nezat');
+      localStorage.setItem('betaOnboardingComplete', 'true');
+      setExplorerId('kelly-nezat');
+      setExplorerName('Kelly');
+      console.log('📱 [MAIA] Mobile beta: Defaulting to Kelly');
+      return;
+    }
+
     // NEVER show onboarding - always let user through
     // Default to guest mode if no stored user
     const newUser = localStorage.getItem('beta_user');
@@ -410,10 +433,10 @@ function MAIAPageContent() {
             }}
           />
 
-          <div className="relative w-full px-2 py-1.5" style={{paddingTop: 'max(env(safe-area-inset-top), 3rem)'}}>
+          <div className="relative w-full px-2 py-1" style={{paddingTop: 'max(env(safe-area-inset-top), 1.5rem)'}}>
             {/* Mobile: Horizontal scrollable container */}
             <div className="md:hidden mobile-carousel scrollbar-hide">
-              <div className="flex items-center gap-3 min-w-max px-3 py-2">
+              <div className="flex items-center gap-2 min-w-max px-2 py-1">
                 {/* Logo removed - now in bottom center */}
 
                 {/* Voice/Text Toggle - Mobile optimized */}
@@ -426,7 +449,7 @@ function MAIAPageContent() {
                   </span>
                 </button>
 
-                {/* Mode Selector - Mobile optimized */}
+                {/* Mode Selector + Session Button - Mobile optimized */}
                 <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5 carousel-item">
                   <motion.button
                     onClick={() => setMaiaMode('normal')}
@@ -476,109 +499,53 @@ function MAIAPageContent() {
                     )}
                     <span className="text-xs">Note</span>
                   </motion.button>
+
+                  {/* Session Button - Inside mode selector, after Note */}
+                  {!hasActiveSession ? (
+                    <motion.button
+                      onClick={() => setHasActiveSession(true)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg
+                               bg-green-500/10 hover:bg-green-500/20
+                               border border-green-500/20 hover:border-green-500/40
+                               text-green-400 text-xs font-light transition-all flex-shrink-0"
+                      title="Start Session"
+                    >
+                      <Clock className="w-3 h-3" />
+                      <span className="text-xs">Start</span>
+                    </motion.button>
+                  ) : (
+                    <motion.button
+                      onClick={() => setHasActiveSession(false)}
+                      className="flex items-center gap-1 px-2 py-1 rounded-lg
+                               bg-red-500/10 hover:bg-red-500/20
+                               border border-red-500/20 hover:border-red-500/40
+                               text-red-400 text-xs font-light transition-all flex-shrink-0"
+                      title="End Session"
+                    >
+                      <Clock className="w-3 h-3" />
+                      <span className="text-xs">End</span>
+                    </motion.button>
+                  )}
                 </div>
 
-                {/* Journey Button - Mobile */}
-                <Link href="/journey">
-                  <motion.button
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0
-                             bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400"
-                    title="Your Archetypal Journey"
-                  >
-                    <BookOpen className="w-3 h-3" />
-                    <span className="text-xs">Journey</span>
-                  </motion.button>
-                </Link>
-
-                {/* Commons Button - Mobile */}
-                <Link href="/maia/community">
-                  <motion.button
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
-                    title="Community Commons"
-                  >
-                    <Users className="w-3 h-3" />
-                    <span className="text-xs">Commons</span>
-                  </motion.button>
-                </Link>
-
-                {/* Labtools Button - Mobile */}
+                {/* Account Button - Mobile (opens bottom sheet) */}
                 <motion.button
-                  onClick={() => {
-                    if (!labToolsAccess.hasAccess) {
-                      labToolsAccess.require();
-                      return;
-                    }
-                    setShowLabDrawer(true);
-                  }}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0 ${
-                    labToolsAccess.hasAccess
-                      ? 'bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 text-blue-400'
-                      : 'bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400'
-                  }`}
-                  title={labToolsAccess.hasAccess ? "Lab Tools" : "Lab Tools (Premium)"}
-                >
-                  {labToolsAccess.hasAccess ? (
-                    <FlaskConical className="w-3 h-3" />
-                  ) : (
-                    <Lock className="w-3 h-3" />
-                  )}
-                  <span className="text-xs">Labs</span>
-                  {!labToolsAccess.hasAccess && (
-                    <span className="text-[10px] px-1 py-0.5 bg-amber-500/20 rounded-sm">PRO</span>
-                  )}
-                </motion.button>
-
-                {/* Session Button - Mobile */}
-                {!hasActiveSession ? (
-                  <motion.button
-                    onClick={() => setHasActiveSession(true)}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg
-                             bg-green-500/10 hover:bg-green-500/20
-                             border border-green-500/20 hover:border-green-500/40
-                             text-green-400 text-xs font-light transition-all flex-shrink-0"
-                    title="Start Session"
-                  >
-                    <Clock className="w-3 h-3" />
-                    <span className="text-xs">Start</span>
-                  </motion.button>
-                ) : (
-                  <motion.button
-                    onClick={() => setHasActiveSession(false)}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg
-                             bg-red-500/10 hover:bg-red-500/20
-                             border border-red-500/20 hover:border-red-500/40
-                             text-red-400 text-xs font-light transition-all flex-shrink-0"
-                    title="End Session"
-                  >
-                    <Clock className="w-3 h-3" />
-                    <span className="text-xs">End</span>
-                  </motion.button>
-                )}
-
-                {/* Sign Out - Mobile */}
-                <motion.button
-                  onClick={handleSignOut}
+                  onClick={() => setShowAccountMenu(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-red-500/10 hover:bg-red-500/20
-                           border border-red-500/20 hover:border-red-500/40
-                           text-red-400 text-xs font-light transition-all flex-shrink-0"
-                  title="Sign Out"
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Account Menu"
                 >
-                  <LogOut className="w-3 h-3" />
-                  <span className="text-xs">Exit</span>
+                  <User className="w-3 h-3" />
+                  <span className="text-xs">Account</span>
                 </motion.button>
               </div>
             </div>
 
-            {/* Desktop: Traditional layout */}
-            <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-4">
-              {/* Left: Logo removed - now in bottom center */}
-              <div></div>
-
-              {/* Center: Voice/Text toggle + Mode selector */}
+            {/* Desktop: Traditional layout - centered navigation */}
+            <div className="hidden md:flex items-center justify-center max-w-7xl mx-auto px-4">
+              {/* All navigation controls grouped together */}
               <div className="flex items-center gap-3">
                 {/* Voice/Text Toggle */}
                 <button
@@ -647,71 +614,8 @@ function MAIAPageContent() {
                     Scribe
                   </motion.button>
                 </div>
-              </div>
 
-              {/* Right: Journey + Commons + Labtools + Session + Sign Out */}
-              <div className="flex items-center gap-2">
-                {/* Journey Button */}
-                <Link href="/journey">
-                  <motion.button
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all
-                             bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title="Your Archetypal Journey"
-                  >
-                    <BookOpen className="w-4 h-4" />
-                    <span className="hidden sm:inline">Journey</span>
-                  </motion.button>
-                </Link>
-
-                {/* Commons Button */}
-                <Link href="/maia/community">
-                  <motion.button
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    title="Community Commons"
-                  >
-                    <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">Commons</span>
-                  </motion.button>
-                </Link>
-
-                {/* Labtools Button */}
-                <motion.button
-                  onClick={() => {
-                    if (!labToolsAccess.hasAccess) {
-                      console.log('LabTools requires subscription - showing upgrade prompt');
-                      labToolsAccess.require();
-                      return;
-                    }
-                    console.log('LabTools button clicked - opening drawer');
-                    setShowLabDrawer(true);
-                  }}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
-                    labToolsAccess.hasAccess
-                      ? 'bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 text-blue-400'
-                      : 'bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 hover:border-amber-500/40 text-amber-400'
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  title={labToolsAccess.hasAccess ? "Lab Tools" : "Lab Tools (Premium)"}
-                >
-                  {labToolsAccess.hasAccess ? (
-                    <FlaskConical className="w-4 h-4" />
-                  ) : (
-                    <Lock className="w-4 h-4" />
-                  )}
-                  <span className="hidden sm:inline">Labtools</span>
-                  {!labToolsAccess.hasAccess && (
-                    <span className="text-[10px] px-1.5 py-0.5 bg-amber-500/20 rounded-sm">PRO</span>
-                  )}
-                </motion.button>
-
+                {/* Session + Account Buttons */}
                 {/* Session Button */}
                 {!hasActiveSession ? (
                   <motion.button
@@ -734,19 +638,19 @@ function MAIAPageContent() {
                   </div>
                 )}
 
-                {/* Sign Out Button - Rightmost */}
+                {/* Account Button - Desktop (opens bottom sheet) */}
                 <motion.button
-                  onClick={handleSignOut}
+                  onClick={() => setShowAccountMenu(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-red-500/10 hover:bg-red-500/20
-                           border border-red-500/20 hover:border-red-500/40
-                           text-red-400 text-xs font-light transition-all"
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  title="Sign Out"
+                  title="Account Menu"
                 >
-                  <LogOut className="w-4 h-4" />
-                  <span className="hidden sm:inline">Sign Out</span>
+                  <User className="w-4 h-4" />
+                  <span className="hidden sm:inline">Account</span>
                 </motion.button>
               </div>
             </div>
@@ -763,6 +667,9 @@ function MAIAPageContent() {
               userBirthDate={userBirthDate}
               sessionId={sessionId}
               voiceEnabled={voiceEnabled}
+              voice={selectedVoice}
+              voiceSpeed={voiceSpeed}
+              voiceModel={voiceModel}
               initialMode={maiaMode}
               onModeChange={setMaiaMode}
               apiEndpoint="/api/sovereign/app/maia"
@@ -959,6 +866,278 @@ function MAIAPageContent() {
         />
       </div>
       </SwipeNavigation>
+
+      {/* Account Bottom Sheet */}
+      <AnimatePresence>
+        {showAccountMenu && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9998]"
+              onClick={() => setShowAccountMenu(false)}
+            />
+            {/* Bottom Sheet */}
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-[#1a1a2e] to-black border-t border-amber-500/30 rounded-t-2xl z-[9999] p-4 pb-8"
+            >
+              {/* Handle */}
+              <div className="w-12 h-1 bg-amber-500/40 rounded-full mx-auto mb-4" />
+
+              {/* Menu Items */}
+              <div className="space-y-2 max-w-md mx-auto">
+                {/* Sustaining Circle Section */}
+                <div className="px-4 py-3 rounded-xl bg-gradient-to-r from-amber-500/5 via-orange-500/5 to-rose-500/5 border border-amber-500/20">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Flame className="w-5 h-5 text-amber-400" />
+                    <span className="text-base text-amber-400 font-medium">Sustaining Circle</span>
+                  </div>
+                  <p className="text-[10px] text-stone-400 mb-3 italic">
+                    Everyone has full access. Your contribution sustains the sacred work.
+                  </p>
+
+                  {/* Current Circle Status */}
+                  {membershipUtils.isBetaTester() && (
+                    <div className="mb-3 flex items-center justify-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                      <span className="text-sm text-amber-300 font-medium">Pioneer Founding Member</span>
+                    </div>
+                  )}
+
+                  {/* Sliding Scale Contribution */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs text-stone-400">Monthly Sustaining Gift</label>
+                      <span className="text-sm text-amber-400 font-bold">${contributionAmount}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="99"
+                      value={contributionAmount}
+                      onChange={(e) => setContributionAmount(parseInt(e.target.value))}
+                      className="w-full h-2 bg-stone-700/50 rounded-lg appearance-none cursor-pointer"
+                      style={{
+                        background: `linear-gradient(to right,
+                          ${contributionAmount >= 33 ? 'rgb(34 197 94 / 0.6)' : contributionAmount >= 15 ? 'rgb(20 184 166 / 0.6)' : 'rgb(251 146 60 / 0.6)'} 0%,
+                          ${contributionAmount >= 33 ? 'rgb(34 197 94 / 0.6)' : contributionAmount >= 15 ? 'rgb(20 184 166 / 0.6)' : 'rgb(251 146 60 / 0.6)'} ${contributionAmount}%,
+                          rgb(87 83 78 / 0.5) ${contributionAmount}%,
+                          rgb(87 83 78 / 0.5) 100%)`
+                      }}
+                    />
+                    <div className="flex justify-between text-[9px] text-stone-500 mt-1">
+                      <span>🕯️ Sustainer</span>
+                      <span>🛡️ Guardian ($15+)</span>
+                      <span>🌳 Elder ($33+)</span>
+                    </div>
+                    <p className="text-center text-[10px] text-stone-400 mt-2 italic">
+                      {contributionAmount >= 33 ? '🌳 Elder: Wisdom keeper, deeply sustaining the whole' :
+                       contributionAmount >= 15 ? '🛡️ Guardian: Steward of the community space' :
+                       '🕯️ Sustainer: Keeping the sacred fire burning'}
+                    </p>
+                    <button
+                      onClick={() => membershipUtils.joinSustainingCircle(contributionAmount)}
+                      className="mt-3 w-full px-3 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 rounded-lg text-sm text-amber-300 font-medium transition-all"
+                    >
+                      <Heart className="w-4 h-4 inline mr-2" />
+                      Join Sustaining Circle
+                    </button>
+                  </div>
+
+                  {/* Alternative Paths */}
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    {/* Founding Pioneer */}
+                    <button
+                      onClick={() => membershipUtils.joinFoundingCircle()}
+                      className="p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-all text-center"
+                    >
+                      <Gift className="w-4 h-4 mx-auto mb-1 text-purple-400" />
+                      <p className="text-[10px] text-purple-300 font-medium">Pioneer Circle</p>
+                      <p className="text-[9px] text-stone-400">$222 lifetime</p>
+                    </button>
+
+                    {/* Seva Exchange */}
+                    <button
+                      onClick={() => setShowSevaOptions(!showSevaOptions)}
+                      className="p-2 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 transition-all text-center"
+                    >
+                      <Users className="w-4 h-4 mx-auto mb-1 text-teal-400" />
+                      <p className="text-[10px] text-teal-300 font-medium">Seva Exchange</p>
+                      <p className="text-[9px] text-stone-400">Contribute service</p>
+                    </button>
+                  </div>
+
+                  {/* Seva Options (expandable) */}
+                  {showSevaOptions && (
+                    <div className="mt-3 p-3 bg-teal-500/5 border border-teal-500/20 rounded-lg">
+                      <p className="text-[10px] text-teal-300 mb-2 font-medium">Choose your path of service:</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {(Object.entries(SEVA_PATHWAYS) as [SevaPathway, typeof SEVA_PATHWAYS[SevaPathway]][]).map(([key, path]) => (
+                          <button
+                            key={key}
+                            onClick={() => membershipUtils.joinSeva(key)}
+                            className="p-1.5 rounded bg-teal-500/10 hover:bg-teal-500/20 text-left transition-all"
+                          >
+                            <p className="text-[9px] text-teal-300 font-medium">{path.name}</p>
+                            <p className="text-[8px] text-stone-500">{path.description}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-amber-500/20 my-2" />
+
+                {/* Voice Settings Section */}
+                <div className="px-4 py-3 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
+                  <div className="flex items-center gap-3 mb-3">
+                    <Volume2 className="w-5 h-5 text-cyan-400" />
+                    <span className="text-base text-cyan-400 font-medium">Voice Settings</span>
+                  </div>
+
+                  {/* Voice Selection */}
+                  <div className="mb-4">
+                    <label className="text-xs text-stone-400 mb-2 block">MAIA&apos;s Voice</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'] as const).map((v) => (
+                        <button
+                          key={v}
+                          onClick={() => setSelectedVoice(v)}
+                          className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                            selectedVoice === v
+                              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                              : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
+                          }`}
+                        >
+                          {v.charAt(0).toUpperCase() + v.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[10px] text-stone-500 mt-1.5">
+                      {selectedVoice === 'alloy' && '🔘 Neutral & balanced'}
+                      {selectedVoice === 'echo' && '🌊 Warm & expressive'}
+                      {selectedVoice === 'fable' && '📖 Storytelling quality'}
+                      {selectedVoice === 'nova' && '⭐ Bright & energetic'}
+                      {selectedVoice === 'shimmer' && '✨ Gentle & soothing'}
+                      {selectedVoice === 'onyx' && '🖤 Deep & resonant'}
+                    </p>
+                  </div>
+
+                  {/* Speed Control */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-xs text-stone-400">Speed</label>
+                      <span className="text-xs text-cyan-400 font-mono">{voiceSpeed.toFixed(2)}x</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="1.5"
+                      step="0.05"
+                      value={voiceSpeed}
+                      onChange={(e) => setVoiceSpeed(parseFloat(e.target.value))}
+                      className="w-full h-1.5 bg-stone-700/50 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                      style={{
+                        background: `linear-gradient(to right, rgb(6 182 212 / 0.5) 0%, rgb(6 182 212 / 0.5) ${((voiceSpeed - 0.5) / 1) * 100}%, rgb(87 83 78 / 0.5) ${((voiceSpeed - 0.5) / 1) * 100}%, rgb(87 83 78 / 0.5) 100%)`
+                      }}
+                    />
+                    <div className="flex justify-between text-[10px] text-stone-500 mt-1">
+                      <span>Slower</span>
+                      <span>Normal</span>
+                      <span>Faster</span>
+                    </div>
+                  </div>
+
+                  {/* Quality Toggle */}
+                  <div>
+                    <label className="text-xs text-stone-400 mb-2 block">Quality</label>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setVoiceModel('tts-1')}
+                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          voiceModel === 'tts-1'
+                            ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                            : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
+                        }`}
+                      >
+                        Standard
+                      </button>
+                      <button
+                        onClick={() => setVoiceModel('tts-1-hd')}
+                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          voiceModel === 'tts-1-hd'
+                            ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                            : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
+                        }`}
+                      >
+                        HD ✨
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="border-t border-amber-500/20 my-2" />
+
+                {/* Commons */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/maia/community');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-amber-500/10 text-amber-400"
+                >
+                  <Users className="w-5 h-5" />
+                  <span className="text-base">Community Commons</span>
+                </button>
+
+                {/* Labtools - Full access for everyone */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    setShowLabDrawer(true);
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-blue-500/10 text-blue-400"
+                >
+                  <FlaskConical className="w-5 h-5" />
+                  <span className="text-base">Labtools</span>
+                </button>
+
+                {/* Divider */}
+                <div className="border-t border-amber-500/20 my-2" />
+
+                {/* Sign Out */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    handleSignOut();
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-red-500/10 text-red-400"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="text-base">Sign Out</span>
+                </button>
+              </div>
+
+              {/* Cancel Button */}
+              <button
+                onClick={() => setShowAccountMenu(false)}
+                className="mt-4 w-full max-w-md mx-auto block py-3 rounded-xl bg-amber-500/10 text-amber-400 text-center font-medium hover:bg-amber-500/20 transition-colors"
+              >
+                Cancel
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </ErrorBoundary>
   );
 }

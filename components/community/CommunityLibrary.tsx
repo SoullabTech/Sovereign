@@ -52,8 +52,8 @@ const insightCollections: InsightCollection[] = [
   {
     id: 'philosophical-foundations',
     title: 'Philosophical Foundations',
-    description: 'Theoretical framework for understanding consciousness evolution and Soullab\'s mission',
-    icon: '🏛️',
+    description: 'Theoretical framework for understanding consciousness evolution and SOULLAB\'s mission',
+    icon: '',
     articles: [
       {
         id: 'consciousness-evolution-framework',
@@ -109,38 +109,38 @@ const insightCollections: InsightCollection[] = [
     id: 'consciousness-insights',
     title: 'Consciousness Development Insights',
     description: 'Practical wisdom for using consciousness technologies in daily life',
-    icon: '💎',
+    icon: '',
     articles: [
       {
         id: 'alchemical-wisdom',
-        title: 'Alchemical Operation Wisdom',
-        description: 'How to work skillfully with each transformation phase',
-        content: 'docs/community-library/CONSCIOUSNESS_INSIGHTS_COLLECTION.md',
-        tags: ['alchemy', 'transformation', 'cycles'],
+        title: 'Archetypal Patterns in Personal Transformation',
+        description: 'How to work skillfully with each transformation phase through archetypal awareness',
+        content: 'Community-Commons/02-Thematic-Essays/Archetypal Patterns in Personal Transformation.md',
+        tags: ['alchemy', 'transformation', 'archetypes', 'cycles'],
         relatedTechnologies: ['alchemical-detection', 'breakthrough-prediction']
       },
       {
         id: 'elemental-mastery',
-        title: 'Elemental Circulation Mastery',
-        description: 'Practical applications for each element phase',
-        content: 'docs/community-library/CONSCIOUSNESS_INSIGHTS_COLLECTION.md',
-        tags: ['elements', 'circulation', 'energy'],
+        title: 'Elemental Balance in Modern Life',
+        description: 'Practical applications for each element phase in daily living',
+        content: 'Community-Commons/02-Thematic-Essays/Elemental Balance in Modern Life.md',
+        tags: ['elements', 'circulation', 'energy', 'balance'],
         relatedTechnologies: ['elemental-circulation', 'elemental-coherence']
       },
       {
-        id: 'breakthrough-timing',
-        title: 'Breakthrough Prediction Insights',
-        description: 'How to work with high, medium, and low probability windows',
-        content: 'docs/community-library/CONSCIOUSNESS_INSIGHTS_COLLECTION.md',
-        tags: ['breakthroughs', 'timing', 'prediction'],
-        relatedTechnologies: ['breakthrough-prediction', 'collective-orchestrator']
+        id: 'shadow-work',
+        title: 'Shadow Work and Conscious Development',
+        description: 'Integrating the shadow for wholeness and breakthrough',
+        content: 'Community-Commons/02-Thematic-Essays/Shadow Work and Conscious Development.md',
+        tags: ['shadow', 'integration', 'jung', 'development'],
+        relatedTechnologies: ['breakthrough-prediction', 'maia-oracle']
       },
       {
         id: 'oracle-integration',
-        title: 'Oracle Intelligence Wisdom',
+        title: 'MAIA Consciousness Advancement Engine',
         description: 'Getting the most from AI consciousness guidance',
-        content: 'docs/community-library/CONSCIOUSNESS_INSIGHTS_COLLECTION.md',
-        tags: ['oracle', 'AI', 'guidance'],
+        content: 'Community-Commons/MAIA_CONSCIOUSNESS_ADVANCEMENT_ENGINE.md',
+        tags: ['oracle', 'AI', 'guidance', 'maia'],
         relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration']
       }
     ]
@@ -149,53 +149,53 @@ const insightCollections: InsightCollection[] = [
     id: 'advanced-mastery',
     title: 'Advanced Consciousness Mastery',
     description: 'Deep wisdom for technology masters and consciousness pioneers',
-    icon: '🌀',
+    icon: '',
     articles: [
       {
         id: 'spiral-mastery',
-        title: 'Spiral Mastery Insights',
-        description: 'Understanding spiral progression and holding paradox without resolution',
-        content: 'docs/community-library/ADVANCED_CONSCIOUSNESS_INSIGHTS.md',
-        tags: ['spiral', 'mastery', 'paradox', 'integration'],
+        title: 'Spiralogic of Soul',
+        description: 'Understanding spiral progression and the soul\'s movement through consciousness',
+        content: 'Community-Commons/02-Thematic-Essays/_Published/Spiralogic of Soul.md',
+        tags: ['spiral', 'mastery', 'soul', 'integration'],
         relatedTechnologies: ['breakthrough-prediction', 'alchemical-detection', 'collective-orchestrator']
       },
       {
         id: 'technology-transcendence',
-        title: 'Technology Transcendence',
-        description: 'Using technology without dependency - prediction weaning and Oracle dialectic',
-        content: 'docs/community-library/ADVANCED_CONSCIOUSNESS_INSIGHTS.md',
-        tags: ['transcendence', 'independence', 'mastery', 'oracle'],
+        title: 'Humane AI Manifesto',
+        description: 'Using technology in service of human flourishing - the SOULLAB approach',
+        content: 'Community-Commons/HUMANE_AI_MANIFESTO.md',
+        tags: ['transcendence', 'independence', 'mastery', 'humane-ai'],
         relatedTechnologies: ['breakthrough-prediction', 'maia-oracle', 'spiralogic-orchestration']
       },
       {
         id: 'collective-field-mastery',
-        title: 'Collective Field Mastery',
-        description: 'Field contribution alchemy and emergence navigation for community evolution',
-        content: 'docs/community-library/ADVANCED_CONSCIOUSNESS_INSIGHTS.md',
+        title: 'Understanding the Field',
+        description: 'A practitioner guide to field contribution and emergence navigation',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Understanding the Field - A Practitioner Guide.md',
         tags: ['collective', 'field', 'emergence', 'community'],
         relatedTechnologies: ['collective-orchestrator', 'resonance-mapper', 'field-coherence-engine']
       },
       {
         id: 'transformation-mastery',
-        title: 'Transformation Mastery',
-        description: 'Crisis navigation and archetypal embodiment for conscious evolution',
-        content: 'docs/community-library/ADVANCED_CONSCIOUSNESS_INSIGHTS.md',
-        tags: ['transformation', 'crisis', 'archetypes', 'evolution'],
+        title: 'The Dialectical Scaffold',
+        description: 'Navigating transformation through dialectical consciousness frameworks',
+        content: 'Community-Commons/01-Core-Concepts/The-Dialectical-Scaffold.md',
+        tags: ['transformation', 'crisis', 'dialectical', 'evolution'],
         relatedTechnologies: ['breakthrough-prediction', 'maia-oracle', 'fascia-field-lab', 'collective-orchestrator']
       },
       {
         id: 'service-integration',
-        title: 'Service Integration',
-        description: 'Individual mastery serving collective evolution and planetary transformation',
-        content: 'docs/community-library/ADVANCED_CONSCIOUSNESS_INSIGHTS.md',
-        tags: ['service', 'integration', 'collective', 'planetary'],
+        title: 'Soul vs Spirit',
+        description: 'Understanding the distinction between soul work and spiritual bypassing',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Soul vs Spirit.md',
+        tags: ['service', 'integration', 'soul', 'spirit'],
         relatedTechnologies: ['collective-orchestrator', 'resonance-mapper', 'maia-oracle']
       },
       {
         id: 'future-evolution',
-        title: 'Future Evolution Insights',
-        description: 'Preparing for global integration and consciousness-technology evolution',
-        content: 'docs/community-library/ADVANCED_CONSCIOUSNESS_INSIGHTS.md',
+        title: 'Consciousness Computing Vision',
+        description: 'The complete vision index for consciousness-technology evolution',
+        content: 'Community-Commons/COMPLETE_CONSCIOUSNESS_VISION_INDEX.md',
         tags: ['future', 'evolution', 'global', 'consciousness-technology'],
         relatedTechnologies: ['spiralogic-orchestration', 'collective-orchestrator', 'field-coherence-engine']
       }
@@ -203,97 +203,145 @@ const insightCollections: InsightCollection[] = [
   },
   {
     id: 'platform-developments',
-    title: 'Platform Development Announcements',
+    title: 'Platform Development & Architecture',
     description: 'Major platform updates, architectural breakthroughs, and consciousness technology evolution',
-    icon: '🚀',
+    icon: '',
     articles: [
       {
-        id: 'platform-differentiation-announcement',
-        title: '🧪📱 MAIA Platform Evolution: Desktop Laboratory vs Mobile Field Systems',
-        description: 'Revolutionary platform differentiation enabling desktop consciousness laboratory work and mobile field support',
-        content: 'COMMUNITY_PLATFORM_DIFFERENTIATION_ANNOUNCEMENT.md',
-        tags: ['platform-update', 'desktop-lab', 'mobile-field', 'architecture', 'breakthrough'],
+        id: 'consciousness-computing-launch',
+        title: 'Consciousness Computing Launch',
+        description: 'The official launch announcement for the consciousness computing platform',
+        content: 'Community-Commons/CONSCIOUSNESS_COMPUTING_LAUNCH_ANNOUNCEMENT.md',
+        tags: ['platform-update', 'launch', 'architecture', 'breakthrough'],
         relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration', 'collective-orchestrator']
+      },
+      {
+        id: 'consciousness-computing-architecture',
+        title: 'Consciousness Computing Architecture',
+        description: 'Technical architecture paper for the consciousness computing system',
+        content: 'Community-Commons/CONSCIOUSNESS_COMPUTING_ARCHITECTURE_PAPER.md',
+        tags: ['architecture', 'technical', 'design'],
+        relatedTechnologies: ['maia-oracle', 'spiralogic-orchestration', 'collective-orchestrator']
+      },
+      {
+        id: 'opus-axioms-system',
+        title: 'MAIA Opus Axioms System',
+        description: 'The foundational axiom system that guides MAIA\'s consciousness responses',
+        content: 'Community-Commons/MAIA_OPUS_AXIOMS_SYSTEM_PAPER.md',
+        tags: ['axioms', 'philosophy', 'guidance'],
+        relatedTechnologies: ['maia-oracle', 'breakthrough-prediction']
+      },
+      {
+        id: 'felt-difference-demonstrations',
+        title: 'The Felt Difference Demonstrations',
+        description: 'Examples showing the felt difference between conventional AI and consciousness-aware AI',
+        content: 'Community-Commons/THE_FELT_DIFFERENCE_DEMONSTRATIONS.md',
+        tags: ['demonstrations', 'comparison', 'experience'],
+        relatedTechnologies: ['maia-oracle']
       }
     ]
   },
   {
     id: 'transformation-stories',
-    title: 'Transformation Case Studies',
-    description: 'Real member journeys using consciousness technologies',
-    icon: '📖',
+    title: 'Alchemical Transformation Stages',
+    description: 'The four stages of alchemical transformation in consciousness work',
+    icon: '',
     articles: [
       {
-        id: 'career-breakthrough',
-        title: 'Career Transformation Through Alchemical Awareness',
-        description: 'How Sarah used technology to navigate career transition',
-        content: 'docs/community-library/TRANSFORMATION_CASE_STUDIES.md',
-        tags: ['career', 'transition', 'timing'],
+        id: 'nigredo-descent',
+        title: 'Nigredo: The Sacred Descent',
+        description: 'Understanding the blackening phase - dissolution and confronting the shadow',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Nigredo - The Sacred Descent.md',
+        tags: ['alchemy', 'nigredo', 'shadow', 'descent'],
         relatedTechnologies: ['alchemical-detection', 'breakthrough-prediction', 'maia-oracle']
       },
       {
-        id: 'relationship-healing',
-        title: 'Relationship Healing Through Collective Field Work',
-        description: 'A couple\'s journey using community consciousness technologies',
-        content: 'docs/community-library/TRANSFORMATION_CASE_STUDIES.md',
-        tags: ['relationships', 'healing', 'collective'],
+        id: 'albedo-purification',
+        title: 'Albedo: The White Light',
+        description: 'The whitening phase - purification and emergence from darkness',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Albedo - The White Light.md',
+        tags: ['alchemy', 'albedo', 'purification', 'light'],
         relatedTechnologies: ['collective-orchestrator', 'resonance-mapper', 'maia-oracle']
       },
       {
-        id: 'creative-breakthrough',
-        title: 'Creative Innovation Through Technology Integration',
-        description: 'How David overcame creative blocks and launched meaningful projects',
-        content: 'docs/community-library/TRANSFORMATION_CASE_STUDIES.md',
-        tags: ['creativity', 'innovation', 'blocks'],
+        id: 'citrinitas-dawn',
+        title: 'Citrinitas: The Golden Dawn',
+        description: 'The yellowing phase - solar consciousness and illumination',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Citrinitas - The Golden Dawn.md',
+        tags: ['alchemy', 'citrinitas', 'illumination', 'solar'],
         relatedTechnologies: ['elemental-circulation', 'breakthrough-prediction', 'collective-orchestrator']
       },
       {
-        id: 'health-consciousness',
-        title: 'Health Crisis as Consciousness Breakthrough',
-        description: 'Maria\'s journey healing through physical-spiritual integration',
-        content: 'docs/community-library/TRANSFORMATION_CASE_STUDIES.md',
-        tags: ['health', 'integration', 'healing'],
+        id: 'rubedo-completion',
+        title: 'Rubedo: The Red Work',
+        description: 'The reddening phase - integration and embodied wholeness',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Rubedo - The Red Work.md',
+        tags: ['alchemy', 'rubedo', 'integration', 'wholeness'],
         relatedTechnologies: ['fascia-field-lab', 'alchemical-detection', 'maia-oracle']
       },
       {
-        id: 'community-leadership',
-        title: 'Community Leadership Through Service',
-        description: 'Alex\'s evolution from corporate executive to consciousness community leader',
-        content: 'docs/community-library/TRANSFORMATION_CASE_STUDIES.md',
-        tags: ['leadership', 'service', 'community'],
+        id: 'coniunctio-union',
+        title: 'Coniunctio: Sacred Union',
+        description: 'The ultimate goal - the sacred marriage of opposites within',
+        content: 'Community-Commons/01-Core-Concepts/_Published/Coniunctio - Sacred Union.md',
+        tags: ['alchemy', 'coniunctio', 'union', 'integration'],
         relatedTechnologies: ['collective-orchestrator', 'resonance-mapper', 'maia-oracle']
       }
     ]
   },
   {
     id: 'daily-integration',
-    title: 'Daily Integration Guides',
-    description: 'Practical tools for daily consciousness technology use',
-    icon: '🗓️',
+    title: 'Thematic Essays',
+    description: 'Deep explorations of consciousness development themes',
+    icon: '',
     articles: [
       {
-        id: 'morning-practices',
-        title: 'Morning Consciousness Check-in (15 minutes)',
-        description: 'Start your day with technology-supported awareness',
-        content: 'docs/member-guides/DAILY_PRACTICE_QUICK_REFERENCE.md',
-        tags: ['daily', 'morning', 'routine'],
+        id: 'spiritual-maturity',
+        title: 'Spiritual Maturity and Developmental Stages',
+        description: 'Understanding the stages of spiritual development and maturation',
+        content: 'Community-Commons/02-Thematic-Essays/Spiritual Maturity and Developmental Stages.md',
+        tags: ['development', 'maturity', 'stages'],
         relatedTechnologies: ['alchemical-detection', 'elemental-circulation', 'breakthrough-prediction', 'maia-oracle']
       },
       {
-        id: 'evening-integration',
-        title: 'Evening Integration Practices (10 minutes)',
-        description: 'End your day with reflection and tomorrow\'s preparation',
-        content: 'docs/member-guides/DAILY_PRACTICE_QUICK_REFERENCE.md',
-        tags: ['daily', 'evening', 'integration'],
+        id: 'embodied-wisdom',
+        title: 'Embodied Wisdom and Somatic Intelligence',
+        description: 'Integrating body wisdom into consciousness practice',
+        content: 'Community-Commons/02-Thematic-Essays/Embodied Wisdom and Somatic Intelligence.md',
+        tags: ['embodiment', 'somatic', 'wisdom'],
         relatedTechnologies: ['fascia-field-lab', 'alchemical-detection', 'breakthrough-prediction']
       },
       {
-        id: 'decision-support',
-        title: 'Technology-Assisted Decision Making',
-        description: 'Use consciousness technologies for important life decisions',
-        content: 'docs/community-library/CONSCIOUSNESS_INSIGHTS_COLLECTION.md',
-        tags: ['decisions', 'timing', 'guidance'],
+        id: 'spiritual-bypass',
+        title: 'Spiritual Bypass vs Soul Work',
+        description: 'Understanding the difference between true soul work and spiritual bypassing',
+        content: 'Community-Commons/02-Thematic-Essays/_Published/Spiritual Bypass vs Soul Work.md',
+        tags: ['spiritual-bypass', 'soul-work', 'authenticity'],
         relatedTechnologies: ['alchemical-detection', 'breakthrough-prediction', 'maia-oracle', 'collective-orchestrator']
+      },
+      {
+        id: 'depression-soul-work',
+        title: 'Depression as Soul Work',
+        description: 'Reframing depression through the lens of soul-making',
+        content: 'Community-Commons/02-Thematic-Essays/_Published/Depression as Soul Work.md',
+        tags: ['depression', 'soul-work', 'healing'],
+        relatedTechnologies: ['maia-oracle', 'alchemical-detection', 'breakthrough-prediction']
+      },
+      {
+        id: 'stick-with-image',
+        title: 'Stick with the Image',
+        description: 'The practice of staying with symbolic imagery in consciousness work',
+        content: 'Community-Commons/02-Thematic-Essays/_Published/Stick with the Image.md',
+        tags: ['imagery', 'symbols', 'practice'],
+        relatedTechnologies: ['maia-oracle', 'alchemical-detection']
+      },
+      {
+        id: 'against-literalization',
+        title: 'Against Literalization',
+        description: 'Why we must resist concretizing the soul\'s images',
+        content: 'Community-Commons/02-Thematic-Essays/_Published/Against Literalization.md',
+        tags: ['literalization', 'soul', 'imagination'],
+        relatedTechnologies: ['maia-oracle', 'alchemical-detection']
       }
     ]
   },
@@ -301,7 +349,7 @@ const insightCollections: InsightCollection[] = [
     id: 'dream-unconscious-integration',
     title: 'Dream & Unconscious Integration How-To',
     description: 'Complete guide for working with MAIA to record, remember, and relate dreams across time',
-    icon: '🌙',
+    icon: '',
     articles: [
       {
         id: 'dream-recording-guide',
@@ -573,57 +621,57 @@ MAIA's DreamWeaver Engine detects wisdom emergence signals.
   },
   {
     id: 'member-support',
-    title: 'Member Support & Help',
-    description: 'FAQ, troubleshooting, and comprehensive support resources',
-    icon: '🆘',
+    title: 'Getting Started',
+    description: 'Welcome guides, FAQ, and community orientation',
+    icon: '',
     articles: [
       {
+        id: 'welcome',
+        title: 'Welcome to SOULLAB',
+        description: 'Your introduction to the consciousness community',
+        content: 'Community-Commons/00-START-HERE/Welcome.md',
+        tags: ['welcome', 'introduction', 'getting-started'],
+        relatedTechnologies: ['maia-oracle']
+      },
+      {
         id: 'member-faq',
-        title: 'Complete Member FAQ',
-        description: 'Answers to the most common questions about consciousness technologies',
-        content: 'docs/member-guides/MEMBER_FAQ.md',
+        title: 'Frequently Asked Questions',
+        description: 'Answers to common questions about SOULLAB and consciousness work',
+        content: 'Community-Commons/00-START-HERE/FAQ.md',
         tags: ['FAQ', 'help', 'questions'],
         relatedTechnologies: ['alchemical-detection', 'breakthrough-prediction', 'maia-oracle', 'collective-orchestrator']
       },
       {
-        id: 'how-to-guides',
-        title: 'Step-by-Step HOW TO Guides',
-        description: 'Detailed instructions for using every consciousness technology effectively',
-        content: 'docs/member-guides/HOW_TO_GUIDES.md',
-        tags: ['instructions', 'tutorials', 'step-by-step'],
-        relatedTechnologies: ['alchemical-detection', 'elemental-circulation', 'breakthrough-prediction', 'maia-oracle', 'collective-orchestrator', 'fascia-field-lab']
-      },
-      {
-        id: 'support-library',
-        title: 'Member Support Library',
-        description: 'Comprehensive resource center for successful technology integration',
-        content: 'docs/member-guides/MEMBER_SUPPORT_LIBRARY.md',
-        tags: ['support', 'resources', 'troubleshooting'],
+        id: 'navigation-guide',
+        title: 'Navigation Guide',
+        description: 'How to find your way through the SOULLAB ecosystem',
+        content: 'Community-Commons/00-START-HERE/Navigation Guide.md',
+        tags: ['navigation', 'guide', 'orientation'],
         relatedTechnologies: ['all']
       },
       {
-        id: 'troubleshooting',
-        title: 'Technology Troubleshooting',
-        description: 'Solutions for common technical and usage problems',
-        content: 'docs/member-guides/HOW_TO_GUIDES.md',
-        tags: ['troubleshooting', 'problems', 'solutions'],
-        relatedTechnologies: ['all']
-      },
-      {
-        id: 'new-member-guide',
-        title: '7-Day New Member Pathway',
-        description: 'Complete orientation and startup guide for new SoulLab members',
-        content: 'docs/member-guides/COMPLETE_EXPLORATION_GUIDE.md',
-        tags: ['new-member', 'orientation', 'startup'],
-        relatedTechnologies: ['alchemical-detection', 'elemental-circulation', 'breakthrough-prediction', 'maia-oracle']
-      },
-      {
-        id: 'community-connection',
-        title: 'Community Connection Guide',
-        description: 'How to find mentors, join groups, and participate in collective practices',
-        content: 'docs/member-guides/MEMBER_SUPPORT_LIBRARY.md',
-        tags: ['community', 'connection', 'mentorship'],
+        id: 'community-guidelines',
+        title: 'Community Guidelines',
+        description: 'How we work together in conscious community',
+        content: 'Community-Commons/00-START-HERE/Community Guidelines.md',
+        tags: ['community', 'guidelines', 'culture'],
         relatedTechnologies: ['collective-orchestrator', 'resonance-mapper']
+      },
+      {
+        id: 'platform-vision',
+        title: 'Platform Vision: Consciousness Research Hub',
+        description: 'The long-term vision for SOULLAB as a consciousness research platform',
+        content: 'Community-Commons/00-START-HERE/Platform Vision - Consciousness Research Hub.md',
+        tags: ['vision', 'platform', 'research'],
+        relatedTechnologies: ['collective-orchestrator', 'maia-oracle']
+      },
+      {
+        id: 'how-wisdom-engine-learns',
+        title: 'How the Wisdom Engine Learns',
+        description: 'Understanding how MAIA develops wisdom through interaction',
+        content: 'Community-Commons/HOW_THE_WISDOM_ENGINE_LEARNS.md',
+        tags: ['wisdom', 'learning', 'ai'],
+        relatedTechnologies: ['maia-oracle', 'breakthrough-prediction']
       }
     ]
   }
@@ -635,8 +683,8 @@ const technologyCategories: TechnologyCategory[] = [
     title: 'Individual Consciousness Technologies',
     description: 'Personal spiral awareness and breakthrough prediction systems',
     phase: 1,
-    color: 'purple',
-    icon: '🧘‍♀️',
+    color: 'teal',
+    icon: '',
     technologies: [
       {
         id: 'alchemical-detection',
@@ -740,8 +788,8 @@ const technologyCategories: TechnologyCategory[] = [
     title: 'Biometric Integration Technologies',
     description: 'Body wisdom integration with consciousness development',
     phase: 2,
-    color: 'green',
-    icon: '💚',
+    color: 'sage',
+    icon: '',
     technologies: [
       {
         id: 'fascia-field-lab',
@@ -794,8 +842,8 @@ const technologyCategories: TechnologyCategory[] = [
     title: 'Oracle Intelligence Network',
     description: 'AI consciousness guidance and wisdom systems',
     phase: 3,
-    color: 'blue',
-    icon: '🔮',
+    color: 'amber',
+    icon: '',
     technologies: [
       {
         id: 'maia-oracle',
@@ -847,8 +895,8 @@ const technologyCategories: TechnologyCategory[] = [
     title: 'Collective Consciousness Technologies',
     description: 'Community field dynamics and resonance systems',
     phase: 4,
-    color: 'indigo',
-    icon: '🌐',
+    color: 'stone',
+    icon: '',
     technologies: [
       {
         id: 'collective-orchestrator',
@@ -949,40 +997,40 @@ export function CommunityLibrary() {
     : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 p-6">
+    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900 p-6">
       <div className="max-w-7xl mx-auto">
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-white mb-4">
-            🌀 SoulLab Community Library
+          <h1 className="text-4xl font-semibold text-stone-900 dark:text-stone-100 mb-4">
+            SOULLAB Community Library
           </h1>
-          <p className="text-xl text-purple-200 mb-6">
+          <p className="text-xl text-stone-600 dark:text-stone-400 mb-6">
             Explore consciousness technologies, practical insights, and transformation stories
           </p>
 
           {/* View Mode Toggle */}
           <div className="flex justify-center mb-6">
-            <div className="bg-white/10 rounded-lg p-1">
+            <div className="bg-stone-200/50 dark:bg-stone-800/50 rounded-lg p-1 border border-stone-300 dark:border-stone-700">
               <button
                 onClick={() => setViewMode('technologies')}
                 className={`px-6 py-2 rounded-lg transition-all ${
                   viewMode === 'technologies'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-purple-300 hover:text-white'
+                    ? 'bg-teal-600 text-white'
+                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
                 }`}
               >
-                🔧 Technologies
+                Technologies
               </button>
               <button
                 onClick={() => setViewMode('insights')}
                 className={`px-6 py-2 rounded-lg transition-all ${
                   viewMode === 'insights'
-                    ? 'bg-purple-600 text-white'
-                    : 'text-purple-300 hover:text-white'
+                    ? 'bg-teal-600 text-white'
+                    : 'text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-200'
                 }`}
               >
-                💎 Insights & Stories
+                Insights & Stories
               </button>
             </div>
           </div>
@@ -994,13 +1042,13 @@ export function CommunityLibrary() {
               placeholder={viewMode === 'technologies' ? 'Search technologies...' : 'Search insights...'}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 rounded-lg bg-white/10 text-white placeholder-purple-300 border border-purple-500/30 focus:border-purple-400 focus:outline-none"
+              className="px-4 py-2 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 placeholder-stone-400 border border-stone-300 dark:border-stone-600 focus:border-teal-500 focus:outline-none"
             />
             {viewMode === 'technologies' && (
               <select
                 value={complexityFilter}
                 onChange={(e) => setComplexityFilter(e.target.value)}
-                className="px-4 py-2 rounded-lg bg-white/10 text-white border border-purple-500/30 focus:border-purple-400 focus:outline-none"
+                className="px-4 py-2 rounded-lg bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 border border-stone-300 dark:border-stone-600 focus:border-teal-500 focus:outline-none"
               >
                 <option value="all">All Levels</option>
                 <option value="beginner">Beginner</option>
@@ -1015,8 +1063,8 @@ export function CommunityLibrary() {
 
           {/* Category Sidebar */}
           <div className="lg:col-span-1">
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
-              <h3 className="text-xl font-semibold text-white mb-4">
+            <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
+              <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-4">
                 {viewMode === 'technologies' ? 'Technology Phases' : 'Insight Collections'}
               </h3>
               <div className="space-y-3">
@@ -1027,15 +1075,17 @@ export function CommunityLibrary() {
                       onClick={() => setSelectedCategory(category.id)}
                       className={`w-full text-left p-4 rounded-lg transition-all ${
                         selectedCategory === category.id
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-white/5 text-purple-200 hover:bg-white/10'
+                          ? 'bg-teal-600 text-white'
+                          : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
                       }`}
                     >
                       <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{category.icon}</span>
+                        <div className="w-8 h-8 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 font-semibold text-sm">
+                          {category.phase}
+                        </div>
                         <div className="flex-1">
                           <div className="font-medium">Phase {category.phase}</div>
-                          <div className="text-sm opacity-90">{category.title}</div>
+                          <div className="text-sm opacity-80">{category.title}</div>
                         </div>
                       </div>
                     </button>
@@ -1047,16 +1097,13 @@ export function CommunityLibrary() {
                       onClick={() => setSelectedInsightCollection(collection)}
                       className={`w-full text-left p-4 rounded-lg transition-all ${
                         selectedInsightCollection?.id === collection.id
-                          ? 'bg-purple-600 text-white'
-                          : 'bg-white/5 text-purple-200 hover:bg-white/10'
+                          ? 'bg-teal-600 text-white'
+                          : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700'
                       }`}
                     >
-                      <div className="flex items-center space-x-3">
-                        <span className="text-2xl">{collection.icon}</span>
-                        <div className="flex-1">
-                          <div className="font-medium">{collection.title}</div>
-                          <div className="text-sm opacity-90">{collection.description}</div>
-                        </div>
+                      <div className="flex-1">
+                        <div className="font-medium">{collection.title}</div>
+                        <div className="text-sm opacity-80">{collection.description}</div>
                       </div>
                     </button>
                   ))
@@ -1078,16 +1125,16 @@ export function CommunityLibrary() {
                 /* Technology Grid View */
                 <div className="space-y-6">
                   {selectedCategory && (
-                    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
+                    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
                       <div className="flex items-center space-x-4 mb-4">
-                        <span className="text-3xl">
-                          {technologyCategories.find(cat => cat.id === selectedCategory)?.icon}
-                        </span>
+                        <div className="w-12 h-12 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-600 dark:text-teal-400 font-bold text-lg">
+                          {technologyCategories.find(cat => cat.id === selectedCategory)?.phase}
+                        </div>
                         <div>
-                          <h2 className="text-2xl font-bold text-white">
+                          <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
                             {technologyCategories.find(cat => cat.id === selectedCategory)?.title}
                           </h2>
-                          <p className="text-purple-200">
+                          <p className="text-stone-600 dark:text-stone-400">
                             {technologyCategories.find(cat => cat.id === selectedCategory)?.description}
                           </p>
                         </div>
@@ -1120,11 +1167,10 @@ export function CommunityLibrary() {
                   onBack={() => setSelectedInsightCollection(null)}
                 />
               ) : (
-                <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
+                <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
                   <div className="text-center py-12">
-                    <div className="text-4xl mb-4">💎</div>
-                    <h2 className="text-2xl font-bold text-white mb-4">Practical Wisdom & Insights</h2>
-                    <p className="text-purple-200 mb-6">
+                    <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100 mb-4">Practical Wisdom & Insights</h2>
+                    <p className="text-stone-600 dark:text-stone-400 mb-6">
                       Select an insight collection from the sidebar to explore practical wisdom, transformation stories, and daily integration guides.
                     </p>
                     <div className="grid md:grid-cols-3 gap-4">
@@ -1132,11 +1178,10 @@ export function CommunityLibrary() {
                         <button
                           key={collection.id}
                           onClick={() => setSelectedInsightCollection(collection)}
-                          className="bg-white/5 hover:bg-white/10 rounded-lg p-4 transition-all"
+                          className="bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg p-4 transition-all border border-stone-200 dark:border-stone-700"
                         >
-                          <div className="text-2xl mb-2">{collection.icon}</div>
-                          <div className="font-medium text-white mb-2">{collection.title}</div>
-                          <div className="text-sm text-purple-200">{collection.articles.length} articles</div>
+                          <div className="font-medium text-stone-900 dark:text-stone-100 mb-2">{collection.title}</div>
+                          <div className="text-sm text-stone-500 dark:text-stone-400">{collection.articles.length} articles</div>
                         </button>
                       ))}
                     </div>
@@ -1148,28 +1193,28 @@ export function CommunityLibrary() {
         </div>
 
         {/* Quick Stats */}
-        <div className="mt-12 bg-white/5 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
-          <h3 className="text-xl font-semibold text-white mb-4 text-center">Innovation Overview</h3>
+        <div className="mt-12 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
+          <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-4 text-center">Innovation Overview</h3>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-purple-300">4</div>
-              <div className="text-sm text-purple-200">Technology Phases</div>
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">4</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400">Technology Phases</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-300">12+</div>
-              <div className="text-sm text-purple-200">Active Systems</div>
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">12+</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400">Active Systems</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-blue-300">5</div>
-              <div className="text-sm text-purple-200">Insight Collections</div>
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">5</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400">Insight Collections</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-indigo-300">30+</div>
-              <div className="text-sm text-purple-200">Wisdom Articles</div>
+              <div className="text-2xl font-bold text-teal-600 dark:text-teal-400">30+</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400">Wisdom Articles</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-yellow-300">Living</div>
-              <div className="text-sm text-purple-200">Intelligence</div>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">Living</div>
+              <div className="text-sm text-stone-600 dark:text-stone-400">Intelligence</div>
             </div>
           </div>
         </div>
@@ -1186,24 +1231,24 @@ function TechnologyCard({
   onSelect: () => void;
 }) {
   const statusColors = {
-    live: 'bg-green-500',
-    beta: 'bg-yellow-500',
-    'coming-soon': 'bg-gray-500'
+    live: 'bg-teal-500',
+    beta: 'bg-amber-500',
+    'coming-soon': 'bg-stone-400'
   };
 
   const complexityColors = {
-    beginner: 'text-green-400',
-    intermediate: 'text-yellow-400',
-    advanced: 'text-red-400'
+    beginner: 'text-teal-600 dark:text-teal-400',
+    intermediate: 'text-amber-600 dark:text-amber-400',
+    advanced: 'text-rose-600 dark:text-rose-400'
   };
 
   return (
     <div
-      className="bg-white/5 hover:bg-white/10 border border-purple-500/30 rounded-lg p-4 cursor-pointer transition-all"
+      className="bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 rounded-lg p-4 cursor-pointer transition-all"
       onClick={onSelect}
     >
       <div className="flex items-start justify-between mb-3">
-        <h4 className="font-semibold text-white">{technology.name}</h4>
+        <h4 className="font-semibold text-stone-900 dark:text-stone-100">{technology.name}</h4>
         <div className="flex items-center space-x-2">
           <span className={`w-2 h-2 rounded-full ${statusColors[technology.status]}`}></span>
           <span className={`text-xs font-medium ${complexityColors[technology.complexity]}`}>
@@ -1211,8 +1256,8 @@ function TechnologyCard({
           </span>
         </div>
       </div>
-      <p className="text-sm text-purple-200 mb-3">{technology.description}</p>
-      <div className="text-xs text-purple-300">
+      <p className="text-sm text-stone-600 dark:text-stone-400 mb-3">{technology.description}</p>
+      <div className="text-xs text-stone-500 dark:text-stone-500">
         {technology.features.slice(0, 2).join(' • ')}
         {technology.features.length > 2 && ' • ...'}
       </div>
@@ -1230,39 +1275,36 @@ function InsightCollectionView({
   onBack: () => void;
 }) {
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
-          className="text-purple-300 hover:text-white flex items-center space-x-2"
+          className="text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 flex items-center space-x-2"
         >
           <span>←</span>
           <span>Back to Collections</span>
         </button>
       </div>
 
-      <div className="flex items-center space-x-4 mb-6">
-        <span className="text-4xl">{collection.icon}</span>
-        <div>
-          <h1 className="text-3xl font-bold text-white">{collection.title}</h1>
-          <p className="text-lg text-purple-200">{collection.description}</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-3xl font-semibold text-stone-900 dark:text-stone-100">{collection.title}</h1>
+        <p className="text-lg text-stone-600 dark:text-stone-400">{collection.description}</p>
       </div>
 
       <div className="grid gap-4">
         {collection.articles.map(article => (
           <div
             key={article.id}
-            className="bg-white/5 hover:bg-white/10 border border-purple-500/30 rounded-lg p-4 cursor-pointer transition-all"
+            className="bg-stone-50 dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 rounded-lg p-4 cursor-pointer transition-all"
             onClick={() => onSelectArticle(article)}
           >
-            <h3 className="font-semibold text-white mb-2">{article.title}</h3>
-            <p className="text-sm text-purple-200 mb-3">{article.description}</p>
+            <h3 className="font-semibold text-stone-900 dark:text-stone-100 mb-2">{article.title}</h3>
+            <p className="text-sm text-stone-600 dark:text-stone-400 mb-3">{article.description}</p>
 
             {/* Tags */}
             <div className="flex flex-wrap gap-2 mb-3">
               {article.tags.map(tag => (
-                <span key={tag} className="px-2 py-1 bg-purple-700/50 rounded text-xs text-purple-200">
+                <span key={tag} className="px-2 py-1 bg-teal-100 dark:bg-teal-900/30 rounded text-xs text-teal-700 dark:text-teal-300">
                   #{tag}
                 </span>
               ))}
@@ -1270,7 +1312,7 @@ function InsightCollectionView({
 
             {/* Related Technologies */}
             {article.relatedTechnologies.length > 0 && (
-              <div className="text-xs text-purple-400">
+              <div className="text-xs text-stone-500">
                 Related: {article.relatedTechnologies.slice(0, 3).join(', ')}
                 {article.relatedTechnologies.length > 3 && '...'}
               </div>
@@ -1290,44 +1332,44 @@ function InsightArticleView({
   onBack: () => void;
 }) {
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
-          className="text-purple-300 hover:text-white flex items-center space-x-2"
+          className="text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 flex items-center space-x-2"
         >
           <span>←</span>
           <span>Back to Collection</span>
         </button>
       </div>
 
-      <h1 className="text-3xl font-bold text-white mb-4">{article.title}</h1>
-      <p className="text-lg text-purple-200 mb-6">{article.description}</p>
+      <h1 className="text-3xl font-semibold text-stone-900 dark:text-stone-100 mb-4">{article.title}</h1>
+      <p className="text-lg text-stone-600 dark:text-stone-400 mb-6">{article.description}</p>
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-6">
         {article.tags.map(tag => (
-          <span key={tag} className="px-3 py-1 bg-purple-700/50 rounded-full text-sm text-purple-200">
+          <span key={tag} className="px-3 py-1 bg-teal-100 dark:bg-teal-900/30 rounded-full text-sm text-teal-700 dark:text-teal-300">
             #{tag}
           </span>
         ))}
       </div>
 
       {/* Content Preview */}
-      <div className="bg-purple-900/50 rounded-lg p-6 mb-6">
-        <h3 className="text-xl font-semibold text-white mb-4">Content Preview</h3>
-        <p className="text-purple-200 mb-4">
+      <div className="bg-stone-100 dark:bg-stone-800 rounded-lg p-6 mb-6 border border-stone-200 dark:border-stone-700">
+        <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-4">Content Preview</h3>
+        <p className="text-stone-600 dark:text-stone-400 mb-4">
           This article contains comprehensive insights and practical wisdom. The full content is available in the documentation files.
         </p>
-        <div className="text-sm text-purple-300">
-          📁 Location: {article.content}
+        <div className="text-sm text-stone-500">
+          Location: {article.content}
         </div>
       </div>
 
       {/* Related Technologies */}
       {article.relatedTechnologies.length > 0 && (
-        <div className="bg-white/5 rounded-lg p-4">
-          <h4 className="font-semibold text-white mb-3">Related Technologies</h4>
+        <div className="bg-stone-50 dark:bg-stone-800/50 rounded-lg p-4 border border-stone-200 dark:border-stone-700">
+          <h4 className="font-semibold text-stone-900 dark:text-stone-100 mb-3">Related Technologies</h4>
           <div className="flex flex-wrap gap-2">
             {article.relatedTechnologies.map(techId => {
               // Find the technology name from all categories
@@ -1335,7 +1377,7 @@ function InsightArticleView({
                 .flatMap(cat => cat.technologies)
                 .find(t => t.id === techId);
               return tech ? (
-                <span key={techId} className="px-3 py-1 bg-indigo-700/50 rounded-full text-sm text-white">
+                <span key={techId} className="px-3 py-1 bg-amber-100 dark:bg-amber-900/30 rounded-full text-sm text-amber-800 dark:text-amber-200">
                   {tech.name}
                 </span>
               ) : null;
@@ -1355,33 +1397,33 @@ function TechnologyDetailView({
   onBack: () => void;
 }) {
   return (
-    <div className="bg-white/10 backdrop-blur-sm rounded-xl border border-purple-500/30 p-6">
+    <div className="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-6 shadow-sm">
       <div className="flex items-center justify-between mb-6">
         <button
           onClick={onBack}
-          className="text-purple-300 hover:text-white flex items-center space-x-2"
+          className="text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 flex items-center space-x-2"
         >
           <span>←</span>
           <span>Back to Library</span>
         </button>
         <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-          technology.status === 'live' ? 'bg-green-500' :
-          technology.status === 'beta' ? 'bg-yellow-500' : 'bg-gray-500'
+          technology.status === 'live' ? 'bg-teal-500' :
+          technology.status === 'beta' ? 'bg-amber-500' : 'bg-stone-400'
         } text-white`}>
           {technology.status.replace('-', ' ')}
         </div>
       </div>
 
-      <h1 className="text-3xl font-bold text-white mb-4">{technology.name}</h1>
-      <p className="text-lg text-purple-200 mb-6">{technology.description}</p>
+      <h1 className="text-3xl font-semibold text-stone-900 dark:text-stone-100 mb-4">{technology.name}</h1>
+      <p className="text-lg text-stone-600 dark:text-stone-400 mb-6">{technology.description}</p>
 
       <div className="grid md:grid-cols-2 gap-6">
         <div>
-          <h3 className="text-xl font-semibold text-white mb-3">Key Features</h3>
+          <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-3">Key Features</h3>
           <ul className="space-y-2">
             {technology.features.map((feature, index) => (
-              <li key={index} className="flex items-start space-x-2 text-purple-200">
-                <span className="text-purple-400 mt-1">•</span>
+              <li key={index} className="flex items-start space-x-2 text-stone-600 dark:text-stone-400">
+                <span className="text-teal-500 mt-1">•</span>
                 <span>{feature}</span>
               </li>
             ))}
@@ -1389,11 +1431,11 @@ function TechnologyDetailView({
         </div>
 
         <div>
-          <h3 className="text-xl font-semibold text-white mb-3">Benefits</h3>
+          <h3 className="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-3">Benefits</h3>
           <ul className="space-y-2">
             {technology.benefits.map((benefit, index) => (
-              <li key={index} className="flex items-start space-x-2 text-purple-200">
-                <span className="text-green-400 mt-1">✓</span>
+              <li key={index} className="flex items-start space-x-2 text-stone-600 dark:text-stone-400">
+                <span className="text-teal-500 mt-1">✓</span>
                 <span>{benefit}</span>
               </li>
             ))}
@@ -1401,16 +1443,16 @@ function TechnologyDetailView({
         </div>
       </div>
 
-      <div className="mt-8 p-4 bg-purple-900/50 rounded-lg">
-        <h4 className="font-semibold text-white mb-2">How to Access</h4>
-        <p className="text-purple-200">{technology.howToAccess}</p>
+      <div className="mt-8 p-4 bg-stone-100 dark:bg-stone-800 rounded-lg border border-stone-200 dark:border-stone-700">
+        <h4 className="font-semibold text-stone-900 dark:text-stone-100 mb-2">How to Access</h4>
+        <p className="text-stone-600 dark:text-stone-400">{technology.howToAccess}</p>
       </div>
 
       <div className="mt-6 flex flex-wrap gap-4">
-        <div className="px-3 py-1 bg-purple-700 rounded-full text-xs text-white">
+        <div className="px-3 py-1 bg-teal-100 dark:bg-teal-900/30 rounded-full text-xs text-teal-700 dark:text-teal-300">
           {technology.complexity} Level
         </div>
-        <div className="px-3 py-1 bg-indigo-700 rounded-full text-xs text-white">
+        <div className="px-3 py-1 bg-stone-200 dark:bg-stone-700 rounded-full text-xs text-stone-600 dark:text-stone-300">
           {technology.location.split('/').pop()?.replace('.ts', '').replace('.tsx', '')}
         </div>
       </div>

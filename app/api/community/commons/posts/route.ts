@@ -2,10 +2,61 @@
 /**
  * COMMUNITY COMMONS POSTS LIST ROUTE
  *
- * Retrieves posts from the Community Commons with filtering, sorting, and pagination.
+ * Returns community posts. Currently returns mock data since
+ * Community Commons content is served from embedded markdown.
+ *
+ * TODO: Integrate with PostgreSQL when database-backed posts are needed.
+ * Per CLAUDE.md: Use local PostgreSQL via lib/db/postgres.ts (NOT Supabase)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Mock posts for API compatibility
+const mockPosts = [
+  {
+    id: '1',
+    title: 'Nigredo - The Sacred Descent',
+    excerpt: 'The alchemical stage of breakdown and purification',
+    tags: ['concepts', 'alchemy', 'nigredo'],
+    user_id: 'commons',
+    user_name: 'Community Commons',
+    created_at: new Date().toISOString(),
+    view_count: 234,
+    like_count: 45,
+    is_featured: true,
+    is_published: true,
+    content_path: 'concepts/nigredo'
+  },
+  {
+    id: '2',
+    title: 'Active Imagination Practice',
+    excerpt: "Jung's revolutionary method for engaging unconscious content",
+    tags: ['practices', 'jung', 'imagination'],
+    user_id: 'commons',
+    user_name: 'Community Commons',
+    created_at: new Date().toISOString(),
+    view_count: 189,
+    like_count: 38,
+    is_featured: true,
+    is_published: true,
+    content_path: 'practices/active-imagination'
+  },
+  {
+    id: '3',
+    title: 'Against Literalization',
+    excerpt: 'Deep explorations of key themes in depth psychology',
+    tags: ['essays', 'hillman', 'psychology'],
+    user_id: 'commons',
+    user_name: 'Community Commons',
+    created_at: new Date().toISOString(),
+    view_count: 156,
+    like_count: 29,
+    is_featured: false,
+    is_published: true,
+    content_path: 'essays/against-literalization'
+  }
+];
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -13,67 +64,37 @@ export async function GET(req: NextRequest) {
     // Pagination
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = (page - 1) * limit;
 
     // Filtering
     const featured = searchParams.get('featured') === 'true';
     const tag = searchParams.get('tag');
-    const userId = searchParams.get('userId');
 
-    // Sorting
-    const sortBy = searchParams.get('sortBy') || 'created_at';
-    const sortOrder = searchParams.get('sortOrder') || 'desc';
+    // Filter mock posts
+    let filteredPosts = [...mockPosts];
 
-    const supabase = createClient();
-    let query = supabase
-      .from('community_commons_posts')
-      .select('*', { count: 'exact' })
-      .eq('is_published', true);
-
-    // Apply filters
     if (featured) {
-      query = query.eq('is_featured', true);
+      filteredPosts = filteredPosts.filter(p => p.is_featured);
     }
 
     if (tag) {
-      query = query.contains('tags', [tag]);
+      filteredPosts = filteredPosts.filter(p => p.tags.includes(tag));
     }
 
-    if (userId) {
-      query = query.eq('user_id', userId);
-    }
-
-    // Apply sorting
-    const validSortColumns = ['created_at', 'updated_at', 'view_count', 'like_count', 'title'];
-    const column = validSortColumns.includes(sortBy) ? sortBy : 'created_at';
-    query = query.order(column, { ascending: sortOrder === 'asc' });
-
-    // Apply pagination
-    query = query.range(offset, offset + limit - 1);
-
-    const { data: posts, error, count } = await query;
-
-    if (error) {
-      console.error('[Commons] Failed to fetch posts:', error);
-      return NextResponse.json(
-        {
-          ok: false,
-          reason: 'database_error',
-          message: 'Failed to fetch posts',
-        },
-        { status: 500 }
-      );
-    }
+    // Pagination
+    const total = filteredPosts.length;
+    const start = (page - 1) * limit;
+    const paginatedPosts = filteredPosts.slice(start, start + limit);
 
     return NextResponse.json({
       ok: true,
-      posts: posts || [],
+      posts: paginatedPosts,
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit),
+        total,
+        totalPages: Math.ceil(total / limit),
       },
+      note: 'Content served from Community Commons. Visit /maia/community/commons for full library.'
     });
   } catch (err) {
     console.error('[Commons] GET error:', err);

@@ -2498,10 +2498,27 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setMessages(prev => [...prev, errorMessage]);
       onMessageAddedRef.current?.(errorMessage);
     } finally {
-      // Always reset processing state for text chat
-      console.log('🧹 Text processing complete - resetting all states (isProcessing: false, isResponding: false)');
+      // 🔥 CRITICAL FIX: Only reset isResponding for TEXT mode
+      // For VOICE mode, isResponding is managed by StreamingAudioQueue.onComplete
+      // Setting it here would cause teal visualizer to cut out mid-speech!
+      const isVoiceStreaming = !showChatInterface && voiceEnabled;
+
+      console.log('🧹 Message processing complete', {
+        isVoiceStreaming,
+        isAudioPlaying: isAudioPlayingRef.current,
+        willResetResponding: !isVoiceStreaming
+      });
+
       setIsProcessing(false);
-      setIsResponding(false);
+
+      // Only reset isResponding for text mode - voice mode handles this in onComplete
+      if (!isVoiceStreaming) {
+        setIsResponding(false);
+        console.log('🔇 [TEXT MODE] Reset isResponding=false');
+      } else {
+        console.log('🔊 [VOICE MODE] Keeping isResponding - audio queue will reset when complete');
+      }
+
       setCurrentMotionState('idle');
     }
   }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady]);

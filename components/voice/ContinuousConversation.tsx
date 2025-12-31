@@ -79,7 +79,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
   const hasSpokenRef = useRef(false); // Track if user has spoken at all (to differentiate from background noise)
-  const adaptiveSilenceThreshold = 2500; // 2.5 seconds for thinking pauses - respectful, not rushed
+  const adaptiveSilenceThreshold = 1500; // 1.5 seconds - responsive but allows brief pauses
 
   // Function refs to avoid temporal dead zone in useImperativeHandle
   const startListeningFnRef = useRef<() => void>();
@@ -171,12 +171,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognition.onresult = (event: any) => {
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
 
-      // 🛑 INTERRUPT: If user starts speaking while MAIA is talking, interrupt MAIA immediately
+      // 🛡️ GUARD: If MAIA is speaking, IGNORE this result entirely
+      // This prevents MAIA's voice from being detected as user speech
+      // (Interrupt feature removed to prevent voice feedback loop)
       if (isSpeakingRef.current) {
-        console.log('🛑 [INTERRUPT] User speaking while MAIA talks - interrupting MAIA');
-        const feedbackPrevention = VoiceFeedbackPrevention.getInstance();
-        feedbackPrevention.interruptMaya();
-        isSpeakingRef.current = false; // Update ref immediately
+        console.log('🚫 [onresult] IGNORED - MAIA is speaking, this is likely echo/feedback');
+        return; // Don't process anything while MAIA speaks
       }
 
       let interimTranscript = '';
@@ -402,9 +402,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   }, [silenceThreshold, onInterimTranscript, onRecordingStateChange, isSafari]);
 
   // Sync props and state to refs to avoid stale closures in recognition callbacks
-  useEffect(() => {
-    isSpeakingRef.current = isSpeaking;
-  }, [isSpeaking]);
+  // 🔥 CRITICAL: Sync isSpeaking SYNCHRONOUSLY (not in useEffect) to prevent race conditions
+  // This ensures the guard in startListening() always has the latest value
+  isSpeakingRef.current = isSpeaking;
 
   useEffect(() => {
     isProcessingRef.current = isProcessing;
@@ -418,18 +418,43 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
-  // 🔇 CRITICAL: Stop recognition when MAIA starts speaking to prevent voice feedback loop
+  // 🔇 CRITICAL: Stop recognition AND clear all timers when MAIA starts speaking
   useEffect(() => {
-    if (isSpeaking && recognitionRef.current) {
-      console.log('🔇 [Voice Feedback Prevention] MAIA started speaking - stopping STT');
-      try {
-        // Always stop recognition when MAIA speaks, regardless of isRecording state
-        recognitionRef.current.stop();
-        setIsRecording(false);
-        isProcessingRef.current = false; // Clear processing flag
-      } catch (err) {
-        console.warn('⚠️ [Voice Feedback Prevention] Error stopping recognition:', err);
+    if (isSpeaking) {
+      console.log('🔇 [Voice Feedback Prevention] MAIA started speaking - FULL STOP');
+
+      // Stop recognition
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (err) {
+          console.warn('⚠️ Error stopping recognition:', err);
+        }
       }
+
+      // Clear ALL timers to prevent any delayed processing
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+        console.log('🧹 Cleared silence timer');
+      }
+      if (recognitionTimeoutRef.current) {
+        clearTimeout(recognitionTimeoutRef.current);
+        recognitionTimeoutRef.current = null;
+        console.log('🧹 Cleared recognition timeout');
+      }
+
+      // Clear any accumulated transcript (it's MAIA's voice, not user's)
+      if (accumulatedTranscript.current) {
+        console.log('🧹 Discarding accumulated transcript (was MAIA echo):',
+          accumulatedTranscript.current.substring(0, 50));
+        accumulatedTranscript.current = '';
+      }
+
+      // Reset all state
+      setIsRecording(false);
+      isRecordingRef.current = false;
+      isProcessingRef.current = false;
     }
   }, [isSpeaking]);
 
@@ -560,13 +585,105 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }, 500);
   }, [onTranscript]);
 
+  // 🔊 Track if audio loop is currently running to prevent duplicates
+  const audioLoopRunningRef = useRef(false);
+
+  // 🔊 Start the audio level monitoring loop (can be called multiple times safely)
+  const startAudioLevelLoop = useCallback(() => {
+    // Prevent multiple loops running simultaneously
+    if (audioLoopRunningRef.current) {
+      console.log('🔊 [AudioLoop] Already running, skipping duplicate start');
+      return;
+    }
+
+    if (!analyserRef.current) {
+      console.log('🔊 [AudioLoop] No analyser - cannot start');
+      return;
+    }
+
+    audioLoopRunningRef.current = true;
+    console.log('🔊 [AudioLoop] Starting audio level monitoring loop');
+
+    const checkAudioLevel = () => {
+      if (!analyserRef.current) {
+        audioLoopRunningRef.current = false;
+        return;
+      }
+
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserRef.current.getByteFrequencyData(dataArray);
+
+      // Calculate average level
+      const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
+      const normalizedLevel = Math.min(average / 128, 1);
+
+      // Store in ref for immediate use (no re-render)
+      audioLevelRef.current = normalizedLevel;
+
+      // Throttle state updates to 10fps (every 100ms) instead of 60fps
+      const now = Date.now();
+      if (now - lastAudioLevelUpdate.current > 100) {
+        setAudioLevel(normalizedLevel);
+        lastAudioLevelUpdate.current = now;
+      }
+
+      // 🌸 Call amplitude callback directly for holoflower visualization
+      // Use ref instead of state to avoid triggering re-renders
+      onAudioLevelChange?.(normalizedLevel, isRecordingRef.current);
+
+      // 🎯 ADAPTIVE SILENCE DETECTION - Detect when user stops speaking
+      // Respect thinking pauses - only send after meaningful silence
+      const voiceThreshold = vadSensitivity; // Use sensitivity from props (default 0.3)
+      const wasSpeaking = isSpeakingNowRef.current;
+      const isSpeakingNow = normalizedLevel > voiceThreshold;
+
+      if (isSpeakingNow && !wasSpeaking) {
+        // User started speaking
+        isSpeakingNowRef.current = true;
+        hasSpokenRef.current = true; // Mark that we've detected real speech
+        silenceStartTimeRef.current = 0;
+        console.log('🗣️ [VAD] User speaking (level:', normalizedLevel.toFixed(2), ')');
+      } else if (!isSpeakingNow && wasSpeaking) {
+        // User paused - start silence timer (might be thinking, might be done)
+        isSpeakingNowRef.current = false;
+        silenceStartTimeRef.current = now;
+        console.log('⏸️ [VAD] Pause detected - listening for continuation...');
+      } else if (!isSpeakingNow && silenceStartTimeRef.current > 0 && hasSpokenRef.current) {
+        // Check if pause has lasted long enough AND we have real content
+        const silenceDuration = now - silenceStartTimeRef.current;
+        if (silenceDuration >= adaptiveSilenceThreshold && accumulatedTranscript.current.trim()) {
+          console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
+          silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
+          hasSpokenRef.current = false; // Reset for next turn
+          if (!isProcessingRef.current) {
+            processAccumulatedTranscript();
+          }
+        }
+      }
+
+      // 🔥 Use ref instead of state to avoid stale closure issues
+      if (isListeningRef.current) {
+        requestAnimationFrame(checkAudioLevel);
+      } else {
+        // Loop stopped - mark as not running
+        audioLoopRunningRef.current = false;
+        console.log('🔊 [AudioLoop] Stopped (isListening=false)');
+      }
+    };
+
+    checkAudioLevel();
+  }, [onAudioLevelChange, vadSensitivity, processAccumulatedTranscript]);
+
   // Initialize audio level monitoring
   const initializeAudioMonitoring = useCallback(async () => {
     try {
       // BUGFIX: Don't request getUserMedia if we already have a stream
       // This prevents permission re-request loops on iPad Safari
-      if (micStreamRef.current) {
+      if (micStreamRef.current && analyserRef.current) {
         console.log('✅ [Continuous] Already have microphone stream, reusing');
+        // 🔥 CRITICAL FIX: Even when reusing stream, restart the audio loop!
+        startAudioLevelLoop();
         return true;
       }
 
@@ -596,89 +713,35 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       const analyser = audioContext.createAnalyser();
       const microphone = audioContext.createMediaStreamSource(stream);
-      
+
       analyser.smoothingTimeConstant = 0.8;
       analyser.fftSize = 256;
-      
+
       microphone.connect(analyser);
-      
+
       audioContextRef.current = audioContext;
       analyserRef.current = analyser;
-      
-      // Monitor audio levels
-      const checkAudioLevel = () => {
-        if (!analyserRef.current) return;
 
-        const bufferLength = analyserRef.current.frequencyBinCount;
-        const dataArray = new Uint8Array(bufferLength);
-        analyserRef.current.getByteFrequencyData(dataArray);
+      // 🔥 Start the audio level monitoring loop
+      startAudioLevelLoop();
 
-        // Calculate average level
-        const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
-        const normalizedLevel = Math.min(average / 128, 1);
-
-        // Store in ref for immediate use (no re-render)
-        audioLevelRef.current = normalizedLevel;
-
-        // Throttle state updates to 10fps (every 100ms) instead of 60fps
-        const now = Date.now();
-        if (now - lastAudioLevelUpdate.current > 100) {
-          setAudioLevel(normalizedLevel);
-          lastAudioLevelUpdate.current = now;
-        }
-
-        // 🌸 Call amplitude callback directly for holoflower visualization
-        // Use ref instead of state to avoid triggering re-renders
-        onAudioLevelChange?.(normalizedLevel, isRecordingRef.current);
-
-        // 🎯 ADAPTIVE SILENCE DETECTION - Detect when user stops speaking
-        // Respect thinking pauses - only send after meaningful silence
-        const voiceThreshold = vadSensitivity; // Use sensitivity from props (default 0.3)
-        const wasSpeaking = isSpeakingNowRef.current;
-        const isSpeakingNow = normalizedLevel > voiceThreshold;
-
-        if (isSpeakingNow && !wasSpeaking) {
-          // User started speaking
-          isSpeakingNowRef.current = true;
-          hasSpokenRef.current = true; // Mark that we've detected real speech
-          silenceStartTimeRef.current = 0;
-          console.log('🗣️ [VAD] User speaking (level:', normalizedLevel.toFixed(2), ')');
-        } else if (!isSpeakingNow && wasSpeaking) {
-          // User paused - start silence timer (might be thinking, might be done)
-          isSpeakingNowRef.current = false;
-          silenceStartTimeRef.current = now;
-          console.log('⏸️ [VAD] Pause detected - listening for continuation...');
-        } else if (!isSpeakingNow && silenceStartTimeRef.current > 0 && hasSpokenRef.current) {
-          // Check if pause has lasted long enough AND we have real content
-          const silenceDuration = now - silenceStartTimeRef.current;
-          if (silenceDuration >= adaptiveSilenceThreshold && accumulatedTranscript.current.trim()) {
-            console.log('✅ [VAD] Natural completion detected after', silenceDuration, 'ms - sending to MAIA');
-            silenceStartTimeRef.current = 0; // Reset to prevent duplicate triggers
-            hasSpokenRef.current = false; // Reset for next turn
-            if (!isProcessingRef.current) {
-              processAccumulatedTranscript();
-            }
-          }
-        }
-
-        if (isListening) {
-          requestAnimationFrame(checkAudioLevel);
-        }
-      };
-      
-      checkAudioLevel();
-      
       return true;
     } catch (error) {
       console.error('❌ [Continuous] Microphone access error:', error);
       return false;
     }
-  }, [isListening, isSafari]);
+  }, [isSafari, startAudioLevelLoop]);
 
   // Start listening
   const startListening = useCallback(async () => {
     console.log('🎤 [ContinuousConversation] startListening called');
     console.log('📱 [ContinuousConversation] Platform:', Capacitor.getPlatform(), 'Native:', useNativeSpeechRef.current);
+
+    // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
+    if (isSpeakingRef.current) {
+      console.log('🚫 [ContinuousConversation] BLOCKED: Cannot start listening while MAIA is speaking');
+      return;
+    }
 
     // 🎤 IMMEDIATE: Notify parent right away so visualizer shows instantly
     setIsListening(true);

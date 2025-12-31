@@ -818,86 +818,218 @@ export default function ContentPage() {
           </div>
         </div>
 
-        {/* Content Header */}
+        {/* Content Header - Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
+          className="mb-12"
         >
-          <div className="flex items-start gap-4 mb-4">
-            <div className={`p-3 rounded-lg ${colors.bg}`}>
-              <TypeIcon className={`w-8 h-8 ${colors.text}`} />
+          <div className="relative py-8">
+            {/* Decorative background pattern */}
+            <div className="absolute inset-0 opacity-[0.02]"
+                 style={{
+                   backgroundImage: `radial-gradient(circle at 1px 1px, white 1px, transparent 0)`,
+                   backgroundSize: '24px 24px'
+                 }} />
+
+            <div className="flex flex-col md:flex-row items-start gap-6">
+              {/* Icon with glow effect */}
+              <div className="relative">
+                <div className={`absolute inset-0 ${colors.bg} blur-xl opacity-50`} />
+                <div className={`relative p-4 rounded-2xl ${colors.bg} border border-white/10`}>
+                  <TypeIcon className={`w-10 h-10 ${colors.text}`} />
+                </div>
+              </div>
+
+              <div className="flex-1">
+                {/* Title with elegant typography */}
+                <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif font-light text-[#D4B896]
+                             tracking-tight mb-4 leading-[1.15]">
+                  {content.title}
+                </h1>
+
+                {/* Description */}
+                <p className="text-lg text-white/60 mb-6 max-w-2xl leading-relaxed">
+                  {content.description}
+                </p>
+
+                {/* Meta info bar */}
+                <div className="flex flex-wrap items-center gap-4 text-sm">
+                  <span className={`px-3 py-1.5 rounded-full ${colors.bg} ${colors.text}
+                                 border border-white/5 uppercase tracking-wider text-xs font-medium`}>
+                    {content.type}
+                  </span>
+                  {content.readTime && (
+                    <span className="flex items-center gap-2 text-white/40">
+                      <Clock className="w-4 h-4" />
+                      {content.readTime} read
+                    </span>
+                  )}
+                  <span className="flex items-center gap-2 text-white/40">
+                    <BookOpen className="w-4 h-4" />
+                    Community Commons
+                  </span>
+                </div>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-[#D4B896] mb-2">{content.title}</h1>
-              <p className="text-white/60">{content.description}</p>
-            </div>
+
+            {/* Decorative line */}
+            <div className="mt-10 h-px bg-gradient-to-r from-[#D4B896]/20 via-[#D4B896]/10 to-transparent" />
           </div>
         </motion.div>
 
-        {/* Content Body */}
+        {/* Content Body - Frosted Glass Container */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/5 border border-white/10 rounded-xl p-8"
+          className="relative"
         >
-          <div className="prose prose-invert prose-amber max-w-none
-                        prose-headings:text-[#D4B896] prose-headings:font-semibold
-                        prose-p:text-white/80 prose-p:leading-relaxed
-                        prose-li:text-white/80
-                        prose-strong:text-[#D4B896]
-                        prose-blockquote:border-[#D4B896]/30 prose-blockquote:text-white/70 prose-blockquote:italic
-                        prose-hr:border-white/10">
-            {/* Render markdown content as HTML-like structure */}
-            {content.content.split('\n').map((line, i) => {
-              // Headers
-              if (line.startsWith('# ')) {
-                return <h1 key={i} className="text-2xl font-bold text-[#D4B896] mt-6 mb-4">{line.slice(2)}</h1>;
-              }
-              if (line.startsWith('## ')) {
-                return <h2 key={i} className="text-xl font-semibold text-[#D4B896] mt-6 mb-3">{line.slice(3)}</h2>;
-              }
-              if (line.startsWith('### ')) {
-                return <h3 key={i} className="text-lg font-medium text-[#D4B896] mt-4 mb-2">{line.slice(4)}</h3>;
-              }
-              // Blockquotes
-              if (line.startsWith('> ')) {
-                return (
-                  <blockquote key={i} className="border-l-4 border-[#D4B896]/30 pl-4 my-4 italic text-white/70">
-                    {line.slice(2)}
-                  </blockquote>
-                );
-              }
-              // Lists
-              if (line.startsWith('- ')) {
-                return (
-                  <li key={i} className="text-white/80 ml-4 list-disc">
-                    {line.slice(2).replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#D4B896]">$1</strong>')}
-                  </li>
-                );
-              }
-              if (line.match(/^\d+\. /)) {
-                return (
-                  <li key={i} className="text-white/80 ml-4 list-decimal">
-                    {line.replace(/^\d+\. /, '').replace(/\*\*(.*?)\*\*/g, '<strong class="text-[#D4B896]">$1</strong>')}
-                  </li>
-                );
-              }
-              // Horizontal rule
-              if (line.startsWith('---')) {
-                return <hr key={i} className="border-white/10 my-6" />;
-              }
-              // Italic text (for footnotes)
-              if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
-                return <p key={i} className="text-white/50 text-sm italic mt-6">{line.slice(1, -1)}</p>;
-              }
-              // Regular paragraphs
-              if (line.trim()) {
-                return <p key={i} className="text-white/80 leading-relaxed mb-4">{line}</p>;
-              }
-              return null;
-            })}
+          {/* Ambient glow behind container */}
+          <div className="absolute -inset-4 bg-gradient-to-br from-amber-500/5 via-transparent to-purple-500/5 blur-3xl" />
+
+          {/* Main frosted glass container */}
+          <div className="relative bg-gradient-to-br from-white/[0.08] to-white/[0.02]
+                        backdrop-blur-xl border border-white/[0.08] rounded-2xl
+                        shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden">
+
+            {/* Subtle top border accent */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#D4B896]/30 to-transparent" />
+
+            {/* Inner content with generous padding */}
+            <div className="p-8 md:p-12 lg:p-16">
+              {/* Article content */}
+              <article className="prose-article">
+                {content.content.split('\n').map((line, i) => {
+                  // Main title (H1) - elegant serif styling
+                  if (line.startsWith('# ')) {
+                    return (
+                      <h1 key={i} className="text-3xl md:text-4xl font-serif font-light text-[#D4B896]
+                                           tracking-tight mt-0 mb-8 leading-tight">
+                        {line.slice(2)}
+                      </h1>
+                    );
+                  }
+                  // Section headers (H2)
+                  if (line.startsWith('## ')) {
+                    return (
+                      <h2 key={i} className="text-xl md:text-2xl font-semibold text-[#D4B896]/90
+                                           mt-12 mb-6 flex items-center gap-3">
+                        <span className="w-8 h-px bg-gradient-to-r from-[#D4B896]/50 to-transparent" />
+                        {line.slice(3)}
+                      </h2>
+                    );
+                  }
+                  // Subsection headers (H3)
+                  if (line.startsWith('### ')) {
+                    return (
+                      <h3 key={i} className="text-lg font-medium text-[#D4B896]/80 mt-8 mb-4
+                                           uppercase tracking-wider text-sm">
+                        {line.slice(4)}
+                      </h3>
+                    );
+                  }
+                  // Blockquotes - elegant pull quote styling
+                  if (line.startsWith('> ')) {
+                    return (
+                      <blockquote key={i} className="relative my-10 py-6 px-8
+                                                   bg-gradient-to-r from-[#D4B896]/5 to-transparent
+                                                   border-l-2 border-[#D4B896]/40 rounded-r-lg">
+                        <span className="absolute -top-4 left-4 text-5xl text-[#D4B896]/20 font-serif">"</span>
+                        <p className="text-lg md:text-xl italic text-white/80 leading-relaxed font-light">
+                          {line.slice(2).replace(/— (.*)$/, '')}
+                        </p>
+                        {line.includes('—') && (
+                          <cite className="block mt-4 text-sm text-[#D4B896]/70 not-italic">
+                            — {line.match(/— (.*)$/)?.[1]}
+                          </cite>
+                        )}
+                      </blockquote>
+                    );
+                  }
+                  // Lists - refined bullet styling
+                  if (line.startsWith('- ')) {
+                    const textContent = line.slice(2);
+                    const hasStrong = textContent.includes('**');
+                    return (
+                      <div key={i} className="flex gap-3 mb-3 group">
+                        <span className="mt-2 w-1.5 h-1.5 rounded-full bg-[#D4B896]/40
+                                       group-hover:bg-[#D4B896]/70 transition-colors flex-shrink-0" />
+                        <span className="text-white/75 leading-relaxed">
+                          {hasStrong ? (
+                            <>
+                              <strong className="text-[#D4B896] font-medium">
+                                {textContent.match(/\*\*(.*?)\*\*/)?.[1]}
+                              </strong>
+                              {textContent.replace(/\*\*(.*?)\*\*/, '').replace(' - ', ' — ')}
+                            </>
+                          ) : (
+                            textContent
+                          )}
+                        </span>
+                      </div>
+                    );
+                  }
+                  // Numbered lists
+                  if (line.match(/^\d+\. /)) {
+                    const num = line.match(/^(\d+)\./)?.[1];
+                    const textContent = line.replace(/^\d+\. /, '');
+                    const hasStrong = textContent.includes('**');
+                    return (
+                      <div key={i} className="flex gap-4 mb-4">
+                        <span className="w-7 h-7 rounded-full bg-[#D4B896]/10 border border-[#D4B896]/20
+                                       flex items-center justify-center text-sm text-[#D4B896]/70 flex-shrink-0">
+                          {num}
+                        </span>
+                        <span className="text-white/75 leading-relaxed pt-0.5">
+                          {hasStrong ? (
+                            <>
+                              <strong className="text-[#D4B896] font-medium">
+                                {textContent.match(/\*\*(.*?)\*\*/)?.[1]}
+                              </strong>
+                              {textContent.replace(/\*\*(.*?)\*\*/, '').replace(' - ', ' — ')}
+                            </>
+                          ) : (
+                            textContent
+                          )}
+                        </span>
+                      </div>
+                    );
+                  }
+                  // Horizontal rule - elegant divider
+                  if (line.startsWith('---')) {
+                    return (
+                      <div key={i} className="my-12 flex items-center justify-center gap-4">
+                        <div className="w-16 h-px bg-gradient-to-r from-transparent to-[#D4B896]/30" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-[#D4B896]/30" />
+                        <div className="w-16 h-px bg-gradient-to-l from-transparent to-[#D4B896]/30" />
+                      </div>
+                    );
+                  }
+                  // Italic text (for footnotes) - subtle footer styling
+                  if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
+                    return (
+                      <p key={i} className="text-white/40 text-sm italic mt-12 pt-6
+                                          border-t border-white/5 text-center">
+                        {line.slice(1, -1)}
+                      </p>
+                    );
+                  }
+                  // Regular paragraphs - refined typography
+                  if (line.trim()) {
+                    return (
+                      <p key={i} className="text-white/75 leading-[1.8] mb-6 text-[1.05rem]">
+                        {line}
+                      </p>
+                    );
+                  }
+                  return null;
+                })}
+              </article>
+            </div>
+
+            {/* Subtle bottom border accent */}
+            <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/5 to-transparent" />
           </div>
         </motion.div>
 

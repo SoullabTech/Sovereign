@@ -12,6 +12,7 @@
 
 import type { RelationshipEssence } from './RelationshipAnamnesis';
 import type { ConversationMessage } from './ConversationPersistence';
+import { generateUUID } from '@/lib/utils/uuid';
 
 // ===================================================================
 // ENCRYPTION UTILITIES (Web Crypto API - built-in, secure)
@@ -366,7 +367,7 @@ export async function loadEssenceLocally(
  */
 export async function initializeUserEncryption(passphrase?: string): Promise<CryptoKey> {
   // Use device fingerprint + optional passphrase for key derivation
-  const deviceId = localStorage.getItem('maia_device_id') || crypto.randomUUID();
+  const deviceId = localStorage.getItem('maia_device_id') || generateUUID();
   localStorage.setItem('maia_device_id', deviceId);
 
   const keyMaterial = passphrase || deviceId;

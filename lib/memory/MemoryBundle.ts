@@ -13,6 +13,7 @@
 import { query } from '@/lib/db/postgres';
 import { TurnsStore } from './stores/TurnsStore';
 import { generateLocalEmbedding } from './embeddings';
+import { calculateDecayedConfidence } from './confidenceDecay';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
@@ -179,7 +180,7 @@ export const MemoryBundleService = {
     facet?: string
   ): Promise<MemoryCandidate[]> {
     try {
-      // First try non-vector ranking (works even when tables are empty/no embeddings)
+      // First try non-vector ranking with confidence decay (works even when tables are empty/no embeddings)
       const nonVectorSql = `
         SELECT
           id,
@@ -189,15 +190,23 @@ export const MemoryBundleService = {
           content_text,
           significance,
           formed_at,
+          last_confirmed_at,
+          confirmed_by_user,
           recall_count,
           (
-            0.65 * COALESCE(significance, 0) +
-            0.35 * EXP(-EXTRACT(EPOCH FROM (NOW() - formed_at)) / 86400.0 / 30.0)
+            0.40 * COALESCE(
+              calculate_decayed_confidence(significance, memory_type, last_confirmed_at, formed_at),
+              significance
+            ) +
+            0.35 * EXP(-EXTRACT(EPOCH FROM (NOW() - formed_at)) / 86400.0 / 30.0) +
+            0.15 * CASE WHEN confirmed_by_user THEN 0.15 ELSE 0 END +
+            0.10 * LEAST(recall_count / 10.0, 1.0)
           ) AS score
         FROM developmental_memories
         WHERE user_id = $1
           AND scope = 'USER'
           AND content_text IS NOT NULL
+          AND (valid_to IS NULL OR valid_to > NOW())
         ORDER BY score DESC
         LIMIT 12
       `;

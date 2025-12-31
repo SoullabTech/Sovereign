@@ -3,6 +3,8 @@
  * Tracks trusted devices and creates device fingerprints
  */
 
+import { generateUUID } from '@/lib/utils/uuid';
+
 export interface DeviceFingerprint {
   id: string;
   userAgent: string;
@@ -40,7 +42,7 @@ class DeviceTrustService {
     const gl = canvas.getContext('webgl');
 
     const fingerprint = {
-      id: crypto.randomUUID(),
+      id: generateUUID(),
       userAgent: navigator.userAgent,
       platform: navigator.platform,
       vendor: navigator.vendor,

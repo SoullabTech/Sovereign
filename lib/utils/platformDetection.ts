@@ -80,11 +80,23 @@ export async function getPlatformInfo(): Promise<PlatformInfo> {
   const isNative = Capacitor.isNativePlatform();
   const isSimulator = isIOSSimulator() || isAndroidEmulator();
 
-  // Simulators don't have microphone access
-  const hasMicrophoneAccess = isSimulator ? false : await checkMicrophoneAccess();
+  // Native platforms use native speech plugin (doesn't need web mic access check)
+  // Simulators may work with native speech but with limited functionality
+  if (isNative) {
+    return {
+      platform,
+      isNative,
+      isSimulator,
+      hasVoiceSupport: true, // Native speech plugin handles this
+      hasMicrophoneAccess: true // Will be checked at runtime by native plugin
+    };
+  }
 
-  // Voice support requires microphone and non-simulator environment
-  const hasVoiceSupport = hasMicrophoneAccess && !isSimulator;
+  // Web: Check microphone access
+  const hasMicrophoneAccess = await checkMicrophoneAccess();
+
+  // Voice support requires microphone
+  const hasVoiceSupport = hasMicrophoneAccess;
 
   return {
     platform,

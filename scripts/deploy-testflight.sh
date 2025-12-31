@@ -115,21 +115,21 @@ cd "$PROJECT_DIR"
 # Build phase
 if [ "$SKIP_BUILD" = false ]; then
     echo ""
-    echo "2. Building Next.js App"
-    echo "-----------------------"
+    echo "2. Configuring Capacitor for Beta"
+    echo "----------------------------------"
 
-    # Set build environment
-    export CAPACITOR_BUILD=1
+    # For beta/prod builds, the app loads from soullab.life remote server
+    # No static export needed - the iOS app is a WebView to the live site
+    export CAPACITOR_MODE=beta
     export NODE_ENV=production
 
-    # Build Next.js with static export
-    echo "  Running: npm run build"
-    npm run build
+    echo "  Mode: beta (remote server: https://soullab.life)"
+    echo "  Note: App content served from remote server, no static build needed"
 
     echo ""
     echo "3. Syncing Capacitor"
     echo "--------------------"
-    npx cap sync ios
+    CAPACITOR_MODE=beta npx cap sync ios
 
     echo ""
     echo "4. Building iOS Archive"

@@ -13,6 +13,7 @@ export interface UseMaiaStreamResult {
     userText: string;
     element: string;
     userId?: string;
+    userName?: string;
     lang?: string;
     mode?: 'dialogue' | 'counsel' | 'scribe';
   }) => Promise<string>;
@@ -35,10 +36,11 @@ export function useMaiaStream(): UseMaiaStreamResult {
     userText: string;
     element: string;
     userId?: string;
+    userName?: string;
     lang?: string;
     mode?: 'dialogue' | 'counsel' | 'scribe';
   }): Promise<string> => {
-    const { userText, element, userId = 'anonymous', mode = 'dialogue' } = params;
+    const { userText, element, userId = 'anonymous', userName, mode = 'dialogue' } = params;
 
     console.log('[MaiaStream] Starting request:', {
       userText: userText.substring(0, 50) + '...',
@@ -69,6 +71,8 @@ export function useMaiaStream(): UseMaiaStreamResult {
         body: JSON.stringify({
           message: userText,
           sessionId: userId,
+          userId: userId,
+          userName: userName, // Pass user's display name
           element: element,
           mode: mode // ✅ Talk/Care/Note mode awareness
         }),
@@ -114,6 +118,8 @@ export function useMaiaStream(): UseMaiaStreamResult {
             body: JSON.stringify({
               message: userText,
               sessionId: userId,
+              userId: userId,
+              userName: userName, // Pass user's display name
               element: element,
               mode: mode // ✅ Talk/Care/Note mode awareness
             })

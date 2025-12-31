@@ -3,8 +3,8 @@
  * Offline-capable consciousness computing with Matrix V2 assessment
  */
 
-const CONSCIOUSNESS_CACHE = 'consciousness-v2';
-const CONSCIOUSNESS_VERSION = '2.0.0';
+const CONSCIOUSNESS_CACHE = 'consciousness-v3';
+const CONSCIOUSNESS_VERSION = '3.0.0'; // Memory patterns UI - Dec 31 2024
 
 // Core consciousness computing files
 const CONSCIOUSNESS_FILES = [
@@ -32,9 +32,13 @@ const CONSCIOUSNESS_FILES = [
   // Essential app files
   '/',
   '/maya',
+  '/maia',
   '/maia/labtools',
   '/manifest.json',
   '/consciousness-manifest.json',
+
+  // Memory patterns UI (Show Why)
+  '/api/memory/patterns',
 
   // Icons and assets
   '/icons/icon-192x192.png',

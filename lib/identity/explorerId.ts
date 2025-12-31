@@ -1,6 +1,8 @@
 // Stable Explorer Identity - persists across sessions for memory continuity
 // This ID is used to key conversation_turns in the database
 
+import { generateUUID } from '@/lib/utils/uuid';
+
 export const EXPLORER_ID_KEY = 'maia-explorer-id';
 
 export function getOrCreateExplorerId(): string {
@@ -9,7 +11,7 @@ export function getOrCreateExplorerId(): string {
   let id = localStorage.getItem(EXPLORER_ID_KEY);
   if (!id) {
     // UUID is perfect here (works with uuid DB columns, and is stable)
-    id = crypto.randomUUID();
+    id = generateUUID();
     localStorage.setItem(EXPLORER_ID_KEY, id);
   }
   return id;

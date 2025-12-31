@@ -7,6 +7,8 @@ PODS:
     - Capacitor
   - CapacitorCommunityBluetoothLe (6.1.0):
     - Capacitor
+  - CapacitorCommunitySpeechRecognition (7.0.1):
+    - Capacitor
   - CapacitorCordova (6.2.1)
   - CapacitorFilesystem (6.0.4):
     - Capacitor
@@ -26,6 +28,7 @@ DEPENDENCIES:
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorClipboard (from `../../node_modules/@capacitor/clipboard`)"
   - "CapacitorCommunityBluetoothLe (from `../../node_modules/@capacitor-community/bluetooth-le`)"
+  - "CapacitorCommunitySpeechRecognition (from `../../node_modules/@capacitor-community/speech-recognition`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
   - "CapacitorHaptics (from `../../node_modules/@capacitor/haptics`)"
@@ -43,6 +46,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/clipboard"
   CapacitorCommunityBluetoothLe:
     :path: "../../node_modules/@capacitor-community/bluetooth-le"
+  CapacitorCommunitySpeechRecognition:
+    :path: "../../node_modules/@capacitor-community/speech-recognition"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
   CapacitorFilesystem:
@@ -63,6 +68,7 @@ SPEC CHECKSUMS:
   CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
   CapacitorClipboard: 6479f3d5c20e5f985cb72e620e11f20a351777e2
   CapacitorCommunityBluetoothLe: 0d4d197e0d0eadb84d4c3a6683768088253419d9
+  CapacitorCommunitySpeechRecognition: 3e03566c44c2bb3b52391a33d4518b1adbdeb38f
   CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
   CapacitorFilesystem: 5b9aec35c0212bd0064e26d278c93e925864f212
   CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
@@ -71,6 +77,6 @@ SPEC CHECKSUMS:
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
 
-PODFILE CHECKSUM: beb5eba4523139f4698ef273703b85a4df00d5ae
+PODFILE CHECKSUM: 5170149a66f48d4aee9da8582439b29e3bf1d0ec
 
 COCOAPODS: 1.16.2
