@@ -68,6 +68,24 @@ export default function BetaAccessPage() {
     // Store the beta code for feature access check
     localStorage.setItem('soullab_beta_code', passcodeTrimmed);
 
+    // 🔥 FIX: Set beta_user object for one-time authentication persistence
+    // This is what betaSession.ts and maia/page.tsx check on subsequent visits
+    const betaUserSession = {
+      id: betaUser.id,
+      username: name,
+      name: name.replace(/[-_]/g, ' '),
+      onboarded: true, // Skip onboarding since they used passcode
+      createdAt: now.toISOString(),
+      lastVisit: now.toISOString()
+    };
+    localStorage.setItem('beta_user', JSON.stringify(betaUserSession));
+
+    // Also set legacy keys for backward compatibility
+    localStorage.setItem('explorerId', betaUser.id);
+    localStorage.setItem('explorerName', name.replace(/[-_]/g, ' '));
+    localStorage.setItem('betaOnboardingComplete', 'true');
+    localStorage.setItem('maiaPermanentUser', 'true');
+
     // Store in beta testers list
     const existingTesters = JSON.parse(localStorage.getItem('maia_beta_testers') || '[]');
     const updatedTesters = [...existingTesters, {
@@ -76,6 +94,8 @@ export default function BetaAccessPage() {
       notes: `Activated via passcode: ${passcodeTrimmed}`
     }];
     localStorage.setItem('maia_beta_testers', JSON.stringify(updatedTesters));
+
+    console.log('✨ [BETA-ACCESS] Session persisted - user will NOT need to re-enter passcode:', name);
 
     setTimeout(() => {
       setIsValidating(false);
