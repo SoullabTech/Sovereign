@@ -4,6 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, Square, Sparkles, BookOpen, Upload, Shield } from 'lucide-react';
 import VoiceRecorder from '../VoiceRecorder';
+import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
 
 interface SacredChatInputProps {
   onSendMessage: (message: string, isJournal?: boolean) => void;
@@ -70,7 +71,7 @@ export default function SacredChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Listen for Sanctuary mode changes
+  // Listen for Sanctuary mode changes — initialize from account defaults if no session settings
   useEffect(() => {
     const loadSanctuaryState = () => {
       if (typeof window === 'undefined') return;
@@ -79,6 +80,11 @@ export default function SacredChatInput({
         if (saved) {
           const settings = JSON.parse(saved);
           setIsSanctuary(settings.sanctuary === true);
+        } else {
+          // No session settings yet — initialize from account defaults
+          const defaults = getInitialSessionSettings();
+          setIsSanctuary(defaults.sanctuary === true);
+          localStorage.setItem('maia_settings', JSON.stringify(defaults));
         }
       } catch (e) {
         console.error('Failed to load sanctuary state', e);

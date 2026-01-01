@@ -5,6 +5,7 @@ import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare
 import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
+import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
 // import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 
 interface QuickSettingsSheetProps {
@@ -85,10 +86,15 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
             conversationMode: conversationMode, // Always use latest from preference
           });
         } else {
-          setSettings({
+          // No session settings yet — initialize from account defaults
+          const defaults = getInitialSessionSettings();
+          const sessionSettings = {
             ...DEFAULT_SETTINGS,
+            ...defaults,
             conversationMode: conversationMode,
-          });
+          };
+          localStorage.setItem('maia_settings', JSON.stringify(sessionSettings));
+          setSettings(sessionSettings);
         }
       } catch (e) {
         console.error('Failed to load settings', e);
@@ -521,7 +527,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                 <motion.button
                   onClick={() => {
                     if ('vibrate' in navigator) navigator.vibrate(10);
-                    window.location.href = '/settings';
+                    window.location.href = '/account/settings';
                   }}
                   className="w-full py-4 bg-gradient-to-r from-purple-500/20 to-blue-500/20
                            border border-purple-500/30 rounded-xl text-purple-300 font-medium
