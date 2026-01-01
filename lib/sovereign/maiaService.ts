@@ -458,6 +458,12 @@ async function fastPathResponse(
     null;
   const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
+  // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
+  const isSanctuary = (meta as any)?.sanctuary === true;
+  if (isSanctuary) {
+    console.log('🛡️ [FAST] Sanctuary mode active - skipping all memory recall');
+  }
+
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
@@ -466,8 +472,9 @@ async function fastPathResponse(
   }
 
   // 🌊 RELATIONSHIP MEMORY (load relational context)
+  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
   let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId) {
+  if (userId && !isSanctuary) {
     try {
       relationshipMemory = await loadRelationshipMemory(userId, {
         includeThemes: true,
@@ -488,8 +495,16 @@ async function fastPathResponse(
 
   // Build minimal context for fast processing
   // 🔄 CROSS-SESSION RECALL: If current session is empty, load from cross-session turns
+  // 🔒 SANCTUARY: Skip all cross-session recall (presence-only mode)
   let recentContext = '';
-  if (conversationHistory.length > 0) {
+  if (isSanctuary) {
+    // Sanctuary mode: no cross-session context, only current session history allowed
+    if (conversationHistory.length > 0) {
+      recentContext = conversationHistory.slice(-3).map(ex =>
+        `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
+      ).join('\n');
+    }
+  } else if (conversationHistory.length > 0) {
     // Use current session history
     recentContext = conversationHistory.slice(-3).map(ex =>
       `User: ${ex.userMessage}\nMAIA: ${ex.maiaResponse.substring(0, 80)}...`
@@ -519,8 +534,9 @@ async function fastPathResponse(
   }
 
   // 🧠 MEMORY BUNDLE: Use compressed context from multi-bucket retrieval if available
-  const memoryContext = (meta as any).memoryContext as string | undefined;
-  const hasMemoryBundle = !!(meta as any).memoryBundle;
+  // 🔒 SANCTUARY: Ignore memoryBundle (it contains cross-session recalled context)
+  const memoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
+  const hasMemoryBundle = isSanctuary ? false : !!(meta as any).memoryBundle;
 
   // 🔒 SECURITY: If user shares sensitive data, instruct MAIA not to claim it was stored
   const sensitiveInstruction = containsSensitiveData(input)
@@ -532,6 +548,7 @@ async function fastPathResponse(
   }
 
   // Build context prompt with memory bundle OR recent context
+  // 🔒 SANCTUARY: memoryContext is already nullified above, so this will fall through to recentContext or plain input
   let contextPrompt: string;
   if (memoryContext && memoryContext.length > 0) {
     // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
@@ -668,7 +685,7 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     : '';
 
   // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
-  const isSanctuary = (meta as any)?.sanctuary === true;
+  // (isSanctuary already defined at start of fastPathResponse)
   const sanctuaryInstruction = isSanctuary
     ? `\n\n🔒 SANCTUARY SESSION ACTIVE:
 This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
@@ -757,6 +774,12 @@ async function corePathResponse(
     null;
   const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
+  // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
+  const isSanctuary = (meta as any)?.sanctuary === true;
+  if (isSanctuary) {
+    console.log('🛡️ [CORE] Sanctuary mode active - skipping all memory recall');
+  }
+
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
@@ -765,8 +788,9 @@ async function corePathResponse(
   }
 
   // 🌊 RELATIONSHIP MEMORY (load relational context for CORE path)
+  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
   let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId) {
+  if (userId && !isSanctuary) {
     try {
       relationshipMemory = await loadRelationshipMemory(userId, {
         includeThemes: true,
@@ -787,8 +811,9 @@ async function corePathResponse(
   const selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
+  // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
   let effectiveHistory = conversationHistory;
-  if (conversationHistory.length === 0 && effectiveUserId) {
+  if (conversationHistory.length === 0 && effectiveUserId && !isSanctuary) {
     try {
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 8);
       if (crossSessionTurns.length > 0) {
@@ -958,6 +983,12 @@ async function deepPathResponse(
     null;
   const policy = effectiveUserId ? await getConsciousnessPolicy(effectiveUserId, input) : null;
 
+  // 🔒 SANCTUARY MODE: Presence-only (no recall from prior sessions)
+  const isSanctuaryDeep = (meta as any)?.sanctuary === true;
+  if (isSanctuaryDeep) {
+    console.log('🛡️ [DEEP] Sanctuary mode active - skipping all memory recall');
+  }
+
   if (policy) {
     if (process.env.DEBUG_CONSCIOUSNESS === '1') {
       console.log(`🧬 [Policy] Level ${policy.awarenessLevel} (${policy.awarenessName}), Element: ${policy.dominantElement}, Explicitness: ${policy.explicitness}, Beads: ${policy.totalBeads}`);
@@ -966,8 +997,9 @@ async function deepPathResponse(
   }
 
   // 🌊 RELATIONSHIP MEMORY (load full relational context for DEEP path)
+  // 🔒 SANCTUARY: Skip relationship memory (no cross-session recall)
   let relationshipMemory: RelationshipMemoryContext | null = null;
-  if (userId) {
+  if (userId && !isSanctuaryDeep) {
     try {
       relationshipMemory = await loadRelationshipMemory(userId, {
         includeThemes: true,
@@ -989,7 +1021,6 @@ async function deepPathResponse(
   (meta as any).selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
 
   // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
-  const isSanctuaryDeep = (meta as any)?.sanctuary === true;
   if (isSanctuaryDeep) {
     (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n🔒 SANCTUARY SESSION ACTIVE:
 This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
@@ -1000,8 +1031,9 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
   }
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
+  // 🔒 SANCTUARY: Skip cross-session recall (presence-only mode)
   let effectiveHistory = conversationHistory;
-  if (conversationHistory.length === 0 && effectiveUserId) {
+  if (conversationHistory.length === 0 && effectiveUserId && !isSanctuaryDeep) {
     try {
       const crossSessionTurns = await TurnsStore.getRecentTurns(effectiveUserId, 10);
       if (crossSessionTurns.length > 0) {
