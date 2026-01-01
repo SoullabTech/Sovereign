@@ -283,7 +283,7 @@ export default function SacredChatInput({
                   className="absolute -top-8 left-3 flex items-center gap-1.5 text-xs text-emerald-400"
                 >
                   <Shield className="w-3 h-3" />
-                  <span>Sanctuary is on</span>
+                  <span>Sanctuary is on · Not saved to memory</span>
                 </motion.div>
               )}
               {isJournalMode && !isSanctuary && (

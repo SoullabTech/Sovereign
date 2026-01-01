@@ -504,14 +504,19 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName, meta } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary } = body as {
       message?: string;
       sessionId?: string;
       mode?: 'dialogue' | 'counsel' | 'scribe';
       userId?: string;
       userName?: string;
       meta?: { explorerId?: string; sessionId?: string };
+      sanctuary?: boolean;
     };
+
+    // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
+    // When true: no content retention, no patterns formed, no training data
+    const isSanctuary = sanctuary === true;
 
     // Voice Renderer request flags
     const voiceEngine = (body?.voiceEngine as 'local' | 'claude' | undefined) ?? 'local';
@@ -607,6 +612,7 @@ export async function POST(req: NextRequest) {
       userId: effectiveUserId,      // 👈 explicit for downstream consumers
       sessionId: safeSessionId,
       reqId,                        // 👈 for audit correlation (cognitive events + logs)
+      sanctuary: isSanctuary,       // 🔒 session-level memory exclusion flag
     };
 
     // Log mode for debugging
@@ -939,6 +945,7 @@ export async function POST(req: NextRequest) {
           ...simpleResult.metadata,
           crystallization,
           voiceRenderer: voiceMetrics,
+          sanctuary: isSanctuary,  // 🔒 Sanctuary mode flag for UI verification
           ruptureDetection: ruptureDetection.ruptureDetected ? {
             detected: ruptureDetection.ruptureDetected,
             type: ruptureDetection.ruptureType,
@@ -1234,6 +1241,7 @@ export async function POST(req: NextRequest) {
         failSoftMode: true,
         crystallization,
         voiceRenderer: voiceMetrics2,
+        sanctuary: isSanctuary,  // 🔒 Sanctuary mode flag for UI verification
         ruptureDetection: ruptureDetection.ruptureDetected ? {
           detected: ruptureDetection.ruptureDetected,
           type: ruptureDetection.ruptureType,

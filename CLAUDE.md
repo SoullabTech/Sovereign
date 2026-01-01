@@ -28,7 +28,7 @@ MAIA supports **Sanctuary sessions** — conversations that remain useful in the
 3. **Minimal metadata** — Only log that a sanctuary session occurred (timestamp, duration) — never content
 4. **Visual clarity** — User must see unambiguous indication that Sanctuary is active
 5. **Default off** — Regular sessions build memory; Sanctuary is an explicit opt-in
-6. **Irreversible per-session** — Once a session is Sanctuary, it cannot be retroactively converted to remembered
+6. **Absolute boundary** — Nothing from a Sanctuary session can be saved, extracted, inferred, or converted into long-term memory, under any circumstances, including by user request during the session
 
 ### Why This Exists
 

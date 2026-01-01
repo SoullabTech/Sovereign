@@ -296,6 +296,11 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                               ? "This session won't be saved to memory. Speak freely."
                               : "MAIA may remember what's helpful for continuity."}
                           </div>
+                          {settings.sanctuary && (
+                            <div className="text-[10px] text-emerald-400/60 mt-1">
+                              No patterns formed. This session leaves no memory behind.
+                            </div>
+                          )}
                         </div>
                       </div>
                       {/* Toggle Switch */}
