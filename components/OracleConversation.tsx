@@ -22,6 +22,7 @@ import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
+import { formatMessageText } from '@/lib/text/formatMessageText';
 import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
 import { QuickSettingsSheet } from './QuickSettingsSheet';
@@ -178,26 +179,9 @@ interface ConversationMessage {
   };
 }
 
-// Component to clean messages by removing stage directions
+// Component to clean messages by removing stage directions while preserving emphasis
 const FormattedMessage: React.FC<{ text: string | undefined }> = ({ text }) => {
-  // Handle undefined or null text
-  if (!text) {
-    return <span></span>;
-  }
-
-  // Remove ALL stage directions and tone markers
-  const cleanedText = text
-    .replace(/\*[^*]*\*/g, '') // Remove single asterisk content
-    .replace(/\*\*[^*]*\*\*/g, '') // Remove double asterisk content
-    .replace(/\*{1,}[^*]+\*{1,}/g, '') // Remove any asterisk-wrapped content
-    .replace(/\([^)]*\)/gi, '') // Remove ALL parenthetical content
-    .replace(/\[[^\]]*\]/g, '') // Remove bracketed content
-    .replace(/\{[^}]*\}/g, '') // Remove content in curly braces
-    .replace(/\s+/g, ' ') // Clean up extra spaces
-    .replace(/^\s*[,;.]\s*/, '') // Remove leading punctuation
-    .trim();
-
-  return <span>{cleanedText}</span>;
+  return <span>{formatMessageText(text || '')}</span>;
 };
 
 export const OracleConversation: React.FC<OracleConversationProps> = ({
@@ -336,6 +320,38 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
   const [breakthroughScore, setBreakthroughScore] = useState(0);
+
+  // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
+  // When true: no content retention, no patterns formed, just presence
+  const [isSanctuary, setIsSanctuary] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          return settings.sanctuary === true;
+        }
+      } catch (e) {
+        console.warn('[Sanctuary] Failed to load initial state:', e);
+      }
+    }
+    return false;
+  });
+
+  // Listen for sanctuary mode changes from QuickSettingsSheet
+  useEffect(() => {
+    const handleSettingsChange = (event: CustomEvent<{ sanctuary?: boolean }>) => {
+      if (typeof event.detail?.sanctuary === 'boolean') {
+        setIsSanctuary(event.detail.sanctuary);
+        console.log(`🛡️ [Sanctuary] Mode ${event.detail.sanctuary ? 'ENABLED' : 'disabled'}`);
+      }
+    };
+
+    window.addEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    };
+  }, []);
 
   // Session time container state
   const [sessionTimer, setSessionTimer] = useState<SessionTimer | null>(null);
@@ -1992,6 +2008,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             memoryMode: (typeof window !== 'undefined' && localStorage.getItem('maiaMemoryMode') === 'longterm') ? 'longterm' : 'continuity',
           },
 
+          // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
+          sanctuary: isSanctuary,
+
           // Canon Wrap (care-mode only)
           allowCanonWrap,
           allowRemoteRendering: false,
@@ -3464,6 +3483,36 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                     {scribeSession?.consultationMessages?.length || 0} consultations
                   </div>
                 </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* 🛡️ SANCTUARY MODE INDICATOR - Visual proof of memory exclusion */}
+      <AnimatePresence>
+        {isSanctuary && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            className="fixed top-8 right-4 z-below-nav"
+          >
+            <div className="bg-gradient-to-r from-emerald-900/90 to-emerald-800/90 backdrop-blur-xl rounded-full px-4 py-2 border border-emerald-500/50 shadow-2xl">
+              <div className="flex items-center gap-2">
+                <motion.div
+                  animate={{
+                    scale: [1, 1.15, 1],
+                    opacity: [0.7, 1, 0.7]
+                  }}
+                  transition={{
+                    duration: 2.5,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="w-2.5 h-2.5 bg-emerald-400 rounded-full shadow-[0_0_10px_rgba(52,211,153,0.8)]"
+                />
+                <span className="text-emerald-300 text-xs font-medium">Sanctuary</span>
               </div>
             </div>
           </motion.div>
