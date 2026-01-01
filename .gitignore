@@ -342,3 +342,6 @@ mobile-app/ios/.symlinks/
 mobile-app/ios/build/
 .aetheric-consciousness-verification.json
 scripts/test-selflet-load.ts
+
+# Auto Claude data directory
+.auto-claude/

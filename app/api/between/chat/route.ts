@@ -911,12 +911,16 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
-      // 💾 PERSIST CONVERSATION: Save to database
-      await addConversationExchange(safeSessionId, message, outboundText, {
-        type: 'safe-mode',
-        mode: mode || 'dialogue',
-        userId: effectiveUserId,
-      });
+      // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
+      if (isSanctuary) {
+        console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
+      } else {
+        await addConversationExchange(safeSessionId, message, outboundText, {
+          type: 'safe-mode',
+          mode: mode || 'dialogue',
+          userId: effectiveUserId,
+        });
+      }
 
       // Audit: request complete (simple path)
       logRequestComplete(reqId, {
@@ -1153,13 +1157,17 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
-    // 💾 PERSIST CONVERSATION: Save to database
-    await addConversationExchange(safeSessionId, message, outboundText2, {
-      type: 'orchestrator',
-      mode: mode || 'dialogue',
-      userId: effectiveUserId,
-      layers: orchestratorResult.metadata?.consciousnessLayers?.successful || [],
-    });
+    // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
+    if (isSanctuary) {
+      console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
+    } else {
+      await addConversationExchange(safeSessionId, message, outboundText2, {
+        type: 'orchestrator',
+        mode: mode || 'dialogue',
+        userId: effectiveUserId,
+        layers: orchestratorResult.metadata?.consciousnessLayers?.successful || [],
+      });
+    }
 
     // Audit: request complete (orchestrator path)
     logRequestComplete(reqId, {

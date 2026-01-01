@@ -595,8 +595,12 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`💫 Conversation moment tracked: ${significance} | Spine updated`);
 
   // 🧠 MEMORY WRITEBACK: Promote to long-term memory if conditions met
+  // 🛡️ SANCTUARY: Absolute boundary - nothing can be saved, extracted, or converted to memory
   let writebackResult: { wrote: boolean; memoryId?: string; reason?: string } = { wrote: false, reason: 'skipped' };
-  if (memoryMode === 'longterm') {
+  if (isSanctuary) {
+    console.log('🛡️ [MemoryWriteback] Skipped - Sanctuary mode (absolute boundary)');
+    writebackResult = { wrote: false, reason: 'sanctuary' };
+  } else if (memoryMode === 'longterm') {
     try {
       const writebackStartTime = Date.now();
       // Extract elemental info (cast to any to avoid strict type issues with null assignments)
