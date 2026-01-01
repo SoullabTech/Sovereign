@@ -5,8 +5,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import { synthesizeSpeechMacOS } from '@/lib/tts/macosTts';
 
-const USE_MACOS_FALLBACK = !process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('placeholder');
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -24,8 +22,11 @@ export async function POST(request: NextRequest) {
     let buffer: Buffer;
     let contentType: string;
 
-    // Use macOS fallback if no valid OpenAI key
-    if (USE_MACOS_FALLBACK) {
+    // Check at runtime, not build time
+    const useLocalFallback = !process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('placeholder');
+
+    // Use macOS fallback if no valid OpenAI key (only works locally)
+    if (useLocalFallback) {
       console.log('🍎 Using macOS TTS fallback (Samantha voice)');
       buffer = await synthesizeSpeechMacOS(text);
       contentType = 'audio/x-aiff';
