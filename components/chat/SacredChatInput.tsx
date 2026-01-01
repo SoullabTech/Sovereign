@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Send, Mic, Square, Sparkles, BookOpen, Upload } from 'lucide-react';
+import { Send, Mic, Square, Sparkles, BookOpen, Upload, Shield } from 'lucide-react';
 import VoiceRecorder from '../VoiceRecorder';
 
 interface SacredChatInputProps {
@@ -66,8 +66,38 @@ export default function SacredChatInput({
   const [isFocused, setIsFocused] = useState(false);
   const [isJournalMode, setIsJournalMode] = useState(false);
   const [showRipple, setShowRipple] = useState(false);
+  const [isSanctuary, setIsSanctuary] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Listen for Sanctuary mode changes
+  useEffect(() => {
+    const loadSanctuaryState = () => {
+      if (typeof window === 'undefined') return;
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          setIsSanctuary(settings.sanctuary === true);
+        }
+      } catch (e) {
+        console.error('Failed to load sanctuary state', e);
+      }
+    };
+
+    loadSanctuaryState();
+
+    const handleSettingsChange = (e: CustomEvent) => {
+      if (e.detail?.sanctuary !== undefined) {
+        setIsSanctuary(e.detail.sanctuary === true);
+      }
+    };
+
+    window.addEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    };
+  }, []);
 
   // Auto-resize textarea with golden ratio constraints
   const adjustTextareaHeight = useCallback(() => {
@@ -243,9 +273,20 @@ export default function SacredChatInput({
 
           {/* Dual-Mode Input Area */}
           <div className="flex-1 relative">
-            {/* Mode Indicator */}
+            {/* Mode Indicators */}
             <AnimatePresence>
-              {isJournalMode && (
+              {isSanctuary && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute -top-8 left-3 flex items-center gap-1.5 text-xs text-emerald-400"
+                >
+                  <Shield className="w-3 h-3" />
+                  <span>Sanctuary is on</span>
+                </motion.div>
+              )}
+              {isJournalMode && !isSanctuary && (
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}

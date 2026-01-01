@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare } from 'lucide-react';
+import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
@@ -13,6 +13,7 @@ interface QuickSettingsSheetProps {
 }
 
 interface MaiaSettings {
+  sanctuary: boolean; // Session-level memory exclusion
   voice: {
     openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
     speed: number;
@@ -47,6 +48,7 @@ const ARCHETYPE_OPTIONS = [
 ];
 
 const DEFAULT_SETTINGS: MaiaSettings = {
+  sanctuary: false, // Default: memory enabled (continuity mode)
   voice: {
     openaiVoice: 'shimmer',
     speed: 0.95,
@@ -71,7 +73,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
       if (typeof window === 'undefined') return;
 
       // const conversationMode = ConversationStylePreference.get();
-      const conversationMode = 'voice'; // Default fallback
+      const conversationMode: ConversationMode = 'her'; // Default fallback
 
       try {
         // Load settings from localStorage (sovereign mode - no cloud storage)
@@ -137,10 +139,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
           }));
         }
 
-        const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-        if (explorerId) {
-          saveToSupabase(explorerId, newSettings);
-        }
+        // Settings are saved to localStorage only (sovereign mode - no cloud storage)
       }
 
       return newSettings;
@@ -154,27 +153,6 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
       adaptive: "Got it. I'll match your rhythm and energy."
     };
     return acknowledgments[mode];
-  };
-
-  const saveToSupabase = async (userId: string, settings: MaiaSettings) => {
-    try {
-      await supabase
-        .from('user_preferences')
-        .upsert({
-          user_id: userId,
-          voice_speed: settings.voice.speed,
-          tone: Math.round(settings.personality.warmth * 100),
-          archetype: settings.archetype,
-          updated_at: new Date().toISOString(),
-        }, {
-          onConflict: 'user_id',
-          ignoreDuplicates: false
-        });
-
-      console.log('✅ Settings saved to Supabase');
-    } catch (error) {
-      console.error('Failed to save settings to Supabase:', error);
-    }
   };
 
   return (
@@ -275,6 +253,65 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2, staggerChildren: 0.1 }}
               >
+                {/* Sanctuary Session Toggle - The Trust Lever */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="pb-4 border-b border-white/10"
+                >
+                  <motion.button
+                    onClick={() => updateSetting('sanctuary', !settings.sanctuary)}
+                    className={`w-full p-4 rounded-xl border transition-all ${
+                      settings.sanctuary
+                        ? 'border-emerald-500/50 bg-emerald-500/15'
+                        : 'border-white/10 bg-black/20'
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          className={`p-2 rounded-lg ${
+                            settings.sanctuary
+                              ? 'bg-emerald-500/20 text-emerald-400'
+                              : 'bg-white/5 text-white/40'
+                          }`}
+                          animate={settings.sanctuary ? {
+                            scale: [1, 1.1, 1],
+                          } : {}}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Shield size={20} />
+                        </motion.div>
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${
+                            settings.sanctuary ? 'text-emerald-300' : 'text-white/80'
+                          }`}>
+                            Sanctuary Session
+                          </div>
+                          <div className="text-xs text-white/50 mt-0.5">
+                            {settings.sanctuary
+                              ? "This session won't be saved to memory. Speak freely."
+                              : "MAIA may remember what's helpful for continuity."}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Toggle Switch */}
+                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                        settings.sanctuary ? 'bg-emerald-500' : 'bg-white/20'
+                      }`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-white shadow-md"
+                          animate={{ x: settings.sanctuary ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.button>
+                </motion.div>
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
