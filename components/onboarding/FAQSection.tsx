@@ -243,7 +243,7 @@ If something feels patronizing, too certain, or out of tune — call it out. Tha
 
 Use the feedback option in the app, or reach out directly to support@soullab.life.
 
-We read everything. Your experience — what works, what doesn't, what surprises you — is how MAIA gets better.
+We read every piece of feedback you choose to send. Your experience — what works, what doesn't, what surprises you — is how MAIA gets better.
 
 ---
 
@@ -555,7 +555,7 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-amber-100">How do I get help or share feedback?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Use the feedback option in the app, or reach out directly to support@soullab.life. We read everything. Your experience — what works, what doesn't, what surprises you — is how MAIA gets better.
+                        Use the feedback option in the app, or reach out directly to support@soullab.life. We read every piece of feedback you choose to send. Your experience — what works, what doesn't, what surprises you — is how MAIA gets better.
                       </div>
                     </div>
                   </div>
