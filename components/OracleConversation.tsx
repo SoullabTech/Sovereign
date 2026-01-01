@@ -678,7 +678,56 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       });
 
     } catch (err) {
-      console.error('❌ OpenAI TTS error:', err);
+      console.error('❌ OpenAI TTS error, falling back to browser TTS:', err);
+
+      // 🎙️ SOVEREIGNTY FALLBACK: Use browser Web Speech API when server TTS fails
+      // This respects CLAUDE.md: "Voice: Local TTS/STT or browser APIs only"
+      try {
+        if ('speechSynthesis' in window) {
+          console.log('🎵 Using browser speechSynthesis fallback');
+          setIsAudioPlaying(true);
+
+          const utterance = new SpeechSynthesisUtterance(text);
+          utterance.rate = 0.9;  // Slightly slower for clarity
+          utterance.pitch = 1.0;
+          utterance.volume = 0.9;
+
+          // Try to find a good female voice
+          const voices = speechSynthesis.getVoices();
+          const preferredVoice = voices.find(v =>
+            v.name.includes('Samantha') ||
+            v.name.includes('Victoria') ||
+            v.name.includes('Karen') ||
+            (v.name.includes('Female') && v.lang.startsWith('en'))
+          ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+            console.log('🎤 Using voice:', preferredVoice.name);
+          }
+
+          await new Promise<void>((resolve) => {
+            utterance.onend = () => {
+              console.log('🔇 Browser TTS finished speaking');
+              setIsResponding(false);
+              setIsAudioPlaying(false);
+              resolve();
+            };
+            utterance.onerror = (e) => {
+              console.error('❌ Browser TTS error:', e);
+              setIsResponding(false);
+              setIsAudioPlaying(false);
+              resolve();
+            };
+            speechSynthesis.speak(utterance);
+          });
+          return; // Successfully spoke with browser TTS
+        }
+      } catch (fallbackErr) {
+        console.error('❌ Browser TTS fallback also failed:', fallbackErr);
+      }
+
+      // If all TTS fails, just reset state
       stopAudioAnalysis();
       setIsResponding(false);
       setIsAudioPlaying(false);
@@ -2939,8 +2988,50 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       await audio.play();
     } catch (error) {
-      console.error('Error speaking message:', error);
-      toast.error('Failed to speak message');
+      console.error('❌ OpenAI TTS error, falling back to browser TTS:', error);
+
+      // 🎙️ SOVEREIGNTY FALLBACK: Use browser Web Speech API when server TTS fails
+      try {
+        if ('speechSynthesis' in window) {
+          console.log('🎵 Using browser speechSynthesis fallback for message replay');
+          const cleanText = cleanMessageForVoice(text);
+
+          const utterance = new SpeechSynthesisUtterance(cleanText);
+          utterance.rate = 0.9;
+          utterance.pitch = 1.0;
+          utterance.volume = 0.9;
+
+          const voices = speechSynthesis.getVoices();
+          const preferredVoice = voices.find(v =>
+            v.name.includes('Samantha') ||
+            v.name.includes('Victoria') ||
+            v.name.includes('Karen') ||
+            (v.name.includes('Female') && v.lang.startsWith('en'))
+          ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+          if (preferredVoice) {
+            utterance.voice = preferredVoice;
+          }
+
+          utterance.onend = () => {
+            setCurrentlySpeakingId(undefined);
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+          };
+          utterance.onerror = () => {
+            setCurrentlySpeakingId(undefined);
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+          };
+
+          speechSynthesis.speak(utterance);
+          return; // Browser TTS started
+        }
+      } catch (fallbackErr) {
+        console.error('❌ Browser TTS fallback also failed:', fallbackErr);
+      }
+
+      toast.error('Voice unavailable - check browser settings');
       setCurrentlySpeakingId(undefined);
       setIsResponding(false);
       setIsAudioPlaying(false);
