@@ -41,7 +41,7 @@ Start wherever you are. There's no preparation required. If you want a doorway, 
 
 ## Can MAIA make mistakes or hallucinate?
 
-Yes. MAIA can misremember details, make incorrect connections, or occasionally speak with more confidence than the evidence warrants. The point isn't perfection — it's usefulness. Treat her like a strong thinking partner: test what she says against your lived knowing. Keep what helps. Question what doesn't. If something feels off, say so — that feedback improves the experience.
+Yes — though far less than typical AI. While most AI hallucinates around 15-35% of the time, MAIA is designed to hallucinate under 2% of the time. Still, she can misremember details, make incorrect connections, or occasionally speak with more confidence than the evidence warrants. The point isn't perfection — it's usefulness. Treat her like a strong thinking partner: test what she says against your lived knowing. Keep what helps. Question what doesn't. If something feels off, say so — that feedback improves the experience.
 
 ---
 
@@ -232,7 +232,7 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-amber-100">Can MAIA make mistakes or hallucinate?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Yes. MAIA can misremember details, make incorrect connections, or occasionally speak with more confidence than the evidence warrants. The point isn't perfection — it's usefulness. Treat her like a strong thinking partner: test what she says against your lived knowing. Keep what helps. Question what doesn't. If something feels off, say so — that feedback improves the experience.
+                        Yes — though far less than typical AI. While most AI hallucinates around 15-35% of the time, MAIA is designed to hallucinate under 2% of the time. Still, she can misremember details, make incorrect connections, or occasionally speak with more confidence than the evidence warrants. The point isn't perfection — it's usefulness. Treat her like a strong thinking partner: test what she says against your lived knowing. Keep what helps. Question what doesn't. If something feels off, say so — that feedback improves the experience.
                       </div>
                     </div>
                   </div>
