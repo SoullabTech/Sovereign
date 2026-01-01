@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import Image from 'next/image';
 
 interface SageTealWelcomeProps {
   userName?: string;
@@ -175,9 +176,12 @@ export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelc
                 }}
                 className="relative z-10 w-24 h-24"
               >
-                <img
+                <Image
                   src="/holoflower.png"
                   alt="Sacred Holoflower"
+                  width={96}
+                  height={96}
+                  priority
                   className="w-full h-full object-contain"
                   style={{
                     filter: 'drop-shadow(0 0 20px rgba(167, 216, 209, 0.6)) drop-shadow(0 0 10px rgba(251, 191, 36, 0.3)) drop-shadow(0 0 5px rgba(128, 203, 196, 0.4))'
