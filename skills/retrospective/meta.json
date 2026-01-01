@@ -1,0 +1,13 @@
+{
+  "id": "retrospective",
+  "name": "Session Retrospective",
+  "version": "0.1.0",
+  "description": "End-of-session flywheel: extracts wins, failures, edge cases from the session and updates skill files or creates new skill stubs. Enables continual learning without model weight updates.",
+  "tier": "CORE",
+  "category": "foundational",
+  "kind": "prompt",
+  "tags": ["learning", "meta", "improvement", "documentation", "flywheel"],
+  "triggers": ["retrospective", "retro", "end of session", "what did we learn", "update skills", "session review"],
+  "elements": ["aether"],
+  "realms": ["MIDDLEWORLD", "UPPERWORLD"]
+}

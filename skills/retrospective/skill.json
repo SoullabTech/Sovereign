@@ -1,0 +1,87 @@
+{
+  "meta": {
+    "id": "retrospective",
+    "name": "Session Retrospective",
+    "version": "0.1.0"
+  },
+  "eligibility": {
+    "minCognitiveLevel": 3,
+    "allowedNervousSystemStates": ["window", "sympathetic"]
+  },
+  "contraindications": {
+    "nervousSystemStates": ["dorsal"],
+    "whenNotToUse": [
+      "Mid-crisis when grounding is needed first",
+      "When user explicitly wants to keep working"
+    ]
+  },
+  "inputs": {
+    "required": ["sessionContext"],
+    "optional": ["filesTouched", "commandsUsed", "errorsEncountered", "stackTraces"]
+  },
+  "outputs": {
+    "sessionSummary": "6-12 bullet summary of what happened",
+    "successPatterns": "Repeatable moves that worked",
+    "failurePatterns": "What to avoid next time",
+    "edgeCases": "Boundary conditions discovered",
+    "patchList": "Concrete updates to skill files",
+    "prPayload": "Optional branch/commit/PR description"
+  },
+  "procedure": [
+    {
+      "id": "safety-scope",
+      "title": "Safety + Scope",
+      "instruction": "Never copy secrets (API keys, tokens, credentials). Prefer minimal patches: add only what will help next time. If uncertain where to store something, put it in a 'Notes' section at the bottom of the most relevant skill."
+    },
+    {
+      "id": "summarize",
+      "title": "Summarize Session (6-12 bullets)",
+      "instruction": "Include: objective, what changed, what was verified (curl/tests/manual), what remains unknown or risky."
+    },
+    {
+      "id": "extract-successes",
+      "title": "Extract Success Patterns",
+      "instruction": "Format each as: **Pattern:** <name> | Trigger: <when it applies> | Move: <what to do> | Proof: <how to verify> | Files: <paths>"
+    },
+    {
+      "id": "extract-failures",
+      "title": "Extract Failure Patterns",
+      "instruction": "Format each as: **Failure:** <name> | Symptom: <what you saw> | Root cause: <why> | Avoid: <what not to do> | Fix: <what to do instead> | Proof: <verification>"
+    },
+    {
+      "id": "edge-cases",
+      "title": "Edge Cases + Invariants",
+      "instruction": "Edge cases: 3-10 bullets of boundary conditions discovered. Invariants: 'must always remain true' (especially for trust + privacy)."
+    },
+    {
+      "id": "target-skills",
+      "title": "Decide Target Skills",
+      "instruction": "Pick 1-3 targets max. Existing skill: add 'Known failures' or 'Verification' section. Or create new skill stub if: repeated behavior emerged, you wrote the same explanation twice, you see a reusable procedure forming."
+    },
+    {
+      "id": "write-patches",
+      "title": "Write Patches",
+      "instruction": "For each patch: file path, exact text to add, where it should go (top/bottom/after section). Output as JSON for the update-skill.ts script."
+    },
+    {
+      "id": "pr-payload",
+      "title": "Optional PR Payload",
+      "instruction": "If repo is git-managed: branch name suggestion, commit message suggestion, PR description (3-6 bullets)."
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Produces actionable patch list (not vague suggestions)",
+    "Identifies at least one success or failure pattern",
+    "Patches are minimal and targeted",
+    "No secrets in output"
+  ],
+  "standardSections": {
+    "knownFailures": "Bullet list of common mistakes + the fix",
+    "verification": "1-5 commands or checks that prove it works",
+    "notes": "Anything useful but not yet stable"
+  }
+}
