@@ -667,6 +667,17 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
     ? formatRelationshipMemoryForPrompt(relationshipMemory)
     : '';
 
+  // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
+  const isSanctuary = (meta as any)?.sanctuary === true;
+  const sanctuaryInstruction = isSanctuary
+    ? `\n\n🔒 SANCTUARY SESSION ACTIVE:
+This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
+- NEVER say "I remember...", "I recall...", "Last time we talked...", or similar memory language
+- NEVER reference past conversations or imply continuity from previous sessions
+- Respond fully present in THIS moment, without memory references
+- You can still be helpful and warm - just don't claim to remember anything`
+    : '';
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   let baseSystemPrompt = `${MAIA_RELATIONAL_SPEC}
 
@@ -674,7 +685,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}
+${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -841,6 +852,17 @@ async function corePathResponse(
     adaptivePrompt = adaptivePrompt + '\n\n' + selfletPromptBlock;
   }
 
+  // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
+  const isSanctuaryCore = (meta as any)?.sanctuary === true;
+  if (isSanctuaryCore) {
+    adaptivePrompt = adaptivePrompt + `\n\n🔒 SANCTUARY SESSION ACTIVE:
+This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
+- NEVER say "I remember...", "I recall...", "Last time we talked...", or similar memory language
+- NEVER reference past conversations or imply continuity from previous sessions
+- Respond fully present in THIS moment, without memory references
+- You can still be helpful and warm - just don't claim to remember anything`;
+  }
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
   if (policy) {
     adaptivePrompt = adaptResponsePromptWithPolicy(adaptivePrompt, policy);
@@ -965,6 +987,17 @@ async function deepPathResponse(
   // Note: For DEEP path, selflet context is stored but prompt injection happens via meta passed to consciousness wrapper
   const selfletContext = (meta as any)?.selfletContext;
   (meta as any).selfletPromptBlock = selfletContext?.surfacedMessagePrompt ?? '';
+
+  // 🔒 SANCTUARY PROMPT RULE: When in sanctuary mode, prohibit memory language
+  const isSanctuaryDeep = (meta as any)?.sanctuary === true;
+  if (isSanctuaryDeep) {
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n🔒 SANCTUARY SESSION ACTIVE:
+This is a sanctuary session. The user has chosen NOT to have this conversation saved to memory.
+- NEVER say "I remember...", "I recall...", "Last time we talked...", or similar memory language
+- NEVER reference past conversations or imply continuity from previous sessions
+- Respond fully present in THIS moment, without memory references
+- You can still be helpful and warm - just don't claim to remember anything`;
+  }
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
   let effectiveHistory = conversationHistory;
@@ -1682,9 +1715,15 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       db: process.env.DATABASE_URL ?? '(no DATABASE_URL env)',
     });
 
+    // 🔒 SANCTUARY MODE: Skip all persistence when sanctuary=true
+    const isSanctuary = (meta as any)?.sanctuary === true;
+
     if (effectiveUserId) {
+      // 🔒 SANCTUARY: No content retention
+      if (isSanctuary) {
+        console.log('🛡️ [TurnsStore] Skipping persist - Sanctuary mode active');
       // 🔒 SECURITY: Never persist sensitive data to conversation_turns
-      if (containsSensitiveData(input)) {
+      } else if (containsSensitiveData(input)) {
         console.log('🔒 [TurnsStore] Skipping persist - sensitive data detected');
       } else {
         try {
@@ -1700,78 +1739,87 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     }
 
     // 📊 MEMORY AUDIT: Record which memories were used in this response
-    try {
-      const { randomUUID } = await import('crypto');
-      const { ConversationMemoryUsesStore } = await import('../memory/stores/ConversationMemoryUsesStore');
+    // 🔒 SANCTUARY: Skip memory audit (no tracking of what was recalled)
+    if (!isSanctuary) {
+      try {
+        const { randomUUID } = await import('crypto');
+        const { ConversationMemoryUsesStore } = await import('../memory/stores/ConversationMemoryUsesStore');
 
-      // Get the memory bundle that was used for this response (from meta)
-      const usedBundle = (meta as any)?.memoryBundle;
+        // Get the memory bundle that was used for this response (from meta)
+        const usedBundle = (meta as any)?.memoryBundle;
 
-      if (usedBundle?.memoryBullets?.length > 0 && effectiveUserId) {
-        const messageId = (meta as any)?.traceId || randomUUID();
+        if (usedBundle?.memoryBullets?.length > 0 && effectiveUserId) {
+          const messageId = (meta as any)?.traceId || randomUUID();
 
-        await ConversationMemoryUsesStore.recordBatch(
-          effectiveUserId,
-          sessionId || 'no-session',
-          messageId,
-          usedBundle.memoryBullets.map((bullet: any, idx: number) => ({
-            memoryTable:
-              bullet.source === 'developmental' ? 'developmental_memories' : 'conversation_turns',
-            memoryId: bullet.id || `${bullet.source}-${idx}`,
-            usedAs:
-              bullet.source === 'breakthrough'
-                ? 'breakthrough'
-                : bullet.source === 'insight'
-                  ? 'pattern'
-                  : 'context',
-            retrievalScore: bullet.significance,
-            confidenceScore: bullet.significance,
-          }))
-        );
+          await ConversationMemoryUsesStore.recordBatch(
+            effectiveUserId,
+            sessionId || 'no-session',
+            messageId,
+            usedBundle.memoryBullets.map((bullet: any, idx: number) => ({
+              memoryTable:
+                bullet.source === 'developmental' ? 'developmental_memories' : 'conversation_turns',
+              memoryId: bullet.id || `${bullet.source}-${idx}`,
+              usedAs:
+                bullet.source === 'breakthrough'
+                  ? 'breakthrough'
+                  : bullet.source === 'insight'
+                    ? 'pattern'
+                    : 'context',
+              retrievalScore: bullet.significance,
+              confidenceScore: bullet.significance,
+            }))
+          );
 
-        console.log(`📊 [MemoryAudit] Recorded ${usedBundle.memoryBullets.length} memory uses`);
+          console.log(`📊 [MemoryAudit] Recorded ${usedBundle.memoryBullets.length} memory uses`);
+        }
+      } catch (auditErr) {
+        console.warn('⚠️ [MemoryAudit] Failed to record uses:', auditErr);
+        // Non-blocking
       }
-    } catch (auditErr) {
-      console.warn('⚠️ [MemoryAudit] Failed to record uses:', auditErr);
-      // Non-blocking
     }
 
     // 🔗 PATTERNS: Attach top patterns to message metadata for UI chips ("Show why")
+    // 🔒 SANCTUARY: Skip pattern attachment (no pattern formation in sanctuary)
     let responsePatterns: PatternMeta[] = [];
-    try {
-      if (effectiveUserId) {
-        const patternRows = await query<{
-          id: string;
-          patternKey: string;
-          seenCount: number;
-          significance: number;
-        }>(
-          `SELECT id, entity_tags[1] AS "patternKey",
-           COALESCE((trigger_event->>'seenCount')::int, 1) AS "seenCount",
-           significance::float8 AS "significance"
-           FROM developmental_memories
-           WHERE user_id = $1 AND memory_type = 'emergent_pattern'
-           ORDER BY significance DESC, formed_at DESC LIMIT 5;`,
-          [effectiveUserId]
-        );
+    if (!isSanctuary) {
+      try {
+        if (effectiveUserId) {
+          const patternRows = await query<{
+            id: string;
+            patternKey: string;
+            seenCount: number;
+            significance: number;
+          }>(
+            `SELECT id, entity_tags[1] AS "patternKey",
+             COALESCE((trigger_event->>'seenCount')::int, 1) AS "seenCount",
+             significance::float8 AS "significance"
+             FROM developmental_memories
+             WHERE user_id = $1 AND memory_type = 'emergent_pattern'
+             ORDER BY significance DESC, formed_at DESC LIMIT 5;`,
+            [effectiveUserId]
+          );
 
-        if (patternRows.rows.length > 0) {
-          responsePatterns = patternRows.rows.map((r) => ({
-            id: r.id,
-            key: r.patternKey || 'unknown',
-            sig: r.significance,
-            seen: r.seenCount,
-          }));
-          console.log(`🔗 [Patterns] Attached ${responsePatterns.length} patterns to response metadata`);
+          if (patternRows.rows.length > 0) {
+            responsePatterns = patternRows.rows.map((r) => ({
+              id: r.id,
+              key: r.patternKey || 'unknown',
+              sig: r.significance,
+              seen: r.seenCount,
+            }));
+            console.log(`🔗 [Patterns] Attached ${responsePatterns.length} patterns to response metadata`);
+          }
         }
+      } catch (patternErr) {
+        console.warn('⚠️ [Patterns] Failed to attach patterns:', patternErr);
+        // Non-blocking - patterns are optional enhancement
       }
-    } catch (patternErr) {
-      console.warn('⚠️ [Patterns] Failed to attach patterns:', patternErr);
-      // Non-blocking - patterns are optional enhancement
     }
 
     // ✨ MEMORY INTEGRATION: Form memory from this conversation (mode-aware)
-    try {
+    // 🔒 SANCTUARY: Skip ALL memory formation when sanctuary=true
+    if (isSanctuary) {
+      console.log('🛡️ [MEMORY] Skipping all memory integration - Sanctuary mode active');
+    } else try {
       const activeMode = normalizeMode((meta as any)?.mode);
       const memoryKey = userId ?? sessionId;
 
