@@ -176,7 +176,7 @@ export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelc
                 className="relative z-10 w-24 h-24"
               >
                 <img
-                  src="/holoflower-sacred.svg"
+                  src="/holoflower.svg"
                   alt="Sacred Holoflower"
                   className="w-full h-full object-contain"
                   style={{
