@@ -88,6 +88,8 @@ Not as a buzzword — as a rule:
 
 This gives the team a non-ethicalized way to talk about restraint. Nobody feels the urge to over-explain.
 
+**Rule of 2:** In any conversation, you get *one sentence* on memory consent unless the other person asks a second question. This prevents sliding into a 90-second arc just because you're proud of it.
+
 ---
 
 ## One Sentence Per Room (Only If Asked)
@@ -99,7 +101,7 @@ Use these to close the loop without opening a debate.
 | **Spiritual elders** | "Some conversations are meant to pass through, not be carried forward — MAIA respects that." |
 | **Product / dev** | "We treat memory like state, not logging — some interactions are intentionally ephemeral." |
 | **Therapeutic / clinical** | "We support reflective work without forcing continuity — not everything needs to become part of a record." |
-| **Investors / partners** | "We built consent into memory itself — which turns restraint into a long-term trust advantage." |
+| **Investors / partners** | "We built consent into how memory works, so trust holds under scale." |
 | **Enterprise / compliance** | "The system can operate fully without retention when required — by design, not exception." |
 
 **Success metric:** They say "that makes sense" and don't bring it up again.
@@ -108,14 +110,14 @@ Use these to close the loop without opening a debate.
 
 ## What NOT to Say
 
-Avoid these phrases — they trigger scrutiny:
+Avoid these phrases — they can trigger unnecessary debate:
 
 - "Privacy-first"
 - "We don't store your data" (absolute claims invite audits)
 - "Ethical AI" as a lead phrase
 - Overusing "Sanctuary" outside the product itself
 
-**Disposable pixels** feels obvious. The others feel like protest.
+**Disposable pixels** feels natural. The others can open conversations you didn't intend.
 
 ---
 
