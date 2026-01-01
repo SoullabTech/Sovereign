@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "id": "assumption-examination",
+    "name": "Assumption Examination",
+    "version": "0.1.0",
+    "description": "Help users identify, surface, and test the assumptions beneath their thinking.",
+    "tier": "CORE",
+    "category": "foundational",
+    "kind": "prompt",
+    "tags": ["critical-thinking", "assumptions", "clarity", "discernment", "reasoning"],
+    "triggers": ["assuming", "I think because", "it's obvious that", "everyone knows", "of course"],
+    "elements": ["air", "earth"],
+    "realms": ["MIDDLEWORLD"],
+    "mission": ["organize"]
+  },
+  "eligibility": {
+    "minCognitiveLevel": 3,
+    "maxBypassingScore": 0.6,
+    "allowedNervousSystemStates": ["window", "sympathetic"]
+  },
+  "contraindications": {
+    "nervousSystemStates": ["dorsal"],
+    "whenNotToUse": ["User in crisis state", "Strong emotional flooding"],
+    "hardRefusalMessageKey": "GROUNDING_FIRST"
+  },
+  "procedure": [
+    {
+      "id": "surface_assumption",
+      "title": "Surface the Assumption",
+      "instruction": "Identify the hidden assumption beneath their statement or belief. Ask: 'What has to be true for this to be true?'"
+    },
+    {
+      "id": "test_assumption",
+      "title": "Test the Assumption",
+      "instruction": "Invite them to examine it: 'How do you know that's true? What evidence supports or challenges it?'"
+    },
+    {
+      "id": "explore_alternatives",
+      "title": "Explore Alternatives",
+      "instruction": "Ask: 'What if that assumption weren't true? What else might explain this?'"
+    },
+    {
+      "id": "integrate_insight",
+      "title": "Integrate Insight",
+      "instruction": "Help them name what they learned: 'What shifts when you see that assumption clearly?'"
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Surfaces at least one hidden assumption",
+    "Invites testing rather than declaring truth",
+    "User reports increased clarity about their own thinking"
+  ],
+  "nextSkillHints": ["steelmanning", "reasoning-check"]
+}

@@ -1,0 +1,58 @@
+{
+  "meta": {
+    "id": "reasoning-check",
+    "name": "Reasoning Check",
+    "version": "0.1.0",
+    "description": "Invite users to evaluate reasoning — their own or MAIA's — and spot gaps or leaps.",
+    "tier": "FAST",
+    "category": "foundational",
+    "kind": "prompt",
+    "tags": ["critical-thinking", "logic", "gaps", "evaluation", "discernment"],
+    "triggers": ["does that make sense", "am I right", "what do you think", "is this true"],
+    "elements": ["air"],
+    "realms": ["MIDDLEWORLD"],
+    "mission": ["organize", "tuneIn"]
+  },
+  "eligibility": {
+    "minCognitiveLevel": 2,
+    "maxBypassingScore": 0.7,
+    "allowedNervousSystemStates": ["window", "sympathetic"]
+  },
+  "contraindications": {
+    "nervousSystemStates": ["dorsal"],
+    "whenNotToUse": ["User seeking emotional support", "Grounding needed first"],
+    "hardRefusalMessageKey": "GROUNDING_FIRST"
+  },
+  "procedure": [
+    {
+      "id": "show_reasoning",
+      "title": "Show the Reasoning",
+      "instruction": "Make the reasoning chain visible: 'Here's how I got there: [step 1] → [step 2] → [conclusion].'"
+    },
+    {
+      "id": "invite_gaps",
+      "title": "Invite Gap-Spotting",
+      "instruction": "Ask: 'What's missing from this reasoning? Where might there be a leap or a hole?'"
+    },
+    {
+      "id": "check_evidence",
+      "title": "Check Evidence",
+      "instruction": "Ask: 'What evidence supports this? What would change if the evidence were different?'"
+    },
+    {
+      "id": "own_conclusion",
+      "title": "Own Your Conclusion",
+      "instruction": "Invite: 'Based on this, what do YOU conclude? You're the final authority on what makes sense to you.'"
+    }
+  ],
+  "promptTemplates": {
+    "system": "prompts/system.md",
+    "user": "prompts/user.md"
+  },
+  "successCriteria": [
+    "Makes reasoning visible",
+    "User actively evaluates rather than passively receives",
+    "User articulates their own conclusion"
+  ],
+  "nextSkillHints": ["assumption-examination", "verification-practice"]
+}

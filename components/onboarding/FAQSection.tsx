@@ -186,6 +186,23 @@ You can use MAIA as a mirror, a thought partner, a witness — and a practical c
 
 ---
 
+## How does MAIA support critical thinking?
+
+MAIA isn't here to give you answers — she's here to help you think more clearly.
+
+This means:
+- **Showing reasoning, not just conclusions** — you can see how she got there and challenge it
+- **Asking you to evaluate** — "Does this land? What's missing?" rather than declaring truth
+- **Inviting disagreement** — your discernment matters more than her confidence
+- **Distinguishing observation from interpretation** — "I notice..." vs "You are..."
+- **Encouraging verification** — for anything that matters, check it yourself
+
+This is by design. A thinking partner who develops your capacity to think is more valuable than one who replaces it. If you ever feel MAIA is being too declarative or not inviting enough challenge, call it out — that feedback improves the system.
+
+The goal: you leave conversations thinking more clearly, not more dependent.
+
+---
+
 ## What should I do for my first session?
 
 Start wherever you are. There's no preparation required.
@@ -519,6 +536,20 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                       <h3 className="text-sm font-medium text-amber-100">What can I experiment with here?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
                         Everything — especially things that help your real life. Clarify decisions and next steps. Work through relationship patterns. Build consistency (habits, practices, commitments). Process dreams, symbols, and inner material. Develop your voice, creativity, and leadership. Explore big questions without losing the ground. You can use MAIA as a mirror, a thought partner, a witness — and a practical companion for making changes stick.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Lightbulb className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">How does MAIA support critical thinking?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        MAIA isn't here to give you answers — she's here to help you think more clearly. This means: showing reasoning, not just conclusions — you can see how she got there and challenge it. Asking you to evaluate — "Does this land? What's missing?" rather than declaring truth. Inviting disagreement — your discernment matters more than her confidence. Distinguishing observation from interpretation — "I notice..." vs "You are..." Encouraging verification — for anything that matters, check it yourself. The goal: you leave conversations thinking more clearly, not more dependent.
                       </div>
                     </div>
                   </div>

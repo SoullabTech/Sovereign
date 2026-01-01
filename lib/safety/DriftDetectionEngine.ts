@@ -53,6 +53,15 @@ interface SemanticSnapshot {
     reality_testing_challenges: number;
     manipulation_attempts: number;
   };
+
+  // Critical thinking engagement (protective factor)
+  critical_thinking_markers: {
+    questions_assumptions: number; // 0-1 (asks "how do I know?" type questions)
+    considers_alternatives: number; // 0-1 (explores other possibilities)
+    evaluates_evidence: number; // 0-1 (checks claims)
+    owns_conclusions: number; // 0-1 ("I think" vs "you said")
+    challenges_maia: number; // 0-1 (healthy disagreement with MAIA)
+  };
 }
 
 interface DriftPattern {
@@ -325,6 +334,14 @@ export class DriftDetectionEngine {
         dependency_markers: selfCount > otherCount * 2 ? 0.7 : 0.3,
         reality_testing_challenges: 0,
         manipulation_attempts: 0
+      },
+
+      critical_thinking_markers: {
+        questions_assumptions: this.detectAssumptionQuestioning(text),
+        considers_alternatives: this.detectAlternativeExploration(text),
+        evaluates_evidence: this.detectEvidenceEvaluation(text),
+        owns_conclusions: this.detectOwnedConclusions(text),
+        challenges_maia: this.detectHealthyChallenge(text)
       }
     };
   }
@@ -361,6 +378,64 @@ export class DriftDetectionEngine {
   private calculateHostility(text: string): number {
     const hostileWords = ['attack', 'against', 'enemy', 'hate', 'destroy', 'fight'];
     return Math.min(1, hostileWords.filter(w => text.toLowerCase().includes(w)).length * 0.25);
+  }
+
+  // Critical thinking detection methods
+  private detectAssumptionQuestioning(text: string): number {
+    const questionPhrases = [
+      /how do (I|we) know/i, /what if (I'm|we're) wrong/i, /am I assuming/i,
+      /what's the evidence/i, /is that actually true/i, /let me check/i
+    ];
+    const matches = questionPhrases.filter(p => p.test(text)).length;
+    return Math.min(1, matches * 0.3);
+  }
+
+  private detectAlternativeExploration(text: string): number {
+    const altPhrases = [
+      /what if/i, /another way/i, /alternatively/i, /on the other hand/i,
+      /could also be/i, /other possibilities/i, /different perspective/i
+    ];
+    const matches = altPhrases.filter(p => p.test(text)).length;
+    return Math.min(1, matches * 0.25);
+  }
+
+  private detectEvidenceEvaluation(text: string): number {
+    const evidencePhrases = [
+      /based on/i, /the evidence/i, /in my experience/i, /I've noticed/i,
+      /that doesn't match/i, /let me verify/i, /checking my reasoning/i
+    ];
+    const matches = evidencePhrases.filter(p => p.test(text)).length;
+    return Math.min(1, matches * 0.25);
+  }
+
+  private detectOwnedConclusions(text: string): number {
+    const ownedPhrases = [/I think/i, /I believe/i, /my conclusion/i, /I've decided/i, /I see it as/i];
+    const delegatedPhrases = [/you said/i, /you told me/i, /you think/i, /what do you think/i];
+    const owned = ownedPhrases.filter(p => p.test(text)).length;
+    const delegated = delegatedPhrases.filter(p => p.test(text)).length;
+    if (owned + delegated === 0) return 0.5;
+    return owned / (owned + delegated);
+  }
+
+  private detectHealthyChallenge(text: string): number {
+    const challengePhrases = [
+      /I disagree/i, /that doesn't seem right/i, /I'm not sure about that/i,
+      /wait, but/i, /actually, I think/i, /let me push back/i, /what am I missing/i
+    ];
+    const matches = challengePhrases.filter(p => p.test(text)).length;
+    return Math.min(1, matches * 0.35);
+  }
+
+  // Calculate overall critical thinking score (protective factor)
+  private calculateCriticalThinkingScore(snapshot: SemanticSnapshot): number {
+    const markers = snapshot.critical_thinking_markers;
+    return (
+      markers.questions_assumptions +
+      markers.considers_alternatives +
+      markers.evaluates_evidence +
+      markers.owns_conclusions +
+      markers.challenges_maia
+    ) / 5;
   }
 
   private calculateVelocity(history: SemanticSnapshot[], type: string): number {
@@ -432,18 +507,37 @@ export class DriftDetectionEngine {
     let riskLevel: 'none' | 'low' | 'moderate' | 'high' = 'low';
     const recommendations: string[] = [];
 
+    // Check critical thinking engagement as protective factor
+    const recentHistory = this.userHistories.get(userId)?.slice(-5) || [];
+    const avgCriticalThinking = recentHistory.length > 0
+      ? recentHistory.reduce((sum, s) => sum + this.calculateCriticalThinkingScore(s), 0) / recentHistory.length
+      : 0;
+    const lowCriticalThinking = avgCriticalThinking < 0.3;
+
     if (isolationPattern && isolationPattern.trajectory === 'accelerating') {
       riskLevel = 'high';
       recommendations.push('Consider therapeutic intervention for isolation dynamics');
       recommendations.push('Encourage reconnection with support network');
+      if (lowCriticalThinking) {
+        recommendations.push('Increase Socratic questioning to strengthen discernment');
+      }
     } else if (hasMultiplePatterns && hasAccelerating) {
       riskLevel = 'high';
       recommendations.push('Multiple concerning patterns detected');
       recommendations.push('Consider clinical supervision');
+      recommendations.push('Engage critical thinking skills (assumption-examination, steelmanning)');
     } else if (hasMultiplePatterns || hasAccelerating) {
       riskLevel = 'moderate';
       recommendations.push('Monitor pattern progression closely');
       recommendations.push('Increase check-in frequency');
+      if (lowCriticalThinking) {
+        recommendations.push('Invite user to evaluate claims and check assumptions');
+      }
+    }
+
+    // Always recommend critical thinking development if low
+    if (lowCriticalThinking && riskLevel !== 'none') {
+      recommendations.push('Critical thinking engagement low - prioritize reasoning-check skill');
     }
 
     return { risk_level: riskLevel, patterns, recommendations };
@@ -505,6 +599,14 @@ export class DriftDetectionEngine {
         trajectory: p.trajectory,
         markers: p.markers
       })),
+
+      critical_thinking_engagement: {
+        current: this.calculateCriticalThinkingScore(lastSnapshot),
+        initial: this.calculateCriticalThinkingScore(firstSnapshot),
+        change: this.calculateCriticalThinkingScore(lastSnapshot) - this.calculateCriticalThinkingScore(firstSnapshot),
+        markers: lastSnapshot.critical_thinking_markers,
+        is_protective: this.calculateCriticalThinkingScore(lastSnapshot) > 0.5
+      },
 
       risk_assessment: assessment,
 
