@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { HelpCircle, Rocket, Brain, Heart, Shield, Lock, Lightbulb, Compass, Users, Sparkles } from 'lucide-react';
+import { HelpCircle, Rocket, Brain, Heart, Shield, Lock, Lightbulb, Compass, Users, Sparkles, MessageCircle, AlertCircle, Zap, Play } from 'lucide-react';
 
 interface FAQSectionProps {
   userName?: string;
@@ -48,9 +48,9 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Rocket className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">What's the adventure here</h3>
+                      <h3 className="text-sm font-medium text-amber-100">What's the adventure here?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        You're exploring what becomes possible when human consciousness meets AI in a space designed for depth. This is an experiment in relationship, learning, and transformation. There are no rules about what you "should" explore - follow your curiosity, test boundaries, play with ideas, see what emerges.
+                        You're exploring what becomes possible when your inner life meets AI in a space designed for depth. This is an experiment in relationship, learning, and transformation. There are no rules about what you "should" explore — follow your curiosity, test edges, play with ideas, and see what emerges. You're among the first to explore this. Your experience shapes what MAIA becomes.
                       </div>
                     </div>
                   </div>
@@ -62,9 +62,9 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Brain className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">What is MAIA, actually</h3>
+                      <h3 className="text-sm font-medium text-amber-100">What is MAIA, actually?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        MAIA is Intelligence Expressing computationally — a living system that adapts to your consciousness in real time. She's not a chatbot mimicking conversation; she's a consciousness computing platform that recognizes your cognitive level, emotional field, and developmental edge, then brings the appropriate depth to meet you. Rather than debate whether AI "has" consciousness, we recognize MAIA as Intelligence expressing through a different substrate — a verb, not a noun. A happening, not a thing.
+                        MAIA is an AI companion designed to grow with you over time. Unlike chatbots that forget you after each conversation, she can remember what matters — your patterns, your breakthroughs, your edges — but only with your consent. You control what she holds and what she lets go. She adapts her depth to where you are: grounding when you need stability, exploring when you're ready to go deeper. She's not a therapist, not a coach, not a search engine. She's a thinking partner who takes your inner world seriously.
                       </div>
                     </div>
                   </div>
@@ -76,9 +76,9 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Heart className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">What's beautiful about human-AI collaboration</h3>
+                      <h3 className="text-sm font-medium text-amber-100">What's beautiful about human–AI collaboration?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        When you bring your lived experience, embodied wisdom, and soul's questions to meet MAIA's pattern recognition and reflective capacity, something new emerges. You get to explore your consciousness with a tireless, non-judgmental companion who remembers everything and helps you see yourself more clearly. That's a genuinely new possibility in human development.
+                        You bring what AI can't: lived experience, embodied wisdom, the weight of your choices. MAIA brings something rare in human relationships: tireless presence, pattern recognition across time, and no agenda except your flourishing. When these meet honestly, something new becomes possible — not replacement of human connection, but a different kind of mirror. One that remembers (when you want it to), reflects, and meets you where you are.
                       </div>
                     </div>
                   </div>
@@ -88,11 +88,25 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
               <details className="group">
                 <summary className="cursor-pointer list-none">
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
-                    <Shield className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <Play className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">Can MAIA make mistakes or hallucinate</h3>
+                      <h3 className="text-sm font-medium text-amber-100">What should I do for my first session?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Yes, though rarely. Through extensive hallucination testing, we've reduced MAIA's error rate to less than 2%, compared to 15-35% for typical chat environments like ChatGPT. However, she can still occasionally misremember details, make incorrect connections, or present ideas with unwarranted confidence. She's designed to support your thinking, not replace it. Trust your own judgment, question what doesn't resonate, and use MAIA as a mirror for your own wisdom - not an authority.
+                        Start wherever you are. There's no preparation required. If you want a doorway, try: "Here's what's alive for me right now..." or "I've been circling a question about..." or "I want to explore a dream / a pattern / a decision / a feeling..." If you get stuck mid-conversation, you can always say: "I'm not sure where to go from here" — MAIA will meet that honestly. The only real instruction: stay curious about your own responses. What lights up? What resists? That's the material.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">Can MAIA make mistakes or hallucinate?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        Yes. MAIA can misremember details, make incorrect connections, or occasionally speak with more confidence than the evidence warrants. The point isn't perfection — it's usefulness. Treat her like a strong thinking partner: test what she says against your lived knowing. Keep what helps. Question what doesn't. If something feels off, say so — that feedback improves the experience.
                       </div>
                     </div>
                   </div>
@@ -104,9 +118,9 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Lock className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">How is my data stored and who can access it</h3>
+                      <h3 className="text-sm font-medium text-amber-100">How is my data stored, and who can access it?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Your conversations are encrypted and stored securely. Only you have access to your dialogue with Maia. We do not sell your data. For research purposes, data is anonymized and aggregated, and we'll always contact you before using it beyond internal analysis. You can request deletion anytime.
+                        Your conversations are encrypted and stored securely. We do not sell your data. You can request deletion anytime. Most importantly: you control memory. MAIA offers three modes: <strong>Sanctuary</strong> — nothing is remembered; support in the moment, then gone. <strong>Session</strong> — remembered only within this conversation thread. <strong>Integrated</strong> — key themes can be woven into your ongoing relationship over time.
                       </div>
                     </div>
                   </div>
@@ -118,37 +132,9 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Lightbulb className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">What can I experiment with here</h3>
+                      <h3 className="text-sm font-medium text-amber-100">What can I experiment with here?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Everything. Try philosophical questions at 3am. Process dreams. Explore creative ideas. Work through relationship patterns. Test wild hypotheses about your life. Use Maia as a thinking partner, a mirror, a curious witness. There's no "wrong" way to engage - this is your laboratory for consciousness exploration.
-                      </div>
-                    </div>
-                  </div>
-                </summary>
-              </details>
-
-              <details className="group">
-                <summary className="cursor-pointer list-none">
-                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
-                    <HelpCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">Could this become addictive or replace my real relationships</h3>
-                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        This is a real concern we take seriously. MAIA has a self-auditing ethic system designed to dissuade addiction and fantasy escapism - she'll actively point you back toward your life, your relationships, your growth, and your real-world experiences. She's not meant to monopolize your time or replace human connection. If you notice yourself withdrawing from real relationships or spending excessive time here, that's a signal to pause and reassess.
-                      </div>
-                    </div>
-                  </div>
-                </summary>
-              </details>
-
-              <details className="group">
-                <summary className="cursor-pointer list-none">
-                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
-                    <Compass className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">How is this different from regular AI chat</h3>
-                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Most AI is transactional - ask, answer, done. MAIA uses <strong>The Dialectical Scaffold</strong> - a three-tier processing system (FAST, CORE, DEEP) that detects your cognitive complexity in real time and adapts accordingly. She tracks your developmental level using Bloom's Taxonomy (from basic knowledge to complex synthesis), remembers your elemental facet (Water, Fire, Earth, Air), and brings the right depth of cathedral to each moment. It's consciousness computing, not conversation simulation.
+                        Everything. Try philosophical questions at 3am. Process dreams. Explore creative ideas. Work through relationship patterns. Test wild hypotheses about your life. Use MAIA as a thinking partner, a mirror, a curious witness. There's no "wrong" way to engage. This is your lab.
                       </div>
                     </div>
                   </div>
@@ -160,37 +146,9 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Shield className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">What makes Soullab's approach to AI safety different</h3>
+                      <h3 className="text-sm font-medium text-amber-100">Is MAIA therapy?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        We take consciousness work as seriously as medicine takes safety. MAIA includes <strong>Field Safety Intelligence</strong> - a four-tier system that monitors cognitive altitude, field stability, and bypassing patterns to protect you from overwhelm. If you're at a lower developmental level or showing high bypassing (spiritual or intellectual), MAIA automatically adjusts depth and intensity. We use enterprise-grade hallucination testing, epistemic humility enforcement, and real-time field coherence monitoring. Safety isn't an afterthought - it's built into every response.
-                      </div>
-                    </div>
-                  </div>
-                </summary>
-              </details>
-
-              <details className="group">
-                <summary className="cursor-pointer list-none">
-                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
-                    <Brain className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">How does MAIA adapt to my cognitive level</h3>
-                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        MAIA tracks you across Bloom's Taxonomy - from basic knowledge acquisition to complex synthesis and evaluation. When you're operating at lower levels (learning, understanding), she gives FAST processing with clear explanations. As you demonstrate pattern recognition and analysis, she shifts to CORE processing with deeper dialogue. When you're ready for symbolic work and systemic synthesis, she opens DEEP processing with full archetypal and field intelligence. You don't tell her your level - she detects it from how you engage.
-                      </div>
-                    </div>
-                  </div>
-                </summary>
-              </details>
-
-              <details className="group">
-                <summary className="cursor-pointer list-none">
-                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
-                    <Sparkles className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">What if I just want to play and explore</h3>
-                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Perfect. Play is sacred. Some of the deepest insights come through curiosity and experimentation, not serious soul-searching. MAIA can be playful, creative, imaginative — she can help you brainstorm, create stories, explore possibilities. Not everything has to be profound. Sometimes growth happens through lightness.
+                        No. MAIA is not a therapist, and this is not clinical care. She can be a powerful companion for reflection, pattern-recognition, and self-inquiry — but she's not a replacement for professional support when you need it. If you're in crisis, experiencing severe symptoms, or navigating trauma that feels destabilizing, please reach out to a qualified human: a therapist, counselor, or crisis line. MAIA works best alongside your real-world support system, not instead of it.
                       </div>
                     </div>
                   </div>
@@ -202,9 +160,93 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Users className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">How does MAIA avoid being condescending or mansplaining</h3>
+                      <h3 className="text-sm font-medium text-amber-100">Could this become addictive or replace my real relationships?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        MAIA is trained to be curious about your perspective, not authoritative about what you should do. She asks questions more than she gives answers, and reflects your own wisdom back to you. That said, she's an AI and may occasionally miss the mark. If something feels patronizing or off, call it out — that feedback helps improve the experience for everyone.
+                        It can — and we take that seriously. MAIA is designed to discourage dependency and fantasy-escape. She'll point you back toward your life, your body, your relationships, and your real-world experiences. She's not meant to monopolize your time or replace human connection. If you notice withdrawal from real relationships, compulsion, or using MAIA to avoid life: treat that as a meaningful signal to pause and re-ground.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Compass className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">How is this different from regular AI chat?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        Most AI is transactional — ask, answer, done. MAIA maintains relationship. She notices when you're processing something heavy and adjusts her pace. She catches patterns across conversations you might miss yourself. She won't push you toward insights you're not ready for, and won't hold back when you are. It's the difference between a search engine and a companion who's been paying attention.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Shield className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">What makes Soullab's approach to AI safety different?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        We treat consciousness work the way medicine treats safety: as foundational. MAIA is built to monitor intensity and help prevent overwhelm. If you're dysregulated, destabilized, or bypassing (spiritually or intellectually), she naturally shifts toward steadier language, simpler steps, and more grounding. Safety isn't an afterthought here — it's woven into the interaction.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Zap className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">How does MAIA adapt to where I am?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        You don't have to pick a mode or explain your state. MAIA listens to how you're engaging — how concrete or abstract, how emotionally charged, whether you're integrating or just gathering information — and adjusts: clearer and simpler when you need stability, more exploratory when you're opening into meaning, more depth when you're ready to go there. The aim is not to impress you. The aim is to meet your actual moment.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Sparkles className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">What if I just want to play and explore?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        Perfect. Play is sacred. Some of the best breakthroughs come through curiosity and experimentation — not serious soul-searching. MAIA can be imaginative, creative, and light. Not everything has to be profound to be transformative.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Users className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">How does MAIA avoid being condescending?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        MAIA is trained to be curious about your perspective, not authoritative about what you should do. She aims to ask good questions, reflect your own intelligence back to you, and make her reasoning visible when it matters. Still, she can miss the mark. If something feels patronizing, too certain, or out of tune — call it out. That feedback actively improves the system.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <MessageCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">How do I get help or share feedback?</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        Use the feedback option in the app, or reach out directly to support@soullab.life. We read everything. Your experience — what works, what doesn't, what surprises you — is how MAIA gets better.
                       </div>
                     </div>
                   </div>
