@@ -205,6 +205,34 @@ The heaviness you feel isn't weakness — it's the weight of building something 
 
 ---
 
+## Why Sanctuary is Absolute in v1
+
+We made Sanctuary **absolute** on purpose:
+
+**Sanctuary means nothing from that session can enter long-term memory — not even by request.**
+
+That sounds strict, but it solves three real problems that show up the moment you scale:
+
+1. **Trust has to be simple to hold in the nervous system**
+   People don't relax into honesty when a boundary is conditional.
+   "Nothing crosses the line" is the only promise that can't be misread.
+
+2. **Exceptions become loopholes**
+   The second you allow "just save this one thing," you've created edge cases:
+   accidental saves, coercion dynamics, UI confusion, and "did it really save?" doubt.
+   Sanctuary stops being Sanctuary.
+
+3. **It protects the deepest use case: honest reflection**
+   The point isn't hiding identity. The point is creating a space where someone can speak *freely* without wondering how it will be used later.
+   Sanctuary is designed for presence first — not harvesting later.
+
+We'll likely add a separate, explicit feature later (e.g. **"Save this moment"**) for users who want selective remembering — but we won't call that Sanctuary. Sanctuary stays sacred: **useful now, gone after.**
+
+**Bottom line:**
+We don't offer anonymity. We offer **consent-based memory** — and Sanctuary is the clearest consent boundary we can make.
+
+---
+
 ## Appendix: Trust Velocity Metrics (Future)
 
 When ready to measure, track:

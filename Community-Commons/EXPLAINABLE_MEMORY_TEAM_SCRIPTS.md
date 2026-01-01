@@ -78,6 +78,95 @@ Not as a buzzword — as a rule:
 
 ---
 
+---
+
+## Sanctuary Slide (Investor/Partner Deck)
+
+**Headline:**
+
+### Sanctuary: Consent-Based Memory
+
+**We don't offer anonymity. We offer consent-based memory.**
+
+**Why Sanctuary is absolute (v1):**
+
+- **Trust must be simple.**
+  "Nothing crosses the line" is the only boundary people can feel in their body without doubt.
+
+- **Exceptions break trust at scale.**
+  The moment you allow "just this once," you create confusion, loopholes, and anxiety about what was really saved.
+
+- **Honest reflection needs safety.**
+  Sanctuary exists so people can think, feel, and speak freely — without wondering how it will be used later.
+
+**Closing line (anchor):**
+
+> Sanctuary is presence without extraction — useful now, gone after.
+
+---
+
+## Paired Slide: Sanctuary vs Continuity
+
+**Headline:**
+
+### Two Intentional Memory Modes
+
+| Sanctuary | Continuity |
+|-----------|------------|
+| *Presence without extraction* | *Memory in service of growth* |
+| Nothing from this session is saved | Patterns form only with consent |
+| No patterns formed, no continuity claims | MAIA shows why she remembers |
+| Designed for honesty, reflection, and inner work | Users confirm, reject, or refine meaning |
+| Useful now, gone after | Designed for learning, coherence, and long-term support |
+
+**Bottom line (spoken):**
+
+> We didn't build one memory system. We built *choice*.
+
+---
+
+## 90-Second Spoken Arc (When Asked)
+
+**Use sparingly.** This is for investor deep-dives or partnership trust conversations — not general marketing. The default posture: the UI speaks for itself.
+
+---
+
+**[0–15s | Frame]**
+"Most AI remembers everything by default. People edit themselves the moment they feel harvested."
+
+**[15–40s | Difference]**
+"MAIA offers consent-based memory. Continuity when you want it, with receipts. Sanctuary when you don't — nothing saved, nothing formed."
+
+**[40–60s | Why absolute]**
+"Sanctuary is absolute on purpose. Trust has to be simple enough to feel. Add exceptions, and the boundary collapses."
+
+**[60–80s | Moat]**
+"Systems that extract trust burn it. Systems that respect consent compound it. You can't retrofit that."
+
+**[80–90s | Close]**
+"When people trust the system, they stay. That's where durable revenue comes from."
+
+---
+
+**Calibration note:** Don't lead with this. Let the feature be discovered. Over-explaining privacy creates the opposite effect — it makes people wonder what you're hiding.
+
+---
+
+## Transition Sentences → Revenue / Governance
+
+Use depending on the room:
+
+**Neutral / Board-ready:**
+> Because memory is consent-based, trust compounds — and trust is what makes this system defensible at scale.
+
+**Founder / Visionary:**
+> When people trust the system, they stay — and that's where sustainable revenue actually comes from.
+
+**Investor / Moat-focused:**
+> This architecture turns ethical restraint into a compounding advantage competitors can't retrofit.
+
+---
+
 ## If Asked (Q&A Cheat Sheet)
 
 | Question | Answer |
