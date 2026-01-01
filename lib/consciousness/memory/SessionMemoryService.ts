@@ -3,7 +3,11 @@
  *
  * Integrates cross-conversation memory patterns with consciousness field-driven responses.
  * Enables MAIA to remember, build patterns, and provide developmental continuity.
+ *
+ * NOTE: Uses PostgreSQL via lib/db/postgres.ts (NOT Supabase - per CLAUDE.md sovereignty rules)
  */
+
+import { query, insertOne } from '../../db/postgres';
 
 interface SessionPattern {
   id?: string;
@@ -49,20 +53,12 @@ interface SpiralDevelopmentContext {
 }
 
 export class SessionMemoryService {
-  private supabase: any;
-  private isInitialized = false;
+  private isInitialized = true; // PostgreSQL is always available via lib/db/postgres
 
   constructor() {
-    // Initialize Supabase client
-    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
-    const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
-
-    if (dbUrl && dbKey) {
-      this.supabase = createClient(dbUrl, dbKey);
-      this.isInitialized = true;
-    } else {
-      console.warn('⚠️ SessionMemoryService: Supabase not configured, memory will be simulated');
-    }
+    // PostgreSQL client is initialized in lib/db/postgres.ts
+    // No additional setup needed - sovereignty maintained
+    console.log('✅ SessionMemoryService: Using PostgreSQL (sovereign memory)');
   }
 
   // ============================================================================
@@ -95,28 +91,30 @@ export class SessionMemoryService {
       consciousnessCoherence: this.calculateConsciousnessCoherence(conversationData.fieldStates)
     };
 
-    if (this.isInitialized) {
-      try {
-        const { data, error } = await this.supabase
-          .from('user_session_patterns')
-          .insert([sessionPattern])
-          .select()
-          .single();
+    try {
+      const result = await insertOne('user_session_patterns', {
+        user_id: userId,
+        session_id: sessionId,
+        conversation_themes: JSON.stringify(sessionPattern.conversationThemes),
+        emotional_patterns: JSON.stringify(sessionPattern.emotionalPatterns),
+        consciousness_field_states: JSON.stringify(sessionPattern.consciousnessFieldStates),
+        spiral_development_indicators: JSON.stringify(sessionPattern.spiralDevelopmentIndicators),
+        field_resonance_patterns: JSON.stringify(sessionPattern.fieldResonancePatterns),
+        session_quality_score: sessionPattern.sessionQualityScore,
+        consciousness_coherence: sessionPattern.consciousnessCoherence,
+        created_at: new Date().toISOString()
+      });
 
-        if (error) throw error;
+      // Store insights separately
+      await this.storeSessionInsights(userId, sessionId, conversationData.insights);
 
-        // Store insights separately
-        await this.storeSessionInsights(userId, sessionId, conversationData.insights);
-
-        console.log('📚 Session pattern stored successfully:', data.id);
-        return data;
-      } catch (error) {
-        console.error('Error storing session pattern:', error);
-      }
+      console.log('📚 Session pattern stored successfully:', result.id);
+      return { ...sessionPattern, id: result.id };
+    } catch (error) {
+      console.error('Error storing session pattern:', error);
+      // Return with generated ID on error (graceful degradation)
+      return { ...sessionPattern, id: `local_${Date.now()}` };
     }
-
-    // Return simulated data if Supabase not available
-    return { ...sessionPattern, id: `sim_${Date.now()}` };
   }
 
   /**
@@ -137,21 +135,26 @@ export class SessionMemoryService {
       insightSignificance: this.calculateInsightSignificance(insight)
     }));
 
-    if (this.isInitialized) {
-      try {
-        const { data, error } = await this.supabase
-          .from('conversation_insights')
-          .insert(insightRecords)
-          .select();
-
-        if (error) throw error;
-        return data;
-      } catch (error) {
-        console.error('Error storing insights:', error);
+    try {
+      const results: ConversationInsight[] = [];
+      for (const insight of insightRecords) {
+        const result = await insertOne('conversation_insights', {
+          session_id: insight.sessionId,
+          user_id: insight.userId,
+          insight_text: insight.insightText,
+          insight_type: insight.insightType,
+          consciousness_field_influence: JSON.stringify(insight.consciousnessFieldInfluence),
+          conversation_context: insight.conversationContext,
+          insight_significance: insight.insightSignificance,
+          created_at: new Date().toISOString()
+        });
+        results.push({ ...insight, id: result.id });
       }
+      return results;
+    } catch (error) {
+      console.error('Error storing insights:', error);
+      return insightRecords; // Return original on error
     }
-
-    return insightRecords;
   }
 
   // ============================================================================
@@ -173,10 +176,6 @@ export class SessionMemoryService {
       spiralDevelopmentContext: null,
       memoryConnections: []
     };
-
-    if (!this.isInitialized) {
-      return this.generateSimulatedMemoryContext(userId, currentMessage);
-    }
 
     try {
       // Get user's spiral development context
@@ -212,7 +211,7 @@ export class SessionMemoryService {
       };
     } catch (error) {
       console.error('Error retrieving memory context:', error);
-      return this.generateSimulatedMemoryContext(userId, currentMessage);
+      return memoryContext; // Return empty context on error, never simulate
     }
   }
 
@@ -220,17 +219,15 @@ export class SessionMemoryService {
    * Get user's spiral development context
    */
   async getSpiralDevelopmentContext(userId: string): Promise<SpiralDevelopmentContext | null> {
-    if (!this.isInitialized) return null;
-
     try {
-      const { data, error } = await this.supabase
-        .from('user_relationship_context')
-        .select('spiral_development, field_resonance_profile')
-        .eq('user_id', userId)
-        .single();
+      const result = await query(
+        'SELECT spiral_development, field_resonance_profile FROM user_relationship_context WHERE user_id = $1 LIMIT 1',
+        [userId]
+      );
 
-      if (error) throw error;
+      if (result.rows.length === 0) return null;
 
+      const data = result.rows[0];
       return data?.spiral_development || null;
     } catch (error) {
       console.error('Error getting spiral context:', error);
@@ -241,27 +238,24 @@ export class SessionMemoryService {
   /**
    * Find sessions with similar themes and patterns
    */
-  async findSimilarSessions(userId: string, query: string, limit = 5): Promise<any[]> {
-    if (!this.isInitialized) return [];
-
+  async findSimilarSessions(userId: string, searchQuery: string, limit = 5): Promise<any[]> {
     try {
-      // Simple theme-based matching for now (would use vector similarity in production)
-      const { data, error } = await this.supabase
-        .from('user_session_patterns')
-        .select('*')
-        .eq('user_id', userId)
-        .order('session_start', { ascending: false })
-        .limit(limit);
-
-      if (error) throw error;
+      const result = await query(
+        'SELECT * FROM user_session_patterns WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
+        [userId, limit]
+      );
 
       // Filter based on thematic similarity
-      return data.filter(session =>
-        session.conversation_themes?.some((theme: string) =>
-          query.toLowerCase().includes(theme.toLowerCase()) ||
-          theme.toLowerCase().includes(this.extractKeyTerms(query)[0]?.toLowerCase() || '')
-        )
-      );
+      return result.rows.filter(session => {
+        const themes = typeof session.conversation_themes === 'string'
+          ? JSON.parse(session.conversation_themes)
+          : session.conversation_themes || [];
+
+        return themes.some((theme: string) =>
+          searchQuery.toLowerCase().includes(theme.toLowerCase()) ||
+          theme.toLowerCase().includes(this.extractKeyTerms(searchQuery)[0]?.toLowerCase() || '')
+        );
+      });
     } catch (error) {
       console.error('Error finding similar sessions:', error);
       return [];
@@ -271,24 +265,18 @@ export class SessionMemoryService {
   /**
    * Find related insights based on semantic similarity
    */
-  async findRelatedInsights(userId: string, query: string, limit = 10): Promise<any[]> {
-    if (!this.isInitialized) return [];
-
+  async findRelatedInsights(userId: string, searchQuery: string, limit = 10): Promise<any[]> {
     try {
-      const { data, error } = await this.supabase
-        .from('conversation_insights')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(limit);
+      const result = await query(
+        'SELECT * FROM conversation_insights WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2',
+        [userId, limit]
+      );
 
-      if (error) throw error;
-
-      // Simple text-based matching (would use vector similarity in production)
-      const keyTerms = this.extractKeyTerms(query);
-      return data.filter(insight =>
+      // Simple text-based matching (vector similarity available via pgvector)
+      const keyTerms = this.extractKeyTerms(searchQuery);
+      return result.rows.filter(insight =>
         keyTerms.some(term =>
-          insight.insight_text.toLowerCase().includes(term.toLowerCase())
+          (insight.insight_text || '').toLowerCase().includes(term.toLowerCase())
         )
       );
     } catch (error) {
@@ -421,18 +409,20 @@ export class SessionMemoryService {
     userId: string,
     sessionData: SessionPattern
   ): Promise<void> {
-    if (!this.isInitialized) return;
-
     try {
-      // Update relationship depth and patterns
-      await this.supabase
-        .from('user_relationship_context')
-        .upsert({
-          user_id: userId,
-          total_sessions: await this.getSessionCount(userId) + 1,
-          relationship_depth: this.calculateRelationshipDepth(sessionData),
-          updated_at: new Date().toISOString()
-        });
+      const sessionCount = await this.getSessionCount(userId);
+      const relationshipDepth = this.calculateRelationshipDepth(sessionData);
+
+      // Upsert relationship context
+      await query(
+        `INSERT INTO user_relationship_context (user_id, total_sessions, relationship_depth, updated_at)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (user_id) DO UPDATE SET
+           total_sessions = $2,
+           relationship_depth = $3,
+           updated_at = $4`,
+        [userId, sessionCount + 1, relationshipDepth, new Date().toISOString()]
+      );
     } catch (error) {
       console.error('Error updating relationship context:', error);
     }
@@ -547,9 +537,9 @@ export class SessionMemoryService {
     }, {} as Record<string, number>);
 
     return Object.entries(themeCount)
-      .filter(([_, count]) => count > 1)
-      .sort(([_, a], [__, b]) => b - a)
-      .map(([theme, _]) => theme);
+      .filter(([_, count]) => (count as number) > 1)
+      .sort(([_, a], [__, b]) => (b as number) - (a as number))
+      .map(([theme]) => theme);
   }
 
   private identifyGrowthEdgePattern(insights: any[]): string | null {
@@ -631,16 +621,12 @@ export class SessionMemoryService {
   }
 
   private async getSessionCount(userId: string): Promise<number> {
-    if (!this.isInitialized) return 0;
-
     try {
-      const { count, error } = await this.supabase
-        .from('user_session_patterns')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-      return count || 0;
+      const result = await query(
+        'SELECT COUNT(*) as count FROM user_session_patterns WHERE user_id = $1',
+        [userId]
+      );
+      return parseInt(result.rows[0]?.count || '0', 10);
     } catch (error) {
       console.error('Error getting session count:', error);
       return 0;
@@ -649,56 +635,6 @@ export class SessionMemoryService {
 
   private calculateRelationshipDepth(sessionData: SessionPattern): number {
     return Math.min(sessionData.sessionQualityScore + 0.1, 1.0);
-  }
-
-  private generateSimulatedMemoryContext(userId: string, query: string): MemoryRetrievalResult {
-    // Generate realistic simulated memory context for testing
-    return {
-      sessionPatterns: [
-        {
-          id: 'sim_session_1',
-          conversation_themes: ['consciousness development', 'spiral dynamics'],
-          session_start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          consciousness_coherence: 0.8
-        }
-      ],
-      relatedInsights: [
-        {
-          id: 'sim_insight_1',
-          insight_text: 'The integration of different consciousness levels requires patience and practice',
-          insight_type: 'integration',
-          created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString()
-        }
-      ],
-      continuityOpportunities: [
-        "I notice this connects to our conversation last week about consciousness development. You mentioned feeling the tension between different levels of awareness.",
-        "This builds beautifully on the insight you had about integration requiring patience. I'm seeing how that understanding is deepening now."
-      ],
-      spiralDevelopmentContext: {
-        currentPrimaryStage: 'green',
-        currentSecondaryStage: 'yellow',
-        growthPatterns: {
-          dominant_growth_edge: 'balancing individual and collective consciousness'
-        },
-        consciousnessThemes: {
-          persistent_questions: ['How do I serve both individual growth and community development?']
-        },
-        fieldResonanceByStage: {
-          earth: 0.7,
-          water: 0.8,
-          air: 0.6,
-          fire: 0.4,
-          aether: 0.5
-        }
-      },
-      memoryConnections: [
-        {
-          type: 'thematic_evolution',
-          description: 'Evolution from individual focus to community consciousness integration',
-          strength: 0.8
-        }
-      ]
-    };
   }
 }
 
