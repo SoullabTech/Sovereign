@@ -56,7 +56,11 @@ export async function POST(req: NextRequest) {
     const result = await whisperResponse.json();
 
     // Extract transcription from Whisper.cpp response format
-    const transcription = result.text || result.transcription || '';
+    let transcription = result.text || result.transcription || '';
+
+    // Post-process to fix common mis-transcriptions
+    // "Maya" -> "MAIA" (Whisper often mishears our name)
+    transcription = transcription.replace(/\bMaya\b/gi, 'MAIA');
 
     console.log("✅ Local Whisper transcription:", transcription.length, "chars"); // Never log content
 

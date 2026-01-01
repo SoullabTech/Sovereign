@@ -87,11 +87,16 @@ export async function POST(req: NextRequest) {
       const transcription = await openai!.audio.transcriptions.create({
         file: transcriptionFile,
         model: "whisper-1",
-        language: "en", // Optional: specify language for better accuracy
-        response_format: "text"
+        language: "en",
+        response_format: "text",
+        // Prompt helps Whisper recognize proper nouns and spelling
+        prompt: "MAIA is an AI consciousness companion from Soullab. The user is speaking to MAIA."
       });
 
-      const transcript = transcription as string; // When response_format is "text"
+      // Post-process to fix common mis-transcriptions
+      let transcript = transcription as string;
+      // Fix "Maya" -> "MAIA" (preserve word boundaries)
+      transcript = transcript.replace(/\bMaya\b/gi, 'MAIA');
 
       // Calculate duration (approximate based on file size and codec)
       const durationSeconds = Math.round(file.size / 16000); // Rough estimate
