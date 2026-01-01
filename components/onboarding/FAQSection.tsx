@@ -14,7 +14,7 @@ const FAQ_CONTENT = `# MAIA FAQ
 Everything you might want to know before we begin.
 — Kelly
 
-*Soullab is a consciousness lab for personal evolution — with safety systems designed to prevent drift.*
+*Soullab is a consciousness lab for personal evolution — sovereignty-first, consent-based memory, with safety systems designed to prevent drift.*
 
 ---
 
@@ -98,13 +98,17 @@ Treat MAIA like a high-level thinking partner: keep what helps, question what do
 
 ## How is my data stored, and who can access it?
 
-Your conversations are encrypted and stored securely. We do not sell your data. You can request deletion anytime.
+Sovereignty and security are core design requirements here, not add-ons.
+
+Your conversations are encrypted in transit and at rest. Access is tightly restricted. We do not sell your data. We do not train external models on your conversations. You can request deletion anytime.
 
 Most importantly: you control memory. MAIA offers three modes:
 
 - **Sanctuary** — nothing is remembered; support in the moment, then gone
 - **Session** — remembered only within this conversation thread
 - **Integrated** — key themes can be woven into your ongoing relationship over time
+
+Consciousness work requires trust. We've built the infrastructure to deserve it.
 
 ---
 
@@ -397,7 +401,7 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-amber-100">How is my data stored, and who can access it?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Your conversations are encrypted and stored securely. We do not sell your data. You can request deletion anytime. Most importantly: you control memory. MAIA offers three modes: <strong>Sanctuary</strong> — nothing is remembered; support in the moment, then gone. <strong>Session</strong> — remembered only within this conversation thread. <strong>Integrated</strong> — key themes can be woven into your ongoing relationship over time.
+                        Sovereignty and security are core design requirements here, not add-ons. Your conversations are encrypted in transit and at rest. Access is tightly restricted. We do not sell your data. We do not train external models on your conversations. You can request deletion anytime. Most importantly: you control memory. MAIA offers three modes: <strong>Sanctuary</strong> — nothing is remembered; support in the moment, then gone. <strong>Session</strong> — remembered only within this conversation thread. <strong>Integrated</strong> — key themes can be woven into your ongoing relationship over time. Consciousness work requires trust. We've built the infrastructure to deserve it.
                       </div>
                     </div>
                   </div>
