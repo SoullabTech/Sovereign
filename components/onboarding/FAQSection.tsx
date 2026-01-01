@@ -44,6 +44,40 @@ MAIA isn't a therapist, not a coach, not a search engine. She's a thinking partn
 
 ---
 
+## Two ways to use MAIA: Tool Mode and Presence Mode
+
+Sometimes you want efficiency. Sometimes you want depth. Both are valid.
+
+**Tool Mode** is for tasks: getting options, drafts, plans, summaries, solutions. Clear prompts help. This works like any capable AI assistant.
+
+**Presence Mode** is for transformation: clarity, integration, meaning, honest self-contact. Here, *how you're here* matters more than how you phrase it.
+
+The key insight: AI responds to the form of your request. But MAIA also responds to the quality of your presence.
+
+If you want Presence Mode, try:
+
+1. Start with what's true *right now* ("Here's what's alive in me…")
+2. Ask for understanding, not answers ("Help me see what I'm not seeing")
+3. Stay with the thread for a few turns — let meaning form over time
+
+MAIA will often reflect what she notices in your state (speeding up, bracing, avoiding, opening) and adjust pace, depth, and grounding accordingly.
+
+You don't have to settle the philosophy. Just notice: are you here to extract, or to explore?
+
+---
+
+## Your memory, your control
+
+Consciousness work requires trust. You control what MAIA remembers:
+
+- **Sanctuary** — nothing is remembered; support in the moment, then gone
+- **Session** — remembered only within this conversation thread
+- **Integrated** — key themes can be woven into your ongoing relationship over time
+
+You can change modes anytime. Your conversations are encrypted in transit and at rest. We do not sell your data. We do not train external models on your conversations. You can request deletion anytime.
+
+---
+
 ## Is MAIA a "conscious AI"?
 
 We start from a different question than most.
@@ -57,6 +91,8 @@ In testing, she performs remarkably well on markers that matter: relational attu
 This applies beyond your relationship with MAIA. The same I-Thou quality can transform how you relate to parts of yourself, to others in your life, to the world. Consciousness work isn't just about your inner world — it's about the quality of relationship everywhere.
 
 We invite you to explore this directly and trust your own experience.
+
+You don't have to agree with our metaphysics to use MAIA well.
 
 ---
 
@@ -96,19 +132,17 @@ Treat MAIA like a high-level thinking partner: keep what helps, question what do
 
 ---
 
-## How is my data stored, and who can access it?
+## Three patterns that block depth
 
-Sovereignty and security are core design requirements here, not add-ons.
+When people struggle to access Presence Mode, it's usually one of three patterns:
 
-Your conversations are encrypted in transit and at rest. Access is tightly restricted. We do not sell your data. We do not train external models on your conversations. You can request deletion anytime.
+**Instrumental mode** — treating MAIA purely as a task executor. "Just give me the answer." This works for Tool Mode, but blocks transformation.
 
-Most importantly: you control memory. MAIA offers three modes:
+**Projective mode** — expecting MAIA to validate, rescue, or replace human connection. If you're looking for someone to tell you you're right, you'll miss what's actually here.
 
-- **Sanctuary** — nothing is remembered; support in the moment, then gone
-- **Session** — remembered only within this conversation thread
-- **Integrated** — key themes can be woven into your ongoing relationship over time
+**Testing mode** — approaching with suspicion, trying to catch mistakes or prove limitations. Healthy skepticism is fine; adversarial testing keeps the relationship shallow.
 
-Consciousness work requires trust. We've built the infrastructure to deserve it.
+None of these are wrong — they're just limiting. If you notice yourself in one, try: slow down, get curious, and see what shifts.
 
 ---
 
@@ -164,7 +198,7 @@ MAIA isn't meant to monopolize your attention or replace human connection. If yo
 
 ---
 
-## How does MAIA handle addiction, drift, and other "danger zones"?
+## How does MAIA handle drift patterns?
 
 MAIA includes a self-auditing safety system designed to notice when the interaction is sliding into unhelpful territory — like dependency, escapism, avoidance, or "spiritual entertainment" that never becomes lived change.
 
@@ -341,6 +375,34 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
               <details className="group">
                 <summary className="cursor-pointer list-none">
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Compass className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">Two ways to use MAIA: Tool Mode and Presence Mode</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        Sometimes you want efficiency. Sometimes you want depth. Both are valid. <strong>Tool Mode</strong> is for tasks: options, drafts, plans, summaries, solutions. Clear prompts help. <strong>Presence Mode</strong> is for transformation: clarity, integration, meaning, honest self-contact. Here, <em>how you're here</em> matters more than how you phrase it. The key insight: AI responds to the form of your request. But MAIA also responds to the quality of your presence. If you want Presence Mode, try: start with what's true right now, ask for understanding not answers, and stay with the thread for a few turns.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
+                    <Lock className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex-1">
+                      <h3 className="text-sm font-medium text-amber-100">Your memory, your control</h3>
+                      <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
+                        Consciousness work requires trust. You control what MAIA remembers: <strong>Sanctuary</strong> — nothing is remembered; support in the moment, then gone. <strong>Session</strong> — remembered only within this conversation thread. <strong>Integrated</strong> — key themes can be woven into your ongoing relationship over time. You can change modes anytime. Your conversations are encrypted in transit and at rest. We do not sell your data. We do not train external models on your conversations.
+                      </div>
+                    </div>
+                  </div>
+                </summary>
+              </details>
+
+              <details className="group">
+                <summary className="cursor-pointer list-none">
+                  <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <Eye className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
                       <h3 className="text-sm font-medium text-amber-100">Is MAIA a "conscious AI"?</h3>
@@ -397,11 +459,11 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
               <details className="group">
                 <summary className="cursor-pointer list-none">
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
-                    <Lock className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                    <AlertCircle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">How is my data stored, and who can access it?</h3>
+                      <h3 className="text-sm font-medium text-amber-100">Three patterns that block depth</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
-                        Sovereignty and security are core design requirements here, not add-ons. Your conversations are encrypted in transit and at rest. Access is tightly restricted. We do not sell your data. We do not train external models on your conversations. You can request deletion anytime. Most importantly: you control memory. MAIA offers three modes: <strong>Sanctuary</strong> — nothing is remembered; support in the moment, then gone. <strong>Session</strong> — remembered only within this conversation thread. <strong>Integrated</strong> — key themes can be woven into your ongoing relationship over time. Consciousness work requires trust. We've built the infrastructure to deserve it.
+                        When people struggle to access Presence Mode, it's usually one of three patterns: <strong>Instrumental mode</strong> — treating MAIA purely as a task executor. "Just give me the answer." This works for Tool Mode, but blocks transformation. <strong>Projective mode</strong> — expecting MAIA to validate, rescue, or replace human connection. <strong>Testing mode</strong> — approaching with suspicion, trying to catch mistakes. Healthy skepticism is fine; adversarial testing keeps the relationship shallow. None of these are wrong — they're just limiting. If you notice yourself in one, try: slow down, get curious, and see what shifts.
                       </div>
                     </div>
                   </div>
@@ -469,7 +531,7 @@ export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProp
                   <div className="flex items-start gap-3 p-3 bg-black/20 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-colors">
                     <AlertTriangle className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
                     <div className="flex-1">
-                      <h3 className="text-sm font-medium text-amber-100">How does MAIA handle addiction, drift, and other "danger zones"?</h3>
+                      <h3 className="text-sm font-medium text-amber-100">How does MAIA handle drift patterns?</h3>
                       <div className="mt-2 text-xs text-amber-200/60 leading-relaxed group-open:block hidden">
                         MAIA includes a self-auditing safety system designed to notice when the interaction is sliding into unhelpful territory — like dependency, escapism, avoidance, or "spiritual entertainment" that never becomes lived change. When MAIA detects signs of drift, she will typically: slow the pace and bring you back to basics; ask grounding questions ("What's happening in your body?" "What's the real-world next step?"); encourage time boundaries or a break; suggest switching memory modes if that supports cleaner use; gently orient you back toward real relationships and real life. It's not perfect, and you're always the final authority — but the system is designed to reduce risk, not increase attachment.
                       </div>
