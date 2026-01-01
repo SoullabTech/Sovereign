@@ -80,9 +80,48 @@ Not as a buzzword — as a rule:
 
 ---
 
-## Sanctuary Slide (Investor/Partner Deck)
+## Internal Anchor: Disposable Pixels
 
-**Headline:**
+**For the team. Not the website.**
+
+> *Some interactions are meant to exist only in the moment. We design for that on purpose.*
+
+This gives the team a non-ethicalized way to talk about restraint. Nobody feels the urge to over-explain.
+
+---
+
+## One Sentence Per Room (Only If Asked)
+
+Use these to close the loop without opening a debate.
+
+| Room | One sentence |
+|------|--------------|
+| **Spiritual elders** | "Some conversations are meant to pass through, not be carried forward — MAIA respects that." |
+| **Product / dev** | "We treat memory like state, not logging — some interactions are intentionally ephemeral." |
+| **Therapeutic / clinical** | "We support reflective work without forcing continuity — not everything needs to become part of a record." |
+| **Investors / partners** | "We built consent into memory itself — which turns restraint into a long-term trust advantage." |
+| **Enterprise / compliance** | "The system can operate fully without retention when required — by design, not exception." |
+
+**Success metric:** They say "that makes sense" and don't bring it up again.
+
+---
+
+## What NOT to Say
+
+Avoid these phrases — they trigger scrutiny:
+
+- "Privacy-first"
+- "We don't store your data" (absolute claims invite audits)
+- "Ethical AI" as a lead phrase
+- Overusing "Sanctuary" outside the product itself
+
+**Disposable pixels** feels obvious. The others feel like protest.
+
+---
+
+## If Asked: Memory Consent (Investor/Partner Only)
+
+**Use only when trust architecture is directly relevant.**
 
 ### Sanctuary: Consent-Based Memory
 
@@ -105,9 +144,9 @@ Not as a buzzword — as a rule:
 
 ---
 
-## Paired Slide: Sanctuary vs Continuity
+## If Asked: Two Memory Modes (Visual Aid)
 
-**Headline:**
+**Only if someone needs the architecture explained.**
 
 ### Two Intentional Memory Modes
 
@@ -125,9 +164,9 @@ Not as a buzzword — as a rule:
 
 ---
 
-## 90-Second Spoken Arc (When Asked)
+## If Asked: Full Trust Story (90 Seconds)
 
-**Use sparingly.** This is for investor deep-dives or partnership trust conversations — not general marketing. The default posture: the UI speaks for itself.
+**Rarely needed.** Only for investor deep-dives or compliance-sensitive partnerships. The UI carries 90% of the meaning — this is the 10% backup.
 
 ---
 
