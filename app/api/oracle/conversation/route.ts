@@ -90,11 +90,20 @@ function rateLimitOrThrow(ip: string) {
   }
 }
 
+type ConversationBody = {
+  userId?: string;
+  sessionId?: string;
+  message?: string;
+  conversationHistory?: any[];
+  element?: string;
+  userName?: string;
+};
+
 export async function POST(request: NextRequest) {
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
-  let body: { userId?: string; sessionId?: string; message?: string; conversationHistory?: any[] } | null = null;
+  let body: ConversationBody | undefined;
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -146,8 +155,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    body = await request.json();
-    const { message, userId, sessionId } = body;
+    const parsed = (await request.json()) as ConversationBody;
+    body = parsed;
+    const { message, userId, sessionId } = parsed;
 
     // Validate required fields
     if (!message || !userId || !sessionId) {
@@ -773,8 +783,8 @@ export async function POST(request: NextRequest) {
     // Log error usage for tracking (fire-and-forget)
     logOracleUsage({
       requestId,
-      userId: typeof body === 'object' && body ? body.userId : undefined,
-      sessionId: typeof body === 'object' && body ? body.sessionId : undefined,
+      userId: body?.userId,
+      sessionId: body?.sessionId,
       ip,
       level: ORACLE_LEVEL,
       status: 'error',

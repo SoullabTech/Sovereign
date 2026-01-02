@@ -182,6 +182,19 @@ class BetaSessionManager {
   }
 
   /**
+   * Static getUser for route handlers that call BetaSessionManager.getUser(req)
+   */
+  public static async getUser(_req: any): Promise<BetaUser | null> {
+    try {
+      // Use singleton instance
+      const mgr = BetaSessionManager.getInstance();
+      return mgr.getCurrentUser();
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Get session state
    */
   public getSessionState(): SessionState {
