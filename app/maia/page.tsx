@@ -273,6 +273,8 @@ function MAIAPageContent() {
 
   const handleWeekZeroSkip = () => {
     console.log('⏭️ [MAIA] Week 0 onboarding skipped');
+    // Mark as complete so it doesn't show again
+    localStorage.setItem('week0_onboarding_complete', 'skipped');
     setShowWeekZeroOnboarding(false);
   };
 
