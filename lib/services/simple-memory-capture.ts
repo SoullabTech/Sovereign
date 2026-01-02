@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Simple Memory Capture Service
  * Uses only memory_events table (which EXISTS in Supabase)

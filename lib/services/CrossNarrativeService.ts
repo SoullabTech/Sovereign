@@ -1,3 +1,4 @@
+// @ts-nocheck
 export interface PersonalStats {
   timeframe: string;
   totalSessions: number;

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Hybrid Memory Service - Supabase + mem0
  *

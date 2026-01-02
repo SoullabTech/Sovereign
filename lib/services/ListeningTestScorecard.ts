@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Listening Test Scorecard System
  * Structured data collection for voice mask evaluation

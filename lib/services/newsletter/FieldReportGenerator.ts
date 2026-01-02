@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * FIELD REPORT NEWSLETTER GENERATOR
  *

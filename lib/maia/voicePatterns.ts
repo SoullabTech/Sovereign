@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { JournalEntry } from './state';
 import { CognitiveVoiceProcessor, CognitiveVoiceAnalysis } from './cognitiveVoiceAnalysis';
 

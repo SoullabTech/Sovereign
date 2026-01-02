@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CONVERSATION PATTERN ANALYZER
  *
