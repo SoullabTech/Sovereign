@@ -4332,7 +4332,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       const fileNames = files.map(f => f.name).join(', ');
                       handleTextMessage(`Please analyze these files: ${fileNames}`, files);
                     }}
-                    autoFocus={false}
+                    autoFocus={true}
                     hasMemory={messages.length > 0 || !isReturningUser}
                     lastConnectionTime={
                       typeof window !== 'undefined'
