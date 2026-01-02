@@ -389,54 +389,34 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           scale: 0.98,
                           y: 1
                         }}
-                        className="relative z-10 w-full px-8 py-5 rounded-xl font-black text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        className="relative z-10 w-full px-8 py-5 rounded-xl font-bold text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 backdrop-blur-sm"
                         style={{
-                          background: `
-                            linear-gradient(145deg, #fcd34d 0%, #fbbf24 20%, #f59e0b 60%, #d97706 100%),
-                            linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
-                          `,
-                          border: '3px solid #92400e',
-                          borderTop: '3px solid #f59e0b',
-                          borderBottom: '3px solid #78350f',
+                          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1))',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
                           boxShadow: `
-                            0 8px 16px rgba(0, 0, 0, 0.3),
-                            0 4px 8px rgba(0, 0, 0, 0.2),
-                            0 12px 24px rgba(146, 64, 14, 0.4),
-                            inset 0 2px 4px rgba(255, 255, 255, 0.4),
-                            inset 0 -3px 6px rgba(0, 0, 0, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                            0 8px 32px rgba(0, 0, 0, 0.15),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
                           `,
-                          color: '#1f2937',
-                          textShadow: '0 1px 2px rgba(255, 255, 255, 0.5), 0 -1px 1px rgba(0, 0, 0, 0.3)',
+                          color: '#b45309',
+                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
                           transform: 'translateY(-2px)'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = `
-                            linear-gradient(145deg, #fde047 0%, #fcd34d 20%, #fbbf24 60%, #f59e0b 100%),
-                            linear-gradient(180deg, rgba(255,255,255,0.3) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
-                          `;
+                          e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15))';
                           e.currentTarget.style.boxShadow = `
-                            0 10px 20px rgba(0, 0, 0, 0.4),
-                            0 6px 12px rgba(0, 0, 0, 0.3),
-                            0 16px 32px rgba(146, 64, 14, 0.5),
-                            inset 0 3px 6px rgba(255, 255, 255, 0.5),
-                            inset 0 -4px 8px rgba(0, 0, 0, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.7)
+                            0 12px 40px rgba(0, 0, 0, 0.2),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.5),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
                           `;
                           e.currentTarget.style.transform = 'translateY(-4px)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = `
-                            linear-gradient(145deg, #fcd34d 0%, #fbbf24 20%, #f59e0b 60%, #d97706 100%),
-                            linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 50%, rgba(0,0,0,0.1) 100%)
-                          `;
+                          e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1))';
                           e.currentTarget.style.boxShadow = `
-                            0 8px 16px rgba(0, 0, 0, 0.3),
-                            0 4px 8px rgba(0, 0, 0, 0.2),
-                            0 12px 24px rgba(146, 64, 14, 0.4),
-                            inset 0 2px 4px rgba(255, 255, 255, 0.4),
-                            inset 0 -3px 6px rgba(0, 0, 0, 0.2),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.6)
+                            0 8px 32px rgba(0, 0, 0, 0.15),
+                            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
                           `;
                           e.currentTarget.style.transform = 'translateY(-2px)';
                         }}
