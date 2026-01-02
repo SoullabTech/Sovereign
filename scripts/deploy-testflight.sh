@@ -168,48 +168,28 @@ if [ "$SKIP_BUILD" = false ]; then
     rm -rf ./output
     mkdir -p ./output
 
-    # Export IPA
+    # Export and upload directly to App Store Connect
+    # Note: With method=app-store-connect + destination=upload, this uploads directly
     xcodebuild -exportArchive \
         -archivePath ./build/App.xcarchive \
         -exportPath ./output \
         -exportOptionsPlist exportOptions.plist \
         -allowProvisioningUpdates \
-        -quiet
+        -authenticationKeyPath "$API_KEY_PATH" \
+        -authenticationKeyID "$API_KEY_ID" \
+        -authenticationKeyIssuerID "$API_ISSUER_ID"
 
-    if [ ! -f "./output/App.ipa" ]; then
-        echo "  IPA export failed!"
-        exit 1
-    fi
-
-    IPA_SIZE=$(du -h "./output/App.ipa" | cut -f1)
-    echo "  IPA created: $IPA_SIZE"
+    UPLOAD_STATUS=$?
 
     cd "$PROJECT_DIR"
 fi
 
-# Upload phase
+# Build-only mode check
 if [ "$BUILD_ONLY" = true ]; then
     echo ""
-    echo "Build complete! IPA at: $IPA_PATH"
-    echo ""
-    echo "To upload later, run:"
-    echo "  $0 --upload-only --issuer '$API_ISSUER_ID'"
-    echo ""
+    echo "Build complete!"
     exit 0
 fi
-
-echo ""
-echo "6. Uploading to TestFlight"
-echo "--------------------------"
-echo "  This may take several minutes..."
-
-xcrun altool --upload-app \
-    -f "$IPA_PATH" \
-    -t ios \
-    --apiKey "$API_KEY_ID" \
-    --apiIssuer "$API_ISSUER_ID"
-
-UPLOAD_STATUS=$?
 
 if [ $UPLOAD_STATUS -eq 0 ]; then
     echo ""
