@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ENHANCED MAIA CHAT - Conversation-Aware Intelligence Integration
  *

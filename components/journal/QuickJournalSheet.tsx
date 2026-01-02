@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Mic, MicOff, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, ChevronDown, ChevronUp, Play, Square, Trash2 } from 'lucide-react';
+import { apiUrl } from '@/lib/http/apiBase';
 
 interface JournalEntry {
   id: string;
@@ -115,7 +116,7 @@ export function QuickJournalSheet({
     setIsSaving(true);
     setSaveError(null);
     try {
-      const response = await fetch('/api/journal/quick', {
+      const response = await fetch(apiUrl('/api/journal/quick'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -299,7 +300,7 @@ export function QuickJournalSheet({
     fd.append('transcriptSource', liveTranscript ? 'web_speech' : 'none');
     fd.append('audio', new File([recordedBlob], 'journal.webm', { type: 'audio/webm' }));
 
-    const res = await fetch('/api/journal/quick/audio', { method: 'POST', body: fd });
+    const res = await fetch(apiUrl('/api/journal/quick/audio'), { method: 'POST', body: fd });
     const j = await res.json();
     if (!j.success) {
       throw new Error(j.error || 'Audio upload failed');

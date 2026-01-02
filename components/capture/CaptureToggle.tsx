@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Radio, Square } from 'lucide-react';
 import { CaptureSheet } from './CaptureSheet';
+import { apiUrl } from '@/lib/http/apiBase';
 
 interface CaptureToggleProps {
   userId: string;
@@ -62,7 +63,7 @@ export function CaptureToggle({ userId }: CaptureToggleProps) {
     try {
       if (captureActive && sessionId) {
         // Stop session
-        const res = await fetch('/api/v1/capture/session/stop', {
+        const res = await fetch(apiUrl('/api/v1/capture/session/stop'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, sessionId })
@@ -74,7 +75,7 @@ export function CaptureToggle({ userId }: CaptureToggleProps) {
         }
       } else {
         // Start session
-        const res = await fetch('/api/v1/capture/session/start', {
+        const res = await fetch(apiUrl('/api/v1/capture/session/start'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId })

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiUrl } from '@/lib/http/apiBase';
 import {
   X,
   Radio,
@@ -115,7 +116,7 @@ export function CaptureSheet({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/v1/capture/note', {
+      const res = await fetch(apiUrl('/api/v1/capture/note'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -145,7 +146,7 @@ export function CaptureSheet({
 
     setCopying(format);
     try {
-      const res = await fetch('/api/v1/capture/export', {
+      const res = await fetch(apiUrl('/api/v1/capture/export'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

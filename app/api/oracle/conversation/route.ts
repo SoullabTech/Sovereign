@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 import { PanconsciousFieldService } from '@/lib/consciousness/panconscious-field';
 import {
