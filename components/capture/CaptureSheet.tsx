@@ -230,7 +230,7 @@ export function CaptureSheet({
                   {captureActive ? (
                     <>
                       <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                      <span className="text-sm font-medium">Recording</span>
+                      <span className="text-sm font-medium">Logging</span>
                     </>
                   ) : (
                     <>
