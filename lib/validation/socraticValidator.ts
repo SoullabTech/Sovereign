@@ -371,16 +371,98 @@ function checkCautionCompliance(args: ValidateArgs): ValidatorRupture[] {
 
 /**
  * Layer 5: Language Resonance
- * Validates tonal alignment with archetypal territory
+ * Validates tonal alignment with archetypal territory and linguistic integrity
+ *
+ * CANON v1.1: Structural linguistic integrity prevents "mind/mouth collapse" -
+ * when the reasoning layer speaks unmediated through the articulation layer,
+ * producing grammatical artifacts (missing referents, dropped placeholders).
  */
 function checkLanguageResonance(args: ValidateArgs): ValidatorRupture[] {
   const ruptures: ValidatorRupture[] = [];
-  const draft = args.draft.toLowerCase();
+  const draft = args.draft;
+  const draftLower = draft.toLowerCase();
   const element = args.element?.toLowerCase();
+
+  // ─────────────────────────────────────────────────────────────────
+  // LINGUISTIC INTEGRITY CHECKS (Mind/Mouth Collapse Detection)
+  // ─────────────────────────────────────────────────────────────────
+
+  // Missing referent after colon (e.g., "The word you used: .")
+  if (/: \./.test(draft)) {
+    ruptures.push({
+      layer: 'LANGUAGE_RESONANCE',
+      code: 'MIND_MOUTH_COLLAPSE_REFERENT',
+      severity: 'CRITICAL',
+      detected: 'Missing referent after colon (": .") - indicates dropped placeholder',
+      recommendation: 'The sentence structure is broken. Rewrite with complete referent or remove the colon construction.',
+      context: 'Mind/mouth collapse: reasoning layer spoke without articulation layer completing the thought',
+    });
+  }
+
+  // Double periods (e.g., "something.. else")
+  if (/\.\s*\./.test(draft)) {
+    ruptures.push({
+      layer: 'LANGUAGE_RESONANCE',
+      code: 'MIND_MOUTH_COLLAPSE_DOUBLE_PERIOD',
+      severity: 'WARNING',
+      detected: 'Double period detected - indicates incomplete sentence structure',
+      recommendation: 'Remove duplicate punctuation or complete the trailing thought.',
+      context: 'Mind/mouth collapse: incomplete articulation',
+    });
+  }
+
+  // Empty quotes (e.g., 'the word "" means')
+  if (/"\s*"/.test(draft) || /'\s*'/.test(draft)) {
+    ruptures.push({
+      layer: 'LANGUAGE_RESONANCE',
+      code: 'MIND_MOUTH_COLLAPSE_EMPTY_QUOTE',
+      severity: 'CRITICAL',
+      detected: 'Empty quotes detected - indicates missing content',
+      recommendation: 'Fill in the quoted content or remove the quote construction.',
+      context: 'Mind/mouth collapse: articulation layer produced empty placeholder',
+    });
+  }
+
+  // Triple+ repeated words (mind stutter, e.g., "what you do as as as")
+  const tripleRepeat = draft.match(/(\b\w{4,}\b)(\s+\1){2,}/i);
+  if (tripleRepeat) {
+    ruptures.push({
+      layer: 'LANGUAGE_RESONANCE',
+      code: 'MIND_MOUTH_COLLAPSE_STUTTER',
+      severity: 'CRITICAL',
+      detected: `Triple repeated word detected: "${tripleRepeat[1]}"`,
+      recommendation: 'Remove duplicate words - this is a generation artifact.',
+      context: 'Mind/mouth collapse: repetition loop in articulation',
+    });
+  }
+
+  // Tautological collapse (e.g., "It's about what you do as much as what you do")
+  const tautologyPatterns = [
+    /it's about (.+) as much as \1/i,
+    /both (.+) and \1/i,
+    /not just (.+) but also \1/i,
+  ];
+  for (const pattern of tautologyPatterns) {
+    if (pattern.test(draft)) {
+      ruptures.push({
+        layer: 'LANGUAGE_RESONANCE',
+        code: 'MIND_MOUTH_COLLAPSE_TAUTOLOGY',
+        severity: 'WARNING',
+        detected: 'Tautological structure detected - same phrase appears twice where contrast expected',
+        recommendation: 'Rewrite with actual contrasting elements or simplify the construction.',
+        context: 'Mind/mouth collapse: reasoning layer repeated itself where articulation should differentiate',
+      });
+      break;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────
+  // ELEMENTAL LANGUAGE CHECKS
+  // ─────────────────────────────────────────────────────────────────
 
   // Clinical/abstract language in Water tender territory
   const clinicalPatterns = /\b(dysregulated|nervous system response|cognitive distortions|intervention protocol|systematic reframing|attachment injury patterns|self-concept fragmentation)\b/i;
-  const clinicalCount = (draft.match(clinicalPatterns) || []).length;
+  const clinicalCount = (draftLower.match(clinicalPatterns) || []).length;
 
   if (element === 'water' && clinicalCount >= 2) {
     ruptures.push({

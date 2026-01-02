@@ -22,6 +22,19 @@ import type { BloomCognitionMeta } from '../types/maia';
 import { routePanconsciousField } from '../field/panconsciousFieldRouter';
 import { enforceFieldSafety, type FieldSafetyDecision } from '../field/enforceFieldSafety';
 import { getCognitiveProfile, type CognitiveProfile } from '../consciousness/cognitiveProfileService';
+import {
+  generatePFIMindState,
+  isPFIMindEnabled,
+  logPFITelemetry,
+  type MindContext,
+  type PFIMindState,
+} from './pfiMindEntrypoint';
+import {
+  determineResponseMode,
+  enforcePresenceConstraints,
+  logPresenceModeTelemetry,
+  type ResponseMode,
+} from './presenceMode';
 import { validateSocraticResponse, type SocraticValidationResult } from '../validation/socraticValidator';
 import { lattice } from '../memory/ConsciousnessMemoryLattice';
 import type { ConsciousnessEvent, SpiralFacet, LifePhase, MemoryField } from '../memory/ConsciousnessMemoryLattice';
@@ -443,7 +456,8 @@ async function fastPathResponse(
   sessionId: string,
   input: string,
   conversationHistory: any[],
-  meta: Record<string, unknown>
+  meta: Record<string, unknown>,
+  mindContext?: MindContext
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`⚡ FAST PATH: Simple response with core MAIA voice`);
 
@@ -759,7 +773,8 @@ async function corePathResponse(
   sessionId: string,
   input: string,
   conversationHistory: any[],
-  meta: Record<string, unknown>
+  meta: Record<string, unknown>,
+  mindContext?: MindContext
 ): Promise<{ response: string; provider: ProviderMeta }> {
   console.log(`🎯 CORE PATH: Normal MAIA conversation with light awareness`);
 
@@ -968,7 +983,8 @@ async function deepPathResponse(
   sessionId: string,
   input: string,
   conversationHistory: any[],
-  meta: Record<string, unknown>
+  meta: Record<string, unknown>,
+  mindContext?: MindContext
 ): Promise<{ response: string; consciousnessData?: any; socraticValidation?: any; provider?: ProviderMeta }> {
   console.log(`🧠 DEEP PATH: Full consciousness orchestration + Claude consultation activated`);
 
@@ -1403,6 +1419,45 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
     }
 
+    // 🧬 PFI MIND CONTEXT (Canon v1.1)
+    // Create typed MindContext for threading PFI mind state through response paths
+    // CANON: This state can influence settling/tone and articulation assistance,
+    // but must NEVER steer conclusions, create convergence, or amplify certainty.
+    const mindContext: MindContext = {
+      userId: effectiveUserId,
+      sessionId,
+      input,
+      conversationHistory: conversationHistory.map((t: any) => ({
+        role: t.role || 'user',
+        content: t.userMessage || t.maiaResponse || t.content || '',
+        userMessage: t.userMessage,
+        maiaResponse: t.maiaResponse,
+      })),
+      cognitiveProfile,
+    };
+
+    // Feature-flagged PFI mind state generation
+    if (isPFIMindEnabled()) {
+      try {
+        const pfiMindState = await generatePFIMindState({
+          userId: effectiveUserId,
+          sessionId,
+          input,
+          conversationHistory: mindContext.conversationHistory,
+          cognitiveProfile,
+          element: (meta as any)?.element ?? null,
+          facet: (meta as any)?.facet ?? null,
+          archetype: (meta as any)?.archetype ?? null,
+          bloomLevel: (meta as any)?.bloomDetection?.numericLevel ?? null,
+        });
+        mindContext.pfiMindState = pfiMindState;
+        console.log(`🧠 [PFI Mind] Generated: source=${pfiMindState.source}, realm=${pfiMindState.realm}, autonomy=${pfiMindState.autonomyRatio}`);
+      } catch (err) {
+        console.warn('⚠️ [PFI Mind] Generation failed (non-blocking):', err);
+        // mindContext.pfiMindState remains undefined - safe fallback
+      }
+    }
+
     // 🧠 THE DIALECTICAL SCAFFOLD - Detect HOW user thinks (not just WHAT they know)
     // Socratic questioning + developmental support: guides users from consumption → creation
     let bloomDetection: BloomDetection | null = null;
@@ -1658,35 +1713,50 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
 
-    // Route to appropriate processing path
+    // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
       case 'FAST': {
-        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta);
+        const fastResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fastResult.response;
         provider = fastResult.provider;
+        // Log PFI telemetry if mind state was generated
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'FAST');
+        }
         break;
       }
 
       case 'CORE': {
-        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta);
+        const coreResult = await corePathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = coreResult.response;
         provider = coreResult.provider;
+        // Log PFI telemetry if mind state was generated
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'CORE');
+        }
         break;
       }
 
       case 'DEEP': {
-        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta);
+        const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
         provider = deepResult.provider; // May be undefined for DEEP path
+        // Log PFI telemetry if mind state was generated
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'DEEP');
+        }
         break;
       }
 
       default: {
         // Fallback to FAST
-        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta);
+        const fallbackResult = await fastPathResponse(sessionId, input, conversationHistory, meta, mindContext);
         rawResponse = fallbackResult.response;
         provider = fallbackResult.provider;
+        if (mindContext?.pfiMindState) {
+          logPFITelemetry(mindContext.pfiMindState, 'FAST');
+        }
         break;
       }
     }
@@ -1695,6 +1765,18 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // eslint-disable-next-line prefer-const
     let text = sanitizeMaiaOutput(rawResponse);
     let audioResponse: Buffer | undefined;
+
+    // 🌿 PRESENCE MODE: When recognition occurs, MAIA does not advance. She abides.
+    // This is a mouth-layer constraint applied after mind state generation.
+    const { mode: responseMode, recognition } = determineResponseMode(input);
+    if (responseMode === 'PRESENCE') {
+      const presenceResult = enforcePresenceConstraints(text);
+      if (presenceResult.wasConstrained) {
+        console.log(`🌿 [Presence Mode] Constrained response: ${presenceResult.violations.join(', ')}`);
+        text = presenceResult.response;
+      }
+      logPresenceModeTelemetry(responseMode, recognition, presenceResult.wasConstrained);
+    }
 
     // 🎤 VOICE SYNTHESIS: MAIA's mind (Claude/local) vs MAIA's voice (OpenAI TTS)
     if (includeAudio) {

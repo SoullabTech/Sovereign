@@ -1,5 +1,9 @@
 # Project Invariants (MUST FOLLOW)
 
+## Canon
+
+**[MAIA Canon v1.1](./docs/canon/MAIA_CANON_v1.1.md)** governs all changes. Before implementing any feature, verify alignment with the canon's prohibitions and structural principles.
+
 ## Database & Backend
 
 - **We do NOT use Supabase.** Never introduce Supabase. Use local PostgreSQL via `lib/db/postgres.ts` only.
