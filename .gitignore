@@ -345,3 +345,10 @@ scripts/test-selflet-load.ts
 
 # Auto Claude data directory
 .auto-claude/
+
+# Python venv
+.venv/
+venv/
+lib/python*/
+bin/
+pyvenv.cfg
