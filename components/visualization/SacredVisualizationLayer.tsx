@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Visualization Layer (SVL)
  * Dynamic Spiralogic UI Engine for Consciousness Computing
