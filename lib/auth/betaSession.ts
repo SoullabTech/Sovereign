@@ -175,6 +175,13 @@ class BetaSessionManager {
   }
 
   /**
+   * Alias for getCurrentUser (for callers expecting getUser)
+   */
+  public getUser(): BetaUser | null {
+    return this.currentUser;
+  }
+
+  /**
    * Get session state
    */
   public getSessionState(): SessionState {

@@ -229,36 +229,44 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const supabase = createClientComponentClient();
+    // Build query using local postgres (sovereignty-compliant)
+    const { query: pgQuery } = await import('@/lib/db/postgres');
 
-    // Build query
-    let query = supabase
-      .from('conversation_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: true });
+    let sql = 'SELECT * FROM conversation_messages WHERE user_id = $1';
+    const params: any[] = [userId];
+    let paramIndex = 2;
 
     // Add session filter if specified
     if (sessionId) {
-      query = query.eq('session_id', sessionId);
+      sql += ` AND session_id = $${paramIndex}`;
+      params.push(sessionId);
+      paramIndex++;
     }
 
     // Add date range filter if specified
     if (startDate) {
-      query = query.gte('timestamp', startDate);
+      sql += ` AND timestamp >= $${paramIndex}`;
+      params.push(startDate);
+      paramIndex++;
     }
     if (endDate) {
-      query = query.lte('timestamp', endDate);
+      sql += ` AND timestamp <= $${paramIndex}`;
+      params.push(endDate);
+      paramIndex++;
     }
 
-    // Execute query
-    const { data: messages, error } = await query;
+    sql += ' ORDER BY timestamp ASC';
 
-    if (error) {
+    // Execute query
+    let messages: ConversationMessage[];
+    try {
+      const result = await pgQuery<ConversationMessage>(sql, params);
+      messages = result.rows;
+    } catch (error: any) {
       console.error('Database error:', error);
       return NextResponse.json({
         error: 'Failed to retrieve conversations',
-        details: error.message
+        details: error?.message || 'Unknown error'
       }, { status: 500 });
     }
 
@@ -341,34 +349,43 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    const supabase = createClientComponentClient();
+    // Build query using local postgres (sovereignty-compliant)
+    const { query: pgQuery } = await import('@/lib/db/postgres');
 
-    // Build query for multiple sessions
-    let query = supabase
-      .from('conversation_messages')
-      .select('*')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: true });
+    let sql = 'SELECT * FROM conversation_messages WHERE user_id = $1';
+    const params: any[] = [userId];
+    let paramIndex = 2;
 
     // Add session filter if specified
     if (sessionIds.length > 0) {
-      query = query.in('session_id', sessionIds);
+      const placeholders = sessionIds.map((_: string, i: number) => `$${paramIndex + i}`).join(', ');
+      sql += ` AND session_id IN (${placeholders})`;
+      params.push(...sessionIds);
+      paramIndex += sessionIds.length;
     }
 
     // Add date range filter if specified
     if (dateRange?.start) {
-      query = query.gte('timestamp', dateRange.start);
+      sql += ` AND timestamp >= $${paramIndex}`;
+      params.push(dateRange.start);
+      paramIndex++;
     }
     if (dateRange?.end) {
-      query = query.lte('timestamp', dateRange.end);
+      sql += ` AND timestamp <= $${paramIndex}`;
+      params.push(dateRange.end);
+      paramIndex++;
     }
 
-    const { data: messages, error } = await query;
+    sql += ' ORDER BY timestamp ASC';
 
-    if (error) {
+    let messages: ConversationMessage[];
+    try {
+      const result = await pgQuery<ConversationMessage>(sql, params);
+      messages = result.rows;
+    } catch (error: any) {
       return NextResponse.json({
         error: 'Failed to retrieve conversations',
-        details: error.message
+        details: error?.message || 'Unknown error'
       }, { status: 500 });
     }
 

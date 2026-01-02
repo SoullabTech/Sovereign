@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
   // Always-in-scope defaults (catch-safe)
   let conversationDepth = 0;
   let trustLevel = 0;
+  let body: { userId?: string; sessionId?: string; message?: string; conversationHistory?: any[] } | null = null;
 
   // Option A guards: request tracking, auth, rate limiting
   const requestId = randomUUID();
@@ -145,7 +146,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
+    body = await request.json();
     const { message, userId, sessionId } = body;
 
     // Validate required fields
