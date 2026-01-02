@@ -81,7 +81,8 @@ const VALID_PASSCODES = [
   'SOULLAB-YVONNE',
   'SOULLAB-ANNA',
   'SOULLAB-RISAKO',
-  'SOULLAB-WHITEY'
+  'SOULLAB-WHITEY',
+  'SOULLAB-LAUREN'
 ];
 
 export async function POST(request: NextRequest) {

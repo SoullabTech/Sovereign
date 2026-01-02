@@ -986,6 +986,26 @@ export const ganeshaContacts: GaneshaContact[] = [
         events: true
       }
     }
+  },
+
+  {
+    id: 'beta-047',
+    name: 'Lauren West',
+    email: 'laurencarolwest@gmail.com',
+    joinDate: '2026-01-02',
+    status: 'active',
+    groups: ['beta-testers', 'consciousness-pioneers', 'newsletter'],
+    tags: ['early-adopter', 'consciousness-pioneer'],
+    metadata: {
+      source: 'beta-program',
+      contribution: 'Early consciousness exploration and platform feedback',
+      passcode: 'SOULLAB-LAUREN',
+      preferences: {
+        newsletters: true,
+        updates: true,
+        events: true
+      }
+    }
   }
 ];
 
