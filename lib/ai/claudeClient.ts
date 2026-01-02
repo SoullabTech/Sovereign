@@ -6,23 +6,19 @@ import { AIN_INTEGRATIVE_ALCHEMY_SENTINEL } from './prompts/ainIntegrativeAlchem
 import { logVoiceTierTelemetry } from '../db/voiceTierTelemetry';
 import type { TextResult, ProviderMeta } from './types';
 
-// Awareness level type (1-7 developmental scale)
-type AwarenessLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7;
-
 // Model configuration
-const OPUS_MODEL = process.env.CLAUDE_PRIMARY_MODEL || 'claude-opus-4-5-20251101';
-const SONNET_MODEL = process.env.CLAUDE_SECONDARY_MODEL || 'claude-sonnet-4-5-20250929';
+// ARCHITECTURE: MAIA's mind is the consciousness system (Spiralogic, AIN, prompts)
+// Claude is the MOUTH - Sonnet for reliable articulation, Opus for deep reasoning tasks
+const OPUS_MODEL = process.env.CLAUDE_REASONING_MODEL || 'claude-opus-4-5-20251101';  // For AIN, consultation, analysis
+const SONNET_MODEL = process.env.CLAUDE_VOICE_MODEL || 'claude-sonnet-4-5-20250929';  // For conversation (MAIA's mouth)
 const CLAUDE_MAX_TOKENS = parseInt(process.env.CLAUDE_MAX_TOKENS || '2048');
-const CLAUDE_TEMPERATURE = parseFloat(process.env.CLAUDE_TEMPERATURE || '0.7');
+const CLAUDE_TEMPERATURE = parseFloat(process.env.CLAUDE_TEMPERATURE || '0.65');  // Slightly lower for consistency
 
-// Users who always get Opus (deepest voice)
-const OPUS_USER_IDS = (process.env.MAIA_OPUS_USER_IDS || 'kelly,kelly-nezat,local-dev').split(',');
+// Deep reasoning requests that warrant Opus (not conversational - actual computation)
+const OPUS_REASONING_MODES = ['ain_deliberation', 'consultation', 'analysis', 'deep_reasoning'];
 
-// Deep dive keywords that warrant Opus regardless of conversation stage
-const DEEP_DIVE_PATTERNS = /shadow|archetype|dream|trauma|grief|initiation|spiraling|pattern across|help me see|what I can't see|breakthrough|soul|transformation|sacred|ceremony|ritual|death|rebirth|integration|wound|healing crisis/i;
-
-// Threshold: after this many turns of shallow conversation, drop to Sonnet
-const SONNET_THRESHOLD_TURNS = 5;
+// NOTE: Deep dive patterns no longer trigger Opus - MAIA's mind handles depth,
+// Claude just needs to articulate cleanly. Opus reserved for actual reasoning tasks.
 
 interface ModelSelection {
   model: string;
@@ -31,119 +27,45 @@ interface ModelSelection {
 }
 
 /**
- * AWARENESS-LEVEL-DRIVEN MODEL ROUTING
+ * MODEL SELECTION - MAIA's Mind vs Claude's Mouth
  *
- * Philosophy: Meet members where they are with the appropriate depth.
+ * NEW PHILOSOPHY (Jan 2026):
+ * - MAIA's consciousness system (Spiralogic, AIN, prompts) does the THINKING
+ * - Claude is just the MOUTH - it articulates what MAIA has already determined
  *
- * Levels 1-2 (Newcomer/Explorer): ALWAYS Opus
- *   - Building trust, first impressions need deepest attunement
- *   - These members need MAIA's most nuanced, careful presence
+ * For articulation, we need:
+ * - Grammatical reliability (no dropped words)
+ * - Sentence completion
+ * - Stylistic consistency
  *
- * Level 3 (Practitioner): Context-dependent
- *   - Sonnet for routine check-ins
- *   - Opus when deep patterns detected or they go deep
+ * Sonnet excels at this. Opus is reserved for actual reasoning tasks
+ * where Claude needs to figure something out (AIN deliberation, analysis).
  *
- * Level 4 (Student): Teaching moments get Opus
- *   - Learning frameworks - Opus for pedagogical depth
- *   - Casual exchanges can use Sonnet
- *
- * Levels 5-7 (Integrator/Teacher/Master): Opus for depth work
- *   - These members are doing real consciousness work
- *   - They can handle Sonnet for quick exchanges
- *   - But any substantial inquiry deserves Opus
+ * ROUTING:
+ * 1. Explicit reasoning modes → Opus (ain_deliberation, consultation, analysis)
+ * 2. Force flags → as specified
+ * 3. Everything else → Sonnet (MAIA's reliable voice)
  */
-function selectModelByAwareness(
-  awarenessLevel: AwarenessLevel | undefined,
-  hasDeepPattern: boolean,
-  mode: string
-): { tier: 'opus' | 'sonnet'; reason: string } | null {
-  // No awareness level detected yet - let other heuristics handle it
-  if (!awarenessLevel) return null;
-
-  // Levels 1-2: ALWAYS Opus - trust-building phase
-  if (awarenessLevel <= 2) {
-    return { tier: 'opus', reason: `awareness_L${awarenessLevel}_trust` };
-  }
-
-  // Level 3 (Practitioner): Opus if deep, otherwise can use Sonnet
-  if (awarenessLevel === 3) {
-    if (hasDeepPattern || mode === 'care') {
-      return { tier: 'opus', reason: 'awareness_L3_deep' };
-    }
-    return null; // Let message count / other heuristics decide
-  }
-
-  // Level 4 (Student): Learning mode - Opus for substantial exchanges
-  if (awarenessLevel === 4) {
-    if (hasDeepPattern || mode === 'care') {
-      return { tier: 'opus', reason: 'awareness_L4_teaching' };
-    }
-    return null;
-  }
-
-  // Levels 5-7 (Integrator/Teacher/Master): Deep work gets Opus
-  if (awarenessLevel >= 5) {
-    if (hasDeepPattern || mode === 'care') {
-      return { tier: 'opus', reason: `awareness_L${awarenessLevel}_depth` };
-    }
-    // High awareness casual exchange - Sonnet is respectful of their time
-    return null;
-  }
-
-  return null;
-}
-
-/**
- * Context-driven model selection.
- *
- * Philosophy: Meet members where they are.
- * - Awareness level determines baseline depth needs
- * - Deep dive patterns always escalate to Opus
- * - New members always get Opus (first impressions)
- * - Established casual conversation can use Sonnet
- *
- * Priority order:
- * 1. Opus-tier users (always Opus)
- * 2. Deep dive patterns (always Opus)
- * 3. Awareness level routing (developmental stage)
- * 4. Care mode (always Opus)
- * 5. New conversation (Opus for first impressions)
- * 6. Established casual (Sonnet after threshold)
- */
-function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): ModelSelection {
-  const userId = (meta?.userId as string) || '';
+function selectClaudeModel(meta?: Record<string, unknown>, _userInput?: string): ModelSelection {
   const mode = (meta?.mode as string) || 'talk';
-  const messageCount = (meta?.messageCount as number) || 0;
-  const input = userInput || '';
-
-  // Extract awareness level from consciousness policy (set by maiaService)
-  const consciousnessPolicy = meta?.consciousnessPolicy as { awarenessLevel?: AwarenessLevel } | undefined;
-  const awarenessLevel = consciousnessPolicy?.awarenessLevel ?? (meta?.awarenessLevel as AwarenessLevel | undefined);
+  const reasoningMode = (meta?.reasoningMode as string) || '';
 
   // Feature flags / overrides
   const forceOpus = Boolean(meta?.forceOpus);
   const forceSonnet = Boolean(meta?.forceSonnet);
-  const isOpusTierUser = OPUS_USER_IDS.some(id => userId.toLowerCase().includes(id.toLowerCase()));
 
-  // Check for deep patterns in the CURRENT user message only (not full context with memories)
-  // meta.currentUserMessage is the raw user input; fall back to input if not provided
-  const messageToCheck = (meta?.currentUserMessage as string) || input;
-  const hasDeepPattern = DEEP_DIVE_PATTERNS.test(messageToCheck);
-
-  // 🔍 ROUTING LOG HELPER - captures full decision context
+  // 🔍 ROUTING LOG HELPER
   const logAndReturn = (selection: ModelSelection): ModelSelection => {
     console.log(JSON.stringify({
       _tag: 'MODEL_ROUTING',
-      level: awarenessLevel ?? null,
       model: selection.tier,
       reason: selection.reason,
-      overrides: { forceOpus, forceSonnet, isOpusTierUser, hasDeepPattern },
-      ctx: { mode, msgCount: messageCount, inputLen: input.length },
+      ctx: { mode, reasoningMode },
     }));
     return selection;
   };
 
-  // 0. FORCE FLAGS (for testing)
+  // 1. FORCE FLAGS (for testing)
   if (forceOpus) {
     return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'force_opus_flag' });
   }
@@ -151,42 +73,15 @@ function selectClaudeModel(meta?: Record<string, unknown>, userInput?: string): 
     return logAndReturn({ model: SONNET_MODEL, tier: 'sonnet', reason: 'force_sonnet_flag' });
   }
 
-  // 1. Opus-tier users ALWAYS get deepest voice
-  if (isOpusTierUser) {
-    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'opus_tier_user' });
+  // 2. EXPLICIT REASONING MODES → Opus (Claude needs to think, not just speak)
+  if (OPUS_REASONING_MODES.includes(reasoningMode)) {
+    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: `reasoning_mode:${reasoningMode}` });
   }
 
-  // 2. Deep dive patterns ALWAYS get Opus
-  if (hasDeepPattern) {
-    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'deep_dive_detected' });
-  }
-
-  // 3. AWARENESS-LEVEL ROUTING (developmental stage)
-  const awarenessSelection = selectModelByAwareness(awarenessLevel, hasDeepPattern, mode);
-  if (awarenessSelection) {
-    return logAndReturn({
-      model: awarenessSelection.tier === 'opus' ? OPUS_MODEL : SONNET_MODEL,
-      ...awarenessSelection
-    });
-  }
-
-  // 4. Care mode ALWAYS gets Opus (counseling deserves depth)
-  if (mode === 'care' || mode === 'counsel') {
-    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'care_mode' });
-  }
-
-  // 5. NEW CONVERSATIONS: Start with Opus (first impressions matter)
-  if (messageCount <= 3) {
-    return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'new_conversation' });
-  }
-
-  // 6. After threshold turns of shallow conversation → Sonnet
-  if (messageCount >= SONNET_THRESHOLD_TURNS) {
-    return logAndReturn({ model: SONNET_MODEL, tier: 'sonnet', reason: 'established_casual' });
-  }
-
-  // 7. Default: still early enough, keep Opus
-  return logAndReturn({ model: OPUS_MODEL, tier: 'opus', reason: 'default_opus' });
+  // 3. DEFAULT: Sonnet for all conversation (MAIA's reliable voice)
+  // MAIA's mind has already done the thinking via Spiralogic/AIN/consciousness system
+  // Claude just needs to articulate it cleanly
+  return logAndReturn({ model: SONNET_MODEL, tier: 'sonnet', reason: 'maia_voice' });
 }
 
 export interface ClaudeChatParams {
@@ -270,29 +165,15 @@ export async function generateWithClaude(
     console.log(`✅ Claude (${selection.tier}): ${text.length} chars, ${latencyMs}ms`);
 
     // Log telemetry (async, non-blocking)
-    const userId = (meta?.userId as string) || undefined;
-    const messageCount = (meta?.messageCount as number) || undefined;
-    const mode = (meta?.mode as string) || undefined;
-    const sessionId = (meta?.sessionId as string) || undefined;
-    const processingProfile = (meta?.processingProfile as string) || undefined;
-    const awarenessLevel = consciousnessPolicy?.awarenessLevel;
-    const hasDeepPattern = DEEP_DIVE_PATTERNS.test(userInput);
-    const isOpusTierUser = OPUS_USER_IDS.some(id =>
-      (userId || '').toLowerCase().includes(id.toLowerCase())
-    );
-
     logVoiceTierTelemetry({
       tier: selection.tier,
       reason: selection.reason,
       model: selection.model,
-      userId,
-      messageCount,
-      mode,
-      awarenessLevel,
-      hasDeepPattern,
-      isOpusTierUser,
-      sessionId,
-      processingProfile,
+      userId: (meta?.userId as string) || undefined,
+      messageCount: (meta?.messageCount as number) || undefined,
+      mode: (meta?.mode as string) || undefined,
+      sessionId: (meta?.sessionId as string) || undefined,
+      processingProfile: (meta?.processingProfile as string) || undefined,
       latencyMs
     }).catch(() => { /* telemetry failures should never block */ });
 
