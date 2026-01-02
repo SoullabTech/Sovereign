@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -73,7 +74,13 @@ export function CaptureSheet({
   const [isCopying, setCopying] = useState<'descript' | 'patreon' | null>(null);
   const [copySuccess, setCopySuccess] = useState<'descript' | 'patreon' | null>(null);
   const [showExport, setShowExport] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Track client-side mount for portal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch notes when sheet opens or session changes
   useEffect(() => {
@@ -181,7 +188,10 @@ export function CaptureSheet({
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  return (
+  // Don't render until mounted (client-side) to use portal
+  if (!mounted) return null;
+
+  return createPortal(
     <AnimatePresence>
       {isOpen && (
         <>
@@ -194,7 +204,7 @@ export function CaptureSheet({
             onClick={onClose}
           />
 
-          {/* Sheet */}
+          {/* Bottom Sheet */}
           <motion.div
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
@@ -408,6 +418,7 @@ export function CaptureSheet({
           </motion.div>
         </>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
