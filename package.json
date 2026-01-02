@@ -27,7 +27,7 @@
     "desktop:build": "npm run build && npm run desktop:package",
     "desktop:package": "electron-builder",
     "desktop:start": "electron electron/main.js",
-    "lint": "cd apps/web && next lint",
+    "lint": "next lint",
     "check:sovereignty": "tsx scripts/check-maia-sovereignty.ts",
     "check:no-supabase": "tsx scripts/check-no-supabase.ts",
     "check:nocheck": "node scripts/check-nocheck-allowlist.js",
