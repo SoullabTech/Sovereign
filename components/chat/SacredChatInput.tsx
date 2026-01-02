@@ -17,6 +17,7 @@ interface SacredChatInputProps {
   isFirstSession?: boolean;
   tone?: number; // 0-1 scale from onboarding
   style?: 'prose' | 'poetic' | 'auto'; // from onboarding
+  mode?: 'dialogue' | 'counsel' | 'scribe'; // MAIA communication mode
 }
 
 // Sacred animation variants
@@ -55,13 +56,16 @@ export default function SacredChatInput({
   onVoiceMessage,
   disabled = false,
   placeholder = "Offer your reflection...",
-  maxLength = 4000,
+  maxLength: maxLengthProp = 4000,
   userId = "anonymous",
   trustLevel = 0.5,
   isFirstSession = false,
   tone = 0.5,
-  style = 'prose'
+  style = 'prose',
+  mode = 'dialogue'
 }: SacredChatInputProps) {
+  // Scribe/Note mode allows unlimited input for full transcript uploads
+  const maxLength = mode === 'scribe' ? undefined : maxLengthProp;
   const [message, setMessage] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
@@ -502,8 +506,8 @@ export default function SacredChatInput({
               )}
             </AnimatePresence>
 
-            {/* Character Counter */}
-            {message.length > maxLength * 0.8 && !isRecording && (
+            {/* Character Counter - only show for modes with limits */}
+            {maxLength && message.length > maxLength * 0.8 && !isRecording && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

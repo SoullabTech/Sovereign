@@ -36,6 +36,7 @@ interface ModernTextInputProps {
   lastConnectionTime?: string;
   currentPhase?: string;
   relationshipDepth?: 'new' | 'developing' | 'deep' | 'profound';
+  mode?: 'normal' | 'patient' | 'session'; // MAIA mode: normal=dialogue, patient=counsel, session=scribe
 }
 
 export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputProps>(({
@@ -52,12 +53,15 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   onFileUpload,
   onDownloadConversation,
   autoFocus = false,
-  maxLength = 10000,
+  maxLength: maxLengthProp = 10000,
   hasMemory = false,
   lastConnectionTime,
   currentPhase,
-  relationshipDepth = 'new'
+  relationshipDepth = 'new',
+  mode = 'normal'
 }, ref) => {
+  // Scribe/session mode allows unlimited input for full transcript uploads
+  const maxLength = mode === 'session' ? undefined : maxLengthProp;
   const [value, setValue] = useState(externalValue || '');
   const [isFocused, setIsFocused] = useState(false);
   const [showTools, setShowTools] = useState(false);
@@ -135,7 +139,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
-    if (newValue.length <= maxLength) {
+    // Allow unlimited input in scribe mode (maxLength undefined)
+    if (!maxLength || newValue.length <= maxLength) {
       setValue(newValue);
       onChange?.(newValue);
     }
@@ -344,8 +349,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
           </div>
         </div>
 
-        {/* Character Count */}
-        {value.length > maxLength * 0.9 && (
+        {/* Character Count - only show for modes with limits */}
+        {maxLength && value.length > maxLength * 0.9 && (
           <div className="absolute -top-6 right-3">
             <span className={`text-xs ${
               value.length >= maxLength ? 'text-red-400' : 'text-white/40'

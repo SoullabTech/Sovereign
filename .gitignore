@@ -355,3 +355,6 @@ pyvenv.cfg
 
 # Beads local workflow artifacts
 .beads/
+
+# Voice journal audio files
+storage/audio/

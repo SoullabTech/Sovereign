@@ -254,6 +254,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [streamingText, setStreamingText] = useState<string>('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [draftMessage, setDraftMessage] = useState('');
   const [echoSuppressUntil, setEchoSuppressUntil] = useState<number>(0);
 
   // Voice/audio state
@@ -322,6 +323,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
   const [breakthroughScore, setBreakthroughScore] = useState(0);
 
+  // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
+  const [composerDraft, setComposerDraft] = useState<string>('');
+
   // 🛡️ SANCTUARY MODE: Session-level memory exclusion (consent boundary)
   // When true: no content retention, no patterns formed, just presence
   const [isSanctuary, setIsSanctuary] = useState(() => {
@@ -354,6 +358,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
+  
   // Session time container state
   const [sessionTimer, setSessionTimer] = useState<SessionTimer | null>(null);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
@@ -1422,6 +1427,37 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }, 100);
     }
   }, [showChatInterface, isProcessing, messages.length]);
+
+  // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
+  useEffect(() => {
+    const handleJournalAskMaia = (e: Event) => {
+      const ce = e as CustomEvent<{
+        content: string;
+        type: 'dream' | 'day';
+        prompt: string;
+      }>;
+
+      const text = ce.detail?.prompt || ce.detail?.content || '';
+      if (!text) return;
+
+      console.log('📓 [Journal→MAIA] Received:', ce.detail?.type);
+
+      // 1) Fill the composer immediately (user sees it)
+      setComposerDraft(text);
+
+      // 2) Ensure chat UI is visible
+      setShowChatInterface(true);
+
+      // 3) Auto-send after a tiny tick so the UI settles
+      setTimeout(() => {
+        handleTextMessage(text);
+        setComposerDraft(''); // Clear after send
+      }, 150);
+    };
+
+    window.addEventListener('journalAskMaia', handleJournalAskMaia as EventListener);
+    return () => window.removeEventListener('journalAskMaia', handleJournalAskMaia as EventListener);
+  }, []);
 
   // Update motion state based on voice activity
   useEffect(() => {
@@ -4367,10 +4403,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
                   <ModernTextInput
                     ref={textInputRef}
+                    value={draftMessage}
+                    onChange={setDraftMessage}
+                    externalValue={composerDraft}
                     disabled={isProcessing}
                     isProcessing={isProcessing}
                     enableVoiceInChat={enableVoiceInChat}
-                    onSubmit={handleTextMessage}
+                    onSubmit={(msg, files) => {
+                      handleTextMessage(msg, files);
+                      setDraftMessage(''); // Clear draft after sending
+                    }}
                     onVoiceResponseToggle={() => {
                       const newValue = !enableVoiceInChat;
                       setEnableVoiceInChat(newValue);
@@ -4395,6 +4437,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       messages.length > 20 ? 'deep' :
                       messages.length > 5 ? 'developing' : 'new'
                     }
+                    mode={listeningMode}
                   />
                 </div>
               </div>
