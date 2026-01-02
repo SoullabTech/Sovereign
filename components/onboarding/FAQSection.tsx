@@ -329,8 +329,36 @@ We read every piece of feedback you choose to send. Your experience — what wor
 `;
 
 export function FAQSection({ userName = "Explorer", onComplete }: FAQSectionProps) {
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const blob = new Blob([FAQ_CONTENT], { type: 'text/markdown' });
+
+    // Use Share API on mobile (works on iOS)
+    if (navigator.share && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      try {
+        const file = new File([blob], 'MAIA-FAQ.md', { type: 'text/markdown' });
+        await navigator.share({
+          title: 'MAIA FAQ',
+          text: 'MAIA Frequently Asked Questions',
+          files: [file]
+        });
+        return;
+      } catch (err) {
+        // If share fails or is cancelled, fall back to copy
+        if ((err as Error).name !== 'AbortError') {
+          // Copy to clipboard as fallback
+          try {
+            await navigator.clipboard.writeText(FAQ_CONTENT);
+            alert('FAQ copied to clipboard!');
+            return;
+          } catch {
+            // Continue to desktop fallback
+          }
+        }
+        return;
+      }
+    }
+
+    // Desktop fallback - traditional download
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
