@@ -49,7 +49,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   onVoiceResponseToggle,
   onFileUpload,
   autoFocus = false,
-  maxLength = 2000,
+  maxLength = 10000,
   hasMemory = false,
   lastConnectionTime,
   currentPhase,
@@ -323,7 +323,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
         </div>
 
         {/* Character Count */}
-        {value.length > maxLength * 0.8 && (
+        {value.length > maxLength * 0.9 && (
           <div className="absolute -top-6 right-3">
             <span className={`text-xs ${
               value.length >= maxLength ? 'text-red-400' : 'text-white/40'
