@@ -1006,6 +1006,26 @@ export const ganeshaContacts: GaneshaContact[] = [
         events: true
       }
     }
+  },
+
+  {
+    id: 'beta-048',
+    name: 'Nadia Grandclement',
+    email: 'Nadiagrandclement@gmail.com',
+    joinDate: '2026-01-02',
+    status: 'active',
+    groups: ['beta-testers', 'consciousness-pioneers', 'newsletter'],
+    tags: ['early-adopter', 'consciousness-pioneer'],
+    metadata: {
+      source: 'beta-program',
+      contribution: 'Early consciousness exploration and platform feedback',
+      passcode: 'SOULLAB-NADIA',
+      preferences: {
+        newsletters: true,
+        updates: true,
+        events: true
+      }
+    }
   }
 ];
 
