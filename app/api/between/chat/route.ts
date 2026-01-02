@@ -20,6 +20,8 @@ import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
+import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
+import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -911,6 +913,25 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
+      // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
+      let socraticValidation: SocraticValidationResult | null = null;
+      try {
+        socraticValidation = validateSocraticResponse({
+          userMessage: message,
+          draft: outboundText,
+          element: inferElementFromText(message)?.toLowerCase(),
+        });
+
+        if (!socraticValidation.passes) {
+          console.warn(`⚠️ [Socratic Validator SAFE] Canon violation detected:`, {
+            decision: socraticValidation.decision,
+            ruptures: socraticValidation.ruptures.map(r => r.code),
+          });
+        }
+      } catch (err) {
+        console.error('[Socratic Validator SAFE] Validation failed (non-blocking):', err);
+      }
+
       // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
       if (isSanctuary) {
         console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
@@ -933,7 +954,17 @@ export async function POST(req: NextRequest) {
         path: 'simple',
       });
 
-      return withSessionCookie(NextResponse.json({
+      // 🛡️ CANON HEADERS: Provenance stamps for all MAIA responses
+      const canonHeaders = makeCanonHeaders({
+        requestId: reqId,
+        pipeline: 'orchestrator.generateMaiaTurn',
+        source: 'direct',
+        mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+        validation: socraticValidation,
+        repaired: false,
+      });
+
+      const response = NextResponse.json({
         message: outboundText,
         route: {
           endpoint: '/api/between/chat',
@@ -961,9 +992,22 @@ export async function POST(req: NextRequest) {
             sovereignty: {
               provider: simpleResult.metadata.provider
             }
-          } : {})
+          } : {}),
+          // 🛡️ Canon validation result (for client observability)
+          socraticValidation: socraticValidation ? {
+            decision: socraticValidation.decision,
+            isGold: socraticValidation.isGold,
+            passes: socraticValidation.passes,
+          } : undefined,
         },
-      }), sessionCookie);
+      });
+
+      // Apply canon headers to response
+      Object.entries(canonHeaders).forEach(([key, value]) => {
+        response.headers.set(key, value);
+      });
+
+      return withSessionCookie(response, sessionCookie);
     }
 
     // Use full fail-soft consciousness orchestrator
@@ -1157,6 +1201,25 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
+    // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
+    let socraticValidation2: SocraticValidationResult | null = null;
+    try {
+      socraticValidation2 = validateSocraticResponse({
+        userMessage: message,
+        draft: outboundText2,
+        element: inferElementFromText(message)?.toLowerCase(),
+      });
+
+      if (!socraticValidation2.passes) {
+        console.warn(`⚠️ [Socratic Validator ORCH] Canon violation detected:`, {
+          decision: socraticValidation2.decision,
+          ruptures: socraticValidation2.ruptures.map(r => r.code),
+        });
+      }
+    } catch (err) {
+      console.error('[Socratic Validator ORCH] Validation failed (non-blocking):', err);
+    }
+
     // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
     if (isSanctuary) {
       console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
@@ -1228,7 +1291,17 @@ export async function POST(req: NextRequest) {
       surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
     } : undefined;
 
-    return withSessionCookie(NextResponse.json({
+    // 🛡️ CANON HEADERS: Provenance stamps for all MAIA responses
+    const canonHeaders2 = makeCanonHeaders({
+      requestId: reqId,
+      pipeline: 'orchestrator.generateMaiaTurn',
+      source: 'direct',
+      mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
+      validation: socraticValidation2,
+      repaired: false,
+    });
+
+    const response2 = NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
@@ -1261,9 +1334,22 @@ export async function POST(req: NextRequest) {
           sovereignty: {
             provider: orchestratorResult.metadata.provider
           }
-        } : {})
+        } : {}),
+        // 🛡️ Canon validation result (for client observability)
+        socraticValidation: socraticValidation2 ? {
+          decision: socraticValidation2.decision,
+          isGold: socraticValidation2.isGold,
+          passes: socraticValidation2.passes,
+        } : undefined,
       }
-    }), sessionCookie);
+    });
+
+    // Apply canon headers to response
+    Object.entries(canonHeaders2).forEach(([key, value]) => {
+      response2.headers.set(key, value);
+    });
+
+    return withSessionCookie(response2, sessionCookie);
   } catch (err: any) {
     // Audit: request failed
     logRequestComplete(reqId, {

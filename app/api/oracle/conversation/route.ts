@@ -30,6 +30,7 @@ import { sessionMemoryServicePostgres as sessionMemoryService } from '@/lib/cons
 import { getRelationshipAnamnesis, loadRelationshipEssence, saveRelationshipEssence, type RelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesisPostgres';
 import { memoryPalaceOrchestrator } from '@/lib/consciousness/memory/MemoryPalaceOrchestrator';
 import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
+import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 
 /**
@@ -737,7 +738,21 @@ export async function POST(request: NextRequest) {
       totalTokens: undefined,
     }).catch(err => console.warn('[oracle] logging failed:', err));
 
-    return NextResponse.json(response);
+    // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
+    const canonHeaders = makeCanonHeaders({
+      requestId,
+      pipeline: 'oracle.conversation',
+      source: 'pfi_full',
+      mode: 'STANDARD',
+      validation: validationResult,
+      repaired: regenerationAttempt > 0,
+    });
+
+    const jsonResponse = NextResponse.json(response);
+    Object.entries(canonHeaders).forEach(([key, value]) => {
+      jsonResponse.headers.set(key, value);
+    });
+    return jsonResponse;
 
   } catch (error) {
     // Calculate duration for error logging

@@ -5,6 +5,8 @@ import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
+import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
+import { randomUUID } from 'crypto';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -57,6 +59,7 @@ function defaultSovereignResponse() {
 
 export async function POST(req: NextRequest) {
   const start = Date.now();
+  const requestId = randomUUID();
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -224,7 +227,21 @@ export async function POST(req: NextRequest) {
       };
     }
 
-    return NextResponse.json(responseData, { status: 200 });
+    // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
+    const canonHeaders = makeCanonHeaders({
+      requestId,
+      pipeline: 'sovereign.getMaiaResponse',
+      source: orchestratorResult.processingProfile === 'DEEP' ? 'pfi_full' : 'pfi_legacy',
+      mode: 'STANDARD',
+      validation: orchestratorResult.validation || null,
+      repaired: orchestratorResult.regenerated || false,
+    });
+
+    const response = NextResponse.json(responseData, { status: 200 });
+    Object.entries(canonHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value);
+    });
+    return response;
   } catch (err: any) {
     const duration = Date.now() - start;
 
