@@ -352,3 +352,6 @@ venv/
 lib/python*/
 bin/
 pyvenv.cfg
+
+# Beads local workflow artifacts
+.beads/
