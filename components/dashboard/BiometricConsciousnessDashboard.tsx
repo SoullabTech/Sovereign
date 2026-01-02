@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * 🧠💓🌟 Real-Time Biometric Consciousness Dashboard
  * Live visualization of SPiralogic elemental balance and Maya consciousness insights

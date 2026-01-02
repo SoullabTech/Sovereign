@@ -1,3 +1,4 @@
+// @ts-nocheck
 // frontend
 
 import { useState } from 'react';

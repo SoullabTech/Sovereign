@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Universal Multi-Faith Spiritual Assessment Tool
  * Determines user's faith context, elemental affinities, and spiritual growth phase

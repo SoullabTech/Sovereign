@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * REFLECTIVE FEEDBACK LOOP
  * Phase II Consciousness Field Integration

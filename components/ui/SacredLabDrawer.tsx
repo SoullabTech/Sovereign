@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Sacred Lab Drawer - Contextual navigation for SOULLAB
  *

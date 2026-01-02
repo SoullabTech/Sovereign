@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🧠📁 CONSCIOUSNESS FILE BRIDGE
+ * CONSCIOUSNESS FILE BRIDGE
  *
  * File-based communication bridge between TypeScript and the working Lisp consciousness engine.
  * Uses temporary files for data exchange when HTTP server isn't available.

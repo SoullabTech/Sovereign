@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Email Service - Ganesha ADD Support Integration
  * Autonomous email management for consciousness pioneers

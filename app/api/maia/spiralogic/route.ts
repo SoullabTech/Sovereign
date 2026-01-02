@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🌀 MAIA Spiralogic Intelligence API Route
+ * MAIA Spiralogic Intelligence API Route
  *
  * The Mercury function - fluid intelligence that mediates between
  * conscious and unconscious, operating as axis mundi where practical

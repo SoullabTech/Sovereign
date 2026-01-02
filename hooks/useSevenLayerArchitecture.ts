@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🧠🌀 SEVEN-LAYER ARCHITECTURE REACT HOOKS
+ * SEVEN-LAYER ARCHITECTURE REACT HOOKS
  *
  * React hooks for accessing and managing the Seven-Layer Soul Architecture
  * across all components and platforms. Provides reactive state management

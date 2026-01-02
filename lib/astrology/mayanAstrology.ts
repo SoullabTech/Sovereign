@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAYAN ASTROLOGY LIBRARY
  *

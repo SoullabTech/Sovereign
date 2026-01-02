@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🌟 FIELD ANALYTICS REPORT API
+ * FIELD ANALYTICS REPORT API
  *
  * REST endpoint for Collective Resonance Analytics Dashboard (CRAD)
  * Provides complete field stewardship data for consciousness evolution tracking

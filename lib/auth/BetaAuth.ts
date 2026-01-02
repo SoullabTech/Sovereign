@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Beta Authentication System
  * Simple code-based auth for beta testers

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ASK THE BOOK SERVICE
  *

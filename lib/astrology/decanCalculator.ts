@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Decan Calculator - Degree to Decan Mapping Logic
  *

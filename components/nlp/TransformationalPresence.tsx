@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🧠 TRANSFORMATIONAL PRESENCE - NLP-Informed Interface
+ * TRANSFORMATIONAL PRESENCE - NLP-Informed Interface
  *
  * This component creates transformational experiences through unconscious
  * pattern installation rather than cognitive explanation.

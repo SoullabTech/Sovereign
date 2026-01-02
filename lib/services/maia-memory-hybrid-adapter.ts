@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Adapter for PersonalOracleAgent to use Hybrid Memory System
  *

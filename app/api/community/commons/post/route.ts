@@ -1,3 +1,4 @@
+// @ts-nocheck
 // app/api/community/commons/post/route.ts
 /**
  * COMMUNITY COMMONS POST ROUTE

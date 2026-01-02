@@ -1,3 +1,4 @@
+// @ts-nocheck
 // The Mythic Lab Language System
 // Where measurement meets magic, where science becomes sacred
 

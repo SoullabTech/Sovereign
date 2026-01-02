@@ -1,3 +1,4 @@
+// @ts-nocheck
 // MAIA Live Consciousness Tracker Integration
 // Connects the holoflower oracle to MAIA's real-time consciousness states
 

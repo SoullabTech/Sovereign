@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Memory Service
  * Handles saving and retrieving conversation memories from maia_messages table

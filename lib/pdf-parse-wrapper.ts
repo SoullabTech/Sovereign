@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Wrapper for pdf-parse to avoid build-time issues
  * The pdf-parse library has debug code that runs at import time

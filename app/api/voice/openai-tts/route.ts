@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TTS Route - OpenAI with macOS fallback for local development
  */

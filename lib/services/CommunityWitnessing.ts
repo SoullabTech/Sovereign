@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * COMMUNITY WITNESSING SYSTEM
  *

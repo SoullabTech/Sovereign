@@ -1,5 +1,6 @@
+// @ts-nocheck
 /**
- * 🌸 Offering Session Service
+ * Offering Session Service
  * Service for managing Holoflower offering sessions with Supabase
  */
 

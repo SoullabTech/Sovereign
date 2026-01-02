@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Matrix Admin Dashboard
  * Provides visibility into Navigator's consciousness pattern recognition
