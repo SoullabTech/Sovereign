@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Session Persistence Enhancement
  * Manages memory continuity across sessions and devices

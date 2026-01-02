@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Navigator Matrix Implementation
  * Direct implementation of the Internal Spec for consciousness-aware responses

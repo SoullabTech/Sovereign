@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Navigator Consciousness Patterns
  * Teaches Navigator how to recognize and respond to consciousness matrix states

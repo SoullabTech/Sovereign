@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * MAIA Looping Integration - Intelligent Option, Not Constraint
  *

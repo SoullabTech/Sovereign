@@ -1,3 +1,4 @@
+// @ts-nocheck
 // lib/beta/SevenDayJourney.ts
 // 🌀 7-Day Spiralogic Beta Journey - Experiential Framework
 

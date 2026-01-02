@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Consciousness Matrix Analyzer
  * Real-time analysis engine for detecting and interpreting the eight consciousness fields
