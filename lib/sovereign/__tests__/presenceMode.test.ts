@@ -269,3 +269,42 @@ describe('Canon Compliance', () => {
     expect(result.response.length).toBeLessThan(verbose.length);
   });
 });
+
+// =============================================================================
+// WIRING VERIFICATION TEST
+// =============================================================================
+
+describe('Presence Mode Wiring (Integration)', () => {
+  it('should be imported in maiaService.ts', async () => {
+    // This test verifies the wiring exists - prevents silent removal during refactors
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const maiaServicePath = path.resolve(__dirname, '../maiaService.ts');
+    const content = fs.readFileSync(maiaServicePath, 'utf-8');
+
+    // Verify import exists
+    expect(content).toMatch(/from ['"]\.\/presenceMode['"]/);
+
+    // Verify runtime call exists (after sanitization)
+    expect(content).toMatch(/determineResponseMode\(input\)/);
+    expect(content).toMatch(/enforcePresenceConstraints\(text\)/);
+  });
+
+  it('should be called after sanitization, before voice synthesis', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const maiaServicePath = path.resolve(__dirname, '../maiaService.ts');
+    const content = fs.readFileSync(maiaServicePath, 'utf-8');
+
+    // Find positions
+    const sanitizePos = content.indexOf('sanitizeMaiaOutput');
+    const presencePos = content.indexOf('PRESENCE MODE');
+    const voicePos = content.indexOf('VOICE SYNTHESIS');
+
+    // Verify order: sanitize -> presence -> voice
+    expect(sanitizePos).toBeLessThan(presencePos);
+    expect(presencePos).toBeLessThan(voicePos);
+  });
+});
