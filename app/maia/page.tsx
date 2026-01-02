@@ -814,29 +814,38 @@ function MAIAPageContent() {
         {/* Welcome Message for First-Time Users */}
         {isMounted && showWelcome && !showWeekZeroOnboarding && (
           <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-md w-[calc(100%-2rem)] bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
           >
-            <div className="text-center">
-              <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-white mb-2">
-                Welcome, {explorerName}
-              </h3>
-              <p className="text-sm text-stone-300 mb-4">
-                Share your story. MAIA will help you discover the wisdom within it.
-                Your journey begins now.
-              </p>
-              <button
-                onClick={() => {
-                  localStorage.setItem('maia_welcome_seen', 'true');
-                  window.location.reload();
-                }}
-                className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
-              >
-                Begin
-              </button>
-            </div>
+            {/* Backdrop */}
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            {/* Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              className="relative max-w-md w-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/40 rounded-2xl p-6 backdrop-blur-xl"
+            >
+              <div className="text-center">
+                <Sparkles className="w-10 h-10 text-amber-400 mx-auto mb-3" />
+                <h3 className="text-lg font-semibold text-white mb-2">
+                  Welcome, {explorerName}
+                </h3>
+                <p className="text-sm text-stone-300 mb-4">
+                  Share your story. MAIA will help you discover the wisdom within it.
+                  Your journey begins now.
+                </p>
+                <button
+                  onClick={() => {
+                    localStorage.setItem('maia_welcome_seen', 'true');
+                    window.location.reload();
+                  }}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-lg font-medium transition-colors"
+                >
+                  Begin
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
 
