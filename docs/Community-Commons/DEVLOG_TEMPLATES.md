@@ -167,6 +167,55 @@ Tell me: ______
 
 ---
 
+## Descript Chapter Naming Convention
+
+### Format
+
+`MM:SS — TAG — Short Verb Phrase (Outcome)`
+
+For sessions >= 1 hour: `HH:MM:SS — TAG — ...`
+
+### Examples
+
+```
+00:00 — START — Today's intention + goal
+03:12 — SHIP — Capture Mode toggle added to header
+09:41 — FIX — kernel-down now kills child processes
+14:05 — DECISION — Keep truth in platform, export to Descript
+18:22 — BLOCKED — pg socket issue on local dev
+21:10 — NEXT — Add capture history + YouTube chapter export
+24:30 — WRAP — Recap + ask for feedback
+```
+
+### Full Tag Set
+
+| Tag | When to use |
+|-----|-------------|
+| **START** | Session beginning, intention setting |
+| **SHIP** | Finished + merged + real |
+| **FIX** | Repaired / stabilized |
+| **DECISION** | Chose a direction |
+| **BLOCKED** | Stuck / needs input |
+| **NEXT** | Tomorrow's action |
+| **WRAP** | Session ending, recap |
+
+### Naming Rules
+
+1. **Verb first**: Add / Fix / Wire / Refactor / Ship / Decide
+2. **One outcome only**: Two outcomes = two notes
+3. **No jargon**: Your future self should understand it
+4. **Under 60 chars**: Descript looks best
+
+### Optional: Scoped Phrases
+
+Add context with brackets: `MM:SS — TAG — [AREA] Verb Phrase`
+
+Areas: `[UI]` `[API]` `[DB]` `[DX]` `[DEPLOY]` `[DOCS]`
+
+Example: `12:08 — SHIP — [API] Add /v1/capture/export for Descript`
+
+---
+
 ## Quick Reference
 
 | Action | How |

@@ -158,22 +158,30 @@ export async function getSessionNotes(sessionId: string): Promise<CaptureNote[]>
 }
 
 /**
- * Format milliseconds as MM:SS timestamp
+ * Format milliseconds as timestamp
+ * - MM:SS for sessions < 1 hour
+ * - HH:MM:SS for sessions >= 1 hour
  */
 function formatTimestamp(ms: number): string {
   const totalSeconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
+
+  // Only show hours if session is >= 1 hour
+  if (hours > 0) {
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }
   return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
 
 /**
  * Export session in Descript chapters format
- * Format: "00:00 TAG: Note text"
+ * Format: "MM:SS — TAG — Note text"
  */
 export function formatDescriptChapters(notes: CaptureNote[]): string {
   return notes
-    .map(note => `${formatTimestamp(note.offset_ms)} ${note.tag.toUpperCase()}: ${note.text}`)
+    .map(note => `${formatTimestamp(note.offset_ms)} — ${note.tag.toUpperCase()} — ${note.text}`)
     .join('\n');
 }
 
