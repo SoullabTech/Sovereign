@@ -17,6 +17,9 @@ import {
 import { query } from '@/lib/db/postgres';
 import { Element } from '@/lib/consciousness/spiralogic-core';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * GET - Fetch daily teachings
  */

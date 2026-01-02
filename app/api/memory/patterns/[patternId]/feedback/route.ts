@@ -10,6 +10,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { PreferenceConfirmationStore } from '@/lib/memory/stores/PreferenceConfirmationStore';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 type PatternAction = 'confirm' | 'reject' | 'refine';
 
 // Map pattern actions to confirmation actions

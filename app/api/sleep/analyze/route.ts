@@ -4,6 +4,9 @@ import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
 import { healthDataImporter, type ParsedHealthData } from '@/lib/biometrics/HealthDataImporter';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 // Sleep-Dream Correlation Analysis API

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * Simple error logging endpoint for client-side errors
  * Prevents 404s when the client tries to log errors

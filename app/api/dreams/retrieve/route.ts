@@ -3,6 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 // Dream Retrieval API - Get user's dreams with analysis and correlations

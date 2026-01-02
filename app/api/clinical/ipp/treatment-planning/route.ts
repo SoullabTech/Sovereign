@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * IPP Treatment Planning Automation
  * Generates evidence-based, personalized treatment plans from IPP assessment results

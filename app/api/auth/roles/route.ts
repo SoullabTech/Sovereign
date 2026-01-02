@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * User Role Management API
  * Handles multi-tier user roles and professional verification

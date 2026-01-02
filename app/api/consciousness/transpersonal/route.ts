@@ -22,6 +22,9 @@ import {
 } from '@/lib/consciousness/transpersonal/TranspersonalSessionManager';
 import AetherConsciousnessInterface from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Initialize transpersonal session management
 let managerInitialized = false;
 

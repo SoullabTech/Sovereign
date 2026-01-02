@@ -18,6 +18,9 @@ import {
 } from '@/lib/features/ElementalJourneyTracker';
 import { query, insertOne, findOne, updateOne } from '@/lib/db/postgres';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * GET - Fetch user's journey snapshot
  */

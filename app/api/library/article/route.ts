@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as path from 'path';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const ALLOWED_DIRECTORIES = [
   'Community-Commons',
   'docs/community-library',

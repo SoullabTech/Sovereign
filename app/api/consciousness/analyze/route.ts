@@ -11,6 +11,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { consciousnessEngine, analyzeConsciousnessWithEngine } from '@/lib/services/consciousness-engine-bridge';
 import type { SevenLayerSnapshot } from '@/lib/architecture/seven-layer-interface';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 interface AnalysisRequest {
   snapshot: SevenLayerSnapshot;
   analysisType?: 'quick' | 'deep' | 'archetypal' | 'protocol-focused';

@@ -20,6 +20,9 @@ import { quantumFieldMemory } from '@/lib/consciousness/memory/QuantumFieldMemor
 // Import Phase II components (for compatibility)
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Create global enhanced integration instance
 let enhancedIntegration: EnhancedMAIAFieldIntegration | null = null;
 let elementalIntegration: ElementalFieldIntegration | null = null;

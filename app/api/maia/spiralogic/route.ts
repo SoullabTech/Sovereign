@@ -24,6 +24,9 @@ import {
   Phase
 } from '@/lib/consciousness/spiralogic-core';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // ====================================================================
 // REQUEST/RESPONSE INTERFACES
 // ====================================================================

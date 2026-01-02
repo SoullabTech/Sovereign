@@ -13,6 +13,9 @@ import fs from 'fs/promises';
 import crypto from 'crypto';
 import { query } from '@/lib/db/postgres';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Node runtime required for filesystem writes
 export const runtime = 'nodejs';
 

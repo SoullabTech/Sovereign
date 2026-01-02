@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * IPP (Ideal Parenting Protocol) Assessment API
  * Complete 40-question assessment with Spiralogic 5-element framework

@@ -3,6 +3,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPool } from '@/lib/database/postgres';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: NextRequest) {
   const pool = getPool();
 

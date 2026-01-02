@@ -6,6 +6,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GlobalAINActivator } from '@/lib/ain/AINEvolutionActivator';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 interface ControlRequest {
   action: 'emergency_stabilization' | 'shutdown' | 'status';
   authorization?: string;

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/postgres";
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   _req: Request,
   { params }: { params: { id: string } }

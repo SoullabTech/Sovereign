@@ -5,6 +5,9 @@ import { betaSession } from '@/lib/auth/betaSession';
 import { healthDataImporter } from '@/lib/biometrics/HealthDataImporter';
 import { CircadianRhythmOptimizer } from '@/lib/biometrics/CircadianRhythmOptimizer';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 const circadianOptimizer = new CircadianRhythmOptimizer();
 

@@ -11,6 +11,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PreferenceConfirmationStore } from '@/lib/memory/stores/PreferenceConfirmationStore';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * GET: Fetch stale preferences for the current user
  */

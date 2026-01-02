@@ -12,6 +12,9 @@ import { randomUUID } from 'crypto';
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Serverless platform config (prevents platform killing long-running DEEP requests)
 export const runtime = 'nodejs';
 export const maxDuration = 60; // seconds

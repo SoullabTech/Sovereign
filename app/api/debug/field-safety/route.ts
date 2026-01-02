@@ -6,6 +6,9 @@ import { getCognitiveProfile } from "@/lib/consciousness/cognitiveProfileService
 import { routePanconsciousField } from "@/lib/field/panconsciousFieldRouter";
 import { detectBloomLevel } from "@/lib/consciousness/bloomCognition";
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * Debug Panel - Field Safety Visibility
  *

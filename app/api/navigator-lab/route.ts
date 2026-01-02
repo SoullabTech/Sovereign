@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionUserId } from '@/lib/auth/session-utils';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Bridge to the beta consciousness computing server for Navigator Lab scenarios
 const BETA_SERVER_URL = process.env.BETA_SERVER_URL || 'http://localhost:3008';
 

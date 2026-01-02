@@ -13,6 +13,9 @@ import { query } from '@/lib/db/postgres'
 import fs from 'fs'
 import path from 'path'
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const COMMONS_ROOT = path.join(process.cwd(), 'Community-Commons')
 const BOOK_PATH = path.join(
   process.cwd(),

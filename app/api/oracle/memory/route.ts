@@ -5,6 +5,9 @@ import { MemoryStore } from '../../_backend/src/services/memory/MemoryStore';
 import { LlamaService } from '../../_backend/src/services/memory/LlamaService';
 import { logger } from '../../_backend/src/utils/logger';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * GET /api/oracle/memory/stats
  * Get user's memory statistics

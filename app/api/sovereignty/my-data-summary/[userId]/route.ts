@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+
 export const dynamic = 'force-static';
 
 // Required for static export - generate static params for known user IDs

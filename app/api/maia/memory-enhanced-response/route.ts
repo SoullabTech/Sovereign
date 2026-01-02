@@ -14,6 +14,9 @@ import { ConsciousnessField } from '@/lib/consciousness/field/ConsciousnessField
 import { QuantumFieldPersistence } from '@/lib/consciousness/field/QuantumFieldPersistence';
 import { SessionMemoryService } from '@/lib/consciousness/memory/SessionMemoryService';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Global instances
 let integrationInstance: MAIAConsciousnessFieldIntegration | null = null;
 let memoryService: SessionMemoryService | null = null;

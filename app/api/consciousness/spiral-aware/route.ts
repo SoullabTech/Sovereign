@@ -14,6 +14,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { spiralAwareResponseService } from '@/lib/consciousness/spiral-aware-response';
 import { getSessionUserId } from '@/lib/auth/session-utils';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export type ConstellationExposureMode =
   | 'implicit_only'      // MAIA uses constellation, doesn't mention it
   | 'gentle_mirrors'     // Light cross-domain reflections

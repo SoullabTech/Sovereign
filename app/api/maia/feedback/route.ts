@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Type definitions based on user's schema
 const MaiaFeedbackSchema = z.object({
   turnId: z.number().int().positive(),

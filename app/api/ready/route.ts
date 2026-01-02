@@ -1,6 +1,9 @@
 // backend: app/api/ready/route.ts
 import { NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * Readiness Check - Are critical dependencies available?
  * Used for deployment health checks, load balancer routing

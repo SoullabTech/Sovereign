@@ -9,6 +9,9 @@ import type {
 } from '@/lib/types/opusPulse';
 import { OPUS_AXIOMS } from '@/lib/types/opusPulse';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     // 1. Get query params

@@ -21,6 +21,9 @@ import {
 } from '@/lib/features/ShadowIntegrationTracker';
 import { query } from '@/lib/db/postgres';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * POST - Record a shadow instance
  */

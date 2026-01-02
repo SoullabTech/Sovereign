@@ -9,6 +9,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { startSession, getActiveSession } from '@/lib/capture/captureStore';
 import { resolveCaptureUserId, withSessionCookie } from '@/lib/capture/captureAuth';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();

@@ -3,6 +3,9 @@ import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
 import { DreamWeaverEngine } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 // Dream Analysis API - Real-time archetypal analysis and wisdom emergence detection

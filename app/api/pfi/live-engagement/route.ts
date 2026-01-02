@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { loadRelationshipEssence } from '@/lib/consciousness/RelationshipAnamnesis';
+
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
 interface LiveEngagementMetrics {
   // Current session tracking
   currentUser: {

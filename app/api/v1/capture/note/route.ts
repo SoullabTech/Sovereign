@@ -14,6 +14,9 @@ import {
 } from '@/lib/capture/captureStore';
 import { resolveCaptureUserId, withSessionCookie } from '@/lib/capture/captureAuth';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const VALID_TAGS: CaptureTag[] = ['ship', 'fix', 'decision', 'blocked', 'next'];
 
 export async function POST(request: NextRequest) {

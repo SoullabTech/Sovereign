@@ -7,6 +7,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ConsciousnessMappingService } from '@/lib/biometric/consciousness-mapping-service';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Biometric data interface matching mobile service
 interface BiometricData {
   source: 'apple_watch' | 'oura_ring' | 'fitbit' | 'garmin' | 'manual';

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 interface FieldVector {
   // Frequency components (Hz)
   fx: number; // Cognitive frequency

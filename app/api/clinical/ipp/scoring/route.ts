@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * IPP Advanced Scoring and Interpretation System
  * Provides sophisticated scoring algorithms and clinical interpretations

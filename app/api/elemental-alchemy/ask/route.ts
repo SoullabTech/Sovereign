@@ -12,6 +12,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { askTheBook, BookQuery } from '@/lib/features/AskTheBookService';
 import { query } from '@/lib/db/postgres';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Valid element types for forcing chapter load
 type ForceElement = 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'spiralogic';
 

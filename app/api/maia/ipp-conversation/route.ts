@@ -1,6 +1,9 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * MAIA IPP Conversational Integration
  * Enables MAIA to offer and conduct IPP assessments through natural conversation

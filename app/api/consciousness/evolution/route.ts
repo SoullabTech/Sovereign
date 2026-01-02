@@ -7,6 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Mock data for demonstration - in production this would come from database/session storage
 function generateMockEvolutionData(userId: string, sessionId: string) {
   // Simulate user-specific consciousness evolution patterns

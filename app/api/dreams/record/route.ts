@@ -5,6 +5,9 @@ import { betaSession } from '@/lib/auth/betaSession';
 import { DreamWeaverEngine } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
 import { DreamMemorySchema } from '@/app/api/_backend/src/schemas/dreamMemory.schema';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
 
 // Dream Recording API - Integrates DreamWeaver Engine with Database

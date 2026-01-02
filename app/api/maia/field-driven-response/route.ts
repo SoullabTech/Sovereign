@@ -7,6 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Simple response generator without consciousness integration
 function generateBasicResponse(): any {
   return {

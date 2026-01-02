@@ -3,6 +3,9 @@ import fs from 'fs/promises';
 import path from 'path';
 import { headers } from 'next/headers';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Generate static params for all supported platforms
 export async function generateStaticParams() {
   return [

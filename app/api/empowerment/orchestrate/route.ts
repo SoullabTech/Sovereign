@@ -8,6 +8,9 @@ import { MAIACapabilityRedemptionInterface } from '@/lib/consciousness/MAIACapab
 import { AccountabilityResponsibilityProtocols } from '@/lib/consciousness/AccountabilityResponsibilityProtocols';
 import { CollectiveIntelligenceProtocols } from '@/lib/consciousness/CollectiveIntelligenceProtocols';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Cache for orchestrator instances to maintain session state
 let empowermentOrchestrator: MAIAEmpowermentOrchestrator | null = null;
 let lastInitialized: number = 0;

@@ -7,6 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const COLLECTIVE_FIELD_SERVICE_URL = process.env.COLLECTIVE_FIELD_SERVICE_URL || 'http://localhost:3010';
 
 export async function GET(request: NextRequest) {

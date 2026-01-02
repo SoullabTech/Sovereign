@@ -10,6 +10,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 const BOOK_PATH = path.join(
   process.cwd(),
   'app/api/_backend/data/founder-knowledge/elemental-alchemy-book.json'

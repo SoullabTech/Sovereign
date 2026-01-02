@@ -12,6 +12,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Mock posts matching the list route
 const mockPosts: Record<string, {
   id: string;

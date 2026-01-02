@@ -15,6 +15,9 @@ import {
 } from '@/lib/capture/captureStore';
 import { resolveCaptureUserIdFromQuery, withSessionCookie } from '@/lib/capture/captureAuth';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);

@@ -10,6 +10,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs/promises';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Node runtime required for filesystem reads
 export const runtime = 'nodejs';
 

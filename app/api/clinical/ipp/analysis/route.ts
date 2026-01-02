@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * IPP Elemental Pattern Analysis API
  * Provides sophisticated analysis of IPP assessment results using 5-element framework

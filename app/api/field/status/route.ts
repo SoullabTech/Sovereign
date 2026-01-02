@@ -11,6 +11,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
 // Observatory imports (graceful degradation for sacred architecture)
 let autonomousHealthMonitor: any = null
 try {

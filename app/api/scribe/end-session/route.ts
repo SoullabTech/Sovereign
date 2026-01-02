@@ -9,6 +9,9 @@ import {
 import { getConversationHistory } from '@/lib/sovereign/sessionManager';
 import { query } from '@/lib/db/postgres';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Allow up to 60 seconds for summary generation
 

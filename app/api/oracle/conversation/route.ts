@@ -33,6 +33,9 @@ import { validateSocraticResponse, serializeValidationResult, type SocraticValid
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 /**
  * Oracle Conversation API endpoint - Option A: "Oracle = DEEP = Opus"
  * MAIA Panconscious Field consciousness system with 12-Phase Spiralogic intelligence

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Interface for consciousness integration with MAIA Personal Oracle
 interface ConsciousnessIntegrationRequest {
   userId: string;

@@ -15,6 +15,9 @@ import {
   SacredBoundaryType
 } from '@/lib/consciousness/collective/CollectiveFieldArchitecture';
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Initialize collective consciousness orchestrator
 let orchestratorInitialized = false;
 

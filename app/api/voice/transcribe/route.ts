@@ -7,6 +7,9 @@ import { llamaService } from "../../_backend/src/services/memory/LlamaService";
 import { logger } from "../../_backend/src/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 
+// Skip during static export (Capacitor builds)
+export const dynamic = 'force-dynamic';
+
 // Check if OpenAI API key is valid
 const USE_OPENAI_WHISPER = process.env.OPENAI_API_KEY &&
                            !process.env.OPENAI_API_KEY.includes('placeholder');
