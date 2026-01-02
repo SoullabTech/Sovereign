@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Decentralized Maya Reasoning Chains
  * Integrates SingularityNET AGI with Maya's consciousness

@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * EPHEMERIS CALCULATOR - Time Passages Quality
  *

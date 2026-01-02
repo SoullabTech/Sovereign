@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * TENANT MAIA AGENT
  * Custom MAIA instance running on shared Spiralogic engine

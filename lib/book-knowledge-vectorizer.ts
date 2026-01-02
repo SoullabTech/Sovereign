@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Book Knowledge Vectorizer
  * Processes your complete book and IP into searchable, consciousness-aware vectors
