@@ -1674,6 +1674,45 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   }, [userId, messages, sessionId]);
 
+  // Handle conversation download
+  const handleDownloadConversation = useCallback(() => {
+    if (messages.length === 0) {
+      toast.error('No messages to download', {
+        duration: 2000,
+        position: 'bottom-center',
+      });
+      return;
+    }
+
+    const timestamp = new Date().toISOString().split('T')[0];
+    const content = messages.map(msg => {
+      const speaker = msg.role === 'user' ? (userName || 'You') : 'MAIA';
+      const text = (msg.text ?? msg.content ?? '').replace(/\*[^*]*\*/g, '').trim();
+      return `${speaker}:\n${text}\n`;
+    }).join('\n---\n\n');
+
+    const header = `MAIA Conversation - ${timestamp}\n${'='.repeat(40)}\n\n`;
+    const blob = new Blob([header + content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `maia-conversation-${timestamp}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success('Conversation downloaded!', {
+      duration: 2000,
+      position: 'bottom-center',
+      style: {
+        background: '#1a1f2e',
+        color: '#d4b896',
+        border: '1px solid rgba(212, 184, 150, 0.2)',
+      },
+    });
+  }, [messages, userName]);
+
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (text: string, attachments?: File[]) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
@@ -4153,18 +4192,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 {/* Show all messages with proper scrolling */}
                 {messages
                   .map((message, index) => {
-                    const handleCopyMessage = () => {
+                    const handleCopyMessage = async () => {
                       const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
-                      navigator.clipboard.writeText(textToCopy);
-                      toast.success('Message copied!', {
-                        duration: 2000,
-                        position: 'bottom-center',
-                        style: {
-                          background: '#1a1f2e',
-                          color: '#d4b896',
-                          border: '1px solid rgba(212, 184, 150, 0.2)',
-                        },
-                      });
+                      try {
+                        await navigator.clipboard.writeText(textToCopy);
+                        toast.success('Message copied!', {
+                          duration: 2000,
+                          position: 'bottom-center',
+                          style: {
+                            background: '#1a1f2e',
+                            color: '#d4b896',
+                            border: '1px solid rgba(212, 184, 150, 0.2)',
+                          },
+                        });
+                      } catch {
+                        toast.error('Failed to copy', {
+                          duration: 2000,
+                          position: 'bottom-center',
+                        });
+                      }
                     };
 
                     return (
@@ -4332,6 +4378,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       const fileNames = files.map(f => f.name).join(', ');
                       handleTextMessage(`Please analyze these files: ${fileNames}`, files);
                     }}
+                    onDownloadConversation={handleDownloadConversation}
                     autoFocus={true}
                     hasMemory={messages.length > 0 || !isReturningUser}
                     lastConnectionTime={

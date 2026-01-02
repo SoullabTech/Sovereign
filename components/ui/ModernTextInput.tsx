@@ -13,7 +13,8 @@ import {
   Sparkles,
   Image as ImageIcon,
   FileText,
-  MoreHorizontal
+  MoreHorizontal,
+  Download
 } from 'lucide-react';
 
 interface ModernTextInputProps {
@@ -28,6 +29,7 @@ interface ModernTextInputProps {
   onVoiceInputToggle?: () => void;
   onVoiceResponseToggle?: () => void;
   onFileUpload?: (files: File[]) => void;
+  onDownloadConversation?: () => void;
   autoFocus?: boolean;
   maxLength?: number;
   hasMemory?: boolean;
@@ -48,6 +50,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   onVoiceInputToggle,
   onVoiceResponseToggle,
   onFileUpload,
+  onDownloadConversation,
   autoFocus = false,
   maxLength = 10000,
   hasMemory = false,
@@ -218,6 +221,25 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
                       <div className="text-white/50 text-xs">
                         {enableVoiceInChat ? 'MAIA will be silent' : 'MAIA will speak aloud'}
                       </div>
+                    </div>
+                  </button>
+                )}
+
+                {/* Download Conversation */}
+                {onDownloadConversation && (
+                  <button
+                    onClick={() => {
+                      onDownloadConversation();
+                      setShowTools(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
+                      <Download className="w-4 h-4 text-emerald-400" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-white/90 font-medium">Download conversation</div>
+                      <div className="text-white/50 text-xs">Save as text file</div>
                     </div>
                   </button>
                 )}
