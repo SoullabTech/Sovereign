@@ -19,7 +19,7 @@ const ELEMENTAL_QUESTIONS = [
   { element: 'Aether', question: 'What connects you?', symbol: '◇', color: 'text-[#00695C]' },
 ];
 
-export function SageTealWelcome({ userName = 'Kelly', onComplete }: SageTealWelcomeProps) {
+export function SageTealWelcome({ userName = 'Explorer', onComplete }: SageTealWelcomeProps) {
   const [currentQuestion, setCurrentQuestion] = useState(0);
 
   // Rotate questions every 3 seconds

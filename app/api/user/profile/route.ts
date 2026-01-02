@@ -17,12 +17,8 @@ export async function GET(request: NextRequest) {
     // Try to get a more personalized name based on userId or use a fallback
     let userName = 'Explorer'; // Default fallback
 
-    // Check for Kelly special case
-    if (userId === 'kelly-nezat' || userId === 'kelly') {
-      userName = 'Kelly';
-    }
-    // Check for other custom user IDs
-    else if (userId && userId !== 'guest') {
+    // Extract name from userId if provided
+    if (userId && userId !== 'guest') {
       // Extract a friendly name from user ID if possible
       const fullName = userId.replace(/[-_]/g, ' ')
                              .replace(/\b\w/g, l => l.toUpperCase())

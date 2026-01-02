@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 
 export default function OnboardingPage() {
   const router = useRouter();
-  const [userName, setUserName] = useState<string>('Kelly');
+  const [userName, setUserName] = useState<string>('Explorer');
 
   useEffect(() => {
     // Get user name from localStorage
@@ -18,7 +18,7 @@ export default function OnboardingPage() {
           router.push('/maia');
           return;
         }
-        setUserName(userData.name || userData.username || 'Kelly');
+        setUserName(userData.name || userData.username || 'Explorer');
       } catch (e) {
         console.error('Error parsing user data:', e);
       }

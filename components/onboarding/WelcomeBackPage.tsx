@@ -10,7 +10,7 @@ interface WelcomeBackPageProps {
   onContinue: () => void;
 }
 
-export default function WelcomeBackPage({ userName = "Kelly", onContinue }: WelcomeBackPageProps) {
+export default function WelcomeBackPage({ userName = "Explorer", onContinue }: WelcomeBackPageProps) {
   const [greeting, setGreeting] = useState('Good morning');
 
   useEffect(() => {

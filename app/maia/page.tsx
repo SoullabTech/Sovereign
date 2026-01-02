@@ -40,19 +40,6 @@ async function getInitialUserData() {
 
   const storedUserId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
 
-  // KELLY SPECIAL CASE - Check multiple possible Kelly identifiers
-  // Do NOT auto-assign based on domain - that would affect all users
-  if (storedUserId === 'kelly-nezat' || storedUserId === 'kelly' ||
-      localStorage.getItem('explorerName')?.toLowerCase() === 'kelly' ||
-      localStorage.getItem('betaUserName')?.toLowerCase() === 'kelly') {
-    console.log('🌟 [MAIA] Kelly recognized from userId/name:', storedUserId);
-    localStorage.setItem('explorerName', 'Kelly');
-    localStorage.setItem('explorerId', 'kelly-nezat');
-    localStorage.setItem('betaOnboardingComplete', 'true');
-    localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
-    return { id: 'kelly-nezat', name: 'Kelly' };
-  }
-
   // Try to fetch from API using stored userId
   if (storedUserId) {
     try {
@@ -282,36 +269,19 @@ function MAIAPageContent() {
     if (hasCheckedAuth.current) return;
     hasCheckedAuth.current = true;
 
-    // KELLY PRIORITY CHECK - Always check Kelly first
+    // Check stored user identity
     const storedName = localStorage.getItem('explorerName');
     const storedId = localStorage.getItem('explorerId');
-    if (storedName?.toLowerCase() === 'kelly' || storedId === 'kelly-nezat') {
-      localStorage.setItem('explorerName', 'Kelly');
-      localStorage.setItem('explorerId', 'kelly-nezat');
-      setExplorerId('kelly-nezat');
-      setExplorerName('Kelly');
-      console.log('🌟 [MAIA] Kelly priority authentication successful');
+
+    // Use stored identity if available
+    if (storedName && storedId) {
+      setExplorerId(storedId);
+      setExplorerName(storedName);
+      console.log('✅ [MAIA] User restored from localStorage:', storedName);
       return;
     }
 
-    // MOBILE BETA DEFAULT - For Capacitor/mobile apps during beta, default to Kelly
-    // This ensures the iOS/Android beta testers have the full experience
-    const isCapacitorApp = typeof window !== 'undefined' &&
-      (window.navigator.userAgent.includes('Capacitor') ||
-       window.location.protocol === 'capacitor:' ||
-       !storedName); // Fresh install = default to Kelly for beta
-
-    if (isCapacitorApp && !storedName && !storedId) {
-      localStorage.setItem('explorerName', 'Kelly');
-      localStorage.setItem('explorerId', 'kelly-nezat');
-      localStorage.setItem('betaOnboardingComplete', 'true');
-      setExplorerId('kelly-nezat');
-      setExplorerName('Kelly');
-      console.log('📱 [MAIA] Mobile beta: Defaulting to Kelly');
-      return;
-    }
-
-    // NEVER show onboarding - always let user through
+    // Check for authenticated user
     // Default to guest mode if no stored user
     const newUser = localStorage.getItem('beta_user');
     if (newUser) {

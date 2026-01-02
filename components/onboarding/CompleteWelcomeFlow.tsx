@@ -14,7 +14,7 @@ interface CompleteWelcomeFlowProps {
   onComplete: () => void;
 }
 
-export default function CompleteWelcomeFlow({ userName = "Kelly", onComplete }: CompleteWelcomeFlowProps) {
+export default function CompleteWelcomeFlow({ userName = "Explorer", onComplete }: CompleteWelcomeFlowProps) {
   const [currentStep, setCurrentStep] = useState(2); // Start at SageTealWelcome since ElementalOrientation and FAQ are already done
 
   const handleNext = () => {
