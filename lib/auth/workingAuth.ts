@@ -1,160 +1,64 @@
 "use client";
 
 /**
- * Working Authentication Service
- * Provides actual Supabase authentication with OAuth support
+ * Working Authentication Service - STUB
+ *
+ * This file previously used Supabase authentication.
+ * Now using postgres-only architecture.
+ *
+ * @deprecated Use lib/auth/authService.ts or direct postgres auth instead
  */
+
+export interface WorkingUser {
+  id: string;
+  email: string;
+  name?: string;
+}
+
+export interface AuthResult {
+  data?: any;
+  error?: Error | null;
+}
+
 export class WorkingAuthService {
-  private supabase;
-
   constructor() {
-    const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL;
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY;
-
-    if (!dbUrl || !supabaseAnonKey) {
-      throw new Error('Supabase configuration missing. Check environment variables.');
-    }
-
-    this.supabase = createClient(dbUrl, supabaseAnonKey);
+    console.warn('[WorkingAuthService] DEPRECATED - Supabase auth removed');
   }
 
-  /**
-   * Magic Link Authentication
-   */
-  async signInWithEmail(email: string, redirectPath?: string): Promise<{ data?: any; error?: AuthError | null }> {
-    try {
-      const baseUrl = window.location.origin;
-      const redirectTo = redirectPath
-        ? `${baseUrl}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`
-        : `${baseUrl}/auth/callback`;
-
-      const { data, error } = await this.supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: redirectTo,
-        }
-      });
-
-      return { data, error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
+  async signInWithEmail(_email: string, _redirectPath?: string): Promise<AuthResult> {
+    return { error: new Error('Supabase auth deprecated - use postgres auth') };
   }
 
-  /**
-   * OAuth Authentication - Google
-   */
-  async signInWithGoogle(redirectPath?: string): Promise<{ data?: any; error?: AuthError | null }> {
-    try {
-      const baseUrl = window.location.origin;
-      const redirectTo = redirectPath
-        ? `${baseUrl}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`
-        : `${baseUrl}/auth/callback`;
-
-      const { data, error } = await this.supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: redirectTo,
-          queryParams: {
-            access_type: 'offline',
-            prompt: 'consent',
-          },
-        }
-      });
-
-      return { data, error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
+  async signInWithGoogle(_redirectPath?: string): Promise<AuthResult> {
+    return { error: new Error('OAuth deprecated - use postgres auth') };
   }
 
-  /**
-   * OAuth Authentication - Apple
-   */
-  async signInWithApple(redirectPath?: string): Promise<{ data?: any; error?: AuthError | null }> {
-    try {
-      const baseUrl = window.location.origin;
-      const redirectTo = redirectPath
-        ? `${baseUrl}/auth/callback?redirect=${encodeURIComponent(redirectPath)}`
-        : `${baseUrl}/auth/callback`;
-
-      const { data, error } = await this.supabase.auth.signInWithOAuth({
-        provider: 'apple',
-        options: {
-          redirectTo: redirectTo,
-        }
-      });
-
-      return { data, error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
+  async signInWithApple(_redirectPath?: string): Promise<AuthResult> {
+    return { error: new Error('OAuth deprecated - use postgres auth') };
   }
 
-  /**
-   * Handle Authentication Callback
-   */
-  async handleAuthCallback(): Promise<{ data?: any; error?: AuthError | null }> {
-    try {
-      const { data, error } = await this.supabase.auth.getSession();
-      return { data, error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
+  async handleAuthCallback(): Promise<AuthResult> {
+    return { data: null };
   }
 
-  /**
-   * Get Current User
-   */
-  async getCurrentUser(): Promise<User | null> {
-    try {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      return user;
-    } catch (error) {
-      console.warn('Error getting current user:', error);
-      return null;
-    }
+  async getCurrentUser(): Promise<WorkingUser | null> {
+    return null;
   }
 
-  /**
-   * Get Current Session
-   */
-  async getSession() {
-    try {
-      const { data: { session } } = await this.supabase.auth.getSession();
-      return session;
-    } catch (error) {
-      console.warn('Error getting session:', error);
-      return null;
-    }
+  async getSession(): Promise<any> {
+    return null;
   }
 
-  /**
-   * Sign Out
-   */
-  async signOut(): Promise<{ error?: AuthError | null }> {
-    try {
-      const { error } = await this.supabase.auth.signOut();
-      return { error };
-    } catch (error) {
-      return { error: error as AuthError };
-    }
+  async signOut(): Promise<AuthResult> {
+    return { error: null };
   }
 
-  /**
-   * Check if authentication is configured
-   */
   isConfigured(): boolean {
-    return !!(process.env.NEXT_PUBLIC_DATABASE_URL && process.env.NEXT_PUBLIC_DATABASE_ANON_KEY);
+    return false;
   }
 
-  /**
-   * Get available OAuth providers based on Supabase configuration
-   */
   getAvailableProviders(): string[] {
-    // This would need to be configured in your Supabase dashboard
-    // For now, return common providers that can be easily configured
-    return ['google', 'apple'];
+    return [];
   }
 }
 

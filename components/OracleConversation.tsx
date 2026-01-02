@@ -23,6 +23,7 @@ import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
 import { formatMessageText } from '@/lib/text/formatMessageText';
+import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
 import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
 import { QuickSettingsSheet } from './QuickSettingsSheet';
@@ -2350,7 +2351,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Handle JSON response (text mode - includes metadata)
         responseData = await response.json();
         console.log('✅ THE BETWEEN response data:', responseData);
-        responseText = cleanMessage(responseData.response || responseData.message || 'I\'m here. What wants your attention?');
+        // Use normalized response for consistent field access
+        const normalized = normalizeAIResponse(responseData);
+        responseText = cleanMessage(normalized?.text || responseData.response || responseData.message || 'I\'m here. What wants your attention?');
 
         // Extract opusAxioms and turnId for Gold Seal feature
         opusAxioms = responseData.opusAxioms;

@@ -28,7 +28,7 @@ type Props = {
   open: boolean;
   onClose: () => void;
   pattern: PatternMeta | null;
-  userId: string;
+  userId?: string;
 };
 
 export function PatternDrawer({ open, onClose, pattern, userId }: Props) {

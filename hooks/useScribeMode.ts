@@ -21,7 +21,19 @@ export interface ScribeModeActions {
   clearTranscript: () => void;
 }
 
-export interface ScribeModeHook extends ScribeModeState, ScribeModeActions {}
+// Extended interface with backward-compatible aliases for OracleConversation.tsx
+export interface ScribeModeHook extends ScribeModeState, ScribeModeActions {
+  // Aliases for backward compatibility
+  isScribing: boolean;
+  currentSession: any;
+  startScribing: () => void;
+  stopScribing: () => void;
+  recordVoiceTranscript: (text: string) => void;
+  recordConsultation: (role: string, text: string) => void;
+  generateSynopsis: () => Promise<string>;
+  downloadTranscript: () => void;
+  getTranscriptForReview: () => string;
+}
 
 /**
  * Hook for managing scribe mode functionality in OracleConversation.
@@ -82,6 +94,26 @@ export function useScribeMode(): ScribeModeHook {
     setTranscript,
     appendTranscript,
     clearTranscript,
+
+    // Backward-compatible aliases for OracleConversation.tsx
+    isScribing: isActive,
+    currentSession: null,
+    startScribing: startScribe,
+    stopScribing: stopScribe,
+    recordVoiceTranscript: appendTranscript,
+    recordConsultation: (role: string, text: string) => appendTranscript(`[${role}]: ${text}\n`),
+    generateSynopsis: async () => transcript,
+    downloadTranscript: () => {
+      // Simple download of transcript
+      const blob = new Blob([transcript], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `scribe-session-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    getTranscriptForReview: () => transcript,
   };
 }
 

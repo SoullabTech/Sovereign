@@ -439,7 +439,7 @@ export async function POST(request: NextRequest) {
             facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
             phase: spiralogicCell.phase,
             confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : null,
-            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'unstable' : false,
+            is_uncertain: cognitiveProfile ? cognitiveProfile.stability === 'volatile' : false,
             regenerated: regenerationAttempt > 0,
             regeneration_attempt: regenerationAttempt,
             summary: validationResult!.summary,
@@ -505,7 +505,7 @@ export async function POST(request: NextRequest) {
             violations: axiomSummary.violations,
             ruptureDetected,
             warningsDetected,
-            evaluations: axiomEvals,
+            evaluations: axiomEvals as any,
             notes: axiomSummary.notes,
           },
         });
@@ -543,7 +543,7 @@ export async function POST(request: NextRequest) {
               frameworksActive: activeFrameworks,
               centeringLevel: panconsciousField.axisMundi.currentCenteringState.level
             },
-            evolutionTriggers: suggestedInterventions.map(i => i.flow)
+            evolutionTriggers: suggestedInterventions.map(i => i.flowId)
           }
         }
       );
@@ -561,19 +561,19 @@ export async function POST(request: NextRequest) {
         {
           messages: [...conversationHistory, { role: 'user', content: message }, { role: 'assistant', content: maiaResponse.coreMessage }],
           fieldStates: [{
-            fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-            water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-            earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-            air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-            aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4,
+            fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+            water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+            earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+            air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+            aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
             coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
           }],
-          insights: symbolPatterns.map(p => p.description || p.archetype),
+          insights: symbolPatterns.map((p: any) => p.description || p.archetype),
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
             phase: spiralogicCell.phase,
-            canonicalQuestion: spiralogicCell.canonicalQuestion,
+            canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
             trustLevel,
             conversationDepth
           }
@@ -600,26 +600,26 @@ export async function POST(request: NextRequest) {
         archetypalResonances: activeFrameworks,
         frameworksActive: activeFrameworks,
         elementalLevels: {
-          fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4
+          fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+          water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+          earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+          air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+          aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4
         },
         fieldStates: [{
-          fire: spiralogicCell.element === 'fire' ? 0.8 : 0.4,
-          water: spiralogicCell.element === 'water' ? 0.8 : 0.4,
-          earth: spiralogicCell.element === 'earth' ? 0.8 : 0.4,
-          air: spiralogicCell.element === 'air' ? 0.8 : 0.4,
-          aether: spiralogicCell.element === 'aether' ? 0.8 : 0.4,
+          fire: spiralogicCell.element.toLowerCase() === 'fire' ? 0.8 : 0.4,
+          water: spiralogicCell.element.toLowerCase() === 'water' ? 0.8 : 0.4,
+          earth: spiralogicCell.element.toLowerCase() === 'earth' ? 0.8 : 0.4,
+          air: spiralogicCell.element.toLowerCase() === 'air' ? 0.8 : 0.4,
+          aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
           coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
         }],
-        insights: symbolPatterns.map(p => p.description || p.archetype),
+        insights: symbolPatterns.map((p: any) => p.description || p.archetype),
         themes: [spiralogicCell.context, ...activeFrameworks],
         spiralIndicators: {
           element: spiralogicCell.element,
           phase: spiralogicCell.phase,
-          canonicalQuestion: spiralogicCell.canonicalQuestion,
+          canonicalQuestion: selectCanonicalQuestion(spiralogicCell),
           trustLevel,
           conversationDepth
         }
@@ -909,7 +909,7 @@ async function generateSpiralogicResponseWithLLM(
     const llmResponse = await llmProvider.generate({
       systemPrompt,
       userInput: fullUserInput,
-      level: consciousnessLevel // Use computed level (DEEP -> 5 -> Opus 4.5)
+      level: consciousnessLevel as any // Use computed level (DEEP -> 5 -> Opus 4.5)
       // Claude is now primary by default
     });
     coreMessage = llmResponse.text;

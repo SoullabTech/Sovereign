@@ -2,11 +2,18 @@
 
 import React from 'react';
 import { Play, Plus } from 'lucide-react';
+import type { SessionPhase } from '@/lib/session/SessionTimer';
 
 interface ResumeSessionPromptProps {
   onResume?: () => void;
   onNewSession?: () => void;
   lastSessionTime?: string;
+  // Extended props for OracleConversation.tsx
+  isOpen?: boolean;
+  remainingTime?: string;
+  phase?: SessionPhase;
+  onStartNew?: () => void;
+  onDismiss?: () => void;
 }
 
 export function ResumeSessionPrompt({ onResume, onNewSession, lastSessionTime }: ResumeSessionPromptProps) {
