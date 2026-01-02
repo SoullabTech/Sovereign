@@ -264,7 +264,8 @@ export function useCollectiveListening(options: UseCollectiveListeningOptions): 
    * Request collective snapshot
    */
   const requestSnapshot = useCallback(async (): Promise<CollectiveSnapshot | null> => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) {
       console.warn('Backchannel not connected');
       return null;
     }
@@ -275,7 +276,7 @@ export function useCollectiveListening(options: UseCollectiveListeningOptions): 
         try {
           const message = JSON.parse(event.data);
           if (message.type === 'collective-snapshot') {
-            wsRef.current?.removeEventListener('message', handleMessage);
+            ws.removeEventListener('message', handleMessage);
             resolve(message.data as CollectiveSnapshot);
           }
         } catch (error) {
@@ -283,17 +284,17 @@ export function useCollectiveListening(options: UseCollectiveListeningOptions): 
         }
       };
 
-      wsRef.current.addEventListener('message', handleMessage);
+      ws.addEventListener('message', handleMessage);
 
       // Send request
-      wsRef.current.send(JSON.stringify({
+      ws.send(JSON.stringify({
         type: 'request-snapshot',
         teamId
       }));
 
       // Timeout after 5 seconds
       setTimeout(() => {
-        wsRef.current?.removeEventListener('message', handleMessage);
+        ws.removeEventListener('message', handleMessage);
         resolve(null);
       }, 5000);
     });
