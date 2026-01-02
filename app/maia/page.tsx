@@ -24,6 +24,8 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
+import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
+import { CaptureToggle } from '@/components/capture/CaptureToggle';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
@@ -158,6 +160,7 @@ function MAIAPageContent() {
   const [showAccountMenu, setShowAccountMenu] = useState(false);
   const [contributionAmount, setContributionAmount] = useState(9); // Sliding scale amount
   const [showSevaOptions, setShowSevaOptions] = useState(false);
+  const [showJournalSheet, setShowJournalSheet] = useState(false);
 
   const hasCheckedAuth = useRef(false);
 
@@ -528,6 +531,22 @@ function MAIAPageContent() {
                   )}
                 </div>
 
+                {/* Journal Button - Mobile */}
+                <motion.button
+                  onClick={() => setShowJournalSheet(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-indigo-500/10 hover:bg-indigo-500/20
+                           border border-indigo-500/20 hover:border-indigo-500/40
+                           text-indigo-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Quick Journal"
+                >
+                  <BookOpen className="w-3 h-3" />
+                  <span className="text-xs">Journal</span>
+                </motion.button>
+
+                {/* Capture Mode Toggle - Mobile */}
+                <CaptureToggle userId={userData.id} />
+
                 {/* Account Button - Mobile (opens bottom sheet) */}
                 <motion.button
                   onClick={() => setShowAccountMenu(true)}
@@ -637,6 +656,24 @@ function MAIAPageContent() {
                     <span className="hidden sm:inline">Session Active</span>
                   </div>
                 )}
+
+                {/* Journal Button - Desktop */}
+                <motion.button
+                  onClick={() => setShowJournalSheet(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                           bg-indigo-500/10 hover:bg-indigo-500/20
+                           border border-indigo-500/20 hover:border-indigo-500/40
+                           text-indigo-400 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Quick Journal"
+                >
+                  <BookOpen className="w-4 h-4" />
+                  <span className="hidden sm:inline">Journal</span>
+                </motion.button>
+
+                {/* Capture Mode Toggle - Desktop */}
+                <CaptureToggle userId={userData.id} />
 
                 {/* Account Button - Desktop (opens bottom sheet) */}
                 <motion.button
@@ -862,6 +899,30 @@ function MAIAPageContent() {
           onAction={(action) => {
             console.log('Lab action:', action);
             // Handle specific actions here
+          }}
+        />
+
+        {/* Quick Journal Sheet */}
+        <QuickJournalSheet
+          isOpen={showJournalSheet}
+          onClose={() => setShowJournalSheet(false)}
+          userId={explorerId}
+          onSaved={(entryId) => {
+            console.log('📓 [MAIA] Journal entry saved:', entryId);
+          }}
+          onAskMaia={(content, type) => {
+            // Close journal and send content to MAIA conversation
+            setShowJournalSheet(false);
+            // Dispatch event that OracleConversation can listen to
+            window.dispatchEvent(new CustomEvent('journalAskMaia', {
+              detail: {
+                content,
+                type,
+                prompt: type === 'dream'
+                  ? `Here's a dream I just captured:\n\n${content}`
+                  : `Something I'm sitting with:\n\n${content}`
+              }
+            }));
           }}
         />
       </div>
