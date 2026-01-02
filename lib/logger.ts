@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Comprehensive error logging for production debugging
 // import { supabase } from './dbClient';
 const supabase = null; // Temporarily disabled

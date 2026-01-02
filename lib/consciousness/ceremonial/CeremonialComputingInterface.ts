@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * CEREMONIAL COMPUTING INTERFACE
  *

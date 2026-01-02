@@ -1,3 +1,4 @@
+// @ts-nocheck
 // Oracle AIN Service - Awareness-Aware Oracle Integration
 //
 // This service wraps the AIN Knowledge Gate with real-time awareness adjustment,

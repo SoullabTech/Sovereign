@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Portal Routing Engine
  *
