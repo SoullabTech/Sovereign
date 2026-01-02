@@ -545,7 +545,7 @@ function MAIAPageContent() {
                 </motion.button>
 
                 {/* Capture Mode Toggle - Mobile */}
-                <CaptureToggle userId={userData.id} />
+                <CaptureToggle userId={explorerId} />
 
                 {/* Account Button - Mobile (opens bottom sheet) */}
                 <motion.button
@@ -673,7 +673,7 @@ function MAIAPageContent() {
                 </motion.button>
 
                 {/* Capture Mode Toggle - Desktop */}
-                <CaptureToggle userId={userData.id} />
+                <CaptureToggle userId={explorerId} />
 
                 {/* Account Button - Desktop (opens bottom sheet) */}
                 <motion.button
