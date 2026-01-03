@@ -156,32 +156,26 @@ jobs:
 
       # Build release IPA only on main branch or tags (when signing secrets are configured)
       - name: Import Code Signing Certificates
-        if: |
-          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-          && secrets.IOS_P12_BASE64 != ''
+        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        continue-on-error: true
+        id: import-certs
         uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.IOS_P12_BASE64 }}
           p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
 
       - name: Download Provisioning Profiles
-        if: |
-          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-          && secrets.IOS_PROVISION_PROFILE_BASE64 != ''
+        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && steps.import-certs.outcome == 'success'
         run: |
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           echo "${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}" | base64 -d > ~/Library/MobileDevice/Provisioning\ Profiles/profile.mobileprovision
 
       - name: Build iOS IPA
-        if: |
-          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-          && secrets.IOS_P12_BASE64 != ''
+        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && steps.import-certs.outcome == 'success'
         run: bash scripts/build-ios.sh release
 
       - name: Upload iOS IPA
-        if: |
-          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
-          && secrets.IOS_P12_BASE64 != ''
+        if: (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')) && steps.import-certs.outcome == 'success'
         uses: actions/upload-artifact@v4
         with:
           name: ios-ipa
@@ -192,7 +186,9 @@ jobs:
         run: |
           echo "✅ iOS Capacitor sync completed successfully"
           echo "📱 Mobile app will load from https://soullab.life"
-          echo "⚠️ IPA signing requires IOS_P12_BASE64 and IOS_PROVISION_PROFILE_BASE64 secrets"
+          if [[ "${{ steps.import-certs.outcome }}" != "success" ]]; then
+            echo "⚠️ IPA not built - code signing secrets not configured"
+          fi
 
   # Build PWA
   build-pwa:
