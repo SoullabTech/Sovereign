@@ -79,6 +79,8 @@ jobs:
         env:
           CAPACITOR_BUILD: true
           NODE_ENV: production
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MAIA_AUDIT_FINGERPRINT_SECRET: ${{ secrets.MAIA_AUDIT_FINGERPRINT_SECRET }}
 
       - name: Sync Capacitor
         run: npx cap sync android
@@ -146,6 +148,8 @@ jobs:
         env:
           CAPACITOR_BUILD: true
           NODE_ENV: production
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MAIA_AUDIT_FINGERPRINT_SECRET: ${{ secrets.MAIA_AUDIT_FINGERPRINT_SECRET }}
 
       - name: Sync Capacitor
         run: npx cap sync ios
@@ -198,6 +202,8 @@ jobs:
         env:
           NEXT_PUBLIC_CONSCIOUSNESS_PWA: true
           NODE_ENV: production
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          MAIA_AUDIT_FINGERPRINT_SECRET: ${{ secrets.MAIA_AUDIT_FINGERPRINT_SECRET }}
 
       - name: Generate PWA Icons
         run: npm run pwa:generate-icons || echo "Icon generation skipped"
