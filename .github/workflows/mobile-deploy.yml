@@ -74,16 +74,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build web assets
-        run: npm run build
-        env:
-          CAPACITOR_BUILD: true
-          NODE_ENV: production
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MAIA_AUDIT_FINGERPRINT_SECRET: ${{ secrets.MAIA_AUDIT_FINGERPRINT_SECRET }}
+      - name: Prepare Capacitor (server mode)
+        run: |
+          # For Android, we use server mode - app loads from production URL
+          # No static export needed (avoids API route conflicts)
+          mkdir -p out
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=https://soullab.life"></head></html>' > out/index.html
 
       - name: Sync Capacitor
-        run: npx cap sync android
+        run: CAPACITOR_MODE=beta npx cap sync android
 
       - name: Build Android Debug APK
         run: bash scripts/build-android.sh debug
@@ -143,16 +142,15 @@ jobs:
           cd ios/App
           pod install
 
-      - name: Build web assets
-        run: npm run build
-        env:
-          CAPACITOR_BUILD: true
-          NODE_ENV: production
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          MAIA_AUDIT_FINGERPRINT_SECRET: ${{ secrets.MAIA_AUDIT_FINGERPRINT_SECRET }}
+      - name: Prepare Capacitor (server mode)
+        run: |
+          # For iOS, we use server mode - app loads from production URL
+          # No static export needed (avoids API route conflicts)
+          mkdir -p out
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=https://soullab.life"></head></html>' > out/index.html
 
       - name: Sync Capacitor
-        run: npx cap sync ios
+        run: CAPACITOR_MODE=beta npx cap sync ios
 
       # Build release IPA only on main branch or tags
       - name: Import Code Signing Certificates
