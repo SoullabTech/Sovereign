@@ -4,6 +4,14 @@
 
 **[MAIA Canon v1.1](./docs/canon/MAIA_CANON_v1.1.md)** governs all changes. Before implementing any feature, verify alignment with the canon's prohibitions and structural principles.
 
+## Deployment
+
+- **We do NOT use Vercel.** Never suggest or assume Vercel deployment.
+- Infrastructure: Docker + Caddy (reverse proxy with auto-SSL)
+- Deployment script: `./scripts/deploy-production.sh`
+- Production compose: `docker-compose.production.yml`
+- To deploy: SSH to server, `git pull`, run `./scripts/deploy-production.sh deploy`
+
 ## Database & Backend
 
 - **We do NOT use Supabase.** Never introduce Supabase. Use local PostgreSQL via `lib/db/postgres.ts` only.
