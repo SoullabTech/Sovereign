@@ -1,8 +1,10 @@
 // @ts-nocheck
-import { OpenAIEmbeddings } from "@langchain/openai";
+// SOVEREIGNTY: No OpenAI dependency - using simple text matching for vector store
+// Full semantic search uses local PostgreSQL pgvector via lib/db/pgvector.ts
+
 import { Document } from "@langchain/core/documents";
 
-// Simplified in-memory vector store implementation for production build compatibility
+// Simple in-memory vector store - no external AI dependencies
 interface MemoryDocument {
   content: string;
   metadata: any;
@@ -11,14 +13,8 @@ interface MemoryDocument {
 
 class SimpleMemoryVectorStore {
   private documents: MemoryDocument[] = [];
-  private embeddings: OpenAIEmbeddings;
-
-  constructor(embeddings: OpenAIEmbeddings) {
-    this.embeddings = embeddings;
-  }
 
   async addDocuments(docs: Document[]) {
-    // For now, just store without embeddings (simplified for production build)
     docs.forEach(doc => {
       this.documents.push({
         content: doc.pageContent,
@@ -28,22 +24,38 @@ class SimpleMemoryVectorStore {
   }
 
   async similaritySearch(query: string, limit: number = 5, filter?: any) {
-    // Simple text matching for now (would use embeddings in full implementation)
+    // Simple text matching (semantic search via pgvector in production)
+    const queryLower = query.toLowerCase();
     const results = this.documents
       .filter(doc => {
-        // Apply metadata filter if provided
         if (filter) {
           return Object.keys(filter).every(key => doc.metadata[key] === filter[key]);
         }
         return true;
       })
-      .filter(doc => doc.content.toLowerCase().includes(query.toLowerCase()))
+      .map(doc => ({
+        ...doc,
+        similarity: this.calculateSimilarity(doc.content.toLowerCase(), queryLower)
+      }))
+      .filter(doc => doc.similarity > 0)
+      .sort((a, b) => b.similarity - a.similarity)
       .slice(0, limit);
 
     return results.map(doc => ({
       pageContent: doc.content,
-      metadata: doc.metadata
+      metadata: { ...doc.metadata, score: doc.similarity }
     }));
+  }
+
+  private calculateSimilarity(content: string, query: string): number {
+    // Simple word overlap scoring
+    const contentWords = new Set(content.split(/\s+/));
+    const queryWords = query.split(/\s+/);
+    let matches = 0;
+    for (const word of queryWords) {
+      if (contentWords.has(word)) matches++;
+    }
+    return queryWords.length > 0 ? matches / queryWords.length : 0;
   }
 }
 
@@ -59,36 +71,25 @@ interface LlamaMemoryDocument {
 
 export class LlamaService {
   private vectorStore: SimpleMemoryVectorStore | null = null;
-  private embeddings: OpenAIEmbeddings;
   private _isInitialized = false;
 
   get isInitialized(): boolean {
     return this._isInitialized;
   }
 
-  constructor() {
-    this.embeddings = new OpenAIEmbeddings({
-      openAIApiKey: process.env.OPENAI_API_KEY,
-      modelName: "text-embedding-ada-002"
-    });
-  }
-
   async init() {
-    // Initialize with simple in-memory vector store for production build compatibility
-    // Can be upgraded to full MemoryVectorStore when LangChain compatibility is resolved
-    this.vectorStore = new SimpleMemoryVectorStore(this.embeddings);
+    // Initialize simple in-memory vector store (no external AI required)
+    this.vectorStore = new SimpleMemoryVectorStore();
     this._isInitialized = true;
   }
 
   async addMemory(userId: string, memory: any) {
     if (!this.vectorStore) throw new Error("Llama index not initialized");
-    
-    // Handle both old format and new structured format
+
     let content: string;
     let metadata: any;
-    
+
     if (typeof memory === 'string') {
-      // Legacy format for backward compatibility
       content = memory;
       metadata = {
         userId,
@@ -96,7 +97,6 @@ export class LlamaService {
         timestamp: new Date().toISOString()
       };
     } else {
-      // New structured format
       content = memory.content;
       metadata = {
         userId,
@@ -106,7 +106,7 @@ export class LlamaService {
         ...memory.meta
       };
     }
-    
+
     const doc = new Document({
       pageContent: content,
       metadata
@@ -117,13 +117,11 @@ export class LlamaService {
 
   async queryMemory(userId: string, query: string, limit: number = 5) {
     if (!this.vectorStore) throw new Error("Llama index not initialized");
-    
-    // Semantic search with user filter
+
     const results = await this.vectorStore.similaritySearch(query, limit, {
       userId
     });
 
-    // Format results for context injection
     return results.map(doc => ({
       content: doc.pageContent,
       type: doc.metadata.type,
@@ -149,7 +147,7 @@ export class LlamaService {
 
   async buildContextPrompt(userId: string, currentMessage: string): Promise<string> {
     const memories = await this.queryMemory(userId, currentMessage);
-    
+
     if (memories.length === 0) {
       return "";
     }
@@ -170,17 +168,14 @@ export class LlamaService {
 
   async searchMemories(userId: string, query: string, limit: number = 10, filters?: { type?: string }): Promise<any[]> {
     if (!this.vectorStore) throw new Error("Llama index not initialized");
-    
-    // Build metadata filter
+
     const filter: any = { userId };
     if (filters?.type) {
       filter.type = filters.type;
     }
-    
-    // Semantic search with filters
+
     const results = await this.vectorStore.similaritySearch(query, limit, filter);
-    
-    // Return structured results
+
     return results.map(doc => ({
       id: doc.metadata.id,
       content: doc.pageContent,
