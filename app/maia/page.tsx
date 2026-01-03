@@ -26,6 +26,7 @@ import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor'
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { CaptureToggle } from '@/components/capture/CaptureToggle';
+import { BetaTesterHub } from '@/components/beta/BetaTesterHub';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
@@ -1220,6 +1221,9 @@ function MAIAPageContent() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Beta Tester Feedback Hub - Only visible to beta testers */}
+      <BetaTesterHub userName={explorerName} userId={explorerId} />
     </ErrorBoundary>
   );
 }
