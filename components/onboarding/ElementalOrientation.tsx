@@ -183,7 +183,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
           transition={{ delay: 0.3 }}
           className="text-center mb-12"
         >
-          <p className="text-amber-200/40 text-sm mb-2">Welcome, {explorerName}</p>
+          <p className="text-amber-200/80 text-sm mb-2">Welcome, {explorerName}</p>
           <h1 className="text-2xl font-light text-amber-50">Before we begin...</h1>
         </motion.div>
 
@@ -216,7 +216,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
             >
               <div className="bg-gradient-to-br from-amber-400/20 to-amber-500/20 backdrop-blur-md border border-amber-500/20 rounded-2xl p-8 md:p-12 text-center">
                 <h2 className="text-2xl font-light text-amber-50 mb-4">How did this feel?</h2>
-                <p className="text-amber-200/60 text-sm mb-8">Your feedback helps us refine the experience</p>
+                <p className="text-amber-100/90 text-sm mb-8">Your feedback helps us refine the experience</p>
                 <div className="flex justify-center gap-6">
                   {[
                     { emoji: '✨', label: 'Just right', value: 'perfect' },
@@ -231,7 +231,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
                       whileTap={{ scale: 0.95 }}
                     >
                       <span className="text-4xl">{option.emoji}</span>
-                      <span className="text-xs text-amber-200/70">{option.label}</span>
+                      <span className="text-xs text-amber-100">{option.label}</span>
                     </motion.button>
                   ))}
                 </div>
@@ -274,7 +274,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
                 className="text-center mb-4 md:mb-6"
               >
                 <h2 className="text-3xl font-light text-amber-50 mb-2">{current.title}</h2>
-                <p className="text-amber-200/70 text-sm tracking-wider uppercase">{current.subtitle}</p>
+                <p className="text-amber-100 text-sm tracking-wider uppercase">{current.subtitle}</p>
               </motion.div>
 
               {/* Content */}
@@ -301,7 +301,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
           <button
             onClick={handleSkip}
             onTouchEnd={(e) => { e.preventDefault(); handleSkip(); }}
-            className="text-sm text-amber-200/40 hover:text-amber-200/60 active:text-amber-200/80 transition-colors py-2 px-3 -ml-3 touch-manipulation"
+            className="text-sm text-amber-200/80 hover:text-amber-100 active:text-amber-50 transition-colors py-2 px-3 -ml-3 touch-manipulation"
           >
             Skip orientation
           </button>
@@ -313,7 +313,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
             className={`flex items-center gap-2 px-6 py-4 rounded-lg transition-all touch-manipulation min-h-[52px] ${
               canProceed
                 ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white active:from-amber-600 active:to-amber-700 cursor-pointer shadow-lg'
-                : 'bg-amber-500/20 text-amber-200/40 cursor-not-allowed'
+                : 'bg-amber-500/20 text-amber-200/70 cursor-not-allowed'
             }`}
           >
             {currentIndex === ELEMENTS.length - 1 ? (
@@ -332,7 +332,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
 
         {/* Current step indicator */}
         <div className="text-center mt-3 md:mt-4">
-          <p className="text-xs text-amber-200/30">
+          <p className="text-xs text-amber-200/70">
             {currentIndex + 1} of {ELEMENTS.length}
           </p>
         </div>
