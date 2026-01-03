@@ -24,7 +24,7 @@ const serverConfigs = {
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
-  webDir: '.next/static', // For production builds, use built static assets
+  webDir: BUILD_MODE === 'dev' ? '.next/static' : 'out', // Use static export for production builds
   server: {
     ...serverConfigs[BUILD_MODE as keyof typeof serverConfigs],
     androidScheme: 'https'
