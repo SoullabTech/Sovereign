@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Crown, Sparkles, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { Crown, Sparkles, ArrowRight, Eye, EyeOff, Mail } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { ganeshaContacts, GaneshaContact } from '@/lib/ganesha/contacts';
 import { Holoflower } from '@/components/ui/Holoflower';
 
@@ -55,7 +56,8 @@ const extractFirstName = (nameOrKey: string): string => {
 };
 
 function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
-  const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing'>('arrival');
+  const router = useRouter();
+  const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing' | 'recovery'>('arrival');
   const [soulKey, setSoulKey] = useState('');
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
@@ -67,6 +69,9 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [recognizedSoul, setRecognizedSoul] = useState<GaneshaContact | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+  const [serverMember, setServerMember] = useState<{ id: string; username: string; name: string } | null>(null);
 
   // Facet awareness - read user's facet profile
   const [facetProfile, setFacetProfile] = useState<{
@@ -150,6 +155,37 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
     // Sacred pause for soul recognition
     await new Promise(resolve => setTimeout(resolve, 1200));
 
+    // First check server-side if this passkey exists
+    try {
+      const checkResponse = await fetch('/api/members/check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passkey: soulKey.toUpperCase() }),
+      });
+
+      const checkData = await checkResponse.json();
+
+      if (checkData.exists) {
+        // Member already registered - redirect to sign in
+        setIsRecognizing(false);
+        if (checkData.onboarded) {
+          // Fully onboarded - go to sign in
+          router.replace('/signin');
+          return;
+        } else {
+          // Started but not finished - continue from where they left off
+          setServerMember(checkData.member);
+          setName(checkData.member.name || '');
+          setPhase('recognition');
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('[SacredSoulInduction] Server check error:', err);
+      // Fall through to local validation if server unavailable
+    }
+
+    // Fall back to local validation (Ganesha contacts + universal keys)
     const validKeys = getAllSacredKeys();
     const recognizedMember = recognizeSoul(soulKey);
 
@@ -157,7 +193,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       setIsRecognizing(false);
 
       if (recognizedMember) {
-        // Returning consciousness pioneer
+        // Returning consciousness pioneer (from Ganesha contacts)
         setRecognizedSoul(recognizedMember);
         const firstName = extractFirstName(recognizedMember.name);
         console.log('Debug - Full name:', recognizedMember.name, 'Extracted first name:', firstName);
@@ -172,6 +208,33 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
     } else {
       setError('This key isn\'t recognized. Please check your invitation and try again.');
       setIsRecognizing(false);
+    }
+  };
+
+  const handleRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setRecoveryStatus('sending');
+
+    try {
+      const response = await fetch('/api/members/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail.toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setRecoveryStatus('sent');
+      } else {
+        setError(data.error || 'Failed to send recovery email');
+        setRecoveryStatus('idle');
+      }
+    } catch (err) {
+      console.error('[SacredSoulInduction] Recovery error:', err);
+      setError('Unable to process recovery request. Please try again.');
+      setRecoveryStatus('idle');
     }
   };
 
@@ -199,6 +262,33 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       return;
     }
 
+    // Register to server
+    try {
+      const response = await fetch('/api/members/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          passkey: soulKey.toUpperCase(),
+          username: username.trim().toLowerCase(),
+          password,
+          name: name.trim(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || 'Failed to create account');
+        return;
+      }
+
+      // Store member info locally for session
+      setServerMember(data.member);
+    } catch (err) {
+      console.error('[SacredSoulInduction] Registration error:', err);
+      // Continue anyway for graceful degradation
+    }
+
     setPhase('blessing');
 
     // Soul blessing ceremony
@@ -223,6 +313,34 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
     if (password.length < 8) {
       setError('Your sacred password needs at least 8 characters to protect your essence');
       return;
+    }
+
+    // Register to server (unless already registered from server check)
+    if (!serverMember) {
+      try {
+        const response = await fetch('/api/members/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            passkey: soulKey.toUpperCase(),
+            username: username.trim().toLowerCase(),
+            password,
+            name: name.trim(),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setError(data.error || 'Failed to create account');
+          return;
+        }
+
+        setServerMember(data.member);
+      } catch (err) {
+        console.error('[SacredSoulInduction] Registration error:', err);
+        // Continue anyway for graceful degradation
+      }
     }
 
     setPhase('blessing');
@@ -398,7 +516,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             inset 0 1px 0 rgba(255, 255, 255, 0.4),
                             inset 0 -1px 0 rgba(0, 0, 0, 0.1)
                           `,
-                          color: '#b45309',
+                          color: '#4b5563',
                           textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
                           transform: 'translateY(-2px)'
                         }}
@@ -426,7 +544,18 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     </motion.div>
                   </form>
 
-                  <div className="text-center mt-8">
+                  {/* Forgot passkey link */}
+                  <div className="text-center mt-6">
+                    <button
+                      type="button"
+                      onClick={() => setPhase('recovery')}
+                      className="text-amber-700/80 hover:text-amber-800 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                    >
+                      Don't remember your passkey?
+                    </button>
+                  </div>
+
+                  <div className="text-center mt-6">
                     <p className="text-teal-800/60 text-sm font-extralight italic tracking-[0.1em]">
 "Attention changes the world. How you attend to it changes what it is you find there."
                       — Iain McGilchrist
@@ -580,7 +709,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           type="submit"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-black rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-gray-600 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
                           style={{
                             textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                           }}
@@ -775,7 +904,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           type="submit"
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-black rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-gray-600 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
                           style={{
                             textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                           }}
@@ -788,6 +917,138 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                 </div>
 
                 {/* Infinity Symbol to ground the card */}
+                <div className="flex justify-center mt-4">
+                  <div className="text-white/70 text-4xl font-light">
+                    ∞
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Phase: Passkey Recovery */}
+            {phase === 'recovery' && (
+              <motion.div
+                key="recovery"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.8 }}
+                className="space-y-10"
+              >
+                {/* Mail icon */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="w-20 h-20 mx-auto"
+                >
+                  <Mail className="w-full h-full text-amber-600/80 drop-shadow-lg" />
+                </motion.div>
+
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="rounded-2xl p-8 max-w-md w-full text-center shadow-2xl border"
+                  style={{
+                    background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(251, 191, 36, 0.05), rgba(255, 255, 255, 0.15))',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    boxShadow: '0 35px 70px -12px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                  }}
+                >
+                  <h1 className="text-2xl font-extralight text-teal-900 mb-4 tracking-[0.15em] uppercase">
+                    Recover Your Passkey
+                  </h1>
+
+                  <p className="text-teal-900 text-base font-extralight leading-relaxed mb-6 tracking-[0.05em]">
+                    Enter the email address associated with your account. If it matches, we'll send your passkey.
+                  </p>
+
+                  {recoveryStatus === 'sent' ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="space-y-6"
+                    >
+                      <div className="bg-emerald-100/60 border border-emerald-300/40 rounded-xl p-6">
+                        <p className="text-emerald-800 text-lg font-light">
+                          Check your email
+                        </p>
+                        <p className="text-emerald-700/80 text-sm font-extralight mt-2">
+                          If an account exists with this email, we've sent recovery instructions.
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhase('arrival');
+                          setRecoveryStatus('idle');
+                          setRecoveryEmail('');
+                        }}
+                        className="text-amber-700/80 hover:text-amber-800 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                      >
+                        Back to passkey entry
+                      </button>
+                    </motion.div>
+                  ) : (
+                    <form onSubmit={handleRecovery} className="space-y-6">
+                      <div className="text-center">
+                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                          Email Address
+                        </label>
+                        <input
+                          type="email"
+                          value={recoveryEmail}
+                          onChange={(e) => setRecoveryEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.05em] focus:outline-none transition-all duration-500"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            color: '#134e4a',
+                            boxShadow: 'inset 0 4px 12px rgba(146, 64, 14, 0.7), inset 0 2px 6px rgba(146, 64, 14, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.3)',
+                          }}
+                        />
+                      </div>
+
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="text-red-600 text-sm font-light text-center bg-red-50/80 rounded-lg p-3 border border-red-200"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
+                      <motion.button
+                        type="submit"
+                        disabled={!recoveryEmail.trim() || recoveryStatus === 'sending'}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        className="w-full px-8 py-4 bg-amber-600/80 hover:bg-amber-600 text-white rounded-xl font-medium text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg"
+                      >
+                        {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
+                      </motion.button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPhase('arrival');
+                          setError('');
+                          setRecoveryEmail('');
+                        }}
+                        className="text-amber-700/80 hover:text-amber-800 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                      >
+                        Back to passkey entry
+                      </button>
+                    </form>
+                  )}
+                </motion.div>
+
+                {/* Infinity Symbol */}
                 <div className="flex justify-center mt-4">
                   <div className="text-white/70 text-4xl font-light">
                     ∞

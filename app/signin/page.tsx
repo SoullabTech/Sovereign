@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
+import { Mail } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 
@@ -12,6 +13,9 @@ export default function SigninPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showRecovery, setShowRecovery] = useState(false);
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
   // Check if already authenticated
   useEffect(() => {
@@ -27,63 +31,97 @@ export default function SigninPage() {
     setIsLoading(true);
 
     try {
-      // Get stored users from registry
-      const usersJson = localStorage.getItem('beta_users');
-      if (!usersJson) {
-        setError('No account found. Please check your credentials.');
-        setIsLoading(false);
-        return;
-      }
-
-      const users = JSON.parse(usersJson);
-
-      // Normalize username to lowercase for case-insensitive lookup
-      const normalizedUsername = username.toLowerCase();
-      const user = users[normalizedUsername];
-
-      console.log('🔍 [Signin Debug]', {
-        usernameEntered: username,
-        normalizedUsername,
-        userFound: !!user,
-        userHasPassword: user ? !!user.password : false,
-        availableUsernames: Object.keys(users)
+      // First try server-side authentication
+      const response = await fetch('/api/members/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.toLowerCase(),
+          password,
+        }),
       });
 
-      // Validate credentials
-      if (!user) {
-        setError('Username not found.');
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        // Server auth succeeded - store session locally
+        const user = {
+          id: data.member.id,
+          username: data.member.username,
+          name: data.member.name,
+          onboarded: data.member.onboarded,
+        };
+
+        localStorage.setItem('beta_user', JSON.stringify(user));
+        localStorage.setItem('explorerId', user.id);
+        localStorage.setItem('explorerName', user.name);
+        localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
+
+        // Redirect based on onboarding status
+        if (user.onboarded) {
+          router.push('/maia');
+        } else {
+          router.push('/begin');
+        }
+        return;
+      }
+
+      // If server says invalid credentials, show error
+      if (response.status === 401) {
+        setError('Invalid username or password.');
         setIsLoading(false);
         return;
       }
 
-      // If user doesn't have a password, they need to go through signup flow
-      if (!user.password) {
-        setError('This account needs to set a password. Please use "Start Fresh" to complete setup.');
-        setIsLoading(false);
-        return;
+      // Fall back to localStorage for existing local-only users
+      const usersJson = localStorage.getItem('beta_users');
+      if (usersJson) {
+        const users = JSON.parse(usersJson);
+        const normalizedUsername = username.toLowerCase();
+        const user = users[normalizedUsername];
+
+        if (user && user.password === password) {
+          localStorage.setItem('beta_user', JSON.stringify(user));
+          localStorage.setItem('explorerId', user.id || user.username);
+          localStorage.setItem('explorerName', user.name || username);
+          localStorage.setItem('betaOnboardingComplete', 'true');
+          router.push('/maia');
+          return;
+        }
       }
 
-      if (user.password !== password) {
-        console.log('❌ Password mismatch:', { expected: user.password, entered: password });
-        setError('Incorrect password.');
-        setIsLoading(false);
-        return;
-      }
-
-      // Create active session
-      localStorage.setItem('beta_user', JSON.stringify(user));
-
-      // Ensure identity markers are set
-      localStorage.setItem('explorerId', user.id || user.username);
-      localStorage.setItem('explorerName', user.name || username);
-      localStorage.setItem('betaOnboardingComplete', 'true');
-
-      // Redirect to MAIA
-      router.push('/maia');
+      setError('Invalid username or password.');
+      setIsLoading(false);
     } catch (err) {
       console.error('Sign in error:', err);
       setError('Something went wrong. Please try again.');
       setIsLoading(false);
+    }
+  };
+
+  const handleRecovery = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setRecoveryStatus('sending');
+
+    try {
+      const response = await fetch('/api/members/recover', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail.toLowerCase() }),
+      });
+
+      if (response.ok) {
+        setRecoveryStatus('sent');
+      } else {
+        const data = await response.json();
+        setError(data.error || 'Failed to send recovery email');
+        setRecoveryStatus('idle');
+      }
+    } catch (err) {
+      console.error('Recovery error:', err);
+      setError('Unable to process recovery request. Please try again.');
+      setRecoveryStatus('idle');
     }
   };
 
@@ -171,7 +209,17 @@ export default function SigninPage() {
           </motion.button>
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={() => setShowRecovery(true)}
+            className="text-amber-700/80 hover:text-amber-800 text-sm font-light underline underline-offset-2 transition-colors duration-300"
+          >
+            Forgot your passkey or password?
+          </button>
+        </div>
+
+        <div className="mt-4 text-center">
           <button
             onClick={() => router.push('/begin')}
             className="text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
@@ -180,6 +228,121 @@ export default function SigninPage() {
           </button>
         </div>
       </motion.div>
+
+      {/* Recovery Modal */}
+      {showRecovery && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          onClick={() => {
+            if (recoveryStatus !== 'sending') {
+              setShowRecovery(false);
+              setRecoveryEmail('');
+              setRecoveryStatus('idle');
+              setError('');
+            }
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="rounded-2xl p-8 max-w-md w-full shadow-2xl border"
+            style={{
+              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9))',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <div className="flex justify-center mb-6">
+              <Mail className="w-12 h-12 text-amber-600/80" />
+            </div>
+
+            <h2 className="text-xl font-light text-teal-900 text-center mb-4 tracking-wide">
+              Recover Your Account
+            </h2>
+
+            <p className="text-teal-800/70 text-sm text-center mb-6">
+              Enter the email address associated with your account. We'll send your passkey and username.
+            </p>
+
+            {recoveryStatus === 'sent' ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-100/60 border border-emerald-300/40 rounded-xl p-6 text-center">
+                  <p className="text-emerald-800 text-lg font-light">
+                    Check your email
+                  </p>
+                  <p className="text-emerald-700/80 text-sm mt-2">
+                    If an account exists with this email, we've sent recovery instructions.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRecovery(false);
+                    setRecoveryStatus('idle');
+                    setRecoveryEmail('');
+                  }}
+                  className="w-full py-3 rounded-xl font-medium text-teal-900 transition-all duration-300"
+                  style={{
+                    background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
+                    border: '1px solid rgba(110, 231, 183, 0.4)',
+                  }}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleRecovery} className="space-y-4">
+                <div>
+                  <label htmlFor="recovery-email" className="block text-sm font-light text-teal-800 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="recovery-email"
+                    value={recoveryEmail}
+                    onChange={(e) => setRecoveryEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                    placeholder="your@email.com"
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
+                    {error}
+                  </div>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={recoveryStatus === 'sending' || !recoveryEmail.trim()}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
+                </motion.button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowRecovery(false);
+                    setRecoveryEmail('');
+                    setError('');
+                  }}
+                  className="w-full py-2 text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+                >
+                  Cancel
+                </button>
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 }

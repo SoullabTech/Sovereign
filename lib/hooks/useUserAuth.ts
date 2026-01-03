@@ -37,7 +37,6 @@ export function useUserAuth() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const supabase = createClientComponentClient();
   const router = useRouter();
 
   const checkAuthStatus = useCallback(async () => {
@@ -47,136 +46,66 @@ export function useUserAuth() {
 
       console.log('🔐 Checking user auth status...');
 
+      // Check localStorage for session
       const explorerId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
       const explorerName = localStorage.getItem('explorerName');
-      let userName = localStorage.getItem('userName');
-
-      // One-time migration: Map explorer codes to real names if userName is missing
-      console.log('🔍 MIGRATION CHECK - userName:', userName, 'explorerName:', explorerName);
-      if (!userName && explorerName) {
-        const nameMapping: Record<string, string> = {
-          'MAIA-ARCHITECT': 'Kelly',
-          'MAIA-APPRENTICE': 'Alex',
-          'MAIA-ALCHEMIST': 'Jordan',
-        };
-
-        if (nameMapping[explorerName]) {
-          userName = nameMapping[explorerName];
-          localStorage.setItem('userName', userName);
-          console.log('🔧 Migrated user name for', explorerName, 'to', userName);
-        }
-      }
-
+      const userName = localStorage.getItem('userName');
+      const betaUserJson = localStorage.getItem('beta_user');
       const localOnboarded = localStorage.getItem('betaOnboardingComplete') === 'true';
 
       console.log('📦 localStorage check:', {
         explorerId: explorerId?.substring(0, 8) + '...',
         explorerName,
-        localOnboarded
+        localOnboarded,
+        hasBetaUser: !!betaUserJson
       });
 
-      if (!explorerId || !explorerName) {
+      // Parse beta_user if available
+      let betaUser = null;
+      if (betaUserJson) {
+        try {
+          betaUser = JSON.parse(betaUserJson);
+        } catch (e) {
+          console.error('Failed to parse beta_user:', e);
+        }
+      }
+
+      // No credentials at all - not authenticated
+      if (!explorerId && !betaUser) {
         console.log('❌ No credentials in localStorage');
         setIsOnboarded(false);
         setIsLoading(false);
         return { authenticated: false, onboarded: false };
       }
 
-      try {
-        console.log('🔍 Querying Supabase for user data...');
-
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('id, sacred_name, name, email, beta_onboarded_at, last_login')
-          .eq('id', explorerId)
-          .single();
-
-        if (userError) {
-          console.log('⚠️ User not found in Supabase, using localStorage fallback');
-          setUser({
-            id: explorerId,
-            sacredName: explorerName,
-            name: userName || explorerName,
-          });
-          setIsOnboarded(localOnboarded);
-          setIsLoading(false);
-          return { authenticated: true, onboarded: localOnboarded };
-        }
-
-        console.log('✅ User data loaded from Supabase:', {
-          id: userData.id.substring(0, 8) + '...',
-          name: userData.sacred_name,
-          onboarded: !!userData.beta_onboarded_at
-        });
-
+      // Use beta_user data if available (from server-side members system)
+      if (betaUser) {
         setUser({
-          id: userData.id,
-          sacredName: userData.sacred_name,
-          name: userData.name || userName || userData.sacred_name,
-          email: userData.email,
-          betaOnboardedAt: userData.beta_onboarded_at,
-          lastLogin: userData.last_login,
+          id: betaUser.id || explorerId || '',
+          sacredName: betaUser.username || explorerName || '',
+          name: betaUser.name || userName || betaUser.username || '',
         });
-        console.log('🔍 SUPABASE USER SET - name:', userData.name || userName || userData.sacred_name, 'sacredName:', userData.sacred_name);
 
-        const dbOnboarded = !!userData.beta_onboarded_at;
-        setIsOnboarded(dbOnboarded);
-
-        if (dbOnboarded && !localOnboarded) {
-          console.log('🔄 Syncing onboarding status to localStorage');
-          localStorage.setItem('betaOnboardingComplete', 'true');
-        }
-
-        const { data: agentData } = await supabase
-          .from('oracle_agents')
-          .select('id, name, archetype, personality_config')
-          .eq('user_id', explorerId)
-          .single();
-
-        if (agentData) {
-          setOracleAgent({
-            id: agentData.id,
-            name: agentData.name,
-            archetype: agentData.archetype,
-            personalityConfig: agentData.personality_config,
-          });
-        }
-
-        // Load user preferences
-        const { data: prefsData } = await supabase
-          .from('user_preferences')
-          .select('*')
-          .eq('user_id', explorerId)
-          .single();
-
-        if (prefsData) {
-          setPreferences({
-            tone: prefsData.tone,
-            style: prefsData.style,
-            theme: prefsData.theme,
-            voice_enabled: prefsData.voice_enabled,
-            voice_speed: prefsData.voice_speed,
-            show_thinking: prefsData.show_thinking,
-            auto_play_voice: prefsData.auto_play_voice,
-          });
-          console.log('✅ User preferences loaded:', prefsData);
-        }
-
+        const onboarded = betaUser.onboarded || localOnboarded;
+        setIsOnboarded(onboarded);
         setIsLoading(false);
-        return { authenticated: true, onboarded: dbOnboarded };
+        return { authenticated: true, onboarded };
+      }
 
-      } catch (supabaseError) {
-        console.log('Supabase check failed, using localStorage fallback');
+      // Fallback to explorerId/explorerName (legacy local-only users)
+      if (explorerId && explorerName) {
         setUser({
           id: explorerId,
           sacredName: explorerName,
           name: userName || explorerName,
         });
-        console.log('🔍 FALLBACK USER SET - name:', userName || explorerName, 'sacredName:', explorerName);
         setIsOnboarded(localOnboarded);
         setIsLoading(false);
         return { authenticated: true, onboarded: localOnboarded };
       }
+
+      setIsLoading(false);
+      return { authenticated: false, onboarded: false };
 
     } catch (err) {
       console.error('Auth check error:', err);
@@ -184,16 +113,29 @@ export function useUserAuth() {
       setIsLoading(false);
       return { authenticated: false, onboarded: false };
     }
-  }, [supabase]);
+  }, []);
 
   const redirectBasedOnStatus = useCallback(async () => {
     const status = await checkAuthStatus();
 
     if (!status.authenticated) {
-      router.replace('/beta-signup');
+      // Check if returning user (has existing account) or new user
+      const existingUser = typeof window !== 'undefined'
+        ? localStorage.getItem('beta_user')
+        : null;
+
+      if (existingUser) {
+        // Returning user - go to sign in
+        router.replace('/signin');
+      } else {
+        // New user - start onboarding
+        router.replace('/begin');
+      }
     } else if (!status.onboarded) {
-      router.replace('/beta-entry');
+      // Authenticated but hasn't completed onboarding
+      router.replace('/begin');
     } else {
+      // Fully authenticated and onboarded
       router.replace('/maia');
     }
   }, [checkAuthStatus, router]);
