@@ -14,6 +14,7 @@ import { DEPTH_PSYCHOLOGY_WISDOM } from './DepthPsychologyWisdom';
 import { FAMILY_CONSTELLATION_WISDOM } from './FamilyConstellationWisdom';
 import { NLP_WISDOM } from './NLPWisdom';
 import { getConstitutionalFoundation } from './ConstitutionalAIKnowledge';
+import DREAM_CONVERSATION_WISDOM, { isDreamContent } from './DreamConversationWisdom';
 
 /**
  * CONTEXTUAL WISDOM ACCESS
@@ -87,6 +88,12 @@ You have access to EXTENSIVE wisdom, but you don't dump it all at once.
     // Add depth psychology if themes suggest it
     if (themes.some(t => ['shadow', 'pattern', 'archetype', 'dream', 'consciousness', 'meaning', 'psyche'].includes(t))) {
       wisdomModules.push(DEPTH_PSYCHOLOGY_WISDOM);
+    }
+
+    // Add dream conversation wisdom if dream content detected (PRIORITY - loads before other modules)
+    if (themes.includes('dream') || isDreamContent(context.userQuestion || '')) {
+      // Insert at beginning so dream mode guidance comes first
+      wisdomModules.unshift(DREAM_CONVERSATION_WISDOM);
     }
 
     // Add family constellation if themes suggest it
