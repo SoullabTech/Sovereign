@@ -204,11 +204,19 @@ export function BetaTesterHub({ userName, userId }: BetaTesterHubProps) {
                 </div>
               )}
 
-              {/* TestFlight Reminder */}
-              <div className="mt-6 px-3 py-2 bg-stone-800/30 border border-stone-700/30 rounded-lg">
-                <p className="text-xs text-stone-500">
-                  <span className="text-stone-400">Tip:</span> Shake your iPhone in TestFlight to send feedback with screenshots.
-                </p>
+              {/* TestFlight Tips */}
+              <div className="mt-6 space-y-2">
+                <div className="px-3 py-2 bg-stone-800/30 border border-stone-700/30 rounded-lg">
+                  <p className="text-xs text-stone-500">
+                    <span className="text-stone-400">Tip:</span> Shake your iPhone in TestFlight to send feedback with screenshots.
+                  </p>
+                </div>
+                <div className="px-3 py-2 bg-amber-900/10 border border-amber-700/20 rounded-lg">
+                  <p className="text-xs text-stone-400">
+                    <span className="text-amber-500">Auto-updates:</span> Open TestFlight → tap MAIA → enable{' '}
+                    <span className="text-[#D4B896]">Automatic Updates</span> to get new builds instantly.
+                  </p>
+                </div>
               </div>
             </motion.div>
           </>
