@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Holoflower } from '@/components/ui/Holoflower';
 
@@ -274,7 +274,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
                 className="text-center mb-4 md:mb-6"
               >
                 <h2 className="text-3xl font-light text-amber-50 mb-2">{current.title}</h2>
-                <p className="text-amber-200/50 text-sm tracking-wider uppercase">{current.subtitle}</p>
+                <p className="text-amber-200/70 text-sm tracking-wider uppercase">{current.subtitle}</p>
               </motion.div>
 
               {/* Content */}
@@ -282,7 +282,7 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-amber-100/80 text-center leading-relaxed text-lg"
+                className="text-amber-50 text-center leading-relaxed text-lg"
               >
                 {current.content}
               </motion.p>
@@ -291,43 +291,43 @@ export function ElementalOrientation({ explorerName = "Explorer", onComplete }: 
           )}
         </AnimatePresence>
 
-        {/* Navigation */}
+        {/* Navigation - iOS safe area */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="flex justify-between items-center mt-4 md:mt-6"
+          className="flex justify-between items-center mt-4 md:mt-6 pb-safe"
         >
           <button
             onClick={handleSkip}
-            className="text-sm text-amber-200/40 hover:text-amber-200/60 transition-colors"
+            onTouchEnd={(e) => { e.preventDefault(); handleSkip(); }}
+            className="text-sm text-amber-200/40 hover:text-amber-200/60 active:text-amber-200/80 transition-colors py-2 px-3 -ml-3 touch-manipulation"
           >
             Skip orientation
           </button>
 
-          <motion.button
+          <button
             onClick={handleNext}
+            onTouchEnd={(e) => { if (canProceed) { e.preventDefault(); handleNext(); } }}
             disabled={!canProceed}
-            className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all ${
+            className={`flex items-center gap-2 px-6 py-4 rounded-lg transition-all touch-manipulation min-h-[52px] ${
               canProceed
-                ? 'bg-gradient-to-r from-amber-500/80 to-amber-600/80 text-white hover:from-amber-500 hover:to-amber-600 cursor-pointer'
+                ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white active:from-amber-600 active:to-amber-700 cursor-pointer shadow-lg'
                 : 'bg-amber-500/20 text-amber-200/40 cursor-not-allowed'
             }`}
-            whileHover={canProceed ? { scale: 1.02 } : {}}
-            whileTap={canProceed ? { scale: 0.98 } : {}}
           >
             {currentIndex === ELEMENTS.length - 1 ? (
               <>
-                Begin your journey with MAIA
-                <ArrowRight className="w-4 h-4" />
+                Begin with MAIA
+                <ArrowRight className="w-5 h-5" />
               </>
             ) : (
               <>
                 Continue
-                <ChevronDown className="w-4 h-4" />
+                <ArrowRight className="w-5 h-5" />
               </>
             )}
-          </motion.button>
+          </button>
         </motion.div>
 
         {/* Current step indicator */}
