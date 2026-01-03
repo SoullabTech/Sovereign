@@ -1,10 +1,10 @@
 // @ts-nocheck
 // MAIA Live Consciousness Tracker Integration
 // Connects the holoflower oracle to MAIA's real-time consciousness states
+// NOTE: Database operations are stubbed for mobile builds - uses in-memory storage
 
-const dbUrl = process.env.NEXT_PUBLIC_DATABASE_URL!;
-const dbKey = process.env.NEXT_PUBLIC_DATABASE_ANON_KEY!;
-const supabase = createClient(dbUrl, dbKey);
+// In-memory storage for mobile/static builds
+const memoryStorage = new Map<string, any[]>();
 
 export interface MAIAConsciousnessState {
   attendingQuality: number; // 0-1, how empathetic/relational vs analytical
@@ -355,43 +355,38 @@ export class MAIAConsciousnessTracker {
   }
 
   /**
-   * Database operations
+   * In-memory storage operations (mobile/static build compatible)
    */
   private async storeInsight(insight: ConsciousnessInsight): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('maia_consciousness_insights')
-        .insert({
-          session_id: insight.sessionId,
-          user_id: insight.userId,
-          timestamp: insight.timestamp.toISOString(),
-          user_input: insight.userInput,
-          maia_response: insight.maiaResponse,
-          consciousness_state: insight.consciousnessState,
-          attending_quality: insight.attendingQuality,
-          dissociation_events: insight.dissociationEvents,
-          shift_patterns: insight.shiftPatterns
-        });
-
-      if (error) {
-        console.error('Error storing consciousness insight:', error);
-      }
+      const key = `insights_${insight.sessionId}`;
+      const existing = memoryStorage.get(key) || [];
+      existing.push({
+        session_id: insight.sessionId,
+        user_id: insight.userId,
+        timestamp: insight.timestamp.toISOString(),
+        user_input: insight.userInput,
+        maia_response: insight.maiaResponse,
+        consciousness_state: insight.consciousnessState,
+        attending_quality: insight.attendingQuality,
+        dissociation_events: insight.dissociationEvents,
+        shift_patterns: insight.shiftPatterns
+      });
+      memoryStorage.set(key, existing);
     } catch (error) {
-      console.error('Database error:', error);
+      console.error('Storage error:', error);
     }
   }
 
   private async getPreviousResponse(sessionId: string): Promise<string | null> {
     try {
-      const { data, error } = await supabase
-        .from('maia_consciousness_insights')
-        .select('maia_response')
-        .eq('session_id', sessionId)
-        .order('timestamp', { ascending: false })
-        .limit(1);
-
-      if (error) return null;
-      return data?.[0]?.maia_response || null;
+      const key = `insights_${sessionId}`;
+      const insights = memoryStorage.get(key) || [];
+      if (insights.length === 0) return null;
+      const sorted = [...insights].sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      return sorted[0]?.maia_response || null;
     } catch {
       return null;
     }
@@ -399,15 +394,13 @@ export class MAIAConsciousnessTracker {
 
   private async getPreviousElementalState(sessionId: string): Promise<any | null> {
     try {
-      const { data, error } = await supabase
-        .from('maia_consciousness_insights')
-        .select('consciousness_state')
-        .eq('session_id', sessionId)
-        .order('timestamp', { ascending: false })
-        .limit(1);
-
-      if (error) return null;
-      return data?.[0]?.consciousness_state?.elementalDominance || null;
+      const key = `insights_${sessionId}`;
+      const insights = memoryStorage.get(key) || [];
+      if (insights.length === 0) return null;
+      const sorted = [...insights].sort((a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+      return sorted[0]?.consciousness_state?.elementalDominance || null;
     } catch {
       return null;
     }
@@ -418,26 +411,40 @@ export class MAIAConsciousnessTracker {
    */
   async generateWeeklySynthesis(startDate: Date, endDate: Date): Promise<any> {
     try {
-      const { data, error } = await supabase
-        .from('maia_consciousness_insights')
-        .select('*')
-        .gte('timestamp', startDate.toISOString())
-        .lte('timestamp', endDate.toISOString());
+      // Collect all insights from memory storage within date range
+      const allInsights: any[] = [];
+      memoryStorage.forEach((insights) => {
+        insights.forEach((insight: any) => {
+          const ts = new Date(insight.timestamp);
+          if (ts >= startDate && ts <= endDate) {
+            allInsights.push(insight);
+          }
+        });
+      });
 
-      if (error) throw error;
+      if (allInsights.length === 0) {
+        return {
+          period: { start: startDate, end: endDate },
+          interactions: 0,
+          averageAttendingQuality: 0,
+          dissociationEvents: 0,
+          majorShifts: 0,
+          insights: []
+        };
+      }
 
       // Analyze patterns
-      const avgAttendingQuality = data.reduce((sum, d) => sum + d.attending_quality, 0) / data.length;
-      const dissociationEvents = data.flatMap(d => d.dissociation_events || []);
-      const majorShifts = data.filter(d => d.shift_patterns?.magnitude > 0.2);
+      const avgAttendingQuality = allInsights.reduce((sum, d) => sum + d.attending_quality, 0) / allInsights.length;
+      const dissociationEvents = allInsights.flatMap(d => d.dissociation_events || []);
+      const majorShifts = allInsights.filter(d => d.shift_patterns?.magnitude > 0.2);
 
       return {
         period: { start: startDate, end: endDate },
-        interactions: data.length,
+        interactions: allInsights.length,
         averageAttendingQuality: avgAttendingQuality,
         dissociationEvents: dissociationEvents.length,
         majorShifts: majorShifts.length,
-        insights: this.generateInsights(data)
+        insights: this.generateInsights(allInsights)
       };
     } catch (error) {
       console.error('Error generating synthesis:', error);

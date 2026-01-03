@@ -7,7 +7,6 @@ const MeditationAwakeningPlatform = dynamicImport(
 );
 
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
-export const dynamic = 'force-dynamic';
 
 export default function ConsciousnessMeditationPage() {
   return (
