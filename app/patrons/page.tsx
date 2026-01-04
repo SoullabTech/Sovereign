@@ -1,63 +1,54 @@
+'use client';
+
 // app/patrons/page.tsx
-// Patron landing page - activate by adding Stripe payment links
+// Patron landing page with Stripe checkout integration
 
-export const metadata = {
-  title: "Patrons | MAIA by Soullab",
-  description:
-    "Join the MAIA Founding Patron Circle — a privacy-first sanctuary for journaling, story, and soul.",
-};
-
-// Stripe Payment Links - set NEXT_PUBLIC_PATRON_JOIN_URL in env for a unified join link
-// Or replace individual tier links with actual Stripe payment links
-const PATRON_JOIN_URL =
-  process.env.NEXT_PUBLIC_PATRON_JOIN_URL ||
-  "mailto:Soullab1@gmail.com?subject=MAIA%20Patron%20Circle";
-
-const STRIPE_LINKS = {
-  seedkeeper: process.env.NEXT_PUBLIC_STRIPE_SEEDKEEPER || PATRON_JOIN_URL,
-  storyWeaver: process.env.NEXT_PUBLIC_STRIPE_STORYWEAVER || PATRON_JOIN_URL,
-  sanctuaryBuilder: process.env.NEXT_PUBLIC_STRIPE_SANCTUARYBUILDER || PATRON_JOIN_URL,
-  founder: process.env.NEXT_PUBLIC_STRIPE_FOUNDER || PATRON_JOIN_URL,
-};
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const tiers = [
   {
+    id: 'seedkeeper',
     name: "Seedkeeper",
     price: "$25/month",
+    amount: 25,
     tagline: "For steady-hearted supporters who want MAIA to exist.",
     bullets: [
       "Monthly build letters",
       "Early access notes + previews",
       "Name (optional) on Supporter Wall",
     ],
-    href: STRIPE_LINKS.seedkeeper,
   },
   {
+    id: 'storyweaver',
     name: "Story Weaver",
     price: "$75/month",
+    amount: 75,
     tagline: "For patrons who want to participate in the unfolding.",
     bullets: [
       "Everything in Seedkeeper",
       "Patron Q&A and circle updates",
       "Priority feedback channel",
     ],
-    href: STRIPE_LINKS.storyWeaver,
     featured: true,
   },
   {
+    id: 'sanctuary',
     name: "Sanctuary Builder",
     price: "$250/month",
+    amount: 250,
     tagline: "For patrons actively funding the sanctuary infrastructure.",
     bullets: [
       "Everything in Story Weaver",
       "Quarterly behind-the-scenes brief",
       "Direct input on roadmap priorities",
     ],
-    href: STRIPE_LINKS.sanctuaryBuilder,
   },
   {
+    id: 'founder',
     name: "Founding Patron",
     price: "$1,000/month",
+    amount: 1000,
     tagline: "For major stewards anchoring MAIA into the world.",
     bullets: [
       "Everything in Sanctuary Builder",
@@ -65,7 +56,6 @@ const tiers = [
       "Direct founder channel",
       "Quarterly vision session",
     ],
-    href: STRIPE_LINKS.founder,
   },
 ];
 
@@ -89,8 +79,60 @@ const faqs = [
 ];
 
 export default function PatronsPage() {
+  const searchParams = useSearchParams();
+  const success = searchParams.get('success');
+  const canceled = searchParams.get('canceled');
+  const [loading, setLoading] = useState<string | null>(null);
+
+  const handleJoin = async (tierId: string, amount: number) => {
+    setLoading(tierId);
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: tierId,
+          amount,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Failed to start checkout. Please try again.');
+        setLoading(null);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Something went wrong. Please try again.');
+      setLoading(null);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900">
+      {/* Success/Cancel Messages */}
+      {success && (
+        <div className="bg-green-50 dark:bg-green-900/30 border-b border-green-200 dark:border-green-800 px-6 py-4">
+          <div className="mx-auto max-w-5xl text-center">
+            <p className="text-green-800 dark:text-green-200 font-medium">
+              🙏 Thank you for joining the Founding Circle! Check your email for confirmation.
+            </p>
+          </div>
+        </div>
+      )}
+      {canceled && (
+        <div className="bg-amber-50 dark:bg-amber-900/30 border-b border-amber-200 dark:border-amber-800 px-6 py-4">
+          <div className="mx-auto max-w-5xl text-center">
+            <p className="text-amber-800 dark:text-amber-200">
+              Checkout was canceled. Feel free to explore or reach out if you have questions.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Hero */}
       <section className="mx-auto max-w-5xl px-6 pt-20 pb-16">
         <p className="text-sm tracking-widest uppercase text-stone-500 dark:text-stone-400">
@@ -115,10 +157,10 @@ export default function PatronsPage() {
             Join the Founding Circle
           </a>
           <a
-            href="/patron-packet.pdf"
+            href="mailto:Soullab1@gmail.com?subject=MAIA%20Patron%20Packet%20Request"
             className="inline-flex items-center justify-center rounded-2xl border border-stone-300 dark:border-stone-700 px-6 py-3 text-base font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
           >
-            Read the Patron Packet
+            Request Patron Packet
           </a>
         </div>
       </section>
@@ -209,7 +251,7 @@ export default function PatronsPage() {
           platform that treats inner life as sacred.
         </p>
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-10 grid gap-6 sm:grid-cols-2">
           {tiers.map((tier) => (
             <div
               key={tier.name}
@@ -245,16 +287,17 @@ export default function PatronsPage() {
                   </li>
                 ))}
               </ul>
-              <a
-                href={tier.href}
-                className={`mt-6 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
+              <button
+                onClick={() => handleJoin(tier.id, tier.amount)}
+                disabled={loading === tier.id}
+                className={`mt-6 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                   tier.featured
                     ? "bg-amber-600 text-white hover:bg-amber-700"
                     : "border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
                 }`}
               >
-                Become a {tier.name}
-              </a>
+                {loading === tier.id ? 'Loading...' : `Become a ${tier.name}`}
+              </button>
             </div>
           ))}
         </div>
@@ -302,7 +345,7 @@ export default function PatronsPage() {
               Join the Founding Circle
             </a>
             <a
-              href="/contact?topic=patrons"
+              href="mailto:Soullab1@gmail.com?subject=Question%20about%20MAIA%20Patronage"
               className="inline-flex items-center justify-center rounded-2xl border border-stone-300 dark:border-stone-700 px-6 py-3 text-base font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
             >
               Talk with Kelly
