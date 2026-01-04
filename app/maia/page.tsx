@@ -146,7 +146,7 @@ function MAIAPageContent() {
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  const [contributionAmount, setContributionAmount] = useState(9); // Sliding scale amount
+  // Removed: contributionAmount slider - now using fixed patron tiers
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
 
@@ -1011,56 +1011,69 @@ function MAIAPageContent() {
                     </div>
                   )}
 
-                  {/* Sliding Scale Contribution */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs text-stone-400">Monthly Sustaining Gift</label>
-                      <span className="text-sm text-amber-400 font-bold">${contributionAmount}</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="99"
-                      value={contributionAmount}
-                      onChange={(e) => setContributionAmount(parseInt(e.target.value))}
-                      className="w-full h-2 bg-stone-700/50 rounded-lg appearance-none cursor-pointer"
-                      style={{
-                        background: `linear-gradient(to right,
-                          ${contributionAmount >= 33 ? 'rgb(34 197 94 / 0.6)' : contributionAmount >= 15 ? 'rgb(20 184 166 / 0.6)' : 'rgb(251 146 60 / 0.6)'} 0%,
-                          ${contributionAmount >= 33 ? 'rgb(34 197 94 / 0.6)' : contributionAmount >= 15 ? 'rgb(20 184 166 / 0.6)' : 'rgb(251 146 60 / 0.6)'} ${contributionAmount}%,
-                          rgb(87 83 78 / 0.5) ${contributionAmount}%,
-                          rgb(87 83 78 / 0.5) 100%)`
-                      }}
-                    />
-                    <div className="flex justify-between text-[9px] text-stone-500 mt-1">
-                      <span>🕯️ Sustainer</span>
-                      <span>🛡️ Guardian ($15+)</span>
-                      <span>🌳 Elder ($33+)</span>
-                    </div>
-                    <p className="text-center text-[10px] text-stone-400 mt-2 italic">
-                      {contributionAmount >= 33 ? '🌳 Elder: Wisdom keeper, deeply sustaining the whole' :
-                       contributionAmount >= 15 ? '🛡️ Guardian: Steward of the community space' :
-                       '🕯️ Sustainer: Keeping the sacred fire burning'}
-                    </p>
+                  {/* Patron Tier Selection */}
+                  <div className="mb-4 space-y-2">
+                    <label className="text-xs text-stone-400 block mb-2">Choose your path</label>
+
+                    {/* Seedkeeper - $25 */}
                     <button
-                      onClick={() => membershipUtils.joinSustainingCircle(contributionAmount)}
-                      className="mt-3 w-full px-3 py-2 bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 border border-amber-500/40 rounded-lg text-sm text-amber-300 font-medium transition-all"
+                      onClick={() => membershipUtils.joinSustainingCircle(25)}
+                      className="w-full p-2 rounded-lg bg-stone-800/50 hover:bg-amber-500/10 border border-stone-700/50 hover:border-amber-500/30 transition-all text-left group"
                     >
-                      <Heart className="w-4 h-4 inline mr-2" />
-                      Join Sustaining Circle
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-stone-300 group-hover:text-amber-300">🌱 Seedkeeper</span>
+                        <span className="text-xs text-amber-400 font-medium">$25/mo</span>
+                      </div>
+                      <p className="text-[9px] text-stone-500 mt-0.5">Monthly build letters + early access</p>
+                    </button>
+
+                    {/* Story Weaver - $75 */}
+                    <button
+                      onClick={() => membershipUtils.joinSustainingCircle(75)}
+                      className="w-full p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all text-left"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-amber-300">✨ Story Weaver</span>
+                        <span className="text-xs text-amber-400 font-medium">$75/mo</span>
+                      </div>
+                      <p className="text-[9px] text-stone-400 mt-0.5">Patron Q&A + priority feedback</p>
+                    </button>
+
+                    {/* Sanctuary Builder - $250 */}
+                    <button
+                      onClick={() => membershipUtils.joinSustainingCircle(250)}
+                      className="w-full p-2 rounded-lg bg-stone-800/50 hover:bg-amber-500/10 border border-stone-700/50 hover:border-amber-500/30 transition-all text-left group"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-stone-300 group-hover:text-amber-300">🏛️ Sanctuary Builder</span>
+                        <span className="text-xs text-amber-400 font-medium">$250/mo</span>
+                      </div>
+                      <p className="text-[9px] text-stone-500 mt-0.5">Direct roadmap input + quarterly briefs</p>
+                    </button>
+
+                    {/* Founding Patron - $1000 */}
+                    <button
+                      onClick={() => membershipUtils.joinSustainingCircle(1000)}
+                      className="w-full p-2 rounded-lg bg-stone-800/50 hover:bg-purple-500/10 border border-stone-700/50 hover:border-purple-500/30 transition-all text-left group"
+                    >
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-stone-300 group-hover:text-purple-300">👑 Founding Patron</span>
+                        <span className="text-xs text-purple-400 font-medium">$1,000/mo</span>
+                      </div>
+                      <p className="text-[9px] text-stone-500 mt-0.5">Direct founder channel + vision sessions</p>
                     </button>
                   </div>
 
                   {/* Alternative Paths */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
-                    {/* Founding Circle - links to patron tiers */}
+                    {/* Full Details Link */}
                     <a
-                      href="/patrons#tiers"
-                      className="p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-all text-center block"
+                      href="/patrons"
+                      className="p-2 rounded-lg bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700/50 transition-all text-center block"
                     >
-                      <Gift className="w-4 h-4 mx-auto mb-1 text-purple-400" />
-                      <p className="text-[10px] text-purple-300 font-medium">Founding Circle</p>
-                      <p className="text-[9px] text-stone-400">See options</p>
+                      <Heart className="w-4 h-4 mx-auto mb-1 text-amber-400" />
+                      <p className="text-[10px] text-stone-300 font-medium">Learn More</p>
+                      <p className="text-[9px] text-stone-500">Full details</p>
                     </a>
 
                     {/* Seva Exchange */}

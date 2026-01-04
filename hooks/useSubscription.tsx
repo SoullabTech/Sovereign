@@ -201,14 +201,16 @@ export const membershipUtils = {
     return 'explorer';
   },
 
-  // Join as Sustainer (monthly contribution)
-  joinSustainingCircle: async (amount: number = 9) => {
+  // Join Sustaining Circle (monthly contribution)
+  joinSustainingCircle: async (amount: number = 25) => {
     if (typeof window === 'undefined') return;
 
-    // Determine tier based on amount
-    let tier: ContributionTier = 'sustainer';
-    if (amount >= 33) tier = 'elder';
-    else if (amount >= 15) tier = 'guardian';
+    // Determine tier based on amount (unified with /patrons page)
+    let tier: ContributionTier = 'seedkeeper';
+    if (amount >= 1000) tier = 'founder';
+    else if (amount >= 250) tier = 'sanctuary';
+    else if (amount >= 75) tier = 'storyweaver';
+    else tier = 'seedkeeper';
 
     // Check if Stripe is configured
     if (isStripeAvailable()) {
@@ -217,7 +219,7 @@ export const membershipUtils = {
       const memberId = betaUser ? JSON.parse(betaUser).id : undefined;
 
       console.log(`🕯️ Redirecting to Stripe checkout for ${tier} ($${amount}/mo)...`);
-      const result = await redirectToCheckout({ tier, amount, memberId });
+      const result = await redirectToCheckout({ tier, memberId });
 
       if (!result.success) {
         console.error('Checkout failed:', result.error);
