@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Shield, Mic, Brain, Users, MessageSquare, RotateCcw, Check } from 'lucide-react';
+import { Shield, Mic, Brain, Users, MessageSquare, RotateCcw, Check, Link } from 'lucide-react';
+import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import {
   getAccountSettings,
   saveAccountSettings,
@@ -34,9 +35,20 @@ const ARCHETYPE_OPTIONS = [
 export function AccountSettings() {
   const [settings, setSettings] = useState<AccountSettingsType>(DEFAULT_ACCOUNT_SETTINGS);
   const [saved, setSaved] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     setSettings(getAccountSettings());
+    // Get userId from localStorage
+    const storedUser = localStorage.getItem('beta_user');
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setUserId(user.id || user.passkey);
+      } catch {
+        // fallback
+      }
+    }
   }, []);
 
   const updateSetting = <K extends keyof AccountSettingsType>(
@@ -289,6 +301,22 @@ export function AccountSettings() {
             })}
           </div>
         </section>
+
+        {/* Google Connections */}
+        {userId && (
+          <section>
+            <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+              <Link size={16} />
+              Connected Services
+            </label>
+            <p className="text-xs text-white/50 mb-4">
+              Connect your Google account to enable calendar sync and email features.
+            </p>
+            <div className="p-4 rounded-xl border border-white/10 bg-black/20">
+              <GoogleConnectSection userId={userId} />
+            </div>
+          </section>
+        )}
 
         {/* Reset */}
         <section className="pt-4 border-t border-white/10">
