@@ -146,7 +146,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Sparkles,
           label: 'Choose Your Guide',
-          action: () => onNavigate('/elder-council'),
+          action: () => onAction?.('choose-guide'),
           description: '39 wisdom traditions as harmonic frequencies'
         },
         {

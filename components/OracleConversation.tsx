@@ -63,6 +63,9 @@ import { FloatingSessionIndicator } from './session/SessionArcIndicator';
 import { SessionRecap, type SessionRecapData } from './session/SessionRecap';
 import { DailyCheckin, type EmotionalState } from './checkin/DailyCheckin';
 import { ElementDiscovery } from './discovery/ElementDiscovery';
+import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
+import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
+import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
@@ -417,6 +420,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       return stored === 'true';
     }
     return false;
+  });
+
+  // Wisdom Council state
+  const [showWisdomCouncil, setShowWisdomCouncil] = useState(false);
+  const [showCurrentTeaching, setShowCurrentTeaching] = useState(false);
+  const [activeTradition, setActiveTradition] = useState<WisdomTradition | null>(() => {
+    if (typeof window !== 'undefined') {
+      const storedId = localStorage.getItem('maia.activeTradition');
+      if (storedId) {
+        return ELDER_COUNCIL_TRADITIONS.find(t => t.id === storedId) || null;
+      }
+    }
+    return null;
   });
 
   // Holoflower/visualization state - Mobile responsive
@@ -4811,6 +4827,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             localStorage.setItem('maia.vocabularyTooltips', String(newValue));
             return;
           }
+          // Wisdom Council actions
+          if (action === 'choose-guide') {
+            setShowWisdomCouncil(true);
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'show-current-elder') {
+            setShowCurrentTeaching(true);
+            setShowLabDrawer(false);
+            return;
+          }
           if (action === 'upload') {
             document.getElementById('maiaFileUpload')?.click();
             return;
@@ -5118,6 +5145,30 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           }}
         />
       )}
+
+      {/* Wisdom Council Picker Modal */}
+      <WisdomCouncilPicker
+        isOpen={showWisdomCouncil}
+        onClose={() => setShowWisdomCouncil(false)}
+        currentTraditionId={activeTradition?.id}
+        onSelect={(tradition) => {
+          setActiveTradition(tradition);
+          localStorage.setItem('maia.activeTradition', tradition.id);
+          setShowWisdomCouncil(false);
+          toast.success(`Now guided by ${tradition.name.split('(')[0].trim()}`);
+        }}
+      />
+
+      {/* Current Teaching Modal */}
+      <CurrentTeachingModal
+        isOpen={showCurrentTeaching}
+        onClose={() => setShowCurrentTeaching(false)}
+        tradition={activeTradition}
+        onChangeGuide={() => {
+          setShowCurrentTeaching(false);
+          setShowWisdomCouncil(true);
+        }}
+      />
 
       {/* Floating Session Indicator - shows when session is active */}
       {sessionTimer && sessionTimer.isActive?.() && !showLabDrawer && (
