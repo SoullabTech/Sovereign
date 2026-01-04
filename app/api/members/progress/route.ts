@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Update member onboarding progress
  * Tracks which step the member has reached

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // app/api/maia/feedback/route.ts
 // API endpoint for collecting user feedback on MAIA's responses
 

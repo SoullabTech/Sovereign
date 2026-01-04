@@ -5,6 +5,8 @@
  * Exchanges the authorization code for tokens and stores them.
  */
 
+export const dynamic = 'force-static';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * 📊 USER DATA SUMMARY API - Mobile PWA Version
  *

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck
 /**
  * FIELD ANALYTICS REPORT API

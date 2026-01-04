@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck
 /**
  * Enhanced Consciousness API Endpoint - Phase III

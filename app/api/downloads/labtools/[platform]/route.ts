@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * 🧠🌀 SEVEN-LAYER ARCHITECTURE SNAPSHOT API
  *

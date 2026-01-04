@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * 🧭 NAVIGATOR LAB API
  *

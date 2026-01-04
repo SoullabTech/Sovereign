@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // app/api/community/commons/posts/route.ts
 /**
  * COMMUNITY COMMONS POSTS LIST ROUTE

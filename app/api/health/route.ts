@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // backend: app/api/health/route.ts
 export const revalidate = false;
 import { NextResponse } from 'next/server';

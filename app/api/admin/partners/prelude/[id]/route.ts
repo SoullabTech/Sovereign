@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db/postgres";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 export async function GET(
   _req: Request,
@@ -31,3 +31,4 @@ export async function GET(
     invites: invitesRes.rows ?? [],
   });
 }
+export function generateStaticParams() { return []; }

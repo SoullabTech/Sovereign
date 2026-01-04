@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Pattern Feedback API
  *

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Passkey Recovery via Email
  * Sends member their passkey if email matches

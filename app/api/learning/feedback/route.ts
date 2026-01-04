@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // app/api/learning/feedback/route.ts
 // API endpoint for user feedback integration with MAIA's learning system
 

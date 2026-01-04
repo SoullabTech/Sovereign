@@ -19,8 +19,10 @@ import {
   Heart,
   Compass,
   Star,
-  Circle
+  Circle,
+  MessageCircle
 } from 'lucide-react'
+import { AskMaiaSheet } from '@/components/elemental-alchemy/AskMaiaSheet'
 
 // Book data structure
 interface Chapter {
@@ -107,6 +109,13 @@ export default function ElementalAlchemyBookPage() {
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null)
   const [viewMode, setViewMode] = useState<'elements' | 'chapters' | 'reading'>('elements')
   const [readProgress, setReadProgress] = useState<Record<number, boolean>>({})
+
+  // Ask MAIA state
+  const [askMaiaOpen, setAskMaiaOpen] = useState(false)
+  const [selectedTeaching, setSelectedTeaching] = useState<string | null>(null)
+
+  // Mock user ID (replace with real auth)
+  const userId = 'beta-user-1'
 
   useEffect(() => {
     loadBookData()
@@ -482,20 +491,35 @@ export default function ElementalAlchemyBookPage() {
 
                     {/* Key Teachings */}
                     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                      <h3 className="text-sm font-medium text-white/70 mb-4 flex items-center gap-2">
-                        <Bookmark className="w-4 h-4" />
-                        Key Teachings
+                      <h3 className="text-sm font-medium text-white/70 mb-4 flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <Bookmark className="w-4 h-4" />
+                          Key Teachings
+                        </span>
+                        <span className="text-xs text-white/40">Tap to ask MAIA</span>
                       </h3>
                       <div className="space-y-2">
                         {selectedChapter.keyTeachings
                           .filter(t => !t.startsWith('!') && t.length > 10)
                           .slice(0, 10)
                           .map((teaching, idx) => (
-                            <div key={idx} className="flex items-start gap-3">
+                            <button
+                              key={idx}
+                              onClick={() => {
+                                setSelectedTeaching(teaching)
+                                setAskMaiaOpen(true)
+                              }}
+                              className="w-full flex items-start gap-3 p-2 -mx-2 rounded-lg
+                                       hover:bg-white/5 transition-colors text-left group"
+                            >
                               <div className={`w-1.5 h-1.5 rounded-full ${element.textColor.replace('text-', 'bg-')}
                                             mt-2 flex-shrink-0`} />
-                              <p className="text-sm text-white/70 leading-relaxed">{teaching}</p>
-                            </div>
+                              <p className="text-sm text-white/70 leading-relaxed flex-1 group-hover:text-white/90">
+                                {teaching}
+                              </p>
+                              <MessageCircle className="w-4 h-4 text-white/20 group-hover:text-amber-400
+                                                      flex-shrink-0 mt-0.5 transition-colors" />
+                            </button>
                           ))}
                       </div>
                     </div>
@@ -569,6 +593,32 @@ export default function ElementalAlchemyBookPage() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Ask MAIA Sheet */}
+        {selectedElement && selectedChapter && selectedTeaching && (
+          <AskMaiaSheet
+            isOpen={askMaiaOpen}
+            onClose={() => {
+              setAskMaiaOpen(false)
+              setSelectedTeaching(null)
+            }}
+            teaching={selectedTeaching}
+            element={selectedElement}
+            chapterNum={selectedChapter.number}
+            chapterTitle={selectedChapter.title}
+            userId={userId}
+            onSaveToJournal={(insight, teaching) => {
+              // Navigate to journal with pre-filled content
+              const params = new URLSearchParams({
+                element: selectedElement,
+                chapter: selectedChapter.number.toString(),
+                prompt: teaching,
+                reflection: `MAIA's insight:\n${insight}\n\nMy reflection:\n`
+              })
+              router.push(`/maia/community/elemental-alchemy/journal?${params.toString()}`)
+            }}
+          />
+        )}
       </div>
     </div>
   )

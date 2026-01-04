@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck - Prototype file, not type-checked
 /**
  * CEREMONIAL CONSCIOUSNESS API

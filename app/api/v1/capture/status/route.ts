@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Capture Status
  * GET /api/v1/capture/status

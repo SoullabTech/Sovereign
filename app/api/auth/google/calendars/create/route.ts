@@ -4,6 +4,8 @@
  * Creates a new calendar in the user's Google account.
  */
 
+export const dynamic = 'force-static';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Ultimate Consciousness System Health Check Endpoint
  * Monitors technological anamnesis system integrity

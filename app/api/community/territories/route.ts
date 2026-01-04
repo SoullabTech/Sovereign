@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // app/api/community/territories/route.ts
 /**
  * COMMUNITY TERRITORIES API

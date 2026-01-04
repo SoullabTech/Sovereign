@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Check if passkey exists in database
  * Used to determine if user is new or returning

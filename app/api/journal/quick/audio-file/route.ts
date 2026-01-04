@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Voice Journal Audio File Serve API
  * GET /api/journal/quick/audio-file?path=storage/audio/journals/...

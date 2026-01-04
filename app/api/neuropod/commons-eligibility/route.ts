@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // API Route: GET /api/neuropod/commons-eligibility
 // Checks Community Commons enhanced gate eligibility (Bloom + biometric requirements)
 

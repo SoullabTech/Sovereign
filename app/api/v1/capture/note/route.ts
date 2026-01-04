@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Add Capture Note
  * POST /api/v1/capture/note

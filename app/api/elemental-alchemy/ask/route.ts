@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * ASK THE BOOK API ROUTE
  *

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck
 // backend: app/api/sovereign/app/maia/voice/route.ts
 

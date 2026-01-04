@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // app/api/community/search/route.ts
 /**
  * COMMUNITY SEARCH API

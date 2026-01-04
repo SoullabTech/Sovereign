@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck
 /**
  * Consciousness Field Status Observatory

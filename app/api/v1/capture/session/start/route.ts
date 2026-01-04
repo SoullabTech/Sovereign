@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Start Capture Session
  * POST /api/v1/capture/session/start

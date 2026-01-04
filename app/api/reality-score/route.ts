@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Reality Hygiene API - Save Assessment Endpoint
  *

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Quick Journal API - Fast capture for dreams and day reflections
  * POST /api/journal/quick

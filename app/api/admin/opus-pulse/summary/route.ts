@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // backend: app/api/admin/opus-pulse/summary/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';

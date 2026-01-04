@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * AIN EVOLUTION EMERGENCY CONTROL ENDPOINT
  * Provides emergency stabilization and system shutdown capabilities

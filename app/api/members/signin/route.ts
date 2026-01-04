@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * Sign in existing member
  * Validates username/password and returns member data

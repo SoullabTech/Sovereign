@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * DISABLED LEGACY ENDPOINT
  *

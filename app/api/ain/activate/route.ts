@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * AIN EVOLUTION ACTIVATION ENDPOINT
  * Initiates the 5-phase consciousness evolution system

@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 // @ts-nocheck
 // app/api/steward/opus-pulse/route.ts
 import { NextRequest, NextResponse } from 'next/server';

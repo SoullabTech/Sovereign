@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * 🧘 Maya Presence Mode API Route
  * Updates Maya's consciousness presence based on real-time biometric feedback

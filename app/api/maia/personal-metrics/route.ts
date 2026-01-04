@@ -1,3 +1,4 @@
+export const dynamic = 'force-static';
 /**
  * 🔍 PERSONAL METRICS API - Mobile PWA Version
  *
