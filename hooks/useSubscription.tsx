@@ -14,6 +14,7 @@ import {
   SEVA_PATHWAYS,
   SevaPathway
 } from '@/lib/subscription/types';
+import { redirectToCheckout, isStripeAvailable, ContributionTier } from '@/lib/stripe/client';
 
 interface SubscriptionContextType {
   user: User | null;
@@ -201,31 +202,70 @@ export const membershipUtils = {
   },
 
   // Join as Sustainer (monthly contribution)
-  joinSustainingCircle: (amount: number = 9) => {
+  joinSustainingCircle: async (amount: number = 9) => {
     if (typeof window === 'undefined') return;
+
+    // Determine tier based on amount
+    let tier: ContributionTier = 'sustainer';
+    if (amount >= 33) tier = 'elder';
+    else if (amount >= 15) tier = 'guardian';
+
+    // Check if Stripe is configured
+    if (isStripeAvailable()) {
+      // Get member ID from localStorage
+      const betaUser = localStorage.getItem('beta_user');
+      const memberId = betaUser ? JSON.parse(betaUser).id : undefined;
+
+      console.log(`🕯️ Redirecting to Stripe checkout for ${tier} ($${amount}/mo)...`);
+      const result = await redirectToCheckout({ tier, amount, memberId });
+
+      if (!result.success) {
+        console.error('Checkout failed:', result.error);
+        alert(`Payment setup failed: ${result.error}. Please try again.`);
+      }
+      // If successful, redirectToCheckout will navigate to Stripe
+      return;
+    }
+
+    // Fallback: Store locally if Stripe not configured (dev mode)
+    console.log('[Dev Mode] Stripe not configured, using localStorage');
     const userData = localStorage.getItem('maia_user_subscription');
     const user = userData ? JSON.parse(userData) : { id: 'guest', name: 'Explorer' };
 
-    // Determine circle based on contribution amount
-    let circle: ContributionCircle = 'sustainer';
-    if (amount >= 33) circle = 'elder';
-    else if (amount >= 15) circle = 'guardian';
-
     user.membership = {
       status: 'active',
-      circle,
+      circle: tier,
       contributionAmount: amount,
       joinedAt: new Date().toISOString()
     };
-    user.subscription = { ...user.subscription, tier: circle, status: 'active' };
+    user.subscription = { ...user.subscription, tier, status: 'active' };
     localStorage.setItem('maia_user_subscription', JSON.stringify(user));
-    console.log(`🕯️ Joined Sustaining Circle as ${circle} ($${amount}/mo)`);
+    console.log(`🕯️ [Dev] Joined Sustaining Circle as ${tier} ($${amount}/mo)`);
     window.location.reload();
   },
 
   // Join Pioneer/Founding Circle (one-time lifetime)
-  joinFoundingCircle: () => {
+  joinFoundingCircle: async () => {
     if (typeof window === 'undefined') return;
+
+    // Check if Stripe is configured
+    if (isStripeAvailable()) {
+      // Get member ID from localStorage
+      const betaUser = localStorage.getItem('beta_user');
+      const memberId = betaUser ? JSON.parse(betaUser).id : undefined;
+
+      console.log('⭐ Redirecting to Stripe checkout for Founder ($222 one-time)...');
+      const result = await redirectToCheckout({ tier: 'founder', memberId });
+
+      if (!result.success) {
+        console.error('Checkout failed:', result.error);
+        alert(`Payment setup failed: ${result.error}. Please try again.`);
+      }
+      return;
+    }
+
+    // Fallback: Store locally if Stripe not configured (dev mode)
+    console.log('[Dev Mode] Stripe not configured, using localStorage');
     const userData = localStorage.getItem('maia_user_subscription');
     const user = userData ? JSON.parse(userData) : { id: 'guest', name: 'Explorer' };
 
@@ -237,7 +277,7 @@ export const membershipUtils = {
     };
     user.subscription = { ...user.subscription, tier: 'founder', status: 'active' };
     localStorage.setItem('maia_user_subscription', JSON.stringify(user));
-    console.log(`⭐ Joined Pioneer Founding Circle`);
+    console.log('⭐ [Dev] Joined Pioneer Founding Circle');
     window.location.reload();
   },
 
