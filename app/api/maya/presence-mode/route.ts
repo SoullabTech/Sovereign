@@ -6,8 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
+
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Presence mode interface matching AppleWatchService
 interface PresenceModeUpdate {

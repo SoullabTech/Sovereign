@@ -56,6 +56,7 @@ import { TurnsStore } from '../memory/stores/TurnsStore';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { query } from '../db/postgres';
+import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -709,6 +710,16 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
 - You can still be helpful and warm - just don't claim to remember anything`
     : '';
 
+  // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
+  const wisdomRouting = routeWisdom(input);
+  let wisdomInjection = '';
+  if (wisdomRouting.activated) {
+    console.log(`🌟 [FAST] Wisdom agent activated: ${wisdomRouting.meta.agentName} (${wisdomRouting.meta.patternType})`);
+    wisdomInjection = wisdomRouting.promptInjection;
+    // Store in meta for potential tool reveal in response
+    (meta as any).wisdomRouting = wisdomRouting;
+  }
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   let baseSystemPrompt = `${MAIA_RELATIONAL_SPEC}
 
@@ -716,7 +727,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}
+${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -903,6 +914,15 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
 - You can still be helpful and warm - just don't claim to remember anything`;
   }
 
+  // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
+  const wisdomRoutingCore = routeWisdom(input);
+  if (wisdomRoutingCore.activated) {
+    console.log(`🌟 [CORE] Wisdom agent activated: ${wisdomRoutingCore.meta.agentName} (${wisdomRoutingCore.meta.patternType})`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + wisdomRoutingCore.promptInjection;
+    // Store in meta for potential tool reveal in response
+    (meta as any).wisdomRouting = wisdomRoutingCore;
+  }
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Apply policy-based adaptation
   if (policy) {
     adaptivePrompt = adaptResponsePromptWithPolicy(adaptivePrompt, policy);
@@ -1044,6 +1064,16 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
 - NEVER reference past conversations or imply continuity from previous sessions
 - Respond fully present in THIS moment, without memory references
 - You can still be helpful and warm - just don't claim to remember anything`;
+  }
+
+  // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
+  const wisdomRoutingDeep = routeWisdom(input);
+  if (wisdomRoutingDeep.activated) {
+    console.log(`🌟 [DEEP] Wisdom agent activated: ${wisdomRoutingDeep.meta.agentName} (${wisdomRoutingDeep.meta.patternType})`);
+    // Inject wisdom routing into the selflet prompt block (will be passed to consciousness wrapper)
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + '\n\n' + wisdomRoutingDeep.promptInjection;
+    // Store in meta for potential tool reveal in response
+    (meta as any).wisdomRouting = wisdomRoutingDeep;
   }
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty

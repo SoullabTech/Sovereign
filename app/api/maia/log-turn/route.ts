@@ -2,11 +2,12 @@
 // API endpoint for logging conversation turns into MAIA's learning system
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { query, transaction } from '@/lib/database/postgres';
 import { z } from 'zod';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Zod validation schema for turn logging
 const MaiaTurnLogSchema = z.object({

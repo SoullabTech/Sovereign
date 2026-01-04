@@ -2,9 +2,10 @@
 
 // Force Node.js runtime (Edge runtime can't handle crypto, some libs)
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import crypto from 'crypto';
 import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
 import {

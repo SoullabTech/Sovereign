@@ -1,8 +1,8 @@
 // backend: app/api/health/route.ts
+export const revalidate = false;
 import { NextResponse } from 'next/server';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 export async function GET() {
   return NextResponse.json(

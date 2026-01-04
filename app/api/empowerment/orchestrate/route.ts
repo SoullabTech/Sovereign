@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { MAIAEmpowermentOrchestrator } from '@/lib/consciousness/MAIAEmpowermentOrchestrator';
 import { ShadowConversationOrchestrator } from '@/lib/consciousness/ShadowConversationOrchestrator';
 import { AgentBackchannelingIntegration } from '@/lib/consciousness/AgentBackchannelingIntegration';
@@ -9,7 +11,6 @@ import { AccountabilityResponsibilityProtocols } from '@/lib/consciousness/Accou
 import { CollectiveIntelligenceProtocols } from '@/lib/consciousness/CollectiveIntelligenceProtocols';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Cache for orchestrator instances to maintain session state
 let empowermentOrchestrator: MAIAEmpowermentOrchestrator | null = null;

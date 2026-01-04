@@ -63,6 +63,10 @@ The onboarding journey happens exactly once per member — whether beta testers 
 ```
 /begin
    ↓ (click "Begin Journey")
+/intro-maia
+   ↓ ("I'm Maia" greeting, click "Continue")
+/intro-daimon
+   ↓ ("I am a Daimon by design", click "Enter the Lab")
 /test-elemental
    ↓ (passkey entry, password setup, "Before we begin..." orientation)
 /faq

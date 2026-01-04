@@ -7,8 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
 
-export const dynamic = 'force-static';
+
 
 // ==============================================================================
 // GET - Consciousness Computing Metrics

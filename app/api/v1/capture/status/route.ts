@@ -8,6 +8,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   getActiveSession,
   getSessionNotes,
@@ -16,7 +18,6 @@ import {
 import { resolveCaptureUserIdFromQuery, withSessionCookie } from '@/lib/capture/captureAuth';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

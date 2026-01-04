@@ -11,8 +11,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
+
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Mock posts for API compatibility
 const mockPosts = [

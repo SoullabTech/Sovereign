@@ -12,8 +12,12 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-// Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
+// Required for static export
+export function generateStaticParams() {
+  return [{ id: 'default' }];
+}
 
 // Mock posts matching the list route
 const mockPosts: Record<string, {

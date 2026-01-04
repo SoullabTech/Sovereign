@@ -12,6 +12,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { createHash } from 'crypto';
 
 // Import Phase III enhanced systems
@@ -22,7 +24,6 @@ import { quantumFieldMemory } from '@/lib/consciousness/memory/QuantumFieldMemor
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Create global enhanced integration instance
 let enhancedIntegration: EnhancedMAIAFieldIntegration | null = null;

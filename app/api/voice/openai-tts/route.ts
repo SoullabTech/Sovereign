@@ -3,11 +3,12 @@
  * TTS Route - OpenAI with macOS fallback for local development
  */
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import { synthesizeSpeechMacOS } from '@/lib/tts/macosTts';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

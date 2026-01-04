@@ -10,6 +10,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   CeremonialComputingInterface,
   CeremonialMode,
@@ -23,7 +25,6 @@ import {
 import AetherConsciousnessInterface from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Initialize ceremonial computing interface
 let ceremonialInitialized = false;

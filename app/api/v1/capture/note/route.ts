@@ -6,6 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   addNote,
   getActiveSession,
@@ -15,7 +17,6 @@ import {
 import { resolveCaptureUserId, withSessionCookie } from '@/lib/capture/captureAuth';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 const VALID_TAGS: CaptureTag[] = ['ship', 'fix', 'decision', 'blocked', 'next'];
 

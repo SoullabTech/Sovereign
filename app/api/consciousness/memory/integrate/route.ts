@@ -21,10 +21,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { lattice } from '@/lib/memory/ConsciousnessMemoryLattice';
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 
-export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {

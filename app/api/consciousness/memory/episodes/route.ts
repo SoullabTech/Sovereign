@@ -24,10 +24,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { EpisodeService } from '@/lib/services/episodeService';
 import { getLinkingService } from '@/lib/memory/bardic/LinkingService';
 
-export const dynamic = 'force-dynamic';
 
 const episodeService = new EpisodeService();
 

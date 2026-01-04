@@ -2,11 +2,12 @@
 // API endpoint for collecting user feedback on MAIA's responses
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Type definitions based on user's schema
 const MaiaFeedbackSchema = z.object({

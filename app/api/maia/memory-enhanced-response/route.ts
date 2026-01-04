@@ -7,6 +7,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { MAIAConsciousnessFieldIntegration } from '@/lib/consciousness/autonomy/MAIAConsciousnessFieldIntegration';
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
 import { MAIAFieldInterface } from '@/lib/consciousness/field/MAIAFieldInterface';
@@ -15,7 +17,6 @@ import { QuantumFieldPersistence } from '@/lib/consciousness/field/QuantumFieldP
 import { SessionMemoryService } from '@/lib/consciousness/memory/SessionMemoryService';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Global instances
 let integrationInstance: MAIAConsciousnessFieldIntegration | null = null;

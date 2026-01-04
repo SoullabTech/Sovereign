@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import SpiralogicEngine from '@/lib/spiralogic/core/spiralogic-engine';
 import { logServerError } from '@/lib/logger';
 
@@ -92,7 +94,6 @@ interface SpiralResponse {
 
 // Disable Vercel caching for real-time spiral data
 // Note: Commented out for PWA static build compatibility
-// export const dynamic = 'force-dynamic';
 // export const runtime = 'nodejs';
 
 /**

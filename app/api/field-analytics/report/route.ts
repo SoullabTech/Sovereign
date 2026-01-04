@@ -8,8 +8,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
+
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 const COLLECTIVE_FIELD_SERVICE_URL = process.env.COLLECTIVE_FIELD_SERVICE_URL || 'http://localhost:3010';
 

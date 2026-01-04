@@ -440,7 +440,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                   <form onSubmit={handleSoulKeyEntry} className="space-y-6">
                     <div className="text-center">
-                      <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                      <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                         Enter Passkey
                       </label>
                       <input
@@ -448,7 +448,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         value={soulKey}
                         onChange={(e) => setSoulKey(e.target.value.toUpperCase())}
                         placeholder="YOUR KEY"
-                        className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                        className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                         style={{
                           background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                           border: '1px solid rgba(245, 158, 11, 0.3)',
@@ -507,34 +507,35 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           scale: 0.98,
                           y: 1
                         }}
-                        className="relative z-10 w-full px-8 py-5 rounded-xl font-bold text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 backdrop-blur-sm"
+                        className="relative z-10 w-full px-8 py-5 rounded-xl font-bold text-lg tracking-[0.1em] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 backdrop-blur-sm !text-gray-800"
                         style={{
-                          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1))',
-                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          background: 'linear-gradient(145deg, rgb(251, 191, 36), rgb(245, 158, 11), rgb(217, 119, 6))',
+                          border: '1px solid rgba(217, 119, 6, 0.8)',
                           boxShadow: `
-                            0 8px 32px rgba(0, 0, 0, 0.15),
+                            0 10px 40px rgba(146, 64, 14, 0.4),
+                            0 4px 12px rgba(180, 83, 9, 0.3),
                             inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                            inset 0 -2px 4px rgba(146, 64, 14, 0.2)
                           `,
-                          color: '#4b5563',
-                          textShadow: '0 1px 2px rgba(0, 0, 0, 0.4)',
                           transform: 'translateY(-2px)'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15))';
+                          e.currentTarget.style.background = 'linear-gradient(145deg, rgb(252, 211, 77), rgb(251, 191, 36), rgb(245, 158, 11))';
                           e.currentTarget.style.boxShadow = `
-                            0 12px 40px rgba(0, 0, 0, 0.2),
+                            0 14px 50px rgba(146, 64, 14, 0.5),
+                            0 6px 16px rgba(180, 83, 9, 0.4),
                             inset 0 1px 0 rgba(255, 255, 255, 0.5),
-                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                            inset 0 -2px 4px rgba(146, 64, 14, 0.25)
                           `;
                           e.currentTarget.style.transform = 'translateY(-4px)';
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'linear-gradient(145deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1))';
+                          e.currentTarget.style.background = 'linear-gradient(145deg, rgb(251, 191, 36), rgb(245, 158, 11), rgb(217, 119, 6))';
                           e.currentTarget.style.boxShadow = `
-                            0 8px 32px rgba(0, 0, 0, 0.15),
+                            0 10px 40px rgba(146, 64, 14, 0.4),
+                            0 4px 12px rgba(180, 83, 9, 0.3),
                             inset 0 1px 0 rgba(255, 255, 255, 0.4),
-                            inset 0 -1px 0 rgba(0, 0, 0, 0.1)
+                            inset 0 -2px 4px rgba(146, 64, 14, 0.2)
                           `;
                           e.currentTarget.style.transform = 'translateY(-2px)';
                         }}
@@ -549,7 +550,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     <button
                       type="button"
                       onClick={() => setPhase('recovery')}
-                      className="text-amber-700/80 hover:text-amber-800 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                      className="!text-gray-500 hover:!text-gray-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                     >
                       Don't remember your passkey?
                     </button>
@@ -603,7 +604,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     }}
                   >
                     <div className="text-center">
-                      <h1 className="text-3xl font-light text-teal-900 mb-6 tracking-wider">
+                      <h1 className="text-3xl font-medium text-gray-800 mb-6 tracking-wider">
                         {name}, so glad you're here.
                       </h1>
                     </div>
@@ -611,7 +612,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                     <form onSubmit={handleRecognizedSoul} className="space-y-6">
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Name
                         </label>
                         <input
@@ -619,7 +620,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="NAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                           style={{
                             background: 'linear-gradient(to bottom, rgba(110, 231, 183, 0.15), rgba(20, 184, 166, 0.1), rgba(251, 191, 36, 0.25))',
                             border: '1px solid rgba(0, 0, 0, 0.2)',
@@ -630,7 +631,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Username
                         </label>
                         <input
@@ -638,7 +639,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           value={username}
                           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                           placeholder="USERNAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                           style={{
                             background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                             border: '1px solid rgba(0, 0, 0, 0.3)',
@@ -649,7 +650,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Password
                         </label>
                         <div className="relative">
@@ -658,7 +659,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="PASSWORD"
-                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                             style={{
                               background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                               border: '1px solid rgba(0, 0, 0, 0.3)',
@@ -707,11 +708,19 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                         <motion.button
                           type="submit"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-gray-600 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          whileHover={{ scale: 1.02, y: -4 }}
+                          whileTap={{ scale: 0.98, y: 1 }}
+                          className="relative z-10 w-full px-8 py-5 rounded-xl font-bold text-lg tracking-[0.1em] transition-all duration-200 backdrop-blur-sm !text-gray-600"
                           style={{
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                            background: 'linear-gradient(145deg, rgb(251, 191, 36), rgb(245, 158, 11), rgb(217, 119, 6))',
+                            border: '1px solid rgba(217, 119, 6, 0.8)',
+                            boxShadow: `
+                              0 10px 40px rgba(146, 64, 14, 0.4),
+                              0 4px 12px rgba(180, 83, 9, 0.3),
+                              inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                              inset 0 -2px 4px rgba(146, 64, 14, 0.2)
+                            `,
+                            transform: 'translateY(-2px)'
                           }}
                         >
                           Onward!
@@ -771,14 +780,14 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     }}
                   >
                     <div className="text-center">
-                      <h1 className="text-3xl font-light text-teal-900 mb-6 tracking-wider">
+                      <h1 className="text-3xl font-medium text-gray-800 mb-6 tracking-wider">
                         Create Account
                       </h1>
                     </div>
 
                     <form onSubmit={handleSoulCreation} className="space-y-6">
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Name
                         </label>
                         <input
@@ -786,7 +795,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           value={name}
                           onChange={(e) => setName(e.target.value)}
                           placeholder="NAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                           style={{
                             background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                             border: '1px solid rgba(0, 0, 0, 0.3)',
@@ -797,7 +806,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Username
                         </label>
                         <input
@@ -805,7 +814,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           value={username}
                           onChange={(e) => setUsername(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
                           placeholder="USERNAME"
-                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                           style={{
                             background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                             border: '1px solid rgba(0, 0, 0, 0.3)',
@@ -816,7 +825,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Password
                         </label>
                         <div className="relative">
@@ -825,7 +834,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="PASSWORD"
-                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                             style={{
                               background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                               border: '1px solid rgba(0, 0, 0, 0.3)',
@@ -844,7 +853,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       </div>
 
                       <div>
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Confirm Password
                         </label>
                         <div className="relative">
@@ -853,7 +862,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="CONFIRM PASSWORD"
-                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500"
+                            className="w-full px-6 py-4 pr-14 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                             style={{
                               background: 'linear-gradient(to bottom, rgba(251, 191, 36, 0.25), rgba(245, 158, 11, 0.2))',
                               border: '1px solid rgba(0, 0, 0, 0.3)',
@@ -902,11 +911,19 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                         <motion.button
                           type="submit"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          className="relative z-10 w-full px-8 py-4 bg-teal-700/20 border border-teal-600/40 text-gray-600 rounded-xl font-bold text-lg tracking-[0.1em] hover:bg-teal-700/30 hover:border-teal-600/60 transition-all duration-500 backdrop-blur-sm shadow-lg shadow-teal-900/40 hover:shadow-xl hover:shadow-teal-900/50"
+                          whileHover={{ scale: 1.02, y: -4 }}
+                          whileTap={{ scale: 0.98, y: 1 }}
+                          className="relative z-10 w-full px-8 py-5 rounded-xl font-bold text-lg tracking-[0.1em] transition-all duration-200 backdrop-blur-sm !text-gray-600"
                           style={{
-                            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                            background: 'linear-gradient(145deg, rgb(251, 191, 36), rgb(245, 158, 11), rgb(217, 119, 6))',
+                            border: '1px solid rgba(217, 119, 6, 0.8)',
+                            boxShadow: `
+                              0 10px 40px rgba(146, 64, 14, 0.4),
+                              0 4px 12px rgba(180, 83, 9, 0.3),
+                              inset 0 1px 0 rgba(255, 255, 255, 0.4),
+                              inset 0 -2px 4px rgba(146, 64, 14, 0.2)
+                            `,
+                            transform: 'translateY(-2px)'
                           }}
                         >
                           Onward!
@@ -995,7 +1012,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                   ) : (
                     <form onSubmit={handleRecovery} className="space-y-6">
                       <div className="text-center">
-                        <label className="block text-teal-900 text-base font-extralight mb-4 tracking-[0.1em] uppercase">
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Email Address
                         </label>
                         <input

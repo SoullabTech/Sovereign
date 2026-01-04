@@ -11,6 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   getJourneySnapshot,
   updateJourneyProgress,
@@ -19,7 +21,6 @@ import {
 import { query, insertOne, findOne, updateOne } from '@/lib/db/postgres';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 /**
  * GET - Fetch user's journey snapshot

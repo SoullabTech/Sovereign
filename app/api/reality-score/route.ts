@@ -14,8 +14,7 @@ import {
   type RealityScores,
 } from "@/lib/reality/realityTypes";
 
-// Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
+export const revalidate = false;
 
 const ScoresSchema = z.record(z.number().int().min(1).max(5));
 

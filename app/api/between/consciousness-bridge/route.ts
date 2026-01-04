@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import logger from '@/lib/utils/performance-logger';
 
 /**

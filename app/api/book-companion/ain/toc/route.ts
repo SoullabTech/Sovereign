@@ -12,8 +12,7 @@ import { NextResponse } from 'next/server';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-// Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
+export const revalidate = false;
 
 type TocItem = {
   id: string;

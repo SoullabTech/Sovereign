@@ -9,11 +9,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 type TocItem = {
   id: string;

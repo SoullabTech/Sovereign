@@ -1,6 +1,8 @@
 // @ts-nocheck
 // app/api/steward/opus-pulse/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import type {
   OpusPulseData,
   OpusPulseSummary,
@@ -11,7 +13,6 @@ import type {
 import { OPUS_AXIOMS } from '@/lib/types/opusPulse';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {

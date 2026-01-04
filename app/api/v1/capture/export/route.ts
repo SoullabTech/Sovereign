@@ -6,6 +6,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   exportSession,
   getActiveSession
@@ -13,7 +15,6 @@ import {
 import { resolveCaptureUserId, withSessionCookie } from '@/lib/capture/captureAuth';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {

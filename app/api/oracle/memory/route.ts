@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { personalOracleAgent } from '../../_backend/src/agents/PersonalOracleAgent';
 import { EnhancedMemoryRetrieval } from '../../_backend/src/services/memory/EnhancedMemoryRetrieval';
 import { MemoryStore } from '../../_backend/src/services/memory/MemoryStore';
@@ -6,7 +8,6 @@ import { LlamaService } from '../../_backend/src/services/memory/LlamaService';
 import { logger } from '../../_backend/src/utils/logger';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/oracle/memory/stats

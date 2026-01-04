@@ -2,11 +2,12 @@
 // API endpoint for conversational interrogation of completed sessions
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import Anthropic from '@anthropic-ai/sdk';
 import { buildSessionReviewPrompt } from '@/lib/scribe/sessionReviewMode';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // Allow up to 60 seconds for complex queries

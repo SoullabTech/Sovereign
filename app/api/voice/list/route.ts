@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const revalidate = false;
 import path from "path";
 import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
 import { logger } from "../../_backend/src/utils/logger";
 
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
-export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/voice/list

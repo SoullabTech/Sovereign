@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
+
 // Note: No dynamic export needed - Capacitor apps call remote API server
 
 // Beta passcode validation endpoint

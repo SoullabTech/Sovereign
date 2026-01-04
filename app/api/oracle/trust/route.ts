@@ -1,10 +1,11 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { personalOracleAgent } from '../../_backend/src/agents/PersonalOracleAgent';
 import { logger } from '../../_backend/src/utils/logger';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/oracle/trust

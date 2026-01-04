@@ -11,6 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   inferSpiralogicCell,
   chooseFrameworksForCell,
@@ -26,7 +28,6 @@ import {
 } from '@/lib/consciousness/spiralogic-core';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // ====================================================================
 // REQUEST/RESPONSE INTERFACES

@@ -1,6 +1,8 @@
 // @ts-nocheck - Prototype file, not type-checked
 // backend: app/api/sovereign/app/maia/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
@@ -13,7 +15,6 @@ import { randomUUID } from 'crypto';
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Serverless platform config (prevents platform killing long-running DEEP requests)
 export const runtime = 'nodejs';

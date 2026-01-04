@@ -2,11 +2,12 @@
 // Enables MAIA to explain her own process and therapeutic framework usage
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { analyzeTherapeuticFrameworks, generateTransparencyReport, type FrameworkAnalysis } from '@/lib/consciousness/therapeuticFrameworkTracker';
 import { getMAIAArchitectureContext, buildSelfAwareContext } from '@/lib/consciousness/maiaArchitectureContext';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
 
 /**
  * Security: Require research API key for all endpoints

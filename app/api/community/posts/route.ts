@@ -7,10 +7,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
+export const revalidate = false;
 import { query } from '@/lib/db/postgres'
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // GET - List/search posts
 export async function GET(request: NextRequest) {

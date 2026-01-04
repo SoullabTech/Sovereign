@@ -5,10 +5,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { ConsciousnessMappingService } from '@/lib/biometric/consciousness-mapping-service';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Biometric data interface matching mobile service
 interface BiometricData {

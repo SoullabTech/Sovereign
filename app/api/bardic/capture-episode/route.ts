@@ -1,10 +1,10 @@
 // backend: app/api/bardic/capture-episode/route.ts
+export const revalidate = false;
 import { NextResponse } from 'next/server';
 
 import { getConversationMemory, type CrystallizationDetection } from '@/lib/memory/bardic/ConversationMemoryIntegration';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 type CaptureEpisodeBody = {
   userId: string;

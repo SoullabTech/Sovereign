@@ -1,11 +1,12 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
 import { DreamWeaverEngine } from '@/app/api/_backend/src/oracle/core/DreamWeaverEngine';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 const prisma = new PrismaClient();
 

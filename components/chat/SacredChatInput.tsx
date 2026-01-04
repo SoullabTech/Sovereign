@@ -19,6 +19,7 @@ interface SacredChatInputProps {
   tone?: number; // 0-1 scale from onboarding
   style?: 'prose' | 'poetic' | 'auto'; // from onboarding
   mode?: 'dialogue' | 'counsel' | 'scribe'; // MAIA communication mode
+  onOpenPromptPicker?: () => void; // Open soul prompt picker
 }
 
 // Sacred animation variants
@@ -63,7 +64,8 @@ export default function SacredChatInput({
   isFirstSession = false,
   tone = 0.5,
   style = 'prose',
-  mode = 'dialogue'
+  mode = 'dialogue',
+  onOpenPromptPicker
 }: SacredChatInputProps) {
   // Scribe/Note mode allows unlimited input for full transcript uploads
   const maxLength = mode === 'scribe' ? undefined : maxLengthProp;
@@ -693,10 +695,24 @@ export default function SacredChatInput({
                 initial={{ opacity: 0, y: 5 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -5 }}
+                className="flex items-center justify-center gap-2"
               >
-                <span className="hidden sm:inline">Type to write • Click mic to speak • Enter to send • Shift+Enter for new line</span>
-                <span className="sm:hidden">Tap mic to speak • Type to write • Tap to send</span>
-                {isJournalMode && <span className="hidden sm:inline"> • Your sacred thoughts are witnessed</span>}
+                <span>
+                  <span className="hidden sm:inline">Type to write • Click mic to speak • Enter to send • Shift+Enter for new line</span>
+                  <span className="sm:hidden">Tap mic to speak • Type to write • Tap to send</span>
+                  {isJournalMode && <span className="hidden sm:inline"> • Your sacred thoughts are witnessed</span>}
+                </span>
+                {/* Soul Prompts trigger - shows when input is empty */}
+                {onOpenPromptPicker && message.trim().length === 0 && !isRecording && (
+                  <button
+                    onClick={onOpenPromptPicker}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/20 text-amber-400 transition-colors"
+                    title="Soul Prompts"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span className="hidden sm:inline">Prompts</span>
+                  </button>
+                )}
               </motion.span>
             )}
           </AnimatePresence>

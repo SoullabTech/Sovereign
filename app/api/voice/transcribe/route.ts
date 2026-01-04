@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+
+export const revalidate = false;
 import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
@@ -8,7 +10,6 @@ import { logger } from "../../_backend/src/utils/logger";
 import { v4 as uuidv4 } from "uuid";
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 // Check if OpenAI API key is valid
 const USE_OPENAI_WHISPER = process.env.OPENAI_API_KEY &&

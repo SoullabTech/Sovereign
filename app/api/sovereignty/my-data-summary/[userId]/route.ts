@@ -7,8 +7,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export const revalidate = false;
 
-export const dynamic = 'force-static';
+
 
 // Required for static export - generate static params for known user IDs
 export async function generateStaticParams() {

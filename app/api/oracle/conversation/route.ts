@@ -1,5 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import { PanconsciousFieldService } from '@/lib/consciousness/panconscious-field';
 import {
   inferSpiralogicCell,
@@ -35,7 +37,6 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 /**
  * Oracle Conversation API endpoint - Option A: "Oracle = DEEP = Opus"

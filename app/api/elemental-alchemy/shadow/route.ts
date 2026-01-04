@@ -11,6 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+
+export const revalidate = false;
 import {
   recordShadowInstance,
   createShadowPattern,
@@ -22,7 +24,6 @@ import {
 import { query } from '@/lib/db/postgres';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 /**
  * POST - Record a shadow instance

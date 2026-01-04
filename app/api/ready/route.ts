@@ -1,8 +1,8 @@
 // backend: app/api/ready/route.ts
+export const revalidate = false;
 import { NextResponse } from 'next/server';
 
 // Skip during static export (Capacitor builds)
-export const dynamic = 'force-dynamic';
 
 /**
  * Readiness Check - Are critical dependencies available?
