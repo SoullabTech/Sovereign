@@ -30,6 +30,7 @@ interface ModernTextInputProps {
   onVoiceResponseToggle?: () => void;
   onFileUpload?: (files: File[]) => void;
   onDownloadConversation?: () => void;
+  onOpenPromptPicker?: () => void;
   autoFocus?: boolean;
   maxLength?: number;
   hasMemory?: boolean;
@@ -52,6 +53,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   onVoiceResponseToggle,
   onFileUpload,
   onDownloadConversation,
+  onOpenPromptPicker,
   autoFocus = false,
   maxLength: maxLengthProp = 10000,
   hasMemory = false,
@@ -201,6 +203,25 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
                     <div className="text-white/50 text-xs">Images, PDFs, documents</div>
                   </div>
                 </button>
+
+                {/* Soul Prompts */}
+                {onOpenPromptPicker && (
+                  <button
+                    onClick={() => {
+                      onOpenPromptPicker();
+                      setShowTools(false);
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm hover:bg-white/5 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-amber-500/20 rounded-lg flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-amber-400" />
+                    </div>
+                    <div className="text-left">
+                      <div className="text-white/90 font-medium">Soul Prompts</div>
+                      <div className="text-white/50 text-xs">Elemental inquiry guides</div>
+                    </div>
+                  </button>
+                )}
 
                 {/* Voice Response Toggle */}
                 {onVoiceResponseToggle && (

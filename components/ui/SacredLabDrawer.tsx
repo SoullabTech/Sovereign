@@ -30,7 +30,16 @@ import {
   Mic,
   MicOff,
   MessageSquare,
-  Cpu
+  Cpu,
+  Flame,
+  Droplets,
+  Mountain,
+  Wind,
+  Clock,
+  Target,
+  Sun,
+  Smile,
+  ClipboardList
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -49,6 +58,9 @@ interface SacredLabDrawerProps {
   isAudioPlaying?: boolean;
   showChatInterface?: boolean;
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
+  // Session & Prompt props
+  sessionPhase?: 'opening' | 'exploration' | 'integration' | 'closure' | 'complete';
+  sessionMinutesRemaining?: number;
 }
 
 export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
@@ -60,8 +72,73 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
   isFieldRecording,
   isScribing,
   hasScribeSession,
+  sessionPhase,
+  sessionMinutesRemaining,
 }) => {
   const menuSections = [
+    {
+      title: 'SOUL PROMPTS & SESSION',
+      icon: '✨',
+      items: [
+        {
+          icon: Sparkles,
+          label: 'Soul Prompts',
+          action: () => onAction?.('open-prompt-picker'),
+          description: 'Elemental prompts to guide your inquiry'
+        },
+        {
+          icon: Clock,
+          label: sessionPhase ? `Session: ${sessionPhase}` : 'Session Arc',
+          action: () => onAction?.('show-session-arc'),
+          description: sessionMinutesRemaining
+            ? `${sessionMinutesRemaining}m remaining`
+            : 'View your session journey',
+          isActive: sessionPhase === 'exploration'
+        },
+        {
+          icon: Target,
+          label: 'Session Synthesis',
+          action: () => onAction?.('show-session-synthesis'),
+          description: 'Review patterns & invitation forward'
+        },
+        {
+          icon: Flame,
+          label: 'Prompt Library',
+          action: () => onNavigate('/labtools/prompts'),
+          description: 'Full library: Seeker → Practitioner → Alchemist'
+        },
+        {
+          icon: ClipboardList,
+          label: 'Session Recap',
+          action: () => onAction?.('session-recap'),
+          description: 'Summary of themes, insights & invitation'
+        },
+      ],
+    },
+    {
+      title: 'SELF-DISCOVERY',
+      icon: '🌱',
+      items: [
+        {
+          icon: Smile,
+          label: 'Daily Check-in',
+          action: () => onAction?.('daily-checkin'),
+          description: 'How are you arriving today?'
+        },
+        {
+          icon: Flame,
+          label: 'Element Discovery',
+          action: () => onAction?.('element-discovery'),
+          description: 'Find your dominant elemental nature'
+        },
+        {
+          icon: BookOpen,
+          label: 'Vocabulary Guide',
+          action: () => onAction?.('toggle-vocabulary-tooltips'),
+          description: 'Highlight soul terms with definitions'
+        },
+      ],
+    },
     {
       title: 'WISDOM COUNCIL',
       icon: '🌟',

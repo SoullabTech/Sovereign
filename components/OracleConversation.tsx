@@ -23,7 +23,9 @@ import { AgentCustomizer } from './oracle/AgentCustomizer';
 import { MaiaSettingsPanel } from './MaiaSettingsPanel';
 import { MaiaFeedbackWidget } from './maia/MaiaFeedbackWidget';
 import { PatternChips, PatternDrawer, type PatternMeta } from './memory';
+import { ToolRevealSheet } from './wisdom/ToolRevealSheet';
 import { formatMessageText } from '@/lib/text/formatMessageText';
+import { HighlightedText } from './vocabulary/VocabularyTooltip';
 import { normalizeAIResponse, type NormalizedAIResponse } from '@/lib/hooks/useOracleData';
 import { ConsciousnessComputingPrompt } from './ConsciousnessComputingPrompt';
 // import { QuickSettingsButton } from './QuickSettingsButton'; // Moved to bottom nav
@@ -55,6 +57,12 @@ import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
+import PromptPicker from './prompts/PromptPicker';
+import SessionSynthesis, { type SessionSynthesisData } from './session/SessionSynthesis';
+import { FloatingSessionIndicator } from './session/SessionArcIndicator';
+import { SessionRecap, type SessionRecapData } from './session/SessionRecap';
+import { DailyCheckin, type EmotionalState } from './checkin/DailyCheckin';
+import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
@@ -178,12 +186,26 @@ interface ConversationMessage {
       sig?: number;
       seen?: number;
     }>;
+    // Wisdom routing data for tool reveal
+    wisdomRouting?: {
+      activated: boolean;
+      tool?: { id: string; name: string; description: string; agentConnection: string } | null;
+      meta?: { agentName: string | null; patternType: string | null };
+    };
   };
 }
 
 // Component to clean messages by removing stage directions while preserving emphasis
-const FormattedMessage: React.FC<{ text: string | undefined }> = ({ text }) => {
-  return <span>{formatMessageText(text || '')}</span>;
+// Optionally highlights vocabulary terms for newcomers
+const FormattedMessage: React.FC<{
+  text: string | undefined;
+  enableVocabularyTooltips?: boolean;
+}> = ({ text, enableVocabularyTooltips = false }) => {
+  const cleanedText = formatMessageText(text || '');
+  if (enableVocabularyTooltips) {
+    return <HighlightedText text={cleanedText} enableTooltips={true} />;
+  }
+  return <span>{cleanedText}</span>;
 };
 
 export const OracleConversation: React.FC<OracleConversationProps> = ({
@@ -280,6 +302,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showVoiceMenu, setShowVoiceMenu] = useState(false);
   const [showAudioSettings, setShowAudioSettings] = useState(false);
+
+  // Wisdom tool reveal state
+  const [activeWisdomTool, setActiveWisdomTool] = useState<{
+    tool: { id: string; name: string; description: string; agentConnection: string } | null;
+    agentName: string | null;
+    userMessage: string;
+  } | null>(null);
   const [showChatInterface, setShowChatInterface] = useState(initialShowChatInterface);
 
   // Sync local state with parent when prop changes
@@ -370,6 +399,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showOpeningRitual, setShowOpeningRitual] = useState(false);
   const [showClosingRitual, setShowClosingRitual] = useState(false);
   const [pendingSessionDuration, setPendingSessionDuration] = useState<number | null>(null);
+
+  // Soul Prompts & Session Synthesis state
+  const [showPromptPicker, setShowPromptPicker] = useState(false);
+  const [showSessionSynthesis, setShowSessionSynthesis] = useState(false);
+  const [sessionSynthesisData, setSessionSynthesisData] = useState<SessionSynthesisData | null>(null);
+
+  // New member support features
+  const [showDailyCheckin, setShowDailyCheckin] = useState(false);
+  const [showElementDiscovery, setShowElementDiscovery] = useState(false);
+  const [showSessionRecap, setShowSessionRecap] = useState(false);
+  const [sessionRecapData, setSessionRecapData] = useState<SessionRecapData | null>(null);
+  const [userCheckinState, setUserCheckinState] = useState<{ state: EmotionalState; intensity: number } | null>(null);
+  const [enableVocabularyTooltips, setEnableVocabularyTooltips] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('maia.vocabularyTooltips');
+      return stored === 'true';
+    }
+    return false;
+  });
 
   // Holoflower/visualization state - Mobile responsive
   const [holoflowerSize, setHoloflowerSize] = useState(() => {
@@ -2476,6 +2524,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       //   }
       // }
 
+      // Extract wisdom routing data if present
+      const wisdomRouting = responseData.metadata?.wisdomRouting;
+
       // Create oracle message with source tag
       const oracleMessage: ConversationMessage = {
         id: `msg-${Date.now()}-oracle`,
@@ -2487,8 +2538,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         coherenceLevel: responseData.metadata?.confidence || 0.85,
         source: 'maia',
         opusAxioms,
-        turnId
+        turnId,
+        metadata: {
+          wisdomRouting: wisdomRouting ? {
+            activated: wisdomRouting.activated,
+            tool: wisdomRouting.tool,
+            meta: wisdomRouting.meta
+          } : undefined
+        }
       };
+
+      // Trigger wisdom tool reveal if activated
+      if (wisdomRouting?.activated && wisdomRouting.tool) {
+        console.log('🌟 [WisdomTool] Revealing tool:', wisdomRouting.tool.name);
+        setActiveWisdomTool({
+          tool: wisdomRouting.tool,
+          agentName: wisdomRouting.meta?.agentName || null,
+          userMessage: cleanedText
+        });
+      }
 
       // Store MAIA's response for echo detection
       lastMaiaResponseRef.current = responseText;
@@ -4281,7 +4349,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       </div>
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
-                          <FormattedMessage text={message.text} />
+                          <FormattedMessage
+                            text={message.text}
+                            enableVocabularyTooltips={enableVocabularyTooltips}
+                          />
                         ) : (
                           message.text
                         )}
@@ -4425,6 +4496,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                       handleTextMessage(`Please analyze these files: ${fileNames}`, files);
                     }}
                     onDownloadConversation={handleDownloadConversation}
+                    onOpenPromptPicker={() => setShowPromptPicker(true)}
                     autoFocus={true}
                     hasMemory={messages.length > 0 || !isReturningUser}
                     lastConnectionTime={
@@ -4676,6 +4748,69 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           setShowLabDrawer(false);
         }}
         onAction={async (action) => {
+          // Soul Prompts & Session actions
+          if (action === 'open-prompt-picker') {
+            setShowPromptPicker(true);
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'show-session-arc') {
+            // Session arc is shown via FloatingSessionIndicator - just close drawer
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'show-session-synthesis') {
+            // Generate synthesis from current conversation if we have messages
+            if (messages.length > 0) {
+              setSessionSynthesisData({
+                patterns: ['Pattern detection in progress...'],
+                invitation: 'Continue exploring what emerged in this conversation.',
+                savedToMemory: !isSanctuary,
+                durationMinutes: sessionTimer?.getElapsedMinutes?.() || undefined
+              });
+              setShowSessionSynthesis(true);
+            }
+            setShowLabDrawer(false);
+            return;
+          }
+          // New member support actions
+          if (action === 'daily-checkin') {
+            setShowDailyCheckin(true);
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'element-discovery') {
+            setShowElementDiscovery(true);
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'session-recap') {
+            // Generate recap from current session
+            if (messages.length > 0) {
+              setSessionRecapData({
+                duration: sessionTimer?.getElapsedMinutes?.() || Math.floor(messages.length / 2),
+                messageCount: messages.length,
+                themes: ['Self-reflection', 'Growth'], // TODO: Extract from conversation
+                elements: {
+                  fire: 0.3,
+                  water: 0.5,
+                  earth: 0.4,
+                  air: 0.6,
+                  aether: 0.2
+                }, // TODO: Calculate from conversation content
+                invitation: 'Continue reflecting on what emerged today.'
+              });
+              setShowSessionRecap(true);
+            }
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'toggle-vocabulary-tooltips') {
+            const newValue = !enableVocabularyTooltips;
+            setEnableVocabularyTooltips(newValue);
+            localStorage.setItem('maia.vocabularyTooltips', String(newValue));
+            return;
+          }
           if (action === 'upload') {
             document.getElementById('maiaFileUpload')?.click();
             return;
@@ -4788,6 +4923,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         isAudioPlaying={isAudioPlaying}
         showChatInterface={showChatInterface}
         voice={voice}
+        sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
+        sessionMinutesRemaining={sessionTimer?.getRemainingMinutes?.()}
       />
 
       {/* 🌊 LIQUID AI - Rhythm Metrics Debug Overlay */}
@@ -4880,6 +5017,117 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         pattern={activePattern}
         userId={userId}
       />
+
+      {/* 🌟 Wisdom Tool Reveal - Ganesha Focus Garden, etc */}
+      {activeWisdomTool && (
+        <ToolRevealSheet
+          tool={activeWisdomTool.tool}
+          agentName={activeWisdomTool.agentName}
+          userMessage={activeWisdomTool.userMessage}
+          onDismiss={() => setActiveWisdomTool(null)}
+          onToolComplete={(toolId, result) => {
+            console.log('🌟 [WisdomTool] Completed:', toolId, result);
+            setActiveWisdomTool(null);
+          }}
+        />
+      )}
+
+      {/* Soul Prompt Picker Modal */}
+      <PromptPicker
+        isOpen={showPromptPicker}
+        onClose={() => setShowPromptPicker(false)}
+        onSelectPrompt={(promptText) => {
+          // Frame as a reflection invitation so MAIA guides the user through it
+          const framedPrompt = `I'd like to sit with this question: ${promptText}`;
+          setDraftMessage(framedPrompt);
+          setComposerDraft(framedPrompt);
+          setShowPromptPicker(false);
+          // Focus the text input
+          setTimeout(() => {
+            textInputRef.current?.focus?.();
+          }, 100);
+        }}
+        consciousnessLevel={3} // TODO: Get from user profile
+        sessionPhase={sessionTimer?.getCurrentPhase?.() as any}
+        useV1Set={false}
+        showDepthToggle={true}
+      />
+
+      {/* Session Synthesis Modal */}
+      {showSessionSynthesis && sessionSynthesisData && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="max-w-lg w-full">
+            <SessionSynthesis
+              synthesis={sessionSynthesisData}
+              onContinue={() => setShowSessionSynthesis(false)}
+              onJournal={() => {
+                // TODO: Navigate to journal with synthesis data
+                setShowSessionSynthesis(false);
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Daily Check-in Modal */}
+      <DailyCheckin
+        isOpen={showDailyCheckin}
+        onClose={() => setShowDailyCheckin(false)}
+        onComplete={(checkin) => {
+          setUserCheckinState({ state: checkin.state, intensity: checkin.intensity });
+          setShowDailyCheckin(false);
+          // Optionally start conversation with the check-in context
+          const contextMessage = `I'm arriving today feeling ${checkin.state.label.toLowerCase()} (${checkin.state.description.toLowerCase()}).${checkin.note ? ` ${checkin.note}` : ''}`;
+          setDraftMessage(contextMessage);
+          setComposerDraft(contextMessage);
+          setTimeout(() => textInputRef.current?.focus?.(), 100);
+        }}
+      />
+
+      {/* Element Discovery Modal */}
+      <ElementDiscovery
+        isOpen={showElementDiscovery}
+        onClose={() => setShowElementDiscovery(false)}
+        onComplete={(result) => {
+          setShowElementDiscovery(false);
+          // Start conversation with element discovery result
+          const contextMessage = `I just discovered my dominant element is ${result.dominant} with ${result.secondary} as secondary. Help me understand what this means for my journey.`;
+          setDraftMessage(contextMessage);
+          setComposerDraft(contextMessage);
+          setTimeout(() => textInputRef.current?.focus?.(), 100);
+        }}
+      />
+
+      {/* Session Recap Modal */}
+      {sessionRecapData && (
+        <SessionRecap
+          isOpen={showSessionRecap}
+          onClose={() => {
+            setShowSessionRecap(false);
+            setSessionRecapData(null);
+          }}
+          data={sessionRecapData}
+          onSaveToJournal={() => {
+            // TODO: Save to journal
+            toast.success('Saved to journal');
+            setShowSessionRecap(false);
+          }}
+          onDownload={() => {
+            downloadTranscript();
+            setShowSessionRecap(false);
+          }}
+        />
+      )}
+
+      {/* Floating Session Indicator - shows when session is active */}
+      {sessionTimer && sessionTimer.isActive?.() && !showLabDrawer && (
+        <FloatingSessionIndicator
+          phase={sessionTimer.getCurrentPhase?.() as any || 'exploration'}
+          elapsedMinutes={sessionTimer.getElapsedMinutes?.() || 0}
+          totalMinutes={sessionTimer.getDurationMinutes?.() || 60}
+          onClick={() => setShowLabDrawer(true)}
+        />
+      )}
 
     </div>
   );
