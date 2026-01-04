@@ -7,7 +7,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init to avoid build-time errors
+let resend: Resend | null = null;
+function getResend() {
+  if (!resend) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // Send recovery email
     try {
-      await resend.emails.send({
+      await getResend().emails.send({
         from: 'Soullab <noreply@soullab.life>',
         to: email,
         subject: 'Your Soullab Passkey',
