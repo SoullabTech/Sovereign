@@ -220,17 +220,12 @@ export function enforcePresenceConstraints(
 
   // If violations found, apply constraints
   if (violations.length > 0) {
-    // Remove trailing questions
-    response = response.replace(/[^.!]\?[^\n]*$/gm, '.');
+    // Convert trailing questions to statements (just replace ? with .)
+    // Old buggy regex was eating the character before ? causing "treating you?" → "treating yo."
+    response = response.replace(/\?(\s*)$/gm, '.$1');
 
-    // Truncate to reduce length (target 40-60% reduction)
-    const sentences = response.split(/(?<=[.!?])\s+/);
-    if (sentences.length > 3) {
-      // Keep first 2-3 sentences max
-      response = sentences.slice(0, Math.min(3, Math.ceil(sentences.length * 0.5))).join(' ');
-    }
-
-    // Remove advancement language
+    // Remove advancement language but keep the rest of the response intact
+    // (removed aggressive sentence truncation that was cutting off responses)
     response = response
       .replace(/let('s| us) (explore|go deeper|continue)[^.]*\./gi, '')
       .replace(/the next (step|move|thing)[^.]*\./gi, '')
