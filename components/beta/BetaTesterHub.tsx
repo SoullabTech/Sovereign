@@ -67,14 +67,13 @@ export function BetaTesterHub({ userName, userId }: BetaTesterHubProps) {
 
   return (
     <>
-      {/* Floating Feedback Button - positioned above chat input on the RIGHT side */}
+      {/* Floating Feedback Button - positioned safely above the bottom nav/input area */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-40 right-4 z-[100] flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-900/80 to-stone-900/80 text-[#D4B896] rounded-lg shadow-lg shadow-black/40 border border-amber-700/40 backdrop-blur-sm"
-        style={{ left: 'auto' }} // Ensure left is not overriding right
+        className="fixed bottom-[140px] left-4 z-[45] flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-900/80 to-stone-900/80 text-[#D4B896] rounded-lg shadow-lg shadow-black/40 border border-amber-700/40 backdrop-blur-sm"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        initial={{ opacity: 0, x: 50 }}
+        initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ delay: 1 }}
       >
