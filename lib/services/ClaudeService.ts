@@ -42,7 +42,7 @@ export class ClaudeService {
       timeout: 8000, // 8 second timeout to fit within Vercel's 10 second limit
     });
     this.model = config.model || 'claude-haiku-4-5-20251001'; // Use faster Haiku model
-    this.maxTokens = config.maxTokens || 600; // Increased for soul metadata output
+    this.maxTokens = config.maxTokens || 1500; // Increased to let MAIA speak fully (was 600 - cut words off)
     this.temperature = config.temperature || 0.8;
   }
   
@@ -740,19 +740,25 @@ Notice where spirit and matter dance, where the cosmic meets the personal, where
   }
 
   private trimResponse(response: string): string {
-    // Ensure response is conversational length
-    if (response.length > 500) {
-      // Take first complete thought
-      const sentences = response.split(/[.!?]+/);
-      let trimmed = '';
-      for (const sentence of sentences) {
-        if (trimmed.length + sentence.length < 450) {
-          trimmed += sentence + '. ';
-        } else {
-          break;
-        }
+    // Allow MAIA to speak fully - only trim truly excessive responses
+    // Previous limit of 450 chars was cutting sentences mid-word
+    const MAX_RESPONSE_LENGTH = parseInt(process.env.MAIA_MAX_RESPONSE_LENGTH || '4000', 10);
+
+    if (response.length > MAX_RESPONSE_LENGTH) {
+      // Find last complete sentence within limit
+      const withinLimit = response.slice(0, MAX_RESPONSE_LENGTH);
+      const lastSentenceEnd = Math.max(
+        withinLimit.lastIndexOf('. '),
+        withinLimit.lastIndexOf('? '),
+        withinLimit.lastIndexOf('! ')
+      );
+
+      if (lastSentenceEnd > MAX_RESPONSE_LENGTH * 0.7) {
+        // Found a good sentence boundary
+        return response.slice(0, lastSentenceEnd + 1).trim();
       }
-      return trimmed.trim();
+      // No good boundary, take full limit
+      return withinLimit.trim();
     }
 
     return response;
