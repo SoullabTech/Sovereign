@@ -2,6 +2,7 @@
 
 // app/patrons/page.tsx
 // Patron landing page with Stripe checkout integration
+// Enhanced with annual pricing, one-time gifts, and Elder sponsorship
 
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -10,8 +11,8 @@ const tiers = [
   {
     id: 'seedkeeper',
     name: "Seedkeeper",
-    price: "$25/month",
-    amount: 25,
+    monthlyPrice: 25,
+    annualPrice: 250, // ~17% savings (2 months free)
     tagline: "For steady-hearted supporters who want MAIA to exist.",
     bullets: [
       "Monthly build letters",
@@ -22,8 +23,8 @@ const tiers = [
   {
     id: 'storyweaver',
     name: "Story Weaver",
-    price: "$75/month",
-    amount: 75,
+    monthlyPrice: 75,
+    annualPrice: 750, // ~17% savings
     tagline: "For patrons who want to participate in the unfolding.",
     bullets: [
       "Everything in Seedkeeper",
@@ -35,8 +36,8 @@ const tiers = [
   {
     id: 'sanctuary',
     name: "Sanctuary Builder",
-    price: "$250/month",
-    amount: 250,
+    monthlyPrice: 250,
+    annualPrice: 2500, // ~17% savings
     tagline: "For patrons actively funding the sanctuary infrastructure.",
     bullets: [
       "Everything in Story Weaver",
@@ -47,8 +48,8 @@ const tiers = [
   {
     id: 'founder',
     name: "Founding Patron",
-    price: "$1,000/month",
-    amount: 1000,
+    monthlyPrice: 1000,
+    annualPrice: 10000, // ~17% savings
     tagline: "For major stewards anchoring MAIA into the world.",
     bullets: [
       "Everything in Sanctuary Builder",
@@ -57,6 +58,13 @@ const tiers = [
       "Quarterly vision session",
     ],
   },
+];
+
+const oneTimeOptions = [
+  { id: 'gift-50', name: "Blessing", amount: 50, description: "A meaningful gesture of support" },
+  { id: 'gift-150', name: "Offering", amount: 150, description: "Help fund a month of development" },
+  { id: 'gift-500', name: "Foundation Stone", amount: 500, description: "Lay groundwork for the sanctuary" },
+  { id: 'gift-custom', name: "Custom Amount", amount: 0, description: "Give what feels right" },
 ];
 
 const faqs = [
@@ -76,6 +84,10 @@ const faqs = [
     q: "How will I stay connected?",
     a: "Monthly build letters for all patrons. Story Weaver and above join the monthly Patron Circle call. Sanctuary Builders and Founders get additional direct access.",
   },
+  {
+    q: "Does my employer match charitable giving?",
+    a: "Many companies match employee donations to nonprofits and mission-driven organizations. Check with your HR department — your contribution could be doubled.",
+  },
 ];
 
 // Separate component for search params (needs Suspense boundary)
@@ -84,8 +96,10 @@ function PatronsContent() {
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
   const [loading, setLoading] = useState<string | null>(null);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
+  const [customAmount, setCustomAmount] = useState<string>('');
 
-  const handleJoin = async (tierId: string, amount: number) => {
+  const handleJoin = async (tierId: string, amount: number, isAnnual: boolean = false) => {
     setLoading(tierId);
     try {
       const response = await fetch('/api/stripe/checkout', {
@@ -94,6 +108,72 @@ function PatronsContent() {
         body: JSON.stringify({
           tier: tierId,
           amount,
+          interval: isAnnual ? 'year' : 'month',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Failed to start checkout. Please try again.');
+        setLoading(null);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Something went wrong. Please try again.');
+      setLoading(null);
+    }
+  };
+
+  const handleOneTimeGift = async (giftId: string, amount: number) => {
+    if (giftId === 'gift-custom') {
+      const customValue = parseInt(customAmount);
+      if (!customValue || customValue < 5) {
+        alert('Please enter an amount of at least $5');
+        return;
+      }
+      amount = customValue;
+    }
+
+    setLoading(giftId);
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: 'one-time-gift',
+          amount,
+          interval: 'one_time',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Failed to start checkout. Please try again.');
+        setLoading(null);
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Something went wrong. Please try again.');
+      setLoading(null);
+    }
+  };
+
+  const handleElderSponsor = async () => {
+    setLoading('elder-sponsor');
+    try {
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tier: 'elder-sponsor',
+          amount: 500,
+          interval: 'one_time',
         }),
       });
 
@@ -119,7 +199,7 @@ function PatronsContent() {
         <div className="bg-green-50 dark:bg-green-900/30 border-b border-green-200 dark:border-green-800 px-6 py-4">
           <div className="mx-auto max-w-5xl text-center">
             <p className="text-green-800 dark:text-green-200 font-medium">
-              🙏 Thank you for joining the Founding Circle! Check your email for confirmation.
+              Thank you for joining the Founding Circle! Check your email for confirmation.
             </p>
           </div>
         </div>
@@ -158,10 +238,10 @@ function PatronsContent() {
             Join the Founding Circle
           </a>
           <a
-            href="mailto:Soullab1@gmail.com?subject=MAIA%20Patron%20Packet%20Request"
+            href="#one-time"
             className="inline-flex items-center justify-center rounded-2xl border border-stone-300 dark:border-stone-700 px-6 py-3 text-base font-medium text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
           >
-            Request Patron Packet
+            Make a One-Time Gift
           </a>
         </div>
       </section>
@@ -229,15 +309,26 @@ function PatronsContent() {
               </li>
             </ul>
 
-            <div className="mt-8 rounded-2xl border border-stone-200 dark:border-stone-700 p-5 bg-stone-50 dark:bg-stone-800">
-              <p className="font-medium text-stone-900 dark:text-stone-100">
-                Sponsor an Elder Story Seat
-              </p>
+            {/* Elder Story Seat - Now Clickable */}
+            <button
+              onClick={handleElderSponsor}
+              disabled={loading === 'elder-sponsor'}
+              className="mt-8 w-full rounded-2xl border-2 border-amber-400 dark:border-amber-600 p-5 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-950/50 transition-all text-left disabled:opacity-50"
+            >
+              <div className="flex items-center justify-between">
+                <p className="font-semibold text-stone-900 dark:text-stone-100">
+                  Sponsor an Elder Story Seat
+                </p>
+                <span className="text-amber-700 dark:text-amber-400 font-medium">$500</span>
+              </div>
               <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                Help an elder preserve their stories with dignity. Limited seats
-                as we refine the experience.
+                Help an elder preserve their stories with dignity. Your gift funds one person's
+                full year of access to MAIA's legacy capture tools.
               </p>
-            </div>
+              <p className="mt-2 text-xs text-amber-700 dark:text-amber-500">
+                {loading === 'elder-sponsor' ? 'Loading...' : 'Click to sponsor →'}
+              </p>
+            </button>
           </div>
         </div>
       </section>
@@ -252,55 +343,172 @@ function PatronsContent() {
           platform that treats inner life as sacred.
         </p>
 
+        {/* Billing Toggle */}
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setBillingCycle('monthly')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              billingCycle === 'monthly'
+                ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900'
+                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800'
+            }`}
+          >
+            Monthly
+          </button>
+          <button
+            onClick={() => setBillingCycle('annual')}
+            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+              billingCycle === 'annual'
+                ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900'
+                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800'
+            }`}
+          >
+            Annual
+            <span className="ml-2 text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">
+              Save 17%
+            </span>
+          </button>
+        </div>
+
         <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          {tiers.map((tier) => (
-            <div
-              key={tier.name}
-              className={`rounded-3xl border p-6 shadow-sm flex flex-col ${
-                tier.featured
-                  ? "border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
-                  : "border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                  {tier.name}
-                </h3>
-                {tier.featured && (
-                  <span className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                    Popular
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-                {tier.tagline}
-              </p>
-              <p className="mt-4 text-2xl font-semibold text-stone-900 dark:text-stone-100">
-                {tier.price}
-              </p>
-              <ul className="mt-5 space-y-2 text-sm text-stone-600 dark:text-stone-400 flex-1">
-                {tier.bullets.map((bullet) => (
-                  <li key={bullet} className="flex gap-2">
-                    <span className="text-green-600 dark:text-green-400">
-                      ✓
-                    </span>
-                    {bullet}
-                  </li>
-                ))}
-              </ul>
-              <button
-                onClick={() => handleJoin(tier.id, tier.amount)}
-                disabled={loading === tier.id}
-                className={`mt-6 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+          {tiers.map((tier) => {
+            const price = billingCycle === 'annual' ? tier.annualPrice : tier.monthlyPrice;
+            const displayPrice = billingCycle === 'annual'
+              ? `$${tier.annualPrice.toLocaleString()}/year`
+              : `$${tier.monthlyPrice}/month`;
+
+            return (
+              <div
+                key={tier.name}
+                className={`rounded-3xl border p-6 shadow-sm flex flex-col ${
                   tier.featured
-                    ? "bg-amber-600 text-white hover:bg-amber-700"
-                    : "border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                    ? "border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
+                    : "border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900"
                 }`}
               >
-                {loading === tier.id ? 'Loading...' : `Become a ${tier.name}`}
-              </button>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                    {tier.name}
+                  </h3>
+                  {tier.featured && (
+                    <span className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                      Popular
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
+                  {tier.tagline}
+                </p>
+                <div className="mt-4">
+                  <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
+                    {displayPrice}
+                  </p>
+                  {billingCycle === 'annual' && (
+                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                      ${Math.round(tier.annualPrice / 12)}/month · 2 months free
+                    </p>
+                  )}
+                </div>
+                <ul className="mt-5 space-y-2 text-sm text-stone-600 dark:text-stone-400 flex-1">
+                  {tier.bullets.map((bullet) => (
+                    <li key={bullet} className="flex gap-2">
+                      <span className="text-green-600 dark:text-green-400">
+                        ✓
+                      </span>
+                      {bullet}
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  onClick={() => handleJoin(tier.id, price, billingCycle === 'annual')}
+                  disabled={loading === tier.id}
+                  className={`mt-6 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                    tier.featured
+                      ? "bg-amber-600 text-white hover:bg-amber-700"
+                      : "border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
+                  }`}
+                >
+                  {loading === tier.id ? 'Loading...' : `Become a ${tier.name}`}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* One-Time Gifts */}
+      <section id="one-time" className="mx-auto max-w-5xl px-6 py-12">
+        <div className="rounded-3xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-8 shadow-sm">
+          <h2 className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
+            One-Time Gifts
+          </h2>
+          <p className="mt-2 text-stone-600 dark:text-stone-400">
+            Can't commit to monthly? A single gift still makes a difference.
+          </p>
+
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {oneTimeOptions.map((option) => (
+              <div
+                key={option.id}
+                className="rounded-2xl border border-stone-200 dark:border-stone-700 p-4 hover:border-amber-400 dark:hover:border-amber-600 transition-colors"
+              >
+                <p className="font-semibold text-stone-900 dark:text-stone-100">
+                  {option.name}
+                </p>
+                {option.id === 'gift-custom' ? (
+                  <div className="mt-2">
+                    <div className="flex items-center gap-1">
+                      <span className="text-stone-500">$</span>
+                      <input
+                        type="number"
+                        min="5"
+                        placeholder="Amount"
+                        value={customAmount}
+                        onChange={(e) => setCustomAmount(e.target.value)}
+                        className="w-full px-2 py-1 text-lg font-semibold bg-transparent border-b border-stone-300 dark:border-stone-600 focus:border-amber-500 focus:outline-none text-stone-900 dark:text-stone-100"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <p className="mt-2 text-xl font-semibold text-stone-900 dark:text-stone-100">
+                    ${option.amount}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
+                  {option.description}
+                </p>
+                <button
+                  onClick={() => handleOneTimeGift(option.id, option.amount)}
+                  disabled={loading === option.id}
+                  className="mt-3 w-full px-3 py-2 text-sm font-medium rounded-lg border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors disabled:opacity-50"
+                >
+                  {loading === option.id ? 'Loading...' : 'Give'}
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Employer Matching */}
+      <section className="mx-auto max-w-5xl px-6 py-8">
+        <div className="rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/30 p-6">
+          <div className="flex items-start gap-4">
+            <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
+              <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
             </div>
-          ))}
+            <div>
+              <h3 className="font-semibold text-stone-900 dark:text-stone-100">
+                Double Your Impact with Employer Matching
+              </h3>
+              <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                Many companies match employee donations. Check with your HR department
+                — your contribution could be doubled at no extra cost to you.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 

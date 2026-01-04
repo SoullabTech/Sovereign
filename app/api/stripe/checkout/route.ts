@@ -2,6 +2,12 @@
  * Stripe Checkout Session API
  *
  * Creates Stripe checkout sessions for Sustaining Circle contributions.
+ * Supports:
+ * - Monthly subscriptions
+ * - Annual subscriptions (17% savings)
+ * - One-time gifts
+ * - Elder Story Seat sponsorship
+ *
  * POST /api/stripe/checkout
  */
 
@@ -13,20 +19,23 @@ export const dynamic = 'force-dynamic';
 
 // Patron tier names from /patrons page
 type PatronTier = 'seedkeeper' | 'storyweaver' | 'sanctuary' | 'founder';
+// Special tiers
+type SpecialTier = 'one-time-gift' | 'elder-sponsor';
 // Legacy tier names (for backwards compatibility)
 type LegacyTier = 'sustainer' | 'guardian' | 'elder' | 'seva';
-type ContributionTier = PatronTier | LegacyTier;
+type ContributionTier = PatronTier | SpecialTier | LegacyTier;
 
 interface CheckoutRequest {
   tier: ContributionTier;
   amount?: number; // Amount in dollars
+  interval?: 'month' | 'year' | 'one_time'; // Billing interval
   memberId?: string;
   successUrl?: string;
   cancelUrl?: string;
 }
 
 // Tier configuration
-const TIER_CONFIG: Record<ContributionTier, {
+const TIER_CONFIG: Record<PatronTier | LegacyTier, {
   name: string;
   mode: 'subscription' | 'payment' | 'none';
   minimumAmount?: number;
@@ -86,17 +95,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body: CheckoutRequest = await request.json();
-    const { tier, amount, memberId, successUrl, cancelUrl } = body;
+    const { tier, amount, interval = 'month', memberId, successUrl, cancelUrl } = body;
 
     // Validate tier
-    if (!tier || !(tier in TIER_CONFIG)) {
+    if (!tier) {
       return NextResponse.json(
-        { success: false, error: 'Invalid contribution tier' },
+        { success: false, error: 'Contribution tier is required' },
         { status: 400 }
       );
     }
-
-    const tierConfig = TIER_CONFIG[tier];
 
     // Seva doesn't use Stripe
     if (tier === 'seva') {
@@ -109,43 +116,110 @@ export async function POST(request: NextRequest) {
     const stripe = getStripe();
     const origin = request.headers.get('origin') || 'http://localhost:3000';
 
+    // Handle special tiers (one-time gifts, elder sponsorship)
+    if (tier === 'one-time-gift' || tier === 'elder-sponsor') {
+      const giftAmount = tier === 'elder-sponsor' ? 50000 : (amount || 50) * 100; // Convert to cents
+      const giftName = tier === 'elder-sponsor' ? 'Elder Story Seat Sponsorship' : 'One-Time Gift';
+      const giftDescription = tier === 'elder-sponsor'
+        ? 'Sponsor one elder\'s full year of access to MAIA\'s legacy capture tools'
+        : `One-time gift of $${(giftAmount / 100).toFixed(0)} to support MAIA`;
+
+      const session = await stripe.checkout.sessions.create({
+        mode: 'payment',
+        line_items: [{
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: giftName,
+              description: giftDescription,
+            },
+            unit_amount: giftAmount,
+          },
+          quantity: 1,
+        }],
+        success_url: successUrl || `${origin}/patrons?success=true&type=gift`,
+        cancel_url: cancelUrl || `${origin}/patrons?canceled=true`,
+        metadata: {
+          tier,
+          type: 'one_time',
+          memberId: memberId || 'anonymous',
+        },
+        allow_promotion_codes: true,
+      });
+
+      console.log(`[Stripe] Created one-time checkout session: ${session.id} for ${giftName}`);
+
+      return NextResponse.json({
+        success: true,
+        sessionId: session.id,
+        url: session.url,
+      });
+    }
+
+    // Validate standard tier
+    if (!(tier in TIER_CONFIG)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid contribution tier' },
+        { status: 400 }
+      );
+    }
+
+    const tierConfig = TIER_CONFIG[tier as PatronTier | LegacyTier];
+
     // Calculate amount in cents
     let amountInCents: number;
-    if (tierConfig.amount) {
+    if (amount) {
+      // Use provided amount (for annual or custom amounts)
+      amountInCents = amount * 100;
+    } else if (tierConfig.amount) {
       // Fixed price tiers (patron tiers)
       amountInCents = tierConfig.amount;
     } else if (tierConfig.minimumAmount) {
       // Sliding scale tiers (legacy)
-      amountInCents = amount ? Math.max(tierConfig.minimumAmount, amount * 100) : tierConfig.minimumAmount;
+      amountInCents = tierConfig.minimumAmount;
     } else {
       amountInCents = 100; // $1 fallback
     }
 
+    // Determine if subscription or one-time payment
+    const isOneTime = interval === 'one_time';
+    const isAnnual = interval === 'year';
+    const billingInterval = isAnnual ? 'year' : 'month';
+
+    // Build product description
+    let description: string;
+    if (isOneTime) {
+      description = `One-time contribution of $${(amountInCents / 100).toFixed(2)}`;
+    } else if (isAnnual) {
+      const monthlyEquivalent = Math.round(amountInCents / 12 / 100);
+      description = `Annual contribution ($${monthlyEquivalent}/mo equivalent, 2 months free)`;
+    } else {
+      description = `Monthly contribution of $${(amountInCents / 100).toFixed(2)}`;
+    }
+
     // Build line items
-    const isSubscription = tierConfig.mode === 'subscription';
     const lineItem: Stripe.Checkout.SessionCreateParams.LineItem = {
       price_data: {
         currency: 'usd',
         product_data: {
           name: `${tierConfig.name} Circle`,
-          description: isSubscription
-            ? `Monthly contribution of $${(amountInCents / 100).toFixed(2)}`
-            : `Lifetime membership - $${(amountInCents / 100).toFixed(2)} one-time`,
+          description,
         },
         unit_amount: amountInCents,
-        ...(isSubscription && { recurring: { interval: 'month' as const } }),
+        ...(!isOneTime && { recurring: { interval: billingInterval as 'month' | 'year' } }),
       },
       quantity: 1,
     };
 
     // Create checkout session
     const sessionParams: Stripe.Checkout.SessionCreateParams = {
-      mode: isSubscription ? 'subscription' : 'payment',
+      mode: isOneTime ? 'payment' : 'subscription',
       line_items: [lineItem],
       success_url: successUrl || `${origin}/patrons?success=true&tier=${tier}`,
       cancel_url: cancelUrl || `${origin}/patrons?canceled=true`,
       metadata: {
         tier,
+        interval: interval || 'month',
         memberId: memberId || 'anonymous',
       },
       allow_promotion_codes: true,
@@ -153,7 +227,7 @@ export async function POST(request: NextRequest) {
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
-    console.log(`[Stripe] Created checkout session: ${session.id} for tier: ${tier}`);
+    console.log(`[Stripe] Created checkout session: ${session.id} for tier: ${tier} (${interval})`);
 
     return NextResponse.json({
       success: true,
