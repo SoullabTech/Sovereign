@@ -72,7 +72,8 @@ async function getInitialUserData() {
   if (betaUser) {
     try {
       const userData = JSON.parse(betaUser);
-      const userName = userData.username || userData.name || userData.displayName;
+      // FIXED: Prefer name over username (name is the display name, username is for login)
+      const userName = userData.name || userData.displayName || userData.username;
       if (userData.onboarded === true && userData.id && userName) {
         localStorage.setItem('explorerName', userName);
         localStorage.setItem('explorerId', userData.id);
@@ -318,7 +319,8 @@ function MAIAPageContent() {
       try {
         const userData = JSON.parse(newUser);
         const newId = userData.id || 'guest';
-        const newName = userData.username || userData.name || userData.displayName || 'Explorer';
+        // FIXED: Prefer name over username (name is the display name, username is for login)
+        const newName = userData.name || userData.displayName || userData.username || 'Explorer';
 
         localStorage.setItem('explorerName', newName);
         localStorage.setItem('explorerId', newId);

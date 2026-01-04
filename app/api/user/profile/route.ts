@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db/postgres';
 
 export const revalidate = false;
 
@@ -7,6 +8,7 @@ export const revalidate = false;
 /**
  * User Profile API endpoint
  * Returns basic profile information for guest users and authenticated users
+ * Now fetches the real name from the members table!
  */
 
 export async function GET(request: NextRequest) {
@@ -17,9 +19,31 @@ export async function GET(request: NextRequest) {
 
     // Try to get a more personalized name based on userId or use a fallback
     let userName = 'Explorer'; // Default fallback
+    let isGuest = userId === 'guest' || !userId;
 
-    // Extract name from userId if provided
-    if (userId && userId !== 'guest') {
+    // First, try to look up the member in the database
+    if (userId && userId !== 'guest' && !userId.startsWith('guest_')) {
+      try {
+        // Check if userId is a valid member ID
+        const result = await query(
+          'SELECT id, name, username FROM members WHERE id = $1 OR username = $1',
+          [userId]
+        );
+
+        if (result.rows.length > 0) {
+          const member = result.rows[0];
+          userName = member.name || member.username || 'Explorer';
+          isGuest = false;
+          console.log(`✅ [USER-PROFILE] Found member: ${userName}`);
+        }
+      } catch (dbError) {
+        console.error('⚠️ [USER-PROFILE] Database lookup failed, using fallback:', dbError);
+        // Fall through to name extraction below
+      }
+    }
+
+    // If database lookup didn't find a name, try to extract from userId
+    if (userName === 'Explorer' && userId && userId !== 'guest' && !userId.startsWith('guest_')) {
       // Extract a friendly name from user ID if possible
       const fullName = userId.replace(/[-_]/g, ' ')
                              .replace(/\b\w/g, l => l.toUpperCase())
@@ -32,7 +56,7 @@ export async function GET(request: NextRequest) {
       id: userId || 'guest',
       name: userName,
       domain: domain || 'localhost',
-      isGuest: userId === 'guest' || !userId,
+      isGuest,
       preferences: {
         theme: 'dark',
         voiceEnabled: true,

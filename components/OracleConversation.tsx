@@ -1494,15 +1494,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // the handleTextMessage flow and MaiaVoiceSystem callbacks.
   // Note: Removed voice state logging useEffect to prevent infinite re-renders
 
-  // Auto-focus text input in chat mode after MAIA responds
+  // Auto-focus text input in chat mode - only when switching to chat mode or when processing ends
+  // FIXED: Don't trigger on every message.length change - causes iOS Safari input freeze
+  // Also don't refocus if already focused (causes keyboard flicker on iOS)
   useEffect(() => {
     if (showChatInterface && !isProcessing && textInputRef.current) {
-      // Small delay to ensure DOM is ready
-      setTimeout(() => {
-        textInputRef.current?.focus();
-      }, 100);
+      // Check if already focused to prevent iOS keyboard issues
+      if (document.activeElement !== textInputRef.current) {
+        // Small delay to ensure DOM is ready
+        const timeoutId = setTimeout(() => {
+          textInputRef.current?.focus();
+        }, 100);
+        return () => clearTimeout(timeoutId);
+      }
     }
-  }, [showChatInterface, isProcessing, messages.length]);
+  }, [showChatInterface, isProcessing]); // Removed messages.length - was causing iOS freeze
 
   // Listen for journal "Ask MAIA" events - puts journal content into composer and auto-sends
   useEffect(() => {
