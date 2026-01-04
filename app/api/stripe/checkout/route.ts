@@ -11,11 +11,15 @@ import Stripe from 'stripe';
 
 export const dynamic = 'force-dynamic';
 
-type ContributionTier = 'sustainer' | 'guardian' | 'elder' | 'founder' | 'seva';
+// Patron tier names from /patrons page
+type PatronTier = 'seedkeeper' | 'storyweaver' | 'sanctuary' | 'founder';
+// Legacy tier names (for backwards compatibility)
+type LegacyTier = 'sustainer' | 'guardian' | 'elder' | 'seva';
+type ContributionTier = PatronTier | LegacyTier;
 
 interface CheckoutRequest {
   tier: ContributionTier;
-  amount?: number; // For sustainer tier sliding scale (in dollars)
+  amount?: number; // Amount in dollars
   memberId?: string;
   successUrl?: string;
   cancelUrl?: string;
@@ -28,25 +32,42 @@ const TIER_CONFIG: Record<ContributionTier, {
   minimumAmount?: number;
   amount?: number;
 }> = {
+  // Patron page tiers
+  seedkeeper: {
+    name: 'Seedkeeper',
+    mode: 'subscription',
+    amount: 2500, // $25/month
+  },
+  storyweaver: {
+    name: 'Story Weaver',
+    mode: 'subscription',
+    amount: 7500, // $75/month
+  },
+  sanctuary: {
+    name: 'Sanctuary Builder',
+    mode: 'subscription',
+    amount: 25000, // $250/month
+  },
+  founder: {
+    name: 'Founding Patron',
+    mode: 'subscription',
+    amount: 100000, // $1,000/month
+  },
+  // Legacy tiers (backwards compatibility)
   sustainer: {
     name: 'Sustainer',
     mode: 'subscription',
-    minimumAmount: 100, // $1 minimum
+    minimumAmount: 100,
   },
   guardian: {
     name: 'Guardian',
     mode: 'subscription',
-    minimumAmount: 1500, // $15 minimum
+    minimumAmount: 1500,
   },
   elder: {
     name: 'Elder',
     mode: 'subscription',
-    minimumAmount: 3300, // $33 minimum
-  },
-  founder: {
-    name: 'Pioneer Founder',
-    mode: 'payment',
-    amount: 22200, // $222 one-time
+    minimumAmount: 3300,
   },
   seva: {
     name: 'Seva',
@@ -90,11 +111,14 @@ export async function POST(request: NextRequest) {
 
     // Calculate amount in cents
     let amountInCents: number;
-    if (tier === 'founder') {
-      amountInCents = tierConfig.amount || 22200;
+    if (tierConfig.amount) {
+      // Fixed price tiers (patron tiers)
+      amountInCents = tierConfig.amount;
+    } else if (tierConfig.minimumAmount) {
+      // Sliding scale tiers (legacy)
+      amountInCents = amount ? Math.max(tierConfig.minimumAmount, amount * 100) : tierConfig.minimumAmount;
     } else {
-      const minAmount = tierConfig.minimumAmount || 100;
-      amountInCents = amount ? Math.max(minAmount, amount * 100) : minAmount;
+      amountInCents = 100; // $1 fallback
     }
 
     // Build line items
