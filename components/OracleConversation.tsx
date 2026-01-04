@@ -156,6 +156,7 @@ interface OracleConversationProps {
   onSessionActiveChange?: (active: boolean) => void; // Notify parent of session active state
   onMessageAdded?: (message: ConversationMessage) => void;
   onSessionEnd?: (reason?: string) => void;
+  initialAction?: string; // Action to trigger on mount (e.g., 'choose-guide', 'show-current-elder')
 }
 
 interface ConversationMessage {
@@ -234,7 +235,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onCloseSessionSelector,
   onSessionActiveChange,
   onMessageAdded,
-  onSessionEnd
+  onSessionEnd,
+  initialAction
 }) => {
   // Listening mode for different conversation styles - MUST be defined early
   type ListeningMode = 'normal' | 'patient' | 'session';
@@ -434,6 +436,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
     return null;
   });
+
+  // Handle initial action from URL (e.g., /maia?action=choose-guide)
+  useEffect(() => {
+    if (initialAction === 'choose-guide') {
+      setShowWisdomCouncil(true);
+    } else if (initialAction === 'show-current-elder') {
+      setShowCurrentTeaching(true);
+    }
+  }, [initialAction]);
 
   // Holoflower/visualization state - Mobile responsive
   const [holoflowerSize, setHoloflowerSize] = useState(() => {

@@ -719,6 +719,7 @@ function MAIAPageContent() {
               showSessionSelector={showSessionSelector}
               onCloseSessionSelector={() => setShowSessionSelector(false)}
               onSessionActiveChange={setHasActiveSession}
+              initialAction={searchParams?.get('action') || undefined}
             />
 
             {/* Claude Code's Living Presence - MOVED to bottom menu bar to free mobile screen space */}

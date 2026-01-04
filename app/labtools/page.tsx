@@ -49,13 +49,13 @@ export default function LabToolsPage() {
         {
           icon: Sparkles,
           label: 'Choose Your Elder',
-          path: '/elder-council',
+          path: '/maia?action=choose-guide',
           description: '39 wisdom traditions as harmonic frequencies'
         },
         {
           icon: Brain,
           label: 'Current Teaching',
-          path: '/current-elder',
+          path: '/maia?action=show-current-elder',
           description: 'See which wisdom guides you now'
         },
       ],
