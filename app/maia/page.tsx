@@ -1053,15 +1053,15 @@ function MAIAPageContent() {
 
                   {/* Alternative Paths */}
                   <div className="grid grid-cols-2 gap-2 mt-3">
-                    {/* Founding Pioneer */}
-                    <button
-                      onClick={() => membershipUtils.joinFoundingCircle()}
-                      className="p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-all text-center"
+                    {/* Founding Circle - links to patron tiers */}
+                    <a
+                      href="/patrons#tiers"
+                      className="p-2 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 border border-purple-500/30 transition-all text-center block"
                     >
                       <Gift className="w-4 h-4 mx-auto mb-1 text-purple-400" />
-                      <p className="text-[10px] text-purple-300 font-medium">Pioneer Circle</p>
-                      <p className="text-[9px] text-stone-400">$222 lifetime</p>
-                    </button>
+                      <p className="text-[10px] text-purple-300 font-medium">Founding Circle</p>
+                      <p className="text-[9px] text-stone-400">See options</p>
+                    </a>
 
                     {/* Seva Exchange */}
                     <button
