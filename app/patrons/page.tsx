@@ -98,6 +98,8 @@ function PatronsContent() {
   const [loading, setLoading] = useState<string | null>(null);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [customAmount, setCustomAmount] = useState<string>('');
+  const [email, setEmail] = useState('');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   const handleJoin = async (tierId: string, amount: number, isAnnual: boolean = false) => {
     setLoading(tierId);
@@ -192,6 +194,29 @@ function PatronsContent() {
     }
   };
 
+  const handleNewsletterSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setEmailStatus('loading');
+    try {
+      const response = await fetch('/api/newsletter/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), source: 'patrons-page' }),
+      });
+
+      if (response.ok) {
+        setEmailStatus('success');
+        setEmail('');
+      } else {
+        setEmailStatus('error');
+      }
+    } catch {
+      setEmailStatus('error');
+    }
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900">
       {/* Success/Cancel Messages */}
@@ -243,6 +268,40 @@ function PatronsContent() {
           >
             Make a One-Time Gift
           </a>
+        </div>
+
+        {/* Social Proof */}
+        <div className="mt-12 flex flex-wrap items-center gap-6">
+          <div className="flex -space-x-2">
+            {/* Avatar placeholders for founding members */}
+            {[
+              'from-amber-400 to-orange-500',
+              'from-violet-400 to-purple-500',
+              'from-emerald-400 to-teal-500',
+              'from-blue-400 to-indigo-500',
+              'from-rose-400 to-pink-500',
+            ].map((gradient, i) => (
+              <div
+                key={i}
+                className={`w-10 h-10 rounded-full bg-gradient-to-br ${gradient} border-2 border-white dark:border-stone-900 flex items-center justify-center`}
+              >
+                <span className="text-white text-xs font-medium">
+                  {['K', 'S', 'M', 'J', 'A'][i]}
+                </span>
+              </div>
+            ))}
+            <div className="w-10 h-10 rounded-full bg-stone-200 dark:bg-stone-700 border-2 border-white dark:border-stone-900 flex items-center justify-center">
+              <span className="text-stone-600 dark:text-stone-300 text-xs font-medium">+</span>
+            </div>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-stone-900 dark:text-stone-100">
+              Join our founding stewards
+            </p>
+            <p className="text-xs text-stone-500 dark:text-stone-400">
+              Building MAIA together since 2024
+            </p>
+          </div>
         </div>
       </section>
 
@@ -587,6 +646,63 @@ function PatronsContent() {
             <br className="hidden sm:block" />
             Every dollar goes toward building something worthy of trust.
           </p>
+        </div>
+      </section>
+
+      {/* Newsletter Signup */}
+      <section className="mx-auto max-w-5xl px-6 py-8">
+        <div className="rounded-3xl border border-amber-200 dark:border-amber-800/50 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 p-8 shadow-sm">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2 className="text-xl font-semibold text-stone-900 dark:text-stone-100">
+              Not Ready to Commit?
+            </h2>
+            <p className="mt-2 text-stone-600 dark:text-stone-400">
+              Join our monthly build letters — honest updates on what we're building,
+              why it matters, and what's next. No spam, just substance.
+            </p>
+
+            <form onSubmit={handleNewsletterSignup} className="mt-6">
+              {emailStatus === 'success' ? (
+                <div className="flex items-center justify-center gap-2 text-green-700 dark:text-green-400">
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-medium">Welcome! Check your inbox to confirm.</span>
+                </div>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    className="flex-1 max-w-xs px-4 py-3 rounded-xl border border-stone-300 dark:border-stone-700
+                             bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100
+                             placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                    required
+                  />
+                  <button
+                    type="submit"
+                    disabled={emailStatus === 'loading'}
+                    className="px-6 py-3 rounded-xl bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900
+                             font-medium hover:bg-stone-800 dark:hover:bg-stone-200 transition-colors
+                             disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {emailStatus === 'loading' ? 'Joining...' : 'Get Build Letters'}
+                  </button>
+                </div>
+              )}
+              {emailStatus === 'error' && (
+                <p className="mt-3 text-sm text-red-600 dark:text-red-400">
+                  Something went wrong. Please try again.
+                </p>
+              )}
+            </form>
+
+            <p className="mt-4 text-xs text-stone-500 dark:text-stone-400">
+              Unsubscribe anytime. Your email stays private.
+            </p>
+          </div>
         </div>
       </section>
 
