@@ -512,6 +512,84 @@ function PatronsContent() {
         </div>
       </section>
 
+      {/* Where Support Goes - Transparency Section */}
+      <section className="mx-auto max-w-5xl px-6 py-12">
+        <div className="rounded-3xl border border-stone-200 dark:border-stone-800 bg-gradient-to-br from-stone-50 via-white to-amber-50/30 dark:from-stone-900 dark:via-stone-900 dark:to-amber-950/20 p-8 shadow-sm">
+          <div className="text-center mb-8">
+            <p className="text-sm tracking-widest uppercase text-amber-600 dark:text-amber-500">
+              Transparency
+            </p>
+            <h2 className="mt-2 text-2xl font-semibold text-stone-900 dark:text-stone-100">
+              Where Your Support Goes
+            </h2>
+            <p className="mt-2 text-stone-600 dark:text-stone-400 max-w-xl mx-auto">
+              Every contribution builds the sanctuary. Here's how your support takes shape.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Development */}
+            <div className="text-center p-5 rounded-2xl bg-white/60 dark:bg-stone-800/40 border border-stone-100 dark:border-stone-700/50">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-violet-100 to-violet-50 dark:from-violet-900/50 dark:to-violet-950/30 flex items-center justify-center">
+                <svg className="w-6 h-6 text-violet-600 dark:text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-stone-900 dark:text-stone-100">Development</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                Building features, refining presence, making MAIA more helpful
+              </p>
+            </div>
+
+            {/* Infrastructure */}
+            <div className="text-center p-5 rounded-2xl bg-white/60 dark:bg-stone-800/40 border border-stone-100 dark:border-stone-700/50">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/50 dark:to-blue-950/30 flex items-center justify-center">
+                <svg className="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2m-2-4h.01M17 16h.01" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-stone-900 dark:text-stone-100">Infrastructure</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                Servers, AI processing, secure storage for your private data
+              </p>
+            </div>
+
+            {/* Elder Access */}
+            <div className="text-center p-5 rounded-2xl bg-white/60 dark:bg-stone-800/40 border border-stone-100 dark:border-stone-700/50">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-amber-100 to-amber-50 dark:from-amber-900/50 dark:to-amber-950/30 flex items-center justify-center">
+                <svg className="w-6 h-6 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-stone-900 dark:text-stone-100">Elder Access</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                Subsidizing seats for those who carry stories but not means
+              </p>
+            </div>
+
+            {/* Community */}
+            <div className="text-center p-5 rounded-2xl bg-white/60 dark:bg-stone-800/40 border border-stone-100 dark:border-stone-700/50">
+              <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-br from-emerald-100 to-emerald-50 dark:from-emerald-900/50 dark:to-emerald-950/30 flex items-center justify-center">
+                <svg className="w-6 h-6 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                </svg>
+              </div>
+              <h3 className="font-semibold text-stone-900 dark:text-stone-100">Community</h3>
+              <p className="mt-1 text-sm text-stone-500 dark:text-stone-400 leading-relaxed">
+                Documentation, support, and sacred gathering spaces
+              </p>
+            </div>
+          </div>
+
+          {/* Subtle note */}
+          <p className="mt-8 text-center text-sm text-stone-500 dark:text-stone-400 italic">
+            We run lean. No bloated team, no VC pressure, no advertising.
+            <br className="hidden sm:block" />
+            Every dollar goes toward building something worthy of trust.
+          </p>
+        </div>
+      </section>
+
       {/* FAQ */}
       <section className="mx-auto max-w-5xl px-6 py-12">
         <div className="rounded-3xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-8 shadow-sm">
