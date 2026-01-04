@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- Celtic OH Monogram V4 - True Celtic cross style -->
+  <g fill="#FAFAF8">
+    <!-- Ring (the O) -->
+    <circle cx="30" cy="30" r="20" fill="none" stroke="#FAFAF8" stroke-width="4"/>
+
+    <!-- Celtic cross arms extending beyond ring -->
+    <!-- Vertical -->
+    <rect x="27" y="4" width="6" height="52" rx="1"/>
+    <!-- Horizontal -->
+    <rect x="4" y="27" width="52" height="6" rx="1"/>
+
+    <!-- Inner H detail -->
+    <rect x="18" y="18" width="3" height="24" opacity="0.7"/>
+    <rect x="39" y="18" width="3" height="24" opacity="0.7"/>
+  </g>
+</svg>

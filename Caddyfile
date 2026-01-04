@@ -47,6 +47,24 @@
     }
 }
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Old Head Plaster - Static Site
+# ═══════════════════════════════════════════════════════════════════════════════
+oldhead.soullab.life {
+    root * /srv/oldhead
+    file_server
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+}
+
 # Health check endpoint for load balancers
 :8080 {
     respond /health 200

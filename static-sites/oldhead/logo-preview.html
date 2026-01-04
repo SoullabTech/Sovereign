@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Old Head Plaster - Logo Exploration</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, serif;
+      background: #1C1C1E;
+      color: #FAFAF8;
+      padding: 40px;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 400;
+      letter-spacing: 4px;
+      margin-bottom: 60px;
+      color: #A8935C;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 30px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #2D2D30;
+      padding: 30px;
+      text-align: center;
+      border: 1px solid #3a3a3d;
+    }
+    .card h3 {
+      color: #A8935C;
+      font-size: 12px;
+      letter-spacing: 3px;
+      margin-bottom: 20px;
+      font-weight: 400;
+    }
+    .logo-container {
+      height: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .logo-container img {
+      height: 80px;
+      width: auto;
+    }
+    .full-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 16px;
+      background: #1C1C1E;
+    }
+    .full-logo img {
+      height: 50px;
+    }
+    .full-logo .text {
+      text-align: left;
+    }
+    .full-logo .brand {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      font-style: italic;
+    }
+    .full-logo .sub {
+      font-size: 10px;
+      letter-spacing: 5px;
+      opacity: 0.7;
+      margin-top: 3px;
+    }
+    .full-logo .est {
+      font-size: 7px;
+      letter-spacing: 2px;
+      opacity: 0.5;
+      margin-top: 2px;
+    }
+    .notes {
+      font-size: 11px;
+      opacity: 0.6;
+      line-height: 1.5;
+      margin-top: 15px;
+    }
+    .light-bg {
+      background: #FAFAF8;
+    }
+    .light-bg .logo-container img {
+      filter: invert(1);
+    }
+    .light-bg .full-logo {
+      background: #ECEAE7;
+    }
+    .light-bg .full-logo .brand,
+    .light-bg .full-logo .sub,
+    .light-bg .full-logo .est {
+      color: #1C1C1E;
+    }
+    .divider {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 0 20px;
+      border-top: 1px solid #3a3a3d;
+      margin-top: 20px;
+    }
+    .divider h2 {
+      color: #A8935C;
+      font-weight: 400;
+      letter-spacing: 4px;
+      font-size: 14px;
+    }
+    .divider p {
+      font-size: 12px;
+      opacity: 0.5;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>LOGO EXPLORATION</h1>
+
+  <div class="grid">
+    <!-- ROUND 1: Celtic Variations -->
+    <div class="divider" style="border-top: none; padding-top: 0;">
+      <h2>ROUND 1 — CELTIC FOUNDATIONS</h2>
+      <p>Initial explorations of Celtic cross and knot motifs</p>
+    </div>
+
+    <div class="card">
+      <h3>V1 — CELTIC CROSS</h3>
+      <div class="logo-container">
+        <img src="/images/logo-celtic-v1.svg" alt="V1">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-celtic-v1.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Double ring with H extending through. Classic Celtic cross reference.</p>
+    </div>
+
+    <div class="card">
+      <h3>V2 — KNOT INSPIRED</h3>
+      <div class="logo-container">
+        <img src="/images/logo-celtic-v2.svg" alt="V2">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-celtic-v2.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Filled bars with inner ring detail. More solid, stamp-like.</p>
+    </div>
+
+    <div class="card">
+      <h3>V3 — SEAL / SHIELD</h3>
+      <div class="logo-container">
+        <img src="/images/logo-celtic-v3.svg" alt="V3">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-celtic-v3.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Bold H with horizon lines. Hints at Old Head promontory meeting the sea.</p>
+    </div>
+
+    <div class="card">
+      <h3>V4 — TRUE CELTIC CROSS</h3>
+      <div class="logo-container">
+        <img src="/images/logo-celtic-v4.svg" alt="V4">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-celtic-v4.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Full Celtic cross with ring. Arms extend beyond. Very traditional.</p>
+    </div>
+
+    <div class="card">
+      <h3>V5 — STANDING STONES</h3>
+      <div class="logo-container">
+        <img src="/images/logo-celtic-v5.svg" alt="V5">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-celtic-v5.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Curved H pillars like dolmens. The arch suggests the cliff headland.</p>
+    </div>
+
+    <!-- ROUND 2: Deeper Explorations -->
+    <div class="divider">
+      <h2>ROUND 2 — DEEPER EXPLORATIONS</h2>
+      <p>Irish heritage • Symbol-first design • Old Head promontory • Craft seal aesthetic</p>
+    </div>
+
+    <div class="card">
+      <h3>V6 — THE CLIFF</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v6-cliff.svg" alt="V6">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v6-cliff.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Headland silhouette meeting the Atlantic. H as cliff face, O as rising sun or moon.</p>
+    </div>
+
+    <div class="card">
+      <h3>V7 — THE TROWEL</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v7-trowel.svg" alt="V7">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v7-trowel.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Plasterer's pointing trowel forms the H. Craft tool as identity.</p>
+    </div>
+
+    <div class="card">
+      <h3>V8 — OGHAM MARKS</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v8-ogham.svg" alt="V8">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v8-ogham.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Ancient Irish alphabet carved on stone edge. Tally marks of the craftsman.</p>
+    </div>
+
+    <div class="card">
+      <h3>V9 — NEGATIVE SPACE</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v9-negative.svg" alt="V9">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v9-negative.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">OH revealed by what's carved away. Like letters pressed into wet plaster.</p>
+    </div>
+
+    <div class="card">
+      <h3>V10 — THE SEAL</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v10-seal.svg" alt="V10">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v10-seal.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Wax seal or stamp mark. O as ring, H as bold vertical. Stampable identity.</p>
+    </div>
+
+    <div class="card">
+      <h3>V11 — THE MONOLITH</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v11-monolith.svg" alt="V11">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v11-monolith.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Standing stone simplicity. OH carved into the ancient monolith.</p>
+    </div>
+
+    <div class="card">
+      <h3>V12 — RING FORT</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v12-fortress.svg" alt="V12">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v12-fortress.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Ancient Irish circular fort. Earthwork rings with H as central dwelling.</p>
+    </div>
+
+    <div class="card">
+      <h3>V13 — ATLANTIC WAVE</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v13-wave.svg" alt="V13">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v13-wave.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+      <p class="notes">Where sea meets stone. O as spiral wave, H rising from the water.</p>
+    </div>
+
+    <!-- On Light Background -->
+    <div class="divider">
+      <h2>FAVORITES ON LIGHT</h2>
+      <p>How these work on ivory backgrounds</p>
+    </div>
+
+    <div class="card light-bg">
+      <h3 style="color:#1C1C1E">V9 — NEGATIVE</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v9-negative.svg" alt="V9 light">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v9-negative.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card light-bg">
+      <h3 style="color:#1C1C1E">V11 — MONOLITH</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v11-monolith.svg" alt="V11 light">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v11-monolith.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card light-bg">
+      <h3 style="color:#1C1C1E">V13 — WAVE</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v13-wave.svg" alt="V13 light">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v13-wave.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card light-bg">
+      <h3 style="color:#1C1C1E">V6 — CLIFF</h3>
+      <div class="logo-container">
+        <img src="/images/logo-v6-cliff.svg" alt="V6 light">
+      </div>
+      <div class="full-logo">
+        <img src="/images/logo-v6-cliff.svg" style="height:40px">
+        <div class="text">
+          <div class="brand">OLD HEAD</div>
+          <div class="sub">PLASTER</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

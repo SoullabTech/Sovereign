@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 120">
+  <!-- OH Monogram - The Headland Mark (compact) -->
+
+  <g fill="#FAFAF8">
+    <!-- O letter - elegant stroked ellipse -->
+    <ellipse cx="45" cy="60" rx="35" ry="48" fill="none" stroke="#FAFAF8" stroke-width="12"/>
+
+    <!-- H letter with serifs -->
+    <g>
+      <!-- Left vertical stem -->
+      <rect x="85" y="8" width="14" height="104"/>
+      <!-- Right vertical stem -->
+      <rect x="135" y="8" width="14" height="104"/>
+      <!-- Crossbar -->
+      <rect x="85" y="53" width="64" height="14"/>
+
+      <!-- Top serifs -->
+      <rect x="76" y="8" width="32" height="6"/>
+      <rect x="126" y="8" width="32" height="6"/>
+
+      <!-- Bottom serifs -->
+      <rect x="76" y="106" width="32" height="6"/>
+      <rect x="126" y="106" width="32" height="6"/>
+    </g>
+
+    <!-- Swoosh - elegant diagonal curve cutting through -->
+    <path
+      d="M-5 100 Q60 75 110 55 Q160 35 205 15"
+      fill="none"
+      stroke="#FAFAF8"
+      stroke-width="5"
+      stroke-linecap="round"
+    />
+  </g>
+</svg>

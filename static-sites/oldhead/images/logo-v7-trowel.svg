@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 60">
+  <!-- V7 - The Trowel: OH with trowel blade as negative space -->
+  <g fill="#FAFAF8">
+    <!-- Outer ring -->
+    <circle cx="30" cy="30" r="26" fill="none" stroke="#FAFAF8" stroke-width="3"/>
+
+    <!-- H pillars -->
+    <rect x="15" y="14" width="5" height="32"/>
+    <rect x="40" y="14" width="5" height="32"/>
+
+    <!-- Trowel shape as crossbar (pointing right like action) -->
+    <path d="M15 28 L45 28 L50 30 L45 32 L15 32 Z"/>
+
+    <!-- Handle hint -->
+    <rect x="50" y="28" width="8" height="4" rx="1" opacity="0.5"/>
+  </g>
+</svg>
