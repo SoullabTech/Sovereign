@@ -4,7 +4,12 @@
  * Client-side helpers for Stripe checkout integration.
  */
 
-export type ContributionTier = 'sustainer' | 'guardian' | 'elder' | 'founder' | 'seva';
+// Patron page tiers
+export type PatronTier = 'seedkeeper' | 'storyweaver' | 'sanctuary' | 'founder';
+// Legacy tiers (drawer menu)
+export type LegacyTier = 'sustainer' | 'guardian' | 'elder' | 'seva';
+// All supported tiers
+export type ContributionTier = PatronTier | LegacyTier;
 
 interface CheckoutOptions {
   tier: ContributionTier;
