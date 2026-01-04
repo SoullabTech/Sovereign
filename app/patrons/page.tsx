@@ -3,7 +3,7 @@
 // app/patrons/page.tsx
 // Patron landing page with Stripe checkout integration
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 const tiers = [
@@ -78,7 +78,8 @@ const faqs = [
   },
 ];
 
-export default function PatronsPage() {
+// Separate component for search params (needs Suspense boundary)
+function PatronsContent() {
   const searchParams = useSearchParams();
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
@@ -354,5 +355,18 @@ export default function PatronsPage() {
         </div>
       </section>
     </main>
+  );
+}
+
+// Default export with Suspense boundary for useSearchParams
+export default function PatronsPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100 dark:from-stone-950 dark:to-stone-900 flex items-center justify-center">
+        <div className="text-stone-500 dark:text-stone-400">Loading...</div>
+      </main>
+    }>
+      <PatronsContent />
+    </Suspense>
   );
 }
