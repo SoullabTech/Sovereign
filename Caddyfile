@@ -5,7 +5,7 @@
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
 # ═══════════════════════════════════════════════════════════════════════════════
 
-{$DOMAIN:localhost}, www.{$DOMAIN:localhost} {
+soullab.life, www.soullab.life {
     # Reverse proxy to MAIA container
     reverse_proxy maia:3000 {
         # Health checks
