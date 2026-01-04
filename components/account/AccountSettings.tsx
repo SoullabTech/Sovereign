@@ -837,15 +837,14 @@ export function AccountSettings() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          {activeSection && (
-            <motion.button
-              onClick={() => setActiveSection(null)}
-              className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
-              whileTap={{ scale: 0.95 }}
-            >
-              <ArrowLeft size={20} className="text-white/60" />
-            </motion.button>
-          )}
+          {/* Back button - to /maia when on main list, to list when in subsection */}
+          <motion.button
+            onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
+            className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
+            whileTap={{ scale: 0.95 }}
+          >
+            <ArrowLeft size={20} className="text-white/60" />
+          </motion.button>
           <div>
             <h1 className="text-2xl font-light text-amber-50">
               {activeSection
