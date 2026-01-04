@@ -1210,6 +1210,18 @@ function MAIAPageContent() {
                   <span className="text-base">Labtools</span>
                 </button>
 
+                {/* Account Settings */}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    router.push('/account/settings');
+                  }}
+                  className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-purple-500/10 text-purple-400"
+                >
+                  <Settings className="w-5 h-5" />
+                  <span className="text-base">Settings</span>
+                </button>
+
                 {/* Send Feedback */}
                 <a
                   href={`mailto:feedback@soullab.life?subject=MAIA%20Beta%20Feedback%20from%20${encodeURIComponent(explorerName)}&body=Hi%20SOULLAB%20team%2C%0A%0A%5BPlease%20share%20your%20feedback%2C%20suggestions%2C%20or%20any%20issues%20you%27ve%20encountered%5D%0A%0A---%0AUser%3A%20${encodeURIComponent(explorerName)}%0ADevice%3A%20${typeof navigator !== 'undefined' ? encodeURIComponent(navigator.userAgent.includes('iPhone') ? 'iPhone' : navigator.userAgent.includes('iPad') ? 'iPad' : 'Desktop') : 'Unknown'}`}
