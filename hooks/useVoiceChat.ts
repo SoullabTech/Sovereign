@@ -84,8 +84,16 @@ export function useVoiceChat({
   useEffect(() => {
     if (isListening && !audioContextRef.current) {
       navigator.mediaDevices.getUserMedia({ audio: true })
-        .then(stream => {
-          const audioContext = new AudioContext();
+        .then(async stream => {
+          // Use webkit prefix for iOS compatibility
+          const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+          const audioContext = new AudioContextClass();
+
+          // iOS requires explicit resume after user interaction
+          if (audioContext.state === 'suspended') {
+            await audioContext.resume();
+          }
+
           const analyser = audioContext.createAnalyser();
           const microphone = audioContext.createMediaStreamSource(stream);
 
@@ -117,7 +125,11 @@ export function useVoiceChat({
           };
           updateVolume();
         })
-        .catch(console.error);
+        .catch(err => {
+          // Handle permission denial and other errors gracefully
+          console.error('Microphone access failed:', err);
+          // Don't crash - just continue without volume monitoring
+        });
     } else if (!isListening && audioContextRef.current) {
       audioContextRef.current.close();
       audioContextRef.current = null;

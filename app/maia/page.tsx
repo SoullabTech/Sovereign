@@ -73,7 +73,11 @@ async function getInitialUserData() {
     try {
       const userData = JSON.parse(betaUser);
       // FIXED: Prefer name over username (name is the display name, username is for login)
-      const userName = userData.name || userData.displayName || userData.username;
+      // Also filter out generic names that shouldn't be displayed
+      const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
+      const rawName = userData.name || userData.displayName || userData.username || '';
+      const userName = genericNames.includes(rawName.toLowerCase()) ? 'Explorer' : rawName;
+
       if (userData.onboarded === true && userData.id && userName) {
         localStorage.setItem('explorerName', userName);
         localStorage.setItem('explorerId', userData.id);
@@ -320,7 +324,10 @@ function MAIAPageContent() {
         const userData = JSON.parse(newUser);
         const newId = userData.id || 'guest';
         // FIXED: Prefer name over username (name is the display name, username is for login)
-        const newName = userData.name || userData.displayName || userData.username || 'Explorer';
+        // Also filter out generic names that shouldn't be displayed
+        const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
+        const rawName = userData.name || userData.displayName || userData.username || '';
+        const newName = genericNames.includes(rawName.toLowerCase()) ? 'Explorer' : (rawName || 'Explorer');
 
         localStorage.setItem('explorerName', newName);
         localStorage.setItem('explorerId', newId);

@@ -105,7 +105,14 @@ export default function HybridVoiceInput({
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         streamRef.current = stream;
 
-        const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+        const audioContext = new AudioContextClass();
+
+        // iOS requires explicit resume after user interaction
+        if (audioContext.state === 'suspended') {
+          await audioContext.resume();
+        }
+
         audioContextRef.current = audioContext;
 
         const source = audioContext.createMediaStreamSource(stream);
@@ -217,6 +224,11 @@ export default function HybridVoiceInput({
         clearTimeout(silenceTimer);
         setSilenceTimer(null);
       }
+    } else {
+      // Start voice mode
+      setMode('voice');
+      setSpeechStarted(true);
+      onStartVoice();
     }
   };
 

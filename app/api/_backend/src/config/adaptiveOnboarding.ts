@@ -84,7 +84,7 @@ export const ADAPTIVE_ONBOARDING: OnboardingFlow = {
       options: {
         work: {
           userExamples: ["work", "career", "job", "business", "money", "success", "professional"],
-          mayaResponse: "Okay, so career and work spiral. Let's bring some clarity to that path.",
+          mayaResponse: "Okay, so career and work are calling your attention 🔥. Let's bring some clarity to that path.",
           element: "fire", // Achievement energy
           archetype: "guide"
         },
@@ -96,7 +96,7 @@ export const ADAPTIVE_ONBOARDING: OnboardingFlow = {
         },
         self: {
           userExamples: ["self", "personal", "growth", "healing", "identity", "purpose", "meaning"],
-          mayaResponse: "Personal growth spiral — beautiful 🌬️. We'll bring some clarity to that journey.",
+          mayaResponse: "Personal growth and inner work — beautiful 🌬️. We'll bring some clarity to that journey.",
           element: "air", // Mental clarity
           archetype: "sage"
         },

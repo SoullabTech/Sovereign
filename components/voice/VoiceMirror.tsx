@@ -178,10 +178,22 @@ export default function VoiceMirror({
     if (!recognitionRef.current) {
       if (!initSpeechRecognition()) return;
     }
-    
+
     setMode('voice');
     setCurrentTranscript('');
-    recognitionRef.current?.start();
+
+    // Wrapped in try-catch for iOS compatibility - recognition.start() can throw
+    try {
+      recognitionRef.current?.start();
+    } catch (err) {
+      console.error('Failed to start speech recognition:', err);
+      showToast({
+        title: "Voice unavailable",
+        description: "Could not start voice recognition. Please try again.",
+        variant: "error"
+      });
+      setMode('text');
+    }
   };
 
   const stopVoice = () => {

@@ -83,12 +83,13 @@ export class GreetingService {
   private static getTalkModeGreeting(context: GreetingContext): string {
     const { userName, daysSinceLastVisit, dominantElement, relationshipEssence, lastConversationTheme, hasHadBreakthrough, timeOfDay } = context;
 
-    // Filter out generic names
+    // Filter out generic names that shouldn't be personalized
+    const genericNames = ['friend', 'explorer', 'guest', 'user', 'anonymous', 'test', 'admin'];
     const isGenericName = !userName ||
-                          userName === 'friend' ||
-                          userName === 'Explorer' ||
-                          userName === 'guest' ||
-                          userName.toLowerCase().includes('guest');
+                          genericNames.includes(userName.toLowerCase()) ||
+                          userName.toLowerCase().includes('guest') ||
+                          userName.toLowerCase().includes('user_') ||
+                          userName.toLowerCase().includes('anonymous');
 
     const hasName = !isGenericName;
     const name = hasName ? userName : '';
