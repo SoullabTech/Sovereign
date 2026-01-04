@@ -18,13 +18,13 @@ export async function GET(request: NextRequest) {
     // Handle user denial
     if (error) {
       console.log('[GoogleCallback] User denied access:', error);
-      return NextResponse.redirect(new URL('/settings?calendar=denied', request.url));
+      return NextResponse.redirect(new URL('/settings?error=access_denied', request.url));
     }
 
     // Validate required params
     if (!code || !state) {
       console.error('[GoogleCallback] Missing code or state');
-      return NextResponse.redirect(new URL('/settings?calendar=error', request.url));
+      return NextResponse.redirect(new URL('/settings?error=missing_params', request.url));
     }
 
     const userId = state;
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     if (!tokens) {
       console.error('[GoogleCallback] Token exchange failed');
-      return NextResponse.redirect(new URL('/settings?calendar=error', request.url));
+      return NextResponse.redirect(new URL('/settings?error=auth_failed', request.url));
     }
 
     // Store tokens
@@ -47,6 +47,6 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('[GoogleCallback] Error:', error);
-    return NextResponse.redirect(new URL('/settings?calendar=error', request.url));
+    return NextResponse.redirect(new URL('/settings?error=server_error', request.url));
   }
 }

@@ -67,10 +67,14 @@ export function BetaTesterHub({ userName, userId }: BetaTesterHubProps) {
 
   return (
     <>
-      {/* Floating Feedback Button - positioned below chat input on the right */}
+      {/* Floating Feedback Button - bottom right, above SOULLAB logo */}
       <motion.button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-4 right-4 z-[45] flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-900/80 to-stone-900/80 text-[#D4B896] rounded-lg shadow-lg shadow-black/40 border border-amber-700/40 backdrop-blur-sm"
+        className="fixed z-[45] flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-900/80 to-stone-900/80 text-[#D4B896] rounded-lg shadow-lg shadow-black/40 border border-amber-700/40 backdrop-blur-sm"
+        style={{
+          bottom: 'max(env(safe-area-inset-bottom, 16px) + 48px, 64px)',
+          right: '16px',
+        }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         initial={{ opacity: 0, x: 50 }}

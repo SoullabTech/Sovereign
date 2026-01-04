@@ -1,11 +1,12 @@
 /**
- * GOOGLE CALENDAR STATUS
+ * GOOGLE CONNECTION STATUS
  *
- * Check if a user has connected their Google Calendar.
+ * Check if a user has connected their Google account (Calendar + Gmail).
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
+import { GmailService } from '@/lib/gmail/GmailService';
 
 export async function GET(request: NextRequest) {
   try {
@@ -25,16 +26,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         configured: false,
         connected: false,
-        message: 'Google Calendar integration not configured'
+        email: null,
+        message: 'Google integration not configured'
       });
     }
 
     // Check if user has connected
     const isConnected = await GoogleCalendarService.isConnected(userId);
 
+    // Get user's email if connected
+    let email: string | null = null;
+    if (isConnected) {
+      email = await GmailService.getUserEmail(userId);
+    }
+
     return NextResponse.json({
       configured: true,
       connected: isConnected,
+      email,
     });
 
   } catch (error) {
@@ -46,6 +55,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         configured: true,
         connected: false,
+        email: null,
         message: 'Database migration pending'
       });
     }

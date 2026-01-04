@@ -1,7 +1,8 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield } from 'lucide-react';
+import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link } from 'lucide-react';
+import { GoogleConnectSection } from './settings/GoogleConnectSection';
 import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
@@ -67,7 +68,24 @@ const DEFAULT_SETTINGS: MaiaSettings = {
 
 export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps) {
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
+  const [userId, setUserId] = useState<string | null>(null);
   // Removed: Supabase client (now using localStorage only for sovereign mode)
+
+  // Get userId from localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        try {
+          const parsed = JSON.parse(betaUser);
+          setUserId(parsed.email || parsed.id || parsed.username);
+        } catch {
+          // Fallback to raw value if not JSON
+          setUserId(betaUser);
+        }
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -518,6 +536,23 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                     })}
                   </div>
                 </motion.div>
+
+                {/* Connections Section - Google Calendar/Gmail */}
+                {userId && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.43 }}
+                  >
+                    <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+                      <Link size={16} />
+                      Connections
+                    </label>
+                    <div className="p-4 rounded-xl border border-white/10 bg-black/20">
+                      <GoogleConnectSection userId={userId} />
+                    </div>
+                  </motion.div>
+                )}
 
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
