@@ -549,6 +549,18 @@ function MAIAPageContent() {
                 {/* Capture Mode Toggle - Mobile */}
                 <CaptureToggle userId={explorerId} />
 
+                {/* Feedback Button - Mobile */}
+                <a
+                  href={`mailto:feedback@soullab.life?subject=MAIA%20Feedback%20from%20${encodeURIComponent(explorerName)}&body=Hi%20SOULLAB%20team%2C%0A%0A%5BShare%20your%20feedback%5D%0A%0A---%0AUser%3A%20${encodeURIComponent(explorerName)}`}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-green-500/10 hover:bg-green-500/20
+                           border border-green-500/20 hover:border-green-500/40
+                           text-green-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Send Feedback"
+                >
+                  <MessageCircle className="w-3 h-3" />
+                </a>
+
                 {/* Account Button - Mobile (opens bottom sheet) */}
                 <motion.button
                   onClick={() => setShowAccountMenu(true)}
@@ -676,6 +688,20 @@ function MAIAPageContent() {
 
                 {/* Capture Mode Toggle - Desktop */}
                 <CaptureToggle userId={explorerId} />
+
+                {/* Feedback Button - Desktop */}
+                <motion.a
+                  href={`mailto:feedback@soullab.life?subject=MAIA%20Feedback%20from%20${encodeURIComponent(explorerName)}&body=Hi%20SOULLAB%20team%2C%0A%0A%5BShare%20your%20feedback%5D%0A%0A---%0AUser%3A%20${encodeURIComponent(explorerName)}`}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                           bg-green-500/10 hover:bg-green-500/20
+                           border border-green-500/20 hover:border-green-500/40
+                           text-green-400 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Send Feedback"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                </motion.a>
 
                 {/* Account Button - Desktop (opens bottom sheet) */}
                 <motion.button
