@@ -18,7 +18,7 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, MessageSquare, Mail, Calendar, CheckCircle, Sparkles, Copy, RefreshCw } from 'lucide-react';
+import { X, Send, MessageSquare, Mail, Calendar, CheckCircle, Sparkles, Copy, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -95,6 +95,11 @@ export function AvoidanceBreaker({
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [gmailConnected, setGmailConnected] = useState(false);
+  const [gmailEmail, setGmailEmail] = useState<string | null>(null);
+  const [isSending, setIsSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [emailSent, setEmailSent] = useState(false);
 
   // Reset on open
   useEffect(() => {
@@ -105,6 +110,33 @@ export function AvoidanceBreaker({
       setSubject('');
       setSituation('');
       setMessageBody('');
+      setSendError(null);
+      setEmailSent(false);
+    }
+  }, [isOpen]);
+
+  // Check Gmail connection status
+  useEffect(() => {
+    async function checkGmail() {
+      try {
+        // Use stored userId or default - in production this would come from auth
+        const userId = localStorage.getItem('beta_user')
+          ? JSON.parse(localStorage.getItem('beta_user') || '{}').email
+          : 'anonymous';
+
+        const response = await fetch(`/api/gmail/send?userId=${encodeURIComponent(userId)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setGmailConnected(data.connected);
+          setGmailEmail(data.email);
+        }
+      } catch (err) {
+        console.error('Gmail check error:', err);
+      }
+    }
+
+    if (isOpen) {
+      checkGmail();
     }
   }, [isOpen]);
 
@@ -201,6 +233,47 @@ export function AvoidanceBreaker({
     setTimeout(() => setCopied(false), 2000);
   }, [messageBody]);
 
+  const handleSendViaGmail = useCallback(async () => {
+    if (messageType !== 'email' || !gmailConnected) return;
+
+    setIsSending(true);
+    setSendError(null);
+
+    try {
+      const userId = localStorage.getItem('beta_user')
+        ? JSON.parse(localStorage.getItem('beta_user') || '{}').email
+        : 'anonymous';
+
+      const response = await fetch('/api/gmail/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          to: recipient, // Could be an email or a name - user should enter email
+          subject: subject || `Message for ${recipient}`,
+          body: messageBody,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setEmailSent(true);
+        setPhase('followup');
+      } else {
+        setSendError(data.error || 'Failed to send email');
+        if (data.needsReauth) {
+          setSendError('Gmail permission needed. Please reconnect Google in settings.');
+        }
+      }
+    } catch (err) {
+      console.error('Gmail send error:', err);
+      setSendError('Failed to send. Please try copying instead.');
+    }
+
+    setIsSending(false);
+  }, [messageType, gmailConnected, recipient, subject, messageBody]);
+
   const handleDraftDone = useCallback(() => {
     setPhase('followup');
   }, []);
@@ -219,7 +292,7 @@ export function AvoidanceBreaker({
       messageBody,
       followUpScheduled: !!followUpDate,
       followUpDate,
-      sent: false // User sends manually with copied text
+      sent: emailSent // True if sent via Gmail
     };
 
     // Schedule the follow-up
@@ -247,7 +320,7 @@ export function AvoidanceBreaker({
       onComplete?.(result);
       onClose();
     }, 1500);
-  }, [messageType, recipient, subject, messageBody, situation, onComplete, onClose]);
+  }, [messageType, recipient, subject, messageBody, situation, emailSent, onComplete, onClose]);
 
   if (!isOpen) return null;
 
@@ -466,12 +539,62 @@ export function AvoidanceBreaker({
                     </motion.p>
                   )}
 
+                  {sendError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 text-amber-400 text-sm bg-amber-900/20
+                                 border border-amber-700/30 rounded-lg px-3 py-2"
+                    >
+                      <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                      <span>{sendError}</span>
+                    </motion.div>
+                  )}
+
+                  {/* Gmail Send button for emails when connected */}
+                  {messageType === 'email' && gmailConnected && (
+                    <button
+                      onClick={handleSendViaGmail}
+                      disabled={isSending || !recipient.includes('@')}
+                      className="w-full py-3 rounded-xl font-medium transition-all
+                                 bg-blue-600/80 hover:bg-blue-600 text-white
+                                 disabled:opacity-50 disabled:cursor-not-allowed
+                                 flex items-center justify-center gap-2"
+                    >
+                      {isSending ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Send via Gmail
+                          {gmailEmail && (
+                            <span className="text-blue-200/70 text-xs">({gmailEmail})</span>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {/* Hint for email address */}
+                  {messageType === 'email' && gmailConnected && !recipient.includes('@') && (
+                    <p className="text-stone-500 text-xs text-center">
+                      Enter the recipient's email address above to send directly
+                    </p>
+                  )}
+
                   <button
                     onClick={handleDraftDone}
-                    className="w-full py-3 rounded-xl font-medium transition-all
-                               bg-rose-600/80 hover:bg-rose-600 text-white"
+                    className={`w-full py-3 rounded-xl font-medium transition-all
+                               ${messageType === 'email' && gmailConnected
+                                 ? 'bg-stone-700/50 hover:bg-stone-700 text-stone-300'
+                                 : 'bg-rose-600/80 hover:bg-rose-600 text-white'}`}
                   >
-                    I'll send this
+                    {messageType === 'email' && gmailConnected
+                      ? "I'll copy and send myself"
+                      : "I'll send this"}
                   </button>
                 </motion.div>
               )}
@@ -530,10 +653,19 @@ export function AvoidanceBreaker({
                     animate={{ scale: 1 }}
                     transition={{ type: 'spring', delay: 0.1 }}
                   >
-                    <CheckCircle className="w-12 h-12 text-rose-400 mx-auto" />
+                    <CheckCircle className={`w-12 h-12 mx-auto ${emailSent ? 'text-emerald-400' : 'text-rose-400'}`} />
                   </motion.div>
-                  <p className="text-stone-300">The loop is closing.</p>
-                  <p className="text-stone-500 text-sm">Now paste and send.</p>
+                  {emailSent ? (
+                    <>
+                      <p className="text-emerald-300">Email sent!</p>
+                      <p className="text-stone-500 text-sm">One less thing on your mind.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-stone-300">The loop is closing.</p>
+                      <p className="text-stone-500 text-sm">Now paste and send.</p>
+                    </>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>

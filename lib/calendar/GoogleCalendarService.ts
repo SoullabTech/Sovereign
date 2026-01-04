@@ -60,6 +60,8 @@ const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
 const SCOPES = [
   'https://www.googleapis.com/auth/calendar.events',
   'https://www.googleapis.com/auth/calendar.readonly',
+  'https://www.googleapis.com/auth/gmail.send',  // Send emails on user's behalf
+  'https://www.googleapis.com/auth/userinfo.email',  // Get user's email address
 ];
 
 function getConfig() {
