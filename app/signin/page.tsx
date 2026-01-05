@@ -44,17 +44,22 @@ export default function SigninPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
+        // Validate name isn't a UUID (safety check)
+        const rawName = data.member.name || '';
+        const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(rawName);
+        const validName = isUUID ? (data.member.username?.charAt(0).toUpperCase() + data.member.username?.slice(1) || 'Friend') : (rawName || 'Friend');
+
         // Server auth succeeded - store session locally
         const user = {
           id: data.member.id,
           username: data.member.username,
-          name: data.member.name,
+          name: validName,
           onboarded: data.member.onboarded,
         };
 
         localStorage.setItem('beta_user', JSON.stringify(user));
         localStorage.setItem('explorerId', user.id);
-        localStorage.setItem('explorerName', user.name);
+        localStorage.setItem('explorerName', validName);
         localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
 
         // Redirect based on onboarding status

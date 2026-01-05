@@ -42,17 +42,26 @@ const recognizeSoul = (soulKey: string): GaneshaContact | null => {
   ) || null;
 };
 
-// Extract first name from full name or soulkey
+// Extract first name from full name or soulkey, with proper capitalization
 const extractFirstName = (nameOrKey: string): string => {
-  // Handle soulkey format (SOULLAB-NAME)
-  if (nameOrKey.startsWith('SOULLAB-')) {
-    return nameOrKey.substring(8); // Remove 'SOULLAB-' prefix
+  const upper = nameOrKey.toUpperCase();
+
+  // Handle soulkey format (SOULLAB-NAME) - case insensitive
+  if (upper.startsWith('SOULLAB-')) {
+    const rawName = nameOrKey.substring(8); // Remove 'SOULLAB-' prefix
+    // Proper case: first letter uppercase, rest lowercase
+    return rawName.charAt(0).toUpperCase() + rawName.slice(1).toLowerCase();
   }
 
   // Handle full name format (First Last or First Last Last)
   // Split by space and take first word
   const firstWord = nameOrKey.split(' ')[0];
-  return firstWord || nameOrKey;
+  if (firstWord) {
+    // Proper case: first letter uppercase, rest lowercase
+    return firstWord.charAt(0).toUpperCase() + firstWord.slice(1).toLowerCase();
+  }
+
+  return nameOrKey;
 };
 
 function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
@@ -456,6 +465,18 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           boxShadow: 'inset 0 4px 12px rgba(146, 64, 14, 0.7), inset 0 2px 6px rgba(146, 64, 14, 0.5), inset 0 1px 2px rgba(0, 0, 0, 0.3)',
                         }}
                       />
+                      <p className="text-teal-700/70 text-sm font-light mt-3 tracking-wide">
+                        Your passkey format is <span className="font-medium text-teal-800">SOULLAB-[NAME]</span>
+                      </p>
+                      <p className="text-teal-600/60 text-xs font-light mt-1">
+                        Don't have a passkey? Request one at{' '}
+                        <a
+                          href="mailto:support@soullab.life"
+                          className="text-amber-600 hover:text-amber-700 underline underline-offset-2"
+                        >
+                          support@soullab.life
+                        </a>
+                      </p>
                     </div>
 
                     {error && (

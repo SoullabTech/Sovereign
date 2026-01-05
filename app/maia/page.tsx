@@ -33,6 +33,61 @@ import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, Fla
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
+// Migration version - increment to force re-auth for all users
+const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
+
+// Helper to detect if a string looks like a UUID (should never be used as a name)
+function isLikelyUUID(str: string): boolean {
+  if (!str) return false;
+  // UUID pattern: 8-4-4-4-12 hex chars, or just looks like hex ID
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const hexPattern = /^[0-9a-f]{8,}$/i;
+  const userIdPattern = /^user_\d+$/;
+  return uuidPattern.test(str) || hexPattern.test(str) || userIdPattern.test(str);
+}
+
+// Force sign-out if session is outdated or corrupted
+function checkAndMigrateSession(): boolean {
+  if (typeof window === 'undefined') return false;
+
+  const storedVersion = localStorage.getItem('maia_session_version');
+  const currentName = localStorage.getItem('explorerName');
+
+  // Force sign-out if: version mismatch OR name looks like a UUID
+  const needsMigration = storedVersion !== String(SESSION_VERSION) || isLikelyUUID(currentName || '');
+
+  if (needsMigration) {
+    console.log('🔄 [MAIA] Session migration required - signing out user');
+    // Clear session data but preserve permanent markers
+    localStorage.removeItem('beta_user');
+    localStorage.removeItem('explorerId');
+    localStorage.removeItem('explorerName');
+    localStorage.removeItem('betaOnboardingComplete');
+    // Set new version
+    localStorage.setItem('maia_session_version', String(SESSION_VERSION));
+    return true; // Needs redirect to sign-in
+  }
+
+  return false;
+}
+
+// Helper to get a valid display name, filtering out UUIDs and generic names
+function getValidDisplayName(name: string | undefined | null, username: string | undefined | null): string {
+  const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin', 'friend'];
+
+  // First try the name field
+  if (name && !isLikelyUUID(name) && !genericNames.includes(name.toLowerCase())) {
+    return name;
+  }
+
+  // Fall back to capitalized username if valid
+  if (username && !isLikelyUUID(username) && !genericNames.includes(username.toLowerCase())) {
+    return username.charAt(0).toUpperCase() + username.slice(1);
+  }
+
+  return 'Friend';
+}
+
 async function getInitialUserData() {
   if (typeof window === 'undefined') return { id: 'guest', name: 'Friend' };
 
@@ -51,16 +106,17 @@ async function getInitialUserData() {
       const data = await response.json();
 
       if (data.success && data.user) {
-        console.log('✅ [MAIA] User profile fetched from API:', data.user.name);
+        const validName = getValidDisplayName(data.user.name, data.user.username);
+        console.log('✅ [MAIA] User profile fetched from API:', validName);
 
         // Sync to localStorage
-        localStorage.setItem('explorerName', data.user.name);
+        localStorage.setItem('explorerName', validName);
         localStorage.setItem('explorerId', data.user.id);
         localStorage.setItem('betaOnboardingComplete', 'true');
         // PERMANENT marker that NEVER gets removed, even on signout
         localStorage.setItem('maiaPermanentUser', 'true');
 
-        return { id: data.user.id, name: data.user.name };
+        return { id: data.user.id, name: validName };
       }
     } catch (error) {
       console.error('❌ [MAIA] Error fetching user profile:', error);
@@ -72,23 +128,18 @@ async function getInitialUserData() {
   if (betaUser) {
     try {
       const userData = JSON.parse(betaUser);
-      // FIXED: Prefer name over username (name is the display name, username is for login)
-      // Also filter out generic names that shouldn't be displayed
-      // If name is generic/missing, use capitalized username as fallback (never "Explorer")
-      const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
-      const rawName = userData.name || userData.displayName || '';
-      const capitalizedUsername = userData.username
-        ? userData.username.charAt(0).toUpperCase() + userData.username.slice(1)
-        : '';
-      const userName = (!rawName || genericNames.includes(rawName.toLowerCase()))
-        ? (capitalizedUsername || 'Friend')
-        : rawName;
+      // Use bulletproof name validation (filters UUIDs, generic names)
+      const validName = getValidDisplayName(
+        userData.name || userData.displayName,
+        userData.username
+      );
 
-      if (userData.onboarded === true && userData.id && userName) {
-        localStorage.setItem('explorerName', userName);
+      // Accept if user has ID (onboarded check removed - was causing issues)
+      if (userData.id) {
+        localStorage.setItem('explorerName', validName);
         localStorage.setItem('explorerId', userData.id);
-        console.log('✅ [MAIA] User authenticated from localStorage:', userName);
-        return { id: userData.id, name: userName };
+        console.log('✅ [MAIA] User authenticated from localStorage:', validName);
+        return { id: userData.id, name: validName };
       }
     } catch (e) {
       console.error('❌ [MAIA] Error parsing beta_user:', e);
@@ -98,10 +149,12 @@ async function getInitialUserData() {
   // Check OLD system (for backward compatibility)
   if (localStorage.getItem('betaOnboardingComplete') === 'true') {
     const id = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-    const name = localStorage.getItem('explorerName');
-    if (id && name) {
-      console.log('📦 [MAIA] Using legacy user data:', name);
-      return { id, name };
+    const storedName = localStorage.getItem('explorerName');
+    if (id) {
+      // Validate stored name isn't a UUID
+      const validName = isLikelyUUID(storedName || '') ? 'Friend' : (storedName || 'Friend');
+      console.log('📦 [MAIA] Using legacy user data:', validName);
+      return { id, name: validName };
     }
   }
 
@@ -183,6 +236,13 @@ function MAIAPageContent() {
   useEffect(() => {
     const initializeUser = async () => {
       setIsMounted(true);
+
+      // Check for session migration (forces re-auth if needed)
+      if (checkAndMigrateSession()) {
+        console.log('🔄 [MAIA] Redirecting to sign-in for fresh session...');
+        router.replace('/signin');
+        return;
+      }
 
       // Get or create persistent sessionId - this enables conversation continuity across reloads!
       const existingSessionId = localStorage.getItem('maia_session_id');
