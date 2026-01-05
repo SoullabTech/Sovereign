@@ -84,7 +84,8 @@ export class GreetingService {
     const { userName, daysSinceLastVisit, dominantElement, relationshipEssence, lastConversationTheme, hasHadBreakthrough, timeOfDay } = context;
 
     // Filter out generic names that shouldn't be personalized
-    const genericNames = ['friend', 'explorer', 'guest', 'user', 'anonymous', 'test', 'admin'];
+    // NOTE: 'friend' removed - if that's what we have, use it rather than falling back to impersonal greeting
+    const genericNames = ['explorer', 'guest', 'user', 'anonymous', 'test', 'admin'];
     const isGenericName = !userName ||
                           genericNames.includes(userName.toLowerCase()) ||
                           userName.toLowerCase().includes('guest') ||

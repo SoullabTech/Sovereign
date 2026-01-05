@@ -44,10 +44,16 @@ export default function SigninPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Use preferredName if available, fallback to name with UUID check
+        // Use preferredName if available, fallback to name, then capitalized username
         const preferredName = data.member.preferredName || data.member.name || '';
         const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(preferredName);
-        const validName = isUUID ? (data.member.username?.charAt(0).toUpperCase() + data.member.username?.slice(1) || 'Friend') : (preferredName || 'Friend');
+        // Priority: preferredName > name > capitalized username > 'Friend'
+        const capitalizedUsername = data.member.username
+          ? data.member.username.charAt(0).toUpperCase() + data.member.username.slice(1)
+          : '';
+        const validName = isUUID
+          ? (capitalizedUsername || 'Friend')
+          : (preferredName || capitalizedUsername || 'Friend');
 
         // Server auth succeeded - store session locally
         const user = {

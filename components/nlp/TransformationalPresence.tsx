@@ -416,13 +416,14 @@ export const TransformationalPresence: React.FC<TransformationalPresenceProps> =
         {children}
       </div>
 
-      {/* GESTURE DETECTION OVERLAY */}
+      {/* GESTURE DETECTION OVERLAY - pointerEvents: none to allow holoflower clicks through */}
       <div
         className="gesture-overlay"
         style={{
           position: 'absolute',
           inset: 0,
-          touchAction: 'pan-y'
+          touchAction: 'pan-y',
+          pointerEvents: 'none'
         }}
         onTouchStart={(e) => {
           const touch = e.touches[0];

@@ -73,14 +73,15 @@ function checkAndMigrateSession(): boolean {
 
 // Helper to get a valid display name, filtering out UUIDs and generic names
 function getValidDisplayName(name: string | undefined | null, username: string | undefined | null): string {
-  const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin', 'friend'];
+  // NOTE: 'friend' is excluded from genericNames - if user explicitly chose it, respect it
+  const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
 
   // First try the name field
   if (name && !isLikelyUUID(name) && !genericNames.includes(name.toLowerCase())) {
     return name;
   }
 
-  // Fall back to capitalized username if valid
+  // Fall back to capitalized username if valid (username is user's chosen identifier)
   if (username && !isLikelyUUID(username) && !genericNames.includes(username.toLowerCase())) {
     return username.charAt(0).toUpperCase() + username.slice(1);
   }
