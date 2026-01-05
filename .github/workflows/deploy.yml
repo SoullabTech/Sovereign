@@ -82,10 +82,13 @@ jobs:
 
       - name: Build application
         run: |
-          MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
+          npm run build
         env:
           NODE_ENV: production
           NEXT_TELEMETRY_DISABLED: 1
+          MAIA_AUDIT_FINGERPRINT_SECRET: build-placeholder
+          OPENAI_API_KEY: sk-placeholder
+          ANTHROPIC_API_KEY: sk-placeholder
 
       - name: Test build artifacts
         run: |
@@ -119,12 +122,15 @@ jobs:
 
       - name: Start application
         run: |
-          MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
+          npm run build
           npm run start &
           sleep 15
         env:
           NODE_ENV: production
           PORT: 3002
+          MAIA_AUDIT_FINGERPRINT_SECRET: build-placeholder
+          OPENAI_API_KEY: sk-placeholder
+          ANTHROPIC_API_KEY: sk-placeholder
 
       - name: Run browser tests
         run: |
