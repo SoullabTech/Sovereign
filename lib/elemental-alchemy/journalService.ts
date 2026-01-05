@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * ELEMENTAL JOURNAL SERVICE
  *

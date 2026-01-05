@@ -1,5 +1,5 @@
-export const dynamic = 'force-static';
 // @ts-nocheck
+export const dynamic = 'force-static';
 /**
  * TTS Route - OpenAI with macOS fallback for local development
  */

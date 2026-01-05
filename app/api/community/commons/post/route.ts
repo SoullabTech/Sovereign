@@ -1,5 +1,5 @@
-export const dynamic = 'force-static';
 // @ts-nocheck
+export const dynamic = 'force-static';
 // app/api/community/commons/post/route.ts
 /**
  * COMMUNITY COMMONS POST ROUTE

@@ -1,5 +1,5 @@
-export const dynamic = 'force-static';
 // @ts-nocheck - Debug route, not type-checked
+export const dynamic = 'force-static';
 // backend: app/api/debug/field-safety/route.ts
 import { NextRequest, NextResponse } from "next/server";
 

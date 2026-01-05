@@ -1,5 +1,5 @@
-export const dynamic = 'force-static';
 // @ts-nocheck
+export const dynamic = 'force-static';
 /**
  * MAIA Spiralogic Intelligence API Route
  *

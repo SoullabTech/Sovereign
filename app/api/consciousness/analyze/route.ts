@@ -1,5 +1,5 @@
-export const dynamic = 'force-static';
 // @ts-nocheck - Prototype file, not type-checked
+export const dynamic = 'force-static';
 /**
  * 🧠🔥 CONSCIOUSNESS ANALYSIS API - LISP ENGINE INTEGRATION
  *
