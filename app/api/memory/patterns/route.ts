@@ -26,29 +26,39 @@ interface PatternRow {
 }
 
 /**
- * GET: Fetch patterns for the current user
+ * GET: Static placeholder for Capacitor builds
+ * Use POST for runtime pattern fetching
+ */
+export async function GET() {
+  return NextResponse.json({
+    ok: true,
+    count: 0,
+    patterns: [],
+    note: 'Static placeholder - use POST for runtime data'
+  });
+}
+
+/**
+ * POST: Fetch patterns for the current user
  *
- * Query params:
+ * Body params:
+ *   userId (required)
  *   limit (default: 20)
  *   minSignificance (default: 0) - filter by minimum significance
  */
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const userId = req.headers.get('x-user-id');
+    const body = await req.json();
+    const userId = body.userId;
     if (!userId) {
       return NextResponse.json(
-        { error: 'Missing x-user-id header' },
+        { error: 'Missing userId in request body' },
         { status: 401 }
       );
     }
 
-    const limit = Math.min(
-      parseInt(req.nextUrl.searchParams.get('limit') ?? '20'),
-      100
-    );
-    const minSignificance = parseFloat(
-      req.nextUrl.searchParams.get('minSignificance') ?? '0'
-    );
+    const limit = Math.min(parseInt(body.limit ?? '20'), 100);
+    const minSignificance = parseFloat(body.minSignificance ?? '0');
 
     const result = await query<PatternRow>(
       `
@@ -89,7 +99,7 @@ export async function GET(req: NextRequest) {
       patterns,
     });
   } catch (err) {
-    console.error('[patterns] GET error:', err);
+    console.error('[patterns] POST error:', err);
     return NextResponse.json(
       { error: 'Failed to fetch patterns' },
       { status: 500 }

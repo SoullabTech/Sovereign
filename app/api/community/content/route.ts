@@ -1,7 +1,7 @@
 export const dynamic = 'force-static';
-import { NextRequest, NextResponse } from 'next/server'
-
 export const revalidate = false;
+
+import { NextRequest, NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
 
@@ -43,69 +43,21 @@ const CONTENT_MAP: Record<string, string> = {
   'practices/sacred-mirror': '04-Practices/sacred-mirror-principle-practices.md',
 }
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const contentPath = searchParams.get('path')
-  const listDir = searchParams.get('list')
-
-  // List available content
-  if (listDir) {
-    try {
-      const categories = await listContentCategories()
-      return NextResponse.json({ categories })
-    } catch (error) {
-      return NextResponse.json({ error: 'Failed to list content' }, { status: 500 })
-    }
-  }
-
-  if (!contentPath) {
-    return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 })
-  }
-
+export async function GET() {
+  // For static export (Capacitor builds), return a static list of available content
+  // The actual content is embedded in the app bundle via Community-Commons directory
   try {
-    // First check the content map
-    let filePath = CONTENT_MAP[contentPath]
-
-    // If not in map, try direct path resolution
-    if (!filePath) {
-      // Sanitize path to prevent directory traversal
-      const sanitizedPath = contentPath.replace(/\.\./g, '').replace(/^\//, '')
-      filePath = sanitizedPath + '.md'
-    }
-
-    const fullPath = path.join(COMMONS_ROOT, filePath)
-
-    // Security check: ensure we're still within COMMONS_ROOT
-    if (!fullPath.startsWith(COMMONS_ROOT)) {
-      return NextResponse.json({ error: 'Invalid path' }, { status: 403 })
-    }
-
-    // Check if file exists
-    if (!fs.existsSync(fullPath)) {
-      // Try alternative locations
-      const alternatives = await findAlternativePaths(contentPath)
-      if (alternatives.length > 0) {
-        return NextResponse.json({
-          error: 'Content not found at expected path',
-          suggestions: alternatives
-        }, { status: 404 })
-      }
-      return NextResponse.json({ error: 'Content not found' }, { status: 404 })
-    }
-
-    const content = fs.readFileSync(fullPath, 'utf-8')
-    const metadata = extractMetadata(content)
-
+    const categories = await listContentCategories();
+    return NextResponse.json({ categories });
+  } catch {
+    // Fallback for when filesystem isn't available (static generation)
     return NextResponse.json({
-      path: contentPath,
-      content,
-      metadata,
-      lastModified: fs.statSync(fullPath).mtime
-    })
-
-  } catch (error) {
-    console.error('Error reading content:', error)
-    return NextResponse.json({ error: 'Failed to read content' }, { status: 500 })
+      categories: [
+        { id: 'concepts', name: 'Core Concepts', items: [] },
+        { id: 'essays', name: 'Thematic Essays', items: [] },
+        { id: 'practices', name: 'Practices', items: [] }
+      ]
+    });
   }
 }
 

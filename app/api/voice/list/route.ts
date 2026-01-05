@@ -10,11 +10,25 @@ import { logger } from "../../_backend/src/utils/logger";
 
 /**
  * GET /api/voice/list
+ * Static placeholder for Capacitor builds
+ */
+export async function GET() {
+  return NextResponse.json({
+    success: true,
+    data: [],
+    count: 0,
+    note: 'Static placeholder - use POST for runtime data'
+  });
+}
+
+/**
+ * POST /api/voice/list
  * Returns all voice transcripts for a given userId
  */
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const userId = req.nextUrl.searchParams.get("userId");
+    const body = await req.json();
+    const userId = body.userId;
 
     if (!userId) {
       return NextResponse.json(
@@ -35,7 +49,7 @@ export async function GET(req: NextRequest) {
 
     // Get voice notes directly
     const voiceNotes = await memoryStore.getVoiceNotes(userId, 100);
-    
+
     // Transform to API response format
     const formattedVoiceNotes = voiceNotes.map(voiceNote => ({
       id: `voice_${voiceNote.id}`,

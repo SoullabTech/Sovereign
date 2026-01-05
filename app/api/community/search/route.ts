@@ -36,11 +36,24 @@ interface SearchResult {
   metadata?: Record<string, unknown>
 }
 
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
-  const q = searchParams.get('q')
-  const types = searchParams.get('types')?.split(',') || ['post', 'library', 'book_chapter']
-  const limit = Math.min(parseInt(searchParams.get('limit') || '20'), 50)
+export async function GET() {
+  // For static export (Capacitor builds), return placeholder
+  // Search requires runtime query params
+  return NextResponse.json({
+    ok: true,
+    query: '',
+    results: [],
+    counts: { posts: 0, library: 0, book: 0 },
+    note: 'Static placeholder - search requires runtime query params'
+  });
+}
+
+// Keep the full implementation for server-side use via POST
+export async function POST(request: NextRequest) {
+  const body = await request.json();
+  const q = body.q;
+  const types = body.types?.split(',') || ['post', 'library', 'book_chapter'];
+  const limit = Math.min(parseInt(body.limit || '20'), 50);
 
   if (!q || q.trim().length < 2) {
     return NextResponse.json({

@@ -8,12 +8,23 @@ import { getPool } from '@/lib/database/postgres';
 
 // Skip during static export (Capacitor builds)
 
-export async function GET(req: NextRequest) {
+export async function GET() {
+  // Static placeholder for Capacitor builds
+  // Use POST for runtime queries with parameters
+  return NextResponse.json({
+    windowDays: 30,
+    counts: { total: 0, gold: 0, edge: 0, rupture: 0 },
+    percentages: { goldPercent: 0, edgePercent: 0, rupturePercent: 0 },
+    note: 'Static placeholder - use POST for runtime data'
+  });
+}
+
+export async function POST(req: NextRequest) {
   const pool = getPool();
 
   try {
-    const { searchParams } = new URL(req.url);
-    const daysParam = searchParams.get('days');
+    const body = await req.json().catch(() => ({}));
+    const daysParam = body.days;
     const days = daysParam ? Math.max(1, Math.min(365, Number(daysParam))) : 30;
 
     const result = await pool.query(
