@@ -11,7 +11,9 @@ import {
   PenLine,
   Copy,
   Check,
-  MessageCircle
+  MessageCircle,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { ELEMENT_INFO, type ElementKey } from '@/lib/elemental-alchemy/assessmentQuestions';
 
@@ -20,6 +22,67 @@ const DEFAULT_ELEMENT_INFO = {
   name: 'Foundation',
   gradient: 'from-violet-500 to-purple-600',
   color: 'violet'
+};
+
+// MAIA's voice for speaking insights
+const MAIA_VOICE = 'alloy';
+
+// Track current audio for stopping
+let currentAudio: HTMLAudioElement | null = null;
+
+const speakMaiaResponse = async (text: string): Promise<void> => {
+  // Clean text for speech
+  const cleanText = text
+    .replace(/\*[^*]+\*/g, '')
+    .replace(/\.{3,}/g, '...')
+    .replace(/["]/g, '')
+    .trim();
+
+  if (!cleanText) return;
+
+  try {
+    const response = await fetch('/api/voice/openai-tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: cleanText,
+        voice: MAIA_VOICE,
+        format: 'mp3',
+        speed: 1.0
+      })
+    });
+
+    if (!response.ok) throw new Error('TTS API error');
+
+    const audioBlob = await response.blob();
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    currentAudio = audio;
+
+    return new Promise((resolve) => {
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl);
+        currentAudio = null;
+        resolve();
+      };
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl);
+        currentAudio = null;
+        resolve();
+      };
+      audio.play().catch(() => resolve());
+    });
+  } catch (error) {
+    console.log('MAIA TTS unavailable:', error);
+  }
+};
+
+const stopMaiaSpeaking = () => {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
 };
 
 interface AskMaiaSheetProps {
@@ -51,6 +114,7 @@ export function AskMaiaSheet({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showAskForm, setShowAskForm] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const info = ELEMENT_INFO[element as ElementKey] || DEFAULT_ELEMENT_INFO;
 
@@ -114,7 +178,26 @@ export function AskMaiaSheet({
     }
   };
 
+  const handleListenToInsight = async () => {
+    if (!insight) return;
+
+    if (isSpeaking) {
+      stopMaiaSpeaking();
+      setIsSpeaking(false);
+      return;
+    }
+
+    setIsSpeaking(true);
+    try {
+      await speakMaiaResponse(insight);
+    } finally {
+      setIsSpeaking(false);
+    }
+  };
+
   const handleClose = () => {
+    stopMaiaSpeaking();
+    setIsSpeaking(false);
     setQuestion('');
     setInsight(null);
     setError(null);
@@ -212,6 +295,28 @@ export function AskMaiaSheet({
                       {insight}
                     </p>
                   </div>
+
+                  {/* Listen Button */}
+                  <button
+                    onClick={handleListenToInsight}
+                    className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl
+                             transition-all ${isSpeaking
+                               ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
+                               : 'bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:bg-amber-500/30'
+                             }`}
+                  >
+                    {isSpeaking ? (
+                      <>
+                        <VolumeX className="w-4 h-4" />
+                        Stop MAIA
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        Listen to MAIA
+                      </>
+                    )}
+                  </button>
 
                   {/* Insight Actions */}
                   <div className="flex gap-3">
