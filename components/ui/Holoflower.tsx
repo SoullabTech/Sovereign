@@ -53,13 +53,13 @@ export function Holoflower({
   return (
     <div className={`${sizes.container} relative flex items-center justify-center ${className}`} style={{ background: 'transparent', boxShadow: 'none', border: 'none', outline: 'none', overflow: 'visible' }}>
 
-      {/* Very subtle background for contrast - more diffused */}
+      {/* Subtle light glow for contrast */}
       <div className="absolute inset-0 flex items-center justify-center">
         <div
-          className={`${sizes.glow} rounded-full bg-gradient-to-br from-gray-800/10 to-gray-700/15`}
+          className={`${sizes.glow} rounded-full`}
           style={{
-            filter: `blur(${parseInt(sizes.blur) * 3}px)`,
-            opacity: 0.15
+            background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+            filter: `blur(${parseInt(sizes.blur)}px)`,
           }}
         />
       </div>
@@ -99,13 +99,13 @@ export function Holoflower({
         </div>
       )}
 
-      {/* Holoflower SVG - enhanced visibility */}
+      {/* Holoflower SVG - clean rendering */}
       {animate ? (
         <motion.div
           className="relative z-10"
           animate={{
-            scale: [1, 1.05, 1],
-            rotate: [0, 3, 0, -3, 0]
+            scale: [1, 1.03, 1],
+            rotate: [0, 2, 0, -2, 0]
           }}
           transition={{
             duration: 6,
@@ -113,63 +113,23 @@ export function Holoflower({
             ease: "easeInOut"
           }}
         >
-
-          {/* Subtle white overlay layer */}
-          <img
-            src={svgPath}
-            alt=""
-            aria-hidden="true"
-            className={`${sizes.image} object-contain absolute inset-0`}
-            style={{
-              filter: `brightness(1.5) contrast(80) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3))`,
-              background: 'transparent',
-              zIndex: 2,
-              mixBlendMode: 'screen',
-              opacity: 0.3
-            }}
-          />
-          {/* Main SVG with luminous white pattern */}
           <img
             src={svgPath}
             alt="Soullab"
-            className={`${sizes.image} object-contain relative z-10`}
+            className={`${sizes.image} object-contain`}
             style={{
-              filter: `brightness(2) contrast(120) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5))`,
-              background: 'transparent',
-              mixBlendMode: 'screen',
-              opacity: 0.8,
-              zIndex: 4
+              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))',
             }}
           />
         </motion.div>
       ) : (
         <div className="relative z-10">
-
-          {/* Subtle white overlay layer */}
-          <img
-            src={svgPath}
-            alt=""
-            aria-hidden="true"
-            className={`${sizes.image} object-contain absolute inset-0`}
-            style={{
-              filter: `brightness(1.5) contrast(80) drop-shadow(0 0 2px rgba(255, 255, 255, 0.3))`,
-              background: 'transparent',
-              zIndex: 2,
-              mixBlendMode: 'screen',
-              opacity: 0.3
-            }}
-          />
-          {/* Main SVG with luminous white pattern */}
           <img
             src={svgPath}
             alt="Soullab"
-            className={`${sizes.image} object-contain relative z-10`}
+            className={`${sizes.image} object-contain`}
             style={{
-              filter: `brightness(2) contrast(120) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5))`,
-              background: 'transparent',
-              mixBlendMode: 'screen',
-              opacity: 0.8,
-              zIndex: 4
+              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))',
             }}
           />
         </div>

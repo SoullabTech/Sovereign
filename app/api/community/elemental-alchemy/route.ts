@@ -22,6 +22,11 @@ const BOOK_PATH = path.join(
 )
 
 export async function GET(request: NextRequest) {
+  // During static export, return empty response
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return NextResponse.json({ chapters: [] });
+  }
+
   const { searchParams } = new URL(request.url)
   const element = searchParams.get('element')
   const chapterNum = searchParams.get('chapter')

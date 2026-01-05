@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, Infinity } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 
@@ -136,8 +136,8 @@ export default function SigninPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
 
       {/* Sacred Holoflower */}
-      <div className="mb-4 z-10 relative">
-        <div className="w-40 h-40 mx-auto">
+      <div className="mb-4 z-10 relative w-full flex justify-center">
+        <div className="w-40 h-40 flex items-center justify-center">
           <Holoflower size="xl" glowIntensity="low" animate={true} />
         </div>
       </div>
@@ -236,11 +236,11 @@ export default function SigninPage() {
         </div>
       </motion.div>
 
-      {/* Infinity Loop */}
-      <div className="mt-24">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z" />
-        </svg>
+      {/* Sacred Holoflower */}
+      <div className="mt-8">
+        <div className="w-12 h-12 mx-auto opacity-40">
+          <Holoflower size="sm" glowIntensity="low" animate={false} />
+        </div>
       </div>
 
       {/* Recovery Modal */}

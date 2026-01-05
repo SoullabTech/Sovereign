@@ -782,20 +782,9 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                 transition={{ duration: 1.2 }}
                 className="space-y-10"
               >
-                <motion.div
-                  className="w-20 h-20 mx-auto mb-10"
-                  animate={{
-                    scale: [1, 1.08, 1],
-                    opacity: [0.8, 1, 0.8]
-                  }}
-                  transition={{
-                    duration: 4,
-                    repeat: Infinity,
-                    ease: "easeInOut"
-                  }}
-                >
-                  <Sparkles className="w-full h-full text-[#6EE7B7] drop-shadow-2xl" />
-                </motion.div>
+                <div className="w-24 h-24 mx-auto mb-10">
+                  <Holoflower size="xl" glowIntensity="medium" animate={true} />
+                </div>
 
                 <div
                   className="rounded-2xl p-10 shadow-2xl border"
