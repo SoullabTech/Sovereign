@@ -3,7 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = false;
 
-// Skip during static export (Capacitor builds)
+// This endpoint is called from the Capacitor app which points to the production server
+// The static export placeholder won't affect runtime behavior
 
 /**
  * SOVEREIGNTY: This endpoint uses LOCAL Whisper.cpp server (NOT OpenAI).
@@ -18,18 +19,26 @@ export const revalidate = false;
 const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8080';
 
 export async function POST(req: NextRequest) {
+  console.log("🎤 [TRANSCRIBE-SIMPLE] Request received. Headers:", {
+    contentType: req.headers.get('content-type'),
+    userAgent: req.headers.get('user-agent')?.substring(0, 50)
+  });
+
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
 
+    console.log("🎤 [TRANSCRIBE-SIMPLE] FormData parsed. File found:", !!file);
+
     if (!file) {
+      console.error("🎤 [TRANSCRIBE-SIMPLE] ERROR: No audio file in FormData");
       return NextResponse.json(
         { success: false, error: "No audio file provided" },
         { status: 400 }
       );
     }
 
-    console.log("📁 Audio file details:", {
+    console.log("🎤 [TRANSCRIBE-SIMPLE] Audio file details:", {
       name: file.name,
       size: file.size,
       type: file.type
@@ -39,15 +48,19 @@ export async function POST(req: NextRequest) {
     const whisperFormData = new FormData();
     whisperFormData.append('file', file);
 
+    console.log("🎤 [TRANSCRIBE-SIMPLE] Forwarding to Whisper:", WHISPER_LOCAL_URL);
+
     // Send to local Whisper server
     const whisperResponse = await fetch(`${WHISPER_LOCAL_URL}/inference`, {
       method: 'POST',
       body: whisperFormData,
     });
 
+    console.log("🎤 [TRANSCRIBE-SIMPLE] Whisper response status:", whisperResponse.status);
+
     if (!whisperResponse.ok) {
       const errorText = await whisperResponse.text();
-      console.error('Local Whisper transcription error:', errorText);
+      console.error('🎤 [TRANSCRIBE-SIMPLE] Whisper error:', errorText);
       return NextResponse.json(
         {
           success: false,

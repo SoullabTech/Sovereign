@@ -251,7 +251,7 @@ export function useVoiceInput({
   const stopRecordingAndTranscribe = useCallback(async () => {
     if (!isNativeRef.current) return;
 
-    console.log('🎤 Stopping native recording and transcribing...');
+    console.log('🎤 [VOICE-DIAG] stopRecordingAndTranscribe called. isNative:', isNativeRef.current);
 
     try {
       // Stop recording and get audio blob
@@ -271,21 +271,38 @@ export function useVoiceInput({
 
       // Send to transcription endpoint
       const formData = new FormData();
-      formData.append('file', blob, `recording.${mimeType === 'audio/wav' ? 'wav' : 'webm'}`);
+      const fileName = `recording.${mimeType === 'audio/wav' ? 'wav' : 'webm'}`;
+      formData.append('file', blob, fileName);
+
+      console.log('🎤 [VOICE-DIAG] Sending to transcription endpoint:', {
+        endpoint: '/api/voice/transcribe-simple',
+        fileName,
+        blobSize: blob.size,
+        blobType: blob.type
+      });
 
       const response = await fetch('/api/voice/transcribe-simple', {
         method: 'POST',
         body: formData,
       });
 
+      console.log('🎤 [VOICE-DIAG] Transcription response status:', response.status, response.statusText);
+
       setIsTranscribing(false);
 
       if (!response.ok) {
         const errData = await response.json().catch(() => ({}));
+        console.error('🎤 [VOICE-DIAG] Transcription failed:', errData);
         throw new Error(errData.error || 'Transcription failed');
       }
 
       const data = await response.json();
+      console.log('🎤 [VOICE-DIAG] Transcription result:', {
+        hasTranscription: !!data.transcription,
+        transcriptionLength: data.transcription?.length || 0,
+        success: data.success,
+        source: data.source
+      });
       const transcribedText = data.transcription?.trim() || '';
 
       if (transcribedText) {
@@ -322,7 +339,8 @@ export function useVoiceInput({
     // Native iOS/Android: Use native voice recorder
     // This bypasses WKWebView audio issues on iOS
     if (isNativeRef.current) {
-      console.log('🎤 Starting native voice recorder...');
+      console.log('🎤 [VOICE-DIAG] Starting NATIVE voice recorder (not WKWebView). Platform:',
+        typeof window !== 'undefined' ? (window as any).Capacitor?.getPlatform() : 'unknown');
 
       try {
         // Clear previous state

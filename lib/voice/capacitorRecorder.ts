@@ -5,6 +5,9 @@
 import { Capacitor } from '@capacitor/core';
 import { CapacitorVoiceRecorder } from '@lgicc/capacitor-voice-recorder';
 
+// Diagnostic: Log platform info on module load
+console.log('[NativeRecorder] Module loaded. Platform:', Capacitor.getPlatform(), 'isNative:', Capacitor.isNativePlatform());
+
 function base64ToUint8Array(base64: string): Uint8Array {
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -68,10 +71,14 @@ export async function ensureNativeMicPermission(): Promise<void> {
  * @throws Error if permission denied or recording fails
  */
 export async function startNativeRecording(): Promise<void> {
-  console.log('[NativeRecorder] Starting recording...');
+  console.log('[NativeRecorder] Starting recording...', {
+    platform: Capacitor.getPlatform(),
+    isNative: Capacitor.isNativePlatform()
+  });
   await ensureNativeMicPermission();
+  console.log('[NativeRecorder] Permission verified, calling startRecording()...');
   await CapacitorVoiceRecorder.startRecording();
-  console.log('[NativeRecorder] Recording started');
+  console.log('[NativeRecorder] ✅ Recording started successfully');
 }
 
 /**
@@ -81,13 +88,29 @@ export async function startNativeRecording(): Promise<void> {
 export async function stopNativeRecording(): Promise<NativeVoiceStopResult> {
   console.log('[NativeRecorder] Stopping recording...');
   const result = await CapacitorVoiceRecorder.stopRecording();
-  console.log('[NativeRecorder] Recording stopped, duration:', result.msDuration, 'ms');
+
+  // DIAGNOSTIC: Log detailed info about captured audio
+  console.log('[NativeRecorder] Raw result:', JSON.stringify({
+    hasMsDuration: 'msDuration' in result,
+    msDuration: result.msDuration,
+    hasBase64: 'base64' in result,
+    base64Length: result.base64?.length || 0,
+    hasSize: 'size' in result,
+    size: (result as any).size
+  }));
 
   // Plugin returns base64 + msDuration + size (wav by default)
   const bytes = base64ToUint8Array(result.base64);
   const mimeType = 'audio/wav';
   // Cast to ArrayBuffer for Blob compatibility
   const blob = new Blob([bytes.buffer as ArrayBuffer], { type: mimeType });
+
+  console.log('[NativeRecorder] Audio captured:', {
+    durationMs: result.msDuration,
+    base64Chars: result.base64?.length || 0,
+    blobBytes: blob.size,
+    mimeType
+  });
 
   return { blob, mimeType, durationMs: result.msDuration };
 }

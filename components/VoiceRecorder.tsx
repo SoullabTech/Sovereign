@@ -43,6 +43,7 @@ export default function VoiceRecorder({
   const {
     isRecording,
     isSupported,
+    isTranscribing,
     transcript,
     error,
     permissionStatus,
@@ -60,13 +61,28 @@ export default function VoiceRecorder({
     minSpeechLengthChars: Math.floor(minSpeechLength / 100) // Convert ms to rough char count
   });
 
-  // Auto-start recording when component mounts
+  // Auto-start recording when component mounts and is ready
   useEffect(() => {
-    if (!hasStarted && isSupported) {
+    // Wait for both support check AND permission to be resolved
+    const shouldStart = !hasStarted && isSupported &&
+      (permissionStatus === 'granted' || permissionStatus === 'prompt');
+
+    console.log('🎤 VoiceRecorder mount check:', {
+      hasStarted,
+      isSupported,
+      permissionStatus,
+      shouldStart
+    });
+
+    if (shouldStart) {
       setHasStarted(true);
-      startRecording();
+      // Small delay to ensure native plugin is ready
+      setTimeout(() => {
+        console.log('🎤 Auto-starting recording...');
+        startRecording();
+      }, 100);
     }
-  }, [hasStarted, isSupported, startRecording]);
+  }, [hasStarted, isSupported, permissionStatus, startRecording]);
 
   // Handle opening iOS settings for permission
   const openSettings = useCallback(() => {
@@ -224,13 +240,16 @@ export default function VoiceRecorder({
         {/* Mic button */}
         <motion.button
           onClick={isRecording ? stopRecording : startRecording}
+          disabled={isTranscribing}
           className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center transition-colors ${
-            isRecording
+            isTranscribing
+              ? 'bg-amber-500/30 text-amber-400/50 cursor-wait'
+              : isRecording
               ? 'bg-red-500 text-white'
               : 'bg-amber-500/20 text-amber-400 hover:bg-amber-500/30'
           }`}
-          whileTap={{ scale: 0.95 }}
-          animate={isRecording ? { scale: [1, 1.05, 1] } : {}}
+          whileTap={isTranscribing ? {} : { scale: 0.95 }}
+          animate={isRecording && !isTranscribing ? { scale: [1, 1.05, 1] } : {}}
           transition={isRecording ? { duration: 1, repeat: Infinity } : {}}
         >
           {isRecording ? (
@@ -252,6 +271,16 @@ export default function VoiceRecorder({
             className="text-white text-sm text-center max-w-[250px] line-clamp-3"
           >
             {transcript}
+          </motion.p>
+        ) : isTranscribing ? (
+          <motion.p
+            key="transcribing"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+            className="text-amber-400 text-sm"
+          >
+            Processing...
           </motion.p>
         ) : isRecording ? (
           <motion.p
