@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * Update member's preferred name
  * Called when user says "Call me X" in conversation
