@@ -34,6 +34,13 @@ const getAllSacredKeys = (): string[] => {
   return [...soulKeys, ...universalKeys];
 };
 
+// Check if a passkey follows valid SOULLAB-NAME format for new registrations
+const isValidSoullabFormat = (key: string): boolean => {
+  const upper = key.toUpperCase();
+  // Must be SOULLAB- followed by at least 2 characters (a name)
+  return upper.startsWith('SOULLAB-') && upper.length >= 10;
+};
+
 // Recognize returning soul by their sacred key
 const recognizeSoul = (soulKey: string): GaneshaContact | null => {
   return ganeshaContacts.find(contact =>
@@ -195,11 +202,12 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       // Fall through to local validation if server unavailable
     }
 
-    // Fall back to local validation (Ganesha contacts + universal keys)
+    // Fall back to local validation (Ganesha contacts + universal keys + SOULLAB-NAME format)
     const validKeys = getAllSacredKeys();
     const recognizedMember = recognizeSoul(soulKey);
+    const isValidFormat = isValidSoullabFormat(soulKey);
 
-    if (validKeys.includes(soulKey.toUpperCase())) {
+    if (validKeys.includes(soulKey.toUpperCase()) || isValidFormat) {
       setIsRecognizing(false);
 
       if (recognizedMember) {
