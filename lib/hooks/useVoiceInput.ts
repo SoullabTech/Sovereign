@@ -10,6 +10,40 @@ import {
   getPermissionErrorMessage
 } from '@/lib/voice/capacitorRecorder';
 
+/**
+ * Get the API base URL for transcription requests.
+ * In Capacitor, window.location.origin is capacitor://localhost which doesn't work.
+ * We need to use the actual server URL.
+ */
+function getApiBaseUrl(): string {
+  // Server-side: return empty (relative URLs work)
+  if (typeof window === 'undefined') return '';
+
+  const origin = window.location.origin || '';
+
+  // Check if we're in Capacitor (capacitor://, file://, or localhost without port)
+  const isCapacitorOrigin =
+    origin.startsWith('capacitor://') ||
+    origin.startsWith('file://') ||
+    origin === 'http://localhost' ||
+    origin === 'https://localhost';
+
+  if (isCapacitorOrigin) {
+    // Use explicit production URL for Capacitor builds
+    // This is set at build time via NEXT_PUBLIC_API_BASE_URL or NEXT_PUBLIC_SITE_URL
+    const envBase =
+      process.env.NEXT_PUBLIC_API_BASE_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      'https://soullab.life'; // Fallback to production
+
+    console.log('🎤 [VOICE-DIAG] Using Capacitor API base:', envBase);
+    return envBase;
+  }
+
+  // Web: use same-origin (relative URLs work)
+  return '';
+}
+
 interface UseVoiceInputOptions {
   onResult: (transcript: string, isFinal: boolean) => void;
   onAutoStop?: (finalTranscript: string) => void;
@@ -274,14 +308,19 @@ export function useVoiceInput({
       const fileName = `recording.${mimeType === 'audio/wav' ? 'wav' : 'webm'}`;
       formData.append('file', blob, fileName);
 
+      // Build absolute endpoint URL (required for Capacitor where origin is capacitor://localhost)
+      const apiBase = getApiBaseUrl();
+      const endpoint = `${apiBase}/api/voice/transcribe-simple`;
+
       console.log('🎤 [VOICE-DIAG] Sending to transcription endpoint:', {
-        endpoint: '/api/voice/transcribe-simple',
+        endpoint,
+        apiBase: apiBase || '(same-origin)',
         fileName,
         blobSize: blob.size,
         blobType: blob.type
       });
 
-      const response = await fetch('/api/voice/transcribe-simple', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         body: formData,
       });

@@ -8,8 +8,40 @@ import { CapacitorVoiceRecorder } from '@lgicc/capacitor-voice-recorder';
 // Diagnostic: Log platform info on module load
 console.log('[NativeRecorder] Module loaded. Platform:', Capacitor.getPlatform(), 'isNative:', Capacitor.isNativePlatform());
 
+/**
+ * Normalize base64 string from native plugin
+ * - Strips data URI prefix if present (e.g., "data:audio/wav;base64,")
+ * - Fixes missing padding (some encoders omit trailing '=')
+ */
+function normalizeBase64(input: string): string {
+  // Check for data URI prefix
+  const hasPrefix = input.includes('base64,');
+  if (hasPrefix) {
+    console.log('[NativeRecorder] Stripping data URI prefix from base64');
+  }
+
+  // Strip data URI prefix if present
+  const stripped = hasPrefix ? input.split('base64,').pop()! : input;
+
+  // Remove whitespace/newlines that can creep in
+  let b64 = stripped.replace(/\s/g, '');
+
+  // Fix missing padding (common on some native encoders)
+  const pad = b64.length % 4;
+  if (pad === 2) {
+    b64 += '==';
+    console.log('[NativeRecorder] Added == padding to base64');
+  } else if (pad === 3) {
+    b64 += '=';
+    console.log('[NativeRecorder] Added = padding to base64');
+  }
+
+  return b64;
+}
+
 function base64ToUint8Array(base64: string): Uint8Array {
-  const binary = atob(base64);
+  const normalized = normalizeBase64(base64);
+  const binary = atob(normalized);
   const bytes = new Uint8Array(binary.length);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
@@ -90,11 +122,14 @@ export async function stopNativeRecording(): Promise<NativeVoiceStopResult> {
   const result = await CapacitorVoiceRecorder.stopRecording();
 
   // DIAGNOSTIC: Log detailed info about captured audio
+  const hasDataUriPrefix = result.base64?.includes('base64,') || false;
   console.log('[NativeRecorder] Raw result:', JSON.stringify({
     hasMsDuration: 'msDuration' in result,
     msDuration: result.msDuration,
     hasBase64: 'base64' in result,
     base64Length: result.base64?.length || 0,
+    hasDataUriPrefix,
+    base64Preview: result.base64?.substring(0, 50) || '(empty)',
     hasSize: 'size' in result,
     size: (result as any).size
   }));

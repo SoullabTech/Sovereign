@@ -44,9 +44,23 @@ export async function POST(req: NextRequest) {
       type: file.type
     });
 
+    // Ensure file has proper name and type (some Whisper servers are picky)
+    // Native iOS recorder may send files with missing/incorrect metadata
+    const arrayBuffer = await file.arrayBuffer();
+    const safeName = file.name && file.name.includes('.') ? file.name : 'recording.wav';
+    const safeType = file.type || 'audio/wav';
+    const fixedFile = new File([arrayBuffer], safeName, { type: safeType });
+
+    console.log("🎤 [TRANSCRIBE-SIMPLE] Fixed file details:", {
+      originalName: file.name,
+      fixedName: safeName,
+      originalType: file.type,
+      fixedType: safeType
+    });
+
     // Forward audio file to local Faster-Whisper server (OpenAI-compatible API)
     const whisperFormData = new FormData();
-    whisperFormData.append('file', file);
+    whisperFormData.append('file', fixedFile, fixedFile.name);
     whisperFormData.append('model', 'base.en');
 
     console.log("🎤 [TRANSCRIBE-SIMPLE] Forwarding to Whisper:", WHISPER_LOCAL_URL);
