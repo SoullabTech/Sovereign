@@ -1,7 +1,16 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Build mode: 'dev' for local development, 'beta' for TestFlight/internal testing, 'prod' for release
-const BUILD_MODE = process.env.CAPACITOR_MODE || 'dev';
+// Detect if this is a production/beta build (not local dev)
+// CAPACITOR_BUILD=1 is set during `npm run build` for Capacitor
+// CAPACITOR_MODE can override explicitly
+const isProductionBuild =
+  process.env.CAPACITOR_BUILD === '1' ||
+  process.env.CAPACITOR_MODE === 'beta' ||
+  process.env.CAPACITOR_MODE === 'prod';
+
+const BUILD_MODE = isProductionBuild
+  ? (process.env.CAPACITOR_MODE || 'beta')
+  : 'dev';
 
 const serverConfigs = {
   dev: {
@@ -10,7 +19,7 @@ const serverConfigs = {
     cleartext: true,
   },
   beta: {
-    // Beta testing - points to production backend
+    // Beta/TestFlight - points to production backend
     url: 'https://soullab.life',
     cleartext: false,
   },
@@ -24,7 +33,7 @@ const serverConfigs = {
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
-  webDir: BUILD_MODE === 'dev' ? '.next/static' : 'out', // Use static export for production builds
+  webDir: isProductionBuild ? 'out' : '.next/static',
   server: {
     ...serverConfigs[BUILD_MODE as keyof typeof serverConfigs],
     androidScheme: 'https'
