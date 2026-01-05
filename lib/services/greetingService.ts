@@ -2,6 +2,55 @@ import { progressiveRevelation, type ContentLevel } from './progressiveRevelatio
 import { type RelationshipEssence, loadRelationshipEssence, getRelationshipAnamnesis } from '../consciousness/RelationshipAnamnesis';
 import { PresenceGreeting } from '../maia/presence-greetings';
 
+/**
+ * Single source of truth for display name resolution
+ * Never returns generic names like 'Friend' - uses actual name from localStorage
+ */
+export function resolveDisplayName(): string {
+  if (typeof window === 'undefined') return 'Friend';
+
+  // Priority 1: Explicit preferred name
+  const preferredName = localStorage.getItem('explorerPreferredName');
+  if (preferredName && preferredName.trim() && preferredName.toLowerCase() !== 'friend') {
+    return preferredName.trim();
+  }
+
+  // Priority 2: Explorer name
+  const explorerName = localStorage.getItem('explorerName');
+  if (explorerName && explorerName.trim() && explorerName.toLowerCase() !== 'friend') {
+    return explorerName.trim();
+  }
+
+  // Priority 3: Parse from beta_user JSON
+  try {
+    const raw = localStorage.getItem('beta_user');
+    if (raw) {
+      const u = JSON.parse(raw);
+      // Check preferredName, name, then username
+      const candidates = [u.preferredName, u.name, u.displayName, u.username];
+      for (const candidate of candidates) {
+        if (candidate && typeof candidate === 'string') {
+          const trimmed = candidate.trim();
+          // Skip UUIDs and generic names
+          const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmed);
+          const isGeneric = ['friend', 'user', 'guest', 'anonymous', 'explorer', 'test', 'admin'].includes(trimmed.toLowerCase());
+          if (!isUUID && !isGeneric && trimmed.length > 0) {
+            // Capitalize username if that's what we're using
+            if (candidate === u.username) {
+              return trimmed.charAt(0).toUpperCase() + trimmed.slice(1);
+            }
+            return trimmed;
+          }
+        }
+      }
+    }
+  } catch {
+    // JSON parse error - continue to fallback
+  }
+
+  return 'Friend';
+}
+
 interface GreetingContext {
   userName: string;
   userId?: string; // For relationship essence lookup
