@@ -1,10 +1,7 @@
-export const dynamic = 'force-static';
+// Dynamic API - needs database access at runtime
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-
-export const revalidate = false;
-
-// Skip during static export (Capacitor builds)
 
 /**
  * User Profile API endpoint
@@ -19,36 +16,41 @@ export async function GET(request: NextRequest) {
     const domain = searchParams.get('domain');
 
     // Try to get a more personalized name based on userId or use a fallback
-    let userName = 'Explorer'; // Default fallback
+    // Note: 'Explorer' is filtered as a generic name, so use 'Friend' as default
+    let userName = 'Friend'; // Default fallback
     let isGuest = userId === 'guest' || !userId;
 
     // First, try to look up the member in the database
     if (userId && userId !== 'guest' && !userId.startsWith('guest_')) {
       try {
-        // Check if userId is a valid member ID
+        // Check if userId is a valid member ID, username, or passkey
         const result = await query(
-          'SELECT id, name, username FROM members WHERE id = $1 OR username = $1',
+          `SELECT id, name, username, passkey FROM members
+           WHERE id = $1 OR username = $1 OR passkey = $1`,
           [userId]
         );
 
         if (result.rows.length > 0) {
           const member = result.rows[0];
-          userName = member.name || member.username || 'Explorer';
+          // Prioritize name, then username - never use passkey as display name
+          userName = member.name || member.username;
           isGuest = false;
           console.log(`✅ [USER-PROFILE] Found member: ${userName}`);
+        } else {
+          console.log(`⚠️ [USER-PROFILE] No member found for userId: ${userId}`);
         }
       } catch (dbError) {
-        console.error('⚠️ [USER-PROFILE] Database lookup failed, using fallback:', dbError);
+        console.error('⚠️ [USER-PROFILE] Database lookup failed:', dbError);
         // Fall through to name extraction below
       }
     }
 
     // If database lookup didn't find a name, try to extract from userId
-    if (userName === 'Explorer' && userId && userId !== 'guest' && !userId.startsWith('guest_')) {
+    if (userName === 'Friend' && userId && userId !== 'guest' && !userId.startsWith('guest_')) {
       // Extract a friendly name from user ID if possible
       const fullName = userId.replace(/[-_]/g, ' ')
                              .replace(/\b\w/g, l => l.toUpperCase())
-                             .replace(/^Guest\d*$/, 'Explorer'); // Clean up guest IDs
+                             .replace(/^Guest\d*$/, 'Friend'); // Clean up guest IDs
       // Extract first name only for conversational intimacy
       userName = fullName.split(' ')[0];
     }

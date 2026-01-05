@@ -59,10 +59,14 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(userData);
         setUser(parsed);
       } else {
-        // Create default explorer (everyone gets full access)
+        // Try to get name from beta_user localStorage first
+        const betaUser = localStorage.getItem('beta_user');
+        const memberName = betaUser ? JSON.parse(betaUser).name : null;
+
+        // Create default user (everyone gets full access)
         const defaultUser: User = {
           id: 'guest',
-          name: 'Explorer',
+          name: memberName || 'Friend',
           subscription: {
             status: 'explorer',
             tier: 'explorer',
@@ -77,10 +81,12 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error('Error initializing subscription:', error);
-      // Fallback to explorer (everyone gets full access)
+      // Fallback - try to get name from beta_user localStorage
+      const betaUser = localStorage.getItem('beta_user');
+      const fallbackName = betaUser ? JSON.parse(betaUser).name : null;
       setUser({
         id: 'guest',
-        name: 'Explorer',
+        name: fallbackName || 'Friend',
         subscription: {
           status: 'explorer',
           tier: 'explorer',
