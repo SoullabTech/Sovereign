@@ -256,7 +256,7 @@ export default function ElementalAlchemyBookPage() {
   const [loading, setLoading] = useState(true)
   const [selectedElement, setSelectedElement] = useState<ElementKey | null>(null)
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null)
-  const [viewMode, setViewMode] = useState<'elements' | 'chapters' | 'reading' | 'section'>('elements')
+  const [viewMode, setViewMode] = useState<'elements' | 'chapters' | 'reading' | 'section' | 'introduction'>('elements')
   const [readProgress, setReadProgress] = useState<Record<number, boolean>>({})
   const [selectedSection, setSelectedSection] = useState<Section | null>(null)
 
@@ -336,6 +336,8 @@ export default function ElementalAlchemyBookPage() {
     } else if (viewMode === 'chapters') {
       setViewMode('elements')
       setSelectedElement(null)
+    } else if (viewMode === 'introduction') {
+      setViewMode('elements')
     } else {
       router.push('/maia/community')
     }
@@ -391,7 +393,7 @@ export default function ElementalAlchemyBookPage() {
                      border border-white/10 text-white/70 hover:bg-white/10 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-            {viewMode === 'elements' ? 'Community' : viewMode === 'chapters' ? 'Elements' : 'Chapters'}
+            {viewMode === 'elements' ? 'Community' : viewMode === 'introduction' ? 'Elements' : viewMode === 'chapters' ? 'Elements' : 'Chapters'}
           </button>
 
           {/* Progress indicator */}
@@ -503,6 +505,26 @@ export default function ElementalAlchemyBookPage() {
                   )
                 })}
               </div>
+
+              {/* Introduction - Start Here */}
+              {bookData?.content?.introduction && (
+                <button
+                  onClick={() => setViewMode('introduction')}
+                  className="mt-6 w-full p-5 rounded-xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10
+                           border border-amber-500/30 hover:border-amber-500/50 transition-all
+                           flex items-center gap-4 group"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600
+                                flex items-center justify-center shadow-lg">
+                    <BookOpen className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left flex-1">
+                    <div className="text-lg font-medium text-amber-300">Read the Introduction</div>
+                    <div className="text-sm text-white/50">Begin your journey into Elemental Alchemy</div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-amber-400/50 group-hover:text-amber-400 group-hover:translate-x-1 transition-all" />
+                </button>
+              )}
 
               {/* Quick Actions */}
               <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -916,6 +938,79 @@ export default function ElementalAlchemyBookPage() {
                   </>
                 )
               })()}
+            </motion.div>
+          )}
+
+          {/* Introduction View */}
+          {viewMode === 'introduction' && bookData?.content?.introduction && (
+            <motion.div
+              key="introduction"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              className="space-y-6"
+            >
+              {/* Introduction Header */}
+              <div className="p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-red-500/10 border border-amber-500/30">
+                <div className="flex items-start gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600
+                                flex items-center justify-center shadow-lg flex-shrink-0">
+                    <BookOpen className="w-7 h-7 text-white" />
+                  </div>
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-amber-300">Introduction</h2>
+                    <p className="text-white/60 text-sm mt-1">
+                      Begin your transformative journey through elemental alchemy
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Introduction Content */}
+              <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                {/* Read Aloud Button */}
+                <div className="flex justify-end mb-4">
+                  <button
+                    onClick={() => handleReadAloud(bookData.content.introduction || '', 'intro')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm
+                             ${isReading
+                               ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
+                               : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                             }`}
+                  >
+                    {isReading ? (
+                      <>
+                        <VolumeX className="w-4 h-4" />
+                        Stop Reading
+                      </>
+                    ) : (
+                      <>
+                        <Volume2 className="w-4 h-4" />
+                        Read Aloud
+                      </>
+                    )}
+                  </button>
+                </div>
+                <div className="prose prose-invert prose-lg max-w-none">
+                  <p className="text-white/85 leading-relaxed whitespace-pre-line text-[16px]">
+                    {bookData.content.introduction
+                      .replace(/!\[\]\[image\d+\]/g, '')
+                      .replace(/\*\*\*/g, '')
+                      .replace(/\n{3,}/g, '\n\n')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Continue to Elements */}
+              <div className="flex justify-center pt-4">
+                <button
+                  onClick={() => setViewMode('elements')}
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600
+                           text-white hover:opacity-90 transition-all font-medium"
+                >
+                  Explore the Elements →
+                </button>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
