@@ -15,9 +15,10 @@ import path from 'path'
 
 // Skip during static export (Capacitor builds)
 
+// Use the full book with complete chapter content
 const BOOK_PATH = path.join(
   process.cwd(),
-  'app/api/_backend/data/founder-knowledge/elemental-alchemy-book.json'
+  'app/api/_backend/data/founder-knowledge/elemental-alchemy-full.json'
 )
 
 export async function GET(request: NextRequest) {

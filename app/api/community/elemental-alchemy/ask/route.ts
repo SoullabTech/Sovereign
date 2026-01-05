@@ -16,12 +16,13 @@ interface AskMaiaRequest {
   chapterNum: number;
   userId: string;
   chapterTitle?: string;
+  chapterContent?: string;
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body: AskMaiaRequest = await request.json();
-    const { teaching, question, element, chapterNum, userId, chapterTitle } = body;
+    const { teaching, question, element, chapterNum, userId, chapterTitle, chapterContent } = body;
 
     if (!teaching || !element || !userId) {
       return NextResponse.json(
@@ -33,19 +34,29 @@ export async function POST(request: NextRequest) {
     // Build the contextual message for MAIA
     const userQuestion = question?.trim() || 'How does this teaching apply to my life right now?';
 
+    // Clean chapter content for context
+    const cleanedContent = chapterContent
+      ?.replace(/!\[\]\[image\d+\]/g, '')
+      ?.replace(/\*\*\*/g, '')
+      ?.replace(/###\s*/g, '')
+      ?.slice(0, 1500);
+
     const contextualMessage = `
 I'm reading from "Elemental Alchemy: The Ancient Art of Living a Phenomenal Life" by Kelly Nezat.
 
 **Current Chapter:** Chapter ${chapterNum}${chapterTitle ? ` - ${chapterTitle}` : ''}
 **Element:** ${element.charAt(0).toUpperCase() + element.slice(1)}
 
-**Teaching I'm reflecting on:**
+**Section I'm reflecting on:**
 "${teaching}"
 
-**My question:**
+${cleanedContent ? `**From the text:**
+${cleanedContent}
+
+` : ''}**My question:**
 ${userQuestion}
 
-Please share your insight, connecting this teaching to practical life wisdom. Keep your response conversational and grounded in the elemental framework.
+Please share your insight as MAIA, drawing from Kelly's elemental wisdom to offer practical guidance. Connect the teaching to everyday life. Be warm, grounded, and specific.
     `.trim();
 
     // Get base URL for internal API call

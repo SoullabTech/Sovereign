@@ -93,26 +93,36 @@ const speakWithBrowserTTS = (text: string, element: string = 'earth'): Promise<v
   })
 }
 
-// High-quality TTS using ElevenLabs via API
+// Voice mapping by element for OpenAI TTS
+const ELEMENT_VOICES: Record<string, string> = {
+  fire: 'onyx',      // Deep, powerful
+  water: 'nova',     // Warm, flowing
+  earth: 'alloy',    // Grounded, neutral
+  air: 'shimmer',    // Light, airy
+  aether: 'fable',   // Ethereal, storytelling
+  intro: 'alloy'
+}
+
+// High-quality TTS using OpenAI via API
 const speakText = async (text: string, element: string = 'earth'): Promise<void> => {
   const cleanText = cleanTextForSpeech(text)
   if (!cleanText) return
 
   try {
-    // Try ElevenLabs API first
-    const response = await fetch('/api/voice/tts', {
+    // Use OpenAI TTS API
+    const voice = ELEMENT_VOICES[element] || 'alloy'
+    const response = await fetch('/api/voice/openai-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: cleanText, element })
+      body: JSON.stringify({
+        text: cleanText,
+        voice,
+        format: 'mp3',
+        speed: element === 'fire' ? 1.1 : element === 'water' ? 0.95 : 1.0
+      })
     })
 
-    // Check if we should fall back to browser TTS
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}))
-      if (errorData.fallbackToBrowser) {
-        console.log('Falling back to browser TTS')
-        return speakWithBrowserTTS(cleanText, element)
-      }
       throw new Error('TTS API error')
     }
 
@@ -141,13 +151,13 @@ const speakText = async (text: string, element: string = 'earth'): Promise<void>
     })
 
   } catch (error) {
-    console.log('ElevenLabs unavailable, using browser TTS:', error)
+    console.log('OpenAI TTS unavailable, using browser TTS:', error)
     return speakWithBrowserTTS(cleanText, element)
   }
 }
 
 const stopSpeaking = () => {
-  // Stop ElevenLabs audio
+  // Stop OpenAI audio
   if (currentAudio) {
     currentAudio.pause()
     currentAudio.currentTime = 0
