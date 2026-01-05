@@ -56,6 +56,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      whisper:
+        condition: service_healthy
 
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -71,6 +73,8 @@ services:
       # Selflet Phase 2E: Disabled by default, enable via override file
       MAIA_SELFLET_WRITE_ENABLED: "0"
       MAIA_SELFLET_ALLOW_ANON: "0"
+      # Whisper.cpp for sovereign voice transcription
+      WHISPER_LOCAL_URL: "http://whisper:8080"
 
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]
@@ -140,6 +144,54 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Whisper.cpp - Local Speech-to-Text
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Sovereign voice transcription - no cloud APIs
+  # Model: ggml-base.en (English, ~150MB)
+  #
+  # First run: docker compose -f docker-compose.production.yml run --rm whisper-init
+  whisper-init:
+    image: alpine:3.19
+    container_name: maia-whisper-init
+    volumes:
+      - whisper_models:/models
+    command: |
+      sh -c '
+        if [ -f /models/ggml-base.en.bin ]; then
+          echo "Model already exists, skipping download"
+        else
+          echo "Downloading ggml-base.en model..."
+          apk add --no-cache wget
+          wget -O /models/ggml-base.en.bin https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin
+          echo "Model downloaded successfully"
+        fi
+      '
+    profiles: ["init"]
+    networks:
+      - maia-network
+
+  whisper:
+    image: ghcr.io/ggerganov/whisper.cpp:main
+    container_name: maia-whisper
+    restart: unless-stopped
+
+    entrypoint: ["/whisper.cpp/server"]
+    command: ["--host", "0.0.0.0", "--port", "8080", "-m", "/models/ggml-base.en.bin"]
+
+    volumes:
+      - whisper_models:/models
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # Ollama - Local LLM (Optional)
   # ═════════════════════════════════════════════════════════════════════════════
   # Uncomment to run Ollama in a container
@@ -171,6 +223,8 @@ volumes:
   caddy_data:
     driver: local
   caddy_config:
+    driver: local
+  whisper_models:
     driver: local
   # ollama_data:
   #   driver: local
