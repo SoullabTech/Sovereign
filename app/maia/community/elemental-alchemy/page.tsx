@@ -93,15 +93,9 @@ const speakWithBrowserTTS = (text: string, element: string = 'earth'): Promise<v
   })
 }
 
-// Voice mapping by element for OpenAI TTS
-const ELEMENT_VOICES: Record<string, string> = {
-  fire: 'onyx',      // Deep, powerful
-  water: 'nova',     // Warm, flowing
-  earth: 'alloy',    // Grounded, neutral
-  air: 'shimmer',    // Light, airy
-  aether: 'fable',   // Ethereal, storytelling
-  intro: 'alloy'
-}
+// OpenAI TTS voices
+const READING_VOICE = 'fable'  // Warm storytelling for book reading
+const MAIA_VOICE = 'alloy'     // For MAIA responses when discussing sections
 
 // High-quality TTS using OpenAI via API
 const speakText = async (text: string, element: string = 'earth'): Promise<void> => {
@@ -109,16 +103,15 @@ const speakText = async (text: string, element: string = 'earth'): Promise<void>
   if (!cleanText) return
 
   try {
-    // Use OpenAI TTS API
-    const voice = ELEMENT_VOICES[element] || 'alloy'
+    // Use OpenAI TTS API with fable voice for reading
     const response = await fetch('/api/voice/openai-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         text: cleanText,
-        voice,
+        voice: READING_VOICE,
         format: 'mp3',
-        speed: element === 'fire' ? 1.1 : element === 'water' ? 0.95 : 1.0
+        speed: 1.0
       })
     })
 
