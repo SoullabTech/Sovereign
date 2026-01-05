@@ -135,8 +135,8 @@ export default function SigninPage() {
 
       {/* Sacred Holoflower */}
       <div className="mb-12">
-        <div className="w-24 h-24 mx-auto">
-          <Holoflower size="lg" glowIntensity="medium" animate={true} />
+        <div className="w-40 h-40 mx-auto">
+          <Holoflower size="xl" glowIntensity="medium" animate={true} />
         </div>
       </div>
 
@@ -218,7 +218,8 @@ export default function SigninPage() {
           <button
             type="button"
             onClick={() => setShowRecovery(true)}
-            className="text-amber-700/80 hover:text-amber-800 text-sm font-light underline underline-offset-2 transition-colors duration-300"
+            className="text-sm font-light px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md"
+            style={{ color: '#374151', backgroundColor: 'rgba(255,255,255,0.5)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
           >
             Forgot your passkey or password?
           </button>
@@ -227,7 +228,8 @@ export default function SigninPage() {
         <div className="mt-4 text-center">
           <button
             onClick={() => router.push('/begin')}
-            className="text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+            className="text-sm font-light px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md"
+            style={{ color: '#374151', backgroundColor: 'rgba(255,255,255,0.5)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
           >
             New to Soullab? Begin Journey
           </button>

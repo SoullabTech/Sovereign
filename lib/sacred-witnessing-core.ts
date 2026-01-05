@@ -329,7 +329,7 @@ export class SacredWitnessingCore {
         `Hello. I'm here with you. What brings you to this moment?`,
         `Welcome. What would you like to explore together?`,
         `I see you. What's calling for attention?`,
-        `Hello, friend. What wants to emerge?`
+        `Hello. What wants to emerge?`
       ];
       return responses[Math.floor(Math.random() * responses.length)];
     }
@@ -353,7 +353,7 @@ export class SacredWitnessingCore {
           `Hello. What's alive for you in this moment?`,
           `Welcome. What would you like to explore together?`,
           `I'm here with you. What's present?`,
-          `Hello, friend. What brings you here today?`
+          `Hello. What brings you here today?`
         ];
         return responses[Math.floor(Math.random() * responses.length)];
       }

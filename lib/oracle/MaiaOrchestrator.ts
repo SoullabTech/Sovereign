@@ -701,7 +701,7 @@ Respond like a real friend would:`;
 
   private getSimpleGreeting(): string {
     const greetings = [
-      "Hey, friend. Good to see you.",
+      "Hey. Good to see you.",
       "Hello! How are you today?",
       "Hi there. How's your heart?",
       "Welcome back. How are things?",
