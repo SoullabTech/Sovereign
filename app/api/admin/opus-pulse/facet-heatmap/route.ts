@@ -9,10 +9,18 @@ import { getPool } from '@/lib/database/postgres';
 // Skip during static export (Capacitor builds)
 
 export async function GET(req: NextRequest) {
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
+  try {
+    searchParams = new URL(req.url).searchParams;
+  } catch {
+    // During static export, return empty data
+    return NextResponse.json({ windowDays: 30, cells: [] });
+  }
+
   const pool = getPool();
 
   try {
-    const { searchParams } = new URL(req.url);
     const daysParam = searchParams.get('days');
     const days = daysParam ? Math.max(1, Math.min(365, Number(daysParam))) : 30;
 

@@ -11,8 +11,16 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 
 export async function GET(request: NextRequest) {
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
   try {
-    const searchParams = request.nextUrl.searchParams;
+    searchParams = request.nextUrl.searchParams;
+  } catch {
+    // During static export, return placeholder redirect
+    return NextResponse.json({ error: 'Static export mode' }, { status: 503 });
+  }
+
+  try {
     const code = searchParams.get('code');
     const state = searchParams.get('state'); // userId
     const error = searchParams.get('error');

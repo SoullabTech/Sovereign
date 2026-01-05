@@ -15,7 +15,20 @@ import { query } from '@/lib/db/postgres'
 // Skip during static export (Capacitor builds)
 
 export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url)
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
+  try {
+    searchParams = new URL(request.url).searchParams;
+  } catch {
+    // During static export, return empty territories
+    return NextResponse.json({
+      ok: true,
+      territories: [],
+      count: 0,
+      note: 'Static export mode'
+    });
+  }
+
   const parentSlug = searchParams.get('parent')
   const includeChildren = searchParams.get('children') === 'true'
 

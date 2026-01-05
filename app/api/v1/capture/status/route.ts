@@ -21,8 +21,23 @@ import { resolveCaptureUserIdFromQuery, withSessionCookie } from '@/lib/capture/
 // Skip during static export (Capacitor builds)
 
 export async function GET(request: NextRequest) {
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
   try {
-    const { searchParams } = new URL(request.url);
+    searchParams = new URL(request.url).searchParams;
+  } catch {
+    // During static export, return empty status
+    return NextResponse.json({
+      success: true,
+      active: false,
+      session: null,
+      notes: [],
+      noteCount: 0,
+      recentSessions: []
+    });
+  }
+
+  try {
     const orgId = searchParams.get('orgId') || 'soullab';
 
     // 🔐 Derive userId server-side (falls back to query param in dev mode)

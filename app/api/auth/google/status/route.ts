@@ -11,8 +11,21 @@ import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 import { GmailService } from '@/lib/gmail/GmailService';
 
 export async function GET(request: NextRequest) {
+  // Handle static generation gracefully
+  let userId: string | null = null;
   try {
-    const userId = request.nextUrl.searchParams.get('userId');
+    userId = request.nextUrl.searchParams.get('userId');
+  } catch {
+    // During static export, return default response
+    return NextResponse.json({
+      configured: false,
+      connected: false,
+      email: null,
+      message: 'Static export mode'
+    });
+  }
+
+  try {
 
     if (!userId) {
       return NextResponse.json(

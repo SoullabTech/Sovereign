@@ -19,9 +19,11 @@ interface UseVoiceInputReturn {
   transcript: string;
   confidence: number;
   error: string | null;
+  permissionStatus: 'unknown' | 'granted' | 'denied' | 'prompt';
   startRecording: () => void;
   stopRecording: () => void;
   resetTranscript: () => void;
+  requestPermission: () => Promise<boolean>;
 }
 
 export function useVoiceInput({
@@ -39,6 +41,7 @@ export function useVoiceInput({
   const [confidence, setConfidence] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(false);
+  const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied' | 'prompt'>('unknown');
   
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -70,15 +73,20 @@ export function useVoiceInput({
         setIsSupported(false);
       });
 
-      // Request permission on init
-      CapacitorSpeechRecognition.requestPermissions().then((result) => {
-        console.log('🎤 Speech recognition permission:', result.speechRecognition);
-        if (result.speechRecognition !== 'granted') {
-          setError('Microphone permission denied. Please enable in Settings.');
-          setIsSupported(false);
+      // Check permission status (don't auto-request on init - let UI trigger that)
+      CapacitorSpeechRecognition.checkPermissions().then((result) => {
+        console.log('🎤 Speech recognition permission status:', result.speechRecognition);
+        if (result.speechRecognition === 'granted') {
+          setPermissionStatus('granted');
+        } else if (result.speechRecognition === 'denied') {
+          setPermissionStatus('denied');
+          setError('Voice permission denied. Tap the mic to enable in Settings.');
+        } else {
+          setPermissionStatus('prompt');
         }
       }).catch((err) => {
-        console.error('🎤 Permission request failed:', err);
+        console.error('🎤 Permission check failed:', err);
+        setPermissionStatus('unknown');
       });
 
       // Add listening state listener for debugging
@@ -221,9 +229,38 @@ export function useVoiceInput({
     };
   }, [continuous, interimResults, language, onResult, onError]);
 
+  // Request permission explicitly (for UI to call)
+  const requestPermission = useCallback(async (): Promise<boolean> => {
+    if (!isNativeRef.current) {
+      // Web: permission is requested when starting recognition
+      return true;
+    }
+
+    try {
+      console.log('🎤 Requesting speech recognition permission...');
+      const result = await CapacitorSpeechRecognition.requestPermissions();
+      console.log('🎤 Permission result:', result.speechRecognition);
+
+      if (result.speechRecognition === 'granted') {
+        setPermissionStatus('granted');
+        setError(null);
+        return true;
+      } else {
+        setPermissionStatus('denied');
+        setError('Please enable Voice & Microphone in Settings → MAIA');
+        return false;
+      }
+    } catch (err) {
+      console.error('🎤 Permission request error:', err);
+      setPermissionStatus('denied');
+      setError('Could not request voice permission');
+      return false;
+    }
+  }, []);
+
   const startRecording = useCallback(async () => {
     if (!isSupported) {
-      const errorMsg = 'Speech recognition not supported';
+      const errorMsg = 'Speech recognition not supported on this device';
       setError(errorMsg);
       onError?.(errorMsg);
       return;
@@ -231,6 +268,18 @@ export function useVoiceInput({
 
     // Native: Use Capacitor plugin
     if (isNativeRef.current) {
+      // Check/request permission first
+      if (permissionStatus !== 'granted') {
+        console.log('🎤 Permission not granted, requesting...');
+        const granted = await requestPermission();
+        if (!granted) {
+          // Show user-friendly error
+          setError('Voice access needed. Go to Settings → MAIA to enable.');
+          onError?.('Voice permission required');
+          return;
+        }
+      }
+
       try {
         setTranscript('');
         setConfidence(0);
@@ -379,8 +428,10 @@ export function useVoiceInput({
     transcript,
     confidence,
     error,
+    permissionStatus,
     startRecording,
     stopRecording,
-    resetTranscript
+    resetTranscript,
+    requestPermission
   };
 }

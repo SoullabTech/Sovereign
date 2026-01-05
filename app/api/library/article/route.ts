@@ -14,8 +14,14 @@ const ALLOWED_DIRECTORIES = [
 ];
 
 export async function GET(request: NextRequest) {
-  const searchParams = request.nextUrl.searchParams;
-  const articlePath = searchParams.get('path');
+  // Handle static generation gracefully
+  let articlePath: string | null = null;
+  try {
+    articlePath = request.nextUrl.searchParams.get('path');
+  } catch {
+    // During static export, return placeholder
+    return NextResponse.json({ error: 'Static export mode' }, { status: 503 });
+  }
 
   if (!articlePath) {
     return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 });

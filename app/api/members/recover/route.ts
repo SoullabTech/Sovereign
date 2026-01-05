@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 /**
  * Passkey Recovery via Email
  * Sends member their passkey if email matches
@@ -7,6 +7,10 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { Resend } from 'resend';
+
+export const revalidate = false;
+
+// Skip during static export (Capacitor builds)
 
 // Lazy init to avoid build-time errors
 let resend: Resend | null = null;
@@ -18,6 +22,10 @@ function getResend() {
 }
 
 export async function POST(request: NextRequest) {
+  // During static export, return placeholder response
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return NextResponse.json({ error: 'Not available in app' }, { status: 503 });
+  }
   try {
     const { email } = await request.json();
 

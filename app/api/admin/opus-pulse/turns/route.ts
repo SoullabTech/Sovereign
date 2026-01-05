@@ -9,10 +9,18 @@ import { getPool } from '@/lib/database/postgres';
 // Skip during static export (Capacitor builds)
 
 export async function GET(req: NextRequest) {
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
+  try {
+    searchParams = new URL(req.url).searchParams;
+  } catch {
+    // During static export, return empty data
+    return NextResponse.json({ items: [] });
+  }
+
   const pool = getPool();
 
   try {
-    const { searchParams } = new URL(req.url);
     const limitParam = searchParams.get('limit');
     const limit = limitParam ? Math.max(1, Math.min(200, Number(limitParam))) : 50;
 

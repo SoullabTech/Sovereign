@@ -9,8 +9,19 @@ export const revalidate = false;
 // Skip during static export (Capacitor builds)
 
 export async function GET(request: NextRequest) {
+  // Handle static generation gracefully
+  let searchParams: URLSearchParams;
   try {
-    const { searchParams } = new URL(request.url);
+    searchParams = new URL(request.url).searchParams;
+  } catch {
+    // During static export, return default eligibility
+    return NextResponse.json({
+      eligible: false,
+      reason: 'Static export mode'
+    });
+  }
+
+  try {
     const userId = searchParams.get('userId');
 
     if (!userId) {

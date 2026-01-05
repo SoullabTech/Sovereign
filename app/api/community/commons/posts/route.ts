@@ -64,7 +64,19 @@ const mockPosts = [
 
 export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(req.url);
+    // Handle static generation gracefully
+    let searchParams: URLSearchParams;
+    try {
+      searchParams = new URL(req.url).searchParams;
+    } catch {
+      // During static export, return mock data
+      return NextResponse.json({
+        ok: true,
+        posts: mockPosts,
+        pagination: { page: 1, limit: 20, total: mockPosts.length, totalPages: 1 },
+        note: 'Static export mode'
+      });
+    }
 
     // Pagination
     const page = parseInt(searchParams.get('page') || '1');

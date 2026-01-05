@@ -26,7 +26,14 @@ function safeRelPath(p: string): string | null {
 }
 
 export async function GET(request: NextRequest) {
-  const filePath = request.nextUrl.searchParams.get('path');
+  // Handle static generation gracefully
+  let filePath: string | null = null;
+  try {
+    filePath = request.nextUrl.searchParams.get('path');
+  } catch {
+    // During static export, searchParams may not be available
+    return NextResponse.json({ success: false, error: 'Static export' }, { status: 503 });
+  }
 
   if (!filePath) {
     return NextResponse.json(

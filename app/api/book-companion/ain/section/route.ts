@@ -67,9 +67,19 @@ async function loadCorpus(): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
+  // Handle static generation gracefully
+  let id: string | null = null;
   try {
-    const id = req.nextUrl.searchParams.get('id');
+    id = req.nextUrl.searchParams.get('id');
+  } catch {
+    // During static export, return placeholder response
+    return NextResponse.json({
+      success: false,
+      error: 'Static export mode'
+    }, { status: 503 });
+  }
 
+  try {
     if (!id) {
       return NextResponse.json(
         { success: false, error: 'Missing id parameter' },
