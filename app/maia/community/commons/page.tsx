@@ -18,7 +18,8 @@ import {
   Brain,
   Heart,
   Eye,
-  Library
+  Library,
+  Flame
 } from 'lucide-react'
 
 export default function MAIACommunityCommonsPage() {
@@ -388,7 +389,16 @@ export default function MAIACommunityCommonsPage() {
         {/* Quick Access Footer */}
         <div className="mt-12 p-6 bg-white/5 border border-white/10 rounded-xl">
           <h3 className="text-lg font-semibold text-[#D4B896] mb-4 text-center">Quick Access</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button
+              onClick={() => handleNavigate('/patrons')}
+              className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 border border-amber-500/30 rounded-lg
+                       text-amber-400 hover:bg-amber-500/20 transition-all text-center"
+            >
+              <Flame className="w-5 h-5 mx-auto mb-2" />
+              <div className="font-medium">Support</div>
+              <div className="text-xs text-white/60">Become a patron</div>
+            </button>
             <button
               onClick={() => handleNavigate('/maia/community/contribute')}
               className="p-4 bg-[#D4B896]/10 border border-[#D4B896]/30 rounded-lg

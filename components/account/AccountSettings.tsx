@@ -746,7 +746,7 @@ export function AccountSettings() {
 
         {/* Upgrade CTA */}
         <motion.button
-          onClick={() => window.location.href = '/maia?openSettings=true'}
+          onClick={() => window.location.href = '/patrons'}
           className="w-full py-3 bg-gradient-to-r from-amber-500/20 to-purple-500/20 hover:from-amber-500/30 hover:to-purple-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors"
           whileTap={{ scale: 0.98 }}
         >
