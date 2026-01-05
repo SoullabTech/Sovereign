@@ -74,9 +74,15 @@ async function getInitialUserData() {
       const userData = JSON.parse(betaUser);
       // FIXED: Prefer name over username (name is the display name, username is for login)
       // Also filter out generic names that shouldn't be displayed
+      // If name is generic/missing, use capitalized username as fallback (never "Explorer")
       const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
-      const rawName = userData.name || userData.displayName || userData.username || '';
-      const userName = genericNames.includes(rawName.toLowerCase()) ? 'Explorer' : rawName;
+      const rawName = userData.name || userData.displayName || '';
+      const capitalizedUsername = userData.username
+        ? userData.username.charAt(0).toUpperCase() + userData.username.slice(1)
+        : '';
+      const userName = (!rawName || genericNames.includes(rawName.toLowerCase()))
+        ? (capitalizedUsername || 'Friend')
+        : rawName;
 
       if (userData.onboarded === true && userData.id && userName) {
         localStorage.setItem('explorerName', userName);
@@ -325,9 +331,15 @@ function MAIAPageContent() {
         const newId = userData.id || 'guest';
         // FIXED: Prefer name over username (name is the display name, username is for login)
         // Also filter out generic names that shouldn't be displayed
+        // If name is generic/missing, use capitalized username as fallback (never "Explorer")
         const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
-        const rawName = userData.name || userData.displayName || userData.username || '';
-        const newName = genericNames.includes(rawName.toLowerCase()) ? 'Explorer' : (rawName || 'Explorer');
+        const rawName = userData.name || userData.displayName || '';
+        const capitalizedUsername = userData.username
+          ? userData.username.charAt(0).toUpperCase() + userData.username.slice(1)
+          : '';
+        const newName = (!rawName || genericNames.includes(rawName.toLowerCase()))
+          ? (capitalizedUsername || 'Friend')
+          : rawName;
 
         localStorage.setItem('explorerName', newName);
         localStorage.setItem('explorerId', newId);

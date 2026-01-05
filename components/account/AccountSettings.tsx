@@ -293,6 +293,19 @@ export function AccountSettings() {
       if (res.ok) {
         const data = await res.json();
         setProfile(prev => prev ? { ...prev, ...data.profile } : null);
+
+        // Also update localStorage so MAIA uses the new name immediately
+        const storedUser = localStorage.getItem('beta_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            user.name = editName;
+            localStorage.setItem('beta_user', JSON.stringify(user));
+          } catch (e) {
+            console.error('[AccountSettings] Failed to update localStorage:', e);
+          }
+        }
+
         showSaveIndicator();
       }
     } catch (err) {
