@@ -1,43 +1,33 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
-// Detect if this is a production/beta build (not local dev)
-// CAPACITOR_BUILD=1 is set during `npm run build` for Capacitor
-// CAPACITOR_MODE can override explicitly
-const isProductionBuild =
-  process.env.CAPACITOR_BUILD === '1' ||
-  process.env.CAPACITOR_MODE === 'beta' ||
-  process.env.CAPACITOR_MODE === 'prod';
+// Build mode detection
+// - CAPACITOR_BUILD=1 during npm run build triggers beta mode
+// - CAPACITOR_MODE can override (dev/beta/prod)
+const BUILD_MODE = (
+  process.env.CAPACITOR_BUILD === '1'
+    ? (process.env.CAPACITOR_MODE || 'beta')
+    : (process.env.CAPACITOR_MODE || 'dev')
+) as 'dev' | 'beta' | 'prod';
 
-const BUILD_MODE = isProductionBuild
-  ? (process.env.CAPACITOR_MODE || 'beta')
-  : 'dev';
+const isProdLike = BUILD_MODE === 'beta' || BUILD_MODE === 'prod';
 
-const serverConfigs = {
-  dev: {
-    // Local development - use LAN IP for physical device testing
-    url: 'http://192.168.4.210:3000',
-    cleartext: true,
-  },
-  beta: {
-    // Beta/TestFlight - points to production backend
-    url: 'https://soullab.life',
-    cleartext: false,
-  },
-  prod: {
-    // Production release - points to production backend
-    url: 'https://soullab.life',
-    cleartext: false,
-  }
+// Dev server config (only used in dev mode)
+const devServer = {
+  url: 'http://192.168.4.210:3000',
+  cleartext: true,
+  androidScheme: 'http' as const,
 };
 
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
-  webDir: isProductionBuild ? 'out' : '.next/static',
-  server: {
-    ...serverConfigs[BUILD_MODE as keyof typeof serverConfigs],
-    androidScheme: 'https'
-  },
+  webDir: isProdLike ? 'out' : '.next/static',
+
+  // Beta/prod: use bundled assets (no server.url)
+  // Dev: use live server for hot reload
+  server: isProdLike
+    ? { androidScheme: 'https' }
+    : devServer,
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,
