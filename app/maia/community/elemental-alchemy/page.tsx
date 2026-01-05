@@ -94,7 +94,7 @@ const speakWithBrowserTTS = (text: string, element: string = 'earth'): Promise<v
 }
 
 // OpenAI TTS voices
-const READING_VOICE = 'fable'  // Warm storytelling for book reading
+const READING_VOICE = 'onyx'   // Deep, rich voice for book reading
 const MAIA_VOICE = 'alloy'     // For MAIA responses when discussing sections
 
 // High-quality TTS using OpenAI via API
