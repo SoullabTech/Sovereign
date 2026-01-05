@@ -3526,9 +3526,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="fixed inset-0 z-40 flex flex-col items-center justify-center"
+            className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none"
           >
-            <div className="flex flex-col items-center gap-8 px-4 w-full max-w-2xl">
+            <div className="flex flex-col items-center gap-8 px-4 w-full max-w-2xl pointer-events-auto">
               {/* Holoflower Icon + Greeting */}
               <div className="flex items-center gap-4">
                 <motion.div
