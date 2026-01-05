@@ -20,24 +20,170 @@ import {
   Compass,
   Star,
   Circle,
-  MessageCircle
+  MessageCircle,
+  Volume2,
+  VolumeX,
+  Pause
 } from 'lucide-react'
 import { AskMaiaSheet } from '@/components/elemental-alchemy/AskMaiaSheet'
+import { BookChat } from '@/components/elemental-alchemy/BookChat'
 
-// Book data structure
+// Track current audio for stopping
+let currentAudio: HTMLAudioElement | null = null
+
+// Clean text for speech synthesis
+const cleanTextForSpeech = (text: string): string => {
+  return text
+    .replace(/\*[^*]+\*/g, '')      // Remove asterisks
+    .replace(/\.{3,}/g, '...')       // Fix ellipsis
+    .replace(/\([^)]+\)/g, '')       // Remove parentheticals
+    .replace(/["]/g, '')             // Remove quotes
+    .trim()
+}
+
+// Browser TTS fallback
+const speakWithBrowserTTS = (text: string, element: string = 'earth'): Promise<void> => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) {
+      resolve()
+      return
+    }
+
+    window.speechSynthesis.cancel()
+
+    const cleanText = cleanTextForSpeech(text)
+    if (!cleanText) {
+      resolve()
+      return
+    }
+
+    const utterance = new SpeechSynthesisUtterance(cleanText)
+
+    // Configure voice based on element
+    utterance.rate = element === 'fire' ? 1.05 :
+                    element === 'water' ? 0.92 :
+                    element === 'earth' ? 0.88 :
+                    element === 'air' ? 1.0 : 0.95
+
+    utterance.pitch = element === 'water' ? 1.1 :
+                     element === 'earth' ? 0.95 :
+                     element === 'air' ? 1.05 : 1.0
+
+    utterance.volume = 0.9
+
+    // Try to select a good voice
+    const voices = window.speechSynthesis.getVoices()
+    const preferredVoice = voices.find(v =>
+      v.name.toLowerCase().includes('samantha') ||
+      v.name.toLowerCase().includes('karen') ||
+      v.name.toLowerCase().includes('moira') ||
+      v.name.toLowerCase().includes('tessa') ||
+      v.name.toLowerCase().includes('allison') ||
+      (v.lang.startsWith('en') && v.name.toLowerCase().includes('female'))
+    ) || voices.find(v => v.lang.startsWith('en'))
+
+    if (preferredVoice) {
+      utterance.voice = preferredVoice
+    }
+
+    utterance.onend = () => resolve()
+    utterance.onerror = () => resolve()
+
+    window.speechSynthesis.speak(utterance)
+  })
+}
+
+// High-quality TTS using ElevenLabs via API
+const speakText = async (text: string, element: string = 'earth'): Promise<void> => {
+  const cleanText = cleanTextForSpeech(text)
+  if (!cleanText) return
+
+  try {
+    // Try ElevenLabs API first
+    const response = await fetch('/api/voice/tts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: cleanText, element })
+    })
+
+    // Check if we should fall back to browser TTS
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      if (errorData.fallbackToBrowser) {
+        console.log('Falling back to browser TTS')
+        return speakWithBrowserTTS(cleanText, element)
+      }
+      throw new Error('TTS API error')
+    }
+
+    // Play the audio
+    const audioBlob = await response.blob()
+    const audioUrl = URL.createObjectURL(audioBlob)
+    const audio = new Audio(audioUrl)
+    currentAudio = audio
+
+    return new Promise((resolve) => {
+      audio.onended = () => {
+        URL.revokeObjectURL(audioUrl)
+        currentAudio = null
+        resolve()
+      }
+      audio.onerror = () => {
+        URL.revokeObjectURL(audioUrl)
+        currentAudio = null
+        // Fall back to browser TTS on audio error
+        speakWithBrowserTTS(cleanText, element).then(resolve)
+      }
+      audio.play().catch(() => {
+        // Fall back to browser TTS if autoplay blocked
+        speakWithBrowserTTS(cleanText, element).then(resolve)
+      })
+    })
+
+  } catch (error) {
+    console.log('ElevenLabs unavailable, using browser TTS:', error)
+    return speakWithBrowserTTS(cleanText, element)
+  }
+}
+
+const stopSpeaking = () => {
+  // Stop ElevenLabs audio
+  if (currentAudio) {
+    currentAudio.pause()
+    currentAudio.currentTime = 0
+    currentAudio = null
+  }
+  // Stop browser TTS
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    window.speechSynthesis.cancel()
+  }
+}
+
+// Book data structure (updated for full content)
+interface Section {
+  title: string
+  content: string
+}
+
 interface Chapter {
   number: number
   title: string
   element?: string
-  keyTeachings: string[]
-  content_excerpt: string
+  sections: Section[]
+  fullContent: string
+  // Legacy fields for backwards compatibility
+  keyTeachings?: string[]
+  content_excerpt?: string
 }
 
 interface BookData {
   title: string
   author: string
   content: {
+    preface?: string
+    introduction?: string
     chapters: Chapter[]
+    appendix?: string
   }
 }
 
@@ -107,12 +253,16 @@ export default function ElementalAlchemyBookPage() {
   const [loading, setLoading] = useState(true)
   const [selectedElement, setSelectedElement] = useState<ElementKey | null>(null)
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null)
-  const [viewMode, setViewMode] = useState<'elements' | 'chapters' | 'reading'>('elements')
+  const [viewMode, setViewMode] = useState<'elements' | 'chapters' | 'reading' | 'section'>('elements')
   const [readProgress, setReadProgress] = useState<Record<number, boolean>>({})
+  const [selectedSection, setSelectedSection] = useState<Section | null>(null)
 
   // Ask MAIA state
   const [askMaiaOpen, setAskMaiaOpen] = useState(false)
   const [selectedTeaching, setSelectedTeaching] = useState<string | null>(null)
+
+  // Read aloud state
+  const [isReading, setIsReading] = useState(false)
 
   // Mock user ID (replace with real auth)
   const userId = 'beta-user-1'
@@ -168,7 +318,16 @@ export default function ElementalAlchemyBookPage() {
   }
 
   const handleBack = () => {
-    if (viewMode === 'reading') {
+    // Stop reading when navigating away
+    if (isReading) {
+      stopSpeaking()
+      setIsReading(false)
+    }
+
+    if (viewMode === 'section') {
+      setViewMode('reading')
+      setSelectedSection(null)
+    } else if (viewMode === 'reading') {
       setViewMode('chapters')
       setSelectedChapter(null)
     } else if (viewMode === 'chapters') {
@@ -177,6 +336,27 @@ export default function ElementalAlchemyBookPage() {
     } else {
       router.push('/maia/community')
     }
+  }
+
+  // Read aloud handlers
+  const handleReadAloud = async (text: string, element: string = 'earth') => {
+    if (isReading) {
+      stopSpeaking()
+      setIsReading(false)
+      return
+    }
+
+    setIsReading(true)
+    try {
+      await speakText(text, element)
+    } finally {
+      setIsReading(false)
+    }
+  }
+
+  const handleStopReading = () => {
+    stopSpeaking()
+    setIsReading(false)
   }
 
   if (loading) {
@@ -432,7 +612,9 @@ export default function ElementalAlchemyBookPage() {
                                 {chapter.title}
                               </h3>
                               <p className="text-sm text-white/50 line-clamp-2">
-                                {chapter.keyTeachings.slice(0, 3).filter(t => !t.startsWith('!')).join(' • ')}
+                                {chapter.sections?.slice(0, 3).map(s => s.title).join(' • ') ||
+                                 chapter.keyTeachings?.slice(0, 3).filter(t => !t.startsWith('!')).join(' • ') ||
+                                 'Explore this chapter'}
                               </p>
                             </div>
 
@@ -489,51 +671,48 @@ export default function ElementalAlchemyBookPage() {
                       </div>
                     </div>
 
-                    {/* Key Teachings */}
+                    {/* Chapter Sections */}
                     <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                       <h3 className="text-sm font-medium text-white/70 mb-4 flex items-center justify-between">
                         <span className="flex items-center gap-2">
-                          <Bookmark className="w-4 h-4" />
-                          Key Teachings
+                          <BookOpen className="w-4 h-4" />
+                          Sections
                         </span>
-                        <span className="text-xs text-white/40">Tap to ask MAIA</span>
+                        <span className="text-xs text-white/40">Tap to read & discuss with MAIA</span>
                       </h3>
                       <div className="space-y-2">
-                        {selectedChapter.keyTeachings
-                          .filter(t => !t.startsWith('!') && t.length > 10)
-                          .slice(0, 10)
-                          .map((teaching, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                setSelectedTeaching(teaching)
-                                setAskMaiaOpen(true)
-                              }}
-                              className="w-full flex items-start gap-3 p-2 -mx-2 rounded-lg
-                                       hover:bg-white/5 transition-colors text-left group"
-                            >
-                              <div className={`w-1.5 h-1.5 rounded-full ${element.textColor.replace('text-', 'bg-')}
-                                            mt-2 flex-shrink-0`} />
-                              <p className="text-sm text-white/70 leading-relaxed flex-1 group-hover:text-white/90">
-                                {teaching}
+                        {(selectedChapter.sections || []).map((section, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              setSelectedSection(section)
+                              setViewMode('section')
+                            }}
+                            className="w-full flex items-start gap-3 p-3 rounded-lg
+                                     bg-white/5 hover:bg-white/10 transition-colors text-left group
+                                     border border-white/5 hover:border-white/10"
+                          >
+                            <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${element.color}
+                                          flex items-center justify-center flex-shrink-0`}>
+                              <span className="text-white text-xs font-medium">{idx + 1}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white/90 font-medium text-sm mb-1 group-hover:text-white">
+                                {section.title}
                               </p>
-                              <MessageCircle className="w-4 h-4 text-white/20 group-hover:text-amber-400
-                                                      flex-shrink-0 mt-0.5 transition-colors" />
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-
-                    {/* Content Excerpt */}
-                    <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                      <h3 className="text-sm font-medium text-white/70 mb-4 flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" />
-                        From the Text
-                      </h3>
-                      <div className="prose prose-invert prose-sm max-w-none">
-                        <p className="text-white/70 leading-relaxed whitespace-pre-line">
-                          {selectedChapter.content_excerpt}
-                        </p>
+                              <p className="text-white/50 text-xs line-clamp-2">
+                                {section.content.slice(0, 120)}...
+                              </p>
+                            </div>
+                            <ChevronRight className="w-5 h-5 text-white/30 group-hover:text-amber-400
+                                                   flex-shrink-0 transition-colors" />
+                          </button>
+                        ))}
+                        {(!selectedChapter.sections || selectedChapter.sections.length === 0) && (
+                          <p className="text-white/40 text-sm text-center py-4">
+                            Full sections coming soon
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -592,6 +771,150 @@ export default function ElementalAlchemyBookPage() {
               })()}
             </motion.div>
           )}
+
+          {/* Section Reading View */}
+          {viewMode === 'section' && selectedElement && selectedChapter && selectedSection && (
+            <motion.div
+              key="section"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6"
+            >
+              {(() => {
+                const element = ELEMENTS[selectedElement]
+                const Icon = element.icon
+
+                return (
+                  <>
+                    {/* Section Header */}
+                    <div className={`p-6 rounded-2xl ${element.bgColor} border ${element.borderColor}`}>
+                      <div className="flex items-start gap-4">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${element.color}
+                                      flex items-center justify-center shadow-lg flex-shrink-0`}>
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <div className={`text-xs ${element.textColor} mb-1`}>
+                            {selectedChapter.title}
+                          </div>
+                          <h2 className="text-xl font-bold text-white">
+                            {selectedSection.title}
+                          </h2>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Full Section Content */}
+                    <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                      {/* Read Aloud Button */}
+                      <div className="flex justify-end mb-4">
+                        <button
+                          onClick={() => handleReadAloud(
+                            `${selectedSection.title}. ${selectedSection.content}`,
+                            selectedElement
+                          )}
+                          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all text-sm
+                                   ${isReading
+                                     ? `bg-gradient-to-r ${element.color} text-white`
+                                     : 'bg-white/10 text-white/70 hover:bg-white/20 hover:text-white'
+                                   }`}
+                        >
+                          {isReading ? (
+                            <>
+                              <VolumeX className="w-4 h-4" />
+                              Stop Reading
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 className="w-4 h-4" />
+                              Read Aloud
+                            </>
+                          )}
+                        </button>
+                      </div>
+                      <div className="prose prose-invert prose-lg max-w-none">
+                        <p className="text-white/85 leading-relaxed whitespace-pre-line text-[16px]">
+                          {selectedSection.content}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Ask MAIA About This Section */}
+                    <div className={`p-6 rounded-xl ${element.bgColor} border ${element.borderColor}`}>
+                      <h3 className={`text-sm font-medium ${element.textColor} mb-3 flex items-center gap-2`}>
+                        <Sparkles className="w-4 h-4" />
+                        Explore This Teaching
+                      </h3>
+                      <p className="text-white/70 text-sm mb-4">
+                        Want to understand this section more deeply? Ask MAIA for personalized insight.
+                      </p>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => {
+                            setSelectedTeaching(selectedSection.title)
+                            setAskMaiaOpen(true)
+                          }}
+                          className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl
+                                   bg-gradient-to-r ${element.color} text-white
+                                   hover:opacity-90 transition-all text-sm font-medium`}
+                        >
+                          <MessageCircle className="w-4 h-4" />
+                          Ask MAIA
+                        </button>
+                        <button
+                          onClick={() => router.push(`/maia/community/elemental-alchemy/journal?element=${selectedElement}&chapter=${selectedChapter.number}&prompt=${encodeURIComponent(selectedSection.title)}`)}
+                          className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl
+                                   bg-white/10 text-white/80 hover:bg-white/20 transition-all text-sm"
+                        >
+                          <PenLine className="w-4 h-4" />
+                          Journal
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Navigation */}
+                    <div className="flex justify-between pt-4">
+                      <button
+                        onClick={() => {
+                          handleStopReading() // Stop reading when navigating
+                          const sections = selectedChapter.sections || []
+                          const currentIdx = sections.findIndex(s => s.title === selectedSection.title)
+                          if (currentIdx > 0) {
+                            setSelectedSection(sections[currentIdx - 1])
+                          } else {
+                            setViewMode('reading')
+                            setSelectedSection(null)
+                          }
+                        }}
+                        className="px-4 py-2 rounded-lg bg-white/5 text-white/60
+                                 hover:bg-white/10 transition-all text-sm"
+                      >
+                        ← Back
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleStopReading() // Stop reading when navigating
+                          const sections = selectedChapter.sections || []
+                          const currentIdx = sections.findIndex(s => s.title === selectedSection.title)
+                          if (currentIdx < sections.length - 1) {
+                            setSelectedSection(sections[currentIdx + 1])
+                          } else {
+                            setViewMode('reading')
+                            setSelectedSection(null)
+                          }
+                        }}
+                        className={`px-4 py-2 rounded-lg bg-gradient-to-r ${element.color}
+                                 text-white hover:opacity-90 transition-all text-sm`}
+                      >
+                        Next Section →
+                      </button>
+                    </div>
+                  </>
+                )
+              })()}
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* Ask MAIA Sheet */}
@@ -606,6 +929,7 @@ export default function ElementalAlchemyBookPage() {
             element={selectedElement}
             chapterNum={selectedChapter.number}
             chapterTitle={selectedChapter.title}
+            chapterContent={selectedSection?.content || selectedChapter.fullContent?.slice(0, 2000) || selectedChapter.content_excerpt}
             userId={userId}
             onSaveToJournal={(insight, teaching) => {
               // Navigate to journal with pre-filled content
@@ -617,6 +941,20 @@ export default function ElementalAlchemyBookPage() {
               })
               router.push(`/maia/community/elemental-alchemy/journal?${params.toString()}`)
             }}
+          />
+        )}
+
+        {/* Book Chat - Floating conversation with MAIA */}
+        {bookData && (
+          <BookChat
+            bookTitle={bookData.title}
+            author={bookData.author}
+            currentChapter={selectedChapter ? {
+              number: selectedChapter.number,
+              title: selectedChapter.title,
+              element: selectedChapter.element
+            } : undefined}
+            userId={userId}
           />
         )}
       </div>
