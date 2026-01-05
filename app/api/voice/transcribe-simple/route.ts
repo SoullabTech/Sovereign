@@ -7,16 +7,16 @@ export const revalidate = false;
 // The static export placeholder won't affect runtime behavior
 
 /**
- * SOVEREIGNTY: This endpoint uses LOCAL Whisper.cpp server (NOT OpenAI).
+ * SOVEREIGNTY: This endpoint uses LOCAL Faster-Whisper server (NOT OpenAI cloud).
  * OpenAI is ONLY used for TTS (Text-to-Speech), NOT for transcription.
  *
- * Local Whisper.cpp server runs on http://127.0.0.1:8080
- * - 100% sovereign (no external API calls)
- * - GPU-accelerated (Metal on Apple Silicon)
- * - Base English model for fast, accurate transcription
+ * Local Faster-Whisper server runs on port 8000 with OpenAI-compatible API
+ * - 100% sovereign (runs locally in Docker, no external API calls)
+ * - CTranslate2 backend for fast inference
+ * - Base English model for accurate transcription
  */
 
-const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8080';
+const WHISPER_LOCAL_URL = process.env.WHISPER_LOCAL_URL || 'http://127.0.0.1:8000';
 
 export async function POST(req: NextRequest) {
   console.log("🎤 [TRANSCRIBE-SIMPLE] Request received. Headers:", {
@@ -44,14 +44,15 @@ export async function POST(req: NextRequest) {
       type: file.type
     });
 
-    // Forward audio file to local Whisper.cpp server
+    // Forward audio file to local Faster-Whisper server (OpenAI-compatible API)
     const whisperFormData = new FormData();
     whisperFormData.append('file', file);
+    whisperFormData.append('model', 'base.en');
 
     console.log("🎤 [TRANSCRIBE-SIMPLE] Forwarding to Whisper:", WHISPER_LOCAL_URL);
 
-    // Send to local Whisper server
-    const whisperResponse = await fetch(`${WHISPER_LOCAL_URL}/inference`, {
+    // Send to local Whisper server (OpenAI-compatible endpoint)
+    const whisperResponse = await fetch(`${WHISPER_LOCAL_URL}/v1/audio/transcriptions`, {
       method: 'POST',
       body: whisperFormData,
     });
@@ -64,7 +65,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Local Whisper transcription failed",
+          error: "Local Faster-Whisper transcription failed",
           details: errorText
         },
         { status: 500 }
@@ -73,20 +74,20 @@ export async function POST(req: NextRequest) {
 
     const result = await whisperResponse.json();
 
-    // Extract transcription from Whisper.cpp response format
-    let transcription = result.text || result.transcription || '';
+    // Extract transcription from OpenAI-compatible response format
+    let transcription = result.text || '';
 
     // Post-process to fix common mis-transcriptions
     // "Maya" -> "MAIA" (Whisper often mishears our name)
     transcription = transcription.replace(/\bMaya\b/gi, 'MAIA');
 
-    console.log("✅ Local Whisper transcription:", transcription.length, "chars"); // Never log content
+    console.log("✅ Local Faster-Whisper transcription:", transcription.length, "chars"); // Never log content
 
     return NextResponse.json({
       success: true,
       transcription: transcription.trim(),
-      confidence: 0.95, // Whisper.cpp doesn't return confidence scores
-      source: 'whisper-local' // Indicate local processing
+      confidence: 0.95, // Faster-Whisper doesn't return confidence scores
+      source: 'faster-whisper-local' // Indicate local processing
     });
 
   } catch (error: any) {
