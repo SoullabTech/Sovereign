@@ -22,6 +22,8 @@ PODS:
     - Capacitor
   - CapacitorStatusBar (6.0.3):
     - Capacitor
+  - LgiccCapacitorVoiceRecorder (6.0.11):
+    - Capacitor
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -36,6 +38,7 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
+  - "LgiccCapacitorVoiceRecorder (from `../../node_modules/@lgicc/capacitor-voice-recorder`)"
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -62,6 +65,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
+  LgiccCapacitorVoiceRecorder:
+    :path: "../../node_modules/@lgicc/capacitor-voice-recorder"
 
 SPEC CHECKSUMS:
   Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
@@ -76,7 +81,8 @@ SPEC CHECKSUMS:
   CapacitorShare: 77ff779e3b7c6ae9fb5461e52cf7ef805d429491
   CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
   CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
+  LgiccCapacitorVoiceRecorder: f32f74e7a68039b7fdeed973836efd179ee7e7b3
 
-PODFILE CHECKSUM: 5170149a66f48d4aee9da8582439b29e3bf1d0ec
+PODFILE CHECKSUM: fb2309f3c90a0611c308e3f3c8ffc1a41ade5c8c
 
 COCOAPODS: 1.16.2

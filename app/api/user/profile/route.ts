@@ -25,15 +25,15 @@ export async function GET(request: NextRequest) {
       try {
         // Check if userId is a valid member ID, username, or passkey
         const result = await query(
-          `SELECT id, name, username, passkey FROM members
+          `SELECT id, name, username, passkey, preferred_name FROM members
            WHERE id = $1 OR username = $1 OR passkey = $1`,
           [userId]
         );
 
         if (result.rows.length > 0) {
           const member = result.rows[0];
-          // Prioritize name, then username - never use passkey as display name
-          userName = member.name || member.username;
+          // Prioritize preferred_name, then name, then username - never use passkey as display name
+          userName = member.preferred_name || member.name || member.username;
           isGuest = false;
           console.log(`✅ [USER-PROFILE] Found member: ${userName}`);
         } else {

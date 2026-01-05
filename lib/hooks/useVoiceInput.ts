@@ -1,6 +1,14 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { SpeechRecognition as CapacitorSpeechRecognition } from '@capacitor-community/speech-recognition';
+// Native recorder for iOS (bypasses WKWebView audio issues)
+import {
+  isNativeApp,
+  startNativeRecording,
+  stopNativeRecording,
+  ensureNativeMicPermission,
+  canRecordNative,
+  getPermissionErrorMessage
+} from '@/lib/voice/capacitorRecorder';
 
 interface UseVoiceInputOptions {
   onResult: (transcript: string, isFinal: boolean) => void;
@@ -16,6 +24,7 @@ interface UseVoiceInputOptions {
 interface UseVoiceInputReturn {
   isRecording: boolean;
   isSupported: boolean;
+  isTranscribing: boolean; // NEW: indicates audio is being transcribed
   transcript: string;
   confidence: number;
   error: string | null;
@@ -37,72 +46,57 @@ export function useVoiceInput({
   minSpeechLengthChars = 3
 }: UseVoiceInputOptions): UseVoiceInputReturn {
   const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [confidence, setConfidence] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isSupported, setIsSupported] = useState(false);
   const [permissionStatus, setPermissionStatus] = useState<'unknown' | 'granted' | 'denied' | 'prompt'>('unknown');
-  
+
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const finalTranscriptRef = useRef<string>('');
   const lastSpeechTimeRef = useRef<number>(0);
   const isNativeRef = useRef<boolean>(false);
-  const capacitorListenerRef = useRef<any>(null);
+  const recordingStartTimeRef = useRef<number>(0);
 
   useEffect(() => {
     const isNative = Capacitor.isNativePlatform();
     isNativeRef.current = isNative;
 
-    // Native iOS/Android: Use Capacitor Speech Recognition plugin
+    // Native iOS/Android: Use native voice recorder (bypasses WKWebView issues)
     if (isNative) {
-      console.log('🎤 Using native Capacitor speech recognition');
+      console.log('🎤 Using native voice recorder (capacitor-voice-recorder)');
 
-      // Check availability first
-      CapacitorSpeechRecognition.available().then((result) => {
-        console.log('🎤 Speech recognition available:', result.available);
-        if (!result.available) {
-          setError('Speech recognition not available on this device');
-          setIsSupported(false);
-          return;
-        }
-        setIsSupported(true);
-      }).catch((err) => {
-        console.error('🎤 Availability check failed:', err);
-        setIsSupported(false);
-      });
+      const initNative = async () => {
+        try {
+          // Check if native recording is available and get permission status
+          const { available, status } = await canRecordNative();
+          console.log('🎤 Native recorder available:', available, 'status:', status);
 
-      // Check permission status (don't auto-request on init - let UI trigger that)
-      CapacitorSpeechRecognition.checkPermissions().then((result) => {
-        console.log('🎤 Speech recognition permission status:', result.speechRecognition);
-        if (result.speechRecognition === 'granted') {
-          setPermissionStatus('granted');
-        } else if (result.speechRecognition === 'denied') {
-          setPermissionStatus('denied');
-          setError('Voice permission denied. Tap the mic to enable in Settings.');
-        } else {
+          // Native recorder is always "supported" on iOS/Android
+          setIsSupported(true);
+
+          if (status === 'GRANTED') {
+            setPermissionStatus('granted');
+          } else if (status === 'DENIED' || status === 'DISABLED_BY_USER') {
+            setPermissionStatus('denied');
+          } else {
+            setPermissionStatus('prompt');
+          }
+
+          console.log('🎤 Native voice recorder init complete');
+        } catch (err) {
+          console.error('🎤 Native init error:', err);
+          // Assume supported, let startRecording handle permission request
+          setIsSupported(true);
           setPermissionStatus('prompt');
         }
-      }).catch((err) => {
-        console.error('🎤 Permission check failed:', err);
-        setPermissionStatus('unknown');
-      });
-
-      // Add listening state listener for debugging
-      CapacitorSpeechRecognition.addListener('listeningState', (data) => {
-        console.log('🎤 Listening state changed:', data.status);
-        if (data.status === 'started') {
-          setIsRecording(true);
-        } else if (data.status === 'stopped') {
-          setIsRecording(false);
-        }
-      });
-
-      return () => {
-        // Cleanup native listeners
-        CapacitorSpeechRecognition.removeAllListeners();
       };
+
+      initNative();
+      return;
     }
 
     // Web: Use browser Speech Recognition API
@@ -237,123 +231,135 @@ export function useVoiceInput({
     }
 
     try {
-      console.log('🎤 Requesting speech recognition permission...');
-      const result = await CapacitorSpeechRecognition.requestPermissions();
-      console.log('🎤 Permission result:', result.speechRecognition);
-
-      if (result.speechRecognition === 'granted') {
-        setPermissionStatus('granted');
-        setError(null);
-        return true;
-      } else {
-        setPermissionStatus('denied');
-        setError('Please enable Voice & Microphone in Settings → MAIA');
-        return false;
-      }
-    } catch (err) {
+      console.log('🎤 Requesting microphone permission...');
+      await ensureNativeMicPermission();
+      console.log('🎤 Permission granted!');
+      setPermissionStatus('granted');
+      setError(null);
+      return true;
+    } catch (err: any) {
       console.error('🎤 Permission request error:', err);
+      const status = err?.message?.replace('MIC_PERMISSION_', '') || 'DENIED';
       setPermissionStatus('denied');
-      setError('Could not request voice permission');
+      setError(getPermissionErrorMessage(status as any));
       return false;
     }
   }, []);
 
+  // Helper to stop native recording and transcribe the audio
+  // Defined before startRecording because startRecording references it in setTimeout
+  const stopRecordingAndTranscribe = useCallback(async () => {
+    if (!isNativeRef.current) return;
+
+    console.log('🎤 Stopping native recording and transcribing...');
+
+    try {
+      // Stop recording and get audio blob
+      const { blob, mimeType, durationMs } = await stopNativeRecording();
+      setIsRecording(false);
+
+      // Show transcribing state
+      setIsTranscribing(true);
+      console.log('🎤 Recording stopped. Duration:', durationMs, 'ms. Sending for transcription...');
+
+      // Skip transcription for very short recordings (< 300ms)
+      if (durationMs && durationMs < 300) {
+        console.log('🎤 Recording too short, skipping transcription');
+        setIsTranscribing(false);
+        return;
+      }
+
+      // Send to transcription endpoint
+      const formData = new FormData();
+      formData.append('file', blob, `recording.${mimeType === 'audio/wav' ? 'wav' : 'webm'}`);
+
+      const response = await fetch('/api/voice/transcribe-simple', {
+        method: 'POST',
+        body: formData,
+      });
+
+      setIsTranscribing(false);
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.error || 'Transcription failed');
+      }
+
+      const data = await response.json();
+      const transcribedText = data.transcription?.trim() || '';
+
+      if (transcribedText) {
+        console.log('🎤 Transcription received:', transcribedText.length, 'chars');
+        setTranscript(transcribedText);
+        setConfidence(data.confidence || 0.9);
+        finalTranscriptRef.current = transcribedText;
+
+        // Notify callbacks with final result
+        onResult(transcribedText, true);
+        onAutoStop?.(transcribedText);
+      } else {
+        console.log('🎤 No transcription returned');
+        setError('No speech detected. Please try again.');
+      }
+
+    } catch (error: any) {
+      console.error('🎤 Stop/transcribe error:', error);
+      setIsRecording(false);
+      setIsTranscribing(false);
+      setError(error?.message || 'Failed to process voice recording');
+      onError?.(error?.message || 'VOICE_TRANSCRIBE_FAILED');
+    }
+  }, [onResult, onAutoStop, onError]);
+
   const startRecording = useCallback(async () => {
     if (!isSupported) {
-      const errorMsg = 'Speech recognition not supported on this device';
+      const errorMsg = 'Voice recording not supported on this device';
       setError(errorMsg);
       onError?.(errorMsg);
       return;
     }
 
-    // Native: Use Capacitor plugin
+    // Native iOS/Android: Use native voice recorder
+    // This bypasses WKWebView audio issues on iOS
     if (isNativeRef.current) {
-      // Check/request permission first
-      if (permissionStatus !== 'granted') {
-        console.log('🎤 Permission not granted, requesting...');
-        const granted = await requestPermission();
-        if (!granted) {
-          // Show user-friendly error
-          setError('Voice access needed. Go to Settings → MAIA to enable.');
-          onError?.('Voice permission required');
-          return;
-        }
-      }
+      console.log('🎤 Starting native voice recorder...');
 
       try {
+        // Clear previous state
         setTranscript('');
         setConfidence(0);
         setError(null);
         finalTranscriptRef.current = '';
-        lastSpeechTimeRef.current = Date.now();
 
-        console.log('🎤 Starting native speech recognition...');
+        // Start native recording (handles permission internally)
+        await startNativeRecording();
 
-        // Check if already listening
-        const listeningStatus = await CapacitorSpeechRecognition.isListening();
-        if (listeningStatus.listening) {
-          console.log('🎤 Already listening, stopping first...');
-          await CapacitorSpeechRecognition.stop();
-        }
-
-        // Set up listener for partial results BEFORE starting
-        capacitorListenerRef.current = await CapacitorSpeechRecognition.addListener(
-          'partialResults',
-          (data: { matches: string[] }) => {
-            console.log('🎤 Partial results received:', data.matches);
-            if (data.matches && data.matches.length > 0) {
-              const text = data.matches[0];
-              lastSpeechTimeRef.current = Date.now();
-              setTranscript(text);
-              onResult(text, false);
-
-              // Clear existing silence timeout
-              if (silenceTimeoutRef.current) {
-                clearTimeout(silenceTimeoutRef.current);
-              }
-
-              // Set silence timeout for auto-stop
-              silenceTimeoutRef.current = setTimeout(() => {
-                const finalText = text.trim();
-                if (finalText.length >= minSpeechLengthChars) {
-                  console.log(`🎤 Auto-stopping native after ${silenceTimeoutMs}ms silence`);
-                  CapacitorSpeechRecognition.stop();
-                  setIsRecording(false);
-                  onAutoStop?.(finalText);
-                }
-              }, silenceTimeoutMs);
-            }
-          }
-        );
-
-        // Start recognition with explicit options
-        console.log('🎤 Calling CapacitorSpeechRecognition.start()...');
-        const result = await CapacitorSpeechRecognition.start({
-          language: 'en-US',
-          partialResults: true,
-          popup: false,
-          maxResults: 5
-        });
-        console.log('🎤 Start result:', result);
-
+        // Only set recording state AFTER successful start
+        recordingStartTimeRef.current = Date.now();
         setIsRecording(true);
+        setPermissionStatus('granted');
+        console.log('🎤 Native recording started successfully!');
 
-        // Set max recording timeout
+        // Set max recording timeout (30 seconds)
         timeoutRef.current = setTimeout(async () => {
-          console.log('🎤 Max timeout reached, stopping...');
-          const stillListening = await CapacitorSpeechRecognition.isListening();
-          if (stillListening.listening) {
-            await CapacitorSpeechRecognition.stop();
-            setIsRecording(false);
-          }
+          console.log('🎤 Max timeout (30s) reached, auto-stopping...');
+          // Will trigger stopRecording which handles transcription
+          await stopRecordingAndTranscribe();
         }, 30000);
 
       } catch (error: any) {
-        console.error('🎤 Failed to start native recognition:', error);
-        const errorMsg = error?.message || 'Failed to start voice recording';
-        setError(errorMsg);
+        console.error('🎤 Failed to start native recording:', error);
         setIsRecording(false);
-        onError?.(errorMsg);
+
+        // Parse permission errors
+        if (error?.message?.startsWith('MIC_PERMISSION_')) {
+          const status = error.message.replace('MIC_PERMISSION_', '');
+          setPermissionStatus('denied');
+          setError(getPermissionErrorMessage(status as any));
+        } else {
+          setError(error?.message || 'Failed to start voice recording');
+        }
+        onError?.(error?.message || 'VOICE_START_FAILED');
       }
       return;
     }
@@ -381,38 +387,30 @@ export function useVoiceInput({
       setError('Failed to start voice recording');
       onError?.('Failed to start voice recording');
     }
-  }, [isSupported, isRecording, onError, language, silenceTimeoutMs, minSpeechLengthChars, onResult, onAutoStop]);
+  }, [isSupported, isRecording, onError, stopRecordingAndTranscribe]);
 
   const stopRecording = useCallback(async () => {
-    // Native: Use Capacitor plugin
-    if (isNativeRef.current) {
-      try {
-        await CapacitorSpeechRecognition.stop();
-        if (capacitorListenerRef.current) {
-          capacitorListenerRef.current.remove();
-          capacitorListenerRef.current = null;
-        }
-      } catch (error) {
-        console.error('🎤 Failed to stop native recognition:', error);
-      }
-      setIsRecording(false);
-    } else {
-      // Web: Use browser API
-      if (recognitionRef.current && isRecording) {
-        recognitionRef.current.stop();
-      }
-    }
-
+    // Clear any pending timeouts first
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
     }
-
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current);
       silenceTimeoutRef.current = null;
     }
-  }, [isRecording]);
+
+    // Native: Stop recording and transcribe
+    if (isNativeRef.current) {
+      await stopRecordingAndTranscribe();
+      return;
+    }
+
+    // Web: Use browser API
+    if (recognitionRef.current && isRecording) {
+      recognitionRef.current.stop();
+    }
+  }, [isRecording, stopRecordingAndTranscribe]);
 
   const resetTranscript = useCallback(() => {
     setTranscript('');
@@ -425,6 +423,7 @@ export function useVoiceInput({
   return {
     isRecording,
     isSupported,
+    isTranscribing,
     transcript,
     confidence,
     error,

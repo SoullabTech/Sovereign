@@ -59,6 +59,13 @@ const config: CapacitorConfig = {
     },
     Clipboard: {
       enabled: true
+    },
+    SpeechRecognition: {
+      language: 'en-US',
+      maxResults: 5,
+      prompt: 'Speak to MAIA',
+      partialResults: true,
+      popup: true
     }
   }
 };

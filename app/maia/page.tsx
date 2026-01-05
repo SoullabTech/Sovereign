@@ -129,8 +129,9 @@ async function getInitialUserData() {
     try {
       const userData = JSON.parse(betaUser);
       // Use bulletproof name validation (filters UUIDs, generic names)
+      // Priority: preferredName > name > displayName (preferredName is what user wants to be called)
       const validName = getValidDisplayName(
-        userData.name || userData.displayName,
+        userData.preferredName || userData.name || userData.displayName,
         userData.username
       );
 
