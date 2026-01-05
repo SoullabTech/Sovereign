@@ -55,24 +55,45 @@ export function useVoiceInput({
     // Native iOS/Android: Use Capacitor Speech Recognition plugin
     if (isNative) {
       console.log('🎤 Using native Capacitor speech recognition');
-      setIsSupported(true);
+
+      // Check availability first
+      CapacitorSpeechRecognition.available().then((result) => {
+        console.log('🎤 Speech recognition available:', result.available);
+        if (!result.available) {
+          setError('Speech recognition not available on this device');
+          setIsSupported(false);
+          return;
+        }
+        setIsSupported(true);
+      }).catch((err) => {
+        console.error('🎤 Availability check failed:', err);
+        setIsSupported(false);
+      });
 
       // Request permission on init
       CapacitorSpeechRecognition.requestPermissions().then((result) => {
         console.log('🎤 Speech recognition permission:', result.speechRecognition);
         if (result.speechRecognition !== 'granted') {
-          setError('Microphone permission denied');
+          setError('Microphone permission denied. Please enable in Settings.');
           setIsSupported(false);
         }
       }).catch((err) => {
         console.error('🎤 Permission request failed:', err);
       });
 
-      return () => {
-        // Cleanup native listener
-        if (capacitorListenerRef.current) {
-          capacitorListenerRef.current.remove();
+      // Add listening state listener for debugging
+      CapacitorSpeechRecognition.addListener('listeningState', (data) => {
+        console.log('🎤 Listening state changed:', data.status);
+        if (data.status === 'started') {
+          setIsRecording(true);
+        } else if (data.status === 'stopped') {
+          setIsRecording(false);
         }
+      });
+
+      return () => {
+        // Cleanup native listeners
+        CapacitorSpeechRecognition.removeAllListeners();
       };
     }
 
@@ -216,14 +237,21 @@ export function useVoiceInput({
         setError(null);
         finalTranscriptRef.current = '';
         lastSpeechTimeRef.current = Date.now();
-        setIsRecording(true);
 
         console.log('🎤 Starting native speech recognition...');
 
-        // Set up listener for partial results
+        // Check if already listening
+        const listeningStatus = await CapacitorSpeechRecognition.isListening();
+        if (listeningStatus.listening) {
+          console.log('🎤 Already listening, stopping first...');
+          await CapacitorSpeechRecognition.stop();
+        }
+
+        // Set up listener for partial results BEFORE starting
         capacitorListenerRef.current = await CapacitorSpeechRecognition.addListener(
           'partialResults',
           (data: { matches: string[] }) => {
+            console.log('🎤 Partial results received:', data.matches);
             if (data.matches && data.matches.length > 0) {
               const text = data.matches[0];
               lastSpeechTimeRef.current = Date.now();
@@ -249,26 +277,34 @@ export function useVoiceInput({
           }
         );
 
-        // Start recognition
-        await CapacitorSpeechRecognition.start({
-          language: language,
+        // Start recognition with explicit options
+        console.log('🎤 Calling CapacitorSpeechRecognition.start()...');
+        const result = await CapacitorSpeechRecognition.start({
+          language: 'en-US',
           partialResults: true,
-          popup: false
+          popup: false,
+          maxResults: 5
         });
+        console.log('🎤 Start result:', result);
+
+        setIsRecording(true);
 
         // Set max recording timeout
         timeoutRef.current = setTimeout(async () => {
-          if (isRecording) {
+          console.log('🎤 Max timeout reached, stopping...');
+          const stillListening = await CapacitorSpeechRecognition.isListening();
+          if (stillListening.listening) {
             await CapacitorSpeechRecognition.stop();
             setIsRecording(false);
           }
         }, 30000);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error('🎤 Failed to start native recognition:', error);
-        setError('Failed to start voice recording');
+        const errorMsg = error?.message || 'Failed to start voice recording';
+        setError(errorMsg);
         setIsRecording(false);
-        onError?.('Failed to start voice recording');
+        onError?.(errorMsg);
       }
       return;
     }
