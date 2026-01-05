@@ -63,6 +63,8 @@ export default function SigninPage() {
         localStorage.setItem('explorerName', validName);
         localStorage.setItem('explorerPreferredName', validName);
         localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
+        // Set session version to prevent /maia from triggering migration redirect
+        localStorage.setItem('maia_session_version', '2');
 
         // Redirect based on onboarding status
         if (user.onboarded) {
@@ -92,6 +94,7 @@ export default function SigninPage() {
           localStorage.setItem('explorerId', user.id || user.username);
           localStorage.setItem('explorerName', user.name || username);
           localStorage.setItem('betaOnboardingComplete', 'true');
+          localStorage.setItem('maia_session_version', '2');
           router.push('/maia');
           return;
         }
