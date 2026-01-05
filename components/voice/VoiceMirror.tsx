@@ -234,12 +234,15 @@ export default function VoiceMirror({
     // Native: Use Capacitor speech recognition
     if (isNativeRef.current) {
       try {
-        console.log('🎤 VoiceMirror: Starting native speech recognition...');
+        showToast({
+          title: "Starting voice...",
+          description: "Initializing native speech recognition",
+          variant: "info"
+        });
 
         // Check if already listening
         const listeningStatus = await CapacitorSpeechRecognition.isListening();
         if (listeningStatus.listening) {
-          console.log('🎤 VoiceMirror: Already listening, stopping first...');
           await CapacitorSpeechRecognition.stop();
         }
 
@@ -247,7 +250,11 @@ export default function VoiceMirror({
         capacitorListenerRef.current = await CapacitorSpeechRecognition.addListener(
           'partialResults',
           (data: { matches: string[] }) => {
-            console.log('🎤 VoiceMirror: Partial results:', data.matches);
+            showToast({
+              title: "Speech detected!",
+              description: data.matches?.[0] || "Processing...",
+              variant: "success"
+            });
             if (data.matches && data.matches.length > 0) {
               const text = data.matches[0];
               setCurrentTranscript(text);
@@ -261,7 +268,6 @@ export default function VoiceMirror({
               silenceTimeoutRef.current = setTimeout(async () => {
                 const finalText = text.trim();
                 if (finalText.length >= 3) {
-                  console.log('🎤 VoiceMirror: Auto-stopping after silence');
                   await CapacitorSpeechRecognition.stop();
                   setIsListening(false);
                   handleSendMessage(finalText);
@@ -271,17 +277,20 @@ export default function VoiceMirror({
           }
         );
 
-        // Start recognition
-        console.log('🎤 VoiceMirror: Calling start()...');
+        // Start recognition - use popup:true on iOS for native UI
         await CapacitorSpeechRecognition.start({
           language: 'en-US',
           partialResults: true,
-          popup: false,
+          popup: true,  // iOS needs native speech UI
           maxResults: 5
         });
 
         setIsListening(true);
-        console.log('🎤 VoiceMirror: Native recognition started!');
+        showToast({
+          title: "Listening...",
+          description: "Speak now - native recognition active",
+          variant: "info"
+        });
 
       } catch (err: any) {
         console.error('🎤 VoiceMirror: Failed to start native recognition:', err);
