@@ -2155,6 +2155,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           userId: userId || 'anonymous',
           userName: userName || 'Friend',
           sessionId,
+          localHour: new Date().getHours(), // Client's local time for correct greetings
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
 
           // Stable identity for cross-session memory persistence

@@ -389,7 +389,7 @@ export class GreetingService {
       `Hello ${userName}. Think of me as a thinking partner - I'm here to help you see your own patterns more clearly. What's on your mind?`,
       `Hey ${userName}. I'm curious about your experience. Tell me what's present for you right now.`
     ] : [
-      `Hi Explorer. I'm here to listen and reflect back what I notice. How are you today?`,
+      `Hi. I'm here to listen and reflect back what I notice. How are you today?`,
       `Hello. Think of me as a thinking partner - I'm here to help you see your own patterns more clearly. What's on your mind?`,
       `Hey there. I'm curious about your experience. Tell me what's present for you right now.`
     ];

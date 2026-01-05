@@ -508,7 +508,7 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary, localHour } = body as {
       message?: string;
       sessionId?: string;
       mode?: 'dialogue' | 'counsel' | 'scribe';
@@ -516,6 +516,7 @@ export async function POST(req: NextRequest) {
       userName?: string;
       meta?: { explorerId?: string; sessionId?: string };
       sanctuary?: boolean;
+      localHour?: number; // Client's local hour (0-23) for correct time-of-day greetings
     };
 
     // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
@@ -1024,6 +1025,7 @@ export async function POST(req: NextRequest) {
         endpoint: '/api/between/chat',
         mode: mode || 'dialogue', // Pass mode (Talk/Care/Note) for appropriate system prompts
         userName: userName || 'Friend',
+        localHour, // Client's local hour (0-23) for correct time-of-day greetings
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness

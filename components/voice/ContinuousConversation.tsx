@@ -735,7 +735,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Start listening
   const startListening = useCallback(async () => {
     console.log('🎤 [ContinuousConversation] startListening called');
-    console.log('📱 [ContinuousConversation] Platform:', Capacitor.getPlatform(), 'Native:', useNativeSpeechRef.current);
+
+    // 🔄 CRITICAL FIX: Re-check native platform at START time, not just mount time
+    // With remote server URLs (beta builds), Capacitor bridge may initialize after page load
+    const isNativePlatform = Capacitor.isNativePlatform();
+    useNativeSpeechRef.current = isNativePlatform;
+
+    console.log('📱 [ContinuousConversation] Platform:', Capacitor.getPlatform(), 'Native:', isNativePlatform);
 
     // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
     if (isSpeakingRef.current) {
@@ -751,7 +757,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     try {
       // 🔄 Use native speech recognition on iOS/Android
-      if (useNativeSpeechRef.current) {
+      if (isNativePlatform) {
         console.log('📱 [ContinuousConversation] Using NATIVE speech recognition');
 
         // Request permission first

@@ -63,6 +63,16 @@ function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
   return mode === 'counsel' || mode === 'scribe' || mode === 'dialogue' ? mode : 'dialogue';
 }
 
+// Convert client's local hour to time-of-day string
+function getTimeOfDayFromHour(hour: number | undefined): 'morning' | 'afternoon' | 'evening' | 'night' {
+  // Use provided localHour if valid, otherwise fall back to server time
+  const h = typeof hour === 'number' && hour >= 0 && hour <= 23 ? hour : new Date().getHours();
+  if (h >= 5 && h < 12) return 'morning';
+  if (h >= 12 && h < 17) return 'afternoon';
+  if (h >= 17 && h < 21) return 'evening';
+  return 'night';
+}
+
 /**
  * Filter mode-inappropriate language from responses
  * DeepSeek-R1 often ignores system prompts, so we post-process
@@ -676,6 +686,20 @@ Examples of good Talk mode greetings:
     }
   }
 
+  // 🕐 TIME AWARENESS: Use client's local time for greetings
+  const localHour = (meta as any)?.localHour as number | undefined;
+  const timeOfDay = getTimeOfDayFromHour(localHour);
+  const timeGreeting = {
+    morning: 'Good morning',
+    afternoon: 'Good afternoon',
+    evening: 'Good evening',
+    night: 'Hi'
+  }[timeOfDay];
+
+  const timeAwareness = `\n\n🕐 CURRENT TIME CONTEXT:
+It is currently ${timeOfDay} for the user. Use "${timeGreeting}" when greeting them.
+Do NOT use greetings for other times of day.`;
+
   // 🧠 THE DIALECTICAL SCAFFOLD - Add cognitive scaffolding for FAST path
   let cognitiveScaffolding = '';
   const bloomDetection = (meta as any).bloomDetection as BloomDetection | undefined;
@@ -727,7 +751,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}
+${MAIA_RUNTIME_PROMPT}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
