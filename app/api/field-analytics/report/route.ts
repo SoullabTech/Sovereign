@@ -16,6 +16,15 @@ export const revalidate = false;
 const COLLECTIVE_FIELD_SERVICE_URL = process.env.COLLECTIVE_FIELD_SERVICE_URL || 'http://localhost:3010';
 
 export async function GET(request: NextRequest) {
+  // Skip database operations during Capacitor static build
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return NextResponse.json({
+      success: true,
+      timestamp: new Date().toISOString(),
+      message: 'Static build placeholder - service available at runtime'
+    });
+  }
+
   try {
     console.log('🌟 Generating field analytics report...');
 

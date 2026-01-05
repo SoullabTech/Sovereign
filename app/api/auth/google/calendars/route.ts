@@ -6,11 +6,17 @@
  */
 
 export const dynamic = 'force-static';
+export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 
 export async function GET(request: NextRequest) {
+  // Skip during static build
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return NextResponse.json({ calendars: [], message: 'Runtime endpoint' });
+  }
+
   try {
     const userId = request.nextUrl.searchParams.get('userId');
 
