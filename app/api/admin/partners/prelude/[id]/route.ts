@@ -15,6 +15,15 @@ export async function GET(
 ) {
   const preludeId = params.id;
 
+  // Return empty data for static generation placeholder
+  // Real requests will have actual prelude IDs
+  if (preludeId === 'default') {
+    return NextResponse.json({
+      response: null,
+      invites: [],
+    });
+  }
+
   const responseRes = await query(
     `SELECT *
      FROM partners_prelude_responses

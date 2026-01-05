@@ -42,6 +42,16 @@ export async function POST(
   { params }: { params: Promise<{ patternId: string }> }
 ) {
   try {
+    const { patternId } = await params;
+
+    // Return empty data for static generation placeholder
+    if (patternId === 'default') {
+      return NextResponse.json({
+        ok: false,
+        error: 'Invalid pattern ID',
+      }, { status: 400 });
+    }
+
     const userId = req.headers.get('x-user-id');
     if (!userId) {
       return NextResponse.json(
@@ -50,7 +60,6 @@ export async function POST(
       );
     }
 
-    const { patternId } = await params;
     if (!patternId) {
       return NextResponse.json(
         { error: 'Missing patternId' },
@@ -151,6 +160,18 @@ export async function GET(
   { params }: { params: Promise<{ patternId: string }> }
 ) {
   try {
+    const { patternId } = await params;
+
+    // Return empty data for static generation placeholder
+    if (patternId === 'default') {
+      return NextResponse.json({
+        ok: true,
+        patternId: 'default',
+        feedbackCount: 0,
+        history: [],
+      });
+    }
+
     const userId = req.headers.get('x-user-id');
     if (!userId) {
       return NextResponse.json(
@@ -159,7 +180,6 @@ export async function GET(
       );
     }
 
-    const { patternId } = await params;
     if (!patternId) {
       return NextResponse.json(
         { error: 'Missing patternId' },

@@ -39,6 +39,19 @@ export async function GET(
   { params }: { params: Promise<{ patternId: string }> }
 ) {
   try {
+    const { patternId } = await params;
+
+    // Return empty data for static generation placeholder
+    if (patternId === 'default') {
+      return NextResponse.json({
+        ok: true,
+        patternId: 'default',
+        patternKey: null,
+        evidenceCount: 0,
+        evidence: [],
+      });
+    }
+
     const userId = req.headers.get('x-user-id');
     if (!userId) {
       return NextResponse.json(
@@ -47,7 +60,6 @@ export async function GET(
       );
     }
 
-    const { patternId } = await params;
     if (!patternId) {
       return NextResponse.json(
         { error: 'Missing patternId' },
