@@ -2153,7 +2153,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         body: JSON.stringify({
           message: cleanedText,
           userId: userId || 'anonymous',
-          userName: userName || 'Explorer',
+          userName: userName || 'Friend',
           sessionId,
           mode: realtimeMode, // Pass the current mode (dialogue/patient/scribe)
 
@@ -3317,7 +3317,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       startTime: timer.getStartTime().toISOString(),
       durationMinutes: timer.getDurationMinutes(),
       userId: userId || 'anonymous',
-      userName: userName || 'Explorer',
+      userName: userName || 'Friend',
       sessionId,
       lastSavedAt: new Date().toISOString(),
       wasExtended: false,
@@ -3379,7 +3379,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       startTime: timer.getStartTime().toISOString(),
       durationMinutes: timer.getDurationMinutes(),
       userId: userId || 'anonymous',
-      userName: userName || 'Explorer',
+      userName: userName || 'Friend',
       sessionId,
       lastSavedAt: new Date().toISOString(),
       wasExtended: savedSessionData.wasExtended,

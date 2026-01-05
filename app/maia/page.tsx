@@ -34,7 +34,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
 async function getInitialUserData() {
-  if (typeof window === 'undefined') return { id: 'guest', name: 'Explorer' };
+  if (typeof window === 'undefined') return { id: 'guest', name: 'Friend' };
 
   const currentUrl = window.location.hostname;
 
@@ -106,7 +106,7 @@ async function getInitialUserData() {
   }
 
   console.log('⚠️ [MAIA] No user data found, using defaults');
-  return { id: 'guest', name: 'Explorer' };
+  return { id: 'guest', name: 'Friend' };
 }
 
 function MAIAPageContent() {
@@ -139,7 +139,7 @@ function MAIAPageContent() {
 
   // Fix hydration: Initialize with safe defaults, update in useEffect
   const [explorerId, setExplorerId] = useState('guest');
-  const [explorerName, setExplorerName] = useState('Explorer');
+  const [explorerName, setExplorerName] = useState('Friend');
   const [userBirthDate, setUserBirthDate] = useState<string | undefined>();
   const [sessionId, setSessionId] = useState('');
   const [isMounted, setIsMounted] = useState(false);
@@ -220,7 +220,7 @@ function MAIAPageContent() {
 
       // Check Week 0 onboarding completion
       const week0Complete = localStorage.getItem('week0_onboarding_complete');
-      if (!week0Complete && initialData.name !== 'Explorer') {
+      if (!week0Complete && initialData.name !== 'Friend') {
         // Show onboarding for new users (but not for guest/default users)
         setShowWeekZeroOnboarding(true);
         console.log('🌱 [MAIA] Week 0 onboarding required for:', initialData.name);
@@ -306,9 +306,9 @@ function MAIAPageContent() {
         // Generate fresh guest identity
         const freshId = `guest_${Date.now()}`;
         localStorage.setItem('explorerId', freshId);
-        localStorage.setItem('explorerName', 'Explorer');
+        localStorage.setItem('explorerName', 'Friend');
         setExplorerId(freshId);
-        setExplorerName('Explorer');
+        setExplorerName('Friend');
         console.log('✅ [MAIA] Session reset - user now has fresh identity:', freshId);
         return;
       }
@@ -370,11 +370,11 @@ function MAIAPageContent() {
     // No stored user - create default guest session
     const guestId = `guest_${Date.now()}`;
     localStorage.setItem('explorerId', guestId);
-    localStorage.setItem('explorerName', 'Explorer');
+    localStorage.setItem('explorerName', 'Friend');
     localStorage.setItem('betaOnboardingComplete', 'true');
     localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
     setExplorerId(guestId);
-    setExplorerName('Explorer');
+    setExplorerName('Friend');
     console.log('✅ [MAIA] Created guest session');
   }, [explorerId, explorerName]);
 

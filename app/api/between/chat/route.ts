@@ -1023,7 +1023,7 @@ export async function POST(req: NextRequest) {
         chatType: 'between-member',
         endpoint: '/api/between/chat',
         mode: mode || 'dialogue', // Pass mode (Talk/Care/Note) for appropriate system prompts
-        userName: userName || 'Explorer',
+        userName: userName || 'Friend',
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
