@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
 
     // Find member by username
     const result = await query(
-      'SELECT id, passkey, username, password_hash, name, onboarded, onboarding_step FROM members WHERE username = $1',
+      'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step FROM members WHERE username = $1',
       [username.toLowerCase()]
     );
 
@@ -61,6 +61,7 @@ export async function POST(request: NextRequest) {
         id: member.id,
         username: member.username,
         name: member.name,
+        preferredName: member.preferred_name || member.name,
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step
       }

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail } from 'lucide-react';
+import { Mail, Infinity } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 
@@ -44,22 +44,24 @@ export default function SigninPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Validate name isn't a UUID (safety check)
-        const rawName = data.member.name || '';
-        const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(rawName);
-        const validName = isUUID ? (data.member.username?.charAt(0).toUpperCase() + data.member.username?.slice(1) || 'Friend') : (rawName || 'Friend');
+        // Use preferredName if available, fallback to name with UUID check
+        const preferredName = data.member.preferredName || data.member.name || '';
+        const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(preferredName);
+        const validName = isUUID ? (data.member.username?.charAt(0).toUpperCase() + data.member.username?.slice(1) || 'Friend') : (preferredName || 'Friend');
 
         // Server auth succeeded - store session locally
         const user = {
           id: data.member.id,
           username: data.member.username,
           name: validName,
+          preferredName: validName,
           onboarded: data.member.onboarded,
         };
 
         localStorage.setItem('beta_user', JSON.stringify(user));
         localStorage.setItem('explorerId', user.id);
         localStorage.setItem('explorerName', validName);
+        localStorage.setItem('explorerPreferredName', validName);
         localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
 
         // Redirect based on onboarding status
@@ -134,9 +136,9 @@ export default function SigninPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
 
       {/* Sacred Holoflower */}
-      <div className="mb-12">
+      <div className="mb-4 z-10 relative">
         <div className="w-40 h-40 mx-auto">
-          <Holoflower size="xl" glowIntensity="medium" animate={true} />
+          <Holoflower size="xl" glowIntensity="low" animate={true} />
         </div>
       </div>
 
@@ -150,7 +152,7 @@ export default function SigninPage() {
           background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(110, 231, 183, 0.05), rgba(255, 255, 255, 0.15))',
           backdropFilter: 'blur(8px)',
           border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 35px 70px -12px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(14, 116, 144, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 0 60px rgba(251, 191, 36, 0.3), 0 0 100px rgba(245, 158, 11, 0.2), 0 0 140px rgba(217, 119, 6, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
         }}
       >
         <h1 className="text-2xl font-extralight text-teal-900 mb-6 text-center tracking-[0.2em]">
@@ -218,23 +220,28 @@ export default function SigninPage() {
           <button
             type="button"
             onClick={() => setShowRecovery(true)}
-            className="text-sm font-light px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md"
-            style={{ color: '#374151', backgroundColor: 'rgba(255,255,255,0.5)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+            className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md bg-white/60 text-slate-500 shadow-sm"
           >
-            Forgot your passkey or password?
+            <span className="text-slate-500">Forgot your passkey or password?</span>
           </button>
         </div>
 
         <div className="mt-4 text-center">
           <button
             onClick={() => router.push('/begin')}
-            className="text-sm font-light px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md"
-            style={{ color: '#374151', backgroundColor: 'rgba(255,255,255,0.5)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}
+            className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md bg-white/60 text-slate-500 shadow-sm"
           >
-            New to Soullab? Begin Journey
+            <span className="text-slate-500">New to Soullab? Begin Journey</span>
           </button>
         </div>
       </motion.div>
+
+      {/* Infinity Loop */}
+      <div className="mt-24">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 12c-2-2.67-4-4-6-4a4 4 0 1 0 0 8c2 0 4-1.33 6-4Zm0 0c2 2.67 4 4 6 4a4 4 0 0 0 0-8c-2 0-4 1.33-6 4Z" />
+        </svg>
+      </div>
 
       {/* Recovery Modal */}
       {showRecovery && (

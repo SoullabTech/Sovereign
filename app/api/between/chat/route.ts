@@ -24,6 +24,7 @@ import { renderVoice } from '@/lib/voice/voiceRenderer';
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
 import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
+import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -628,6 +629,14 @@ export async function POST(req: NextRequest) {
     // 💾 ENSURE SESSION EXISTS: Create or update session record for persistence
     await ensureSession(safeSessionId);
     console.log(`[Chat API] Session ensured: ${safeSessionId}`);
+
+    // 🏷️ NAME CHANGE DETECTION: Check if user wants to change what MAIA calls them
+    if (!effectiveUserId.startsWith('anon:')) {
+      const nameChangeResult = await processNameChangeIfDetected(message, effectiveUserId);
+      if (nameChangeResult.detected && nameChangeResult.updated) {
+        console.log(`[Chat API] 🏷️ Name change detected and updated: "${nameChangeResult.newName}"`);
+      }
+    }
 
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     const conversationHistory = await getConversationHistory(safeSessionId, 20);

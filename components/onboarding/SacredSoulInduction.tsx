@@ -69,6 +69,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
   const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing' | 'recovery'>('arrival');
   const [soulKey, setSoulKey] = useState('');
   const [name, setName] = useState('');
+  const [preferredName, setPreferredName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -212,6 +213,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
         // New soul arriving - extract name from passkey if it follows SOULLAB- format
         const extractedName = extractFirstName(soulKey);
         setName(extractedName);
+        setPreferredName(extractedName); // Default preferred name to extracted name
         setPhase('creation');
       }
     } else {
@@ -281,6 +283,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
           username: username.trim().toLowerCase(),
           password,
           name: name.trim(),
+          preferredName: preferredName.trim() || name.trim(),
         }),
       });
 
@@ -335,6 +338,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
             username: username.trim().toLowerCase(),
             password,
             name: name.trim(),
+            preferredName: preferredName.trim() || name.trim(),
           }),
         });
 
@@ -814,7 +818,13 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         <input
                           type="text"
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            // If preferred name matches old name, update it too
+                            if (preferredName === name || !preferredName) {
+                              setPreferredName(e.target.value);
+                            }
+                          }}
                           placeholder="NAME"
                           className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                           style={{
@@ -824,6 +834,28 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.2)',
                           }}
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
+                          What should MAIA call you?
+                        </label>
+                        <input
+                          type="text"
+                          value={preferredName}
+                          onChange={(e) => setPreferredName(e.target.value)}
+                          placeholder="NICKNAME OR NAME"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(110, 231, 183, 0.2), rgba(127, 181, 179, 0.15))',
+                            border: '1px solid rgba(14, 116, 144, 0.3)',
+                            color: '#134e4a',
+                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0, 0, 0, 0.2)',
+                          }}
+                        />
+                        <p className="text-teal-600/70 text-xs font-light mt-2 text-center">
+                          You can change this anytime by telling MAIA "Call me..."
+                        </p>
                       </div>
 
                       <div>

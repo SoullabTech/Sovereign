@@ -16,7 +16,7 @@ function hashPassword(password: string): string {
 
 export async function POST(request: NextRequest) {
   try {
-    const { passkey, username, password, name, email } = await request.json();
+    const { passkey, username, password, name, email, preferredName } = await request.json();
 
     if (!passkey || !username || !password) {
       return NextResponse.json(
@@ -55,10 +55,10 @@ export async function POST(request: NextRequest) {
     const passwordHash = hashPassword(password);
 
     const result = await query(
-      `INSERT INTO members (passkey, username, password_hash, name, email, onboarding_step)
-       VALUES ($1, $2, $3, $4, $5, 'test-elemental')
-       RETURNING id, username, name, onboarded, onboarding_step, created_at`,
-      [passkey.toUpperCase(), username.toLowerCase(), passwordHash, name || username, email]
+      `INSERT INTO members (passkey, username, password_hash, name, preferred_name, email, onboarding_step)
+       VALUES ($1, $2, $3, $4, $5, $6, 'test-elemental')
+       RETURNING id, username, name, preferred_name, onboarded, onboarding_step, created_at`,
+      [passkey.toUpperCase(), username.toLowerCase(), passwordHash, name || username, preferredName || name || username, email]
     );
 
     const member = result.rows[0];
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
         id: member.id,
         username: member.username,
         name: member.name,
+        preferredName: member.preferred_name,
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step
       }
