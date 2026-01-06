@@ -13,12 +13,33 @@ if [ -d "app/api" ]; then
   mv app/api /tmp/maia-api-backup-$$
 fi
 
+# Move dynamic routes that can't be statically exported
+echo "📦 Moving dynamic routes aside (served from production server)..."
+mkdir -p /tmp/maia-dynamic-backup-$$
+for route in "app/caseload" "app/admin/partners/prelude" "app/community/commons"; do
+  if [ -d "$route" ]; then
+    mv "$route" /tmp/maia-dynamic-backup-$$/
+  fi
+done
+
 # Ensure we restore on exit
 cleanup() {
   echo "📦 Cleaning up..."
   # Restore API routes
   if [ -d "/tmp/maia-api-backup-$$" ]; then
     mv /tmp/maia-api-backup-$$ app/api
+  fi
+  # Restore dynamic routes
+  if [ -d "/tmp/maia-dynamic-backup-$$" ]; then
+    for item in /tmp/maia-dynamic-backup-$$/*/; do
+      basename=$(basename "$item")
+      case "$basename" in
+        caseload) mv "$item" app/ ;;
+        prelude) mkdir -p app/admin/partners && mv "$item" app/admin/partners/ ;;
+        commons) mkdir -p app/community && mv "$item" app/community/ ;;
+      esac
+    done
+    rm -rf /tmp/maia-dynamic-backup-$$
   fi
   # Restore tsconfig in next.config.js
   sed -i '' "s/tsconfigPath: 'tsconfig.capacitor.json'/tsconfigPath: 'tsconfig.core.json'/" next.config.js 2>/dev/null || true
