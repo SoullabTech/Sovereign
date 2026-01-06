@@ -38,7 +38,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isProcessing = false,
     isSpeaking = false,
     autoStart = false, // Disabled to prevent infinite restart loops
-    silenceThreshold = 6000, // 6s to capture full thoughts and complex sentences - increased for longer pauses
+    silenceThreshold = 8000, // 8s to capture full thoughts - generous buffer so user doesn't feel rushed
     vadSensitivity = 0.3
   } = props;
 
@@ -79,7 +79,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
   const hasSpokenRef = useRef(false); // Track if user has spoken at all (to differentiate from background noise)
-  const adaptiveSilenceThreshold = 1500; // 1.5 seconds - responsive but allows brief pauses
+  const adaptiveSilenceThreshold = 3500; // 3.5 seconds - generous buffer for natural pauses and thinking
 
   // Function refs to avoid temporal dead zone in useImperativeHandle
   const startListeningFnRef = useRef<() => void>();
