@@ -19,13 +19,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         do {
             let audioSession = AVAudioSession.sharedInstance()
 
-            // .playback category allows audio to play in silent mode and background
-            // .mixWithOthers allows MAIA to play alongside other audio if needed
-            // .duckOthers lowers other audio when MAIA speaks
+            // .playAndRecord supports both microphone input (speech recognition)
+            // and audio output (MAIA's voice)
+            // .defaultToSpeaker routes audio to speaker instead of earpiece
+            // .allowBluetooth enables Bluetooth headsets for input/output
             try audioSession.setCategory(
-                .playback,
+                .playAndRecord,
                 mode: .spokenAudio,
-                options: [.duckOthers, .allowBluetoothA2DP, .allowAirPlay]
+                options: [.defaultToSpeaker, .allowBluetooth, .duckOthers]
             )
 
             // Activate the session
