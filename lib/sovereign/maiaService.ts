@@ -669,13 +669,14 @@ This is how friends actually talk - pattern interruption, elegant reframes, well
 
 ⚠️  CRITICAL TALK MODE RULES - OVERRIDE ALL OTHER EXAMPLES:
 NEVER say: "How can I help you?" / "How can I assist you?" / "What can I do for you?" / "What would you like to explore?" / "Where do you want to start?"
-INSTEAD say: "Good morning, Kelly! Glad to see you back." / "Hey there. How's it going?" / "Hi. What's on your mind?" / "How have things been?"
+INSTEAD: Use the user's actual name (from USER IDENTIFICATION below) in greetings - or use "there" or "friend" if no name is provided.
 
-Examples of good Talk mode greetings:
-- Returning with name: "Good morning, Kelly! Glad to see you back."
-- With context: "Hey Kelly, still working with that project we discussed?"
+Examples of good Talk mode greetings (replace [Name] with actual user's name):
+- Returning with name: "Good morning, [Name]! Glad to see you back."
+- With context: "Hey [Name], still working with that project we discussed?"
 - First contact: "Hi there. Good to see you. How are you?"
-- Time-aware: "Good evening, Kelly. How's it been today?"${fieldAwareness}`;
+- Time-aware: "Good evening, [Name]. How's it been today?"
+- No name known: "Hi there. How's it going?" / "Hey friend. What's on your mind?"${fieldAwareness}`;
         break;
       case 'counsel':
         modeAdaptation = '\n\n💚 CARE MODE — WHO MAIA IS:\nMAIA shows up as a caring, capable guide - here to support, direct, and hold space for growth. Therapeutic language is natural. Clear next steps, explicit validation, structure when needed. This is the place for "I\'m here to help" and active support.';
@@ -744,6 +745,19 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     (meta as any).wisdomRouting = wisdomRouting;
   }
 
+  // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
+  // This prevents name contamination from system prompt examples that mention Kelly (the creator)
+  const currentUserName = (meta as any)?.userName as string | undefined;
+  const userIdentification = currentUserName && currentUserName.toLowerCase() !== 'friend'
+    ? `\n\n👤 USER IDENTIFICATION (CRITICAL):
+The person you are speaking with is named "${currentUserName}".
+- Use this name when greeting them or addressing them by name
+- Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
+- "${currentUserName}" is NOT Kelly unless their name is literally "Kelly"`
+    : `\n\n👤 USER IDENTIFICATION:
+The current user has not provided their name. Address them as "friend" or "there" when needed.
+- Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
+
   // 🧬 AWARENESS-ADAPTIVE PROMPTING: Adapt based on developmental readiness
   let baseSystemPrompt = `${MAIA_RELATIONAL_SPEC}
 
@@ -751,7 +765,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -938,6 +952,20 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
 - You can still be helpful and warm - just don't claim to remember anything`;
   }
 
+  // 👤 USER IDENTIFICATION (CORE path): Explicitly tell MAIA who the current user is
+  const currentUserNameCore = (meta as any)?.userName as string | undefined;
+  if (currentUserNameCore && currentUserNameCore.toLowerCase() !== 'friend') {
+    adaptivePrompt = adaptivePrompt + `\n\n👤 USER IDENTIFICATION (CRITICAL):
+The person you are speaking with is named "${currentUserNameCore}".
+- Use this name when greeting them or addressing them by name
+- Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
+- "${currentUserNameCore}" is NOT Kelly unless their name is literally "Kelly"`;
+  } else {
+    adaptivePrompt = adaptivePrompt + `\n\n👤 USER IDENTIFICATION:
+The current user has not provided their name. Address them as "friend" or "there" when needed.
+- Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
+  }
+
   // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
   const wisdomRoutingCore = routeWisdom(input);
   if (wisdomRoutingCore.activated) {
@@ -1098,6 +1126,20 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + '\n\n' + wisdomRoutingDeep.promptInjection;
     // Store in meta for potential tool reveal in response
     (meta as any).wisdomRouting = wisdomRoutingDeep;
+  }
+
+  // 👤 USER IDENTIFICATION (DEEP path): Explicitly tell MAIA who the current user is
+  const currentUserNameDeep = (meta as any)?.userName as string | undefined;
+  if (currentUserNameDeep && currentUserNameDeep.toLowerCase() !== 'friend') {
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n👤 USER IDENTIFICATION (CRITICAL):
+The person you are speaking with is named "${currentUserNameDeep}".
+- Use this name when greeting them or addressing them by name
+- Do NOT confuse this user with Kelly (the creator of Soullab) who is mentioned elsewhere in your context
+- "${currentUserNameDeep}" is NOT Kelly unless their name is literally "Kelly"`;
+  } else {
+    (meta as any).selfletPromptBlock = ((meta as any).selfletPromptBlock || '') + `\n\n👤 USER IDENTIFICATION:
+The current user has not provided their name. Address them as "friend" or "there" when needed.
+- Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
   }
 
   // 🔄 CROSS-SESSION RECALL: Merge cross-session turns if current session is empty
