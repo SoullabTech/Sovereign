@@ -87,6 +87,47 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Embedding Worker - Async Queue Consumer
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Processes embedding_jobs queue, generates vectors via Ollama
+  # Same build as maia, different entrypoint
+  #
+  # Deploy: docker compose -f docker-compose.production.yml up -d --build maia-embed-worker
+  # Logs:   docker compose -f docker-compose.production.yml logs -f maia-embed-worker
+  maia-embed-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: maia-embed-worker
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      MAIA_EMBEDDINGS_MODE: queue
+      # DB inside compose network
+      DATABASE_URL: postgresql://soullab:${POSTGRES_PASSWORD}@postgres:5432/maia_consciousness
+      # Ollama on host (EC2)
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      OLLAMA_EMBED_MODEL: nomic-embed-text
+      # Tuning
+      EMBEDDING_MAX_ATTEMPTS: "5"
+
+    command: ["npx", "tsx", "scripts/embedding_worker.ts"]
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # PostgreSQL - Consciousness Data Persistence
   # ═════════════════════════════════════════════════════════════════════════════
   postgres:
