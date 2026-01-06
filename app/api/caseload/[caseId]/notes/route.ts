@@ -10,6 +10,8 @@ export const dynamic = 'error';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { CaseStore } from '@/lib/caseload/CaseStore';
+import { CaseMemoryService } from '@/lib/caseload/CaseMemoryService';
+import { CasePatternService } from '@/lib/caseload/CasePatternService';
 import type { CreateNoteInput, NoteListFilters } from '@/lib/caseload/types';
 
 interface RouteParams {
@@ -152,6 +154,32 @@ export async function POST(request: NextRequest, context: RouteParams) {
     }
 
     const newNote = await CaseStore.createNote(caseId, memberId, noteInput as CreateNoteInput);
+
+    // Ingest note content into case memory (async, non-blocking)
+    try {
+      await CaseMemoryService.ingestText({
+        caseId,
+        memberId,
+        sourceType: 'note',
+        sourceId: newNote.id,
+        occurredAt: newNote.session_date,
+        content: newNote.content,
+        metadata: {
+          note_type: newNote.note_type,
+          themes_observed: newNote.themes_observed,
+          interventions_used: newNote.interventions_used,
+          element_focus: newNote.element_focus,
+          spiral_movement: newNote.spiral_movement,
+        },
+        embed: true,
+      });
+
+      // Update pattern aggregations
+      await CasePatternService.upsert(caseId);
+    } catch (memoryErr) {
+      // Don't fail the request if memory ingestion fails
+      console.error('[CASELOAD] Memory ingestion error (non-fatal):', memoryErr);
+    }
 
     return NextResponse.json({
       success: true,

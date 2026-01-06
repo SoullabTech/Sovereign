@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { SacredCard } from '@/components/ui/SacredCard';
 import { CaptureLinker } from '@/components/caseload/CaptureLinker';
+import { CaseMemoryPanel } from '@/components/caseload/CaseMemoryPanel';
 import type { CaseWithStats, CaseNote, Element, CaseStatus, UpdateCaseInput } from '@/lib/caseload/types';
 
 // Element configuration
@@ -331,8 +332,15 @@ export default function CaseDetailPage() {
             </SacredCard>
           </div>
 
-          {/* Right column - Notes timeline */}
-          <div className="lg:col-span-2">
+          {/* Right column - Memory + Notes */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Case Memory Panel */}
+            <SacredCard variant="glass" size="md">
+              <h3 className="text-sm font-medium text-neutral-silver/60 mb-4">Case Memory</h3>
+              <CaseMemoryPanel caseId={caseId} memberId={getMemberId() || ''} />
+            </SacredCard>
+
+            {/* Notes timeline */}
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-medium text-gold-divine">Session Notes</h2>
               <button

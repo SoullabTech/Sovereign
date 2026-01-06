@@ -8,3 +8,4 @@ export { CaseCard } from './CaseCard';
 export { CaseList } from './CaseList';
 export { NoteEditor } from './NoteEditor';
 export { CaptureLinker } from './CaptureLinker';
+export { CaseMemoryPanel } from './CaseMemoryPanel';
