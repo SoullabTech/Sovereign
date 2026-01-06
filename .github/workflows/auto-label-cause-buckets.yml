@@ -30,11 +30,11 @@ jobs:
               labelsToAdd.add('bluetooth');
             }
 
-            // Permissions / privacy (strict: requires Settings path or explicit permission + mic/speech combo)
+            // Permissions / privacy (strict: requires mic/speech mention + either Settings path or permission word)
             const hasSettingsPath = /(privacy\s*(&|and)\s*security|settings\s*→|settings\s*>)/.test(text);
             const hasPermissionWord = /(permission|permissions|denied|not allowed|access denied)/.test(text);
             const hasMicOrSpeech = /(microphone|speech recognition|mic permission)/.test(text);
-            if (hasSettingsPath || (hasPermissionWord && hasMicOrSpeech)) {
+            if ((hasSettingsPath && hasMicOrSpeech) || (hasPermissionWord && hasMicOrSpeech)) {
               labelsToAdd.add('permissions');
             }
 
