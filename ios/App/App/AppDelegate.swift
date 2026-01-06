@@ -1,6 +1,5 @@
 import UIKit
 import Capacitor
-import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -8,34 +7,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Configure audio session for MAIA voice playback
-        // This ensures audio plays even when phone is in silent mode
-        // and continues when app is backgrounded
-        configureAudioSession()
+        // Audio session is configured by Capacitor speech-recognition plugin
+        // when microphone access is requested
         return true
-    }
-
-    private func configureAudioSession() {
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-
-            // .playAndRecord supports both microphone input (speech recognition)
-            // and audio output (MAIA's voice)
-            // .defaultToSpeaker routes audio to speaker instead of earpiece
-            // .allowBluetooth enables Bluetooth headsets for input/output
-            try audioSession.setCategory(
-                .playAndRecord,
-                mode: .spokenAudio,
-                options: [.defaultToSpeaker, .allowBluetooth, .duckOthers]
-            )
-
-            // Activate the session
-            try audioSession.setActive(true)
-
-            print("✅ MAIA Audio Session configured successfully")
-        } catch {
-            print("❌ Failed to configure audio session: \(error.localizedDescription)")
-        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
