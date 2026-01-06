@@ -22,6 +22,9 @@ jobs:
             const body  = (issue.body  || "").toLowerCase();
             const text = `${title}\n\n${body}`;
 
+            // Current labels on the issue
+            const currentLabels = new Set((issue.labels || []).map(l => (typeof l === "string" ? l : l.name)));
+
             // Labels we may add (and auto-create if missing)
             const LABEL_DEFS = {
               "voice":        { color: "6f42c1", description: "Voice / mic / speech / audio pipeline" },
@@ -78,6 +81,9 @@ jobs:
             const hasNumberedSteps = /(^|\n)\s*(1[\).\:]|step\s*1[\)\:\.]|-\s*\[\s*\]\s*)/i.test(issue.body || "");
             const hasExpectedActual = hasAny(["expected:", "actual:", "expected behavior", "actual behavior"]);
             const likelyMissingRepro = !(mentionsSteps || hasNumberedSteps || hasExpectedActual);
+
+            // If repro info is now present, remove needs-repro (self-healing on edits)
+            const shouldRemoveNeedsRepro = !likelyMissingRepro && currentLabels.has("needs-repro");
 
             // Collect labels to add
             const desired = new Set();
@@ -138,3 +144,19 @@ jobs:
               issue_number: issue.number,
               labels,
             });
+
+            // Self-healing: remove needs-repro if repro info was added
+            if (shouldRemoveNeedsRepro) {
+              core.info("Removing label: needs-repro (repro info detected)");
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: issue.number,
+                  name: "needs-repro",
+                });
+              } catch (err) {
+                // ignore if missing / already removed
+                if (err.status !== 404) throw err;
+              }
+            }
