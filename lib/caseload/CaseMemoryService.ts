@@ -8,8 +8,22 @@
 
 import { query } from '@/lib/db/postgres';
 import { generateLocalEmbedding } from '@/lib/memory/embeddings';
+import { EmbeddingQueueService } from '@/lib/ai/EmbeddingQueueService';
+import { embedWithOllama } from '@/lib/ai/localEmbeddingClient';
 
 export type MemorySourceType = 'note' | 'capture' | 'consultation' | 'manual';
+export type EmbedMode = 'sync' | 'queue' | 'none';
+
+/**
+ * Get embedding mode from explicit param or environment
+ */
+function getEmbedMode(explicit?: EmbedMode): EmbedMode {
+  if (explicit) return explicit;
+  const v = (process.env.MAIA_EMBEDDINGS_MODE || 'sync').toLowerCase();
+  if (v === 'queue') return 'queue';
+  if (v === 'none') return 'none';
+  return 'sync';
+}
 
 export interface CaseMemoryChunk {
   id: string;
@@ -83,6 +97,8 @@ export class CaseMemoryService {
 
   /**
    * Ingest text content into memory chunks with optional embedding
+   *
+   * @param embedMode - 'sync' (default): embed inline, 'queue': enqueue for async, 'none': no embedding
    */
   static async ingestText(params: {
     caseId: string;
@@ -92,7 +108,8 @@ export class CaseMemoryService {
     occurredAt?: string;
     content: string;
     metadata?: Record<string, unknown>;
-    embed?: boolean;
+    embed?: boolean; // Legacy: if false, uses 'none' mode
+    embedMode?: EmbedMode;
   }): Promise<{ inserted: number }> {
     const {
       caseId,
@@ -103,7 +120,15 @@ export class CaseMemoryService {
       content,
       metadata = {},
       embed = true,
+      embedMode: explicitMode,
     } = params;
+
+    // Determine embedding mode: explicit > env > legacy embed param
+    const embedMode = explicitMode
+      ? explicitMode
+      : embed === false
+        ? 'none'
+        : getEmbedMode();
 
     const chunks = chunkText(content);
     if (!chunks.length) return { inserted: 0 };
@@ -111,59 +136,80 @@ export class CaseMemoryService {
     let inserted = 0;
 
     for (const chunk of chunks) {
-      let embedding: number[] | null = null;
-      let embeddingModel: string | null = null;
-      let embeddedAt: string | null = null;
+      // Mode: sync - embed inline and insert
+      if (embedMode === 'sync') {
+        let embedding: number[] | null = null;
+        let embeddingModel: string | null = null;
 
-      if (embed) {
         try {
-          embedding = await generateLocalEmbedding(chunk);
-          if (embedding && embedding.length > 0) {
-            embeddingModel = 'nomic-embed-text';
-            embeddedAt = new Date().toISOString();
-          }
+          const result = await embedWithOllama({ text: chunk });
+          embedding = result.embedding;
+          embeddingModel = result.model;
         } catch (err) {
-          console.warn('[CaseMemory] Embedding failed, storing without vector:', err);
+          console.warn('[CaseMemory] Sync embedding failed, storing without vector:', err);
         }
+
+        const hasEmbedding = embedding && embedding.length > 0;
+
+        await query(
+          `INSERT INTO case_memory_chunks (
+            case_id, member_id, source_type, source_id,
+            occurred_at, content, metadata,
+            embedding, embedding_model, embedded_at
+          ) VALUES (
+            $1, $2, $3, $4,
+            $5, $6, $7,
+            ${hasEmbedding ? '$8::vector' : 'NULL'}, $9, ${hasEmbedding ? 'now()' : 'NULL'}
+          )`,
+          hasEmbedding
+            ? [
+                caseId,
+                memberId,
+                sourceType,
+                sourceId,
+                occurredAt,
+                chunk,
+                JSON.stringify(metadata),
+                toVectorLiteral(embedding!),
+                embeddingModel,
+              ]
+            : [
+                caseId,
+                memberId,
+                sourceType,
+                sourceId,
+                occurredAt,
+                chunk,
+                JSON.stringify(metadata),
+                null,
+                null,
+              ]
+        );
+
+        inserted += 1;
+        continue;
       }
 
-      const hasEmbedding = embedding && embedding.length > 0;
-
-      await query(
+      // Mode: queue or none - insert without embedding
+      const ins = await query<{ id: string }>(
         `INSERT INTO case_memory_chunks (
           case_id, member_id, source_type, source_id,
           occurred_at, content, metadata,
           embedding, embedding_model, embedded_at
-        ) VALUES (
-          $1, $2, $3, $4,
-          $5, $6, $7,
-          ${hasEmbedding ? '$8::vector' : 'NULL'}, $9, $10
-        )`,
-        hasEmbedding
-          ? [
-              caseId,
-              memberId,
-              sourceType,
-              sourceId,
-              occurredAt,
-              chunk,
-              JSON.stringify(metadata),
-              toVectorLiteral(embedding!),
-              embeddingModel,
-              embeddedAt,
-            ]
-          : [
-              caseId,
-              memberId,
-              sourceType,
-              sourceId,
-              occurredAt,
-              chunk,
-              JSON.stringify(metadata),
-              null,
-              null,
-            ]
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NULL, NULL, NULL)
+        RETURNING id`,
+        [caseId, memberId, sourceType, sourceId, occurredAt, chunk, JSON.stringify(metadata)]
       );
+
+      const chunkId = ins.rows[0]?.id;
+
+      // Enqueue for async embedding if in queue mode
+      if (embedMode === 'queue' && chunkId) {
+        await EmbeddingQueueService.enqueueCaseMemoryChunk({
+          chunkId,
+          input: chunk,
+        });
+      }
 
       inserted += 1;
     }
