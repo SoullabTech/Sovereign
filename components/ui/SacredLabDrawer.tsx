@@ -39,7 +39,9 @@ import {
   Target,
   Sun,
   Smile,
-  ClipboardList
+  ClipboardList,
+  Briefcase,
+  Users
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -196,6 +198,24 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           label: 'Research Notes',
           action: () => onNavigate('/lab-notes'),
           description: 'Discoveries and investigations'
+        },
+      ],
+    },
+    {
+      title: 'PRACTITIONER',
+      icon: '⚕️',
+      items: [
+        {
+          icon: Briefcase,
+          label: 'Caseload',
+          action: () => onNavigate('/caseload'),
+          description: 'Manage client cases with MAIA consultation'
+        },
+        {
+          icon: Users,
+          label: 'Consult MAIA',
+          action: () => onAction?.('caseload-consult'),
+          description: 'Cross-caseload clinical consultation'
         },
       ],
     },
