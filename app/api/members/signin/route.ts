@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'error';
+
 /**
  * Sign in existing member
  * Validates username/password and returns member data

@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'error';
+
 /**
  * Password Reset Flow
  * POST /api/members/reset-password - Request reset (sends email)

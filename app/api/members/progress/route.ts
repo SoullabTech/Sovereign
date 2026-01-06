@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'error';
+
 /**
  * Update member onboarding progress
  * Tracks which step the member has reached

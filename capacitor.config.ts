@@ -21,12 +21,12 @@ const devServer = {
 const config: CapacitorConfig = {
   appId: 'life.soullab.maia',
   appName: 'MAIA Consciousness Computing',
-  webDir: isProdLike ? 'out' : '.next/static',
+  webDir: 'out',
 
-  // Beta/prod: use bundled assets (no server.url)
-  // Dev: use live server for hot reload
+  // Beta/prod: load from soullab.life remote server
+  // Dev: use local dev server for hot reload
   server: isProdLike
-    ? { androidScheme: 'https' }
+    ? { url: 'https://soullab.life', androidScheme: 'https' }
     : devServer,
   plugins: {
     SplashScreen: {

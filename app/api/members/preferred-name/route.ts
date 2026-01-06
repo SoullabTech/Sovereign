@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'error';
+
 /**
  * Update member's preferred name
  * Called when user says "Call me X" in conversation
