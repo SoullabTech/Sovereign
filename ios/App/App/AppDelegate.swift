@@ -1,5 +1,6 @@
 import UIKit
 import Capacitor
+import AVFoundation
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -7,8 +8,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Configure audio session for MAIA voice playback
+        // This ensures audio plays even when phone is in silent mode
+        // and continues when app is backgrounded
+        configureAudioSession()
         return true
+    }
+
+    private func configureAudioSession() {
+        do {
+            let audioSession = AVAudioSession.sharedInstance()
+
+            // .playback category allows audio to play in silent mode and background
+            // .mixWithOthers allows MAIA to play alongside other audio if needed
+            // .duckOthers lowers other audio when MAIA speaks
+            try audioSession.setCategory(
+                .playback,
+                mode: .spokenAudio,
+                options: [.duckOthers, .allowBluetooth, .allowAirPlay]
+            )
+
+            // Activate the session
+            try audioSession.setActive(true)
+
+            print("✅ MAIA Audio Session configured successfully")
+        } catch {
+            print("❌ Failed to configure audio session: \(error.localizedDescription)")
+        }
     }
 
     func applicationWillResignActive(_ application: UIApplication) {

@@ -145,7 +145,8 @@ export class MaiaVoiceSystem {
   }
 
   // Set a safety timeout to prevent stuck isPlaying state
-  // If audio doesn't end within 60 seconds, force reset
+  // If audio doesn't end within 5 minutes, force reset
+  // NOTE: MAIA needs full range to vocalize thoughtful responses - don't cut her off!
   private setPlaybackTimeout() {
     this.clearPlaybackTimeout();
     this.playbackTimeoutId = setTimeout(() => {
@@ -167,7 +168,7 @@ export class MaiaVoiceSystem {
           }
         }
       }
-    }, 60000); // 60 second safety timeout
+    }, 300000); // 5 minute safety timeout - MAIA deserves full expression
   }
 
   // Clean text for speech without artificial pauses
