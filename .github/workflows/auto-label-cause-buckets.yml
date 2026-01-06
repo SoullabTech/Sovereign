@@ -33,7 +33,7 @@ jobs:
             // Permissions / privacy (strict: requires mic/speech mention + either Settings path or permission word)
             const hasSettingsPath = /(privacy\s*(&|and)\s*security|settings\s*→|settings\s*>)/.test(text);
             const hasPermissionWord = /(permission|permissions|denied|not allowed|access denied)/.test(text);
-            const hasMicOrSpeech = /(microphone|speech recognition|mic permission|dictation|transcription|transcribe)/.test(text);
+            const hasMicOrSpeech = /\b(microphone|speech recognition|mic permission|dictation|transcription|transcribe|voice typing)\b/.test(text);
             if ((hasSettingsPath && hasMicOrSpeech) || (hasPermissionWord && hasMicOrSpeech)) {
               labelsToAdd.add('permissions');
             }
