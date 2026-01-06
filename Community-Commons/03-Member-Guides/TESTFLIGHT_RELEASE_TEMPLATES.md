@@ -129,4 +129,55 @@ One-paragraph summaries for App Store Connect. Pick the flavor that fits.
 
 ---
 
+## Build Troubleshooting
+
+If the Capacitor build fails with weird prerender errors or ENOENT for routes:
+
+### Deep Clean (fixes 90% of issues)
+
+```bash
+# From repo root
+rm -rf .next out node_modules/.cache ios/App/build
+
+# Rebuild
+CAPACITOR_BUILD=1 MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
+npx cap sync ios
+```
+
+**Why:** Next.js caches route manifests and can reference deleted/moved routes.
+
+### If ENOENT persists after deep clean
+
+Then it's a real missing file, not cache:
+
+```bash
+# Check if the file exists
+ls -la app/api/ain/process/route.ts
+
+# Find what's referencing it
+rg "ain/process" -S app components lib
+```
+
+### iOS build directory conflict
+
+If you see `Could not delete /ios/App/build because it was not created by the build system`:
+
+```bash
+rm -rf ios/App/build
+npx cap sync ios
+```
+
+### Pod install fails
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+sudo xcodebuild -license accept
+cd ios/App/App
+pod repo update
+pod install
+cd ~/MAIA-SOVEREIGN
+```
+
+---
+
 *Last updated: 2026-01-06*

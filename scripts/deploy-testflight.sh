@@ -127,12 +127,19 @@ if [ "$SKIP_BUILD" = false ]; then
     echo "  Note: App content served from remote server, no static build needed"
 
     echo ""
-    echo "3. Syncing Capacitor"
+    echo "3. Cleaning Build Artifacts"
+    echo "---------------------------"
+    echo "  Removing stale .next, out, and cache directories..."
+    rm -rf "$PROJECT_DIR/.next" "$PROJECT_DIR/out" "$PROJECT_DIR/node_modules/.cache" "$IOS_DIR/build" 2>/dev/null || true
+    echo "  Clean complete"
+
+    echo ""
+    echo "4. Syncing Capacitor"
     echo "--------------------"
     CAPACITOR_MODE=beta npx cap sync ios
 
     echo ""
-    echo "4. Building iOS Archive"
+    echo "5. Building iOS Archive"
     echo "-----------------------"
     cd "$IOS_DIR"
 
@@ -161,7 +168,7 @@ if [ "$SKIP_BUILD" = false ]; then
     echo "  Archive created successfully"
 
     echo ""
-    echo "5. Exporting IPA"
+    echo "6. Exporting IPA"
     echo "----------------"
 
     # Remove old output
