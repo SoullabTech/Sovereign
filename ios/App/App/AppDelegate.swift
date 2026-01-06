@@ -25,7 +25,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             try audioSession.setCategory(
                 .playback,
                 mode: .spokenAudio,
-                options: [.duckOthers, .allowBluetooth, .allowAirPlay]
+                options: [.duckOthers, .allowBluetoothA2DP, .allowAirPlay]
             )
 
             // Activate the session
