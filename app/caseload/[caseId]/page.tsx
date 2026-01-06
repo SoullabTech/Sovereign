@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { SacredCard } from '@/components/ui/SacredCard';
 import { CaptureLinker } from '@/components/caseload/CaptureLinker';
 import { CaseMemoryPanel } from '@/components/caseload/CaseMemoryPanel';
+import { CaseConsultationPanel } from '@/components/caseload/CaseConsultationPanel';
 import type { CaseWithStats, CaseNote, Element, CaseStatus, UpdateCaseInput } from '@/lib/caseload/types';
 
 // Element configuration
@@ -338,6 +339,11 @@ export default function CaseDetailPage() {
             <SacredCard variant="glass" size="md">
               <h3 className="text-sm font-medium text-neutral-silver/60 mb-4">Case Memory</h3>
               <CaseMemoryPanel caseId={caseId} memberId={getMemberId() || ''} />
+            </SacredCard>
+
+            {/* MAIA Consultation Panel */}
+            <SacredCard variant="glass" size="md">
+              <CaseConsultationPanel caseId={caseId} memberId={getMemberId() || ''} />
             </SacredCard>
 
             {/* Notes timeline */}

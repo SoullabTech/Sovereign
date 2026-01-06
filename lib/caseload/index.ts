@@ -32,3 +32,4 @@ export * from './types';
 export { CaseStore } from './CaseStore';
 export { CaseMemoryService } from './CaseMemoryService';
 export { CasePatternService } from './CasePatternService';
+export { CaseConsultationService } from './CaseConsultationService';
