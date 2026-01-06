@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * Voice Journal Audio File Serve API
  * GET /api/journal/quick/audio-file?path=storage/audio/journals/...

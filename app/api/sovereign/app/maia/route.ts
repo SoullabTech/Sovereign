@@ -1,5 +1,5 @@
 // @ts-nocheck - Prototype file, not type-checked
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // backend: app/api/sovereign/app/maia/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 

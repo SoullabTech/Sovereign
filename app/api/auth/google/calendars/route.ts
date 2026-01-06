@@ -5,7 +5,7 @@
  * Used for selecting which calendar to use for focus events.
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';

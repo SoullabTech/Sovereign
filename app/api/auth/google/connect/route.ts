@@ -5,7 +5,7 @@
  * Returns the authorization URL for the frontend to redirect to.
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';

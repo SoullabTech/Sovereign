@@ -10,7 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GmailService } from '@/lib/gmail/GmailService';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 const TEST_USER_ID = 'soullab1@gmail.com';
 

@@ -10,7 +10,7 @@ import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
 import { pool } from '@/lib/db/postgres';
 import Stripe from 'stripe';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 async function getRawBody(request: NextRequest): Promise<Buffer> {
   const reader = request.body?.getReader();

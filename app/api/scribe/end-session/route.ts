@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // app/api/scribe/end-session/route.ts
 // API endpoint to end a session and generate summary
 

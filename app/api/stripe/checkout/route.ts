@@ -15,7 +15,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
 import Stripe from 'stripe';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 // Patron tier names from /patrons page
 type PatronTier = 'seedkeeper' | 'storyweaver' | 'sanctuary' | 'founder';

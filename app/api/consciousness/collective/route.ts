@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * COLLECTIVE CONSCIOUSNESS API
  *

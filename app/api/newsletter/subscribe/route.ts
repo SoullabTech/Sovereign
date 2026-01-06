@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db/postgres';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 interface SubscribeRequest {
   email: string;

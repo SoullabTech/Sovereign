@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * 📱⌚ Biometric Data Update API Route
  * Receives real-time biometric data from Apple Watch, Oura Ring, and other devices
