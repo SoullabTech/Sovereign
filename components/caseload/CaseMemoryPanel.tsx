@@ -169,7 +169,9 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
             title={
               embeddingBacklog > 200
                 ? 'High backlog - worker may be down or Ollama unreachable'
-                : 'Embedding queue pending'
+                : embeddingBacklog > 0
+                  ? 'Embedding queue pending'
+                  : 'Embedding queue healthy'
             }
             className={cn(
               'px-2 py-0.5 text-xs border rounded',

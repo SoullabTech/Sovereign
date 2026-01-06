@@ -44,8 +44,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Install psql for Render preDeployCommand (migrations run in runtime container)
-RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client \
+# Install psql for migrations + curl for worker preflight health checks
+RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy standalone output + static assets
@@ -61,6 +61,17 @@ COPY --from=builder --chown=node:node /app/node_modules/@prisma ./node_modules/@
 # Migrations for Render preDeployCommand
 COPY --from=builder --chown=node:node /app/database ./database
 COPY --from=builder --chown=node:node /app/prisma ./prisma
+
+# Scripts + tsx for embedding worker
+COPY --from=builder --chown=node:node /app/scripts ./scripts
+COPY --from=builder --chown=node:node /app/node_modules/tsx ./node_modules/tsx
+COPY --from=builder --chown=node:node /app/node_modules/esbuild ./node_modules/esbuild
+COPY --from=builder --chown=node:node /app/node_modules/get-tsconfig ./node_modules/get-tsconfig
+COPY --from=builder --chown=node:node /app/node_modules/resolve-pkg-maps ./node_modules/resolve-pkg-maps
+
+# Lib dependencies for worker scripts
+COPY --from=builder --chown=node:node /app/lib ./lib
+COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 
 USER node
 EXPOSE 3000

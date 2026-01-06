@@ -99,4 +99,34 @@ If you don't see an update: quit TestFlight, reopen, refresh again
 
 ---
 
+## Release Summary Templates
+
+One-paragraph summaries for App Store Connect. Pick the flavor that fits.
+
+### Option A — Ultra short (best default)
+
+```
+**Release Summary:** This build improves **{WHAT IMPROVED}**, fixes **{WHAT WAS BROKEN}**, and adds **{WHAT'S NEW}**. Please specifically test: **{TOP 3 TESTS}**. If anything fails, send **device + iOS + build # + screenshot/screen recording**.
+```
+
+### Option B — Voice-focused (great for MAIA)
+
+```
+**Release Summary:** This build improves **voice reliability**, specifically **{e.g., mic restart after MAIA speaks / transcription consistency / permission handling}**, and updates UI for **{e.g., ? Help button / Show Text toggle position}**. Please test: **(1) Talk mode transcribes**, **(2) MAIA speaks then mic works again**, **(3) ? opens Voice Help**, **(4) Show/Hide Text toggle works**. Report issues with **device + iOS + build # + steps + video**.
+```
+
+### Option C — Member-friendly tone
+
+```
+**Release Summary:** This build is meant to make MAIA feel smoother and more dependable. It updates **{FEATURE/FIX}** and adds **{FEATURE}** so troubleshooting is easier. Please try a quick **Talk → MAIA speaks → Talk again** loop, then check the **? Voice Help** and **Show/Hide Text** toggle. If anything feels off, share **your iPhone model, iOS version, build number, and a screenshot/video**.
+```
+
+### Example (filled in)
+
+```
+**Release Summary:** This build improves voice reliability by reducing mic restart failures after MAIA speaks, and adds an in-app **? Voice Help** sheet plus a safer position for the **Show Text** toggle. Please test: (1) Talk transcribes, (2) MAIA speaks then Talk works again, (3) ? opens help, (4) Show/Hide Text works. Report issues with device + iOS + build # + steps + video.
+```
+
+---
+
 *Last updated: 2026-01-06*
