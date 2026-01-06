@@ -24,9 +24,10 @@ export async function GET(request: NextRequest) {
     if (userId && userId !== 'guest' && !userId.startsWith('guest_')) {
       try {
         // Check if userId is a valid member ID, username, or passkey
+        // Note: id is UUID type, so we cast to text for string comparison
         const result = await query(
           `SELECT id, name, username, passkey, preferred_name FROM members
-           WHERE id = $1 OR username = $1 OR passkey = $1`,
+           WHERE id::text = $1 OR username = $1 OR passkey = $1`,
           [userId]
         );
 
