@@ -95,9 +95,9 @@ jobs:
             if (isCrash) desired.add("crash");
             if (likelyMissingRepro) desired.add("needs-repro");
 
-            // Don't label if nothing matched
-            if (desired.size === 0) {
-              core.info("No labels matched; skipping.");
+            // Skip if nothing to add AND nothing to remove
+            if (desired.size === 0 && !shouldRemoveNeedsRepro) {
+              core.info("No labels to add or remove; skipping.");
               return;
             }
 
@@ -134,18 +134,22 @@ jobs:
               await ensureLabel(name);
             }
 
-            // Add labels (idempotent)
+            // Add labels (only if there are any to add)
             const labels = Array.from(desired);
             core.info(`likelyMissingRepro=${likelyMissingRepro} shouldRemoveNeedsRepro=${shouldRemoveNeedsRepro}`);
             core.info(`desired_labels_to_add=${labels.join(",") || "(none)"}`);
-            core.info(`Adding labels: ${labels.join(", ")}`);
 
-            await github.rest.issues.addLabels({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: issue.number,
-              labels,
-            });
+            if (labels.length > 0) {
+              core.info(`Adding labels: ${labels.join(", ")}`);
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                labels,
+              });
+            } else {
+              core.info("No labels to add.");
+            }
 
             // Self-healing: remove needs-repro if repro info was added
             if (shouldRemoveNeedsRepro) {
