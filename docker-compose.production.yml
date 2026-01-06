@@ -127,7 +127,17 @@ services:
       # Tuning
       EMBEDDING_MAX_ATTEMPTS: "5"
 
-    command: ["npx", "tsx", "scripts/embedding_worker.ts"]
+    # Wait for Ollama before starting (prevents spam failures if Ollama is down)
+    command:
+      - sh
+      - -c
+      - |
+        until curl -sf ${OLLAMA_BASE_URL}/api/tags >/dev/null 2>&1; do
+          echo "waiting for ollama at ${OLLAMA_BASE_URL}..."
+          sleep 2
+        done
+        echo "ollama ready, starting worker..."
+        npx tsx scripts/embedding_worker.ts
 
     networks:
       - maia-network

@@ -82,10 +82,11 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
     fetchData();
   }, [fetchData]);
 
-  // Poll embedding backlog every 30s
+  // Poll embedding backlog
+  const BACKLOG_POLL_MS = 4_000;
   useEffect(() => {
     fetchBacklog();
-    const interval = setInterval(fetchBacklog, 30_000);
+    const interval = setInterval(fetchBacklog, BACKLOG_POLL_MS);
     return () => clearInterval(interval);
   }, [fetchBacklog]);
 
@@ -163,12 +164,23 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
         >
           {searching ? '...' : 'Search'}
         </button>
-        {typeof embeddingBacklog === 'number' && embeddingBacklog > 0 && (
+        {typeof embeddingBacklog === 'number' && (
           <span
-            title="Embedding queue pending"
-            className="px-2 py-0.5 text-xs bg-amber-900/60 text-amber-300 border border-amber-600/30 rounded animate-pulse"
+            title={
+              embeddingBacklog > 200
+                ? 'High backlog - worker may be down or Ollama unreachable'
+                : 'Embedding queue pending'
+            }
+            className={cn(
+              'px-2 py-0.5 text-xs border rounded',
+              embeddingBacklog > 200
+                ? 'bg-red-900/60 text-red-300 border-red-600/30 animate-pulse'
+                : embeddingBacklog > 0
+                  ? 'bg-amber-900/60 text-amber-300 border-amber-600/30 animate-pulse'
+                  : 'bg-emerald-900/20 text-emerald-300 border-emerald-600/20',
+            )}
           >
-            ⏳ {embeddingBacklog}
+            {embeddingBacklog > 200 ? '🚨' : '⏳'} {embeddingBacklog}
           </span>
         )}
       </div>
