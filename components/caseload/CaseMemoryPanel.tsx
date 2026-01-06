@@ -45,6 +45,17 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
   const [loading, setLoading] = useState(false);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [embeddingBacklog, setEmbeddingBacklog] = useState<number | null>(null);
+
+  const fetchBacklog = useCallback(async () => {
+    try {
+      const res = await fetch('/api/embeddings/backlog', { cache: 'no-store' });
+      const data = await res.json();
+      setEmbeddingBacklog(typeof data?.pending === 'number' ? data.pending : 0);
+    } catch {
+      setEmbeddingBacklog(null);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
     try {
@@ -70,6 +81,13 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Poll embedding backlog every 30s
+  useEffect(() => {
+    fetchBacklog();
+    const interval = setInterval(fetchBacklog, 30_000);
+    return () => clearInterval(interval);
+  }, [fetchBacklog]);
 
   const handleSearch = async () => {
     if (!query.trim()) return;
@@ -129,7 +147,7 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
   return (
     <div className={cn('space-y-4', className)}>
       {/* Search bar */}
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         <input
           type="text"
           value={query}
@@ -145,6 +163,14 @@ export const CaseMemoryPanel: React.FC<CaseMemoryPanelProps> = ({
         >
           {searching ? '...' : 'Search'}
         </button>
+        {typeof embeddingBacklog === 'number' && embeddingBacklog > 0 && (
+          <span
+            title="Embedding queue pending"
+            className="px-2 py-0.5 text-xs bg-amber-900/60 text-amber-300 border border-amber-600/30 rounded animate-pulse"
+          >
+            ⏳ {embeddingBacklog}
+          </span>
+        )}
       </div>
 
       {error && (
