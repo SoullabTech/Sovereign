@@ -157,6 +157,7 @@ jobs:
                 });
               } catch (err) {
                 // ignore if missing / already removed
-                if (err.status !== 404) throw err;
+                const status = err?.status || err?.response?.status || err?.statusCode;
+                if (status !== 404) throw err;
               }
             }
