@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // backend: app/api/admin/opus-pulse/facet-heatmap/route.ts
 
 import { NextRequest, NextResponse } from 'next/server';

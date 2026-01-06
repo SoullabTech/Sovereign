@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server'

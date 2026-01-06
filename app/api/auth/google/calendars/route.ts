@@ -5,8 +5,9 @@
  * Used for selecting which calendar to use for focus events.
  */
 
-export const dynamic = 'force-dynamic';
 export const revalidate = false;
+
+export const dynamic = 'force-static';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';

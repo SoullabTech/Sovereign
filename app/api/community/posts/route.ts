@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // app/api/community/posts/route.ts
 /**
  * COMMUNITY POSTS API

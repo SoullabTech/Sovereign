@@ -26,10 +26,11 @@ import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor'
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { CaptureToggle } from '@/components/capture/CaptureToggle';
+import { VoiceHelpSheet } from '@/components/help';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 
@@ -214,6 +215,7 @@ function MAIAPageContent() {
   // Removed: contributionAmount slider - now using fixed patron tiers
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
+  const [showVoiceHelp, setShowVoiceHelp] = useState(false);
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -549,6 +551,18 @@ function MAIAPageContent() {
                       <span className="text-xs">End</span>
                     </motion.button>
                   )}
+
+                  {/* Voice Help Button - Mobile */}
+                  <motion.button
+                    onClick={() => setShowVoiceHelp(true)}
+                    className="flex items-center justify-center w-6 h-6 rounded-full
+                             bg-amber-500/10 hover:bg-amber-500/20
+                             border border-amber-500/20 hover:border-amber-500/40
+                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                    title="Voice Help"
+                  >
+                    <HelpCircle className="w-3.5 h-3.5" />
+                  </motion.button>
                 </div>
 
                 {/* Journal Button - Mobile */}
@@ -688,6 +702,20 @@ function MAIAPageContent() {
                     <span className="hidden sm:inline">Session Active</span>
                   </div>
                 )}
+
+                {/* Voice Help Button - Desktop */}
+                <motion.button
+                  onClick={() => setShowVoiceHelp(true)}
+                  className="flex items-center justify-center w-8 h-8 rounded-full
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Voice Help"
+                >
+                  <HelpCircle className="w-4 h-4" />
+                </motion.button>
 
                 {/* Journal Button - Desktop */}
                 <motion.button
@@ -980,6 +1008,12 @@ function MAIAPageContent() {
               }
             }));
           }}
+        />
+
+        {/* Voice Help Sheet */}
+        <VoiceHelpSheet
+          isOpen={showVoiceHelp}
+          onClose={() => setShowVoiceHelp(false)}
         />
       </div>
       </SwipeNavigation>

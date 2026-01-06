@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 /**
  * 🎯 FACILITATOR SESSION PREP API - Mobile PWA Version
  *

@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // backend: app/api/ready/route.ts
 export const revalidate = false;
 import { NextResponse } from 'next/server';

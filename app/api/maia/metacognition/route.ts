@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // MAIA Metacognitive Reflection API
 // Enables MAIA to explain her own process and therapeutic framework usage
 

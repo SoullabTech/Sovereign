@@ -4,7 +4,8 @@
  * Check if a user has connected their Google account (Calendar + Gmail).
  */
 
-export const dynamic = 'force-dynamic';
+
+export const dynamic = 'force-static';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';

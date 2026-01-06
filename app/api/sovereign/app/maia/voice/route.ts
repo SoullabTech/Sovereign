@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // backend: app/api/sovereign/app/maia/voice/route.ts
 
 import { NextRequest, NextResponse } from "next/server";
