@@ -1,4 +1,5 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# backend/devops
 # Creates or updates MAIA triage labels (idempotent)
 # Usage:
 #   export REPO="SoullabTech/Sovereign"
@@ -9,6 +10,11 @@
 set -euo pipefail
 
 REPO="${REPO:-SoullabTech/Sovereign}"
+
+if ! command -v gh >/dev/null 2>&1; then
+  echo "Error: gh CLI not found. Install GitHub CLI first."
+  exit 1
+fi
 
 ensure_label () {
   local name="$1"
@@ -45,4 +51,6 @@ ensure_label "needs-repro" "6A737D" "Needs reproduction steps / info"
 ensure_label "testflight"  "0969DA" "TestFlight beta testing"
 
 echo "✅ Labels ensured on $REPO:"
-gh label list --repo "$REPO" | grep -E "^(P[0-2]|voice|ui|permissions|bluetooth|crash|needs-repro|testflight)\b" || true
+gh label list --repo "$REPO" \
+  | grep -E '^(P[0-2]|voice|ui|permissions|bluetooth|crash|needs-repro|testflight)([[:space:]]|$)' \
+  || true

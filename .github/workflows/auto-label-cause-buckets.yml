@@ -1,0 +1,78 @@
+name: Auto-label cause buckets (keyword based)
+
+on:
+  issues:
+    types: [opened, edited]
+
+permissions:
+  issues: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Apply cause-bucket labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const text = `${issue.title}\n${issue.body || ''}`.toLowerCase();
+
+            const labelsToAdd = new Set();
+
+            // Crash-ish
+            if (/(crash|force close|quit unexpectedly|app closed|fatal|sigabrt|exception)/.test(text)) {
+              labelsToAdd.add('crash');
+            }
+
+            // Bluetooth / routing
+            if (/(bluetooth|airpods|carplay|car audio|headphones|headset|handsfree|hfp|a2dp)/.test(text)) {
+              labelsToAdd.add('bluetooth');
+            }
+
+            // Permissions / privacy
+            if (/(permission|permissions|privacy|speech recognition|microphone|mic permission)/.test(text)) {
+              labelsToAdd.add('permissions');
+            }
+
+            // Voice / transcription (separate from permissions)
+            if (/(transcrib|transcription|listening|didn't hear|no words|no transcript|speech to text|stt|voice mode|mic not working)/.test(text)) {
+              labelsToAdd.add('voice');
+            }
+
+            // UI / layout
+            if (/(ui|layout|button|toggle|hidden|overlap|can.t find|not visible|tappable|tap target|sheet)/.test(text)) {
+              labelsToAdd.add('ui');
+            }
+
+            // Needs repro (very simple heuristic)
+            // If they left steps basically blank, add needs-repro.
+            const body = issue.body || '';
+            const stepsMatch = body.match(/##\s*Steps to reproduce[\s\S]*?(?=##\s|$)/i);
+            if (stepsMatch) {
+              const steps = stepsMatch[0]
+                .replace(/##\s*Steps to reproduce/i, '')
+                .replace(/[`>*#-]/g, '')
+                .trim();
+              if (steps.length < 25 || /^(n\/a|na|none|unknown|idk)$/i.test(steps)) {
+                labelsToAdd.add('needs-repro');
+              }
+            } else {
+              labelsToAdd.add('needs-repro');
+            }
+
+            const existing = new Set(issue.labels.map(l => (typeof l === 'string' ? l : l.name)));
+
+            const finalLabels = [...labelsToAdd].filter(l => !existing.has(l));
+            if (finalLabels.length === 0) {
+              core.info('No new cause-bucket labels to add.');
+              return;
+            }
+
+            core.info(`Adding labels: ${finalLabels.join(', ')}`);
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels: finalLabels
+            });
