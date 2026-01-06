@@ -286,9 +286,20 @@ export default function SigninPage() {
               Recover Your Account
             </h2>
 
-            <p className="text-teal-800/70 text-sm text-center mb-6">
-              Enter the email address associated with your account. We'll send your passkey and username.
+            <p className="text-teal-800/70 text-sm text-center mb-4">
+              Enter your email to receive your passkey and username.
             </p>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowRecovery(false);
+                router.push('/reset-password');
+              }}
+              className="w-full mb-4 py-2 text-amber-700/80 text-sm font-medium hover:text-amber-600 transition-colors duration-300 underline underline-offset-2"
+            >
+              Need to reset your password instead?
+            </button>
 
             {recoveryStatus === 'sent' ? (
               <div className="space-y-4">
