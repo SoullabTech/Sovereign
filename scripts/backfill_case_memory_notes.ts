@@ -61,7 +61,7 @@ async function main() {
   }
   if (since) {
     params.push(since);
-    where.push(`occurred_at >= $${params.length}::timestamptz`);
+    where.push(`session_date >= $${params.length}::date`);
   }
 
   params.push(limit);
@@ -72,16 +72,16 @@ async function main() {
     SELECT
       id,
       case_id,
-      member_id,
-      occurred_at,
+      practitioner_id,
+      session_date,
       content,
-      themes,
-      interventions,
+      themes_observed,
+      interventions_used,
       element_focus,
       spiral_movement
     FROM case_notes
     ${whereSql}
-    ORDER BY occurred_at ASC
+    ORDER BY session_date ASC
     LIMIT $${params.length}
     `,
     params
@@ -98,8 +98,8 @@ async function main() {
 
     const noteId = String(n.id);
     const cid = String(n.case_id);
-    const memberId = String(n.member_id);
-    const occurredAt = new Date(n.occurred_at).toISOString();
+    const memberId = String(n.practitioner_id);
+    const occurredAt = new Date(n.session_date).toISOString();
     const content = String(n.content || '').trim();
 
     if (!content) {
@@ -150,8 +150,8 @@ async function main() {
       occurredAt,
       content,
       metadata: {
-        themes: n.themes ?? null,
-        interventions: n.interventions ?? null,
+        themes: n.themes_observed ?? null,
+        interventions: n.interventions_used ?? null,
         element_focus: n.element_focus ?? null,
         spiral_movement: n.spiral_movement ?? null,
         backfilled: true,
