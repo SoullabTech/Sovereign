@@ -14,6 +14,7 @@ import { generateWithLocalModel } from '@/lib/ai/localModelClient';
 import { CaseStore } from './CaseStore';
 import { CaseMemoryService } from './CaseMemoryService';
 import { CasePatternService } from './CasePatternService';
+import { getSpiralogicContext, analyzeThemesThroughSpiralogic } from './SpiralogicConsultationContext';
 
 // Valid consultation types per DB constraint
 export type ConsultationType =
@@ -34,8 +35,13 @@ export interface ConsultationResult {
   risks_or_watchouts: string[];
   elemental_reflection?: {
     element_focus?: string;
+    facet_code?: string;
+    core_movement?: string;
+    shadow_pattern?: string;
+    gold_medicine?: string;
     spiral_movement?: string;
-    note?: string;
+    transition_readiness?: string;
+    note?: string; // Legacy field for backwards compatibility
   };
 }
 
@@ -103,6 +109,17 @@ export class CaseConsultationService {
       topK: 10,
     });
 
+    // Build Spiralogic context from case data
+    const spiralogicContext = getSpiralogicContext({
+      facetCode: caseData.facet_code,
+      primaryElement: caseData.primary_element,
+      spiralStage: caseData.spiral_stage,
+    });
+
+    // Analyze themes through Spiralogic if patterns exist
+    const patternThemes = patternsRow?.summary?.themesTop?.map(t => t.value) || [];
+    const themeAnalysis = analyzeThemesThroughSpiralogic(patternThemes);
+
     // Build context for MAIA
     const contextProvided = {
       case: {
@@ -116,39 +133,61 @@ export class CaseConsultationService {
         facet_code: caseData.facet_code,
       },
       patterns: patternsRow?.summary || null,
+      spiralogic: {
+        currentFacet: spiralogicContext.currentFacet?.code || null,
+        coreMovement: spiralogicContext.coreMovement,
+        coreQuestion: spiralogicContext.coreQuestion,
+        themeAnalysis: themeAnalysis.reasoning,
+      },
       recent_memory_count: recentMem.length,
       semantic_hits_count: topHits.length,
     };
 
-    // Build prompt
+    // Build prompt with Spiralogic integration
     const systemPrompt = `You are MAIA assisting a licensed practitioner with a private case consultation.
 You must be practical, grounded, and avoid diagnosis claims. Use tentative language.
+
+You are deeply grounded in the SPIRALOGIC FRAMEWORK - a 12-phase elemental alchemy system:
+- Four Elements cycle: Fire (initiation/action) → Water (feeling/descent) → Earth (form/embodiment) → Air (meaning/transmission)
+- Each element has 3 phases: Cardinal (1 - opening), Fixed (2 - deepening), Mutable (3 - integration/transition)
+- Facet codes: F1-F3 (Fire), W1-W3 (Water), E1-E3 (Earth), A1-A3 (Air)
+
 Return ONLY valid JSON matching this schema:
 
 {
-  "case_summary": "string - brief overview of case dynamics",
+  "case_summary": "string - brief overview of case dynamics through Spiralogic lens",
   "themes_emerging": ["array of key themes you observe"],
-  "working_hypotheses": ["clinical hypotheses to consider"],
+  "working_hypotheses": ["clinical hypotheses grounded in elemental patterns"],
   "next_session_focus": ["recommended areas for next session"],
-  "suggested_interventions": ["practical interventions to try"],
-  "questions_to_ask": ["questions that might deepen inquiry"],
-  "risks_or_watchouts": ["things to monitor or be cautious about"],
+  "suggested_interventions": ["practical interventions aligned with current facet"],
+  "questions_to_ask": ["questions that might deepen inquiry - include canonical questions for the facet"],
+  "risks_or_watchouts": ["things to monitor, including shadow patterns for current facet"],
   "elemental_reflection": {
-    "element_focus": "primary element at play (earth/water/fire/air/aether)",
-    "spiral_movement": "any spiral stage transitions observed",
-    "note": "brief elemental/spiralogic insight"
+    "element_focus": "primary element at play (fire/water/earth/air)",
+    "facet_code": "current facet code if identifiable (F1, W2, E3, etc.)",
+    "core_movement": "what movement is being asked of this person",
+    "shadow_pattern": "shadow patterns to watch for",
+    "gold_medicine": "therapeutic direction/gold medicine",
+    "spiral_movement": "any phase transitions observed or approaching",
+    "transition_readiness": "is the client ready to move to next phase? what signs?"
   }
 }
 
 Guidelines:
 - Honor the practitioner's clinical judgment
 - Offer observations, not prescriptions
-- Ask questions that deepen inquiry
-- Ground insights in the Spiralogic framework when relevant
+- Ask questions that deepen inquiry - USE THE CANONICAL QUESTIONS for the current facet
+- Ground ALL insights in the Spiralogic framework
+- Watch for shadow patterns specific to the facet
+- Point toward the gold medicine (therapeutic direction)
 - Be a peer consultant, not the therapist`;
 
     const userInput = `CASE CONTEXT:
 ${JSON.stringify(contextProvided.case, null, 2)}
+
+${spiralogicContext.spiralogicPromptSection}
+
+${themeAnalysis.suggestedElement ? `\nTHEME ANALYSIS: ${themeAnalysis.reasoning}` : ''}
 
 PATTERN SUMMARY:
 ${JSON.stringify(patternsRow?.summary || 'No patterns computed yet', null, 2)}

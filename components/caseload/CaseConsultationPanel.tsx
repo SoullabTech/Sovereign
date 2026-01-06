@@ -21,7 +21,12 @@ interface ConsultationContent {
   risks_or_watchouts?: string[];
   elemental_reflection?: {
     element_focus?: string;
+    facet_code?: string;
+    core_movement?: string;
+    shadow_pattern?: string;
+    gold_medicine?: string;
     spiral_movement?: string;
+    transition_readiness?: string;
     note?: string;
   };
 }
@@ -240,25 +245,68 @@ export const CaseConsultationPanel: React.FC<CaseConsultationPanelProps> = ({
           <Bullets title="Questions to Ask" items={activeContent.questions_to_ask} color="text-blue-400" />
           <Bullets title="Risks / Watchouts" items={activeContent.risks_or_watchouts} color="text-red-400" />
 
-          {/* Elemental Reflection */}
+          {/* Spiralogic Reflection */}
           {activeContent.elemental_reflection && (
-            <div className="p-3 bg-sacred-navy/40 border border-gold-divine/20 rounded-lg">
-              <h5 className="text-xs font-medium text-gold-divine/70 mb-2">Elemental Reflection</h5>
-              <div className="space-y-1 text-sm text-neutral-silver/80">
-                {activeContent.elemental_reflection.element_focus && (
-                  <div>
-                    <span className="text-neutral-silver/50">Element:</span>{' '}
-                    <span className="text-amber-400">{activeContent.elemental_reflection.element_focus}</span>
+            <div className="p-4 bg-sacred-navy/40 border border-gold-divine/20 rounded-lg">
+              <h5 className="text-xs font-medium text-gold-divine/70 mb-3">Spiralogic Reflection</h5>
+              <div className="space-y-2 text-sm">
+                {/* Element & Facet */}
+                <div className="flex flex-wrap gap-4">
+                  {activeContent.elemental_reflection.element_focus && (
+                    <div>
+                      <span className="text-neutral-silver/50 text-xs">Element:</span>{' '}
+                      <span className="text-amber-400 font-medium capitalize">{activeContent.elemental_reflection.element_focus}</span>
+                    </div>
+                  )}
+                  {activeContent.elemental_reflection.facet_code && (
+                    <div>
+                      <span className="text-neutral-silver/50 text-xs">Facet:</span>{' '}
+                      <span className="text-gold-divine font-medium">{activeContent.elemental_reflection.facet_code}</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Core Movement */}
+                {activeContent.elemental_reflection.core_movement && (
+                  <div className="mt-2">
+                    <span className="text-neutral-silver/50 text-xs block">Core Movement:</span>
+                    <p className="text-cyan-400/90">{activeContent.elemental_reflection.core_movement}</p>
                   </div>
                 )}
+
+                {/* Shadow & Gold */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
+                  {activeContent.elemental_reflection.shadow_pattern && (
+                    <div className="p-2 bg-red-900/20 border border-red-500/20 rounded">
+                      <span className="text-red-400/70 text-xs block mb-1">Shadow Pattern:</span>
+                      <p className="text-red-300/80 text-xs">{activeContent.elemental_reflection.shadow_pattern}</p>
+                    </div>
+                  )}
+                  {activeContent.elemental_reflection.gold_medicine && (
+                    <div className="p-2 bg-amber-900/20 border border-amber-500/20 rounded">
+                      <span className="text-amber-400/70 text-xs block mb-1">Gold Medicine:</span>
+                      <p className="text-amber-300/80 text-xs">{activeContent.elemental_reflection.gold_medicine}</p>
+                    </div>
+                  )}
+                </div>
+
+                {/* Spiral Movement & Transition */}
                 {activeContent.elemental_reflection.spiral_movement && (
-                  <div>
-                    <span className="text-neutral-silver/50">Spiral:</span>{' '}
+                  <div className="mt-2">
+                    <span className="text-neutral-silver/50 text-xs">Spiral Movement:</span>{' '}
                     <span className="text-purple-400">{activeContent.elemental_reflection.spiral_movement}</span>
                   </div>
                 )}
+                {activeContent.elemental_reflection.transition_readiness && (
+                  <div className="mt-1">
+                    <span className="text-neutral-silver/50 text-xs">Transition Readiness:</span>{' '}
+                    <span className="text-green-400/80">{activeContent.elemental_reflection.transition_readiness}</span>
+                  </div>
+                )}
+
+                {/* Legacy note field */}
                 {activeContent.elemental_reflection.note && (
-                  <div className="text-neutral-silver/70 mt-2 whitespace-pre-wrap">
+                  <div className="text-neutral-silver/70 mt-2 whitespace-pre-wrap border-t border-gold-divine/10 pt-2">
                     {activeContent.elemental_reflection.note}
                   </div>
                 )}

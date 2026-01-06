@@ -33,3 +33,12 @@ export { CaseStore } from './CaseStore';
 export { CaseMemoryService } from './CaseMemoryService';
 export { CasePatternService } from './CasePatternService';
 export { CaseConsultationService } from './CaseConsultationService';
+export {
+  getSpiralogicContext,
+  parseFacetCode,
+  buildFacetCode,
+  analyzeThemesThroughSpiralogic,
+  getAllFacets,
+  getFacetSummary,
+  type SpiralogicContext,
+} from './SpiralogicConsultationContext';
