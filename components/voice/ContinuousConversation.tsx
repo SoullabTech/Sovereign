@@ -780,13 +780,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         isProcessingRef.current = false;
         consecutiveRestartCount.current = 0;
 
-        // 🎤 Initialize audio monitoring for voice visualization (also needed on native!)
-        const audioReady = await initializeAudioMonitoring();
-        if (!audioReady) {
-          console.warn('⚠️ [Native] Audio monitoring failed - visualization disabled');
-        } else {
-          console.log('✅ [Native] Audio monitoring ready for visualization');
-        }
+        // 🚫 SKIP audio monitoring on native iOS - it conflicts with native speech recognition
+        // The native plugin handles mic access directly; calling getUserMedia() causes crashes
+        console.log('📱 [Native] Skipping audio monitoring - native plugin handles mic access');
 
         // Set up listener for partial results
         nativeListenerRef.current = await NativeSpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
