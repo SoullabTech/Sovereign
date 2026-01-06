@@ -1,0 +1,140 @@
+# backend
+name: Issue Auto-Label
+
+on:
+  issues:
+    types: [opened, edited, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  autolabel:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Auto-label issues
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = context.payload.issue;
+            const title = (issue.title || "").toLowerCase();
+            const body  = (issue.body  || "").toLowerCase();
+            const text = `${title}\n\n${body}`;
+
+            // Labels we may add (and auto-create if missing)
+            const LABEL_DEFS = {
+              "voice":        { color: "6f42c1", description: "Voice / mic / speech / audio pipeline" },
+              "ui":           { color: "0e8a16", description: "UI/UX, layout, visuals, interaction" },
+              "permissions":  { color: "d93f0b", description: "Permissions / privacy prompts / access denied" },
+              "bluetooth":    { color: "1d76db", description: "Bluetooth / BLE / headset routing" },
+              "crash":        { color: "b60205", description: "Crash / hang / freeze / fatal error" },
+              "needs-repro":  { color: "fbca04", description: "Missing reproduction steps / unclear report" },
+              "testflight":   { color: "5319e7", description: "TestFlight / iOS beta report" },
+            };
+
+            function hasAny(patterns) {
+              return patterns.some((p) => (p instanceof RegExp ? p.test(text) : text.includes(p)));
+            }
+
+            // --- Heuristics ---
+            const isTestflight = hasAny([
+              "testflight", "ios build", "build ", "tf build", "capacit", "xcode",
+            ]);
+
+            const isVoice = hasAny([
+              "voice", "speech", "mic", "microphone", "audio", "whisper", "transcription",
+              "stt", "tts", "realtime", "webrtc", "dictation", "recognition",
+            ]);
+
+            const isBluetooth = hasAny([
+              "bluetooth", "ble", "airpods", "headphones", "headset", "carplay",
+              "connected device", "audio route", "routing",
+            ]);
+
+            const isPermissions = hasAny([
+              "permission", "permissions", "allow", "denied", "privacy",
+              "microphone access", "camera access", "notifications",
+              "calendar access", "contacts access", "location access",
+            ]);
+
+            const isUI = hasAny([
+              "ui", "ux", "screen", "button", "layout", "spacing", "scroll",
+              "tap", "click", "drawer", "modal", "badge", "navbar", "responsive",
+              "dark mode", "light mode",
+            ]);
+
+            const isCrash = hasAny([
+              "crash", "crashed", "freeze", "frozen", "hang", "hung",
+              "unresponsive", "stuck", "white screen", "black screen",
+              "sigabrt", "fatal", "exception", "stacktrace",
+            ]);
+
+            // needs-repro: lightweight heuristic
+            const mentionsSteps = hasAny([
+              "steps to reproduce", "repro steps", "reproduction steps", "how to reproduce", "repro:",
+            ]);
+
+            const hasNumberedSteps = /(^|\n)\s*(1[\).\:]|step\s*1[\)\:\.]|-\s*\[\s*\]\s*)/i.test(issue.body || "");
+            const hasExpectedActual = hasAny(["expected:", "actual:", "expected behavior", "actual behavior"]);
+            const likelyMissingRepro = !(mentionsSteps || hasNumberedSteps || hasExpectedActual);
+
+            // Collect labels to add
+            const desired = new Set();
+            if (isTestflight) desired.add("testflight");
+            if (isVoice) desired.add("voice");
+            if (isBluetooth) desired.add("bluetooth");
+            if (isPermissions) desired.add("permissions");
+            if (isUI) desired.add("ui");
+            if (isCrash) desired.add("crash");
+            if (likelyMissingRepro) desired.add("needs-repro");
+
+            // Don't label if nothing matched
+            if (desired.size === 0) {
+              core.info("No labels matched; skipping.");
+              return;
+            }
+
+            // Helper: ensure label exists
+            async function ensureLabel(name) {
+              const def = LABEL_DEFS[name];
+              if (!def) return;
+
+              try {
+                await github.rest.issues.getLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name,
+                });
+              } catch (err) {
+                // Create it if missing
+                if (err.status === 404) {
+                  core.info(`Creating missing label: ${name}`);
+                  await github.rest.issues.createLabel({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    name,
+                    color: def.color,
+                    description: def.description,
+                  });
+                } else {
+                  throw err;
+                }
+              }
+            }
+
+            // Ensure all desired labels exist
+            for (const name of desired) {
+              await ensureLabel(name);
+            }
+
+            // Add labels (idempotent)
+            const labels = Array.from(desired);
+            core.info(`Adding labels: ${labels.join(", ")}`);
+
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              labels,
+            });
