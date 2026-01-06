@@ -28,6 +28,11 @@ const config: CapacitorConfig = {
   server: isProdLike
     ? { url: 'https://soullab.life', androidScheme: 'https' }
     : devServer,
+
+  // Enable WebView debugging for Safari Web Inspector (even in TestFlight)
+  ios: {
+    webContentsDebuggingEnabled: true,
+  },
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,

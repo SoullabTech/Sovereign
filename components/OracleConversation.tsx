@@ -4351,7 +4351,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           {/* Text Display Toggle for Voice Mode */}
           {!showChatInterface && (
-            <div className="fixed top-20 md:top-20 right-4 md:right-8 z-below-nav">
+            <div className="fixed top-36 md:top-36 right-4 md:right-8 z-below-nav">
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
                 className="px-3 py-1.5 rounded-full text-xs font-medium bg-black/20 backdrop-blur-md
