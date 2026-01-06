@@ -52,6 +52,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const recognitionRef = useRef<any>(null);
   const useNativeSpeechRef = useRef<boolean>(Capacitor.isNativePlatform()); // Use native speech on iOS/Android
   const nativeListenerRef = useRef<any>(null); // Store native listener handle
+  const nativeStateListenerRef = useRef<any>(null); // Store listeningState listener handle
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -423,7 +424,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     if (isSpeaking) {
       console.log('🔇 [Voice Feedback Prevention] MAIA started speaking - FULL STOP');
 
-      // Stop recognition
+      // Stop native speech recognition on iOS/Android
+      if (useNativeSpeechRef.current) {
+        (async () => {
+          try {
+            await NativeSpeechRecognition.stop();
+            console.log('🛑 [Native] Stopped for MAIA speech');
+          } catch (e) {
+            // May already be stopped
+          }
+        })();
+      }
+
+      // Stop web recognition
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -784,6 +797,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // The native plugin handles mic access directly; calling getUserMedia() causes crashes
         console.log('📱 [Native] Skipping audio monitoring - native plugin handles mic access');
 
+        // 🧹 CRITICAL: Remove any existing listeners before adding new ones
+        // This prevents listener accumulation that causes crashes
+        if (nativeListenerRef.current) {
+          try {
+            await nativeListenerRef.current.remove();
+          } catch (e) {
+            console.log('⚠️ [Native] Cleanup: partialResults listener already removed');
+          }
+          nativeListenerRef.current = null;
+        }
+        if (nativeStateListenerRef.current) {
+          try {
+            await nativeStateListenerRef.current.remove();
+          } catch (e) {
+            console.log('⚠️ [Native] Cleanup: listeningState listener already removed');
+          }
+          nativeStateListenerRef.current = null;
+        }
+
         // Set up listener for partial results
         nativeListenerRef.current = await NativeSpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
           if (data.matches && data.matches.length > 0) {
@@ -804,19 +836,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           }
         });
 
-        // Start native speech recognition
-        await NativeSpeechRecognition.start({
-          language: 'en-US',
-          maxResults: 3,
-          prompt: 'Speak to MAIA',
-          partialResults: true,
-          popup: false
-        });
-
-        console.log('🎙️ [ContinuousConversation] Native recognition started');
-
-        // Handle when speech ends
-        NativeSpeechRecognition.addListener('listeningState', async (state: { status: string }) => {
+        // Handle when speech ends - store listener reference for cleanup
+        nativeStateListenerRef.current = await NativeSpeechRecognition.addListener('listeningState', async (state: { status: string }) => {
           console.log('🔊 [Native] State:', state.status);
           if (state.status === 'stopped' && isListeningRef.current) {
             // Process accumulated transcript
@@ -829,25 +850,58 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               onTranscript(finalTranscript);
             }
             // Auto-restart if still in listening mode
+            // 🔥 CRITICAL: Longer delay (1.5s) to allow iOS audio session to fully release after TTS
             if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-              console.log('🔄 [Native] Auto-restarting...');
+              console.log('🔄 [Native] Will auto-restart in 1.5s...');
               setTimeout(async () => {
-                if (isListeningRef.current) {
+                // Double-check conditions before restart
+                if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
                   try {
+                    console.log('🎙️ [Native] Restarting speech recognition...');
                     await NativeSpeechRecognition.start({
                       language: 'en-US',
                       maxResults: 3,
                       partialResults: true,
                       popup: false
                     });
-                  } catch (e) {
-                    console.warn('⚠️ [Native] Restart failed:', e);
+                    console.log('✅ [Native] Restart successful');
+                  } catch (e: any) {
+                    console.warn('⚠️ [Native] Restart failed:', e?.message || e);
+                    // On failure, try one more time after another delay
+                    setTimeout(async () => {
+                      if (isListeningRef.current && !isSpeakingRef.current) {
+                        try {
+                          await NativeSpeechRecognition.start({
+                            language: 'en-US',
+                            maxResults: 3,
+                            partialResults: true,
+                            popup: false
+                          });
+                          console.log('✅ [Native] Retry restart successful');
+                        } catch (e2) {
+                          console.error('❌ [Native] Retry also failed - user must tap mic');
+                        }
+                      }
+                    }, 2000);
                   }
+                } else {
+                  console.log('🚫 [Native] Conditions changed, not restarting');
                 }
-              }, 500);
+              }, 1500); // 1.5 seconds - gives iOS audio session time to release
             }
           }
         });
+
+        // Start native speech recognition
+        await NativeSpeechRecognition.start({
+          language: 'en-US',
+          maxResults: 3,
+          prompt: 'Speak to MAIA',
+          partialResults: true,
+          popup: false
+        });
+
+        console.log('🎙️ [ContinuousConversation] Native recognition started');
 
         return;
       }
@@ -937,13 +991,33 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // Stop native speech recognition on iOS/Android
     if (useNativeSpeechRef.current) {
       try {
+        // Stop recognition first
         await NativeSpeechRecognition.stop();
+        console.log('🛑 [Native] Recognition stopped');
+
+        // Clean up partialResults listener
         if (nativeListenerRef.current) {
-          await nativeListenerRef.current.remove();
+          try {
+            await nativeListenerRef.current.remove();
+          } catch (e) {
+            // Ignore - may already be removed
+          }
           nativeListenerRef.current = null;
         }
+
+        // Clean up listeningState listener
+        if (nativeStateListenerRef.current) {
+          try {
+            await nativeStateListenerRef.current.remove();
+          } catch (e) {
+            // Ignore - may already be removed
+          }
+          nativeStateListenerRef.current = null;
+        }
+
+        // Final cleanup - remove any remaining listeners
         await NativeSpeechRecognition.removeAllListeners();
-        console.log('🛑 [Native] Recognition stopped');
+        console.log('🧹 [Native] All listeners cleaned up');
       } catch (e) {
         console.warn('⚠️ [Native] Error stopping:', e);
       }
