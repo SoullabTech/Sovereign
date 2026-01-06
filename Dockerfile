@@ -64,6 +64,7 @@ COPY --from=builder --chown=node:node /app/prisma ./prisma
 
 # Scripts + tsx for embedding worker
 COPY --from=builder --chown=node:node /app/scripts ./scripts
+COPY --from=builder --chown=node:node /app/node_modules/.bin ./node_modules/.bin
 COPY --from=builder --chown=node:node /app/node_modules/tsx ./node_modules/tsx
 COPY --from=builder --chown=node:node /app/node_modules/esbuild ./node_modules/esbuild
 COPY --from=builder --chown=node:node /app/node_modules/get-tsconfig ./node_modules/get-tsconfig
