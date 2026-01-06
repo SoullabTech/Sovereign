@@ -343,25 +343,26 @@ function MAIAPageContent() {
     hasCheckedAuth.current = true;
 
     // MIGRATION: Fix contaminated Kelly sessions (bug introduced Dec 31, 2024)
-    // Users who aren't Kelly but got assigned kelly-nezat identity
+    // Users who aren't Kelly but got assigned the literal 'kelly-nezat' ID
+    // NOTE: Only check for the contaminated ID, NOT the name. Real Kelly has a proper UUID now.
     const storedId = localStorage.getItem('explorerId');
     const storedName = localStorage.getItem('explorerName');
     const betaUser = localStorage.getItem('beta_user');
 
-    if (storedId === 'kelly-nezat' || storedName?.toLowerCase() === 'kelly') {
+    if (storedId === 'kelly-nezat') {
       // Check if this is actually Kelly via beta_user auth
       let isActuallyKelly = false;
       if (betaUser) {
         try {
           const userData = JSON.parse(betaUser);
           const authName = (userData.username || userData.name || userData.email || '').toLowerCase();
-          isActuallyKelly = authName.includes('kelly') || userData.id === 'kelly-nezat';
+          isActuallyKelly = authName.includes('kelly');
         } catch (e) { /* ignore */ }
       }
 
       if (!isActuallyKelly) {
         // This user was incorrectly assigned Kelly's identity - reset them
-        console.log('🔧 [MAIA] Fixing contaminated session - clearing Kelly identity');
+        console.log('🔧 [MAIA] Fixing contaminated session - clearing kelly-nezat identity');
         localStorage.removeItem('explorerId');
         localStorage.removeItem('explorerName');
         localStorage.removeItem('betaOnboardingComplete');
