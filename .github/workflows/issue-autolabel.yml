@@ -136,6 +136,8 @@ jobs:
 
             // Add labels (idempotent)
             const labels = Array.from(desired);
+            core.info(`likelyMissingRepro=${likelyMissingRepro} shouldRemoveNeedsRepro=${shouldRemoveNeedsRepro}`);
+            core.info(`desired_labels_to_add=${labels.join(",") || "(none)"}`);
             core.info(`Adding labels: ${labels.join(", ")}`);
 
             await github.rest.issues.addLabels({
