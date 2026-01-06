@@ -26,10 +26,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find member by username
+    // Find member by username (case-insensitive)
     const result = await query(
-      'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step FROM members WHERE username = $1',
-      [username.toLowerCase()]
+      'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step FROM members WHERE LOWER(username) = LOWER($1)',
+      [username]
     );
 
     if (result.rows.length === 0) {
