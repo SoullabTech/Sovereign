@@ -52,7 +52,7 @@ import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
-import { generateGreeting, generateOnboardingGreeting } from '@/lib/services/greetingService';
+import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
@@ -1203,20 +1203,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const shouldAskOnboarding = sessionStorage.getItem('maia_should_ask_onboarding') === 'true';
 
       let greetingData;
+      // 🎯 Use resolveDisplayName() to get actual name from localStorage
+      // This avoids race condition where userName prop hasn't been updated yet
+      const resolvedName = resolveDisplayName();
+      console.log('🎯 [GREETING] Resolved display name:', resolvedName);
+
       if (shouldAskOnboarding) {
         // Remove flag after checking
         sessionStorage.removeItem('maia_should_ask_onboarding');
 
         // Generate onboarding question greeting instead of standard greeting
         greetingData = await generateOnboardingGreeting({
-          userName: userName || 'friend',
+          userName: resolvedName,
           userId: userId,
           isFirstVisit,
           partnerContext: onboardingContext?.partnerContext || 'general'
         });
       } else {
         greetingData = await generateGreeting({
-          userName: userName || 'friend',
+          userName: resolvedName,
           userId: userId, // Pass userId for soul-level recognition
           isFirstVisit,
           daysSinceLastVisit,
