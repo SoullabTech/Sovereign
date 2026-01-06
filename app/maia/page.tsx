@@ -10,7 +10,7 @@
  * God is more between than within - the I-Thou relationship
  */
 
-import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -215,8 +215,6 @@ function MAIAPageContent() {
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
 
-  const hasCheckedAuth = useRef(false);
-
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
   //   const betaUser = localStorage.getItem('beta_user');
@@ -338,15 +336,12 @@ function MAIAPageContent() {
     setShowWeekZeroOnboarding(false);
   };
 
+  // One-time migration check for contaminated kelly-nezat sessions
   useEffect(() => {
-    if (hasCheckedAuth.current) return;
-    hasCheckedAuth.current = true;
-
     // MIGRATION: Fix contaminated Kelly sessions (bug introduced Dec 31, 2024)
     // Users who aren't Kelly but got assigned the literal 'kelly-nezat' ID
     // NOTE: Only check for the contaminated ID, NOT the name. Real Kelly has a proper UUID now.
     const storedId = localStorage.getItem('explorerId');
-    const storedName = localStorage.getItem('explorerName');
     const betaUser = localStorage.getItem('beta_user');
 
     if (storedId === 'kelly-nezat') {
@@ -376,70 +371,9 @@ function MAIAPageContent() {
         return;
       }
     }
-
-    // Use stored identity if available
-    if (storedName && storedId) {
-      setExplorerId(storedId);
-      setExplorerName(storedName);
-      console.log('✅ [MAIA] User restored from localStorage:', storedName);
-      return;
-    }
-
-    // Check for authenticated user
-    // Default to guest mode if no stored user
-    const newUser = localStorage.getItem('beta_user');
-    if (newUser) {
-      try {
-        const userData = JSON.parse(newUser);
-        const newId = userData.id || 'guest';
-        // FIXED: Prefer name over username (name is the display name, username is for login)
-        // Also filter out generic names that shouldn't be displayed
-        // If name is generic/missing, use capitalized username as fallback (never "Explorer")
-        const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
-        const rawName = userData.name || userData.displayName || '';
-        const capitalizedUsername = userData.username
-          ? userData.username.charAt(0).toUpperCase() + userData.username.slice(1)
-          : '';
-        const newName = (!rawName || genericNames.includes(rawName.toLowerCase()))
-          ? (capitalizedUsername || 'Friend')
-          : rawName;
-
-        localStorage.setItem('explorerName', newName);
-        localStorage.setItem('explorerId', newId);
-        localStorage.setItem('betaOnboardingComplete', 'true');
-        localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
-
-        if (explorerId !== newId) setExplorerId(newId);
-        if (explorerName !== newName) setExplorerName(newName);
-
-        console.log('✅ [MAIA] User session restored:', { name: newName, id: newId });
-        return;
-      } catch (e) {
-        console.error('Error parsing user data:', e);
-      }
-    }
-
-    // Check OLD system
-    const oldId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
-    const oldName = localStorage.getItem('explorerName');
-
-    if (oldId && oldName) {
-      if (explorerId !== oldId) setExplorerId(oldId);
-      if (explorerName !== oldName) setExplorerName(oldName);
-      console.log('✅ [MAIA] User session restored from legacy:', { name: oldName, id: oldId });
-      return;
-    }
-
-    // No stored user - create default guest session
-    const guestId = `guest_${Date.now()}`;
-    localStorage.setItem('explorerId', guestId);
-    localStorage.setItem('explorerName', 'Friend');
-    localStorage.setItem('betaOnboardingComplete', 'true');
-    localStorage.setItem('maiaPermanentUser', 'true'); // PERMANENT marker
-    setExplorerId(guestId);
-    setExplorerName('Friend');
-    console.log('✅ [MAIA] Created guest session');
-  }, [explorerId, explorerName]);
+    // All other user loading is handled by getInitialUserData() in the first useEffect
+    // Do NOT duplicate that logic here - it causes race conditions with stale localStorage
+  }, []);
 
   // Onboarding removed - direct access only
   return (
