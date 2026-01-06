@@ -1,3 +1,10 @@
+export const dynamic = 'force-static';
+
+// Required for static export with dynamic routes
+export function generateStaticParams() {
+  return [{ caseId: 'default' }];
+}
+
 /**
  * CASE CAPTURE LINKS API
  *

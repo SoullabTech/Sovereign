@@ -1,4 +1,5 @@
-export const dynamic = 'error';
+export const dynamic = 'force-static';
+
 
 /**
  * Sign in existing member

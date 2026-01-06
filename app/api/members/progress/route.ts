@@ -1,4 +1,5 @@
-export const dynamic = 'error';
+export const dynamic = 'force-static';
+
 
 /**
  * Update member onboarding progress

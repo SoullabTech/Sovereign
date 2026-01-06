@@ -48,6 +48,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const [audioLevel, setAudioLevel] = useState(0);
   const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [debugLog, setDebugLog] = useState<string[]>([]); // On-screen debug for iOS
+
+  // Helper to add debug messages (visible on screen for iOS debugging)
+  const addDebug = useCallback((msg: string) => {
+    console.log(msg);
+    setDebugLog(prev => [...prev.slice(-4), msg]); // Keep last 5 messages
+  }, []);
 
   const recognitionRef = useRef<any>(null);
   const useNativeSpeechRef = useRef<boolean>(Capacitor.isNativePlatform()); // Use native speech on iOS/Android
@@ -748,43 +755,46 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // 🎛️ Ensure native speech recognition is ready (permissions + availability)
   const ensureNativeSpeechReady = useCallback(async (): Promise<{ ok: boolean; reason?: string }> => {
     const platform = Capacitor.getPlatform();
-    console.log('🎛️ [Voice] ensureNativeSpeechReady - platform:', platform, 'isNative:', Capacitor.isNativePlatform());
+    addDebug(`Platform: ${platform}`);
 
     try {
       // Check if speech recognition is available on device
+      addDebug('Checking availability...');
       const avail = await NativeSpeechRecognition.available();
-      console.log('✅ [Native] available() =>', JSON.stringify(avail));
+      addDebug(`Available: ${JSON.stringify(avail)}`);
 
       if (!avail?.available) {
-        return { ok: false, reason: 'Speech recognition not available on this device' };
+        return { ok: false, reason: 'Speech not available on device' };
       }
 
       // Check current permission status
+      addDebug('Checking permissions...');
       const perms = await NativeSpeechRecognition.checkPermissions();
-      console.log('🔐 [Native] checkPermissions() =>', JSON.stringify(perms));
+      addDebug(`Perms: ${perms?.speechRecognition}`);
 
       if (perms?.speechRecognition !== 'granted') {
         // Request permissions (this covers both speech + mic on iOS)
-        console.log('🔐 [Native] Requesting permissions...');
+        addDebug('Requesting permissions...');
         const req = await NativeSpeechRecognition.requestPermissions();
-        console.log('🧾 [Native] requestPermissions() =>', JSON.stringify(req));
+        addDebug(`Req result: ${req?.speechRecognition}`);
 
         if (req?.speechRecognition !== 'granted') {
-          return { ok: false, reason: `Permission not granted (${req?.speechRecognition || 'unknown'})` };
+          return { ok: false, reason: `Perm denied: ${req?.speechRecognition || 'unknown'}` };
         }
       }
 
-      console.log('✅ [Native] Speech recognition is ready!');
+      addDebug('✅ Ready!');
       return { ok: true };
     } catch (e: any) {
-      console.error('❌ [Native] ensureNativeSpeechReady error:', e);
+      addDebug(`❌ Error: ${e?.message || e}`);
       return { ok: false, reason: e?.message || String(e) };
     }
-  }, []);
+  }, [addDebug]);
 
   // Start listening
   const startListening = useCallback(async () => {
     console.log('🎤 [ContinuousConversation] startListening called');
+    addDebug('🎤 startListening called');
 
     // 🔄 CRITICAL: Determine platform at START time
     // With remote server URLs (beta builds), Capacitor bridge may initialize after page load
@@ -795,6 +805,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     console.log('📱 [ContinuousConversation] Platform:', platform, 'shouldUseNative:', shouldUseNative);
     console.log('📱 [ContinuousConversation] Capacitor.isNativePlatform():', Capacitor.isNativePlatform());
+    addDebug(`Platform: ${platform}, native: ${shouldUseNative}`);
 
     // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
     if (isSpeakingRef.current) {
@@ -927,6 +938,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         // Start native speech recognition
         console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');
+        addDebug('🎙️ Calling start()...');
         try {
           await NativeSpeechRecognition.start({
             language: 'en-US',
@@ -936,12 +948,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             popup: false  // Set to true if iOS requires the popup UI
           });
           console.log('✅ [ContinuousConversation] NativeSpeechRecognition.start() succeeded!');
+          addDebug('✅ start() succeeded!');
         } catch (startError: any) {
           console.error('❌ [ContinuousConversation] NativeSpeechRecognition.start() FAILED:', startError);
           console.error('❌ [ContinuousConversation] Error details:', JSON.stringify(startError, null, 2));
+          addDebug(`❌ start() failed: ${startError?.message || startError}`);
 
           // Try with popup: true as fallback (iOS may require it)
           console.log('🔄 [ContinuousConversation] Retrying with popup: true...');
+          addDebug('🔄 Retrying popup:true...');
           try {
             await NativeSpeechRecognition.start({
               language: 'en-US',
@@ -951,8 +966,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               popup: true  // Try with popup enabled
             });
             console.log('✅ [ContinuousConversation] Retry with popup: true succeeded!');
+            addDebug('✅ Retry succeeded!');
           } catch (retryError: any) {
             console.error('❌ [ContinuousConversation] Retry also FAILED:', retryError);
+            addDebug(`❌ Retry failed: ${retryError?.message || retryError}`);
             throw retryError;
           }
         }
@@ -1038,7 +1055,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       onRecordingStateChange?.(false); // Hide visualizer on error
       throw error; // Re-throw so parent component can handle
     }
-  }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange]);
+  }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady]);
 
   // Stop listening
   const stopListening = useCallback(async () => {
@@ -1217,6 +1234,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const showLoader = isTranscribing || isProcessing;
 
   return (
+    <>
+      {/* 🐛 DEBUG PANEL - On-screen debug for iOS TestFlight (Safari Inspector doesn't work with remote URLs) */}
+      {debugLog.length > 0 && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-black/90 p-2 text-xs font-mono">
+          <div className="text-yellow-400 mb-1">🐛 iOS Debug:</div>
+          {debugLog.map((msg, i) => (
+            <div key={i} className="text-green-400 truncate">{msg}</div>
+          ))}
+        </div>
+      )}
+
     <div className="flex items-center gap-3">
       {/* Main control button */}
       <button
@@ -1287,6 +1315,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         </div>
       )}
     </div>
+    </>
   );
 });
 

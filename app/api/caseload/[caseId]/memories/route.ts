@@ -1,4 +1,8 @@
-export const dynamic = 'error';
+export const dynamic = 'force-static';
+
+export function generateStaticParams() {
+  return [{ caseId: 'default' }];
+}
 
 /**
  * CASE MEMORIES API
