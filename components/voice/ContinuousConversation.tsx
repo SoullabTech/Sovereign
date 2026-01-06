@@ -745,16 +745,56 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [isSafari, startAudioLevelLoop]);
 
+  // 🎛️ Ensure native speech recognition is ready (permissions + availability)
+  const ensureNativeSpeechReady = useCallback(async (): Promise<{ ok: boolean; reason?: string }> => {
+    const platform = Capacitor.getPlatform();
+    console.log('🎛️ [Voice] ensureNativeSpeechReady - platform:', platform, 'isNative:', Capacitor.isNativePlatform());
+
+    try {
+      // Check if speech recognition is available on device
+      const avail = await NativeSpeechRecognition.available();
+      console.log('✅ [Native] available() =>', JSON.stringify(avail));
+
+      if (!avail?.available) {
+        return { ok: false, reason: 'Speech recognition not available on this device' };
+      }
+
+      // Check current permission status
+      const perms = await NativeSpeechRecognition.checkPermissions();
+      console.log('🔐 [Native] checkPermissions() =>', JSON.stringify(perms));
+
+      if (perms?.speechRecognition !== 'granted') {
+        // Request permissions (this covers both speech + mic on iOS)
+        console.log('🔐 [Native] Requesting permissions...');
+        const req = await NativeSpeechRecognition.requestPermissions();
+        console.log('🧾 [Native] requestPermissions() =>', JSON.stringify(req));
+
+        if (req?.speechRecognition !== 'granted') {
+          return { ok: false, reason: `Permission not granted (${req?.speechRecognition || 'unknown'})` };
+        }
+      }
+
+      console.log('✅ [Native] Speech recognition is ready!');
+      return { ok: true };
+    } catch (e: any) {
+      console.error('❌ [Native] ensureNativeSpeechReady error:', e);
+      return { ok: false, reason: e?.message || String(e) };
+    }
+  }, []);
+
   // Start listening
   const startListening = useCallback(async () => {
     console.log('🎤 [ContinuousConversation] startListening called');
 
-    // 🔄 CRITICAL FIX: Re-check native platform at START time, not just mount time
+    // 🔄 CRITICAL: Determine platform at START time
     // With remote server URLs (beta builds), Capacitor bridge may initialize after page load
-    const isNativePlatform = Capacitor.isNativePlatform();
-    useNativeSpeechRef.current = isNativePlatform;
+    const platform = Capacitor.getPlatform();
+    // IMPORTANT: On iOS/Android, ALWAYS use native - never fall back to web speech
+    const shouldUseNative = platform === 'ios' || platform === 'android';
+    useNativeSpeechRef.current = shouldUseNative;
 
-    console.log('📱 [ContinuousConversation] Platform:', Capacitor.getPlatform(), 'Native:', isNativePlatform);
+    console.log('📱 [ContinuousConversation] Platform:', platform, 'shouldUseNative:', shouldUseNative);
+    console.log('📱 [ContinuousConversation] Capacitor.isNativePlatform():', Capacitor.isNativePlatform());
 
     // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
     if (isSpeakingRef.current) {
@@ -762,32 +802,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       return;
     }
 
-    // 🎤 IMMEDIATE: Notify parent right away so visualizer shows instantly
-    setIsListening(true);
-    isListeningRef.current = true;
-    onRecordingStateChange?.(true);
-    console.log('📡 [Immediate] Notified parent: listening mode active');
-
     try {
       // 🔄 Use native speech recognition on iOS/Android
-      if (isNativePlatform) {
-        console.log('📱 [ContinuousConversation] Using NATIVE speech recognition');
+      if (shouldUseNative) {
+        console.log('📱 [ContinuousConversation] Using NATIVE speech recognition for platform:', platform);
 
-        // Request permission first
-        const permResult = await NativeSpeechRecognition.requestPermissions();
-        console.log('🔐 [ContinuousConversation] Permission result:', permResult);
-
-        if (permResult.speechRecognition !== 'granted') {
-          setVoiceError('Speech recognition permission denied. Please enable in Settings.');
-          throw new Error('VOICE_UNAVAILABLE');
+        // 🎛️ CRITICAL: Ensure permissions before showing "Listening..."
+        const ready = await ensureNativeSpeechReady();
+        if (!ready.ok) {
+          console.warn('🚫 [Native] Not starting recognition:', ready.reason);
+          setVoiceError(ready.reason || 'Speech recognition not available');
+          // DON'T show "Listening..." if we can't actually listen
+          return;
         }
 
-        // Check availability
-        const available = await NativeSpeechRecognition.available();
-        if (!available.available) {
-          setVoiceError('Speech recognition not available on this device.');
-          throw new Error('VOICE_UNAVAILABLE');
-        }
+        // NOW we can show listening state
+        setIsListening(true);
+        isListeningRef.current = true;
+        onRecordingStateChange?.(true);
+        console.log('📡 [Native] Permissions OK - showing listening state');
 
         setVoiceError(null);
         isProcessingRef.current = false;
@@ -893,13 +926,36 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         });
 
         // Start native speech recognition
-        await NativeSpeechRecognition.start({
-          language: 'en-US',
-          maxResults: 3,
-          prompt: 'Speak to MAIA',
-          partialResults: true,
-          popup: false
-        });
+        console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');
+        try {
+          await NativeSpeechRecognition.start({
+            language: 'en-US',
+            maxResults: 3,
+            prompt: 'Speak to MAIA',
+            partialResults: true,
+            popup: false  // Set to true if iOS requires the popup UI
+          });
+          console.log('✅ [ContinuousConversation] NativeSpeechRecognition.start() succeeded!');
+        } catch (startError: any) {
+          console.error('❌ [ContinuousConversation] NativeSpeechRecognition.start() FAILED:', startError);
+          console.error('❌ [ContinuousConversation] Error details:', JSON.stringify(startError, null, 2));
+
+          // Try with popup: true as fallback (iOS may require it)
+          console.log('🔄 [ContinuousConversation] Retrying with popup: true...');
+          try {
+            await NativeSpeechRecognition.start({
+              language: 'en-US',
+              maxResults: 3,
+              prompt: 'Speak to MAIA',
+              partialResults: true,
+              popup: true  // Try with popup enabled
+            });
+            console.log('✅ [ContinuousConversation] Retry with popup: true succeeded!');
+          } catch (retryError: any) {
+            console.error('❌ [ContinuousConversation] Retry also FAILED:', retryError);
+            throw retryError;
+          }
+        }
 
         console.log('🎙️ [ContinuousConversation] Native recognition started');
 
@@ -936,6 +992,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       console.log('✅ [ContinuousConversation] Audio monitoring ready');
       setVoiceError(null); // Clear any previous errors
+
+      // NOW we can show listening state for web
+      setIsListening(true);
+      isListeningRef.current = true;
+      onRecordingStateChange?.(true);
+      console.log('📡 [Web] Permissions OK - showing listening state');
 
     // Initialize speech recognition
     if (!recognitionRef.current) {
