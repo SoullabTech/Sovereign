@@ -751,6 +751,16 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🧭 [FAST] Epistemic path addendum applied (${epistemicPathAddendum.split('\n')[0]})`);
   }
 
+  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel/Scribe modes
+  const therapeuticFrameworkAddendum = (meta as any)?.therapeuticFrameworkAddendum as string | undefined;
+  const reflectionLensAddendum = (meta as any)?.reflectionLensAddendum as string | undefined;
+  if (therapeuticFrameworkAddendum) {
+    console.log(`🧘 [FAST] Therapeutic framework applied: ${therapeuticFrameworkAddendum.split('\n')[0]}`);
+  }
+  if (reflectionLensAddendum) {
+    console.log(`🔮 [FAST] Reflection lens applied: ${reflectionLensAddendum.split('\n')[0]}`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   const currentUserName = (meta as any)?.userName as string | undefined;
@@ -771,7 +781,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -938,6 +948,9 @@ async function corePathResponse(
     } : undefined,
     // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
     epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,
+    // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
+    therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
+    reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -1359,6 +1372,9 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         repairGuidance: repairPrompt,
         // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
         epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,
+        // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
+        therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
+        reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

@@ -59,6 +59,9 @@ export interface MaiaContext {
   selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
   // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
   epistemicPathAddendum?: string;
+  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses for Counsel/Scribe modes
+  therapeuticFrameworkAddendum?: string;
+  reflectionLensAddendum?: string;
 }
 
 /**
@@ -563,6 +566,18 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (context.epistemicPathAddendum) {
     adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
     console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
+  }
+
+  // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode
+  if (context.therapeuticFrameworkAddendum) {
+    adaptedPrompt += `\n\n${context.therapeuticFrameworkAddendum}`;
+    console.log(`🧘 [Therapeutic Framework] Applied: ${context.therapeuticFrameworkAddendum.split('\n')[0]}`);
+  }
+
+  // 🔮 REFLECTION LENS: Mode-specific lens for Scribe mode
+  if (context.reflectionLensAddendum) {
+    adaptedPrompt += `\n\n${context.reflectionLensAddendum}`;
+    console.log(`🔮 [Reflection Lens] Applied: ${context.reflectionLensAddendum.split('\n')[0]}`);
   }
 
   return adaptedPrompt.trim();

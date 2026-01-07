@@ -55,6 +55,7 @@ import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
+import { getCounselFramework, getScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
 import PromptPicker from './prompts/PromptPicker';
@@ -2133,8 +2134,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
           sanctuary: isSanctuary,
 
-          // 🧭 THERAPEUTIC FRAMEWORK: Mode-specific lens (handled by therapeuticFrameworks.ts)
-          // Framework is now applied contextually based on realtimeMode (dialogue/counsel/scribe)
+          // 🧭 THERAPEUTIC FRAMEWORK: Mode-specific lens
+          therapeuticFramework: realtimeMode === 'patient' ? getCounselFramework() : undefined,
+          reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,

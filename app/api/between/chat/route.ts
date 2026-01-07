@@ -22,6 +22,7 @@ import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { buildEpistemicPathAddendum, type EpistemicPathSelection } from '@/lib/consciousness/epistemicPathPrompt';
+import { getFrameworkPromptAddendum, getReflectionLensAddendum, type TherapeuticFramework, type ReflectionLens } from '@/lib/consciousness/therapeuticFrameworks';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
 import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
@@ -511,7 +512,7 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement, therapeuticFramework, reflectionLens } = body as {
       message?: string;
       sessionId?: string;
       mode?: 'dialogue' | 'counsel' | 'scribe';
@@ -522,6 +523,8 @@ export async function POST(req: NextRequest) {
       localHour?: number; // Client's local hour (0-23) for correct time-of-day greetings
       epistemicPath?: EpistemicPathSelection; // 🧭 User-chosen epistemic path
       dominantElement?: 'water' | 'fire' | 'earth' | 'air'; // User's elemental signature
+      therapeuticFramework?: 'auto' | 'jungian' | 'cbt' | 'somatic' | 'ifs' | 'relational' | 'humanistic' | 'existential';
+      reflectionLens?: 'auto' | 'jungian' | 'somatic' | 'relational' | 'narrative';
     };
 
     // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
@@ -1033,6 +1036,12 @@ export async function POST(req: NextRequest) {
       dominantElement,
     });
 
+    // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens addendums
+    const effectiveFramework = (therapeuticFramework as TherapeuticFramework) || 'auto';
+    const effectiveLens = (reflectionLens as ReflectionLens) || 'auto';
+    const therapeuticFrameworkAddendum = mode === 'counsel' ? getFrameworkPromptAddendum(effectiveFramework) : null;
+    const reflectionLensAddendum = mode === 'scribe' ? getReflectionLensAddendum(effectiveLens) : null;
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
@@ -1050,6 +1059,8 @@ export async function POST(req: NextRequest) {
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
         epistemicPathAddendum, // 🧭 User-chosen epistemic lens
+        therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
+        reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
       }
     });
 
