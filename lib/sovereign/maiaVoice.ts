@@ -57,6 +57,8 @@ export interface MaiaContext {
   // 🧠 SELF-AWARENESS: Enable MAIA to explain her own architecture
   selfAwareMode?: boolean;
   selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
+  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  epistemicPathAddendum?: string;
 }
 
 /**
@@ -555,6 +557,12 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
     const selfAwareContext = buildSelfAwareContext(detail);
     adaptedPrompt += `\n\n${selfAwareContext}`;
     console.log(`🧠 [Self-Awareness] Enabled (${detail} detail) - MAIA can explain her architecture`);
+  }
+
+  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  if (context.epistemicPathAddendum) {
+    adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
+    console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
   }
 
   return adaptedPrompt.trim();

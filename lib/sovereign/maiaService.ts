@@ -745,6 +745,12 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     (meta as any).wisdomRouting = wisdomRouting;
   }
 
+  // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+  const epistemicPathAddendum = (meta as any)?.epistemicPathAddendum as string | undefined;
+  if (epistemicPathAddendum) {
+    console.log(`🧭 [FAST] Epistemic path addendum applied (${epistemicPathAddendum.split('\n')[0]})`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   const currentUserName = (meta as any)?.userName as string | undefined;
@@ -765,7 +771,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -929,7 +935,9 @@ async function corePathResponse(
       score: (meta as any).bloomDetection.score,
       rationale: (meta as any).bloomDetection.rationale,
       scaffoldingPrompt: (meta as any).bloomDetection.scaffoldingPrompt
-    } : undefined
+    } : undefined,
+    // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+    epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -1348,7 +1356,9 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         },
         mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
         conversationContext: (meta as any).conversationContext as any,
-        repairGuidance: repairPrompt
+        repairGuidance: repairPrompt,
+        // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
+        epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

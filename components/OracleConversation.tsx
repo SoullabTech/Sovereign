@@ -42,6 +42,7 @@ import { VoiceState } from '@/lib/voice/voice-capture';
 // REMOVED FORMANT VOICE ENGINE - MAIA now speaks with OpenAI Alloy voice
 // import { getMaiaVoiceEngine, voiceStateManager, type Element } from '@/lib/voice';
 import type { Element } from '@/lib/voice';
+import type { EpistemicPath } from '@/lib/consciousness/ModeStanceCharter';
 // import { useMAIASDK } from '@/hooks/useMAIASDK-simple'; // Fallback option (if needed)
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
@@ -393,7 +394,42 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  
+  // 🧭 EPISTEMIC PATH: How MAIA shapes her responses (Jungian, Somatic, CBT, etc.)
+  const [epistemicPath, setEpistemicPath] = useState<EpistemicPath | 'auto'>(() => {
+    if (typeof window === 'undefined') return 'auto';
+    const saved = localStorage.getItem('maia_path');
+    return (saved as EpistemicPath | 'auto') || 'auto';
+  });
+
+  const [dominantElement, setDominantElement] = useState<
+    'water' | 'fire' | 'earth' | 'air' | undefined
+  >(() => {
+    if (typeof window === 'undefined') return undefined;
+    try {
+      const betaUser = localStorage.getItem('beta_user');
+      if (!betaUser) return undefined;
+      const parsed = JSON.parse(betaUser);
+      return parsed?.dominantElement;
+    } catch {
+      return undefined;
+    }
+  });
+
+  // Listen for epistemic path changes from PathSelector
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ path?: EpistemicPath | 'auto' }>;
+      const next = ce?.detail?.path || (localStorage.getItem('maia_path') as EpistemicPath | 'auto') || 'auto';
+      setEpistemicPath(next);
+      console.log(`🧭 [Path] Changed to: ${next}`);
+    };
+
+    window.addEventListener('maia-path-changed', handler as EventListener);
+    return () => window.removeEventListener('maia-path-changed', handler as EventListener);
+  }, []);
+
   // Session time container state
   const [sessionTimer, setSessionTimer] = useState<SessionTimer | null>(null);
   const [showResumePrompt, setShowResumePrompt] = useState(false);
@@ -2127,6 +2163,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
           sanctuary: isSanctuary,
+
+          // 🧭 EPISTEMIC PATH: How MAIA shapes her responses (Jungian, Somatic, CBT, etc.)
+          epistemicPath,
+          dominantElement,
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,
