@@ -24,6 +24,8 @@ import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
 import { buildEpistemicPathAddendum, type EpistemicPathSelection } from '@/lib/consciousness/epistemicPathPrompt';
 import { getFrameworkPromptAddendum, getReflectionLensAddendum, type TherapeuticFramework, type ReflectionLens } from '@/lib/consciousness/therapeuticFrameworks';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
+import { calculateBirthChart, type BirthChart, type BirthData, type PlanetPosition } from '@/lib/astrology/ephemerisCalculator';
+import { calculateCurrentTransits, findTransitAspects, type TransitPositions, type AspectPattern } from '@/lib/astrology/transitCalculator';
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
 import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
@@ -100,41 +102,164 @@ interface BirthDataInput {
 }
 
 /**
- * Format birth data into an astrological context addendum for MAIA's prompt.
- * This allows MAIA to reference the user's natal chart in relevant conversations.
+ * Format a planet position for display
  */
-function buildAstrologicalContextAddendum(birthData: BirthDataInput | undefined): string | null {
+function formatPlanetPosition(planet: string, pos: PlanetPosition, includeHouse: boolean = true): string {
+  const retrograde = pos.retrograde ? ' ℞' : '';
+  const house = includeHouse ? ` (House ${pos.house})` : '';
+  return `${planet}: ${pos.sign} ${pos.degree.toFixed(1)}°${retrograde}${house}`;
+}
+
+/**
+ * Format an aspect for display
+ */
+function formatAspect(aspect: AspectPattern): string {
+  const orb = aspect.orb < 1 ? '(exact)' : `(${aspect.orb.toFixed(1)}° orb)`;
+  const applying = aspect.applying ? 'applying' : 'separating';
+  return `Transit ${aspect.transitPlanet} ${aspect.aspectType} natal ${aspect.natalPlanet} ${orb} - ${applying}`;
+}
+
+/**
+ * Build full astrological context with calculated natal chart and current transits.
+ * This gives MAIA deep astrological awareness for personalized cosmic insights.
+ */
+async function buildAstrologicalContextAddendum(birthData: BirthDataInput | undefined): Promise<string | null> {
   if (!birthData?.date) return null;
 
   const parts: string[] = [];
   parts.push('🌟 ASTROLOGICAL CONTEXT');
   parts.push('');
-  parts.push('This person has shared their birth data with you. You may weave astrological insights naturally when relevant:');
-  parts.push('');
-  parts.push(`Birth Date: ${birthData.date}`);
 
-  if (birthData.time) {
-    parts.push(`Birth Time: ${birthData.time}`);
+  // Check if we have enough data for full chart calculation
+  const hasTime = !!birthData.time;
+  const hasLocation = birthData.location?.lat !== undefined && birthData.location?.lng !== undefined;
+  const canCalculateFullChart = hasTime && hasLocation;
+
+  if (canCalculateFullChart) {
+    try {
+      // Calculate natal chart
+      const chartData: BirthData = {
+        date: birthData.date,
+        time: birthData.time!,
+        location: {
+          lat: birthData.location!.lat,
+          lng: birthData.location!.lng,
+          timezone: birthData.location?.timezone || 'UTC',
+        },
+      };
+
+      const natalChart = await calculateBirthChart(chartData);
+      const currentTransits = await calculateCurrentTransits(new Date());
+      const transitAspects = findTransitAspects(currentTransits, natalChart);
+
+      // Format natal chart
+      parts.push('═══ NATAL CHART ═══');
+      parts.push('');
+      parts.push('☉ LUMINARIES & PERSONAL PLANETS:');
+      parts.push(formatPlanetPosition('Sun', natalChart.sun));
+      parts.push(formatPlanetPosition('Moon', natalChart.moon));
+      parts.push(formatPlanetPosition('Mercury', natalChart.mercury));
+      parts.push(formatPlanetPosition('Venus', natalChart.venus));
+      parts.push(formatPlanetPosition('Mars', natalChart.mars));
+      parts.push('');
+
+      parts.push('♃ SOCIAL PLANETS:');
+      parts.push(formatPlanetPosition('Jupiter', natalChart.jupiter));
+      parts.push(formatPlanetPosition('Saturn', natalChart.saturn));
+      parts.push('');
+
+      parts.push('♅ OUTER PLANETS (Generational):');
+      parts.push(formatPlanetPosition('Uranus', natalChart.uranus));
+      parts.push(formatPlanetPosition('Neptune', natalChart.neptune));
+      parts.push(formatPlanetPosition('Pluto', natalChart.pluto));
+      parts.push('');
+
+      parts.push('☊ LUNAR NODES & CHIRON:');
+      parts.push(formatPlanetPosition('North Node', natalChart.northNode));
+      parts.push(formatPlanetPosition('South Node', natalChart.southNode));
+      parts.push(formatPlanetPosition('Chiron', natalChart.chiron));
+      parts.push('');
+
+      parts.push('⬆ ANGLES:');
+      parts.push(`Ascendant (Rising): ${natalChart.ascendant.sign} ${natalChart.ascendant.degree.toFixed(1)}°`);
+      parts.push(`Midheaven (MC): ${natalChart.midheaven.sign} ${natalChart.midheaven.degree.toFixed(1)}°`);
+      parts.push('');
+
+      // Key natal aspects
+      const majorAspects = natalChart.aspects.filter(a =>
+        ['conjunction', 'opposition', 'square', 'trine'].includes(a.type) && a.orb < 5
+      );
+      if (majorAspects.length > 0) {
+        parts.push('⚝ KEY NATAL ASPECTS:');
+        majorAspects.slice(0, 8).forEach(a => {
+          const marker = a.exact ? '★' : '•';
+          parts.push(`${marker} ${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°)`);
+        });
+        parts.push('');
+      }
+
+      // Current transits
+      parts.push('═══ CURRENT TRANSITS ═══');
+      parts.push(`As of: ${new Date().toLocaleDateString()}`);
+      parts.push('');
+
+      // Filter to significant transits (outer planet aspects to personal planets)
+      const significantTransits = transitAspects.filter(a => {
+        const outerPlanets = ['Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
+        const personalPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
+        const isOuter = outerPlanets.includes(a.transitPlanet);
+        const isPersonal = personalPlanets.includes(a.natalPlanet) ||
+                          a.natalPlanet === 'Sun' || a.natalPlanet === 'Moon';
+        return isOuter && isPersonal && a.orb < 5;
+      });
+
+      if (significantTransits.length > 0) {
+        parts.push('☍ ACTIVE TRANSITS TO NATAL CHART:');
+        significantTransits.slice(0, 6).forEach(t => {
+          parts.push(`• ${formatAspect(t)}`);
+        });
+        parts.push('');
+      } else {
+        parts.push('No major outer planet transits to personal planets currently active.');
+        parts.push('');
+      }
+
+    } catch (error) {
+      console.error('[Astrology] Chart calculation error:', error);
+      // Fall back to basic birth data
+      parts.push(`Birth Date: ${birthData.date}`);
+      parts.push(`Birth Time: ${birthData.time}`);
+      if (birthData.location?.name) {
+        parts.push(`Birth Location: ${birthData.location.name}`);
+      }
+      parts.push('');
+      parts.push('(Full chart calculation unavailable - use general astrological knowledge)');
+      parts.push('');
+    }
   } else {
-    parts.push('Birth Time: Unknown (use Sun sign and planetary positions only, no house placements)');
+    // No time or location - just provide basic info
+    parts.push(`Birth Date: ${birthData.date}`);
+    if (!hasTime) {
+      parts.push('Birth Time: Unknown');
+    }
+    if (!hasLocation) {
+      parts.push('Birth Location: Unknown');
+    }
+    parts.push('');
+    parts.push('Without birth time and location, focus on:');
+    parts.push('- Sun sign qualities and general planetary positions');
+    parts.push('- Avoid house placements, rising sign, or precise aspects');
+    parts.push('');
   }
 
-  if (birthData.location?.name) {
-    parts.push(`Birth Location: ${birthData.location.name}`);
-  }
-  if (birthData.location?.timezone) {
-    parts.push(`Timezone: ${birthData.location.timezone}`);
-  }
-
-  parts.push('');
-  parts.push('Guidelines for astrological references:');
-  parts.push('- Offer astrological insights when the conversation touches on patterns, timing, or self-understanding');
-  parts.push('- Never lead with astrology unless the person asks specifically');
-  parts.push('- Frame transits as invitations, not predictions');
-  parts.push('- Connect archetypal patterns to their lived experience');
-  parts.push('- If birth time is unknown, avoid house placements and rising sign');
-  parts.push('');
-  parts.push('Remember: Astrology is a lens for pattern recognition, not fortune-telling.');
+  // Guidelines
+  parts.push('═══ INTEGRATION GUIDELINES ═══');
+  parts.push('• Offer astrological insights when the conversation touches on patterns, timing, or self-understanding');
+  parts.push('• Never lead with astrology unless asked specifically');
+  parts.push('• Frame transits as invitations and weather, not predictions or fate');
+  parts.push('• Connect archetypal patterns to their lived experience');
+  parts.push('• Use phrases like "archetypally speaking" or "through an astrological lens"');
+  parts.push('• Remember: astrology is pattern recognition, not fortune-telling');
 
   return parts.join('\n');
 }
@@ -1108,7 +1233,7 @@ export async function POST(req: NextRequest) {
     const reflectionLensAddendum = mode === 'scribe' ? getReflectionLensAddendum(effectiveLens) : null;
 
     // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-    const astrologicalContextAddendum = buildAstrologicalContextAddendum(birthData);
+    const astrologicalContextAddendum = await buildAstrologicalContextAddendum(birthData);
 
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
