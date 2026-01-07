@@ -3532,19 +3532,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 </motion.h1>
               </div>
 
-              {/* 🧭 Path Banner - Shows current epistemic lens (Welcome view) */}
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.25, duration: 0.4 }}
-                className="w-full mb-3"
-              >
-                <PathBanner
-                  currentPath={epistemicPath}
-                  onClick={() => setShowPathSelector(true)}
-                />
-              </motion.div>
-
               {/* Welcome Input Field - Claude-like centered input */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
