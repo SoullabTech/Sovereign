@@ -1268,11 +1268,14 @@ function MAIAPageContent() {
                           step="5"
                           value={sustainingAmount}
                           onChange={(e) => setSustainingAmount(parseInt(e.target.value))}
-                          className="w-full h-2 bg-stone-700/50 rounded-full appearance-none cursor-pointer accent-amber-500
+                          className="w-full h-2 rounded-full cursor-pointer accent-amber-500
+                            [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-stone-700/50
                             [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
-                            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:shadow-lg
+                            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-1.5
+                            [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-stone-700/50
                             [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
                             [&::-moz-range-thumb]:bg-amber-500 [&::-moz-range-thumb]:border-0"
+                          style={{ WebkitAppearance: 'none', appearance: 'none', background: 'transparent' }}
                         />
                         <div className="flex justify-between text-[9px] text-stone-500 mt-1">
                           <span>$5</span>
@@ -1281,12 +1284,28 @@ function MAIAPageContent() {
                       </div>
 
                       {/* Benefits Preview */}
-                      <div className="text-[9px] text-stone-400 mb-4 space-y-1">
+                      <div className="text-[9px] text-stone-400 mb-3 space-y-1">
                         <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Monthly build letters</p>
                         {sustainingAmount >= 25 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Early access + previews</p>}
                         {sustainingAmount >= 75 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Patron Q&A circle</p>}
                         {sustainingAmount >= 250 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Direct roadmap input</p>}
                         {sustainingAmount >= 500 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Founder channel access</p>}
+                      </div>
+
+                      {/* Transparency */}
+                      <div className="bg-stone-800/50 rounded-lg p-3 mb-3 border border-stone-700/50">
+                        <p className="text-[8px] text-stone-500 uppercase tracking-wide mb-2">What this sustains</p>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-[9px]">
+                          <span className="text-stone-400">Infrastructure</span>
+                          <span className="text-stone-500 text-right">~$500/mo</span>
+                          <span className="text-stone-400">Development</span>
+                          <span className="text-stone-500 text-right">70+ hrs/wk</span>
+                          <span className="text-amber-400 font-medium">Target</span>
+                          <span className="text-amber-400 text-right font-medium">$3,500/mo</span>
+                        </div>
+                        <p className="text-[8px] text-stone-500 mt-2">
+                          No VC. No ads. MAIA exists because people who use it sustain it.
+                        </p>
                       </div>
 
                       {/* Join Button */}

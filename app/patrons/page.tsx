@@ -421,12 +421,15 @@ function PatronsContent() {
                 step="5"
                 value={sliderAmount}
                 onChange={(e) => setSliderAmount(parseInt(e.target.value))}
-                className="w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full appearance-none cursor-pointer accent-amber-500
+                className="w-full h-2 rounded-full cursor-pointer accent-amber-500
+                  [&::-webkit-slider-runnable-track]:h-2 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-stone-200 dark:[&::-webkit-slider-runnable-track]:bg-stone-700
                   [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
                   [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:shadow-lg
-                  [&::-webkit-slider-thumb]:hover:bg-amber-600 [&::-webkit-slider-thumb]:transition-colors
+                  [&::-webkit-slider-thumb]:hover:bg-amber-600 [&::-webkit-slider-thumb]:transition-colors [&::-webkit-slider-thumb]:-mt-2
+                  [&::-moz-range-track]:h-2 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-stone-200 dark:[&::-moz-range-track]:bg-stone-700
                   [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full
                   [&::-moz-range-thumb]:bg-amber-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-lg"
+                style={{ WebkitAppearance: 'none', appearance: 'none', background: 'transparent' }}
               />
               <div className="flex justify-between text-xs text-stone-400 dark:text-stone-500 mt-2">
                 <span>$5</span>
@@ -452,6 +455,32 @@ function PatronsContent() {
                   </li>
                 ))}
               </ul>
+            </div>
+
+            {/* Transparency - The Real Numbers */}
+            <div className="bg-stone-100 dark:bg-stone-800/50 rounded-2xl p-5 border border-stone-200 dark:border-stone-700 mb-6">
+              <p className="text-xs font-medium text-stone-700 dark:text-stone-300 mb-3 uppercase tracking-wide">
+                The real numbers
+              </p>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between text-stone-600 dark:text-stone-400">
+                  <span>AI + infrastructure</span>
+                  <span className="font-mono text-stone-500">$500/mo</span>
+                </div>
+                <div className="flex justify-between text-stone-600 dark:text-stone-400">
+                  <span>Full-time development</span>
+                  <span className="font-mono text-stone-500">70+ hrs/week</span>
+                </div>
+                <div className="border-t border-stone-200 dark:border-stone-700 pt-2 mt-2">
+                  <div className="flex justify-between text-stone-700 dark:text-stone-300 font-medium">
+                    <span>What keeps this running</span>
+                    <span className="font-mono">$3,500/mo</span>
+                  </div>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
+                No venture capital. No ads. No data harvesting. MAIA exists because people who use it sustain it.
+              </p>
             </div>
 
             {/* Billing Toggle */}
