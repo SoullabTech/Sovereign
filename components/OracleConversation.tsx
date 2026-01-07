@@ -43,6 +43,7 @@ import { VoiceState } from '@/lib/voice/voice-capture';
 // import { getMaiaVoiceEngine, voiceStateManager, type Element } from '@/lib/voice';
 import type { Element } from '@/lib/voice';
 import type { EpistemicPath } from '@/lib/consciousness/ModeStanceCharter';
+import PathSelector, { PathBanner } from '@/components/path/PathSelector';
 // import { useMAIASDK } from '@/hooks/useMAIASDK-simple'; // Fallback option (if needed)
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
@@ -414,6 +415,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       return undefined;
     }
   });
+
+  // 🧭 PathSelector modal state
+  const [showPathSelector, setShowPathSelector] = useState(false);
 
   // Listen for epistemic path changes from PathSelector
   useEffect(() => {
@@ -4469,6 +4473,13 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               <div className="fixed inset-x-0 z-below-nav" style={{ bottom: '2.5rem' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
+                  {/* 🧭 Path Banner - Shows current epistemic lens */}
+                  <div className="max-w-4xl mx-auto mb-2 px-2">
+                    <PathBanner
+                      currentPath={epistemicPath}
+                      onClick={() => setShowPathSelector(true)}
+                    />
+                  </div>
                   <ModernTextInput
                     ref={textInputRef}
                     value={draftMessage}
@@ -4688,6 +4699,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       <QuickSettingsSheet
         isOpen={showAudioSettings}
         onClose={() => setShowAudioSettings(false)}
+      />
+
+      {/* 🧭 Epistemic Path Selector - How MAIA meets you */}
+      <PathSelector
+        isOpen={showPathSelector}
+        onClose={() => setShowPathSelector(false)}
+        onSelect={(path) => {
+          setEpistemicPath(path);
+          setShowPathSelector(false);
+        }}
+        currentPath={epistemicPath}
+        dominantElement={dominantElement}
       />
 
       {/* Floating Quick Settings Button */}

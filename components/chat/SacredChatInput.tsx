@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Send, Mic, Square, Sparkles, BookOpen, Upload, Shield } from 'lucide-react';
 import VoiceRecorder from '../VoiceRecorder';
 import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
+import { PathBanner } from '../path/PathSelector';
+import type { EpistemicPath } from '@/lib/consciousness/ModeStanceCharter';
 
 interface SacredChatInputProps {
   onSendMessage: (message: string, isJournal?: boolean) => void;
@@ -20,6 +22,8 @@ interface SacredChatInputProps {
   style?: 'prose' | 'poetic' | 'auto'; // from onboarding
   mode?: 'dialogue' | 'counsel' | 'scribe'; // MAIA communication mode
   onOpenPromptPicker?: () => void; // Open soul prompt picker
+  onOpenPathSelector?: () => void; // Open epistemic path selector
+  currentPath?: EpistemicPath | 'auto'; // Current epistemic path
 }
 
 // Sacred animation variants
@@ -65,7 +69,9 @@ export default function SacredChatInput({
   tone = 0.5,
   style = 'prose',
   mode = 'dialogue',
-  onOpenPromptPicker
+  onOpenPromptPicker,
+  onOpenPathSelector,
+  currentPath = 'auto'
 }: SacredChatInputProps) {
   // Scribe/Note mode allows unlimited input for full transcript uploads
   const maxLength = mode === 'scribe' ? undefined : maxLengthProp;
@@ -227,6 +233,13 @@ export default function SacredChatInput({
 
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 sm:p-6 border-t border-amber-400/20 bg-neutral-900/95 backdrop-blur-xl z-50 shadow-2xl">
+      {/* Path Banner - Shows current epistemic path */}
+      {onOpenPathSelector && (
+        <div className="max-w-4xl mx-auto mb-2">
+          <PathBanner currentPath={currentPath} onClick={onOpenPathSelector} />
+        </div>
+      )}
+
       {/* Sacred Input Container - Mobile Optimized */}
       <motion.div
         ref={containerRef}

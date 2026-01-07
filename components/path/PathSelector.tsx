@@ -17,69 +17,96 @@ interface PathSelectorProps {
   dominantElement?: 'water' | 'fire' | 'earth' | 'air';
 }
 
-// Path display config with visual metaphors
+// Path display config with promise (lens) + won't (filter) + shortUI
 const PATH_DISPLAY: Record<EpistemicPath | 'auto', {
   label: string;
-  question: string;
+  shortUI: string;
+  promise: string;
+  wont: string;
   icon: typeof Compass;
   color: string;
   gradient: string;
+  isPrimary: boolean; // Show in main list vs "More paths"
 }> = {
-  jungian: {
-    label: 'Depth',
-    question: 'Go into the symbolic, the dream, the shadow',
-    icon: Compass,
-    color: 'text-indigo-400',
-    gradient: 'from-indigo-500/20 to-purple-500/20'
+  auto: {
+    label: 'Sacred Mirror',
+    shortUI: 'Reflective. You lead.',
+    promise: "I'll reflect what's here with clarity and care so your own knowing can come forward.",
+    wont: "I won't force an interpretation, rush you into fixes, or make your experience mean something you don't consent to.",
+    icon: Sparkles,
+    color: 'text-purple-400',
+    gradient: 'from-purple-500/20 to-violet-500/20',
+    isPrimary: true
   },
   somatic: {
     label: 'Body',
-    question: 'Start with sensation, let the body speak',
+    shortUI: 'Slow is fast.',
+    promise: "I'll help you listen to the body—pace, sensation, safety—one honest step at a time.",
+    wont: "I won't push catharsis, intensity, or override your nervous system's timing.",
     icon: Mountain,
     color: 'text-emerald-400',
-    gradient: 'from-emerald-500/20 to-teal-500/20'
+    gradient: 'from-emerald-500/20 to-teal-500/20',
+    isPrimary: true
   },
   cbt: {
     label: 'Clarity',
-    question: 'Work with thoughts, find patterns, reframe',
+    shortUI: 'Practical experiments.',
+    promise: "I'll help you get practical: name the loop, test a small change, and track what works.",
+    wont: "I won't dismiss feelings or treat your inner world like a bug to logic away.",
     icon: Wind,
     color: 'text-sky-400',
-    gradient: 'from-sky-500/20 to-blue-500/20'
-  },
-  shamanic: {
-    label: 'Mystery',
-    question: 'Honor the numinous, witness without explaining',
-    icon: Flame,
-    color: 'text-orange-400',
-    gradient: 'from-orange-500/20 to-red-500/20'
+    gradient: 'from-sky-500/20 to-blue-500/20',
+    isPrimary: true
   },
   relational: {
     label: 'Connection',
-    question: 'Explore what happens between, attachment, resonance',
+    shortUI: 'Boundaries + repair.',
+    promise: "I'll focus on the field between you and others—needs, boundaries, rupture/repair, clean speech.",
+    wont: "I won't take sides, reward blame stories, or coach manipulation.",
     icon: Droplets,
     color: 'text-blue-400',
-    gradient: 'from-blue-500/20 to-cyan-500/20'
+    gradient: 'from-blue-500/20 to-cyan-500/20',
+    isPrimary: true
+  },
+  jungian: {
+    label: 'Depth',
+    shortUI: 'Symbols, shadow, pattern.',
+    promise: "I'll stay close to your images—dreams, symbols, patterns—and help them unfold over time.",
+    wont: "I won't give generic \"symbol = X\" definitions or flatten you into a typology.",
+    icon: Compass,
+    color: 'text-indigo-400',
+    gradient: 'from-indigo-500/20 to-purple-500/20',
+    isPrimary: false
+  },
+  shamanic: {
+    label: 'Mystery',
+    shortUI: 'Mythic + grounded.',
+    promise: "I'll meet you in mythic language—ritual, protection, soul-orientation—while staying grounded.",
+    wont: "I won't claim certainty about spirits/causality, or replace your discernment with my authority.",
+    icon: Flame,
+    color: 'text-orange-400',
+    gradient: 'from-orange-500/20 to-red-500/20',
+    isPrimary: false
   },
   integral: {
     label: 'Spiral',
-    question: 'Navigate elements, phases, developmental movement',
+    shortUI: 'Whole-system clarity.',
+    promise: "I'll map the whole ecology—multiple lenses, levels, states, timelines—so you can see the real drivers.",
+    wont: "I won't over-complicate or use big maps to avoid the next true step.",
     icon: Sparkles,
     color: 'text-amber-400',
-    gradient: 'from-amber-500/20 to-yellow-500/20'
+    gradient: 'from-amber-500/20 to-yellow-500/20',
+    isPrimary: false
   },
   humanistic: {
     label: 'Trust',
-    question: 'Follow your knowing, I trust your direction',
+    shortUI: 'Values + agency.',
+    promise: "I'll center dignity and agency—values, meaning, choice—so you strengthen your inner authority.",
+    wont: "I won't pathologize you or push you toward a life optimized for approval.",
     icon: Droplets,
     color: 'text-rose-400',
-    gradient: 'from-rose-500/20 to-pink-500/20'
-  },
-  auto: {
-    label: 'Let MAIA Sense',
-    question: 'I\'ll attune to what serves each moment',
-    icon: Sparkles,
-    color: 'text-purple-400',
-    gradient: 'from-purple-500/20 to-violet-500/20'
+    gradient: 'from-rose-500/20 to-pink-500/20',
+    isPrimary: false
   }
 };
 
@@ -105,15 +132,18 @@ export function PathSelector({
     ? suggestPathFromElemental(dominantElement)
     : [];
 
-  // All paths for "More paths" section
-  const allPaths: (EpistemicPath | 'auto')[] = [
-    'auto', 'jungian', 'somatic', 'cbt', 'shamanic', 'relational', 'integral', 'humanistic'
-  ];
+  // Primary paths (4 core paths shown by default)
+  const primaryPaths: (EpistemicPath | 'auto')[] = Object.entries(PATH_DISPLAY)
+    .filter(([_, config]) => config.isPrimary)
+    .map(([key]) => key as EpistemicPath | 'auto');
 
-  // Paths not in suggestions (for "More paths" section)
-  const otherPaths = allPaths.filter(
-    p => p === 'auto' || !suggestedPaths.includes(p as EpistemicPath)
-  );
+  // Expanded paths (shown under "More paths")
+  const expandedPaths: EpistemicPath[] = Object.entries(PATH_DISPLAY)
+    .filter(([_, config]) => !config.isPrimary)
+    .map(([key]) => key as EpistemicPath);
+
+  // Track expanded state
+  const [showMorePaths, setShowMorePaths] = useState(false);
 
   const handleSelect = (path: EpistemicPath | 'auto') => {
     setSelectedPath(path);
@@ -184,12 +214,15 @@ export function PathSelector({
             <Icon size={20} />
           </motion.div>
 
-          <div className="flex-1">
-            <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className={`text-sm font-medium ${
                 isSelected ? 'text-amber-300' : 'text-white/80'
               }`}>
                 {display.label}
+              </span>
+              <span className="text-xs text-white/40">
+                {display.shortUI}
               </span>
               {isSelected && (
                 <motion.span
@@ -202,8 +235,13 @@ export function PathSelector({
                 </motion.span>
               )}
             </div>
-            <p className="text-xs text-white/50 mt-1">
-              {display.question}
+            {/* Promise (lens) */}
+            <p className="text-xs text-white/60 mt-1.5 leading-relaxed">
+              {display.promise}
+            </p>
+            {/* Won't (filter) - shown when selected or hovered */}
+            <p className="text-xs text-white/40 mt-1 leading-relaxed italic">
+              {display.wont}
             </p>
           </div>
         </div>
@@ -319,39 +357,55 @@ export function PathSelector({
                       );
                     })()}
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {suggestedPaths.map(path => renderPathCard(path, true))}
                   </div>
                 </motion.div>
               )}
 
-              {/* Auto option (always visible) */}
+              {/* Primary paths (4 core options) */}
               <motion.div
-                className="mb-4"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
               >
-                {renderPathCard('auto')}
+                <div className="space-y-3">
+                  {primaryPaths
+                    .filter(p => !suggestedPaths.includes(p as EpistemicPath))
+                    .map(path => renderPathCard(path))}
+                </div>
               </motion.div>
 
-              {/* All paths */}
+              {/* More paths toggle */}
               <motion.div
+                className="mt-4"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <Compass size={16} className="text-white/40" />
-                  <span className="text-sm text-white/60">
-                    {dominantElement ? 'Other paths' : 'All paths'}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {(dominantElement ? otherPaths.filter(p => p !== 'auto') : allPaths.filter(p => p !== 'auto')).map(path =>
-                    renderPathCard(path as EpistemicPath)
+                <button
+                  onClick={() => setShowMorePaths(!showMorePaths)}
+                  className="w-full flex items-center justify-center gap-2 py-2 text-sm text-white/50 hover:text-white/70 transition-colors"
+                >
+                  <Compass size={14} />
+                  <span>{showMorePaths ? 'Fewer paths' : 'More paths...'}</span>
+                </button>
+
+                <AnimatePresence>
+                  {showMorePaths && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-3 mt-3 overflow-hidden"
+                    >
+                      {expandedPaths
+                        .filter(p => !suggestedPaths.includes(p))
+                        .map(path => renderPathCard(path))}
+                    </motion.div>
                   )}
-                </div>
+                </AnimatePresence>
               </motion.div>
 
               {/* Helper text */}
@@ -361,7 +415,7 @@ export function PathSelector({
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.5 }}
               >
-                Paths are doorways, not identities. You can change anytime.
+                Paths are lenses, not identities. Change anytime.
               </motion.p>
             </div>
           </motion.div>
@@ -372,7 +426,40 @@ export function PathSelector({
 }
 
 /**
- * Compact version for inline use (e.g., in chat header)
+ * Compact banner for above the input — shows current path with shortUI
+ * "Meeting you through: Sacred Mirror — Reflective. You lead. ▾"
+ */
+export function PathBanner({
+  currentPath = 'auto',
+  onClick
+}: {
+  currentPath?: EpistemicPath | 'auto';
+  onClick?: () => void;
+}) {
+  const display = PATH_DISPLAY[currentPath];
+  const Icon = display.icon;
+
+  return (
+    <motion.button
+      onClick={onClick}
+      className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                 bg-white/5 border border-white/10 hover:bg-white/10 transition-all
+                 text-white/60 hover:text-white/80"
+      whileTap={{ scale: 0.98 }}
+      whileHover={{ scale: 1.01 }}
+    >
+      <Icon size={14} className={display.color} />
+      <span className="text-xs">
+        Meeting you through: <span className="text-white/80">{display.label}</span>
+        <span className="text-white/40 ml-1">— {display.shortUI}</span>
+      </span>
+      <span className="text-white/40 ml-1">▾</span>
+    </motion.button>
+  );
+}
+
+/**
+ * Compact indicator for tight spaces (e.g., chat header)
  */
 export function PathIndicator({
   currentPath = 'auto',
