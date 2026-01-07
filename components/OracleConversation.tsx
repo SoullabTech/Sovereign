@@ -42,8 +42,6 @@ import { VoiceState } from '@/lib/voice/voice-capture';
 // REMOVED FORMANT VOICE ENGINE - MAIA now speaks with OpenAI Alloy voice
 // import { getMaiaVoiceEngine, voiceStateManager, type Element } from '@/lib/voice';
 import type { Element } from '@/lib/voice';
-import type { EpistemicPath } from '@/lib/consciousness/ModeStanceCharter';
-import PathSelector, { PathBanner } from '@/components/path/PathSelector';
 // import { useMAIASDK } from '@/hooks/useMAIASDK-simple'; // Fallback option (if needed)
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
@@ -395,44 +393,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  // 🧭 EPISTEMIC PATH: How MAIA shapes her responses (Jungian, Somatic, CBT, etc.)
-  const [epistemicPath, setEpistemicPath] = useState<EpistemicPath | 'auto'>(() => {
-    if (typeof window === 'undefined') return 'auto';
-    const saved = localStorage.getItem('maia_path');
-    return (saved as EpistemicPath | 'auto') || 'auto';
-  });
-
-  const [dominantElement, setDominantElement] = useState<
-    'water' | 'fire' | 'earth' | 'air' | undefined
-  >(() => {
-    if (typeof window === 'undefined') return undefined;
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (!betaUser) return undefined;
-      const parsed = JSON.parse(betaUser);
-      return parsed?.dominantElement;
-    } catch {
-      return undefined;
-    }
-  });
-
-  // 🧭 PathSelector modal state
-  const [showPathSelector, setShowPathSelector] = useState(false);
-
-  // Listen for epistemic path changes from PathSelector
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const handler = (e: Event) => {
-      const ce = e as CustomEvent<{ path?: EpistemicPath | 'auto' }>;
-      const next = ce?.detail?.path || (localStorage.getItem('maia_path') as EpistemicPath | 'auto') || 'auto';
-      setEpistemicPath(next);
-      console.log(`🧭 [Path] Changed to: ${next}`);
-    };
-
-    window.addEventListener('maia-path-changed', handler as EventListener);
-    return () => window.removeEventListener('maia-path-changed', handler as EventListener);
-  }, []);
+  // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
+  // Now handled by lib/consciousness/therapeuticFrameworks.ts
+  // Framework selection is mode-specific and accessed via FrameworkSelector component
 
   // Session time container state
   const [sessionTimer, setSessionTimer] = useState<SessionTimer | null>(null);
@@ -2170,9 +2133,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
           sanctuary: isSanctuary,
 
-          // 🧭 EPISTEMIC PATH: How MAIA shapes her responses (Jungian, Somatic, CBT, etc.)
-          epistemicPath,
-          dominantElement,
+          // 🧭 THERAPEUTIC FRAMEWORK: Mode-specific lens (handled by therapeuticFrameworks.ts)
+          // Framework is now applied contextually based on realtimeMode (dialogue/counsel/scribe)
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,
@@ -4475,13 +4437,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               <div className="fixed inset-x-0 z-below-nav" style={{ bottom: '2.5rem' }}>
                 {/* Modern text input area */}
                 <div className="bg-soul-surface/90 px-2 py-3 pb-2 border-t border-soul-border/40 backdrop-blur-xl">
-                  {/* 🧭 Path Banner - Shows current epistemic lens */}
-                  <div className="max-w-4xl mx-auto mb-2 px-2">
-                    <PathBanner
-                      currentPath={epistemicPath}
-                      onClick={() => setShowPathSelector(true)}
-                    />
-                  </div>
                   <ModernTextInput
                     ref={textInputRef}
                     value={draftMessage}
@@ -4703,17 +4658,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         onClose={() => setShowAudioSettings(false)}
       />
 
-      {/* 🧭 Epistemic Path Selector - How MAIA meets you */}
-      <PathSelector
-        isOpen={showPathSelector}
-        onClose={() => setShowPathSelector(false)}
-        onSelect={(path) => {
-          setEpistemicPath(path);
-          setShowPathSelector(false);
-        }}
-        currentPath={epistemicPath}
-        dominantElement={dominantElement}
-      />
+      {/* 🧭 Therapeutic Framework Selector - Mode-specific (Counsel/Scribe)
+          Now handled by FrameworkSelector component, accessed contextually */}
 
       {/* Floating Quick Settings Button */}
       {/* QuickSettingsButton removed - now in bottom nav bar */}

@@ -1,11 +1,9 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link, Compass } from 'lucide-react';
+import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link } from 'lucide-react';
 import { GoogleConnectSection } from './settings/GoogleConnectSection';
 import { useState, useEffect } from 'react';
-import { PathSelector, PathIndicator } from './path/PathSelector';
-import type { EpistemicPath } from '@/lib/consciousness/ModeStanceCharter';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 import { getInitialSessionSettings } from '@/lib/settings/accountSettings';
@@ -72,32 +70,6 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [userId, setUserId] = useState<string | null>(null);
   // Removed: Supabase client (now using localStorage only for sovereign mode)
-
-  // Path selection state
-  const [showPathSelector, setShowPathSelector] = useState(false);
-  const [currentPath, setCurrentPath] = useState<EpistemicPath | 'auto'>('auto');
-  const [dominantElement, setDominantElement] = useState<'water' | 'fire' | 'earth' | 'air' | undefined>();
-
-  // Load saved path and elemental profile
-  useEffect(() => {
-    if (typeof window !== 'undefined' && isOpen) {
-      const savedPath = localStorage.getItem('maia_path');
-      if (savedPath && (savedPath === 'auto' || ['jungian', 'somatic', 'cbt', 'shamanic', 'relational', 'integral', 'humanistic'].includes(savedPath))) {
-        setCurrentPath(savedPath as EpistemicPath | 'auto');
-      }
-
-      // Try to get dominant element from user profile
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        try {
-          const parsed = JSON.parse(betaUser);
-          if (parsed.dominantElement) {
-            setDominantElement(parsed.dominantElement);
-          }
-        } catch { /* ignore parse errors */ }
-      }
-    }
-  }, [isOpen]);
 
   // Get userId from localStorage
   useEffect(() => {
@@ -370,35 +342,6 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   </motion.button>
                 </motion.div>
 
-                {/* Epistemic Path Selection - "How do you want to be met?" */}
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.22 }}
-                  className="pb-4 border-b border-white/10"
-                >
-                  <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
-                    <Compass size={16} />
-                    How You Want to Be Met
-                  </label>
-                  <motion.button
-                    onClick={() => setShowPathSelector(true)}
-                    className="w-full text-left p-4 rounded-xl border border-white/10 bg-black/20 hover:bg-white/5 transition-all"
-                    whileTap={{ scale: 0.98 }}
-                    whileHover={{ scale: 1.01 }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <PathIndicator currentPath={currentPath} />
-                      <span className="text-xs text-white/40">Tap to change</span>
-                    </div>
-                    <p className="text-xs text-white/50 mt-2">
-                      {currentPath === 'auto'
-                        ? "MAIA attunes to what serves each moment"
-                        : `Responses shaped by ${currentPath} sensibility`}
-                    </p>
-                  </motion.button>
-                </motion.div>
-
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -645,18 +588,6 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
         </>
       )}
     </AnimatePresence>
-
-    {/* Path Selector Modal */}
-    <PathSelector
-      isOpen={showPathSelector}
-      onClose={() => setShowPathSelector(false)}
-      onSelect={(path) => {
-        setCurrentPath(path);
-        // The PathSelector component handles localStorage and event dispatch
-      }}
-      currentPath={currentPath}
-      dominantElement={dominantElement}
-    />
     </>
   );
 }
