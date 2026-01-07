@@ -25,10 +25,14 @@ export async function GET(request: NextRequest) {
       try {
         // Check if userId is a valid member ID, username, or passkey
         // Note: id is UUID type, so we cast to text for string comparison
+        // Also check for legacy format where username is embedded (e.g., 'kelly-nezat' should match username 'kelly')
+        const legacyUsername = userId.includes('-') ? userId.split('-')[0] : null;
+
         const result = await query(
           `SELECT id, name, username, passkey, preferred_name FROM members
-           WHERE id::text = $1 OR username = $1 OR passkey = $1`,
-          [userId]
+           WHERE id::text = $1 OR username = $1 OR passkey = $1
+           OR ($2::text IS NOT NULL AND username = $2)`,
+          [userId, legacyUsername]
         );
 
         if (result.rows.length > 0) {
