@@ -4399,7 +4399,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           {!showChatInterface && (
             <div
               className="fixed right-4 md:right-8 z-50"
-              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 9rem)' }}
+              style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
             >
               <button
                 onClick={() => setShowVoiceText(!showVoiceText)}
