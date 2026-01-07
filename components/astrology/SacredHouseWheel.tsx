@@ -30,8 +30,9 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
-import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
+import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
 import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
+import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 import { AlchemicalSymbol } from './AlchemicalSymbols';
 import { Mission, MissionLayerSettings } from '@/lib/story/types';
 import { MissionDot, MissionPopup } from './MissionDot';
@@ -1986,12 +1987,39 @@ export function SacredHouseWheel({
 
                         <div>
                           <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
-                            Sign Expression
+                            Sign Expression — {zodiacArchetype?.facetName || activePlanet.sign}
                           </h4>
-                          <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
-                            {zodiacArchetype?.facetName || `${activePlanet.name} expresses through ${activePlanet.sign} energy`}
-                          </p>
+                          {/* Jungian Archetypes */}
+                          {zodiacArchetype?.archetypes?.jungian && zodiacArchetype.archetypes.jungian.length > 0 && (
+                            <p className={`text-xs leading-relaxed mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                              <span className="opacity-70">Archetypes:</span>{' '}
+                              <span className="font-medium">{zodiacArchetype.archetypes.jungian.slice(0, 2).join(', ')}</span>
+                            </p>
+                          )}
+                          {/* Mythological Figures */}
+                          {zodiacArchetype?.archetypes?.mythological && zodiacArchetype.archetypes.mythological.length > 0 && (
+                            <p className={`text-xs leading-relaxed mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                              <span className="opacity-70">Mythology:</span>{' '}
+                              <span className="italic">{zodiacArchetype.archetypes.mythological.slice(0, 2).join(', ')}</span>
+                            </p>
+                          )}
+                          {/* Cultural Heroes */}
+                          {zodiacArchetype?.archetypes?.cultural && zodiacArchetype.archetypes.cultural.length > 0 && (
+                            <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                              <span className="opacity-70">Heroes:</span>{' '}
+                              {zodiacArchetype.archetypes.cultural.slice(0, 2).join(', ')}
+                            </p>
+                          )}
                         </div>
+
+                        {/* Personalized Synthesis */}
+                        {generateArchetypalDescription(activePlanet.name, activePlanet.sign, activePlanet.house) && (
+                          <div className={`mt-3 p-3 rounded-lg ${isDayMode ? 'bg-amber-50/50' : 'bg-amber-900/20'}`}>
+                            <p className={`text-xs italic leading-relaxed ${isDayMode ? 'text-amber-800' : 'text-amber-200/80'}`}>
+                              {generateArchetypalDescription(activePlanet.name, activePlanet.sign, activePlanet.house)}
+                            </p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Right Column - House Placement & Aspects */}
@@ -2013,21 +2041,34 @@ export function SacredHouseWheel({
                             <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
                               Aspects ({planetAspects.length})
                             </h4>
-                            <div className="space-y-1">
+                            <div className="space-y-2">
                               {planetAspects.slice(0, 3).map((aspect, idx) => {
                                 const otherPlanet = aspect.planet1 === activePlanet.name ? aspect.planet2 : aspect.planet1;
+                                // Get archetypal interpretation for this aspect
+                                const aspectSynthesis = synthesizeAspect(
+                                  activePlanet.name,
+                                  otherPlanet,
+                                  aspect.type as AspectType
+                                );
                                 return (
                                   <div
                                     key={idx}
-                                    className={`px-2 py-1 rounded text-xs ${isDayMode ? 'bg-stone-100/60' : 'bg-stone-800/40'}`}
+                                    className={`px-2 py-2 rounded ${isDayMode ? 'bg-stone-100/60' : 'bg-stone-800/40'}`}
                                   >
-                                    <span className={isDayMode ? 'text-stone-900' : 'text-stone-100'}>
-                                      {aspect.type}
-                                    </span>
-                                    {' '}
-                                    <span className={isDayMode ? 'text-stone-600' : 'text-stone-400'}>
-                                      with {otherPlanet} ({aspect.orb.toFixed(1)}°)
-                                    </span>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <span className={`text-xs font-medium ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                                        {aspect.type}
+                                      </span>
+                                      <span className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                        with {otherPlanet} ({aspect.orb.toFixed(1)}°)
+                                      </span>
+                                    </div>
+                                    {/* Aspect interpretation from synthesizeAspect */}
+                                    {aspectSynthesis && (
+                                      <p className={`text-xs italic leading-relaxed mt-1 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                        {aspectSynthesis.coreQuestion}
+                                      </p>
+                                    )}
                                   </div>
                                 );
                               })}
@@ -2053,7 +2094,7 @@ export function SacredHouseWheel({
                       </div>
                     </div>
 
-                    {/* Footer - Elemental Integration */}
+                    {/* Footer - Deeper Exploration */}
                     <div
                       className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
                       style={{
@@ -2061,10 +2102,7 @@ export function SacredHouseWheel({
                       }}
                     >
                       <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                        <span className="opacity-60">Current Transits:</span>{' '}
-                        <span className="font-medium italic">
-                          Live transit data coming soon
-                        </span>
+                        <span className="opacity-80">✨ Ask MAIA about current transits to this placement</span>
                       </p>
                     </div>
                   </>
