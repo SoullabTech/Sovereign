@@ -394,10 +394,10 @@ export function SacredHouseWheel({
 
   return (
     <div className={`relative ${className}`} style={{ minHeight: '1280px' }}>
-      {/* Central holoflower overlay - Multicolor elemental sacred geometry */}
+      {/* Central holoflower overlay - Sacred geometry */}
       <img
-        src="/elementalHoloflower.svg"
-        alt="Elemental Holoflower"
+        src="/holoflower.svg"
+        alt="Holoflower"
         style={{
           position: 'absolute',
           top: '50%',
@@ -405,7 +405,7 @@ export function SacredHouseWheel({
           transform: 'translate(-50%, -50%)',
           width: '400px',
           height: '400px',
-          opacity: 0.2,
+          opacity: 0.15,
           pointerEvents: 'none',
           mixBlendMode: 'lighten',
           zIndex: 5
