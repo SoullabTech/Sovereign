@@ -9,12 +9,16 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Sun, Moon, Star } from 'lucide-react';
+import { ArrowLeft, Sparkles, Sun, Moon, Star, ChevronDown, ChevronUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { MiniHoloflower } from '@/components/holoflower/MiniHoloflower';
+import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
+import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
+import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
+import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 
 interface PlanetPosition {
   sign: string;
@@ -109,11 +113,20 @@ function calculateElementalBalance(chart: BirthChartData) {
   };
 }
 
+// Elemental colors for planet insights
+const elementalColors = {
+  fire: { color: '#F5A362', glow: 'rgba(245, 163, 98, 0.3)' },
+  water: { color: '#8BADD6', glow: 'rgba(139, 173, 214, 0.3)' },
+  earth: { color: '#A8C69F', glow: 'rgba(168, 198, 159, 0.3)' },
+  air: { color: '#F5D565', glow: 'rgba(245, 213, 101, 0.3)' },
+};
+
 export default function BirthChartPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
 
   const handleCalculate = async (data: any) => {
     setLoading(true);
@@ -223,10 +236,11 @@ export default function BirthChartPage() {
                   />
                 </div>
 
-                {/* Planetary Positions */}
+                {/* Planetary Positions - Clickable with Insights */}
                 <div className="bg-black/30 rounded-xl p-6 border border-[#D4B896]/20">
                   <h3 className="text-[#D4B896] font-medium mb-4">Planetary Positions</h3>
-                  <div className="space-y-2 text-sm">
+                  <p className="text-white/40 text-xs mb-4 italic">Click a planet to reveal archetypal insights</p>
+                  <div className="space-y-1 text-sm">
                     {[
                       { name: 'Sun', icon: '☉', data: chartData.sun },
                       { name: 'Moon', icon: '☽', data: chartData.moon },
@@ -240,19 +254,198 @@ export default function BirthChartPage() {
                       { name: 'Pluto', icon: '♇', data: chartData.pluto },
                       { name: 'Chiron', icon: '⚷', data: chartData.chiron },
                       { name: 'North Node', icon: '☊', data: chartData.northNode },
-                    ].map(({ name, icon, data }) => (
-                      <div key={name} className="flex items-center justify-between py-1 border-b border-white/5">
-                        <span className="text-white/70">
-                          <span className="text-lg mr-2">{icon}</span>
-                          {name}
-                          {data?.retrograde && <span className="text-red-400 ml-1">℞</span>}
-                        </span>
-                        <span className="text-[#D4B896]">
-                          {data?.sign} {data?.degree?.toFixed(1)}°
-                          <span className="text-white/40 ml-2">H{data?.house}</span>
-                        </span>
-                      </div>
-                    ))}
+                    ].map(({ name, icon, data }) => {
+                      const isExpanded = expandedPlanet === name;
+                      const zodiacArchetype = data?.sign ? getZodiacArchetype(data.sign) : null;
+                      const planetArchetype = getPlanetaryArchetype(name);
+                      const houseData = data?.house ? getSpiralogicHouseData(data.house) : null;
+                      const element = zodiacArchetype?.element || 'fire';
+                      const elementStyle = elementalColors[element as keyof typeof elementalColors];
+                      const planetAspects = chartData.aspects?.filter(
+                        a => a.planet1 === name || a.planet2 === name
+                      ) || [];
+
+                      return (
+                        <div key={name}>
+                          {/* Planet Row - Clickable */}
+                          <div
+                            className={`flex items-center justify-between py-2 px-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                              isExpanded
+                                ? 'bg-[#D4B896]/10 border border-[#D4B896]/30'
+                                : 'hover:bg-white/5 border border-transparent'
+                            }`}
+                            onClick={() => setExpandedPlanet(isExpanded ? null : name)}
+                          >
+                            <span className="text-white/70 flex items-center gap-2">
+                              <span className="text-lg">{icon}</span>
+                              {name}
+                              {data?.retrograde && <span className="text-red-400 text-xs">℞</span>}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[#D4B896]">
+                                {data?.sign} {data?.degree?.toFixed(1)}°
+                                <span className="text-white/40 ml-2">H{data?.house}</span>
+                              </span>
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-[#D4B896]/60" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-white/30" />
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Expanded Insight Panel */}
+                          <AnimatePresence>
+                            {isExpanded && data?.sign && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div
+                                  className="mx-2 mb-3 p-4 rounded-lg border"
+                                  style={{
+                                    background: `linear-gradient(135deg, ${elementStyle.color}10, transparent)`,
+                                    borderColor: `${elementStyle.color}30`,
+                                  }}
+                                >
+                                  {/* Element & Modality Tags */}
+                                  <div className="flex items-center gap-2 mb-3">
+                                    <span
+                                      className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                                      style={{ background: `${elementStyle.color}20`, color: elementStyle.color }}
+                                    >
+                                      {zodiacArchetype?.element || 'Unknown'}
+                                    </span>
+                                    <span className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/60 uppercase tracking-wide">
+                                      {zodiacArchetype?.modality || 'Unknown'}
+                                    </span>
+                                    {zodiacArchetype?.temperament && (
+                                      <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/20 text-purple-300 uppercase tracking-wide">
+                                        {zodiacArchetype.temperament}
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  {/* Two Column Grid */}
+                                  <div className="grid grid-cols-2 gap-4">
+                                    {/* Left - Archetype Info */}
+                                    <div className="space-y-3">
+                                      {/* Planetary Archetype */}
+                                      <div>
+                                        <h5 className="text-xs uppercase tracking-wider text-white/50 mb-1">
+                                          {name} Archetype
+                                        </h5>
+                                        <p className="text-white/90 text-sm font-medium">
+                                          {planetArchetype?.archetype || 'The Guide'}
+                                        </p>
+                                        <p className="text-white/50 text-xs mt-1">
+                                          {planetArchetype?.description}
+                                        </p>
+                                      </div>
+
+                                      {/* Sign Facet */}
+                                      <div>
+                                        <h5 className="text-xs uppercase tracking-wider text-white/50 mb-1">
+                                          {data.sign} Expression
+                                        </h5>
+                                        <p className="text-[#D4B896] text-sm font-medium">
+                                          {zodiacArchetype?.facetName}
+                                        </p>
+                                        {zodiacArchetype?.archetypes?.jungian && (
+                                          <p className="text-white/50 text-xs mt-1">
+                                            <span className="text-white/30">Archetypes:</span>{' '}
+                                            {zodiacArchetype.archetypes.jungian.slice(0, 2).join(', ')}
+                                          </p>
+                                        )}
+                                        {zodiacArchetype?.archetypes?.mythological && (
+                                          <p className="text-white/50 text-xs mt-1 italic">
+                                            <span className="text-white/30">Mythology:</span>{' '}
+                                            {zodiacArchetype.archetypes.mythological.slice(0, 2).join(', ')}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </div>
+
+                                    {/* Right - House & Aspects */}
+                                    <div className="space-y-3">
+                                      {/* House Activation */}
+                                      {houseData && (
+                                        <div>
+                                          <h5 className="text-xs uppercase tracking-wider text-white/50 mb-1">
+                                            House {data.house} Activation
+                                          </h5>
+                                          <p className="text-white/90 text-sm font-medium">
+                                            {houseData.facet}
+                                          </p>
+                                          <p className="text-white/50 text-xs mt-1">
+                                            {houseData.lesson}
+                                          </p>
+                                        </div>
+                                      )}
+
+                                      {/* Aspects */}
+                                      {planetAspects.length > 0 && (
+                                        <div>
+                                          <h5 className="text-xs uppercase tracking-wider text-white/50 mb-1">
+                                            Connections ({planetAspects.length})
+                                          </h5>
+                                          <div className="space-y-1">
+                                            {planetAspects.slice(0, 3).map((aspect, idx) => {
+                                              const otherPlanet = aspect.planet1 === name ? aspect.planet2 : aspect.planet1;
+                                              const aspectSynthesis = synthesizeAspect(
+                                                name,
+                                                otherPlanet,
+                                                aspect.type as AspectType
+                                              );
+                                              return (
+                                                <div key={idx} className="text-xs">
+                                                  <span className={`font-medium ${
+                                                    aspect.type === 'conjunction' ? 'text-amber-400' :
+                                                    aspect.type === 'trine' ? 'text-blue-400' :
+                                                    aspect.type === 'square' ? 'text-red-400' :
+                                                    aspect.type === 'opposition' ? 'text-purple-400' :
+                                                    'text-green-400'
+                                                  }`}>
+                                                    {aspect.type}
+                                                  </span>
+                                                  <span className="text-white/50"> with {otherPlanet}</span>
+                                                  {aspectSynthesis?.coreQuestion && (
+                                                    <p className="text-white/40 text-xs italic mt-0.5 pl-2 border-l border-white/10">
+                                                      {aspectSynthesis.coreQuestion}
+                                                    </p>
+                                                  )}
+                                                </div>
+                                              );
+                                            })}
+                                            {planetAspects.length > 3 && (
+                                              <p className="text-white/30 text-xs italic">
+                                                +{planetAspects.length - 3} more
+                                              </p>
+                                            )}
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Synthesis Quote */}
+                                  {generateArchetypalDescription(name, data.sign, data.house) && (
+                                    <div className="mt-3 pt-3 border-t border-white/10">
+                                      <p className="text-xs italic text-[#D4B896]/80">
+                                        "{generateArchetypalDescription(name, data.sign, data.house)}"
+                                      </p>
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
