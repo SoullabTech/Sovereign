@@ -26,7 +26,7 @@ import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor'
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { CaptureToggle } from '@/components/capture/CaptureToggle';
-import { VoiceHelpSheet } from '@/components/help';
+import { VoiceHelpSheet, TestFlightHelpSheet } from '@/components/help';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
@@ -216,6 +216,7 @@ function MAIAPageContent() {
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
+  const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
 
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
@@ -563,6 +564,18 @@ function MAIAPageContent() {
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
                   </motion.button>
+
+                  {/* TestFlight Help Button - Mobile */}
+                  <motion.button
+                    onClick={() => setShowTestFlightHelp(true)}
+                    className="flex items-center justify-center w-6 h-6 rounded-full
+                             bg-amber-500/10 hover:bg-amber-500/20
+                             border border-amber-500/20 hover:border-amber-500/40
+                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                    title="TestFlight Quick Test"
+                  >
+                    <span className="text-[10px] font-semibold tracking-wide">TF</span>
+                  </motion.button>
                 </div>
 
                 {/* Journal Button - Mobile */}
@@ -715,6 +728,20 @@ function MAIAPageContent() {
                   title="Voice Help"
                 >
                   <HelpCircle className="w-4 h-4" />
+                </motion.button>
+
+                {/* TestFlight Help Button - Desktop */}
+                <motion.button
+                  onClick={() => setShowTestFlightHelp(true)}
+                  className="flex items-center justify-center w-8 h-8 rounded-full
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="TestFlight Quick Test"
+                >
+                  <span className="text-xs font-semibold tracking-wide">TF</span>
                 </motion.button>
 
                 {/* Journal Button - Desktop */}
@@ -1014,6 +1041,12 @@ function MAIAPageContent() {
         <VoiceHelpSheet
           isOpen={showVoiceHelp}
           onClose={() => setShowVoiceHelp(false)}
+        />
+
+        {/* TestFlight Help Sheet */}
+        <TestFlightHelpSheet
+          isOpen={showTestFlightHelp}
+          onClose={() => setShowTestFlightHelp(false)}
         />
       </div>
       </SwipeNavigation>
