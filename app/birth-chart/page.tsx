@@ -215,7 +215,10 @@ export default function BirthChartPage() {
                   <h3 className="text-[#D4B896] font-medium mb-4 text-center">House Wheel</h3>
                   <SacredHouseWheel
                     planets={chartDataToPlanets(chartData)}
-                    aspects={chartData.aspects || []}
+                    aspects={(chartData.aspects || [])
+                      .filter((a): a is typeof a & { type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' } =>
+                        ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
+                      )}
                     isDayMode={false}
                   />
                 </div>
@@ -260,7 +263,6 @@ export default function BirthChartPage() {
                   <h3 className="text-[#D4B896] font-medium mb-4 text-center">Elemental Balance</h3>
                   <ElementalBalanceDisplay
                     balance={elementalBalance}
-                    isDayMode={false}
                   />
                 </div>
               )}
