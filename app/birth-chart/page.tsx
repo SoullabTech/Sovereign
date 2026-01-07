@@ -57,6 +57,37 @@ const signElements: Record<string, string> = {
   Cancer: 'water', Scorpio: 'water', Pisces: 'water',
 };
 
+// Transform chartData into planets array for SacredHouseWheel
+function chartDataToPlanets(chart: BirthChartData) {
+  const planetKeys = [
+    { key: 'sun', name: 'Sun' },
+    { key: 'moon', name: 'Moon' },
+    { key: 'mercury', name: 'Mercury' },
+    { key: 'venus', name: 'Venus' },
+    { key: 'mars', name: 'Mars' },
+    { key: 'jupiter', name: 'Jupiter' },
+    { key: 'saturn', name: 'Saturn' },
+    { key: 'uranus', name: 'Uranus' },
+    { key: 'neptune', name: 'Neptune' },
+    { key: 'pluto', name: 'Pluto' },
+    { key: 'chiron', name: 'Chiron' },
+    { key: 'northNode', name: 'North Node' },
+  ];
+
+  return planetKeys
+    .map(({ key, name }) => {
+      const pos = chart[key as keyof BirthChartData] as PlanetPosition;
+      if (!pos?.sign) return null;
+      return {
+        name,
+        sign: pos.sign,
+        house: pos.house || 1,
+        degree: pos.degree || 0,
+      };
+    })
+    .filter(Boolean) as { name: string; sign: string; house: number; degree: number }[];
+}
+
 function calculateElementalBalance(chart: BirthChartData) {
   const elements = { fire: 0, earth: 0, air: 0, water: 0 };
   const planets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'];
@@ -183,8 +214,8 @@ export default function BirthChartPage() {
                 <div className="bg-black/30 rounded-xl p-6 border border-[#D4B896]/20">
                   <h3 className="text-[#D4B896] font-medium mb-4 text-center">House Wheel</h3>
                   <SacredHouseWheel
-                    chartData={chartData}
-                    size={320}
+                    planets={chartDataToPlanets(chartData)}
+                    aspects={chartData.aspects || []}
                     isDayMode={false}
                   />
                 </div>
