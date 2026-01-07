@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
   Link, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
-  Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen
+  Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
+  Star, MapPin, Search
 } from 'lucide-react';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import {
@@ -20,6 +21,17 @@ import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/c
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
+
+interface BirthDataType {
+  date: string | null;
+  time: string | null;
+  location: {
+    lat: number;
+    lng: number;
+    name: string | null;
+    timezone: string | null;
+  } | null;
+}
 
 interface MemberProfile {
   id: string;
@@ -37,6 +49,7 @@ interface MemberProfile {
     amount: number;
     joinedAt: string | null;
   };
+  birthData: BirthDataType | null;
 }
 
 interface MemberSettings {
@@ -52,7 +65,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'maia' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -87,6 +100,7 @@ const CIRCLE_TIERS = {
 const SECTIONS: { id: SettingsSection; label: string; icon: typeof User }[] = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'account', label: 'Account', icon: Lock },
+  { id: 'astrology', label: 'Birth Chart', icon: Star },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
@@ -124,6 +138,26 @@ export function AccountSettings() {
   const [editEmail, setEditEmail] = useState('');
   const [editBio, setEditBio] = useState('');
 
+  // Birth data edit state
+  const [editBirthDate, setEditBirthDate] = useState('');
+  const [editBirthTime, setEditBirthTime] = useState('');
+  const [editBirthLocation, setEditBirthLocation] = useState('');
+  const [birthLocationSearch, setBirthLocationSearch] = useState('');
+  const [locationResults, setLocationResults] = useState<Array<{
+    display_name: string;
+    lat: string;
+    lon: string;
+    timezone: string;
+  }>>([]);
+  const [showLocationResults, setShowLocationResults] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState<{
+    lat: number;
+    lng: number;
+    name: string;
+    timezone: string;
+  } | null>(null);
+  const [searchingLocation, setSearchingLocation] = useState(false);
+
   // ─────────────────────────────────────────────────────────────────────────
   // Data Loading
   // ─────────────────────────────────────────────────────────────────────────
@@ -153,6 +187,21 @@ export function AccountSettings() {
           setEditName(profileData.name || '');
           setEditEmail(profileData.email || '');
           setEditBio(profileData.bio || '');
+
+          // Load birth data
+          if (profileData.birthData) {
+            setEditBirthDate(profileData.birthData.date || '');
+            setEditBirthTime(profileData.birthData.time || '');
+            if (profileData.birthData.location) {
+              setEditBirthLocation(profileData.birthData.location.name || '');
+              setSelectedLocation({
+                lat: profileData.birthData.location.lat,
+                lng: profileData.birthData.location.lng,
+                name: profileData.birthData.location.name || '',
+                timezone: profileData.birthData.location.timezone || 'UTC',
+              });
+            }
+          }
         }
 
         // Load settings from server
@@ -314,6 +363,94 @@ export function AccountSettings() {
       setSaving(false);
     }
   }, [userId, editName, editEmail, editBio, showSaveIndicator]);
+
+  // Search for birth location
+  const searchLocation = useCallback(async (query: string) => {
+    if (!query || query.length < 3) {
+      setLocationResults([]);
+      return;
+    }
+
+    setSearchingLocation(true);
+    try {
+      const res = await fetch(`/api/astrology/geocode?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.data) {
+          setLocationResults(data.data);
+          setShowLocationResults(true);
+        }
+      }
+    } catch (err) {
+      console.error('[AccountSettings] Location search error:', err);
+    } finally {
+      setSearchingLocation(false);
+    }
+  }, []);
+
+  // Debounced location search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (birthLocationSearch && birthLocationSearch.length >= 3) {
+        searchLocation(birthLocationSearch);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [birthLocationSearch, searchLocation]);
+
+  // Save birth data
+  const saveBirthData = useCallback(async () => {
+    if (!userId) return;
+    setSaving(true);
+
+    try {
+      const birthData = editBirthDate ? {
+        date: editBirthDate,
+        time: editBirthTime || null,
+        location: selectedLocation ? {
+          lat: selectedLocation.lat,
+          lng: selectedLocation.lng,
+          name: selectedLocation.name,
+          timezone: selectedLocation.timezone,
+        } : null,
+      } : null;
+
+      const res = await fetch('/api/members/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          memberId: userId,
+          birthData,
+        }),
+      });
+
+      if (res.ok) {
+        // Update local profile state
+        setProfile(prev => prev ? {
+          ...prev,
+          birthData,
+        } : null);
+
+        // Store birth data in localStorage for immediate MAIA access
+        const storedUser = localStorage.getItem('beta_user');
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            user.birthData = birthData;
+            localStorage.setItem('beta_user', JSON.stringify(user));
+          } catch (e) {
+            console.error('[AccountSettings] Failed to update localStorage:', e);
+          }
+        }
+
+        showSaveIndicator();
+      }
+    } catch (err) {
+      console.error('[AccountSettings] Save birth data error:', err);
+    } finally {
+      setSaving(false);
+    }
+  }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator]);
 
   const exportData = useCallback(async () => {
     if (!userId) return;
@@ -776,6 +913,161 @@ export function AccountSettings() {
     );
   };
 
+  const renderAstrology = () => (
+    <div className="space-y-6">
+      <p className="text-sm text-white/50 mb-4">
+        Share your birth details so MAIA can weave astrological wisdom into your conversations.
+      </p>
+
+      {/* Birth Date */}
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+          <Star size={16} />
+          Birth Date
+        </label>
+        <input
+          type="date"
+          value={editBirthDate}
+          onChange={(e) => setEditBirthDate(e.target.value)}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
+        />
+      </div>
+
+      {/* Birth Time */}
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+          <Clock size={16} />
+          Birth Time (optional)
+        </label>
+        <input
+          type="time"
+          value={editBirthTime}
+          onChange={(e) => setEditBirthTime(e.target.value)}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:border-amber-500/50 focus:outline-none [color-scheme:dark]"
+        />
+        <p className="text-xs text-white/40 mt-1">
+          Birth time enables accurate rising sign and house placements
+        </p>
+      </div>
+
+      {/* Birth Location */}
+      <div className="relative">
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+          <MapPin size={16} />
+          Birth Location
+        </label>
+        <div className="relative">
+          <input
+            type="text"
+            value={birthLocationSearch || editBirthLocation}
+            onChange={(e) => {
+              setBirthLocationSearch(e.target.value);
+              setEditBirthLocation(e.target.value);
+            }}
+            onFocus={() => locationResults.length > 0 && setShowLocationResults(true)}
+            placeholder="Search city or place..."
+            className="w-full px-4 py-3 pr-10 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
+          />
+          {searchingLocation ? (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <div className="w-5 h-5 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin" />
+            </div>
+          ) : (
+            <Search size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40" />
+          )}
+        </div>
+
+        {/* Location Search Results */}
+        <AnimatePresence>
+          {showLocationResults && locationResults.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute z-10 w-full mt-2 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto"
+            >
+              {locationResults.map((loc, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    setSelectedLocation({
+                      lat: parseFloat(loc.lat),
+                      lng: parseFloat(loc.lon),
+                      name: loc.display_name,
+                      timezone: loc.timezone,
+                    });
+                    setEditBirthLocation(loc.display_name);
+                    setBirthLocationSearch('');
+                    setShowLocationResults(false);
+                  }}
+                  className="w-full px-4 py-3 text-left hover:bg-white/5 border-b border-white/5 last:border-0 transition-colors"
+                >
+                  <div className="text-sm text-white/90 line-clamp-2">{loc.display_name}</div>
+                  <div className="text-xs text-white/40 mt-1">{loc.timezone}</div>
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Selected Location Display */}
+        {selectedLocation && (
+          <div className="mt-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+            <div className="text-xs text-amber-300">Selected:</div>
+            <div className="text-sm text-white/80 line-clamp-1">{selectedLocation.name}</div>
+            <div className="text-xs text-white/40">{selectedLocation.timezone}</div>
+          </div>
+        )}
+      </div>
+
+      {/* Current Chart Status */}
+      {profile?.birthData?.date && (
+        <div className="p-4 bg-gradient-to-br from-violet-500/10 to-amber-500/10 rounded-xl border border-violet-500/20">
+          <div className="flex items-center gap-2 text-violet-300 mb-2">
+            <Star size={18} />
+            <span className="text-sm font-medium">Birth Chart Saved</span>
+          </div>
+          <p className="text-xs text-white/60">
+            MAIA can now reference your natal chart and current transits in conversations.
+          </p>
+          <motion.button
+            onClick={() => window.location.href = '/astrology'}
+            className="mt-3 text-xs text-amber-400 hover:text-amber-300 transition-colors"
+            whileTap={{ scale: 0.98 }}
+          >
+            View Full Chart →
+          </motion.button>
+        </div>
+      )}
+
+      {/* Save Button */}
+      <motion.button
+        onClick={saveBirthData}
+        disabled={saving || !editBirthDate}
+        className="w-full py-3 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-xl text-amber-300 font-medium transition-colors disabled:opacity-50"
+        whileTap={{ scale: 0.98 }}
+      >
+        {saving ? 'Saving...' : 'Save Birth Data'}
+      </motion.button>
+
+      {/* Clear Birth Data */}
+      {profile?.birthData?.date && (
+        <button
+          onClick={() => {
+            setEditBirthDate('');
+            setEditBirthTime('');
+            setEditBirthLocation('');
+            setSelectedLocation(null);
+            saveBirthData();
+          }}
+          className="w-full text-sm text-white/40 hover:text-white/60 transition-colors"
+        >
+          Clear birth data
+        </button>
+      )}
+    </div>
+  );
+
   const renderConnections = () => (
     <div className="space-y-6">
       <p className="text-sm text-white/50 mb-6">
@@ -943,6 +1235,7 @@ export function AccountSettings() {
           >
             {activeSection === 'profile' && renderProfile()}
             {activeSection === 'account' && renderAccount()}
+            {activeSection === 'astrology' && renderAstrology()}
             {activeSection === 'maia' && renderMaiaSettings()}
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}

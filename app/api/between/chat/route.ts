@@ -84,6 +84,61 @@ function inferEmotionalShiftFromText(userText: string): { from?: string; to: str
   return undefined;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// 🌟 ASTROLOGICAL CONTEXT BUILDER
+// ═══════════════════════════════════════════════════════════════
+
+interface BirthDataInput {
+  date?: string;
+  time?: string;
+  location?: {
+    lat: number;
+    lng: number;
+    name?: string;
+    timezone?: string;
+  };
+}
+
+/**
+ * Format birth data into an astrological context addendum for MAIA's prompt.
+ * This allows MAIA to reference the user's natal chart in relevant conversations.
+ */
+function buildAstrologicalContextAddendum(birthData: BirthDataInput | undefined): string | null {
+  if (!birthData?.date) return null;
+
+  const parts: string[] = [];
+  parts.push('🌟 ASTROLOGICAL CONTEXT');
+  parts.push('');
+  parts.push('This person has shared their birth data with you. You may weave astrological insights naturally when relevant:');
+  parts.push('');
+  parts.push(`Birth Date: ${birthData.date}`);
+
+  if (birthData.time) {
+    parts.push(`Birth Time: ${birthData.time}`);
+  } else {
+    parts.push('Birth Time: Unknown (use Sun sign and planetary positions only, no house placements)');
+  }
+
+  if (birthData.location?.name) {
+    parts.push(`Birth Location: ${birthData.location.name}`);
+  }
+  if (birthData.location?.timezone) {
+    parts.push(`Timezone: ${birthData.location.timezone}`);
+  }
+
+  parts.push('');
+  parts.push('Guidelines for astrological references:');
+  parts.push('- Offer astrological insights when the conversation touches on patterns, timing, or self-understanding');
+  parts.push('- Never lead with astrology unless the person asks specifically');
+  parts.push('- Frame transits as invitations, not predictions');
+  parts.push('- Connect archetypal patterns to their lived experience');
+  parts.push('- If birth time is unknown, avoid house placements and rising sign');
+  parts.push('');
+  parts.push('Remember: Astrology is a lens for pattern recognition, not fortune-telling.');
+
+  return parts.join('\n');
+}
+
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
 const INCLUDE_PROVIDER_META = process.env.MAIA_INCLUDE_PROVIDER_META === '1';
@@ -512,7 +567,7 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement, therapeuticFramework, reflectionLens } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement, therapeuticFramework, reflectionLens, birthData } = body as {
       message?: string;
       sessionId?: string;
       mode?: 'dialogue' | 'counsel' | 'scribe';
@@ -525,6 +580,16 @@ export async function POST(req: NextRequest) {
       dominantElement?: 'water' | 'fire' | 'earth' | 'air'; // User's elemental signature
       therapeuticFramework?: 'auto' | 'jungian' | 'cbt' | 'somatic' | 'ifs' | 'relational' | 'humanistic' | 'existential';
       reflectionLens?: 'auto' | 'jungian' | 'somatic' | 'relational' | 'narrative';
+      birthData?: { // 🌟 User's birth data for astrological context
+        date?: string;
+        time?: string;
+        location?: {
+          lat: number;
+          lng: number;
+          name?: string;
+          timezone?: string;
+        };
+      };
     };
 
     // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
@@ -1042,6 +1107,9 @@ export async function POST(req: NextRequest) {
     const therapeuticFrameworkAddendum = mode === 'counsel' ? getFrameworkPromptAddendum(effectiveFramework) : null;
     const reflectionLensAddendum = mode === 'scribe' ? getReflectionLensAddendum(effectiveLens) : null;
 
+    // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+    const astrologicalContextAddendum = buildAstrologicalContextAddendum(birthData);
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
@@ -1061,6 +1129,7 @@ export async function POST(req: NextRequest) {
         epistemicPathAddendum, // 🧭 User-chosen epistemic lens
         therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
         reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
+        astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
       }
     });
 

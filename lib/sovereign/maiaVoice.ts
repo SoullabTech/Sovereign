@@ -62,6 +62,8 @@ export interface MaiaContext {
   // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses for Counsel/Scribe modes
   therapeuticFrameworkAddendum?: string;
   reflectionLensAddendum?: string;
+  // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+  astrologicalContextAddendum?: string;
 }
 
 /**
@@ -578,6 +580,12 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (context.reflectionLensAddendum) {
     adaptedPrompt += `\n\n${context.reflectionLensAddendum}`;
     console.log(`🔮 [Reflection Lens] Applied: ${context.reflectionLensAddendum.split('\n')[0]}`);
+  }
+
+  // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+  if (context.astrologicalContextAddendum) {
+    adaptedPrompt += `\n\n${context.astrologicalContextAddendum}`;
+    console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
   }
 
   return adaptedPrompt.trim();

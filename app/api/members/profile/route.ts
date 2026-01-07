@@ -27,6 +27,8 @@ export async function GET(request: NextRequest) {
         m.id, m.username, m.name, m.email, m.passkey,
         m.avatar_url, m.bio, m.timezone,
         m.onboarded, m.created_at, m.last_sign_in,
+        m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
+        m.birth_location_name, m.birth_timezone,
         ms.circle_tier, ms.circle_amount, ms.circle_joined_at
       FROM members m
       LEFT JOIN member_settings ms ON m.id = ms.member_id
@@ -62,6 +64,17 @@ export async function GET(request: NextRequest) {
         amount: member.circle_amount || 0,
         joinedAt: member.circle_joined_at,
       },
+      // Birth data for astrology
+      birthData: member.birth_date ? {
+        date: member.birth_date,
+        time: member.birth_time,
+        location: member.birth_location_lat && member.birth_location_lng ? {
+          lat: parseFloat(member.birth_location_lat),
+          lng: parseFloat(member.birth_location_lng),
+          name: member.birth_location_name,
+          timezone: member.birth_timezone,
+        } : null,
+      } : null,
     });
   } catch (error) {
     console.error('[Profile API] Error:', error);
@@ -79,7 +92,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { memberId, name, email, bio, timezone } = body;
+    const { memberId, name, email, bio, timezone, birthData } = body;
 
     if (!memberId) {
       return NextResponse.json(
@@ -88,16 +101,83 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Build SET clauses dynamically
+    const setClauses: string[] = [];
+    const values: unknown[] = [memberId];
+    let paramIndex = 2;
+
+    if (name !== undefined) {
+      setClauses.push(`name = $${paramIndex++}`);
+      values.push(name);
+    }
+    if (email !== undefined) {
+      setClauses.push(`email = $${paramIndex++}`);
+      values.push(email);
+    }
+    if (bio !== undefined) {
+      setClauses.push(`bio = $${paramIndex++}`);
+      values.push(bio);
+    }
+    if (timezone !== undefined) {
+      setClauses.push(`timezone = $${paramIndex++}`);
+      values.push(timezone);
+    }
+
+    // Birth data fields
+    if (birthData !== undefined) {
+      if (birthData === null) {
+        // Clear birth data
+        setClauses.push(`birth_date = NULL, birth_time = NULL, birth_location_lat = NULL, birth_location_lng = NULL, birth_location_name = NULL, birth_timezone = NULL`);
+      } else {
+        if (birthData.date !== undefined) {
+          setClauses.push(`birth_date = $${paramIndex++}`);
+          values.push(birthData.date);
+        }
+        if (birthData.time !== undefined) {
+          setClauses.push(`birth_time = $${paramIndex++}`);
+          values.push(birthData.time);
+        }
+        if (birthData.location !== undefined) {
+          if (birthData.location === null) {
+            setClauses.push(`birth_location_lat = NULL, birth_location_lng = NULL, birth_location_name = NULL, birth_timezone = NULL`);
+          } else {
+            if (birthData.location.lat !== undefined) {
+              setClauses.push(`birth_location_lat = $${paramIndex++}`);
+              values.push(birthData.location.lat);
+            }
+            if (birthData.location.lng !== undefined) {
+              setClauses.push(`birth_location_lng = $${paramIndex++}`);
+              values.push(birthData.location.lng);
+            }
+            if (birthData.location.name !== undefined) {
+              setClauses.push(`birth_location_name = $${paramIndex++}`);
+              values.push(birthData.location.name);
+            }
+            if (birthData.location.timezone !== undefined) {
+              setClauses.push(`birth_timezone = $${paramIndex++}`);
+              values.push(birthData.location.timezone);
+            }
+          }
+        }
+      }
+    }
+
+    if (setClauses.length === 0) {
+      return NextResponse.json(
+        { error: 'No fields to update' },
+        { status: 400 }
+      );
+    }
+
     // Update members table
     const result = await query(
       `UPDATE members
-       SET name = COALESCE($2, name),
-           email = COALESCE($3, email),
-           bio = COALESCE($4, bio),
-           timezone = COALESCE($5, timezone)
+       SET ${setClauses.join(', ')}
        WHERE id = $1
-       RETURNING id, username, name, email, bio, timezone`,
-      [memberId, name, email, bio, timezone]
+       RETURNING id, username, name, email, bio, timezone,
+                 birth_date, birth_time, birth_location_lat, birth_location_lng,
+                 birth_location_name, birth_timezone`,
+      values
     );
 
     if (result.rows.length === 0) {

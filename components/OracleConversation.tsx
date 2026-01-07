@@ -2164,7 +2164,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               isCrisis: lastSafetyCheck.isCrisis,
               isBurnout: lastSafetyCheck.isBurnout
             } : undefined
-          } : undefined
+          } : undefined,
+
+          // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
+          birthData: (() => {
+            if (typeof window === 'undefined') return undefined;
+            try {
+              const stored = localStorage.getItem('beta_user');
+              if (!stored) return undefined;
+              const user = JSON.parse(stored);
+              return user.birthData || undefined;
+            } catch {
+              return undefined;
+            }
+          })()
         }),
         signal: controller.signal
       });
