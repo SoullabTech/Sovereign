@@ -386,8 +386,32 @@ export default function MAIACommunityCommonsPage() {
           ))}
         </div>
 
+        {/* MAIA's Wisdom Sources Banner */}
+        <div className="mt-12 p-6 bg-gradient-to-r from-purple-500/10 via-[#D4B896]/10 to-blue-500/10 border border-[#D4B896]/30 rounded-xl">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#D4B896] to-[#B8935A] rounded-xl
+                          flex items-center justify-center shadow-lg flex-shrink-0">
+              <Library className="w-7 h-7 text-[#0f1419]" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-[#D4B896] mb-1">MAIA's Wisdom Sources</h3>
+              <p className="text-sm text-white/60">
+                Explore the 108+ texts spanning psychology, astrology, philosophy, and sacred traditions
+                that inform MAIA's understanding and guidance.
+              </p>
+            </div>
+            <button
+              onClick={() => handleNavigate('/maia/community/wisdom-sources')}
+              className="px-6 py-3 bg-[#D4B896]/20 border border-[#D4B896]/40 rounded-lg
+                       text-[#D4B896] hover:bg-[#D4B896]/30 transition-all font-medium flex-shrink-0"
+            >
+              View Library
+            </button>
+          </div>
+        </div>
+
         {/* Quick Access Footer */}
-        <div className="mt-12 p-6 bg-white/5 border border-white/10 rounded-xl">
+        <div className="mt-6 p-6 bg-white/5 border border-white/10 rounded-xl">
           <h3 className="text-lg font-semibold text-[#D4B896] mb-4 text-center">Quick Access</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <button
