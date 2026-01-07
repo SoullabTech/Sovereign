@@ -32,6 +32,12 @@ export interface AccountSettings {
 
   /** Default conversation style */
   conversationMode: ConversationMode;
+
+  /** Display preferences */
+  display: {
+    /** Show vocabulary tooltips for soul vocabulary terms */
+    vocabularyTooltips: boolean;
+  };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -49,6 +55,9 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   },
   archetype: 'AUTO' as ArchetypeId,
   conversationMode: 'her',
+  display: {
+    vocabularyTooltips: true, // Default on for newcomers learning soul vocabulary
+  },
 };
 
 const STORAGE_KEY = 'maia_account_settings';
@@ -78,6 +87,7 @@ export function getAccountSettings(): AccountSettings {
       ...parsed,
       voice: { ...DEFAULT_ACCOUNT_SETTINGS.voice, ...parsed.voice },
       memory: { ...DEFAULT_ACCOUNT_SETTINGS.memory, ...parsed.memory },
+      display: { ...DEFAULT_ACCOUNT_SETTINGS.display, ...parsed.display },
     };
   } catch (e) {
     console.error('[AccountSettings] Failed to parse stored settings:', e);

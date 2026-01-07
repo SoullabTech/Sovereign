@@ -35,8 +35,8 @@ function SettingsContent() {
         router.push('/maia?openSettings=true');
       }, 3000);
     } else {
-      // No special params, just redirect to maia with settings open
-      router.push('/maia?openSettings=true');
+      // No special params, redirect to full account settings page
+      router.push('/account/settings');
     }
   }, [searchParams, router]);
 

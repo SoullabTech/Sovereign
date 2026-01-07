@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
   Link, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
-  Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft
+  Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen
 } from 'lucide-react';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import {
@@ -647,6 +647,25 @@ export function AccountSettings() {
             );
           })}
         </div>
+      </div>
+
+      {/* Vocabulary Tooltips */}
+      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-white/5 text-amber-400">
+            <BookOpen size={18} />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-white/90">Vocabulary Tooltips</div>
+            <div className="text-xs text-white/50">
+              Highlight soul vocabulary terms with hover definitions
+            </div>
+          </div>
+        </div>
+        {renderToggle(
+          maiaSettings.display?.vocabularyTooltips ?? true,
+          () => updateNestedMaiaSetting('display.vocabularyTooltips', !(maiaSettings.display?.vocabularyTooltips ?? true))
+        )}
       </div>
     </div>
   );

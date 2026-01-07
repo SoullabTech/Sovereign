@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { findTermsInText, type VocabularyTerm } from '@/lib/vocabulary/soulVocabulary';
+import { getAccountSettings } from '@/lib/settings/accountSettings';
 
 /**
  * VocabularyTooltip - Highlights soul vocabulary terms with hover tooltips
@@ -121,15 +122,41 @@ export function VocabularyTooltip({ term, children }: VocabularyTooltipProps) {
 interface HighlightedTextProps {
   text: string;
   className?: string;
+  /** Override the global setting. If undefined, uses account settings. */
   enableTooltips?: boolean;
 }
 
 export function HighlightedText({
   text,
   className = '',
-  enableTooltips = true
+  enableTooltips
 }: HighlightedTextProps) {
-  if (!enableTooltips) {
+  // Check global setting if not explicitly overridden
+  const [tooltipsEnabled, setTooltipsEnabled] = useState(enableTooltips ?? true);
+
+  useEffect(() => {
+    if (enableTooltips !== undefined) {
+      setTooltipsEnabled(enableTooltips);
+      return;
+    }
+
+    // Read from account settings
+    const settings = getAccountSettings();
+    setTooltipsEnabled(settings.display?.vocabularyTooltips ?? true);
+
+    // Listen for settings changes
+    const handleSettingsChange = (e: CustomEvent) => {
+      const newSettings = e.detail;
+      setTooltipsEnabled(newSettings.display?.vocabularyTooltips ?? true);
+    };
+
+    window.addEventListener('maia-account-settings-changed', handleSettingsChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-account-settings-changed', handleSettingsChange as EventListener);
+    };
+  }, [enableTooltips]);
+
+  if (!tooltipsEnabled) {
     return <span className={className}>{text}</span>;
   }
 
