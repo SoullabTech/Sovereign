@@ -224,8 +224,9 @@ export default function BirthChartPage() {
               <div className="grid md:grid-cols-2 gap-8">
 
                 {/* House Wheel */}
-                <div className="bg-black/30 rounded-xl p-6 border border-[#D4B896]/20">
+                <div className="bg-black/30 rounded-xl p-6 border border-[#D4B896]/20 overflow-visible relative" style={{ zIndex: 10 }}>
                   <h3 className="text-[#D4B896] font-medium mb-4 text-center">House Wheel</h3>
+                  <p className="text-white/40 text-xs mb-4 text-center italic">Click a planet on the wheel for insights</p>
                   <SacredHouseWheel
                     planets={chartDataToPlanets(chartData)}
                     aspects={(chartData.aspects || [])
@@ -233,6 +234,7 @@ export default function BirthChartPage() {
                         ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
                       )}
                     isDayMode={false}
+                    className="max-h-[500px]"
                   />
                 </div>
 

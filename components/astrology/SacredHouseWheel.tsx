@@ -1889,24 +1889,25 @@ export function SacredHouseWheel({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute left-1/2 top-1/2 mx-auto max-w-2xl z-50"
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4"
             style={{
               pointerEvents: clickedPlanet ? 'auto' : 'none',
-              transform: 'translate(-50%, -50%)'
+              backgroundColor: clickedPlanet ? 'rgba(0,0,0,0.5)' : 'transparent'
             }}
             onClick={() => clickedPlanet && setClickedPlanet(null)}
           >
             <div
-              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden ${
+              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full ${
                 isDayMode
                   ? 'bg-white/95 border-stone-200/60'
-                  : 'bg-black/85 border-stone-700/60'
+                  : 'bg-black/95 border-stone-700/60'
               }`}
               style={{
                 boxShadow: isDayMode
                   ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
                   : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139, 92, 246, 0.15)',
               }}
+              onClick={(e) => e.stopPropagation()}
             >
               {(() => {
                 const activePlanet = clickedPlanet || hoveredPlanet;
@@ -1963,8 +1964,20 @@ export function SacredHouseWheel({
                             </p>
                           </div>
                         </div>
-                        <div className={`text-xs uppercase tracking-wider font-medium ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                          {element.toUpperCase()}
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                            style={{ background: `${color}25`, color }}
+                          >
+                            {element}
+                          </span>
+                          {zodiacArchetype?.modality && (
+                            <span className={`px-2 py-0.5 rounded-full text-xs uppercase tracking-wide ${
+                              isDayMode ? 'bg-stone-200 text-stone-600' : 'bg-white/10 text-white/70'
+                            }`}>
+                              {zodiacArchetype.modality}
+                            </span>
+                          )}
                         </div>
                       </div>
                     </div>
