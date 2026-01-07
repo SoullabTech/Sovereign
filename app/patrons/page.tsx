@@ -479,7 +479,7 @@ function PatronsContent() {
                 </div>
               </div>
               <p className="mt-4 text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
-                No venture capital. No ads. No data harvesting. MAIA exists because people who use it sustain it.
+                No venture capital. No ads. No data harvesting. For us by us.
               </p>
             </div>
 

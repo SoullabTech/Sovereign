@@ -1350,7 +1350,7 @@ function MAIAPageContent() {
                           <span className="text-amber-400 text-right font-medium">$3,500/mo</span>
                         </div>
                         <p className="text-[8px] text-stone-500 mt-2">
-                          No VC. No ads. MAIA exists because people who use it sustain it.
+                          No VC. No ads. For us by us.
                         </p>
                       </div>
 
