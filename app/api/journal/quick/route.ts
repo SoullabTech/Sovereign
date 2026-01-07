@@ -132,14 +132,39 @@ export async function GET(request: NextRequest) {
     // Ensure table exists
     await ensureTableExists();
 
+    // Build list of all possible user IDs to check (handles legacy ID migrations)
+    // This includes: current UUID, username, and legacy 'username-nezat' format
+    const userIds: string[] = [userId];
+
+    // If userId is a UUID, look up the member's username for legacy entries
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidPattern.test(userId)) {
+      try {
+        const memberResult = await query<{ username: string }>(
+          'SELECT username FROM members WHERE id::text = $1',
+          [userId]
+        );
+        if (memberResult.rows.length > 0) {
+          const username = memberResult.rows[0].username;
+          userIds.push(username);
+          userIds.push(`${username}-nezat`); // Legacy format
+          console.log(`📚 [QuickJournal] Checking entries for IDs: ${userIds.join(', ')}`);
+        }
+      } catch (e) {
+        // Members table might not exist, continue with just userId
+      }
+    }
+
+    // Build query with all possible user IDs
+    const placeholders = userIds.map((_, i) => `$${i + 1}`).join(', ');
     let queryStr = `
       SELECT * FROM quick_journal_entries
-      WHERE user_id = $1
+      WHERE user_id IN (${placeholders})
     `;
-    const params: (string | number)[] = [userId];
+    const params: (string | number)[] = [...userIds];
 
     if (entryType && ['dream', 'day'].includes(entryType)) {
-      queryStr += ` AND entry_type = $2`;
+      queryStr += ` AND entry_type = $${params.length + 1}`;
       params.push(entryType);
     }
 

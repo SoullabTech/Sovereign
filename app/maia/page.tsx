@@ -33,6 +33,15 @@ import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
 import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
+import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
+import {
+  getCounselFramework,
+  getScribeLens,
+  type TherapeuticFramework,
+  type ReflectionLens,
+  THERAPEUTIC_FRAMEWORKS,
+  REFLECTION_LENSES,
+} from '@/lib/consciousness/therapeuticFrameworks';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -266,6 +275,12 @@ function MAIAPageContent() {
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
   const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
 
+  // Framework selector state (long-press on Care/Note tabs)
+  const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
+  const [frameworkSelectorMode, setFrameworkSelectorMode] = useState<'counsel' | 'scribe'>('counsel');
+  const [currentCounselFramework, setCurrentCounselFramework] = useState<TherapeuticFramework>('auto');
+  const [currentScribeLens, setCurrentScribeLens] = useState<ReflectionLens>('auto');
+
   // Keep users on this beautiful page - no redirect
   // useEffect(() => {
   //   const betaUser = localStorage.getItem('beta_user');
@@ -347,6 +362,27 @@ function MAIAPageContent() {
     };
 
     initializeUser();
+  }, []);
+
+  // Load and listen for framework/lens changes
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Load initial values
+    setCurrentCounselFramework(getCounselFramework());
+    setCurrentScribeLens(getScribeLens());
+
+    // Listen for changes
+    const handleCounselChange = () => setCurrentCounselFramework(getCounselFramework());
+    const handleScribeChange = () => setCurrentScribeLens(getScribeLens());
+
+    window.addEventListener('maia-counsel-framework-changed', handleCounselChange);
+    window.addEventListener('maia-scribe-lens-changed', handleScribeChange);
+
+    return () => {
+      window.removeEventListener('maia-counsel-framework-changed', handleCounselChange);
+      window.removeEventListener('maia-scribe-lens-changed', handleScribeChange);
+    };
   }, []);
 
   const handleVoiceChange = (voice: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer') => {
@@ -543,6 +579,26 @@ function MAIAPageContent() {
                   </motion.button>
                   <motion.button
                     onClick={() => setMaiaMode('patient')}
+                    onTouchStart={(e) => {
+                      const timer = setTimeout(() => {
+                        e.preventDefault();
+                        if ('vibrate' in navigator) navigator.vibrate(10);
+                        setFrameworkSelectorMode('counsel');
+                        setShowFrameworkSelector(true);
+                      }, 500);
+                      (e.currentTarget as any)._longPressTimer = timer;
+                    }}
+                    onTouchEnd={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onTouchMove={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setFrameworkSelectorMode('counsel');
+                      setShowFrameworkSelector(true);
+                    }}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg
                              bg-amber-500/10 hover:bg-amber-500/20
                              border border-amber-500/20 hover:border-amber-500/40
@@ -551,14 +607,38 @@ function MAIAPageContent() {
                       border: maiaMode === 'patient' ? '1px solid #14b8a6' : undefined,
                       fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
                     }}
+                    title="Tap to switch mode • Hold for framework"
                   >
                     {maiaMode === 'patient' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#5eead4' }} />
                     )}
                     <span className="text-xs">Care</span>
+                    {currentCounselFramework !== 'auto' && (
+                      <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
+                    )}
                   </motion.button>
                   <motion.button
                     onClick={() => setMaiaMode('session')}
+                    onTouchStart={(e) => {
+                      const timer = setTimeout(() => {
+                        e.preventDefault();
+                        if ('vibrate' in navigator) navigator.vibrate(10);
+                        setFrameworkSelectorMode('scribe');
+                        setShowFrameworkSelector(true);
+                      }, 500);
+                      (e.currentTarget as any)._longPressTimer = timer;
+                    }}
+                    onTouchEnd={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onTouchMove={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      setFrameworkSelectorMode('scribe');
+                      setShowFrameworkSelector(true);
+                    }}
                     className="flex items-center gap-1 px-2 py-1 rounded-lg
                              bg-amber-500/10 hover:bg-amber-500/20
                              border border-amber-500/20 hover:border-amber-500/40
@@ -567,11 +647,15 @@ function MAIAPageContent() {
                       border: maiaMode === 'session' ? '1px solid #3b82f6' : undefined,
                       fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
                     }}
+                    title="Tap to switch mode • Hold for lens"
                   >
                     {maiaMode === 'session' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
                     )}
                     <span className="text-xs">Note</span>
+                    {currentScribeLens !== 'auto' && (
+                      <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
+                    )}
                   </motion.button>
 
                   {/* Session Button - Inside mode selector, after Note */}
@@ -1077,6 +1161,13 @@ function MAIAPageContent() {
         <TestFlightHelpSheet
           isOpen={showTestFlightHelp}
           onClose={() => setShowTestFlightHelp(false)}
+        />
+
+        {/* Framework Selector - Long-press on Care/Note buttons */}
+        <FrameworkSelector
+          mode={frameworkSelectorMode}
+          isOpen={showFrameworkSelector}
+          onClose={() => setShowFrameworkSelector(false)}
         />
       </div>
       </SwipeNavigation>
