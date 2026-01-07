@@ -459,9 +459,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [enableVocabularyTooltips, setEnableVocabularyTooltips] = useState(() => {
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem('maia.vocabularyTooltips');
-      return stored === 'true';
+      // Default to true for new users (null means never set)
+      // Existing users who explicitly turned it off will have 'false'
+      return stored === null ? true : stored === 'true';
     }
-    return false;
+    return true;
   });
 
   // Wisdom Council state

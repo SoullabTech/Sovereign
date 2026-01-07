@@ -47,12 +47,14 @@ export default function SigninPage() {
         // Use preferredName if available, fallback to name, then capitalized username
         const preferredName = data.member.preferredName || data.member.name || '';
         const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(preferredName);
+        const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
+        const isGeneric = genericNames.includes(preferredName.toLowerCase());
         // Priority: preferredName > name > capitalized username > 'Friend'
         const capitalizedUsername = data.member.username
           ? data.member.username.charAt(0).toUpperCase() + data.member.username.slice(1)
           : '';
-        const validName = isUUID
-          ? (capitalizedUsername || 'Friend')
+        const validName = (isUUID || isGeneric)
+          ? (capitalizedUsername && !genericNames.includes(capitalizedUsername.toLowerCase()) ? capitalizedUsername : 'Friend')
           : (preferredName || capitalizedUsername || 'Friend');
 
         // Server auth succeeded - store session locally
@@ -96,9 +98,19 @@ export default function SigninPage() {
         const user = users[normalizedUsername];
 
         if (user && user.password === password) {
+          // Apply same name validation as server-side auth (filter generic names like 'user', 'guest')
+          const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
+          const rawName = user.name || username;
+          const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(rawName);
+          const isGeneric = genericNames.includes(rawName.toLowerCase());
+          const capitalizedUsername = username.charAt(0).toUpperCase() + username.slice(1);
+          const validLocalName = (isUUID || isGeneric)
+            ? (isGeneric ? 'Friend' : capitalizedUsername)
+            : rawName;
+
           localStorage.setItem('beta_user', JSON.stringify(user));
           localStorage.setItem('explorerId', user.id || user.username);
-          localStorage.setItem('explorerName', user.name || username);
+          localStorage.setItem('explorerName', validLocalName);
           localStorage.setItem('betaOnboardingComplete', 'true');
           localStorage.setItem('maia_session_version', '2');
           router.push('/maia');

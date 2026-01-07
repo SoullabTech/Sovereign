@@ -35,6 +35,7 @@ export function VocabularyTooltip({ term, children }: VocabularyTooltipProps) {
     archetype: 'border-blue-500/30 bg-blue-500/10',
     spiritual: 'border-purple-500/30 bg-purple-500/10',
     somatic: 'border-rose-500/30 bg-rose-500/10',
+    spiralogic: 'border-cyan-500/30 bg-cyan-500/10',
   };
 
   const categoryLabels = {
@@ -44,6 +45,7 @@ export function VocabularyTooltip({ term, children }: VocabularyTooltipProps) {
     archetype: 'Archetypal',
     spiritual: 'Spiritual',
     somatic: 'Somatic',
+    spiralogic: 'Spiralogic',
   };
 
   return (

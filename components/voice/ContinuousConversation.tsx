@@ -791,10 +791,29 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     }
   }, [addDebug]);
 
+  // 🛡️ CRASH PREVENTION: Track startup state to prevent concurrent starts
+  const isStartingRef = useRef(false);
+  const lastStartAttemptRef = useRef(0);
+
   // Start listening
   const startListening = useCallback(async () => {
     console.log('🎤 [ContinuousConversation] startListening called');
     addDebug('🎤 startListening called');
+
+    // 🛡️ CRASH PREVENTION: Debounce rapid taps (500ms minimum between attempts)
+    const now = Date.now();
+    if (now - lastStartAttemptRef.current < 500) {
+      console.log('⏳ [ContinuousConversation] Debounced - too soon after last attempt');
+      return;
+    }
+    lastStartAttemptRef.current = now;
+
+    // 🛡️ CRASH PREVENTION: Don't start if already starting
+    if (isStartingRef.current) {
+      console.log('🚫 [ContinuousConversation] Already starting - ignoring duplicate call');
+      return;
+    }
+    isStartingRef.current = true;
 
     // 🔄 CRITICAL: Determine platform at START time
     // With remote server URLs (beta builds), Capacitor bridge may initialize after page load
@@ -810,6 +829,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
     if (isSpeakingRef.current) {
       console.log('🚫 [ContinuousConversation] BLOCKED: Cannot start listening while MAIA is speaking');
+      isStartingRef.current = false;
       return;
     }
 
@@ -818,12 +838,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       if (shouldUseNative) {
         console.log('📱 [ContinuousConversation] Using NATIVE speech recognition for platform:', platform);
 
+        // 🛡️ CRASH PREVENTION: Stop any existing recognition first
+        // This prevents "already listening" crashes on iOS
+        try {
+          await NativeSpeechRecognition.stop();
+          console.log('🛑 [Native] Pre-emptively stopped any existing recognition');
+        } catch {
+          // Ignore errors - recognition may not have been running
+        }
+
         // 🎛️ CRITICAL: Ensure permissions before showing "Listening..."
         const ready = await ensureNativeSpeechReady();
         if (!ready.ok) {
           console.warn('🚫 [Native] Not starting recognition:', ready.reason);
           setVoiceError(ready.reason || 'Speech recognition not available');
           // DON'T show "Listening..." if we can't actually listen
+          isStartingRef.current = false;
           return;
         }
 
@@ -976,6 +1006,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         console.log('🎙️ [ContinuousConversation] Native recognition started');
 
+        isStartingRef.current = false; // ✅ Reset after successful start
         return;
       }
 
@@ -1052,8 +1083,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Reset state on error and notify parent
       setIsListening(false);
       isListeningRef.current = false;
+      isStartingRef.current = false; // ✅ Reset starting flag on error
       onRecordingStateChange?.(false); // Hide visualizer on error
       throw error; // Re-throw so parent component can handle
+    } finally {
+      // Ensure starting flag is always reset, even on unexpected errors
+      isStartingRef.current = false;
     }
   }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady]);
 

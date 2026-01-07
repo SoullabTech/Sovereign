@@ -8,7 +8,7 @@ export interface VocabularyTerm {
   term: string;
   aliases?: string[];  // Alternative spellings/forms
   definition: string;
-  category: 'alchemy' | 'psychology' | 'elemental' | 'archetype' | 'spiritual' | 'somatic';
+  category: 'alchemy' | 'psychology' | 'elemental' | 'archetype' | 'spiritual' | 'somatic' | 'spiralogic';
   depth: 'beginner' | 'intermediate' | 'advanced';
   relatedTerms?: string[];
   emoji?: string;
@@ -288,6 +288,80 @@ export const soulVocabulary: VocabularyTerm[] = [
     category: 'somatic',
     depth: 'beginner',
     emoji: '🌊'
+  },
+
+  // Spiralogic - MAIA's developmental framework
+  {
+    term: 'Spiral',
+    aliases: ['the Spiral', 'Spiralogic', 'spiral dynamics'],
+    definition: 'A framework for understanding where you are in your journey. Not a ladder to climb but a spiral of deepening — each element (Fire, Water, Earth, Air, Aether) has levels that represent increasing capacity, not better/worse stages.',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['elemental level', 'Fire level', 'Water level'],
+    emoji: '🌀'
+  },
+  {
+    term: 'elemental level',
+    aliases: ['level 1', 'level 2', 'level 3', 'level 4', 'level 5'],
+    definition: 'Your current capacity in each element. Level 1 = emerging awareness, Level 2 = developing skill, Level 3 = integrated practice, Level 4 = teaching capacity, Level 5 = mastery. These shift with life circumstances — not fixed destinations.',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['Spiral', 'elemental balance'],
+    emoji: '📊'
+  },
+  {
+    term: 'Fire level',
+    aliases: ['Fire 1', 'Fire 2', 'Fire 3', 'Fire 4', 'Fire 5'],
+    definition: 'Your current capacity with will, action, and transformation. Higher levels mean greater skill with directed energy and purpose, not being "more fiery."',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['fire element', 'elemental level'],
+    emoji: '🔥'
+  },
+  {
+    term: 'Water level',
+    aliases: ['Water 1', 'Water 2', 'Water 3', 'Water 4', 'Water 5'],
+    definition: 'Your current capacity with emotion, intuition, and flow. Higher levels mean greater skill with feeling and receptivity, not being "more emotional."',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['water element', 'elemental level'],
+    emoji: '💧'
+  },
+  {
+    term: 'Earth level',
+    aliases: ['Earth 1', 'Earth 2', 'Earth 3', 'Earth 4', 'Earth 5'],
+    definition: 'Your current capacity with grounding, stability, and embodiment. Higher levels mean greater skill with practical wisdom and presence, not being "more grounded."',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['earth element', 'elemental level'],
+    emoji: '🌿'
+  },
+  {
+    term: 'Air level',
+    aliases: ['Air 1', 'Air 2', 'Air 3', 'Air 4', 'Air 5'],
+    definition: 'Your current capacity with thought, clarity, and communication. Higher levels mean greater skill with perspective and understanding, not being "more intellectual."',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['air element', 'elemental level'],
+    emoji: '💨'
+  },
+  {
+    term: 'Aether level',
+    aliases: ['Aether 1', 'Aether 2', 'Aether 3', 'Aether 4', 'Aether 5'],
+    definition: 'Your current capacity with meaning, connection, and transcendence. Higher levels mean greater skill with spiritual integration, not being "more enlightened."',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['aether', 'elemental level'],
+    emoji: '✨'
+  },
+  {
+    term: 'elemental balance',
+    aliases: ['element balance', 'elemental harmony'],
+    definition: 'The relative strength of your elemental capacities. Balance isn\'t about being equal everywhere — it\'s about knowing your gifts and growing edges. Some imbalance is natural and purposeful.',
+    category: 'spiralogic',
+    depth: 'beginner',
+    relatedTerms: ['Spiral', 'elemental level'],
+    emoji: '⚖️'
   },
 ];
 
