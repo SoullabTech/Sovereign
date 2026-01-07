@@ -1882,19 +1882,15 @@ export function SacredHouseWheel({
           );
         })()}
 
-        {/* Planetary Insight Overlay - Shows planet/sign/archetype/aspects */}
-        {(clickedPlanet !== null || hoveredPlanet !== null) && (
+        {/* Planetary Insight Overlay - Shows planet/sign/archetype/aspects (click only) */}
+        {clickedPlanet !== null && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.98 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="fixed inset-0 flex items-center justify-center z-[100] p-4"
-            style={{
-              pointerEvents: clickedPlanet ? 'auto' : 'none',
-              backgroundColor: clickedPlanet ? 'rgba(0,0,0,0.5)' : 'transparent'
-            }}
-            onClick={() => clickedPlanet && setClickedPlanet(null)}
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+            onClick={() => setClickedPlanet(null)}
           >
             <div
               className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full ${
@@ -1910,7 +1906,7 @@ export function SacredHouseWheel({
               onClick={(e) => e.stopPropagation()}
             >
               {(() => {
-                const activePlanet = clickedPlanet || hoveredPlanet;
+                const activePlanet = clickedPlanet;
                 if (!activePlanet) return null;
                 const element = houseElements[activePlanet.house as keyof typeof houseElements] as keyof typeof elementalColors;
                 const elementColor = elementalColors[element];
