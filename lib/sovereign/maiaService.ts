@@ -563,6 +563,16 @@ async function fastPathResponse(
   const memoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
   const hasMemoryBundle = isSanctuary ? false : !!(meta as any).memoryBundle;
 
+  // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded source texts
+  const ainKnowledgeContext = (meta as any).ainKnowledgeContext as string | undefined;
+  const hasAinKnowledge = !!(meta as any).ainKnowledge;
+
+  if (ainKnowledgeContext && hasAinKnowledge) {
+    const ainMeta = (meta as any).ainKnowledge;
+    console.log(`📚 [AINKnowledge] Injecting wisdom context (${ainKnowledgeContext.length} chars)`);
+    console.log(`   Sources: ${ainMeta.sources?.join(', ')}`);
+  }
+
   // 🔒 SECURITY: If user shares sensitive data, instruct MAIA not to claim it was stored
   const sensitiveInstruction = containsSensitiveData(input)
     ? `\n\n🔒 SECURITY: The user is sharing sensitive data (passwords, codes, etc). Do NOT claim you stored or will remember it. Say you can't store secrets in memory and suggest they keep it in a secure password manager or personal vault.`
@@ -574,15 +584,22 @@ async function fastPathResponse(
 
   // Build context prompt with memory bundle OR recent context
   // 🔒 SANCTUARY: memoryContext is already nullified above, so this will fall through to recentContext or plain input
+
+  // 📚 Format AIN knowledge for injection (if available)
+  const ainKnowledgeBlock = ainKnowledgeContext && ainKnowledgeContext.length > 0
+    ? `\n\n📚 RELEVANT WISDOM (from your training sources - draw upon naturally, don't cite directly):
+${ainKnowledgeContext}\n`
+    : '';
+
   let contextPrompt: string;
   if (memoryContext && memoryContext.length > 0) {
     // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
-    contextPrompt = `${memoryContext}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `${memoryContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
   } else if (recentContext.length > 0) {
     // Fallback to simple recent context
-    contextPrompt = `Recent conversation:\n${recentContext}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    contextPrompt = `Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
   } else {
-    contextPrompt = `${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    contextPrompt = `${ainKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
   }
 
   // Import MAIA runtime prompt with full relational and lineage intelligence

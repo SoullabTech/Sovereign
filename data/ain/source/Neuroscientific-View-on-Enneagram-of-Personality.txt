@@ -1,0 +1,494 @@
+                                                                                                             ISSN: 2690- 909X
+
+Review Article                                 Advances in Neurology and Neuroscience
+A Neuroscientific View on the Enneagram of Personality
+Saleh Vallander*
+
+Medical Doctor and teacher of the Enneagram and             *
+                                                             Corresponding Author
+Myers-Briggs systems, Sweden.                               Saleh Vallander, Correspondence concerning this article should be addressed
+                                                            to: saleh@salehvallander.com.
+
+                                                            Submitted: 2023, July 04 ; Accepted: 2023, July 29 ; Published: 2023, Aug 26
+
+
+
+
+  Citation: Vallander, S. (2023). A Neuroscientific View on the Enneagram of Personality. Adv Neur Neur Sci, 6(2), 243-250.
+
+   Abstract
+   The Enneagram is a personality typing system that categorizes individuals into nine distinct types based on their emotional
+   and instinctual patterns. Recently, this typology has gained considerable attention from neuroscientists, in terms of its
+   potential to help us chart the complexities of emotional brain processes. This article will explore the correlations between
+   the Enneagram and the seven primary-process emotional systems charted by neuroscientist Jaak Panksepp: FEAR, RAGE,
+   GRIEF, SEEKING, LUST, CARE, and PLAY. These correlations may potentially have significant implications for our future
+   understanding of the connection between neuroscience and personality.
+
+Keywords: Enneagram, Personality, Brain, Affective Neuroscience, Panksepp, Primary-Process Emotions, Primary Emotional
+Systems, Emotion, Instinct.
+1. Introduction                                                    between psychology and neurobiology, allowing us to gain
+The Enneagram is one of the most renowned personality typing       a deeper understanding of how personality patterns arise
+systems in the world today. It is widely used in therapy and       from neurobiological processes in the brain. In such a way,
+personal development, offering insights into how individuals       the Enneagram could potentially navigate us through the
+experience themselves and interact with the world. The             complexities of neuroscience, shedding light on the intricacies
+Enneagram categorizes people into nine distinct types based        of brain function.
+on their underlying emotional and motivational patterns. Many
+people attest to this system’s astonishing accuracy in mapping     This article will explore the connection between the Enneagram
+different patterns of human personality.                           and the neurobiology of the brain. The Enneagram will be
+                                                                   paralleled with affective neuroscience discoveries made by
+But if the Enneagram is an accurate description of personality,    neuroscientist Jaak Panksepp, who identified seven primary
+one would expect it to have a basis in the neurobiology of the     emotional networks in the brain: FEAR, RAGE, GRIEF,
+brain. And indeed, the Enneagram has awakened some interest        SEEKING, LUST, CARE, and PLAY. These seven emotional
+within neuroscientific circles. For instance, neuroscientist Dan   systems will be correlated to the Enneagram Triads and the
+Siegel has acknowledged the Enneagram as unique in outlining       Instinctual Drives.
+the "internal architecture of mental functioning” [1]. However,
+the connection between the Enneagram and neuroscience is still     2. Overview of The Enneagram System
+a matter of speculation.                                           The Enneagram was first introduced to the modern world by
+                                                                   Russian-Armenian teacher George Gurdjieff, who established it
+The study of personality patterns in the brain touches upon        as a psychological development system. It was later adapted as a
+one of the greatest mysteries in science today: the connection     personality typing system by Bolivian teacher Oscar Ichazo, and
+between body and mind. It remains largely unclear exactly          then integrated with concepts of Western psychology by Chilean
+how activity within the brain can give rise to the diversity of    psychiatrist Claudio Naranjo.
+personalities seen among individuals. Yet, some significant
+research developments have been made. Neuroscientists have         The Enneagram of Personality is a system of nine different
+demonstrated how specific brain regions become active when         personality types numbered One to Nine. The nine types
+a person feels a particular emotion or behaves in a certain way,   represent specific ways an individual’s personality constellates
+which can be linked to various aspects of personality.             around one of three primary negative emotions: anger, fear, and
+                                                                   grief. Accordingly, the nine types are assembled into three main
+The Enneagram of Personality could be a valuable bridge
+Adv Neur Neur Sci, 2023                                                                                        Volume 6 | Issue 2 | 243
+groups, also called ‘Triads’:                                         2.2. The Grief Triad
+• The Anger Triad (Types Eight, Nine, and One)                        • Type Twos (The Helper) deal with their grief by attempting
+• The Grief Triad (Types Two, Three, and Four)                             to gain love from others and being seen as helpful and
+• The Fear Triad (Types Five, Six, and Seven)                              caring. They tend to be generous, demonstrative, people-
+                                                                           pleasing, and possessive.
+During early childhood, a difficult experience will be                • Type Threes (The Achiever) deal with their grief by denying
+predominantly felt as a variation of either anger, fear, or grief,         it and strive to be seen as valuable and successful in the eyes
+depending on the individual’s emotional temperament or                     of others. They tend to be adaptable, excelling, driven, and
+character. These variations form the basis of the nine Enneagram           image-conscious.
+Types. All nine type patterns exist within each of us, but one        • Type Fours (The Individualist) deal with their grief by
+pattern will be dominant, resulting in the dominant Enneagram              becoming preoccupied with their sense of identity and
+Type.                                                                      uniqueness. They tend to be expressive, dramatic, self-
+                                                                           absorbed, and temperamental.
+The following is a brief description of the nine types regarding
+their specific emotional pattern and typical characteristics. These   2.3. The Fear Triad
+characteristics are given as they are described in the Enneagram      • Type Fives (The Investigator) fear being overwhelmed and
+Institute [2].                                                             unable to cope with the outer world. They deal with this fear
+                                                                           by withdrawing into their inner, mental world. They tend to
+2.1. The Anger Triad                                                       be perceptive, innovative, secretive, and isolated.
+• Type Eights (The Challenger) deal with their anger by               • Type Sixes (The Loyalist) deal with their fear by finding
+     taking an oppositional stance toward others and the world.            security from different sources such as relationships,
+     They tend to be self-confident, decisive, willful, and                alliances, or belief systems. They tend to be engaging,
+     confrontational.                                                      responsible, anxious, and suspicious.
+• Type Nines (The Peacemaker) deny their anger, and thus,             • Type Sevens (The Enthusiast) fear their inner world and try
+     they are mostly unaware of it and usually avoid conflict.             to avoid feelings of pain and loss. They deal with this fear by
+     They tend to be receptive, reassuring, complacent, and                keeping their minds distracted and engaging in stimulating
+     resigned.                                                             activities in the outer world. They tend to be spontaneous,
+• Type Ones (The Reformer) deal with their anger by                        versatile, acquisitive, and scattered.
+     attempting to control and suppress it, resulting in a critical
+     attitude toward themselves and others. They tend to be           2.4. The Enneagram Symbol
+     principled, purposeful, self-controlled, and perfectionistic.    The Enneagram is portrayed as a circle where each of the nine
+                                                                      types is positioned at equal distances along the outside (Figure
+                                                                      1). Inside the circle are several connecting lines showing how
+                                                                      the nine types are related to each other.
+
+
+
+
+                                                  Figure 1: The Enneagram Symbol
+2.5. The Lines of Stress and Growth                                   represents how a type behaves under pressure or loss of control.
+The Enneagram symbol (Figure 1) shows how the nine types are          For example, Type Five is connected to Type Seven (via the
+connected and related. There are several connecting lines inside      Direction of Stress) and Type Eight (via the Direction of Growth).
+the circle. Each Enneagram Type is connected to two other types       Under stressful conditions, a Type Five will behave similarly to
+via these inner lines. The lines represent how each type responds     an unhealthy version of Type Seven, becoming distracted and
+and behaves under different conditions. One line, the Direction       mentally scattered. However, when a Type Five feels secure and
+of Growth, shows how a type behaves when they are secure,             safe, they will tend to behave similarly to a healthy version of
+thriving and growing. The other line, the Direction of Stress,        Type Eight, showing strength and decisiveness.
+
+Adv Neur Neur Sci, 2023                                                                                         Volume 6 | Issue 2 | 244
+2.6. The Three Instinctual Drives                                     2.6.3. The Social Instinct
+The Enneagram system further identifies three Instinctual             The Social Instinct is the drive for social relatedness and
+Drives (also called Instincts). These are biological processes        intimacy. People with a dominant Social Instinct need to feel a
+that motivate individuals to engage in certain behaviors, in order    sense of belonging and strive to connect with others. They are
+to promote their survival and the survival of their species. The      often well-attuned to other people. They may actively try to form
+Instincts are crucial to our functioning as biological organisms      new relations and have a keen eye for social hierarchies, using
+and, as such, have a significant influence on our personalities.      this to elevate their position and social standing. The Social
+The three Instinctual Drives are:                                     Instinct can motivate a person to act altruistically, protecting and
+                                                                      conserving groups for the greater good of everybody involved.
+•   The Self-Preservation Instinct: concerned with survival,
+    well-being, and security.                                         3. The Neuroscience of Emotion
+•   The Sexual Instinct: concerned with attraction, courtship         Research into the science of emotion has made significant
+    display, and sexual competition.                                  progress in recent years, largely thanks to advances in
+•   The Social Instinct: concerned with social connections,           technological methods such as brain imaging. These advances
+    relatedness, and intimacy.                                        have enabled researchers to map neural pathways and study the
+                                                                      processes that underlie emotional experiences. As such, they can
+Every person has (in addition to the nine type patterns) all the      create realistic models of how emotions function in the brain.
+Instinctual Drives operating within them. However, for each           Based on discoveries made through neural mapping of the brain,
+person, one of the Instincts is more prioritized than the others.     primary emotional responses have been found to emerge from
+This is known as the dominant Instinct and will receive the most      the midbrain and limbic system [3,4]. These primary emotional
+focus and attention. The dominant Instinct, thus, has a stronger      responses are then further modulated and modified by higher
+influence on the personality than the other two Instincts, and        regions in the neocortex. The neocortex acts as a control center,
+will significantly shape an individual's attitudes and values.        allowing us to reflect and contemplate on our emotions and
+Everything in the personality will gravitate around being able        regulate how we handle and express them. For example, when
+to meet the needs of the dominant Instinct. As such, each             an individual is angry, the raw emotion of rage emerges from
+person will have a dominant Instinctual Drive and a dominant          the midbrain and limbic system but is then modulated by the
+Enneagram Type pattern.                                               neocortex to be expressed in ways that are somewhat acceptable
+                                                                      to the surrounding community.
+A person with a dominant Self-Preservation Instinct is called a
+Self-Preservation Type and is mainly concerned with matters           4. The Seven Primary-Process Emotional Systems
+of survival, well-being, and lifestyle. A person with a dominant      Jaak Panksepp was a leading figure in the field of affective
+Sexual Instinct is called a Sexual Type, and is primarily             neuroscience, which studies how emotions arise in the brain.
+concerned with generating a sense of attraction and chemistry         Through his neurobiological investigations in mammals, he
+in their activities and interaction with others. A person with a      charted seven primary emotional networks in the midbrain and
+dominant Social Instinct is called a Social Type and is primarily     limbic system [5,3]. These networks are genetically inborn and
+concerned with their social relationships.                            hardwired into the brain. In other words, they are instinctive and,
+                                                                      therefore, do not need to be learned. They emerged very early
+2.6.1. The Self-Preservation Instinct                                 in the course of brain evolution, arising from ancient structures
+The Self-Preservation Instinct is the drive for survival and well-    deep within the most primitive parts of the brain. Panksepp
+being. It is concerned with matters of health, comfort, food,         called these the primary-process emotional systems, identifying
+shelter, routine, and material security. People whose dominant        FEAR, RAGE, GRIEF, SEEKING, LUST, CARE, and PLAY.
+Instinct is Self-Preservation tend to focus on meeting those          Each cause distinct affective experiences and behaviors in
+needs; they are often disciplined, practically oriented, and have     the animal. They are capitalized to distinguish them from the
+the ability to set goals and fulfill them.                            ordinary usage of these words.
+
+2.6.2. The Sexual Instinct                                            Each primary-process emotional system follows an ascending
+The Sexual Instinct arises from the primal urge to reproduce          pathway that runs up from the midbrain to the limbic system,
+and ensure one's genetic material can make it into the next           and finally connects to higher brain regions in the neocortex.
+generation. It is more than simply a drive for reproduction;          The PAG (periaqueductal gray) is an important region in the
+it also involves the act of courtship display and attracting          midbrain that is involved in all of these emotional systems.
+significant others. People with a dominant Sexual Instinct are
+often preoccupied with chasing the feeling of ‘chemistry’ and         Each of the primary emotional systems has either a positive
+finding compatibility with another person. This can include a         or negative valence; they can cause attraction or aversion in
+sexual partner, lover, or friend. They constantly seek intense        response to a given situation. FEAR, RAGE, and GRIEF are
+and stimulating relationships, interests, and activities, and enjoy   modes of negative reaction, generating the primary emotions of
+becoming wholly immersed and merged with them. This sense             fear, rage, and grief. SEEKING, LUST, CARE, and PLAY are
+of merging is not to be confused with social intimacy, which is a     modes of positive reaction, generating the primary emotions of
+concern of the Social Instinct.                                       excitement, sexual lust, affection, and joy, respectively.
+
+
+
+Adv Neur Neur Sci, 2023                                                                                         Volume 6 | Issue 2 | 245
+The following is a brief overview of the seven primary-process          dopamine.
+emotional systems in the brain:
+                                                                        4.5. The LUST System
+4.1.The FEAR System                                                     The LUST system motivates animals to find suitable mates and
+The function of the FEAR system is to signal danger and orient          reproduce. It involves different feelings associated with sexual
+the animal, so that it can avoid and escape the threat. It causes       attraction and arousal. The LUST system prompts animals to
+physiological changes in the body, such as increased heart              engage in courting and mating behaviors, which vary widely
+rate and blood flow. It can trigger different types of behaviors        depending on the species.
+depending on the perceived threat level, mobilizing the animal
+to escape or causing it to freeze in its place. When the FEAR           Traditionally, sexual lust is often not considered an emotion but
+system is activated, the animal will have a negative, fearful           a bodily instinct. However, Panksepp and many others argue that
+experience that urges it to get away from the FEAR-inducing             it should be regarded as an emotion because it produces complex
+stimulus, and the associated physiological changes will aid it          instinctual behaviors, which are characteristic of emotions.
+in doing so as quickly as possible. When the FEAR system is
+experimentally stimulated in humans, subjects report feelings           The LUST system is located in the PAG, hypothalamus, and
+of intense fearfulness and anxiety with no apparent cause. The          amygdala. It is closely tied to the activity of sex hormones like
+FEAR network runs through the PAG (periaqueductal gray),                testosterone.
+hypothalamus and amygdala.
+                                                                        4.6. The CARE System
+4.2. The RAGE System                                                    The CARE system promotes nurturing and caring behaviors.
+The RAGE system enables an animal to defend itself and fight            It especially takes expression in the mother-child relationship,
+against competitors. It is commonly activated when an animal has        where it helps to ensure that offspring are properly taken care
+difficulty in meeting its needs or when it is confined or restrained.   of, and all of their basic needs are met. The CARE system is
+When the RAGE response is evoked, animals will move toward              associated with feelings of love and can result in various
+the cause of their frustration and engage in aggressive behaviors       affectionate behaviors, such as caressing and embracing. Besides
+such as biting and scratching. Stimulation of the RAGE system           its role in mothering, it can also promote other social bonds
+in humans causes intense anger attacks. This system’s neural            where nurturance is involved. The CARE system is located in
+network runs through the PAG, hypothalamus, and amygdala.               the PAG and hypothalamus. It is associated with hormones such
+                                                                        as oxytocin and prolactin.
+4.3. The GRIEF System
+The GRIEF system is activated when an individual becomes                4.7. The PLAY System
+separated from their caregiver or loved one, and is associated          The PLAY system promotes friendly interactions and enjoyment
+with feelings of distress, sadness, and loss. It can cause a young      with other individuals. It stimulates laughter and playfulness
+animal to exhibit distress vocalizations (crying), in order to be       and is particularly active during childhood. It prompts animals
+noticed by their caregiver and ensure they are taken care of. If        to engage in fun physical activities like chasing, poking, and
+contact with the caregiver is not re-established, the young animal      wrestling. These activities help the animal learn social rules
+will gradually stop crying and collapse into a state similar to         and develop social bonds. Behaviors associated with the PLAY
+depression. It is thought that human grief and sadness are caused       system are accompanied by a feeling of intense social joy. The
+by the GRIEF system. The GRIEF system is located in the PAG,            PLAY system is located in the PAG and thalamus.
+thalamus, and anterior cingulate gyrus.
+                                                                        5. The Three Levels of Emotional Brain Processing
+4.4. The SEEKING System                                                 Affective neuroscience identifies three levels of emotional
+The SEEKING system motivates an animal to seek out resources            processing in the brain: primary, secondary, and tertiary [3].
+necessary for survival. It is associated with exploratory,              In addition to the primary-process emotional systems, there
+appetitive, and inquisitive behaviors that benefit individual           are also secondary and tertiary emotional processes, which
+animals by helping them locate food, shelter, and other beneficial      allow the brain to modulate, learn from, and reflect upon the
+resources. It motivates them to interact and engage with their          primary emotions. Each of these processes exists in different
+environment, and evokes feelings of excitement, anticipation,           brain regions, and they create a hierarchy that runs anatomically,
+and curiosity.                                                          from the midbrain to the limbic system and up to the neocortex.
+                                                                        The primary-process emotions exist on the level of the midbrain
+The SEEKING system is also involved in all the other emotional          and limbic system, the secondary processes occur largely in the
+systems and plays a supporting role in their functioning. For           limbic system, and the tertiary processes in the neocortex.
+example, when coupled with the LUST or PLAY systems, it
+arouses a sense of purpose and interest.                                Moreover, the primary-process emotions are the foundation
+                                                                        upon which the secondary processes can be established, and the
+The brain areas associated with the SEEKING system are the              secondary processes guide the formation of the tertiary processes.
+PAG, hypothalamus, ventral tegmental area (VTA), nucleus                As such, the primary-process emotions are embedded (nested)
+accumbens, and medial forebrain bundle. When activated, the             and re-represented in secondary processes, which are, in turn,
+SEEKING system causes the release of the brain chemical                 embedded within tertiary processes. Thus, the primary-process
+
+Adv Neur Neur Sci, 2023                                                                                          Volume 6 | Issue 2 | 246
+emotions influence the learning that occurs at the secondary-       personalities are all constellated around the experience of fear.
+process level, and the secondary processes guide the formation      Thus, the neural circuitry of the FEAR system may give rise to
+of higher cognitive capacities at the tertiary-process level.       the psychological patterns seen in the Fear Types, either on the
+                                                                    primary process level or as higher secondary and tertiary brain
+6. Previous Neuroscientific Descriptions of The Enneagram           processes that modulate the primary FEAR system.
+In 2009, medical doctor Jack Killen published an article, which
+correlated the Fear, Anger, and Grief Triads to the FEAR,           7.2. The Anger Triad and the RAGE System
+RAGE, and GRIEF systems within the affective neuroscience           The feelings of anger and rage that are generated by the RAGE
+framework put forth by Jaak Panksepp [6]. This grew out of          system correspond to the underlying emotion of Types Eight,
+Killen’s collaboration with Dan Siegel, David Daniels, Denise       Nine, and One, which make up the Anger Triad. Thus, the RAGE
+Daniels, and Laura Baker. In the article, he further speculated     system may be the neurobiological basis from which the Anger
+how each of the nine types is based on a specific way of handling   Type patterns emerge. The Anger Type patterns could either
+their underlying negative primary emotions, either through          be different neural circuits within the primary RAGE system,
+sustenance, suppression, or shifting/reframing. This correlation    or secondary and tertiary processes that modulate the primary
+between the Enneagram Triads and the negative primary               RAGE system.
+emotional systems is a highly plausible argument.
+                                                                    7.3. The Grief Triad and the GRIEF System
+7. The Enneagram and the Seven Primary-Process Emotional            The grief and social distress generated by the GRIEF system
+Systems                                                             corresponds to the underlying emotion of the Grief Triad, where
+As has been explained, the Enneagram of Personality is a map of     the personality is constellated around the experience of grief.
+emotional and instinctual patterns. The brain regions primarily     The GRIEF system serves to signal the loss of care and social
+responsible for emotions and instincts are the midbrain and         support. It is triggered by separation from a caregiver and results
+limbic system. Therefore, it is reasonable to hypothesize that      in feelings of distress and sadness. The GRIEF system causes
+the Enneagram has a neurobiological basis in these regions.         animals to exhibit distress vocalization (crying), helping them to
+Furthermore, the nine type patterns and Instinctual Drives          be noticed by caregivers and reestablish contact. When activated,
+may emerge from distinct neural networks within these brain         the GRIEF system can also prompt individuals to seek out the
+regions. The most active of these networks might determine an       company of others.
+individual's dominant Enneagram Type and Instinctual Drive.
+                                                                    Common to all three Grief Types is the desire to be noticed by
+The central proposition of this article is that the Enneagram       others and adapting their behavior to gain love or admiration.
+Triads and Instinctual Drives correspond to emotional and           For this reason, the Grief Types are often called the Image Types
+instinctual patterns that arise from Panksepp's seven primary-      because they are often highly focused on their presented image to
+process emotional systems:                                          others. This relates to the function of the GRIEF system, which
+• The Fear Triad corresponds to the FEAR system.                    is to help an individual be noticed by others and reestablish
+• The Anger Triad corresponds to the RAGE system.                   social contact.
+• The Grief Triad corresponds to the GRIEF system.
+• The Self-Preservation Instinct corresponds to the SEEKING         7.4. The Self-Preservation Instinct and the SEEKING System
+     system.                                                        There are many striking similarities between the SEEKING
+• The Sexual Instinct corresponds to the LUST system.               system and the Self-Preservation Instinct. Both are concerned
+• The Social Instinct corresponds to the CARE and PLAY              with basic survival and well-being, the acquisition of resources,
+     systems.                                                       and the motivation to fulfill tasks and goals. Therefore, the basic
+                                                                    aspects of the Self-Preservation Instinct might correspond to the
+*Note that the Instinctual Drives correspond to the positive        behaviors and motivations that emerge from the primary-process
+emotional systems, while the Triads correspond to the negative      SEEKING system located in the PAG, hypothalamus, ventral
+emotional systems.                                                  tegmental area, nucleus accumbens, and medial forebrain
+                                                                    bundle. Further aspects of the Self-Preservation Instinct may
+Within this hypothesis, the nine Enneagram Types would be           correspond to secondary and tertiary processes emanating from
+psychological patterns that emerge from the FEAR, RAGE, and         the higher reaches of the SEEKING system.
+GRIEF systems. They may be either different neural circuits
+within the primary emotional systems or higher processes of         The following sections will use quotes from Enneagram authors
+emotional modification.                                             and neuroscientists to compare the Self-Preservation Instinct
+The following sections will explore the correlations between        and SEEKING system:
+each primary-process emotional system and its Enneagram
+counterpart.                                                        7.4.1. Descriptions of the Self-Preservation Instinct
+                                                                    Enneagram author Russ Hudson writes the following about the
+7.1. The Fear Triad and the FEAR System                             Self-Preservation Instinct [7].
+The fearful emotion generated by the FEAR system corresponds             It [Self-Preservation] is an awareness of our health,
+to the underlying emotion of the Enneagram Fear Triad. The               well-being, and of having the necessary resources for our
+Fear Triad consists of Types Five, Six, and Seven, whose                 survival.
+
+Adv Neur Neur Sci, 2023                                                                                       Volume 6 | Issue 2 | 247
+    ….                                                              7.5.1. Description of the Sexual Instinct
+  Self-Preservation is a fundamental to all life - it is a drive    Luckovich [8]:
+  way more fundamental than anything in our personality. …
+  It manifests in animals as ways to obtain food and shelter,         This [Sexual] instinct is the drive to put ourselves
+  and avoid danger. (p.4)                                             ahead of sexual competition. … Organisms invest an
+   ….                                                                 enormous proportion of activity and energy in eliciting
+  The second zone of the Self-Preservation Instinct is                the attention and attraction of a potential mate. All the
+  practicality and resources. Part of survival is having              bright feathers, deafening calls, frenetic dances, and
+  necessary resources. In human affairs this also means the           other impractical investments of energy seen in animals
+  management and maintenance of those resources. These                are for a sexual goal. This instinct discerns who or what
+  can include items such as money, possessions, time and              we’re attracted to and provides the motivation to pursue
+  energy. (p.4)                                                       it, to enhance and display characteristics that make us
+                                                                      more enticing. (p.18)
+7.4.2. Descriptions of the SEEKING system                             .…
+Jaak Panksepp and Lucy Biven write the following about the            The Sexual Instinct seeks sexual partners with whom we
+SEEKING system [3]:                                                   share suitably strong chemistry to bring us to a state of
+                                                                      sufficient excitation for full surrender during the sexual
+  One of the most important instinctual - emotional systems
+                                                                      act. (p.18)
+  of the brain is the one that allows animals to search for,
+                                                                      .…
+  find, and acquire all of the resources that are needed for
+                                                                      The Sexual Instinct is attuned to and organized around
+  survival. Arousal of this SEEKING system produces all
+                                                                      patterns and pathways of excitation and physiological
+  kinds of approach behaviors. (p.95)
+                                                                      and psychological arousal. What begins as tracking
+  ….
+                                                                      sexual attraction extends to a sensitivity to what arouses
+  Suppose that an animal is hungry. Hunger feels bad, but
+                                                                      energy when this instinct is engaged. (p.20)
+  the encouraging sense of purpose that emanates from
+  SEEKING arousal still makes the animal curious about
+                                                                    7.5.2. Descriptions of the LUST System
+  its environment and sufficiently optimistic to engage in a
+                                                                    Panksepp & Biven [3]:
+  focused and energetic search for food. (p.99)
+  ….                                                                  When animals are in the throes of the LUST system, they
+  SEEKING arousal then inspires animals to enthusiastically           exhibit abundant "courting" activities and eventually move
+  search for the many types of resources that they need. When         toward an urgent joining of their bodies with a receptive
+  animals are hungry, thirsty, or cold, especially when there         mate. (p.36)
+  are indications of available resources in the environment,          .…
+  their SEEKING systems go into overdrive as they forage for          The LUST system lies at the very fulcrum of our attempts
+  food, water, and shelter. (p.100)                                   to understand basic mammalian physical drives (sexual
+  ….                                                                  affects). (p.245)
+  The SEEKING - EXPECTANCY system is a general-                       .…
+  purpose system for obtaining all kinds of resources that            Sexuality in mammals, at the primary-process level, is a
+  exist in the world, from nuts to knowledge, so to speak. In         product of the LUST circuitries. (p.282)
+  short, it participates in all appetitive behaviors that precede
+                                                                    7.6. The Social Instinct and the PLAY System
+  consummation; it generates the urge to search for any and
+                                                                    The Social Instinct and the PLAY system share many similarities.
+  all of the “fruits” of the environment. (p.103)
+                                                                    Integral to both is a concern with social interactions, cooperation,
+  ….
+                                                                    and social hierarchy. Therefore, some aspects of the Social
+  When we look forward to anything, when we work toward
+                                                                    Instinct might correspond to behaviors and motivations that
+  anything, and when we vigorously try to escape from
+                                                                    emerge from the primary-process PLAY system located in the
+  anything, the SEEKING system energizes our behaviors
+                                                                    PAG and thalamus. Further intricacies of the Social Instinct may
+  and attitudes. (p.143)
+                                                                    correspond to secondary and tertiary processes emanating from
+7.5. The Sexual Instinct and the LUST System                        the higher reaches of the PLAY system. There are also other
+If comparisons are drawn between the Sexual Instinct and the        aspects of the Social Instinct which may instead correspond with
+LUST system, the similarity is evident: both are concerned with     the CARE system. This will be discussed later in the article.
+sexuality and the act of courtship display. Therefore, the basic    The following sections will compare descriptions of the Social
+aspects of the Sexual Instinct might correspond to behaviors and    Instinct and the PLAY system:
+motivations that emerge from the primary-process LUST system
+in the PAG, hypothalamus, and amygdala. Further aspects of          7.6.1. Descriptions of the Social Instinct
+the Sexual Instinct may correspond to secondary and tertiary        Hudson [7]:
+processes emanating from the upper end of the LUST system.            When this zone [of the Social Instinct] is strong, we are
+                                                                      able to show up with others and create truly collaborative
+In the following sections, a comparison will be drawn between         and reciprocally beneficial relationships. (p.8)
+quote-descriptions of the Sexual Instinct and the LUST system:        ….
+
+Adv Neur Neur Sci, 2023                                                                                       Volume 6 | Issue 2 | 248
+  SO [The Social Instinct] is about the ability to get together   7.7. The Social Instinct and the CARE System
+  for whatever we might be creating or exploring. (p.8)           The final comparison to be drawn is between the Social
+  ….                                                              Instinct and the CARE system. Here too there are considerable
+  People strong in SO [the Social Instinct] work at their         similarities as both are concerned with caregiving, empathy, and
+  relationships and strive for reciprocity. (p.8)                 intimacy. Thus, the caregiving aspects of the Social Instinct may
+  ….                                                              correspond to behaviors and motivations emerging from the
+  This zone [of the Social Instinct] helps us in our ability to   primary-process CARE system in the PAG and hypothalamus.
+  engage others, and to strengthen connections when it serves     Further intricacies of the Social Instinct may correspond to
+  our purposes or desires. … People strong in this zone value     secondary and tertiary processes emanating from the upper end
+  communication. (p.8)                                            of the CARE system. Other aspects of the Social Instinct may
+  ….                                                              instead correspond to the PLAY system, as was shown in the
+  The third zone of the Social Instinct is "Participation and     previous section.
+  Contribution." Humans need to be able to contribute,
+  to know that their efforts are meaningful to others. It is      The following sections will compare descriptions of the Social
+  instinctual. In this sense, we can also be passionate about     Instinct and the CARE system:
+  what we contribute to others and this is Social.
+  Participation also brings a sense of belonging-that we are      7.7.1. Descriptions of the Parental and Social Caregiving
+  welcomed and that what we are doing matters. (p.8)              Aspect of the Social Instinct
+                                                                  Hudson [7]:
+7.6.2. Descriptions of the PLAY System                              SO [the Social Instinct] began with parenting. Most
+Panksepp & Biven [3]:                                               species on earth do not parent - it is a fairly late
+  The PLAY system allows children to learn about social             development in evolution. But the awareness of the state
+  rules of conduct-for example, when to cooperate and               of the young became crucial as more complex animals
+  when to compete, and at times to retreat in good-humored          required more time to "grow up." So, the parental bond is
+  ways and let someone else win. … So, when children play,          the origin of Social [Instinct]. (p.7)
+  they learn valuable social skills, such as the necessity of       .…
+  reciprocity and giving way on occasion. (p.xix)                   It [the Social Instinct] is also what helps us be good
+  ….                                                                parents/caregivers - we have to be able to sense what the
+  The evidence indicates that PLAY is one of the primary-           child needs. It helps us adapt and respond to what we
+  process, genetically determined social urges. (p.356)             detect in others. (p.8)
+  ….                                                                The origin of the Social Instinct in mammals is in the
+  Among the possible social functions [of PLAY] are the             bond between a mother and child. To be able to read and
+  learning of various competitive and noncompetitive social         attune to another’s experience, needs, and intentions is
+  skills. These range from behaviors that facilitate social         important for negotiating survival within a group, but
+  bonding and social cooperation, to those that promote             an even more basic principle for mammalian life is that
+  social rank and leadership, as well as the ability to             offspring must matter to parents. (p.22-23)
+  communicate effectively. (p.373)
+  ….
+  Compared to animals that have had little history of play,
+  those with a history of abundant play experiences spend
+  more time with others suggesting a social-bonding               7.7.2. Descriptions of the Parental and Social Caregiving
+  (friendship) function of play. … Such a function could be       Aspect of the CARE System
+  very useful for establishing future social alliances and        Davis & Panksepp [9]:
+  cooperation and perhaps even empathy. (p.374)                     The CARE/Nurturance system motivates and coordinates
+  ….                                                                the caretaking and rearing of infants from the time they are
+                                                                    totally dependent newborns throughout the long period of
+  The PLAY urge may be of critical importance in the                early childhood development. … However, the CARE system
+  cultural and epigenetic construction of sophisticated             may also motivate social helping behaviors in general. (Ch.
+  social brains that can understand the emotional states            1)
+  and motives of others, opening the doors to sophisticated
+  social cooperation and fellow feelings of camaraderie,          Panksepp & Biven [3]:
+  compassion, empathy, and solidarity with and toward               This chapter will focus on the CARE system, which is
+  others. PLAY promotes social intelligence. (p.379)                epitomized by maternal devotion. We will discuss emerging
+  ….                                                                knowledge about the way’s mammalian brains generate
+  This [PLAY] activity helps to produce satisfied and self-         nurturing impulses; then we will briefly discuss how these
+  actualized adults because it promotes emotional growth            chemistries may control social learning and higher social
+  and social sensitivity. (p.385)                                   cognitions. (p.284)
+                                                                    .…
+
+
+Adv Neur Neur Sci, 2023                                                                                    Volume 6 | Issue 2 | 249
+   Research on the primary-process aspects of the                     results of such studies can be compared and contrasted to
+   social brain is currently moving forward rapidly.                  Enneagram analyses to determine if there are any correlations or
+   The neuroscientific community is recognizing the                   patterns of interest. In the future, a fully integrated neurobiological
+   importance of CARE and the other primary social                    model of the Enneagram may possibly be developed through
+   systems in the brain. (p.286)                                      further research [10-17].
+
+Panksepp & Biven on the role of oxytocin in social CARE               References
+behaviors [3]:                                                        1. Siegel, D. J. (2010). The mindful therapist: A clinician's guide
+                                                                          to mindsight and neural integration. WW Norton & Company.
+   The hormone oxytocin, along with some other                        2. Type descriptions. The Enneagram Institute. (n.d.). Retrieved
+   chemicals, plays a crucial role in generating maternal                 August 22, 2022,
+   behaviors within the CARE system. … Animals become                 3. Panksepp, J., & Biven, L. (2012). The Archeology of Mind.
+   both less aggressive and more confident and nurturant                  Neuroevolutionary Origins of Humans Emotions, WW. W.
+   when their brains are awash in oxytocin . (p.37)                   4. Venkatraman, A., Edlow, B. L., & Immordino-Yang, M. H.
+   ….                                                                     (2017). The brainstem in emotion: a review. Frontiers in
+   In many experiments’ oxytocin does promote various                     neuroanatomy, 11, 15.
+   pro-social behaviors and attitudes in animals and                  5. Panksepp, J. (2004). Affective neuroscience: The foundations
+   humans. Among humans, it increases the willingness to                  of human and animal emotions. Oxford university press.
+   trust others in economic exchanges. … Under the right              6. Killen, J. (2009). Toward the neurobiology of the enneagram.
+   conditions (with someone you already love) oxytocin                    The Enneagram Journal, 2(1), 40-61.
+   makes us more pro-social - more tolerant and friendlier.           7. Hudson, R. (2020). Enneagram Instincts (SP, SX, SO) and
+   (p.38)                                                                 Subtypes.
+   ….                                                                 8. Luckovich, J. (2021). The Instinctual Drives and the
+   Social temperaments of animals can be modified by                      Enneagram.
+   either promoting or diminishing the genetic expression             9. Davis, K. L., & Panksepp, J. (2018). The emotional foundations
+   of oxytocin or vasopressin. Not only do these changing                 of personality: A neurobiological and evolutionary approach.
+   neurochemical tides modify primary-process social                      WW Norton & Company.
+   responsiveness, but they also percolate through the                10. Davis, K. L., & Montag, C. (2019). Selected principles
+   nervous system to regulate many higher brain processes                 of Pankseppian affective neuroscience. Frontiers in
+   such as social memories and cognitions. (p.308)                        neuroscience, 12, 1025.
+8. Conclusion                                                         11. Diener, E., & Emmons, R. A. (1984). The independence of
+This article has taken a comprehensive look at how the Enneagram          positive and negative affect. Journal of personality and social
+Type patterns and Instinctual Drives might relate to the                  psychology, 47(5), 1105.
+neurobiology of the brain. The Enneagram Triads and Instinctual       12. Izard, C. E. (2007). Basic emotions, natural kinds, emotion
+Drives show a high degree of correlation with Panksepp’s primary-         schemas, and a new paradigm. Perspectives on psychological
+process emotional systems.                                                science, 2(3), 260-280.
+                                                                      13. Jacques, M., Hiam, D., Craig, J., Barrès, R., Eynon, N., &
+Affective neuroscience and the Enneagram may be seen as                   Voisin, S. (2019). Epigenetic changes in healthy human
+complementary fields of study that can help inform one another.           skeletal muscle following exercise–a systematic review.
+They are both concerned with emotions, which lie at the                   Epigenetics, 14(7), 633-648.
+intersection between body and mind. As such, the two fields can       14. Montag, C., & Panksepp, J. (2017). Primary emotional
+be integrated to achieve a greater understanding of the body-mind         systems and personality: an evolutionary perspective.
+connection. The Enneagram can potentially shed some light on              Frontiers in psychology, 8, 464.
+the inner workings of the brain by offering a model that explains     15. Panksepp, J. (2022). Affective neuroscience of the emotional
+how the different primary emotional systems are organized. In             BrainMind: evolutionary perspectives and implications for
+this way, the Enneagram might serve as a map that can guide               understanding depression. Dialogues in clinical neuroscience.
+neurobiological research through the intricacies of emotional         16. Panksepp, J. (2011). Cross-species affective neuroscience
+brain processes.                                                          decoding of the primal affective experiences of humans and
+                                                                          related animals. PloS one, 6(9), e21236.
+Thorough studies will be needed to support the correlations and       17. Riso, D. R., & Hudson, R. (1999). The wisdom of the
+hypotheses outlined in this work. Of particular interest is the use       Enneagram: The complete guide to psychological and
+of brain imaging technologies, which can identify neural pathways         spiritual growth for the nine personality types (p. 389). New
+that are activated when subjects report specific emotions. The            York: Bantam Books.
+
+
+
+                                                                      Copyright: ©2023, Saleh Vallander. This is an open-access article
+                                                                      distributed under the terms of the Creative Commons Attribution License,
+                                                                      which permits unrestricted use, distribution, and reproduction in any
+                                                                      medium, provided the original author and source are credited.
+
+Adv Neur Neur Sci, 2023                                    https://opastpublishers.com                              Volume 6 | Issue 2 | 250
+

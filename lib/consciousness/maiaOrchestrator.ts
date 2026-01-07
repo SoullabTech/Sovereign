@@ -26,6 +26,7 @@ import { MemoryWritebackService, type MemoryMode } from '@/lib/memory/MemoryWrit
 import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate';
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 import { getMCPConsciousnessIntegration, type OracleContextEnrichment } from '@/lib/mcp/integrations';
+import { retrieveForMode, formatForPrompt, type RetrievalResult } from '@/lib/ain/knowledge/RetrievalService';
 
 // ─── Recall Quality Helpers ───────────────────────────────────────────────────
 function clamp01(n: number) {
@@ -397,6 +398,40 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     layersFailed.push('mcp-context');
   }
 
+  // 📚 AIN KNOWLEDGE: Retrieve mode-aware wisdom from embedded source texts
+  // Maps mode to domain filters: care→therapeutic, talk→jungian/philosophy, divination→astrology/enneagram
+  let ainKnowledgeContext = '';
+  let ainKnowledgeChunks: RetrievalResult[] = [];
+  const sessionMode = (context as any)?.mode || (meta as any)?.mode || 'talk';
+
+  try {
+    const ainStartTime = Date.now();
+
+    // Retrieve relevant knowledge based on conversation mode
+    ainKnowledgeChunks = await retrieveForMode(message, sessionMode, {
+      limit: 3,
+      minSimilarity: 0.35,
+      userId,
+    });
+
+    if (ainKnowledgeChunks.length > 0) {
+      // Format for prompt injection
+      ainKnowledgeContext = formatForPrompt(ainKnowledgeChunks, 1500);
+
+      console.log(`📚 [AINKnowledge] Retrieved ${ainKnowledgeChunks.length} chunks for ${sessionMode} mode`);
+      console.log(`   Sources: ${ainKnowledgeChunks.map(c => c.sourceTitle).join(', ')}`);
+      console.log(`   Similarity: ${ainKnowledgeChunks.map(c => (c.similarity * 100).toFixed(1) + '%').join(', ')}`);
+
+      layerTimings['ain-knowledge'] = Date.now() - ainStartTime;
+      layersSuccessful.push('ain-knowledge');
+    } else {
+      console.log(`📚 [AINKnowledge] No relevant chunks found for "${message.substring(0, 50)}..."`);
+    }
+  } catch (error) {
+    console.warn('[AINKnowledge] Retrieval failed (continuing without):', error);
+    layersFailed.push('ain-knowledge');
+  }
+
   // 1️⃣ ALWAYS: Get base MAIA response first (core functionality) with conversation context
   let maiaResult;
   try {
@@ -423,6 +458,14 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           timingGuidance: mcpEnrichment.timingGuidance,
           taskContext: mcpEnrichment.taskContext,
           consciousnessMarkers: mcpEnrichment.consciousnessMarkers,
+        } : undefined,
+        // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded sources
+        ainKnowledgeContext: ainKnowledgeContext || undefined,
+        ainKnowledge: ainKnowledgeChunks.length > 0 ? {
+          chunksRetrieved: ainKnowledgeChunks.length,
+          sources: ainKnowledgeChunks.map(c => c.sourceTitle),
+          domains: [...new Set(ainKnowledgeChunks.map(c => c.domain))],
+          avgSimilarity: ainKnowledgeChunks.reduce((sum, c) => sum + c.similarity, 0) / ainKnowledgeChunks.length,
         } : undefined,
         // MAIA-PAI conversational kernel context
         conversationContext: {
