@@ -36,7 +36,27 @@ export async function GET(request: NextRequest) {
           // Prioritize preferred_name, then name, then username - never use passkey as display name
           userName = member.preferred_name || member.name || member.username;
           isGuest = false;
-          console.log(`✅ [USER-PROFILE] Found member: ${userName}`);
+          console.log(`✅ [USER-PROFILE] Found member: ${userName} (id: ${member.id})`);
+
+          // Return full member data for proper name handling
+          const profile = {
+            id: member.id,
+            name: userName,
+            username: member.username,
+            preferredName: member.preferred_name,
+            domain: domain || 'localhost',
+            isGuest: false,
+            preferences: {
+              theme: 'dark',
+              voiceEnabled: true,
+            },
+            created: new Date().toISOString(),
+          };
+
+          return NextResponse.json({
+            success: true,
+            user: profile
+          });
         } else {
           console.log(`⚠️ [USER-PROFILE] No member found for userId: ${userId}`);
         }

@@ -108,11 +108,16 @@ async function getInitialUserData() {
       const data = await response.json();
 
       if (data.success && data.user) {
-        const validName = getValidDisplayName(data.user.name, data.user.username);
-        console.log('✅ [MAIA] User profile fetched from API:', validName);
+        // Priority: preferredName > name > username (preferredName is what user wants to be called)
+        const validName = getValidDisplayName(
+          data.user.preferredName || data.user.name,
+          data.user.username
+        );
+        console.log('✅ [MAIA] User profile fetched from API:', validName, '(preferredName:', data.user.preferredName, ')');
 
         // Sync to localStorage
         localStorage.setItem('explorerName', validName);
+        localStorage.setItem('explorerPreferredName', validName);
         localStorage.setItem('explorerId', data.user.id);
         localStorage.setItem('betaOnboardingComplete', 'true');
         // PERMANENT marker that NEVER gets removed, even on signout
