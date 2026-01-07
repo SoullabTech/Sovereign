@@ -106,3 +106,66 @@ export const TESTFLIGHT_SECTIONS = {
     ],
   },
 } as const;
+
+/**
+ * Five SacredCards format for ritual checklist UI
+ */
+export const TESTFLIGHT_SACRED_CARDS = [
+  {
+    key: 'update',
+    title: 'Update',
+    icon: 'ArrowUpCircle',
+    lines: [
+      'TestFlight → MAIA → pull to refresh → Update',
+      "If you don't see Update: close TestFlight, reopen, pull to refresh again.",
+    ],
+  },
+  {
+    key: 'voice-loop',
+    title: 'Voice Loop',
+    icon: 'Mic',
+    lines: [
+      '1) Tap Talk → say: "Testing one two three"',
+      '2) Let MAIA respond (MAIA speaks)',
+      '3) Tap Talk again → say: "Second test after MAIA spoke"',
+      '✅ Pass: both transcribe + respond',
+      '❌ Fail: stuck "Listening…", no text, or 2nd Talk breaks',
+    ],
+  },
+  {
+    key: 'ui-checks',
+    title: 'UI Checks',
+    icon: 'LayoutGrid',
+    lines: [
+      'Tap ? Voice Help → opens + readable',
+      'Tap Show Text / Hide Text → visible + works',
+    ],
+  },
+  {
+    key: 'fast-fixes',
+    title: 'Fast Fixes',
+    icon: 'Wrench',
+    lines: [
+      '1) Force close MAIA → reopen → retry Voice Loop',
+      '2) Bluetooth OFF (AirPods / car) → retry',
+      '3) Settings → Privacy & Security:',
+      '   - Microphone → MAIA → ON',
+      '   - Speech Recognition → MAIA → ON',
+      '   Then force close → retry',
+    ],
+  },
+  {
+    key: 'report',
+    title: 'Report a Bug',
+    icon: 'Bug',
+    lines: [
+      'Device + iOS:',
+      'MAIA build #:',
+      'What happened:',
+      'Steps: 1) 2) 3)',
+      'Frequency: Every / Often / Sometimes / Once',
+      'Bluetooth: Off / On / AirPods / Car',
+      'Video: (10–20 sec screen recording)',
+    ],
+  },
+] as const;
