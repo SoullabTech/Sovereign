@@ -1,4 +1,5 @@
-export const dynamic = 'force-static';
+// Production requires force-dynamic for database access
+export const dynamic = 'force-dynamic';
 
 
 /**
