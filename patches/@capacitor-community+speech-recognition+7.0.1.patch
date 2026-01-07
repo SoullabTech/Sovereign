@@ -1,8 +1,8 @@
 diff --git a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
-index 5d1b35b..3ad2034 100644
+index 5d1b35b..92d3bac 100644
 --- a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
 +++ b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
-@@ -1,208 +1,232 @@
+@@ -1,208 +1,264 @@
  import Foundation
  import Capacitor
  import Speech
@@ -81,64 +81,26 @@ index 5d1b35b..3ad2034 100644
 -            }
 +        // Cleanup previous session
 +        self.cleanup()
-+
+ 
+-            let language: String = call.getString("language") ?? "en-US"
+-            let maxResults: Int = call.getInt("maxResults") ?? self.defaultMatches
+-            let partialResults: Bool = call.getBool("partialResults") ?? false
 +        // Create recognizer
 +        self.speechRecognizer = SFSpeechRecognizer(locale: Locale(identifier: language))
 +        guard let speechRecognizer = self.speechRecognizer else {
 +            call.reject("Could not create speech recognizer")
 +            return
 +        }
-+
+ 
+-            if self.recognitionTask != nil {
+-                self.recognitionTask?.cancel()
+-                self.recognitionTask = nil
+-            }
 +        // Check on-device availability
 +        var useOnDevice = false
 +        if #available(iOS 13.0, *) {
 +            useOnDevice = speechRecognizer.supportsOnDeviceRecognition
 +            print("[SR] On-device supported: \(useOnDevice)")
-+        }
-+
-+        guard speechRecognizer.isAvailable else {
-+            call.reject("Speech recognizer not available")
-+            return
-+        }
-+
-+        // Setup audio session
-+        let audioSession = AVAudioSession.sharedInstance()
-+        do {
-+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
-+            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
-+            print("[SR] Audio session ready")
-+        } catch {
-+            print("[SR] Audio session error: \(error)")
-+            call.reject("Audio error: \(error.localizedDescription)")
-+            return
-+        }
-+
-+        // Create engine and request
-+        self.audioEngine = AVAudioEngine()
-+        self.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
-+
-+        guard let audioEngine = self.audioEngine,
-+              let recognitionRequest = self.recognitionRequest else {
-+            call.reject("Could not create audio components")
-+            return
-+        }
- 
--            let language: String = call.getString("language") ?? "en-US"
--            let maxResults: Int = call.getInt("maxResults") ?? self.defaultMatches
--            let partialResults: Bool = call.getBool("partialResults") ?? false
-+        recognitionRequest.shouldReportPartialResults = self.partialResults
- 
--            if self.recognitionTask != nil {
--                self.recognitionTask?.cancel()
--                self.recognitionTask = nil
-+        // Force on-device if available
-+        if #available(iOS 13.0, *) {
-+            if useOnDevice {
-+                recognitionRequest.requiresOnDeviceRecognition = true
-+                print("[SR] Using ON-DEVICE recognition")
-+            } else {
-+                print("[SR] Using NETWORK recognition")
-             }
 +        }
  
 -            self.audioEngine = AVAudioEngine.init()
@@ -155,24 +117,124 @@ index 5d1b35b..3ad2034 100644
 -                      return
 -                }
 -            } catch {
-+        // Get input format
++        guard speechRecognizer.isAvailable else {
++            call.reject("Speech recognizer not available")
++            return
++        }
+ 
+-            }
++        // Setup audio session - iOS 26 requires proper configuration
++        let audioSession = AVAudioSession.sharedInstance()
++        do {
++            // Use .measurement mode - specifically designed for speech recognition
++            // On iOS 26, this mode properly signals the OS that we need mic access
++            try audioSession.setCategory(.playAndRecord, mode: .measurement, options: [.defaultToSpeaker, .allowBluetoothA2DP, .mixWithOthers])
++            try audioSession.setPreferredSampleRate(44100)
++            try audioSession.setPreferredIOBufferDuration(0.005) // 5ms for low latency
++            try audioSession.setActive(true, options: .notifyOthersOnDeactivation)
++            print("[SR] Audio session ready - mode: measurement, sampleRate: \(audioSession.sampleRate)")
++        } catch {
++            print("[SR] Audio session error: \(error)")
++            call.reject("Audio error: \(error.localizedDescription)")
++            return
++        }
+ 
+-            self.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+-            self.recognitionRequest?.shouldReportPartialResults = partialResults
++        // Create engine and request
++        self.audioEngine = AVAudioEngine()
++        self.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
+ 
+-            let inputNode: AVAudioInputNode = self.audioEngine!.inputNode
+-            let format: AVAudioFormat = inputNode.outputFormat(forBus: 0)
++        guard let audioEngine = self.audioEngine,
++              let recognitionRequest = self.recognitionRequest else {
++            call.reject("Could not create audio components")
++            return
++        }
+ 
+-            self.recognitionTask = self.speechRecognizer?.recognitionTask(with: self.recognitionRequest!, resultHandler: { (result, error) in
+-                if result != nil {
+-                    let resultArray: NSMutableArray = NSMutableArray()
+-                    var counter: Int = 0
++        recognitionRequest.shouldReportPartialResults = self.partialResults
+ 
+-                    for transcription: SFTranscription in result!.transcriptions {
+-                        if maxResults > 0 && counter < maxResults {
+-                            resultArray.add(transcription.formattedString)
+-                        }
+-                        counter+=1
+-                    }
++        // iOS 26: Let system choose best recognition path
++        // Don't force on-device - it may have issues on newer iOS versions
++        if #available(iOS 13.0, *) {
++            // Allow network recognition for better accuracy
++            recognitionRequest.requiresOnDeviceRecognition = false
++            print("[SR] Using NETWORK recognition (on-device available: \(useOnDevice))")
++        }
+ 
+-                    if partialResults {
+-                        self.notifyListeners("partialResults", data: ["matches": resultArray])
+-                    } else {
+-                        call.resolve([
+-                            "matches": resultArray
+-                        ])
+-                    }
++        // Get input format - use inputFormat for recording
 +        let inputNode = audioEngine.inputNode
-+        let recordingFormat = inputNode.outputFormat(forBus: 0)
-+        print("[SR] Format: \(recordingFormat.sampleRate)Hz, \(recordingFormat.channelCount)ch")
-+
-+        guard recordingFormat.sampleRate > 0 else {
-+            call.reject("Invalid audio format")
++        // CRITICAL: inputFormat is what the hardware provides for recording
++        let recordingFormat = inputNode.inputFormat(forBus: 0)
++        print("[SR] Input format: \(recordingFormat.sampleRate)Hz, \(recordingFormat.channelCount)ch")
+ 
+-                    if result!.isFinal {
+-                        self.audioEngine!.stop()
+-                        self.audioEngine?.inputNode.removeTap(onBus: 0)
+-                        self.notifyListeners("listeningState", data: ["status": "stopped"])
+-                        self.recognitionTask = nil
+-                        self.recognitionRequest = nil
+-                    }
+-                }
++        // Fallback to output format if input format has 0 channels (simulator)
++        let finalFormat: AVAudioFormat
++        if recordingFormat.channelCount == 0 {
++            let outputFormat = inputNode.outputFormat(forBus: 0)
++            print("[SR] Using output format: \(outputFormat.sampleRate)Hz, \(outputFormat.channelCount)ch")
++            finalFormat = outputFormat
++        } else {
++            finalFormat = recordingFormat
++        }
+ 
+-                if error != nil {
+-                    self.audioEngine!.stop()
+-                    self.audioEngine?.inputNode.removeTap(onBus: 0)
+-                    self.recognitionRequest = nil
+-                    self.recognitionTask = nil
+-                    self.notifyListeners("listeningState", data: ["status": "stopped"])
+-                    call.reject(error!.localizedDescription)
+-                }
+-            })
++        guard finalFormat.sampleRate > 0 && finalFormat.channelCount > 0 else {
++            call.reject("Invalid audio format - sampleRate: \(finalFormat.sampleRate), channels: \(finalFormat.channelCount)")
 +            return
 +        }
 +
 +        // Start recognition with delegate for better visibility
 +        self.recognitionTask = speechRecognizer.recognitionTask(with: recognitionRequest, delegate: self)
- 
-+        // Install tap
-+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
++
++        // Install tap with validated format - track buffer count for diagnostics
++        var bufferCount = 0
++        inputNode.installTap(onBus: 0, bufferSize: 1024, format: finalFormat) { [weak self] buffer, _ in
++            bufferCount += 1
++            if bufferCount == 1 {
++                print("[SR] 🎤 First audio buffer received!")
++            } else if bufferCount % 100 == 0 {
++                print("[SR] 🎤 Buffer count: \(bufferCount)")
++            }
 +            self?.recognitionRequest?.append(buffer)
 +        }
-+
+ 
+-            inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
+-                self.recognitionRequest?.append(buffer)
 +        // Start engine
 +        audioEngine.prepare()
 +        do {
@@ -189,85 +251,6 @@ index 5d1b35b..3ad2034 100644
 +        }
 +    }
  
--            self.recognitionRequest = SFSpeechAudioBufferRecognitionRequest()
--            self.recognitionRequest?.shouldReportPartialResults = partialResults
-+    // MARK: - SFSpeechRecognitionTaskDelegate
- 
--            let inputNode: AVAudioInputNode = self.audioEngine!.inputNode
--            let format: AVAudioFormat = inputNode.outputFormat(forBus: 0)
-+    public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didHypothesizeTranscription transcription: SFTranscription) {
-+        print("[SR] 🎤 Hypothesis: \(transcription.formattedString)")
-+        if self.partialResults {
-+            self.notifyListeners("partialResults", data: ["matches": [transcription.formattedString]])
-+        }
-+    }
- 
--            self.recognitionTask = self.speechRecognizer?.recognitionTask(with: self.recognitionRequest!, resultHandler: { (result, error) in
--                if result != nil {
--                    let resultArray: NSMutableArray = NSMutableArray()
--                    var counter: Int = 0
-+    public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishRecognition recognitionResult: SFSpeechRecognitionResult) {
-+        let matches = recognitionResult.transcriptions.prefix(self.maxResults).map { $0.formattedString }
-+        print("[SR] ✅ Final: \(matches)")
- 
--                    for transcription: SFTranscription in result!.transcriptions {
--                        if maxResults > 0 && counter < maxResults {
--                            resultArray.add(transcription.formattedString)
--                        }
--                        counter+=1
--                    }
-+        if !self.partialResults {
-+            self.currentCall?.resolve(["matches": matches])
-+        }
-+    }
- 
--                    if partialResults {
--                        self.notifyListeners("partialResults", data: ["matches": resultArray])
--                    } else {
--                        call.resolve([
--                            "matches": resultArray
--                        ])
--                    }
-+    public func speechRecognitionTaskWasCancelled(_ task: SFSpeechRecognitionTask) {
-+        print("[SR] ⚠️ Task cancelled")
-+        self.stopEngine()
-+        self.notifyListeners("listeningState", data: ["status": "stopped"])
-+    }
- 
--                    if result!.isFinal {
--                        self.audioEngine!.stop()
--                        self.audioEngine?.inputNode.removeTap(onBus: 0)
--                        self.notifyListeners("listeningState", data: ["status": "stopped"])
--                        self.recognitionTask = nil
--                        self.recognitionRequest = nil
--                    }
--                }
-+    public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishSuccessfully successfully: Bool) {
-+        print("[SR] Task finished, success: \(successfully)")
-+        self.stopEngine()
-+        self.notifyListeners("listeningState", data: ["status": "stopped"])
- 
--                if error != nil {
--                    self.audioEngine!.stop()
--                    self.audioEngine?.inputNode.removeTap(onBus: 0)
--                    self.recognitionRequest = nil
--                    self.recognitionTask = nil
--                    self.notifyListeners("listeningState", data: ["status": "stopped"])
--                    call.reject(error!.localizedDescription)
--                }
--            })
-+        if !successfully && !self.partialResults {
-+            self.currentCall?.reject("Recognition failed")
-+        }
-+    }
- 
--            inputNode.installTap(onBus: 0, bufferSize: 1024, format: format) { (buffer: AVAudioPCMBuffer, _: AVAudioTime) in
--                self.recognitionRequest?.append(buffer)
--            }
-+    private func cleanup() {
-+        self.recognitionTask?.cancel()
-+        self.recognitionTask = nil
- 
 -            self.audioEngine?.prepare()
 -            do {
 -                try self.audioEngine?.start()
@@ -277,7 +260,56 @@ index 5d1b35b..3ad2034 100644
 -                }
 -            } catch {
 -                call.reject(self.messageUnknown)
--            }
++    // MARK: - SFSpeechRecognitionTaskDelegate
++
++    public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didHypothesizeTranscription transcription: SFTranscription) {
++        print("[SR] 🎤 Hypothesis: \(transcription.formattedString)")
++        if self.partialResults {
++            self.notifyListeners("partialResults", data: ["matches": [transcription.formattedString]])
++        }
++    }
++
++    public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishRecognition recognitionResult: SFSpeechRecognitionResult) {
++        let matches = recognitionResult.transcriptions.prefix(self.maxResults).map { $0.formattedString }
++        print("[SR] ✅ Final: \(matches)")
++
++        if !self.partialResults {
++            self.currentCall?.resolve(["matches": matches])
++        }
++    }
++
++    public func speechRecognitionTaskWasCancelled(_ task: SFSpeechRecognitionTask) {
++        print("[SR] ⚠️ Task cancelled")
++        self.stopEngine()
++        self.notifyListeners("listeningState", data: ["status": "stopped"])
++    }
++
++    public func speechRecognitionTaskFinishedReadingAudio(_ task: SFSpeechRecognitionTask) {
++        print("[SR] 📖 Finished reading audio input")
++    }
++
++    public func speechRecognitionTask(_ task: SFSpeechRecognitionTask, didFinishSuccessfully successfully: Bool) {
++        print("[SR] Task finished, success: \(successfully)")
++        if !successfully {
++            if let error = task.error {
++                print("[SR] ❌ Error: \(error.localizedDescription)")
++                print("[SR] ❌ Error code: \((error as NSError).code)")
++                print("[SR] ❌ Error domain: \((error as NSError).domain)")
+             }
+         }
++        self.stopEngine()
++        self.notifyListeners("listeningState", data: ["status": "stopped"])
++
++        if !successfully && !self.partialResults {
++            let errorMsg = task.error?.localizedDescription ?? "Recognition failed"
++            self.currentCall?.reject(errorMsg)
++        }
++    }
++
++    private func cleanup() {
++        self.recognitionTask?.cancel()
++        self.recognitionTask = nil
++
 +        if let engine = self.audioEngine {
 +            if engine.isRunning { engine.stop() }
 +            engine.inputNode.removeTap(onBus: 0)
@@ -290,7 +322,7 @@ index 5d1b35b..3ad2034 100644
 +        if let engine = self.audioEngine, engine.isRunning {
 +            engine.stop()
 +            engine.inputNode.removeTap(onBus: 0)
-         }
++        }
 +        self.recognitionRequest?.endAudio()
      }
  
