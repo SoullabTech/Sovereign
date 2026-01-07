@@ -97,6 +97,16 @@ async function getInitialUserData() {
 
   const storedUserId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
 
+  // 🔍 DIAGNOSTIC: Log localStorage state for debugging name issues
+  console.log('🔍 [INIT] localStorage state:', {
+    explorerId: localStorage.getItem('explorerId'),
+    betaUserId: localStorage.getItem('betaUserId'),
+    explorerName: localStorage.getItem('explorerName'),
+    explorerPreferredName: localStorage.getItem('explorerPreferredName'),
+    beta_user: localStorage.getItem('beta_user')?.substring(0, 100) + '...',
+    storedUserId
+  });
+
   // Try to fetch from API using stored userId
   if (storedUserId) {
     try {
@@ -114,11 +124,13 @@ async function getInitialUserData() {
           data.user.username
         );
         console.log('✅ [MAIA] User profile fetched from API:', validName, '(preferredName:', data.user.preferredName, ')');
+        console.log('🔍 [MAIA] API response:', JSON.stringify(data.user));
 
         // Sync to localStorage
         localStorage.setItem('explorerName', validName);
         localStorage.setItem('explorerPreferredName', validName);
         localStorage.setItem('explorerId', data.user.id);
+        console.log('🔍 [MAIA] Wrote to localStorage: explorerName=' + validName);
         localStorage.setItem('betaOnboardingComplete', 'true');
         // PERMANENT marker that NEVER gets removed, even on signout
         localStorage.setItem('maiaPermanentUser', 'true');

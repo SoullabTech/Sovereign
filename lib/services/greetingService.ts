@@ -9,15 +9,23 @@ import { PresenceGreeting } from '../maia/presence-greetings';
 export function resolveDisplayName(): string {
   if (typeof window === 'undefined') return 'Friend';
 
-  // Priority 1: Explicit preferred name
+  // 🔍 DIAGNOSTIC: Log what we're reading from localStorage
   const preferredName = localStorage.getItem('explorerPreferredName');
+  const explorerName = localStorage.getItem('explorerName');
+  console.log('🔍 [resolveDisplayName] Reading from localStorage:', {
+    explorerPreferredName: preferredName,
+    explorerName: explorerName,
+  });
+
+  // Priority 1: Explicit preferred name
   if (preferredName && preferredName.trim() && preferredName.toLowerCase() !== 'friend') {
+    console.log('🔍 [resolveDisplayName] Using explorerPreferredName:', preferredName);
     return preferredName.trim();
   }
 
   // Priority 2: Explorer name
-  const explorerName = localStorage.getItem('explorerName');
   if (explorerName && explorerName.trim() && explorerName.toLowerCase() !== 'friend') {
+    console.log('🔍 [resolveDisplayName] Using explorerName:', explorerName);
     return explorerName.trim();
   }
 
@@ -48,6 +56,7 @@ export function resolveDisplayName(): string {
     // JSON parse error - continue to fallback
   }
 
+  console.log('🔍 [resolveDisplayName] No valid name found, returning Friend');
   return 'Friend';
 }
 
