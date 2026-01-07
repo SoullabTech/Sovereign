@@ -95,13 +95,24 @@ jobs:
               /(^|\n)\s*[-*]\s+(open|tap|click|press|go to|select|choose|start|stop|record)\b/i.test(rawBody) ||
               /(^|\n)\s*[-*]\s+\w+/.test(rawBody); // fallback: any bullet list at all
 
+            // PATCH 3b: Treat markdown task lists as steps (common in templates)
+            // - [ ] Open app  /  - [x] Tap record
+            const hasChecklistSteps =
+              /(^|\n)\s*[-*]\s*\[\s*[xX ]\s*\]\s+\S+/.test(rawBody);
+
             // PATCH 4: Allow "Expected behavior" / "Actual behavior" headings without colon
             const hasExpectedActual =
               hasAny(["expected:", "actual:", "expected behavior", "actual behavior"]) ||
               /(^|\n)\s*expected(\s+behavior)?\s*[:\-]?\s*/i.test(rawBody) ||
               /(^|\n)\s*actual(\s+behavior)?\s*[:\-]?\s*/i.test(rawBody);
 
-            const likelyMissingRepro = !(mentionsSteps || hasNumberedSteps || hasBulletSteps || hasExpectedActual);
+            const likelyMissingRepro = !(
+              mentionsSteps ||
+              hasNumberedSteps ||
+              hasBulletSteps ||
+              hasChecklistSteps ||
+              hasExpectedActual
+            );
 
             // If repro info is now present, remove needs-repro (self-healing on edits)
             const shouldRemoveNeedsRepro = !likelyMissingRepro && currentLabels.has("needs-repro");
