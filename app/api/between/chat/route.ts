@@ -1,4 +1,5 @@
-export const dynamic = 'force-static';
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 // backend: app/api/between/chat/route.ts
 
 // Force Node.js runtime (Edge runtime can't handle crypto, some libs)

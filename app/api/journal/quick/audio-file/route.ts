@@ -1,4 +1,5 @@
-export const dynamic = 'force-static';
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 /**
  * Voice Journal Audio File Serve API
  * GET /api/journal/quick/audio-file?path=storage/audio/journals/...

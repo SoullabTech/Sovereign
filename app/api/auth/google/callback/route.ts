@@ -6,7 +6,8 @@
  */
 
 
-export const dynamic = 'force-static';
+// Production requires force-dynamic for per-user database access
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
