@@ -73,14 +73,35 @@ jobs:
               "sigabrt", "fatal", "exception", "stacktrace",
             ]);
 
-            // needs-repro: lightweight heuristic
-            const mentionsSteps = hasAny([
-              "steps to reproduce", "repro steps", "reproduction steps", "how to reproduce", "repro:",
-            ]);
+            // needs-repro: widened heuristics for common issue formats
+            const rawBody = issue.body || "";
 
-            const hasNumberedSteps = /(^|\n)\s*(1[\).\:]|step\s*1[\)\:\.]|-\s*\[\s*\]\s*)/i.test(issue.body || "");
-            const hasExpectedActual = hasAny(["expected:", "actual:", "expected behavior", "actual behavior"]);
-            const likelyMissingRepro = !(mentionsSteps || hasNumberedSteps || hasExpectedActual);
+            // PATCH 1: Widen mentionsSteps to catch headings + common variants
+            const mentionsSteps = hasAny([
+              "steps to reproduce", "steps:", "reproduction steps", "repro steps",
+              "repro:", "how to reproduce", "to reproduce",
+            ]) || /(^|\n)\s{0,3}#{1,6}\s*steps\b/i.test(rawBody)
+               || /(^|\n)\s{0,3}#{1,6}\s*steps to reproduce\b/i.test(rawBody);
+
+            // PATCH 2: Expand hasNumberedSteps to catch 1) / 1- / Step 1:
+            const hasNumberedSteps =
+              /(^|\n)\s*\d+\.\s+/.test(rawBody) ||     // 1. foo
+              /(^|\n)\s*\d+\)\s+/.test(rawBody) ||     // 1) foo
+              /(^|\n)\s*\d+\s*-\s+/.test(rawBody) ||   // 1 - foo
+              /(^|\n)\s*step\s*\d+\s*[:\-]/i.test(rawBody); // Step 1: foo
+
+            // PATCH 3: Detect bullet lists as steps
+            const hasBulletSteps =
+              /(^|\n)\s*[-*]\s+(open|tap|click|press|go to|select|choose|start|stop|record)\b/i.test(rawBody) ||
+              /(^|\n)\s*[-*]\s+\w+/.test(rawBody); // fallback: any bullet list at all
+
+            // PATCH 4: Allow "Expected behavior" / "Actual behavior" headings without colon
+            const hasExpectedActual =
+              hasAny(["expected:", "actual:", "expected behavior", "actual behavior"]) ||
+              /(^|\n)\s*expected(\s+behavior)?\s*[:\-]?\s*/i.test(rawBody) ||
+              /(^|\n)\s*actual(\s+behavior)?\s*[:\-]?\s*/i.test(rawBody);
+
+            const likelyMissingRepro = !(mentionsSteps || hasNumberedSteps || hasBulletSteps || hasExpectedActual);
 
             // If repro info is now present, remove needs-repro (self-healing on edits)
             const shouldRemoveNeedsRepro = !likelyMissingRepro && currentLabels.has("needs-repro");
