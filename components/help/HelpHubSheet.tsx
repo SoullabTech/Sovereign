@@ -70,7 +70,7 @@ export default function HelpHubSheet({
                   <button
                     onClick={() => {
                       onClose();
-                      onOpenVoiceHelp();
+                      requestAnimationFrame(() => onOpenVoiceHelp());
                     }}
                     className="group flex w-full items-center justify-between rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-left hover:bg-amber-500/15"
                   >
@@ -95,7 +95,7 @@ export default function HelpHubSheet({
                   <button
                     onClick={() => {
                       onClose();
-                      onOpenTestFlightHelp();
+                      requestAnimationFrame(() => onOpenTestFlightHelp());
                     }}
                     className="group flex w-full items-center justify-between rounded-2xl border border-amber-500/20 bg-amber-500/10 px-4 py-4 text-left hover:bg-amber-500/15"
                   >
