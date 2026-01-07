@@ -7,7 +7,7 @@
  * Follows Spiral Journey philosophy: wonder over instruction
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Circle, MapPin, Clock, Calendar } from 'lucide-react';
 import { MiniHoloflower } from '../holoflower/MiniHoloflower';
@@ -46,10 +46,12 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
   const [isSearching, setIsSearching] = useState(false);
   const [locationResults, setLocationResults] = useState<any[]>([]);
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Search for location using geocoding
-  const searchLocation = async (query: string) => {
-    if (query.length < 2) {
+  // Search for location using geocoding (with debounce)
+  const searchLocation = useCallback(async (query: string) => {
+    if (query.length < 3) {
       setLocationResults([]);
       return;
     }
@@ -62,24 +64,41 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
       );
       const data = await response.json();
 
-      if (data.success) {
-        console.log(`Location search results from ${data.provider}:`, data.data);
+      if (data.success && data.data?.length > 0) {
+        console.log(`📍 Location search results from ${data.provider}:`, data.data.length, 'results');
         setLocationResults(data.data);
       } else {
-        console.error('Location search error:', data.error);
+        console.warn('📍 Location search returned no results for:', query);
         setLocationResults([]);
-        // Show user-friendly error if service is down
-        if (response.status === 503) {
-          alert('Location search is temporarily unavailable. Please try again in a moment.');
-        }
       }
     } catch (error) {
-      console.error('Location search error:', error);
+      console.error('📍 Location search error:', error);
       setLocationResults([]);
     } finally {
       setIsSearching(false);
     }
-  };
+  }, []);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    if (searchQuery.length >= 3 && !selectedLocation) {
+      searchTimeoutRef.current = setTimeout(() => {
+        searchLocation(searchQuery);
+      }, 300); // 300ms debounce
+    } else {
+      setLocationResults([]);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, selectedLocation, searchLocation]);
 
   const handleLocationSelect = async (location: any) => {
     console.log('Location selected:', location);
@@ -211,7 +230,7 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
         </div>
 
         {/* Birth Location */}
-        <div className="relative">
+        <div className="relative" style={{ zIndex: 40 }}>
           <label
             htmlFor="birthLocation"
             className="flex items-center gap-2 text-sm mb-2"
@@ -225,12 +244,14 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
             type="text"
             value={locationName}
             onChange={(e) => {
-              setLocationName(e.target.value);
+              const value = e.target.value;
+              setLocationName(value);
+              setSearchQuery(value); // Triggers debounced search
               setSelectedLocation(null); // Clear selection when typing
-              searchLocation(e.target.value);
             }}
             placeholder="Type city name, then select from dropdown..."
             required
+            autoComplete="off"
             className="w-full px-4 py-3 border transition-all duration-300 bg-black/40 border-orange-900/40 focus:border-orange-700/60 focus:outline-none focus:ring-1 focus:ring-orange-600/30"
             style={{ fontWeight: 300, color: '#fed7aa' }}
           />
@@ -243,7 +264,8 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="absolute z-10 w-full mt-2 border overflow-hidden bg-stone-900/95 border-orange-800/40 shadow-xl"
+              className="absolute z-50 w-full mt-2 border overflow-hidden bg-stone-900 border-orange-800/40 shadow-2xl"
+              style={{ maxHeight: '300px', overflowY: 'auto' }}
             >
               {locationResults.map((result, index) => (
                 <button
