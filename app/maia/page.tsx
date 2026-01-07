@@ -90,12 +90,41 @@ function getValidDisplayName(name: string | undefined | null, username: string |
   return 'Friend';
 }
 
+// Check if an ID is a valid member identifier (not a placeholder)
+function isValidMemberId(id: string | null | undefined): boolean {
+  if (!id) return false;
+  if (id === 'guest' || id.startsWith('guest_') || id === 'anonymous') return false;
+  return true;
+}
+
 async function getInitialUserData() {
   if (typeof window === 'undefined') return { id: 'guest', name: 'Friend' };
 
   const currentUrl = window.location.hostname;
 
-  const storedUserId = localStorage.getItem('explorerId') || localStorage.getItem('betaUserId');
+  // Check multiple sources for valid member ID, prioritizing authenticated data
+  let storedUserId = localStorage.getItem('explorerId');
+
+  // If explorerId is invalid (guest), try to get real ID from beta_user
+  if (!isValidMemberId(storedUserId)) {
+    const betaUser = localStorage.getItem('beta_user');
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        if (isValidMemberId(userData.id)) {
+          storedUserId = userData.id;
+          // Sync the valid ID back to explorerId
+          localStorage.setItem('explorerId', userData.id);
+          console.log('🔄 [MAIA] Synced member ID from beta_user:', userData.id);
+        }
+      } catch (e) { /* invalid JSON */ }
+    }
+  }
+
+  // Fallback to betaUserId
+  if (!isValidMemberId(storedUserId)) {
+    storedUserId = localStorage.getItem('betaUserId');
+  }
 
   // 🔍 DIAGNOSTIC: Log localStorage state for debugging name issues
   console.log('🔍 [INIT] localStorage state:', {
@@ -104,11 +133,12 @@ async function getInitialUserData() {
     explorerName: localStorage.getItem('explorerName'),
     explorerPreferredName: localStorage.getItem('explorerPreferredName'),
     beta_user: localStorage.getItem('beta_user')?.substring(0, 100) + '...',
-    storedUserId
+    storedUserId,
+    isValid: isValidMemberId(storedUserId)
   });
 
-  // Try to fetch from API using stored userId
-  if (storedUserId) {
+  // Try to fetch from API using stored userId (only if it's a valid member ID)
+  if (isValidMemberId(storedUserId)) {
     try {
       const params = new URLSearchParams();
       params.append('userId', storedUserId);

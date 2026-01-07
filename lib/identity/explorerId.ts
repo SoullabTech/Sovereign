@@ -5,26 +5,65 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export const EXPLORER_ID_KEY = 'maia-explorer-id';
 
+// Check if an ID is a valid member identifier (not a placeholder)
+function isValidMemberId(id: string | null): boolean {
+  if (!id) return false;
+  // Filter out placeholder/guest IDs
+  if (id === 'guest' || id.startsWith('guest_') || id === 'anonymous') return false;
+  return true;
+}
+
 export function getOrCreateExplorerId(): string {
   if (typeof window === 'undefined') return '';
 
   // Check all identity sources in priority order:
   // 1. Authenticated member ID from sign-in (most authoritative)
-  // 2. Legacy beta user ID
-  // 3. Previously generated maia-explorer-id
-  // 4. Generate new UUID as last resort
-  let id = localStorage.getItem('explorerId')
-        || localStorage.getItem('betaUserId')
-        || localStorage.getItem(EXPLORER_ID_KEY);
+  // 2. Member ID from beta_user JSON (auth system)
+  // 3. Legacy beta user ID
+  // 4. Previously generated maia-explorer-id
+  // 5. Generate new UUID as last resort
 
-  if (!id) {
-    // UUID is perfect here (works with uuid DB columns, and is stable)
-    id = generateUUID();
+  // Priority 1: Direct explorerId (if it's a real member ID, not "guest")
+  const explorerId = localStorage.getItem('explorerId');
+  if (isValidMemberId(explorerId)) {
+    localStorage.setItem(EXPLORER_ID_KEY, explorerId!);
+    return explorerId!;
   }
 
-  // Always sync to maia-explorer-id for consistency
-  localStorage.setItem(EXPLORER_ID_KEY, id);
-  return id;
+  // Priority 2: Extract from beta_user JSON (contains authenticated member data)
+  const betaUser = localStorage.getItem('beta_user');
+  if (betaUser) {
+    try {
+      const userData = JSON.parse(betaUser);
+      if (isValidMemberId(userData.id)) {
+        // Sync the valid ID to explorerId for future lookups
+        localStorage.setItem('explorerId', userData.id);
+        localStorage.setItem(EXPLORER_ID_KEY, userData.id);
+        console.log('🔄 [Identity] Synced member ID from beta_user:', userData.id);
+        return userData.id;
+      }
+    } catch (e) {
+      // Invalid JSON, continue
+    }
+  }
+
+  // Priority 3: Legacy betaUserId
+  const betaUserId = localStorage.getItem('betaUserId');
+  if (isValidMemberId(betaUserId)) {
+    localStorage.setItem(EXPLORER_ID_KEY, betaUserId!);
+    return betaUserId!;
+  }
+
+  // Priority 4: Previously generated maia-explorer-id
+  const maiaExplorerId = localStorage.getItem(EXPLORER_ID_KEY);
+  if (isValidMemberId(maiaExplorerId)) {
+    return maiaExplorerId!;
+  }
+
+  // Priority 5: Generate new UUID as last resort
+  const newId = generateUUID();
+  localStorage.setItem(EXPLORER_ID_KEY, newId);
+  return newId;
 }
 
 /**
