@@ -77,7 +77,7 @@ COPY --from=builder --chown=node:node /app/tsconfig.json ./tsconfig.json
 USER node
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/api/consciousness/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+# NOTE: No HEALTHCHECK in Dockerfile - use service-specific healthchecks in docker-compose.yml
+# This prevents confusion when the same image is used for web (maia) vs worker (maia-embed-worker)
 
 CMD ["node", "server.js"]
