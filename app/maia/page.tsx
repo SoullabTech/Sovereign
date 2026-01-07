@@ -582,7 +582,6 @@ function MAIAPageContent() {
                     onClick={() => setMaiaMode('patient')}
                     onTouchStart={(e) => {
                       const timer = setTimeout(() => {
-                        e.preventDefault();
                         if ('vibrate' in navigator) navigator.vibrate(10);
                         setFrameworkSelectorMode('counsel');
                         setShowFrameworkSelector(true);
@@ -595,8 +594,8 @@ function MAIAPageContent() {
                     onTouchMove={(e) => {
                       clearTimeout((e.currentTarget as any)._longPressTimer);
                     }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
+                    onDoubleClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(10);
                       setFrameworkSelectorMode('counsel');
                       setShowFrameworkSelector(true);
                     }}
@@ -608,7 +607,7 @@ function MAIAPageContent() {
                       border: maiaMode === 'patient' ? '1px solid #14b8a6' : undefined,
                       fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
                     }}
-                    title="Tap to switch mode • Hold for framework"
+                    title="Tap to switch • Double-click for framework"
                   >
                     {maiaMode === 'patient' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#5eead4' }} />
@@ -635,8 +634,8 @@ function MAIAPageContent() {
                     onTouchMove={(e) => {
                       clearTimeout((e.currentTarget as any)._longPressTimer);
                     }}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
+                    onDoubleClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(10);
                       setFrameworkSelectorMode('scribe');
                       setShowFrameworkSelector(true);
                     }}
@@ -648,7 +647,7 @@ function MAIAPageContent() {
                       border: maiaMode === 'session' ? '1px solid #3b82f6' : undefined,
                       fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
                     }}
-                    title="Tap to switch mode • Hold for lens"
+                    title="Tap to switch • Double-click for lens"
                   >
                     {maiaMode === 'session' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
@@ -778,6 +777,25 @@ function MAIAPageContent() {
                   </motion.button>
                   <motion.button
                     onClick={() => setMaiaMode('patient')}
+                    onTouchStart={(e) => {
+                      const timer = setTimeout(() => {
+                        if ('vibrate' in navigator) navigator.vibrate(10);
+                        setFrameworkSelectorMode('counsel');
+                        setShowFrameworkSelector(true);
+                      }, 500);
+                      (e.currentTarget as any)._longPressTimer = timer;
+                    }}
+                    onTouchEnd={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onTouchMove={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onDoubleClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(10);
+                      setFrameworkSelectorMode('counsel');
+                      setShowFrameworkSelector(true);
+                    }}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                              bg-amber-500/10 hover:bg-amber-500/20
                              border border-amber-500/20 hover:border-amber-500/40
@@ -788,14 +806,37 @@ function MAIAPageContent() {
                       border: maiaMode === 'patient' ? '2px solid #14b8a6' : undefined,
                       fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
                     }}
+                    title="Tap to switch • Double-click for framework"
                   >
                     {maiaMode === 'patient' && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#5eead4' }} />
                     )}
                     Counsel
+                    {currentCounselFramework !== 'auto' && (
+                      <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
+                    )}
                   </motion.button>
                   <motion.button
                     onClick={() => setMaiaMode('session')}
+                    onTouchStart={(e) => {
+                      const timer = setTimeout(() => {
+                        if ('vibrate' in navigator) navigator.vibrate(10);
+                        setFrameworkSelectorMode('scribe');
+                        setShowFrameworkSelector(true);
+                      }, 500);
+                      (e.currentTarget as any)._longPressTimer = timer;
+                    }}
+                    onTouchEnd={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onTouchMove={(e) => {
+                      clearTimeout((e.currentTarget as any)._longPressTimer);
+                    }}
+                    onDoubleClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(10);
+                      setFrameworkSelectorMode('scribe');
+                      setShowFrameworkSelector(true);
+                    }}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                              bg-amber-500/10 hover:bg-amber-500/20
                              border border-amber-500/20 hover:border-amber-500/40
@@ -806,11 +847,15 @@ function MAIAPageContent() {
                       border: maiaMode === 'session' ? '2px solid #3b82f6' : undefined,
                       fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
                     }}
+                    title="Tap to switch • Double-click for lens"
                   >
                     {maiaMode === 'session' && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
                     )}
                     Scribe
+                    {currentScribeLens !== 'auto' && (
+                      <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
+                    )}
                   </motion.button>
                 </div>
 
