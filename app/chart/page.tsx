@@ -14,7 +14,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Lock, MessageCircle, Star, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
-import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
+import { TraditionalHouseWheel } from '@/components/astrology/TraditionalHouseWheel';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 
 interface PlanetPosition {
@@ -241,16 +241,18 @@ export default function ChartLandingPage() {
 
               {/* Chart Display */}
               <div className="grid md:grid-cols-2 gap-8">
-                {/* House Wheel */}
+                {/* House Wheel - Traditional Format */}
                 <div className="bg-black/30 rounded-xl p-6 border border-[#D4B896]/20">
-                  <h3 className="text-[#D4B896] font-medium mb-4 text-center">House Wheel</h3>
-                  <SacredHouseWheel
+                  <h3 className="text-[#D4B896] font-medium mb-4 text-center">Natal Chart</h3>
+                  <TraditionalHouseWheel
                     planets={chartDataToPlanets(chartData)}
                     aspects={(chartData.aspects || [])
                       .filter((a): a is typeof a & { type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' } =>
                         ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
                       )}
+                    ascendantSign={chartData.ascendant.sign}
                     isDayMode={false}
+                    showAspects={true}
                   />
                 </div>
 
