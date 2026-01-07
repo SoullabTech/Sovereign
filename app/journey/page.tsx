@@ -649,17 +649,26 @@ export default function AstrologyPage() {
 
             {/* Toggle and CTA buttons */}
             <div className="flex items-center justify-center gap-3 mb-2">
-              {/* View Example Chart Toggle */}
-              <button
-                onClick={() => setShowExampleChart(!showExampleChart)}
-                className={`px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all ${
+              {/* Chart Toggle - Shows whose chart is currently displayed */}
+              <div className="flex items-center gap-2">
+                <span className={`px-3 py-1 rounded text-[10px] font-serif ${
                   showExampleChart
-                    ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-stone-900'
-                    : 'bg-stone-800/40 text-stone-300 border border-stone-700/50'
-                }`}
-              >
-                {showExampleChart ? '👁️ Viewing Example (Kelly\'s Chart)' : '✨ View Example Chart'}
-              </button>
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : 'bg-emerald-500/20 text-emerald-400'
+                }`}>
+                  {showExampleChart ? 'Kelly\'s Example' : 'Your Chart'}
+                </span>
+                <button
+                  onClick={() => setShowExampleChart(!showExampleChart)}
+                  className={`px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all ${
+                    showExampleChart
+                      ? 'bg-emerald-600/80 text-white hover:bg-emerald-500'
+                      : 'bg-stone-800/40 text-stone-300 border border-stone-700/50 hover:border-amber-600/50'
+                  }`}
+                >
+                  {showExampleChart ? '← Return to My Chart' : 'See Example (Kelly)'}
+                </button>
+              </div>
 
               {/* Start Your Missions CTA */}
               {!showExampleChart && (
