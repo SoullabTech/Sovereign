@@ -1164,14 +1164,15 @@ function MAIAPageContent() {
           onClose={() => setShowTestFlightHelp(false)}
         />
 
-        {/* Framework Selector - Long-press on Care/Note buttons */}
-        <FrameworkSelector
-          mode={frameworkSelectorMode}
-          isOpen={showFrameworkSelector}
-          onClose={() => setShowFrameworkSelector(false)}
-        />
-      </div>
+        </div>
       </SwipeNavigation>
+
+      {/* Framework Selector - Long-press on Care/Note buttons (OUTSIDE SwipeNavigation for proper z-index) */}
+      <FrameworkSelector
+        mode={frameworkSelectorMode}
+        isOpen={showFrameworkSelector}
+        onClose={() => setShowFrameworkSelector(false)}
+      />
 
       {/* Account Bottom Sheet */}
       <AnimatePresence>
