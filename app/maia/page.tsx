@@ -535,7 +535,7 @@ function MAIAPageContent() {
                   {/* Session Button - Inside mode selector, after Note */}
                   {!hasActiveSession ? (
                     <motion.button
-                      onClick={() => setHasActiveSession(true)}
+                      onClick={() => setShowSessionSelector(true)}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg
                                bg-green-500/10 hover:bg-green-500/20
                                border border-green-500/20 hover:border-green-500/40
