@@ -7,58 +7,44 @@
 import { useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-const tiers = [
+// Benefit thresholds - what you get at each level
+const benefitTiers = [
   {
-    id: 'seedkeeper',
+    minAmount: 5,
+    name: "Supporter",
+    benefits: ["Monthly build letters", "Name (optional) on Supporter Wall"],
+  },
+  {
+    minAmount: 25,
     name: "Seedkeeper",
-    monthlyPrice: 25,
-    annualPrice: 250, // ~17% savings (2 months free)
-    tagline: "For steady-hearted supporters who want MAIA to exist.",
-    bullets: [
-      "Monthly build letters",
-      "Early access notes + previews",
-      "Name (optional) on Supporter Wall",
-    ],
+    benefits: ["Monthly build letters", "Early access notes + previews", "Name (optional) on Supporter Wall"],
   },
   {
-    id: 'storyweaver',
+    minAmount: 75,
     name: "Story Weaver",
-    monthlyPrice: 75,
-    annualPrice: 750, // ~17% savings
-    tagline: "For patrons who want to participate in the unfolding.",
-    bullets: [
-      "Everything in Seedkeeper",
-      "Patron Q&A and circle updates",
-      "Priority feedback channel",
-    ],
-    featured: true,
+    benefits: ["All Seedkeeper benefits", "Patron Q&A and circle updates", "Priority feedback channel"],
   },
   {
-    id: 'sanctuary',
+    minAmount: 250,
     name: "Sanctuary Builder",
-    monthlyPrice: 250,
-    annualPrice: 2500, // ~17% savings
-    tagline: "For patrons actively funding the sanctuary infrastructure.",
-    bullets: [
-      "Everything in Story Weaver",
-      "Quarterly behind-the-scenes brief",
-      "Direct input on roadmap priorities",
-    ],
+    benefits: ["All Story Weaver benefits", "Quarterly behind-the-scenes brief", "Direct input on roadmap priorities"],
   },
   {
-    id: 'founder',
+    minAmount: 500,
     name: "Founding Patron",
-    monthlyPrice: 1000,
-    annualPrice: 10000, // ~17% savings
-    tagline: "For major stewards anchoring MAIA into the world.",
-    bullets: [
-      "Everything in Sanctuary Builder",
-      "Named dedication (if desired)",
-      "Direct founder channel",
-      "Quarterly vision session",
-    ],
+    benefits: ["All Sanctuary Builder benefits", "Named dedication (if desired)", "Direct founder channel", "Quarterly vision session"],
   },
 ];
+
+const getCurrentTier = (amount: number) => {
+  let current = benefitTiers[0];
+  for (const tier of benefitTiers) {
+    if (amount >= tier.minAmount) {
+      current = tier;
+    }
+  }
+  return current;
+};
 
 const oneTimeOptions = [
   { id: 'gift-50', name: "Blessing", amount: 50, description: "A meaningful gesture of support" },
@@ -100,6 +86,8 @@ function PatronsContent() {
   const [customAmount, setCustomAmount] = useState<string>('');
   const [email, setEmail] = useState('');
   const [emailStatus, setEmailStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [sliderAmount, setSliderAmount] = useState(25);
+  const currentTier = getCurrentTier(sliderAmount);
 
   const handleJoin = async (tierId: string, amount: number, isAnnual: boolean = false) => {
     setLoading(tierId);
@@ -392,7 +380,7 @@ function PatronsContent() {
         </div>
       </section>
 
-      {/* Tiers */}
+      {/* Tiers - Slider Approach */}
       <section id="tiers" className="mx-auto max-w-5xl px-6 py-16">
         <h2 className="text-3xl font-semibold text-stone-900 dark:text-stone-100">
           Join the Founding Circle
@@ -401,97 +389,118 @@ function PatronsContent() {
           Patrons aren't customers. You're stewards of a different future — a
           platform that treats inner life as sacred.
         </p>
+        <p className="mt-2 text-stone-500 dark:text-stone-500 italic">
+          Choose what feels right for you.
+        </p>
 
-        {/* Billing Toggle */}
-        <div className="mt-8 flex items-center justify-center gap-4">
-          <button
-            onClick={() => setBillingCycle('monthly')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              billingCycle === 'monthly'
-                ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900'
-                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800'
-            }`}
-          >
-            Monthly
-          </button>
-          <button
-            onClick={() => setBillingCycle('annual')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              billingCycle === 'annual'
-                ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900'
-                : 'text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800'
-            }`}
-          >
-            Annual
-            <span className="ml-2 text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">
-              Save 17%
-            </span>
-          </button>
-        </div>
+        {/* Slider Card */}
+        <div className="mt-10 max-w-xl mx-auto">
+          <div className="rounded-3xl border border-amber-300 dark:border-amber-700 bg-gradient-to-br from-amber-50 via-white to-stone-50 dark:from-amber-950/40 dark:via-stone-900 dark:to-stone-950 p-8 shadow-lg">
 
-        <div className="mt-10 grid gap-6 sm:grid-cols-2">
-          {tiers.map((tier) => {
-            const price = billingCycle === 'annual' ? tier.annualPrice : tier.monthlyPrice;
-            const displayPrice = billingCycle === 'annual'
-              ? `$${tier.annualPrice.toLocaleString()}/year`
-              : `$${tier.monthlyPrice}/month`;
+            {/* Amount Display */}
+            <div className="text-center mb-6">
+              <p className="text-sm text-stone-500 dark:text-stone-400 mb-2">
+                Monthly contribution
+              </p>
+              <p className="text-4xl font-light text-stone-900 dark:text-stone-100">
+                ${sliderAmount}
+              </p>
+              {billingCycle === 'annual' && (
+                <p className="text-sm text-green-600 dark:text-green-400 mt-1">
+                  ${sliderAmount * 10}/year (2 months free)
+                </p>
+              )}
+            </div>
 
-            return (
-              <div
-                key={tier.name}
-                className={`rounded-3xl border p-6 shadow-sm flex flex-col ${
-                  tier.featured
-                    ? "border-amber-400 dark:border-amber-600 bg-amber-50 dark:bg-amber-950/30"
-                    : "border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900"
+            {/* Slider */}
+            <div className="mb-8">
+              <input
+                type="range"
+                min="5"
+                max="500"
+                step="5"
+                value={sliderAmount}
+                onChange={(e) => setSliderAmount(parseInt(e.target.value))}
+                className="w-full h-2 bg-stone-200 dark:bg-stone-700 rounded-full appearance-none cursor-pointer accent-amber-500
+                  [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-6 [&::-webkit-slider-thumb]:h-6
+                  [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:shadow-lg
+                  [&::-webkit-slider-thumb]:hover:bg-amber-600 [&::-webkit-slider-thumb]:transition-colors
+                  [&::-moz-range-thumb]:w-6 [&::-moz-range-thumb]:h-6 [&::-moz-range-thumb]:rounded-full
+                  [&::-moz-range-thumb]:bg-amber-500 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:shadow-lg"
+              />
+              <div className="flex justify-between text-xs text-stone-400 dark:text-stone-500 mt-2">
+                <span>$5</span>
+                <span>$500+</span>
+              </div>
+            </div>
+
+            {/* Current Tier Display */}
+            <div className="bg-white dark:bg-stone-800 rounded-2xl p-5 border border-stone-200 dark:border-stone-700 mb-6">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                  <span className="text-white text-sm">✦</span>
+                </div>
+                <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
+                  {currentTier.name}
+                </h3>
+              </div>
+              <ul className="space-y-2">
+                {currentTier.benefits.map((benefit, idx) => (
+                  <li key={idx} className="flex gap-2 text-sm text-stone-600 dark:text-stone-400">
+                    <span className="text-amber-500">✓</span>
+                    {benefit}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Billing Toggle */}
+            <div className="flex items-center justify-center gap-4 mb-6">
+              <button
+                onClick={() => setBillingCycle('monthly')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  billingCycle === 'monthly'
+                    ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900'
+                    : 'text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-                    {tier.name}
-                  </h3>
-                  {tier.featured && (
-                    <span className="text-xs uppercase tracking-wide text-amber-700 dark:text-amber-400">
-                      Popular
-                    </span>
-                  )}
-                </div>
-                <p className="mt-1 text-sm text-stone-500 dark:text-stone-400">
-                  {tier.tagline}
-                </p>
-                <div className="mt-4">
-                  <p className="text-2xl font-semibold text-stone-900 dark:text-stone-100">
-                    {displayPrice}
-                  </p>
-                  {billingCycle === 'annual' && (
-                    <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                      ${Math.round(tier.annualPrice / 12)}/month · 2 months free
-                    </p>
-                  )}
-                </div>
-                <ul className="mt-5 space-y-2 text-sm text-stone-600 dark:text-stone-400 flex-1">
-                  {tier.bullets.map((bullet) => (
-                    <li key={bullet} className="flex gap-2">
-                      <span className="text-green-600 dark:text-green-400">
-                        ✓
-                      </span>
-                      {bullet}
-                    </li>
-                  ))}
-                </ul>
-                <button
-                  onClick={() => handleJoin(tier.id, price, billingCycle === 'annual')}
-                  disabled={loading === tier.id}
-                  className={`mt-6 inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                    tier.featured
-                      ? "bg-amber-600 text-white hover:bg-amber-700"
-                      : "border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-800"
-                  }`}
-                >
-                  {loading === tier.id ? 'Loading...' : `Become a ${tier.name}`}
-                </button>
-              </div>
-            );
-          })}
+                Monthly
+              </button>
+              <button
+                onClick={() => setBillingCycle('annual')}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  billingCycle === 'annual'
+                    ? 'bg-stone-900 dark:bg-stone-100 text-stone-50 dark:text-stone-900'
+                    : 'text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:bg-stone-800'
+                }`}
+              >
+                Annual
+                <span className="ml-2 text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-full">
+                  Save 17%
+                </span>
+              </button>
+            </div>
+
+            {/* Join Button */}
+            <button
+              onClick={() => {
+                setLoading('founding-circle');
+                handleJoin(
+                  'founding-circle',
+                  billingCycle === 'annual' ? sliderAmount * 10 : sliderAmount,
+                  billingCycle === 'annual'
+                );
+              }}
+              disabled={loading === 'founding-circle'}
+              className="w-full py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold text-lg transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading === 'founding-circle' ? 'Loading...' : `Join as ${currentTier.name}`}
+            </button>
+
+            <p className="mt-4 text-center text-xs text-stone-500 dark:text-stone-400">
+              Secure payment via Stripe · Cancel anytime
+            </p>
+          </div>
         </div>
       </section>
 

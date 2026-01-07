@@ -268,7 +268,8 @@ function MAIAPageContent() {
   const [showLabDrawer, setShowLabDrawer] = useState(false);
   const [showWeekZeroOnboarding, setShowWeekZeroOnboarding] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
-  // Removed: contributionAmount slider - now using fixed patron tiers
+  const [showSustainingSlider, setShowSustainingSlider] = useState(false);
+  const [sustainingAmount, setSustainingAmount] = useState(25);
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
   const [showHelpHub, setShowHelpHub] = useState(false);
@@ -1215,81 +1216,96 @@ function MAIAPageContent() {
                     </div>
                   )}
 
-                  {/* Patron Tier Selection */}
-                  <div className="mb-4 space-y-2">
-                    <label className="text-xs text-stone-400 block mb-2">Choose your path</label>
-
-                    {/* Seedkeeper - $25 */}
+                  {/* Choose Your Path */}
+                  <div className="grid grid-cols-2 gap-2">
+                    {/* Sustaining Circle */}
                     <button
-                      onClick={() => membershipUtils.joinSustainingCircle(25)}
-                      className="w-full p-2 rounded-lg bg-stone-800/50 hover:bg-amber-500/10 border border-stone-700/50 hover:border-amber-500/30 transition-all text-left group"
+                      onClick={() => setShowSustainingSlider(!showSustainingSlider)}
+                      className={`p-2 rounded-lg transition-all text-center ${
+                        showSustainingSlider
+                          ? 'bg-amber-500/20 border border-amber-500/40'
+                          : 'bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30'
+                      }`}
                     >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-stone-300 group-hover:text-amber-300">🌱 Seedkeeper</span>
-                        <span className="text-xs text-amber-400 font-medium">$25/mo</span>
-                      </div>
-                      <p className="text-[9px] text-stone-500 mt-0.5">Monthly build letters + early access</p>
+                      <Flame className="w-4 h-4 mx-auto mb-1 text-amber-400" />
+                      <p className="text-[10px] text-amber-300 font-medium">Sustaining Circle</p>
+                      <p className="text-[9px] text-stone-400">Choose your level</p>
                     </button>
-
-                    {/* Story Weaver - $75 */}
-                    <button
-                      onClick={() => membershipUtils.joinSustainingCircle(75)}
-                      className="w-full p-2 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all text-left"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-amber-300">✨ Story Weaver</span>
-                        <span className="text-xs text-amber-400 font-medium">$75/mo</span>
-                      </div>
-                      <p className="text-[9px] text-stone-400 mt-0.5">Patron Q&A + priority feedback</p>
-                    </button>
-
-                    {/* Sanctuary Builder - $250 */}
-                    <button
-                      onClick={() => membershipUtils.joinSustainingCircle(250)}
-                      className="w-full p-2 rounded-lg bg-stone-800/50 hover:bg-amber-500/10 border border-stone-700/50 hover:border-amber-500/30 transition-all text-left group"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-stone-300 group-hover:text-amber-300">🏛️ Sanctuary Builder</span>
-                        <span className="text-xs text-amber-400 font-medium">$250/mo</span>
-                      </div>
-                      <p className="text-[9px] text-stone-500 mt-0.5">Direct roadmap input + quarterly briefs</p>
-                    </button>
-
-                    {/* Founding Patron - $1000 */}
-                    <button
-                      onClick={() => membershipUtils.joinSustainingCircle(1000)}
-                      className="w-full p-2 rounded-lg bg-stone-800/50 hover:bg-purple-500/10 border border-stone-700/50 hover:border-purple-500/30 transition-all text-left group"
-                    >
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-stone-300 group-hover:text-purple-300">👑 Founding Patron</span>
-                        <span className="text-xs text-purple-400 font-medium">$1,000/mo</span>
-                      </div>
-                      <p className="text-[9px] text-stone-500 mt-0.5">Direct founder channel + vision sessions</p>
-                    </button>
-                  </div>
-
-                  {/* Alternative Paths */}
-                  <div className="grid grid-cols-2 gap-2 mt-3">
-                    {/* Full Details Link */}
-                    <a
-                      href="/patrons"
-                      className="p-2 rounded-lg bg-stone-800/50 hover:bg-stone-700/50 border border-stone-700/50 transition-all text-center block"
-                    >
-                      <Heart className="w-4 h-4 mx-auto mb-1 text-amber-400" />
-                      <p className="text-[10px] text-stone-300 font-medium">Learn More</p>
-                      <p className="text-[9px] text-stone-500">Full details</p>
-                    </a>
 
                     {/* Seva Exchange */}
                     <button
                       onClick={() => setShowSevaOptions(!showSevaOptions)}
-                      className="p-2 rounded-lg bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30 transition-all text-center"
+                      className={`p-2 rounded-lg transition-all text-center ${
+                        showSevaOptions
+                          ? 'bg-teal-500/20 border border-teal-500/40'
+                          : 'bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/30'
+                      }`}
                     >
                       <Users className="w-4 h-4 mx-auto mb-1 text-teal-400" />
                       <p className="text-[10px] text-teal-300 font-medium">Seva Exchange</p>
                       <p className="text-[9px] text-stone-400">Contribute service</p>
                     </button>
                   </div>
+
+                  {/* Sustaining Circle Slider (expandable) */}
+                  {showSustainingSlider && (
+                    <div className="mt-3 p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                      <p className="text-[10px] text-amber-300 mb-3 font-medium text-center">
+                        Choose what feels right for you
+                      </p>
+
+                      {/* Amount Display */}
+                      <div className="text-center mb-4">
+                        <p className="text-2xl font-light text-amber-300">${sustainingAmount}<span className="text-sm text-stone-400">/mo</span></p>
+                      </div>
+
+                      {/* Slider */}
+                      <div className="mb-4">
+                        <input
+                          type="range"
+                          min="5"
+                          max="500"
+                          step="5"
+                          value={sustainingAmount}
+                          onChange={(e) => setSustainingAmount(parseInt(e.target.value))}
+                          className="w-full h-2 bg-stone-700/50 rounded-full appearance-none cursor-pointer accent-amber-500
+                            [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5
+                            [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500 [&::-webkit-slider-thumb]:shadow-lg
+                            [&::-moz-range-thumb]:w-5 [&::-moz-range-thumb]:h-5 [&::-moz-range-thumb]:rounded-full
+                            [&::-moz-range-thumb]:bg-amber-500 [&::-moz-range-thumb]:border-0"
+                        />
+                        <div className="flex justify-between text-[9px] text-stone-500 mt-1">
+                          <span>$5</span>
+                          <span>$500+</span>
+                        </div>
+                      </div>
+
+                      {/* Benefits Preview */}
+                      <div className="text-[9px] text-stone-400 mb-4 space-y-1">
+                        <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Monthly build letters</p>
+                        {sustainingAmount >= 25 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Early access + previews</p>}
+                        {sustainingAmount >= 75 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Patron Q&A circle</p>}
+                        {sustainingAmount >= 250 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Direct roadmap input</p>}
+                        {sustainingAmount >= 500 && <p className="flex items-center gap-1"><span className="text-amber-400">✓</span> Founder channel access</p>}
+                      </div>
+
+                      {/* Join Button */}
+                      <button
+                        onClick={() => membershipUtils.joinSustainingCircle(sustainingAmount)}
+                        className="w-full py-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm font-medium transition-all"
+                      >
+                        Join Circle
+                      </button>
+
+                      {/* Full Details Link */}
+                      <a
+                        href="/patrons"
+                        className="block text-center text-[9px] text-stone-500 hover:text-amber-400 mt-2 transition-colors"
+                      >
+                        View full details →
+                      </a>
+                    </div>
+                  )}
 
                   {/* Seva Options (expandable) */}
                   {showSevaOptions && (
