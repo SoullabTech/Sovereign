@@ -219,13 +219,24 @@ class RCNEngine:
             },
             "submit_answer": {
                 "name": "submit_answer",
-                "description": "Submit final answer when you have enough information OR when budget is exhausted. Include what you couldn't verify if incomplete.",
+                "description": (
+                    "Submit final answer when you have enough information OR when budget is exhausted.\n"
+                    "Return structured fields. Keep answer clean.\n"
+                    "Example:\n"
+                    "{\n"
+                    '  "answer": "The onboarding flow differs in 3 ways: ...",\n'
+                    '  "confidence": 0.72,\n'
+                    '  "not_verified": ["SSO edge cases", "permissions section chunk 15-20"],\n'
+                    '  "rerun_suggestion": "increase max_chunks_read from 20 to 35"\n'
+                    "}"
+                ),
                 "input_schema": {
                     "type": "object",
+                    "additionalProperties": False,
                     "properties": {
                         "answer": {
                             "type": "string",
-                            "description": "The final answer"
+                            "description": "The final answer ONLY. Do not include 'not verified', caveats, uncertainty lists, or rerun instructions in this field."
                         },
                         "confidence": {
                             "type": "number",
@@ -233,19 +244,19 @@ class RCNEngine:
                         },
                         "reasoning": {
                             "type": "string",
-                            "description": "Brief reasoning summary"
+                            "description": "Optional. 1-3 sentences max. Do not restate answer. Do not include 'not verified' items here."
                         },
                         "not_verified": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "description": "List of things you didn't have time/budget to check"
+                            "description": "REQUIRED. List of things you didn't have time/budget to check. If fully verified, return []."
                         },
                         "rerun_suggestion": {
                             "type": "string",
-                            "description": "What budget to increase if rerun needed (e.g., 'increase max_chunks_read to 30')"
+                            "description": "Optional. If incomplete, suggest which budget to increase (e.g., 'increase max_chunks_read from 20 to 35')."
                         }
                     },
-                    "required": ["answer", "confidence"]
+                    "required": ["answer", "confidence", "not_verified"]
                 }
             }
         }
@@ -353,6 +364,61 @@ class RCNEngine:
 
         return "Unknown tool", provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
+    def _salvage_not_verified(self, answer: str, not_verified: Optional[list[str]]) -> tuple[str, list[str]]:
+        """
+        Salvage heuristic: if model stuffed uncertainties into answer text,
+        extract them into not_verified and clean the answer.
+
+        Returns: (clean_answer, not_verified_list)
+        """
+        import re
+
+        # If not_verified already populated, trust it
+        if not_verified and len(not_verified) > 0:
+            return answer, not_verified
+
+        # Markers that suggest stuffing
+        markers = [
+            r"(?i)not verified[:\s]",
+            r"(?i)couldn't verify[:\s]",
+            r"(?i)not checked[:\s]",
+            r"(?i)unable to verify[:\s]",
+            r"(?i)didn't have time to[:\s]",
+            r"(?i)budget.{0,20}limited[:\s]",
+        ]
+
+        # Check if any marker present
+        has_marker = any(re.search(m, answer) for m in markers)
+        if not has_marker:
+            return answer, not_verified or []
+
+        # Try to extract bullet points after markers
+        extracted = []
+        clean_answer = answer
+
+        # Pattern: marker followed by bullet list or comma-separated items
+        for marker in markers:
+            pattern = marker + r"(.+?)(?=\n\n|\Z)"
+            match = re.search(pattern, answer, re.DOTALL)
+            if match:
+                items_text = match.group(1)
+                # Extract bullet items (- item or * item or numbered)
+                bullets = re.findall(r"[-*•]\s*(.+?)(?=\n[-*•]|\n\n|\Z)", items_text)
+                if bullets:
+                    extracted.extend([b.strip() for b in bullets])
+                else:
+                    # Try comma-separated
+                    items = [i.strip() for i in items_text.split(",") if i.strip()]
+                    extracted.extend(items[:5])  # Limit
+
+                # Remove this section from answer
+                clean_answer = re.sub(marker + r".+?(?=\n\n|\Z)", "", clean_answer, flags=re.DOTALL)
+
+        # Clean up whitespace
+        clean_answer = re.sub(r"\n{3,}", "\n\n", clean_answer).strip()
+
+        return clean_answer, extracted if extracted else (not_verified or [])
+
     def _make_budget_exhausted_message(
         self,
         reason: str,
@@ -429,6 +495,8 @@ Strategy:
 2. Read promising chunks (be selective - you have limits)
 3. Navigate to related content if needed
 4. Submit answer when confident
+
+IMPORTANT: If you are unsure or budget-limited, you MUST put uncertainties in the `not_verified` array field. The `answer` field must contain ONLY the answer - no caveats, uncertainty lists, or "I didn't verify" statements.
 
 Be efficient - minimize tool calls while ensuring accuracy.
 When ready, call submit_answer with your response."""
@@ -566,12 +634,19 @@ When ready, call submit_answer with your response."""
                             estimated_output_tokens += step_output_tokens
 
                             total_elapsed = (time.time() - start_time) * 1000
-                            not_verified = answer_data.get("not_verified")
+
+                            # Extract fields with salvage heuristic
+                            raw_answer = answer_data.get("answer", "")
+                            raw_not_verified = answer_data.get("not_verified")
                             rerun_suggestion = answer_data.get("rerun_suggestion")
-                            logger.info(f"[{run_id}] Completed at depth {depth}: submit_answer, confidence={answer_data.get('confidence', 0.8)}, not_verified={len(not_verified) if not_verified else 0}")
+
+                            # Salvage: if model stuffed uncertainties into answer, extract them
+                            clean_answer, not_verified = self._salvage_not_verified(raw_answer, raw_not_verified)
+
+                            logger.info(f"[{run_id}] Completed at depth {depth}: submit_answer, confidence={answer_data.get('confidence', 0.8)}, not_verified={len(not_verified)}")
                             return RecursiveResult(
                                 run_id=run_id,
-                                answer=answer_data.get("answer", ""),
+                                answer=clean_answer,
                                 confidence=answer_data.get("confidence", 0.8),
                                 reasoning_trace=reasoning_trace,
                                 provenance=provenance,
