@@ -99,6 +99,12 @@ export interface BudgetUsage {
   estimatedTotalTokens: number;
   /** Why budget was exhausted (if applicable) */
   budgetExhaustedReason?: string;
+  /** Whether a forced submit round was used (system overhead) */
+  forcedSubmitUsed?: boolean;
+  /** Recursions used by forced submit (not counted in recursionsUsed) */
+  forcedSubmitOverheadRecursions?: number;
+  /** Tool calls used by forced submit (not counted in toolCallsUsed) */
+  forcedSubmitOverheadToolCalls?: number;
 }
 
 export interface RecursiveResult {
@@ -232,6 +238,10 @@ export class RCNClient {
         estimatedOutputTokens: budgetUsage.estimated_output_tokens as number,
         estimatedTotalTokens: budgetUsage.estimated_total_tokens as number,
         budgetExhaustedReason: budgetUsage.budget_exhausted_reason as string | undefined,
+        // Forced submit overhead (system overhead, not counted against limits)
+        forcedSubmitUsed: budgetUsage.forced_submit_used as boolean | undefined,
+        forcedSubmitOverheadRecursions: budgetUsage.forced_submit_overhead_recursions as number | undefined,
+        forcedSubmitOverheadToolCalls: budgetUsage.forced_submit_overhead_tool_calls as number | undefined,
       },
       notVerified: raw.not_verified as string[] | undefined,
       rerunSuggestion: raw.rerun_suggestion as string | undefined,

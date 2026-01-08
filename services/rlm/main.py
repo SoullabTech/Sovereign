@@ -34,6 +34,12 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rcn-service")
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# Version (single source of truth)
+# ═══════════════════════════════════════════════════════════════════════════════
+
+RCN_VERSION = "0.2.5"
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # Budget Defaults (can be overridden per-request)
 # ═══════════════════════════════════════════════════════════════════════════════
 
@@ -117,6 +123,10 @@ class BudgetUsage(BaseModel):
     estimated_output_tokens: int
     estimated_total_tokens: int
     budget_exhausted_reason: Optional[str] = None
+    # Forced submit overhead (system overhead, not counted against limits)
+    forced_submit_used: bool = False
+    forced_submit_overhead_recursions: int = 0
+    forced_submit_overhead_tool_calls: int = 0
 
 class RecursiveResult(BaseModel):
     """Response from recursive processing"""
@@ -766,9 +776,10 @@ When ready, call submit_answer with your response."""
                         reasoning_trace=reasoning_trace,
                         provenance=provenance,
                         budget_usage=BudgetUsage(
-                            recursions_used=len(reasoning_trace) + 1,  # +1 for forced round
+                            # Keep used <= limit invariant; forced submit is system overhead
+                            recursions_used=len(reasoning_trace),
                             recursions_limit=budget.max_recursions,
-                            tool_calls_used=tool_calls_count + 1,  # +1 for submit
+                            tool_calls_used=tool_calls_count,
                             tool_calls_limit=budget.max_tool_calls,
                             chunks_read_used=chunks_read_count,
                             chunks_read_limit=budget.max_chunks_read,
@@ -777,7 +788,11 @@ When ready, call submit_answer with your response."""
                             estimated_input_tokens=estimated_input_tokens,
                             estimated_output_tokens=estimated_output_tokens,
                             estimated_total_tokens=estimated_input_tokens + estimated_output_tokens,
-                            budget_exhausted_reason=budget_exhausted_reason
+                            budget_exhausted_reason=budget_exhausted_reason,
+                            # System overhead from forced submit (not counted against limits)
+                            forced_submit_used=True,
+                            forced_submit_overhead_recursions=1,
+                            forced_submit_overhead_tool_calls=1,
                         ),
                         completed_normally=False,  # Still incomplete, but has real answer
                         not_verified=not_verified,
@@ -832,7 +847,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="MAIA Recursive Corpus Navigator",
     description="RLM-inspired corpus-as-environment processing with budget enforcement",
-    version="0.2.1",
+    version=RCN_VERSION,
     lifespan=lifespan
 )
 
@@ -850,7 +865,7 @@ async def health():
     """Health check endpoint"""
     return HealthResponse(
         status="healthy",
-        version="0.2.4",
+        version=RCN_VERSION,
         model=rcn_engine.model if rcn_engine else "not initialized",
         default_budgets={
             "max_recursions": DEFAULT_MAX_RECURSIONS,
