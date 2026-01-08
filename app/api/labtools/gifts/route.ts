@@ -2,7 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy-load Resend client to avoid build-time initialization
+function getResendClient() {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY not configured');
+  }
+  return new Resend(apiKey);
+}
 
 // Simple admin check - in production use proper auth
 const ADMIN_SECRET = process.env.LABTOOLS_SECRET || 'soullab-admin-2025';
@@ -309,6 +316,7 @@ async function sendGiftEmail(
       ? `${gifterName} sent you a gift — MAIA awaits`
       : `You've been gifted access to MAIA`;
 
+    const resend = getResendClient();
     const result = await resend.emails.send({
       from: 'Kelly @ Soullab <kelly@soullab.life>',
       to: recipientEmail,
