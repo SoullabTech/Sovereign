@@ -77,93 +77,6 @@ const elementalColors = {
   },
 };
 
-// Kelly's Real Missions - Demo/Test Case for Mission Tracking
-const KELLY_MISSIONS: Mission[] = [
-  {
-    id: 'mission-1',
-    userId: 'kelly',
-    title: 'Build MAIA Platform',
-    description: 'Create consciousness co-authorship platform where everyone becomes their own mythographer',
-    status: 'active',
-    house: 10, // Career/Legacy/Public work
-    relatedPlanets: ['Saturn'], // Saturn focal point
-    progress: 75,
-    milestones: [
-      { id: 'm1', title: 'Sacred Scribe system architecture', completed: true },
-      { id: 'm2', title: 'Mission tracking with pulsing dots', completed: true },
-      { id: 'm3', title: 'Database integration', completed: false },
-      { id: 'm4', title: 'Launch to first cohort', completed: false },
-    ],
-    identifiedDate: new Date('2024-06-01'),
-    startedDate: new Date('2024-07-15'),
-    transitContext: {
-      activatingPlanet: 'Saturn in Pisces',
-      transitDescription: 'Saturn focal point crystallizing life\'s work through consciousness technology',
-    },
-    createdAt: new Date('2024-06-01'),
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'mission-2',
-    userId: 'kelly',
-    title: 'Spiralogic Teaching Curriculum',
-    description: 'Develop comprehensive teaching system for Spiralogic archetypal framework',
-    status: 'active',
-    house: 9, // Teaching/Philosophy/Expansion
-    relatedPlanets: ['Sun', 'Venus'], // Sun in 9th area, Venus teaching
-    progress: 45,
-    milestones: [
-      { id: 'm1', title: 'Core framework documented', completed: true },
-      { id: 'm2', title: 'Alchemical house system complete', completed: true },
-      { id: 'm3', title: 'First cohort curriculum', completed: false },
-      { id: 'm4', title: 'Certification program', completed: false },
-    ],
-    identifiedDate: new Date('2024-03-15'),
-    startedDate: new Date('2024-04-01'),
-    createdAt: new Date('2024-03-15'),
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'mission-3',
-    userId: 'kelly',
-    title: 'Collective Vision Crystallization',
-    description: 'Building community of practitioners who see the pattern and serve as sacred scribes',
-    status: 'emerging',
-    house: 11, // Community/Collective/Future vision
-    relatedPlanets: ['Uranus'], // Innovation, collective consciousness
-    progress: 20,
-    milestones: [
-      { id: 'm1', title: 'Vision articulated', completed: true },
-      { id: 'm2', title: 'First practitioners gathering', completed: false },
-      { id: 'm3', title: 'Training protocols', completed: false },
-    ],
-    identifiedDate: new Date('2024-09-01'),
-    createdAt: new Date('2024-09-01'),
-    lastUpdated: new Date(),
-  },
-  {
-    id: 'mission-4',
-    userId: 'kelly',
-    title: 'Sacred Geometry Integration',
-    description: 'Bringing pre-literate symbolic transmission into the consciousness field',
-    status: 'completed',
-    house: 12, // Spirituality/Dissolution/Transcendence
-    relatedPlanets: ['Jupiter', 'Neptune'], // Expansion + Mysticism
-    progress: 100,
-    milestones: [
-      { id: 'm1', title: 'Metatron\'s Cube', completed: true, completedDate: new Date('2024-10-01') },
-      { id: 'm2', title: '7 Sacred Spirals', completed: true, completedDate: new Date('2024-10-05') },
-      { id: 'm3', title: 'Torus vortex', completed: true, completedDate: new Date('2024-10-10') },
-      { id: 'm4', title: 'Alchemical symbols', completed: true, completedDate: new Date('2024-10-15') },
-    ],
-    identifiedDate: new Date('2024-09-15'),
-    startedDate: new Date('2024-09-20'),
-    completedDate: new Date('2024-10-15'),
-    createdAt: new Date('2024-09-15'),
-    lastUpdated: new Date('2024-10-15'),
-  },
-];
-
 export default function AstrologyPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -182,8 +95,6 @@ export default function AstrologyPage() {
   const { missions, loading: missionsLoading } = useMissions();
   const [showMissionManager, setShowMissionManager] = useState(false);
 
-  // Demo/Tutorial mode - toggle between user's chart and Kelly's example chart
-  const [showExampleChart, setShowExampleChart] = useState(false);
 
   // Welcome modal for first-time users
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -661,43 +572,19 @@ export default function AstrologyPage() {
               Soul-centric field instrument · Hover to reveal neural pathways and archetypal insights
             </p>
 
-            {/* Toggle and CTA buttons */}
-            <div className="flex items-center justify-center gap-3 mb-2">
-              {/* Chart Toggle - Shows whose chart is currently displayed */}
-              <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded text-[10px] font-serif ${
-                  showExampleChart
-                    ? 'bg-amber-500/20 text-amber-400'
-                    : 'bg-emerald-500/20 text-emerald-400'
-                }`}>
-                  {showExampleChart ? 'Kelly\'s Example' : 'Your Chart'}
-                </span>
-                <button
-                  onClick={() => setShowExampleChart(!showExampleChart)}
-                  className={`px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all ${
-                    showExampleChart
-                      ? 'bg-emerald-600/80 text-white hover:bg-emerald-500'
-                      : 'bg-stone-800/40 text-stone-300 border border-stone-700/50 hover:border-amber-600/50'
-                  }`}
-                >
-                  {showExampleChart ? '← Return to My Chart' : 'See Example (Kelly)'}
-                </button>
-              </div>
-
-              {/* Start Your Missions CTA */}
-              {!showExampleChart && (
-                <button
-                  onClick={() => setShowMissionManager(true)}
-                  className="px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all"
-                  style={{
-                    background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
-                    color: 'white',
-                    boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
-                  }}
-                >
-                  🎯 Start Your Missions with MAIA
-                </button>
-              )}
+            {/* Start Your Missions CTA */}
+            <div className="flex items-center justify-center mb-2">
+              <button
+                onClick={() => setShowMissionManager(true)}
+                className="px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all"
+                style={{
+                  background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+                  color: 'white',
+                  boxShadow: '0 2px 8px rgba(16, 185, 129, 0.3)',
+                }}
+              >
+                🎯 Start Your Missions with MAIA
+              </button>
             </div>
             {/* Spiralogic Process Legend - Hide on mobile to save space */}
             <div className={`space-y-1 ${isDayMode ? 'text-stone-600' : 'text-stone-400'} hidden sm:block`}>
@@ -727,9 +614,9 @@ export default function AstrologyPage() {
                 animate={true}
               >
                 {/* Sacred House Wheel - Now actually BIG at the SVG level */}
-                <div className="relative w-full h-full flex items-center justify-center">
+                <div className="relative w-full h-full flex items-center justify-center" style={{ pointerEvents: 'auto' }}>
                     {/* Central Holoflower - Fibonacci spiral pattern */}
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
                       <div className="w-20 h-20 md:w-28 md:h-28 opacity-15">
                         <svg viewBox="0 0 200 200" className="w-full h-full">
                           {/* Fibonacci spiral of dots - pre-calculated */}
@@ -1973,37 +1860,20 @@ export default function AstrologyPage() {
             </p>
 
             <p className="text-stone-400 text-sm mb-8 leading-relaxed">
-              Want a guided tour using Kelly's chart as an example? You'll see how mission dots work, how to read planetary nodes, and what the sacred geometry means.
+              Click on any planet to reveal its archetypal insights - your sign expression, house activation, and aspects with other planets.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={() => {
-                  setShowWelcomeModal(false);
-                  setShowExampleChart(true);
-                }}
-                className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all"
-                style={{
-                  background: 'linear-gradient(135deg, #D4AF37 0%, #FFB84D 100%)',
-                  color: '#2C1810',
-                  boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
-                }}
-              >
-                Yes, show me how it works
-              </button>
-
-              <button
-                onClick={() => setShowWelcomeModal(false)}
-                className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all backdrop-blur-md"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(212, 175, 55, 0.4)',
-                  color: '#E8D4BF',
-                }}
-              >
-                Explore on my own
-              </button>
-            </div>
+            <button
+              onClick={() => setShowWelcomeModal(false)}
+              className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all"
+              style={{
+                background: 'linear-gradient(135deg, #D4AF37 0%, #FFB84D 100%)',
+                color: '#2C1810',
+                boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
+              }}
+            >
+              Explore My Chart
+            </button>
           </motion.div>
         </motion.div>
       )}
