@@ -51,6 +51,24 @@ interface Aspect {
   orb: number;
 }
 
+// Transit planet position for current sky layer
+interface Transit {
+  planet: string;
+  sign: string;
+  degree: number;
+  longitude: number;
+  house?: number; // Transit's house in natal chart
+}
+
+// Transit-to-natal aspect
+interface TransitAspect {
+  transitPlanet: string;
+  natalPlanet: string;
+  aspectType: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
+  orb: number;
+  applying: boolean; // Is aspect getting tighter?
+}
+
 interface SacredHouseWheelProps {
   planets?: Planet[];
   aspects?: Aspect[];
@@ -60,6 +78,9 @@ interface SacredHouseWheelProps {
   // MISSION TRACKING - Pulsing dots for creative manifestations
   missions?: Mission[];
   missionLayerSettings?: MissionLayerSettings;
+  // CURRENT TRANSITS - Live planetary positions
+  transits?: Transit[];
+  transitAspects?: TransitAspect[];
 }
 
 // Spiralogic Spiral Order - Clockwise from top
@@ -248,12 +269,16 @@ export function SacredHouseWheel({
     showArchetypal: true,
     showTransits: false,
   },
+  transits = [],
+  transitAspects = [],
 }: SacredHouseWheelProps) {
   const [hoveredHouse, setHoveredHouse] = useState<number | null>(null);
   const [hoveredPlanet, setHoveredPlanet] = useState<Planet | null>(null);
   const [clickedPlanet, setClickedPlanet] = useState<Planet | null>(null);
   const [clickedHouse, setClickedHouse] = useState<number | null>(null);
   const [clickedMission, setClickedMission] = useState<Mission | null>(null);
+  const [hoveredTransit, setHoveredTransit] = useState<Transit | null>(null);
+  const [clickedTransit, setClickedTransit] = useState<Transit | null>(null);
   const [revealedAspects, setRevealedAspects] = useState(false);
   const [showSacredGeometry, setShowSacredGeometry] = useState(true); // Fremen alchemist mode
 
@@ -362,6 +387,43 @@ export function SacredHouseWheel({
 
   // Calculate all planet positions with collision detection for optimal performance
   const planetPositions = getPlanetPositions(planets);
+
+  // Calculate transit positions on outer ring (radius 145)
+  // Uses direct ecliptic longitude (not spiralogic house order)
+  const getTransitPositions = (transitsArray: Transit[]) => {
+    const positions: { [key: string]: { x: number; y: number; angle: number } } = {};
+    const occupiedAngles: number[] = [];
+    const transitRadius = 145; // Outer ring beyond natal planets (120)
+
+    transitsArray.forEach((transit) => {
+      // Convert ecliptic longitude to wheel angle
+      // 0° Aries = top of wheel, proceeding counterclockwise
+      let angle = (transit.longitude - 90); // Adjust so 0° is at top
+      angle = ((angle % 360) + 360) % 360; // Normalize to 0-360
+
+      // Simple collision detection for transits
+      let finalAngle = angle;
+      const minSpacing = 12;
+      for (const occupied of occupiedAngles) {
+        const diff = Math.abs(finalAngle - occupied);
+        if (diff < minSpacing || diff > (360 - minSpacing)) {
+          finalAngle = (finalAngle + minSpacing) % 360;
+        }
+      }
+      occupiedAngles.push(finalAngle);
+
+      const angleRad = finalAngle * (Math.PI / 180);
+      positions[transit.planet] = {
+        x: 200 + transitRadius * Math.cos(angleRad),
+        y: 200 + transitRadius * Math.sin(angleRad),
+        angle: finalAngle,
+      };
+    });
+
+    return positions;
+  };
+
+  const transitPositions = getTransitPositions(transits);
 
   // FIELD DYNAMICS 4: Draw aspect as field current through Aether center
   // All currents converge on the unmoved witness (nothing orbits, everything passes through)
@@ -1611,6 +1673,144 @@ export function SacredHouseWheel({
           );
         })}
 
+        {/* CURRENT TRANSITS LAYER - Live planetary positions */}
+        {missionLayerSettings.showTransits && transits.length > 0 && (
+          <g className="transit-layer">
+            {/* Outer transit ring boundary - dashed to differentiate */}
+            <circle
+              cx="200"
+              cy="200"
+              r="155"
+              fill="none"
+              stroke={isDayMode ? '#a8a29e' : '#57534e'}
+              strokeWidth="0.5"
+              strokeOpacity="0.2"
+              strokeDasharray="4,8"
+            />
+
+            {/* Transit planets on outer ring */}
+            {transits.map((transit) => {
+              const pos = transitPositions[transit.planet];
+              if (!pos) return null;
+
+              const isHovered = hoveredTransit?.planet === transit.planet;
+              const isClicked = clickedTransit?.planet === transit.planet;
+              const element = ['Fire', 'Earth', 'Air', 'Water'][
+                ['Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo', 'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces']
+                  .indexOf(transit.sign) % 4
+              ] as 'fire' | 'earth' | 'air' | 'water';
+              const elementalColorMap = isDayMode ? elementalColors[element]?.day : elementalColors[element]?.night;
+              const color = elementalColorMap || (isDayMode ? '#78716c' : '#a8a29e');
+
+              // Check if this transit is aspecting a natal planet
+              const activeAspect = transitAspects.find(a => a.transitPlanet === transit.planet);
+              const isAspecting = !!activeAspect;
+
+              return (
+                <g
+                  key={`transit-${transit.planet}`}
+                  onMouseEnter={() => setHoveredTransit(transit)}
+                  onMouseLeave={() => setHoveredTransit(null)}
+                  onClick={() => setClickedTransit(isClicked ? null : transit)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Transit aspect line to natal planet */}
+                  {isAspecting && activeAspect && planetPositions[activeAspect.natalPlanet] && (
+                    <motion.line
+                      x1={pos.x}
+                      y1={pos.y}
+                      x2={planetPositions[activeAspect.natalPlanet].x}
+                      y2={planetPositions[activeAspect.natalPlanet].y}
+                      stroke={aspectColors[activeAspect.aspectType as keyof typeof aspectColors] || '#8B5CF6'}
+                      strokeWidth={activeAspect.orb < 2 ? 1.5 : 1}
+                      strokeOpacity={isHovered ? 0.6 : 0.25}
+                      strokeDasharray="3,3"
+                      initial={{ pathLength: 0 }}
+                      animate={{
+                        pathLength: 1,
+                        opacity: isHovered ? [0.4, 0.8, 0.4] : 0.25
+                      }}
+                      transition={{
+                        pathLength: { duration: 0.5 },
+                        opacity: { duration: 2, repeat: Infinity, ease: 'easeInOut' }
+                      }}
+                    />
+                  )}
+
+                  {/* Transit planet glow (outer) - pulsing when aspecting */}
+                  <motion.circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={isHovered ? 10 : 7}
+                    fill={color}
+                    fillOpacity={isHovered ? 0.35 : 0.15}
+                    initial={{ scale: 0.8 }}
+                    animate={{
+                      scale: isAspecting ? [0.9, 1.1, 0.9] : (isHovered ? 1.1 : 1),
+                      opacity: isAspecting ? [0.15, 0.35, 0.15] : (isHovered ? 0.35 : 0.15)
+                    }}
+                    transition={{
+                      duration: isAspecting ? 2 : (isHovered ? 0.3 : 3),
+                      repeat: isAspecting ? Infinity : 0,
+                      ease: 'easeInOut'
+                    }}
+                    style={{
+                      filter: isHovered || isAspecting ? `drop-shadow(0 0 6px ${color})` : 'none',
+                    }}
+                    className="pointer-events-none"
+                  />
+
+                  {/* Transit planet circle - dashed border to differentiate from natal */}
+                  <motion.circle
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={isHovered ? 9 : 7}
+                    fill="transparent"
+                    stroke={color}
+                    strokeWidth={isHovered ? 1.5 : 1}
+                    strokeOpacity={isHovered ? 0.8 : 0.5}
+                    strokeDasharray="2,2"
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: isHovered ? 1.05 : 1 }}
+                    transition={{ duration: 0.2 }}
+                    className="pointer-events-auto"
+                  />
+
+                  {/* Transit planet symbol */}
+                  <motion.text
+                    x={pos.x}
+                    y={pos.y}
+                    textAnchor="middle"
+                    dominantBaseline="central"
+                    className="text-xs pointer-events-none select-none"
+                    fill={color}
+                    fontSize={isHovered ? '12' : '10'}
+                    fillOpacity={isHovered ? 0.95 : 0.7}
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: isHovered ? 1.1 : 1 }}
+                    transition={{ duration: 0.2 }}
+                    style={{
+                      filter: isHovered ? `drop-shadow(0 0 3px ${color})` : 'none',
+                      fontFamily: 'serif'
+                    }}
+                  >
+                    {transit.planet === 'Sun' && '☉'}
+                    {transit.planet === 'Moon' && '☽'}
+                    {transit.planet === 'Mercury' && '☿'}
+                    {transit.planet === 'Venus' && '♀'}
+                    {transit.planet === 'Mars' && '♂'}
+                    {transit.planet === 'Jupiter' && '♃'}
+                    {transit.planet === 'Saturn' && '♄'}
+                    {transit.planet === 'Uranus' && '♅'}
+                    {transit.planet === 'Neptune' && '♆'}
+                    {transit.planet === 'Pluto' && '♇'}
+                  </motion.text>
+                </g>
+              );
+            })}
+          </g>
+        )}
+
         {/* Horizon line (Ascendant-Descendant) */}
         <line
           x1="40"
@@ -2112,6 +2312,159 @@ export function SacredHouseWheel({
                     >
                       <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
                         <span className="opacity-80">✨ Ask MAIA about current transits to this placement</span>
+                      </p>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </motion.div>
+        )}
+
+        {/* Transit Planet Insight Popup */}
+        {clickedTransit !== null && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+            onClick={() => setClickedTransit(null)}
+          >
+            <div
+              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-md w-full ${
+                isDayMode
+                  ? 'bg-white/95 border-stone-200/60'
+                  : 'bg-black/95 border-indigo-700/60'
+              }`}
+              style={{
+                boxShadow: isDayMode
+                  ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
+                  : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(99, 102, 241, 0.2)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {(() => {
+                const transit = clickedTransit;
+                if (!transit) return null;
+
+                // Get relevant transit aspects for this planet
+                const relevantAspects = transitAspects.filter(a => a.transitPlanet === transit.planet);
+
+                // Planet symbol mapping
+                const symbols: { [key: string]: string } = {
+                  Sun: '☉', Moon: '☽', Mercury: '☿', Venus: '♀', Mars: '♂',
+                  Jupiter: '♃', Saturn: '♄', Uranus: '♅', Neptune: '♆', Pluto: '♇',
+                };
+
+                return (
+                  <>
+                    {/* Header */}
+                    <div
+                      className="px-6 py-4 border-b"
+                      style={{
+                        background: isDayMode
+                          ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.02))'
+                          : 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.05))',
+                        borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xl border-2 border-dashed"
+                          style={{
+                            background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(99, 102, 241, 0.1))',
+                            borderColor: 'rgba(99, 102, 241, 0.5)',
+                            color: isDayMode ? '#4F46E5' : '#818CF8',
+                          }}
+                        >
+                          {symbols[transit.planet] || transit.planet[0]}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
+                              {transit.planet} Transit
+                            </h3>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-medium bg-indigo-500/20 text-indigo-300">
+                              LIVE
+                            </span>
+                          </div>
+                          <p className={`text-sm ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                            {transit.degree.toFixed(1)}° {transit.sign}
+                            {transit.house && ` · House ${transit.house}`}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Content */}
+                    <div className="px-6 py-4 space-y-4">
+                      {/* Transit-to-Natal Aspects */}
+                      {relevantAspects.length > 0 && (
+                        <div>
+                          <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                            Active Natal Aspects
+                          </h4>
+                          <div className="space-y-2">
+                            {relevantAspects.slice(0, 4).map((aspect, idx) => (
+                              <div
+                                key={idx}
+                                className={`p-2 rounded-lg border ${isDayMode ? 'bg-stone-50 border-stone-200' : 'bg-stone-800/50 border-stone-700/50'}`}
+                              >
+                                <div className="flex items-center justify-between">
+                                  <span className={`text-sm font-medium ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
+                                    {aspect.aspectType.charAt(0).toUpperCase() + aspect.aspectType.slice(1)} natal {aspect.natalPlanet}
+                                  </span>
+                                  <span className={`text-xs ${aspect.applying ? 'text-green-400' : 'text-amber-400'}`}>
+                                    {aspect.applying ? '→ applying' : '← separating'} ({aspect.orb.toFixed(1)}°)
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {relevantAspects.length === 0 && (
+                        <div>
+                          <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                            Natal Aspects
+                          </h4>
+                          <p className={`text-sm ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                            No major aspects to your natal planets at this time.
+                          </p>
+                        </div>
+                      )}
+
+                      {/* General transit meaning */}
+                      <div>
+                        <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                          Current Weather
+                        </h4>
+                        <p className={`text-sm italic ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                          {transit.planet === 'Moon' && 'The Moon moves quickly through emotional tides — its influence is brief but potent.'}
+                          {transit.planet === 'Sun' && 'Solar energy illuminates where attention flows — consciousness seeks expression.'}
+                          {transit.planet === 'Mercury' && 'Mercury brings mental activity and communication — thoughts seek articulation.'}
+                          {transit.planet === 'Venus' && 'Venus draws in beauty and connection — the heart seeks harmony.'}
+                          {transit.planet === 'Mars' && 'Mars energizes action and desire — the will seeks direction.'}
+                          {transit.planet === 'Jupiter' && 'Jupiter expands horizons and meaning — growth seeks opportunity.'}
+                          {transit.planet === 'Saturn' && 'Saturn structures and tests — discipline meets responsibility.'}
+                          {transit.planet === 'Uranus' && 'Uranus disrupts and liberates — awakening seeks authenticity.'}
+                          {transit.planet === 'Neptune' && 'Neptune dissolves and inspires — the soul seeks transcendence.'}
+                          {transit.planet === 'Pluto' && 'Pluto transforms and empowers — depth seeks truth.'}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Footer */}
+                    <div
+                      className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
+                      style={{
+                        borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                      }}
+                    >
+                      <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
+                        ✨ Ask MAIA for deeper transit insights
                       </p>
                     </div>
                   </>

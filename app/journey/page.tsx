@@ -13,8 +13,8 @@
  * - Wisdom over information
  */
 
-import { useEffect, useState } from 'react';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings, ArrowLeft } from 'lucide-react';
+import { useEffect, useState, useCallback } from 'react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings, ArrowLeft, Orbit } from 'lucide-react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
@@ -51,6 +51,23 @@ interface BirthChartData {
     type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition';
     orb: number;
   }>;
+}
+
+// Transit data from API
+interface Transit {
+  planet: string;
+  sign: string;
+  degree: number;
+  longitude: number;
+  house?: number;
+}
+
+interface TransitAspect {
+  transitPlanet: string;
+  natalPlanet: string;
+  aspectType: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' | 'quincunx';
+  orb: number;
+  applying: boolean;
 }
 
 // Arrakis night color palette - desert mysticism after the twin moons rise
@@ -95,6 +112,11 @@ export default function AstrologyPage() {
   const { missions, loading: missionsLoading } = useMissions();
   const [showMissionManager, setShowMissionManager] = useState(false);
 
+  // Current transits - live planetary positions
+  const [transits, setTransits] = useState<Transit[]>([]);
+  const [transitAspects, setTransitAspects] = useState<TransitAspect[]>([]);
+  const [showTransits, setShowTransits] = useState(false);
+  const [transitsLoading, setTransitsLoading] = useState(false);
 
   // Welcome modal for first-time users
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
@@ -278,6 +300,81 @@ export default function AstrologyPage() {
   useEffect(() => {
     setLoading(false);
   }, []);
+
+  // Fetch current transits - with auto-refresh every 15 minutes (Moon moves fast)
+  const fetchTransits = useCallback(async () => {
+    if (!chartData || !birthData) return;
+
+    setTransitsLoading(true);
+    try {
+      const response = await fetch('/api/astrology/current-transits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          birthChart: {
+            sun: chartData.sun,
+            moon: chartData.moon,
+            mercury: chartData.mercury,
+            venus: chartData.venus,
+            mars: chartData.mars,
+            jupiter: chartData.jupiter,
+            saturn: chartData.saturn,
+            uranus: chartData.uranus,
+            neptune: chartData.neptune,
+            pluto: chartData.pluto,
+            ascendant: chartData.ascendant,
+          }
+        })
+      });
+
+      const result = await response.json();
+      if (result.success && result.data) {
+        // Convert API response to Transit format
+        const transitData: Transit[] = result.data.positions.map((p: { planet: string; sign: string; degree: number; longitude: number; house?: number }) => ({
+          planet: p.planet,
+          sign: p.sign,
+          degree: p.degree,
+          longitude: p.longitude,
+          house: p.house,
+        }));
+        setTransits(transitData);
+
+        // Convert aspects to TransitAspect format
+        if (result.data.aspects) {
+          const aspectData: TransitAspect[] = result.data.aspects.map((a: { transitPlanet: string; natalPlanet: string; aspectType: string; orb: number; applying: boolean }) => ({
+            transitPlanet: a.transitPlanet,
+            natalPlanet: a.natalPlanet,
+            aspectType: a.aspectType as TransitAspect['aspectType'],
+            orb: a.orb,
+            applying: a.applying,
+          }));
+          setTransitAspects(aspectData);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching transits:', error);
+    } finally {
+      setTransitsLoading(false);
+    }
+  }, [chartData, birthData]);
+
+  // Fetch transits when showTransits is toggled on and chart exists
+  useEffect(() => {
+    if (showTransits && chartData && transits.length === 0) {
+      fetchTransits();
+    }
+  }, [showTransits, chartData, transits.length, fetchTransits]);
+
+  // Auto-refresh transits every 15 minutes when visible
+  useEffect(() => {
+    if (!showTransits || !chartData) return;
+
+    const refreshInterval = setInterval(() => {
+      fetchTransits();
+    }, 15 * 60 * 1000); // 15 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [showTransits, chartData, fetchTransits]);
 
   // Threshold - The invitation unfolds
   if (loading) {
@@ -572,8 +669,8 @@ export default function AstrologyPage() {
               Soul-centric field instrument · Hover to reveal neural pathways and archetypal insights
             </p>
 
-            {/* Start Your Missions CTA */}
-            <div className="flex items-center justify-center mb-2">
+            {/* Start Your Missions CTA + Transit Toggle */}
+            <div className="flex items-center justify-center gap-3 mb-2">
               <button
                 onClick={() => setShowMissionManager(true)}
                 className="px-4 py-2 rounded-lg text-xs font-serif tracking-wide transition-all"
@@ -584,6 +681,17 @@ export default function AstrologyPage() {
                 }}
               >
                 🎯 Start Your Missions with MAIA
+              </button>
+              <button
+                onClick={() => setShowTransits(!showTransits)}
+                className={`px-3 py-2 rounded-lg text-xs font-serif tracking-wide transition-all flex items-center gap-1.5 ${
+                  showTransits
+                    ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/50'
+                    : 'bg-stone-700/50 text-stone-400 border border-stone-600/50 hover:bg-stone-700'
+                }`}
+              >
+                <Orbit className="w-3.5 h-3.5" />
+                {transitsLoading ? 'Loading...' : showTransits ? 'Transits On' : 'Transits'}
               </button>
             </div>
             {/* Spiralogic Process Legend - Hide on mobile to save space */}
@@ -666,7 +774,17 @@ export default function AstrologyPage() {
                       aspects={chartData.aspects}
                       isDayMode={isDayMode}
                       showAspects={true}
-                      missions={missions}  // Show user's actual missions with progress rings
+                      missions={missions}
+                      missionLayerSettings={{
+                        showEmerging: true,
+                        showActive: true,
+                        showCompleted: true,
+                        showUrgent: true,
+                        showArchetypal: true,
+                        showTransits: showTransits,
+                      }}
+                      transits={transits}
+                      transitAspects={transitAspects}
                     />
                 </div>
               </ConsciousnessFieldWithTorus>
