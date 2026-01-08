@@ -68,8 +68,10 @@ export interface ExecutionTrace {
   chunksReadThisStep: number[];
   /** Time taken for this step (ms) */
   elapsedMs: number;
-  /** Estimated tokens used */
-  tokenEstimate: number;
+  /** Estimated input tokens this step */
+  inputTokensThisStep: number;
+  /** Estimated output tokens this step */
+  outputTokensThisStep: number;
 }
 
 export interface BudgetUsage {
@@ -89,13 +91,19 @@ export interface BudgetUsage {
   elapsedMs: number;
   /** Timeout limit (ms) */
   timeoutMs: number;
-  /** Estimated total tokens */
-  estimatedTokens: number;
+  /** Estimated input tokens (all steps) */
+  estimatedInputTokens: number;
+  /** Estimated output tokens (all steps) */
+  estimatedOutputTokens: number;
+  /** Estimated total tokens (input + output) */
+  estimatedTotalTokens: number;
   /** Why budget was exhausted (if applicable) */
   budgetExhaustedReason?: string;
 }
 
 export interface RecursiveResult {
+  /** Unique run ID for correlation/debugging */
+  runId: string;
   /** The final answer from recursive processing */
   answer: string;
   /** Confidence score 0-1 */
@@ -187,6 +195,7 @@ export class RCNClient {
     const provenance = raw.provenance as Array<Record<string, unknown>>;
 
     return {
+      runId: raw.run_id as string,
       answer: raw.answer as string,
       confidence: raw.confidence as number,
       completedNormally: raw.completed_normally as boolean,
@@ -196,7 +205,8 @@ export class RCNClient {
         toolCallsThisStep: t.tool_calls_this_step as number,
         chunksReadThisStep: t.chunks_read_this_step as number[],
         elapsedMs: t.elapsed_ms as number,
-        tokenEstimate: t.token_estimate as number,
+        inputTokensThisStep: t.input_tokens_this_step as number,
+        outputTokensThisStep: t.output_tokens_this_step as number,
       })),
       provenance: provenance.map(p => ({
         chunkId: p.chunk_id as number,
@@ -214,7 +224,9 @@ export class RCNClient {
         chunksReadLimit: budgetUsage.chunks_read_limit as number,
         elapsedMs: budgetUsage.elapsed_ms as number,
         timeoutMs: budgetUsage.timeout_ms as number,
-        estimatedTokens: budgetUsage.estimated_tokens as number,
+        estimatedInputTokens: budgetUsage.estimated_input_tokens as number,
+        estimatedOutputTokens: budgetUsage.estimated_output_tokens as number,
+        estimatedTotalTokens: budgetUsage.estimated_total_tokens as number,
         budgetExhaustedReason: budgetUsage.budget_exhausted_reason as string | undefined,
       },
     };

@@ -14,6 +14,7 @@ import json
 import logging
 import hashlib
 import time
+import uuid
 from typing import Optional
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -43,8 +44,23 @@ DEFAULT_TIMEOUT_MS = 60000  # 60 seconds
 DEFAULT_MAX_TOKENS_PER_CALL = 4096
 
 # Token cost estimates (rough, for budgeting)
-TOKENS_PER_TOOL_CALL_ESTIMATE = 500
-TOKENS_PER_CHUNK_READ_ESTIMATE = 800
+TOKENS_PER_TOOL_CALL_OVERHEAD = 150  # Tool call structure
+TOKENS_PER_CHUNK_CHAR = 0.25  # ~4 chars per token
+TOKENS_PER_LLM_RESPONSE_ESTIMATE = 800  # Average response size
+TOKENS_SYSTEM_PROMPT_ESTIMATE = 400  # System prompt overhead
+
+# Tool name mapping (request names -> actual tool names)
+TOOL_NAME_MAP = {
+    "search": "search_corpus",
+    "read": "read_chunk",
+    "navigate": "navigate_related",
+    "submit": "submit_answer",
+    # Also accept full names
+    "search_corpus": "search_corpus",
+    "read_chunk": "read_chunk",
+    "navigate_related": "navigate_related",
+    "submit_answer": "submit_answer",
+}
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Models
@@ -63,7 +79,10 @@ class RecursiveQuery(BaseModel):
     prompt: str = Field(..., description="The main query/task")
     corpus: Optional[list[str]] = Field(default=None, description="Corpus chunks to search/navigate")
     corpus_type: Optional[str] = Field(default="general", description="Type: general, codebase, docs, transcript")
-    tools_enabled: list[str] = Field(default=["search", "read", "navigate"], description="Available tools")
+    tools_enabled: list[str] = Field(
+        default=["search", "read", "navigate"],
+        description="Tools to enable: search, read, navigate (submit always enabled)"
+    )
     budget: BudgetLimits = Field(default_factory=BudgetLimits, description="Hard budget limits")
 
 class ChunkProvenance(BaseModel):
@@ -81,7 +100,8 @@ class ExecutionTrace(BaseModel):
     tool_calls_this_step: int
     chunks_read_this_step: list[int]
     elapsed_ms: float
-    token_estimate: int
+    tokens_input_estimate: int  # Estimated input tokens this step
+    tokens_output_estimate: int  # Estimated output tokens this step
 
 class BudgetUsage(BaseModel):
     """How much of the budget was consumed"""
@@ -93,11 +113,14 @@ class BudgetUsage(BaseModel):
     chunks_read_limit: int
     elapsed_ms: float
     timeout_ms: int
-    estimated_tokens: int
+    estimated_input_tokens: int
+    estimated_output_tokens: int
+    estimated_total_tokens: int
     budget_exhausted_reason: Optional[str] = None
 
 class RecursiveResult(BaseModel):
     """Response from recursive processing"""
+    run_id: str  # Unique ID for this run (for correlation/debugging)
     answer: str
     confidence: float
     reasoning_trace: list[ExecutionTrace]
@@ -122,10 +145,12 @@ class RCNEngine:
     Instead of stuffing entire corpus into context, model queries/navigates
     corpus as external environment through tool calls.
 
-    Key differences from raw LLM:
+    Key features:
     - Hard budget enforcement (tool calls, chunks, time)
     - Provenance tracking (what was read, when, hashes)
     - Observability (detailed execution trace)
+    - Tool filtering (enable/disable specific tools)
+    - Run IDs for correlation
     """
 
     def __init__(self):
@@ -133,12 +158,12 @@ class RCNEngine:
             api_key=os.getenv("ANTHROPIC_API_KEY")
         )
         self.model = os.getenv("RLM_MODEL", "claude-sonnet-4-20250514")
-        self.tools = self._build_tools()
+        self.all_tools = self._build_all_tools()
 
-    def _build_tools(self) -> list[dict]:
-        """Define tools for corpus-as-environment"""
-        return [
-            {
+    def _build_all_tools(self) -> dict[str, dict]:
+        """Build all available tools as a dict for filtering"""
+        return {
+            "search_corpus": {
                 "name": "search_corpus",
                 "description": "Search the corpus for chunks matching a query. Returns chunk IDs and snippets.",
                 "input_schema": {
@@ -157,7 +182,7 @@ class RCNEngine:
                     "required": ["query"]
                 }
             },
-            {
+            "read_chunk": {
                 "name": "read_chunk",
                 "description": "Read the full content of a specific corpus chunk by ID.",
                 "input_schema": {
@@ -171,7 +196,7 @@ class RCNEngine:
                     "required": ["chunk_id"]
                 }
             },
-            {
+            "navigate_related": {
                 "name": "navigate_related",
                 "description": "Find chunks related to the current chunk (adjacent, linked, or semantically similar).",
                 "input_schema": {
@@ -190,7 +215,7 @@ class RCNEngine:
                     "required": ["chunk_id", "direction"]
                 }
             },
-            {
+            "submit_answer": {
                 "name": "submit_answer",
                 "description": "Submit final answer when you have enough information. Call this when done.",
                 "input_schema": {
@@ -212,11 +237,29 @@ class RCNEngine:
                     "required": ["answer", "confidence"]
                 }
             }
-        ]
+        }
+
+    def _get_filtered_tools(self, tools_enabled: list[str]) -> list[dict]:
+        """Filter tools based on request. submit_answer always included."""
+        enabled_tool_names = set()
+
+        # Map request names to actual tool names
+        for name in tools_enabled:
+            if name in TOOL_NAME_MAP:
+                enabled_tool_names.add(TOOL_NAME_MAP[name])
+
+        # Always include submit_answer
+        enabled_tool_names.add("submit_answer")
+
+        return [self.all_tools[name] for name in enabled_tool_names if name in self.all_tools]
 
     def _hash_chunk(self, content: str) -> str:
         """Generate SHA256 hash of chunk content for provenance"""
         return hashlib.sha256(content.encode()).hexdigest()[:16]
+
+    def _estimate_tokens(self, text: str) -> int:
+        """Rough token estimate (~4 chars per token for English)"""
+        return int(len(text) * TOKENS_PER_CHUNK_CHAR)
 
     def _execute_tool(
         self,
@@ -224,14 +267,16 @@ class RCNEngine:
         tool_input: dict,
         corpus: list[str],
         provenance: list[ChunkProvenance],
-        chunks_read_count: int
-    ) -> tuple[str, list[ChunkProvenance], int, list[int]]:
+        chunks_read_count: int,
+        run_id: str
+    ) -> tuple[str, list[ChunkProvenance], int, list[int], int]:
         """
         Execute a tool call against the corpus environment.
 
-        Returns: (result_str, updated_provenance, new_chunks_read_count, chunk_ids_read_this_call)
+        Returns: (result_str, updated_provenance, new_chunks_read_count, chunk_ids_read_this_call, tokens_estimate)
         """
         chunks_read_this_call: list[int] = []
+        tokens_estimate = TOKENS_PER_TOOL_CALL_OVERHEAD
 
         if tool_name == "search_corpus":
             query = tool_input.get("query", "").lower()
@@ -246,7 +291,9 @@ class RCNEngine:
                     if len(results) >= max_results:
                         break
 
-            return json.dumps({"results": results, "total_found": len(results)}), provenance, chunks_read_count, chunks_read_this_call
+            result = json.dumps({"results": results, "total_found": len(results)})
+            tokens_estimate += self._estimate_tokens(result)
+            return result, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
         elif tool_name == "read_chunk":
             chunk_id = tool_input.get("chunk_id", 0)
@@ -264,28 +311,55 @@ class RCNEngine:
                     access_order=chunks_read_count
                 ))
 
-                return content, provenance, chunks_read_count, chunks_read_this_call
-            return f"Chunk {chunk_id} not found", provenance, chunks_read_count, chunks_read_this_call
+                tokens_estimate += self._estimate_tokens(content)
+                logger.debug(f"[{run_id}] read_chunk({chunk_id}): {len(content)} chars, ~{tokens_estimate} tokens")
+                return content, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
+
+            return f"Chunk {chunk_id} not found", provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
         elif tool_name == "navigate_related":
             chunk_id = tool_input.get("chunk_id", 0)
             direction = tool_input.get("direction", "next")
 
             if direction == "next" and chunk_id + 1 < len(corpus):
-                return json.dumps({"related_chunk_id": chunk_id + 1}), provenance, chunks_read_count, chunks_read_this_call
+                result = json.dumps({"related_chunk_id": chunk_id + 1})
             elif direction == "prev" and chunk_id > 0:
-                return json.dumps({"related_chunk_id": chunk_id - 1}), provenance, chunks_read_count, chunks_read_this_call
+                result = json.dumps({"related_chunk_id": chunk_id - 1})
             elif direction == "similar":
                 # Would use embeddings in production
-                return json.dumps({"related_chunk_id": min(chunk_id + 2, len(corpus) - 1)}), provenance, chunks_read_count, chunks_read_this_call
+                result = json.dumps({"related_chunk_id": min(chunk_id + 2, len(corpus) - 1)})
+            else:
+                result = json.dumps({"related_chunk_id": None, "message": "No related chunk found"})
 
-            return json.dumps({"related_chunk_id": None, "message": "No related chunk found"}), provenance, chunks_read_count, chunks_read_this_call
+            tokens_estimate += self._estimate_tokens(result)
+            return result, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
         elif tool_name == "submit_answer":
             # This is handled specially - signals completion
-            return json.dumps(tool_input), provenance, chunks_read_count, chunks_read_this_call
+            result = json.dumps(tool_input)
+            tokens_estimate += self._estimate_tokens(result)
+            return result, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
-        return "Unknown tool", provenance, chunks_read_count, chunks_read_this_call
+        return "Unknown tool", provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
+
+    def _make_budget_exhausted_message(
+        self,
+        reason: str,
+        chunks_read: int,
+        tool_calls: int,
+        provenance: list[ChunkProvenance]
+    ) -> str:
+        """Create helpful message when budget is exhausted"""
+        chunk_summary = ""
+        if provenance:
+            chunk_ids = [p.chunk_id for p in provenance[-5:]]  # Last 5 chunks
+            chunk_summary = f" You read chunks: {chunk_ids}."
+
+        return (
+            f"BUDGET LIMIT REACHED: {reason}. "
+            f"You've made {tool_calls} tool calls and read {chunks_read} chunks.{chunk_summary} "
+            f"Call submit_answer now with your best answer based on what you've found."
+        )
 
     async def process(self, query: RecursiveQuery) -> RecursiveResult:
         """
@@ -293,6 +367,7 @@ class RCNEngine:
 
         Enforces hard budgets and tracks provenance.
         """
+        run_id = str(uuid.uuid4())[:8]  # Short ID for logs
         start_time = time.time()
         corpus = query.corpus or []
         budget = query.budget
@@ -301,22 +376,26 @@ class RCNEngine:
         provenance: list[ChunkProvenance] = []
         tool_calls_count = 0
         chunks_read_count = 0
-        estimated_tokens = 0
+        estimated_input_tokens = TOKENS_SYSTEM_PROMPT_ESTIMATE
+        estimated_output_tokens = 0
         budget_exhausted_reason: Optional[str] = None
+
+        # Get filtered tools based on request
+        tools = self._get_filtered_tools(query.tools_enabled)
+        tool_names = [t["name"] for t in tools]
+
+        logger.info(f"[{run_id}] Starting RCN: corpus={len(corpus)} chunks, tools={tool_names}, budget={budget.max_tool_calls}/{budget.max_chunks_read}/{budget.timeout_ms}ms")
 
         # System prompt for RCN behavior
         system = f"""You are a recursive corpus navigator processing a query against a corpus environment.
 
 Instead of seeing the entire corpus, you navigate it using tools:
-- search_corpus: Find relevant chunks
-- read_chunk: Read full content of a chunk
-- navigate_related: Find connected chunks
-- submit_answer: Submit your final answer (required to complete)
+{chr(10).join(f'- {t["name"]}: {t["description"].split(".")[0]}' for t in tools)}
 
 Corpus type: {query.corpus_type}
 Total chunks available: {len(corpus)}
 
-BUDGET LIMITS (will be enforced):
+BUDGET LIMITS (will be enforced - plan accordingly):
 - Max tool calls: {budget.max_tool_calls}
 - Max chunks to read: {budget.max_chunks_read}
 - Time limit: {budget.timeout_ms}ms
@@ -330,6 +409,8 @@ Strategy:
 Be efficient - minimize tool calls while ensuring accuracy.
 When ready, call submit_answer with your response."""
 
+        estimated_input_tokens += self._estimate_tokens(query.prompt)
+
         # Initial user message
         messages.append({
             "role": "user",
@@ -339,21 +420,26 @@ When ready, call submit_answer with your response."""
         # Recursive loop with budget enforcement
         for depth in range(budget.max_recursions):
             step_start = time.time()
+            step_input_tokens = 0
+            step_output_tokens = 0
 
             # Check timeout
             elapsed_ms = (time.time() - start_time) * 1000
             if elapsed_ms >= budget.timeout_ms:
                 budget_exhausted_reason = "timeout"
+                logger.warning(f"[{run_id}] Timeout at depth {depth}: {elapsed_ms:.0f}ms >= {budget.timeout_ms}ms")
                 break
 
             # Check tool call budget
             if tool_calls_count >= budget.max_tool_calls:
                 budget_exhausted_reason = "max_tool_calls"
+                logger.warning(f"[{run_id}] Tool call limit at depth {depth}: {tool_calls_count} >= {budget.max_tool_calls}")
                 break
 
             # Check chunks read budget
             if chunks_read_count >= budget.max_chunks_read:
                 budget_exhausted_reason = "max_chunks_read"
+                logger.warning(f"[{run_id}] Chunk read limit at depth {depth}: {chunks_read_count} >= {budget.max_chunks_read}")
                 break
 
             try:
@@ -361,11 +447,18 @@ When ready, call submit_answer with your response."""
                     model=self.model,
                     max_tokens=budget.max_tokens_per_call,
                     system=system,
-                    tools=self.tools,
+                    tools=tools,
                     messages=messages
                 )
+                # Estimate tokens from response
+                step_output_tokens = TOKENS_PER_LLM_RESPONSE_ESTIMATE
+                if hasattr(response, 'usage'):
+                    # Use actual usage if available
+                    step_input_tokens = getattr(response.usage, 'input_tokens', 0)
+                    step_output_tokens = getattr(response.usage, 'output_tokens', 0)
+
             except Exception as e:
-                logger.error(f"LLM call failed at depth {depth}: {e}")
+                logger.error(f"[{run_id}] LLM call failed at depth {depth}: {e}")
                 budget_exhausted_reason = f"llm_error: {str(e)}"
                 break
 
@@ -380,17 +473,21 @@ When ready, call submit_answer with your response."""
                 tool_calls_this_step=0,
                 chunks_read_this_step=[],
                 elapsed_ms=step_elapsed,
-                token_estimate=TOKENS_PER_TOOL_CALL_ESTIMATE
+                tokens_input_estimate=step_input_tokens,
+                tokens_output_estimate=step_output_tokens
             )
 
             # Check if model is done (no tool use)
             if response.stop_reason == "end_turn":
                 text_blocks = [b for b in response.content if b.type == "text"]
                 reasoning_trace.append(trace_entry)
+                estimated_output_tokens += step_output_tokens
 
                 if text_blocks:
                     total_elapsed = (time.time() - start_time) * 1000
+                    logger.info(f"[{run_id}] Completed at depth {depth}: end_turn, {total_elapsed:.0f}ms")
                     return RecursiveResult(
+                        run_id=run_id,
                         answer=text_blocks[0].text,
                         confidence=0.7,
                         reasoning_trace=reasoning_trace,
@@ -404,7 +501,9 @@ When ready, call submit_answer with your response."""
                             chunks_read_limit=budget.max_chunks_read,
                             elapsed_ms=total_elapsed,
                             timeout_ms=budget.timeout_ms,
-                            estimated_tokens=estimated_tokens
+                            estimated_input_tokens=estimated_input_tokens,
+                            estimated_output_tokens=estimated_output_tokens,
+                            estimated_total_tokens=estimated_input_tokens + estimated_output_tokens
                         ),
                         completed_normally=True
                     )
@@ -421,7 +520,6 @@ When ready, call submit_answer with your response."""
                     if block.type == "tool_use":
                         tool_calls_count += 1
                         tool_calls_this_step += 1
-                        estimated_tokens += TOKENS_PER_TOOL_CALL_ESTIMATE
 
                         # Check budgets before executing
                         if tool_calls_count > budget.max_tool_calls:
@@ -429,7 +527,9 @@ When ready, call submit_answer with your response."""
                             tool_results.append({
                                 "type": "tool_result",
                                 "tool_use_id": block.id,
-                                "content": "BUDGET EXCEEDED: max_tool_calls reached. Call submit_answer now."
+                                "content": self._make_budget_exhausted_message(
+                                    "max_tool_calls", chunks_read_count, tool_calls_count, provenance
+                                )
                             })
                             continue
 
@@ -439,9 +539,12 @@ When ready, call submit_answer with your response."""
                             trace_entry.tool_calls_this_step = tool_calls_this_step
                             trace_entry.chunks_read_this_step = chunks_read_this_step
                             reasoning_trace.append(trace_entry)
+                            estimated_output_tokens += step_output_tokens
 
                             total_elapsed = (time.time() - start_time) * 1000
+                            logger.info(f"[{run_id}] Completed at depth {depth}: submit_answer, confidence={answer_data.get('confidence', 0.8)}")
                             return RecursiveResult(
+                                run_id=run_id,
                                 answer=answer_data.get("answer", ""),
                                 confidence=answer_data.get("confidence", 0.8),
                                 reasoning_trace=reasoning_trace,
@@ -455,7 +558,9 @@ When ready, call submit_answer with your response."""
                                     chunks_read_limit=budget.max_chunks_read,
                                     elapsed_ms=total_elapsed,
                                     timeout_ms=budget.timeout_ms,
-                                    estimated_tokens=estimated_tokens
+                                    estimated_input_tokens=estimated_input_tokens,
+                                    estimated_output_tokens=estimated_output_tokens,
+                                    estimated_total_tokens=estimated_input_tokens + estimated_output_tokens
                                 ),
                                 completed_normally=True
                             )
@@ -465,22 +570,23 @@ When ready, call submit_answer with your response."""
                             tool_results.append({
                                 "type": "tool_result",
                                 "tool_use_id": block.id,
-                                "content": "BUDGET EXCEEDED: max_chunks_read reached. Call submit_answer with what you know."
+                                "content": self._make_budget_exhausted_message(
+                                    "max_chunks_read", chunks_read_count, tool_calls_count, provenance
+                                )
                             })
                             continue
 
                         # Execute tool
-                        result, provenance, chunks_read_count, chunks_this_call = self._execute_tool(
+                        result, provenance, chunks_read_count, chunks_this_call, tool_tokens = self._execute_tool(
                             block.name,
                             block.input,
                             corpus,
                             provenance,
-                            chunks_read_count
+                            chunks_read_count,
+                            run_id
                         )
                         chunks_read_this_step.extend(chunks_this_call)
-
-                        if block.name == "read_chunk":
-                            estimated_tokens += TOKENS_PER_CHUNK_READ_ESTIMATE
+                        step_input_tokens += tool_tokens
 
                         tool_results.append({
                             "type": "tool_result",
@@ -495,7 +601,10 @@ When ready, call submit_answer with your response."""
 
                 trace_entry.tool_calls_this_step = tool_calls_this_step
                 trace_entry.chunks_read_this_step = chunks_read_this_step
+                trace_entry.tokens_input_estimate = step_input_tokens
                 reasoning_trace.append(trace_entry)
+                estimated_input_tokens += step_input_tokens
+                estimated_output_tokens += step_output_tokens
 
             # Break if budget exhausted
             if budget_exhausted_reason:
@@ -503,7 +612,9 @@ When ready, call submit_answer with your response."""
 
         # Budget exhausted or max recursions - return partial result
         total_elapsed = (time.time() - start_time) * 1000
+        logger.warning(f"[{run_id}] Incomplete: {budget_exhausted_reason or 'max_recursions'}, {total_elapsed:.0f}ms")
         return RecursiveResult(
+            run_id=run_id,
             answer=f"Processing stopped: {budget_exhausted_reason or 'max_recursions'}. Partial exploration completed.",
             confidence=0.3,
             reasoning_trace=reasoning_trace,
@@ -517,7 +628,9 @@ When ready, call submit_answer with your response."""
                 chunks_read_limit=budget.max_chunks_read,
                 elapsed_ms=total_elapsed,
                 timeout_ms=budget.timeout_ms,
-                estimated_tokens=estimated_tokens,
+                estimated_input_tokens=estimated_input_tokens,
+                estimated_output_tokens=estimated_output_tokens,
+                estimated_total_tokens=estimated_input_tokens + estimated_output_tokens,
                 budget_exhausted_reason=budget_exhausted_reason
             ),
             completed_normally=False
@@ -542,7 +655,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="MAIA Recursive Corpus Navigator",
     description="RLM-inspired corpus-as-environment processing with budget enforcement",
-    version="0.2.0",
+    version="0.2.1",
     lifespan=lifespan
 )
 
@@ -560,7 +673,7 @@ async def health():
     """Health check endpoint"""
     return HealthResponse(
         status="healthy",
-        version="0.2.0",
+        version="0.2.1",
         model=rcn_engine.model if rcn_engine else "not initialized",
         default_budgets={
             "max_recursions": DEFAULT_MAX_RECURSIONS,
@@ -586,9 +699,11 @@ async def process_recursive(query: RecursiveQuery):
     try:
         result = await rcn_engine.process(query)
         logger.info(
-            f"RCN processed: depth={result.budget_usage.recursions_used}, "
+            f"[{result.run_id}] RCN complete: "
+            f"depth={result.budget_usage.recursions_used}, "
             f"tools={result.budget_usage.tool_calls_used}/{result.budget_usage.tool_calls_limit}, "
             f"chunks={result.budget_usage.chunks_read_used}/{result.budget_usage.chunks_read_limit}, "
+            f"tokens~{result.budget_usage.estimated_total_tokens}, "
             f"elapsed={result.budget_usage.elapsed_ms:.0f}ms, "
             f"completed={result.completed_normally}"
         )
