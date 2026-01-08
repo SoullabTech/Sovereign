@@ -100,8 +100,8 @@ class ExecutionTrace(BaseModel):
     tool_calls_this_step: int
     chunks_read_this_step: list[int]
     elapsed_ms: float
-    tokens_input_estimate: int  # Estimated input tokens this step
-    tokens_output_estimate: int  # Estimated output tokens this step
+    input_tokens_this_step: int  # Estimated input tokens this step
+    output_tokens_this_step: int  # Estimated output tokens this step
 
 class BudgetUsage(BaseModel):
     """How much of the budget was consumed"""
@@ -127,6 +127,8 @@ class RecursiveResult(BaseModel):
     provenance: list[ChunkProvenance]
     budget_usage: BudgetUsage
     completed_normally: bool  # False if budget exhausted
+    not_verified: Optional[list[str]] = None  # Things not checked (if budget exhausted)
+    rerun_suggestion: Optional[str] = None  # Suggested budget increase for rerun
 
 class HealthResponse(BaseModel):
     status: str
@@ -217,7 +219,7 @@ class RCNEngine:
             },
             "submit_answer": {
                 "name": "submit_answer",
-                "description": "Submit final answer when you have enough information. Call this when done.",
+                "description": "Submit final answer when you have enough information OR when budget is exhausted. Include what you couldn't verify if incomplete.",
                 "input_schema": {
                     "type": "object",
                     "properties": {
@@ -232,6 +234,15 @@ class RCNEngine:
                         "reasoning": {
                             "type": "string",
                             "description": "Brief reasoning summary"
+                        },
+                        "not_verified": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of things you didn't have time/budget to check"
+                        },
+                        "rerun_suggestion": {
+                            "type": "string",
+                            "description": "What budget to increase if rerun needed (e.g., 'increase max_chunks_read to 30')"
                         }
                     },
                     "required": ["answer", "confidence"]
@@ -347,7 +358,8 @@ class RCNEngine:
         reason: str,
         chunks_read: int,
         tool_calls: int,
-        provenance: list[ChunkProvenance]
+        provenance: list[ChunkProvenance],
+        budget: BudgetLimits
     ) -> str:
         """Create helpful message when budget is exhausted"""
         chunk_summary = ""
@@ -355,10 +367,22 @@ class RCNEngine:
             chunk_ids = [p.chunk_id for p in provenance[-5:]]  # Last 5 chunks
             chunk_summary = f" You read chunks: {chunk_ids}."
 
+        # Suggest which budget to increase based on exhaustion reason
+        suggestion = ""
+        if reason == "max_tool_calls":
+            suggestion = f"increase max_tool_calls from {budget.max_tool_calls} to {budget.max_tool_calls + 10}"
+        elif reason == "max_chunks_read":
+            suggestion = f"increase max_chunks_read from {budget.max_chunks_read} to {budget.max_chunks_read + 15}"
+        elif reason == "timeout":
+            suggestion = f"increase timeout_ms from {budget.timeout_ms} to {budget.timeout_ms + 30000}"
+
         return (
             f"BUDGET LIMIT REACHED: {reason}. "
             f"You've made {tool_calls} tool calls and read {chunks_read} chunks.{chunk_summary} "
-            f"Call submit_answer now with your best answer based on what you've found."
+            f"Call submit_answer NOW with: "
+            f"(1) your best answer based on what you've found, "
+            f"(2) not_verified: list what you didn't have time to check, "
+            f"(3) rerun_suggestion: '{suggestion}' if a rerun would help."
         )
 
     async def process(self, query: RecursiveQuery) -> RecursiveResult:
@@ -473,8 +497,8 @@ When ready, call submit_answer with your response."""
                 tool_calls_this_step=0,
                 chunks_read_this_step=[],
                 elapsed_ms=step_elapsed,
-                tokens_input_estimate=step_input_tokens,
-                tokens_output_estimate=step_output_tokens
+                input_tokens_this_step=step_input_tokens,
+                output_tokens_this_step=step_output_tokens
             )
 
             # Check if model is done (no tool use)
@@ -528,7 +552,7 @@ When ready, call submit_answer with your response."""
                                 "type": "tool_result",
                                 "tool_use_id": block.id,
                                 "content": self._make_budget_exhausted_message(
-                                    "max_tool_calls", chunks_read_count, tool_calls_count, provenance
+                                    "max_tool_calls", chunks_read_count, tool_calls_count, provenance, budget
                                 )
                             })
                             continue
@@ -542,7 +566,9 @@ When ready, call submit_answer with your response."""
                             estimated_output_tokens += step_output_tokens
 
                             total_elapsed = (time.time() - start_time) * 1000
-                            logger.info(f"[{run_id}] Completed at depth {depth}: submit_answer, confidence={answer_data.get('confidence', 0.8)}")
+                            not_verified = answer_data.get("not_verified")
+                            rerun_suggestion = answer_data.get("rerun_suggestion")
+                            logger.info(f"[{run_id}] Completed at depth {depth}: submit_answer, confidence={answer_data.get('confidence', 0.8)}, not_verified={len(not_verified) if not_verified else 0}")
                             return RecursiveResult(
                                 run_id=run_id,
                                 answer=answer_data.get("answer", ""),
@@ -562,7 +588,9 @@ When ready, call submit_answer with your response."""
                                     estimated_output_tokens=estimated_output_tokens,
                                     estimated_total_tokens=estimated_input_tokens + estimated_output_tokens
                                 ),
-                                completed_normally=True
+                                completed_normally=True,
+                                not_verified=not_verified,
+                                rerun_suggestion=rerun_suggestion
                             )
 
                         # Check chunk read budget
@@ -571,7 +599,7 @@ When ready, call submit_answer with your response."""
                                 "type": "tool_result",
                                 "tool_use_id": block.id,
                                 "content": self._make_budget_exhausted_message(
-                                    "max_chunks_read", chunks_read_count, tool_calls_count, provenance
+                                    "max_chunks_read", chunks_read_count, tool_calls_count, provenance, budget
                                 )
                             })
                             continue
@@ -601,7 +629,7 @@ When ready, call submit_answer with your response."""
 
                 trace_entry.tool_calls_this_step = tool_calls_this_step
                 trace_entry.chunks_read_this_step = chunks_read_this_step
-                trace_entry.tokens_input_estimate = step_input_tokens
+                trace_entry.input_tokens_this_step = step_input_tokens
                 reasoning_trace.append(trace_entry)
                 estimated_input_tokens += step_input_tokens
                 estimated_output_tokens += step_output_tokens

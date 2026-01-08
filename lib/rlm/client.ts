@@ -116,6 +116,10 @@ export interface RecursiveResult {
   budgetUsage: BudgetUsage;
   /** True if completed normally, false if budget exhausted */
   completedNormally: boolean;
+  /** Things not verified due to budget constraints (if incomplete) */
+  notVerified?: string[];
+  /** Suggested budget increase for rerun (if incomplete) */
+  rerunSuggestion?: string;
 }
 
 export interface RCNHealth {
@@ -229,6 +233,8 @@ export class RCNClient {
         estimatedTotalTokens: budgetUsage.estimated_total_tokens as number,
         budgetExhaustedReason: budgetUsage.budget_exhausted_reason as string | undefined,
       },
+      notVerified: raw.not_verified as string[] | undefined,
+      rerunSuggestion: raw.rerun_suggestion as string | undefined,
     };
   }
 
