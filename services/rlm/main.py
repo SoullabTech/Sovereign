@@ -383,11 +383,7 @@ class RCNEngine:
         else:
             normalized = []
 
-        # If not_verified has real items after normalization, trust it
-        if normalized:
-            return answer, normalized
-
-        # Markers that suggest stuffing
+        # Markers that suggest stuffing in answer text
         markers = [
             r"(?i)not verified[:\s]",
             r"(?i)couldn't verify[:\s]",
@@ -397,37 +393,38 @@ class RCNEngine:
             r"(?i)budget.{0,20}limited[:\s]",
         ]
 
-        # Check if any marker present
-        has_marker = any(re.search(m, answer) for m in markers)
-        if not has_marker:
-            return answer, not_verified or []
-
-        # Try to extract bullet points after markers
-        extracted = []
+        # ALWAYS clean answer text of stuffed markers, even if not_verified is populated
         clean_answer = answer
+        extracted = []
+        has_marker = any(re.search(m, answer) for m in markers)
 
-        # Pattern: marker followed by bullet list or comma-separated items
-        for marker in markers:
-            pattern = marker + r"(.+?)(?=\n\n|\Z)"
-            match = re.search(pattern, answer, re.DOTALL)
-            if match:
-                items_text = match.group(1)
-                # Extract bullet items (- item or * item or numbered)
-                bullets = re.findall(r"[-*•]\s*(.+?)(?=\n[-*•]|\n\n|\Z)", items_text)
-                if bullets:
-                    extracted.extend([b.strip() for b in bullets])
-                else:
-                    # Try comma-separated
-                    items = [i.strip() for i in items_text.split(",") if i.strip()]
-                    extracted.extend(items[:5])  # Limit
+        if has_marker:
+            # Try to extract bullet points after markers
+            for marker in markers:
+                pattern = marker + r"(.+?)(?=\n\n|\Z)"
+                match = re.search(pattern, answer, re.DOTALL)
+                if match:
+                    items_text = match.group(1)
+                    # Extract bullet items (- item or * item or numbered)
+                    bullets = re.findall(r"[-*•]\s*(.+?)(?=\n[-*•]|\n\n|\Z)", items_text)
+                    if bullets:
+                        extracted.extend([b.strip() for b in bullets])
+                    else:
+                        # Try comma-separated
+                        items = [i.strip() for i in items_text.split(",") if i.strip()]
+                        extracted.extend(items[:5])  # Limit
 
-                # Remove this section from answer
-                clean_answer = re.sub(marker + r".+?(?=\n\n|\Z)", "", clean_answer, flags=re.DOTALL)
+                    # Remove this section from answer
+                    clean_answer = re.sub(marker + r".+?(?=\n\n|\Z)", "", clean_answer, flags=re.DOTALL)
 
-        # Clean up whitespace
-        clean_answer = re.sub(r"\n{3,}", "\n\n", clean_answer).strip()
+            # Clean up whitespace
+            clean_answer = re.sub(r"\n{3,}", "\n\n", clean_answer).strip()
 
-        return clean_answer, extracted if extracted else (not_verified or [])
+        # If we have normalized items from the field, use them (trust the field)
+        # Otherwise use extracted items from answer text
+        final_not_verified = normalized if normalized else extracted
+
+        return clean_answer, final_not_verified
 
     def _make_budget_exhausted_message(
         self,
@@ -723,12 +720,79 @@ When ready, call submit_answer with your response."""
             if budget_exhausted_reason:
                 break
 
-        # Budget exhausted or max recursions - return partial result
+        # Budget exhausted or max recursions - force one final submit_answer round
+        if not budget_exhausted_reason:
+            budget_exhausted_reason = "max_recursions"
+
+        # Force submit: inject message and make one more call with only submit_answer tool
+        force_submit_msg = self._make_budget_exhausted_message(
+            budget_exhausted_reason, chunks_read_count, tool_calls_count, provenance, budget
+        )
+        messages.append({
+            "role": "user",
+            "content": f"[FINAL TURN] {force_submit_msg}"
+        })
+
+        logger.info(f"[{run_id}] Forcing final submit_answer round after {budget_exhausted_reason}")
+
+        try:
+            # Only provide submit_answer tool for final round
+            submit_only_tools = [t for t in tools if t["name"] == "submit_answer"]
+            final_response = self.client.messages.create(
+                model=self.model,
+                max_tokens=budget.max_tokens_per_call,
+                system=system,
+                tools=submit_only_tools,
+                messages=messages
+            )
+
+            # Process the forced submit_answer
+            for block in final_response.content:
+                if block.type == "tool_use" and block.name == "submit_answer":
+                    answer_data = block.input
+                    total_elapsed = (time.time() - start_time) * 1000
+
+                    # Extract fields with salvage heuristic
+                    raw_answer = answer_data.get("answer", "")
+                    raw_not_verified = answer_data.get("not_verified")
+                    rerun_suggestion = answer_data.get("rerun_suggestion")
+                    clean_answer, not_verified = self._salvage_not_verified(raw_answer, raw_not_verified)
+
+                    logger.info(f"[{run_id}] Forced submit complete: confidence={answer_data.get('confidence', 0.5)}, not_verified={len(not_verified)}")
+                    return RecursiveResult(
+                        run_id=run_id,
+                        answer=clean_answer,
+                        confidence=answer_data.get("confidence", 0.5),
+                        reasoning_trace=reasoning_trace,
+                        provenance=provenance,
+                        budget_usage=BudgetUsage(
+                            recursions_used=len(reasoning_trace) + 1,  # +1 for forced round
+                            recursions_limit=budget.max_recursions,
+                            tool_calls_used=tool_calls_count + 1,  # +1 for submit
+                            tool_calls_limit=budget.max_tool_calls,
+                            chunks_read_used=chunks_read_count,
+                            chunks_read_limit=budget.max_chunks_read,
+                            elapsed_ms=total_elapsed,
+                            timeout_ms=budget.timeout_ms,
+                            estimated_input_tokens=estimated_input_tokens,
+                            estimated_output_tokens=estimated_output_tokens,
+                            estimated_total_tokens=estimated_input_tokens + estimated_output_tokens,
+                            budget_exhausted_reason=budget_exhausted_reason
+                        ),
+                        completed_normally=False,  # Still incomplete, but has real answer
+                        not_verified=not_verified,
+                        rerun_suggestion=rerun_suggestion
+                    )
+
+        except Exception as e:
+            logger.error(f"[{run_id}] Forced submit failed: {e}")
+
+        # Fallback if forced submit didn't work
         total_elapsed = (time.time() - start_time) * 1000
-        logger.warning(f"[{run_id}] Incomplete: {budget_exhausted_reason or 'max_recursions'}, {total_elapsed:.0f}ms")
+        logger.warning(f"[{run_id}] Incomplete (no forced answer): {budget_exhausted_reason}, {total_elapsed:.0f}ms")
         return RecursiveResult(
             run_id=run_id,
-            answer=f"Processing stopped: {budget_exhausted_reason or 'max_recursions'}. Partial exploration completed.",
+            answer=f"Processing stopped: {budget_exhausted_reason}. Partial exploration completed.",
             confidence=0.3,
             reasoning_trace=reasoning_trace,
             provenance=provenance,
@@ -786,7 +850,7 @@ async def health():
     """Health check endpoint"""
     return HealthResponse(
         status="healthy",
-        version="0.2.1",
+        version="0.2.4",
         model=rcn_engine.model if rcn_engine else "not initialized",
         default_budgets={
             "max_recursions": DEFAULT_MAX_RECURSIONS,
