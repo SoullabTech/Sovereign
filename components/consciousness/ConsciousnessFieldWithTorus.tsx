@@ -173,15 +173,16 @@ export default function ConsciousnessFieldWithTorus({
 
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
-      {/* 3D Torus field background */}
+      {/* 3D Torus field background - pointer-events none so wheel is clickable */}
       <div style={{
         position: 'absolute',
         inset: 0,
-        zIndex: 0
+        zIndex: 0,
+        pointerEvents: 'none'
       }}>
         <Canvas
           camera={{ position: [0, 0, 8], fov: 50 }}
-          style={{ background: 'transparent' }}
+          style={{ background: 'transparent', pointerEvents: 'none' }}
         >
           <ambientLight intensity={0.5} />
           <pointLight position={[10, 10, 10]} intensity={0.8} />
