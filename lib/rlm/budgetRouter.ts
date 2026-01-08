@@ -129,9 +129,11 @@ function shouldEscalate(
   if (ctx?.channel === 'voice') return null;
 
   const { confidence, completedNormally, budgetUsage } = last;
+  // Treat forcedSubmitUsed as "hit the wall" even if we got an answer
   const exhausted =
     !completedNormally ||
     !!budgetUsage.budgetExhaustedReason ||
+    !!budgetUsage.forcedSubmitUsed ||
     budgetUsage.elapsedMs >= budgetUsage.timeoutMs;
 
   const nearBudget =

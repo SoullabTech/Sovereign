@@ -237,14 +237,16 @@ export class RCNClient {
         estimatedInputTokens: budgetUsage.estimated_input_tokens as number,
         estimatedOutputTokens: budgetUsage.estimated_output_tokens as number,
         estimatedTotalTokens: budgetUsage.estimated_total_tokens as number,
-        budgetExhaustedReason: budgetUsage.budget_exhausted_reason as string | undefined,
+        // Coalesce null → undefined to match TS types (Python sends null, not undefined)
+        budgetExhaustedReason: (budgetUsage.budget_exhausted_reason ?? undefined) as string | undefined,
         // Forced submit overhead (system overhead, not counted against limits)
-        forcedSubmitUsed: budgetUsage.forced_submit_used as boolean | undefined,
-        forcedSubmitOverheadRecursions: budgetUsage.forced_submit_overhead_recursions as number | undefined,
-        forcedSubmitOverheadToolCalls: budgetUsage.forced_submit_overhead_tool_calls as number | undefined,
+        forcedSubmitUsed: (budgetUsage.forced_submit_used ?? undefined) as boolean | undefined,
+        forcedSubmitOverheadRecursions: (budgetUsage.forced_submit_overhead_recursions ?? undefined) as number | undefined,
+        forcedSubmitOverheadToolCalls: (budgetUsage.forced_submit_overhead_tool_calls ?? undefined) as number | undefined,
       },
-      notVerified: raw.not_verified as string[] | undefined,
-      rerunSuggestion: raw.rerun_suggestion as string | undefined,
+      // Coalesce null → undefined
+      notVerified: (raw.not_verified ?? undefined) as string[] | undefined,
+      rerunSuggestion: (raw.rerun_suggestion ?? undefined) as string | undefined,
     };
   }
 
