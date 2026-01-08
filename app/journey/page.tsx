@@ -14,7 +14,8 @@
  */
 
 import { useEffect, useState } from 'react';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings } from 'lucide-react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, BookOpen, Settings, ArrowLeft } from 'lucide-react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
@@ -478,6 +479,19 @@ export default function AstrologyPage() {
           ? 'radial-gradient(circle at 50% 30%, #E8DCC8 0%, #D4C4B0 100%)'
           : 'radial-gradient(ellipse at top, #1e3a5f 0%, #1a2947 20%, #15203a 40%, #0f1729 60%, #0a0f1e 80%, #050911 100%)'
       }}>
+
+      {/* Back to MAIA navigation */}
+      <Link
+        href="/maia"
+        className={`fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
+          isDayMode
+            ? 'bg-amber-100/80 text-amber-800 hover:bg-amber-200/80'
+            : 'bg-white/10 text-amber-200 hover:bg-white/20'
+        }`}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        <span className="text-sm font-medium">MAIA</span>
+      </Link>
 
       {/* Twilight horizon - hint of sunlight just past dusk */}
       {!isDayMode && (
