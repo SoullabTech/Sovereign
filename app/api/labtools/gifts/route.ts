@@ -266,7 +266,8 @@ export async function POST(request: NextRequest) {
         success: true,
         passkey: uniquePasskey,
         emailSent: emailResult.success,
-        emailId: emailResult.id
+        emailId: emailResult.id,
+        emailError: emailResult.error
       });
     }
 
@@ -292,7 +293,8 @@ export async function POST(request: NextRequest) {
       success: true,
       passkey,
       emailSent: emailResult.success,
-      emailId: emailResult.id
+      emailId: emailResult.id,
+      emailError: emailResult.error
     });
 
   } catch (error: any) {
@@ -318,7 +320,8 @@ async function sendGiftEmail(
 
     const resend = getResendClient();
     const result = await resend.emails.send({
-      from: 'Kelly @ Soullab <kelly@soullab.life>',
+      from: 'Soullab Gifts <gifts@soullab.life>',
+      replyTo: 'kelly@soullab.life',
       to: recipientEmail,
       subject,
       html: generateGiftEmailHtml(recipientName, passkey, gifterName, personalMessage),
@@ -333,8 +336,9 @@ async function sendGiftEmail(
     return { success: true, id: result.data?.id };
 
   } catch (error: any) {
-    console.error(`❌ Failed to send gift email to ${recipientEmail}:`, error.message);
-    return { success: false, error: error.message };
+    console.error(`❌ Failed to send gift email to ${recipientEmail}:`, error);
+    console.error('Full error details:', JSON.stringify(error, null, 2));
+    return { success: false, error: error.message || String(error) };
   }
 }
 
