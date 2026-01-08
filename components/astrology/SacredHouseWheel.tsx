@@ -1607,6 +1607,28 @@ export function SacredHouseWheel({
                 {planet.name === 'North Node' && '☊'}
                 {planet.name === 'South Node' && '☋'}
               </motion.text>
+
+              {/* Sign abbreviation label below planet */}
+              <motion.text
+                x={pos.x}
+                y={pos.y + 18}
+                textAnchor="middle"
+                dominantBaseline="central"
+                className="pointer-events-none select-none"
+                fill={color}
+                fontSize="8"
+                fontWeight="500"
+                initial={{ opacity: 0.6 }}
+                animate={{ opacity: isHovered ? 1 : 0.7 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  filter: isHovered ? `drop-shadow(0 0 2px ${color})` : 'none',
+                  fontFamily: 'sans-serif',
+                  letterSpacing: '0.5px'
+                }}
+              >
+                {planet.sign.slice(0, 3).toUpperCase()}
+              </motion.text>
             </g>
           );
         })}
