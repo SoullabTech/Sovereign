@@ -15,6 +15,9 @@ import logging
 import hashlib
 import time
 import uuid
+import subprocess
+import re
+from pathlib import Path
 from typing import Optional
 from datetime import datetime, timezone
 from contextlib import asynccontextmanager
@@ -37,7 +40,7 @@ logger = logging.getLogger("rcn-service")
 # Version (single source of truth)
 # ═══════════════════════════════════════════════════════════════════════════════
 
-RCN_VERSION = "0.2.5"
+RCN_VERSION = "0.3.0"  # Added vault-as-corpus support
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Budget Defaults (can be overridden per-request)
@@ -61,12 +64,28 @@ TOOL_NAME_MAP = {
     "read": "read_chunk",
     "navigate": "navigate_related",
     "submit": "submit_answer",
+    # Vault-specific tools
+    "vault_search": "vault_search",
+    "vault_read": "vault_read",
     # Also accept full names
     "search_corpus": "search_corpus",
     "read_chunk": "read_chunk",
     "navigate_related": "navigate_related",
     "submit_answer": "submit_answer",
 }
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# Vault Configuration
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Default vault path (can be overridden via environment or per-request)
+DEFAULT_VAULT_PATH = os.getenv("RCN_VAULT_PATH", os.path.expanduser("~/vault"))
+
+# File extensions to include in vault search
+VAULT_EXTENSIONS = [".md", ".txt", ".canvas"]
+
+# Max file size to read (prevent OOM on huge files)
+VAULT_MAX_FILE_SIZE = 500_000  # 500KB
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Models
@@ -84,12 +103,13 @@ class RecursiveQuery(BaseModel):
     """Request for recursive corpus navigation"""
     prompt: str = Field(..., description="The main query/task")
     corpus: Optional[list[str]] = Field(default=None, description="Corpus chunks to search/navigate")
-    corpus_type: Optional[str] = Field(default="general", description="Type: general, codebase, docs, transcript")
+    corpus_type: Optional[str] = Field(default="general", description="Type: general, codebase, docs, transcript, vault")
     tools_enabled: list[str] = Field(
         default=["search", "read", "navigate"],
-        description="Tools to enable: search, read, navigate (submit always enabled)"
+        description="Tools to enable: search, read, navigate, vault_search, vault_read (submit always enabled)"
     )
     budget: BudgetLimits = Field(default_factory=BudgetLimits, description="Hard budget limits")
+    vault_path: Optional[str] = Field(default=None, description="Path to Obsidian vault (for corpus_type=vault)")
 
 class ChunkProvenance(BaseModel):
     """Provenance for an accessed chunk"""
@@ -98,6 +118,9 @@ class ChunkProvenance(BaseModel):
     char_count: int
     accessed_at: str  # ISO timestamp
     access_order: int  # Order in which it was accessed
+    # Vault-specific fields (only populated for vault corpus)
+    file_path: Optional[str] = None  # Relative path within vault
+    heading: Optional[str] = None  # H1/H2 heading if reading a section
 
 class ExecutionTrace(BaseModel):
     """Detailed trace of a single recursion step"""
@@ -268,6 +291,57 @@ class RCNEngine:
                     },
                     "required": ["answer", "confidence", "not_verified"]
                 }
+            },
+            # ═══════════════════════════════════════════════════════════════════
+            # Vault-specific tools (for corpus_type=vault)
+            # ═══════════════════════════════════════════════════════════════════
+            "vault_search": {
+                "name": "vault_search",
+                "description": (
+                    "Search the Obsidian vault for files matching a query. Uses ripgrep for fast searching. "
+                    "Returns file paths with line numbers and snippets. Use this to find relevant notes."
+                ),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "Search query (regex supported)"
+                        },
+                        "max_results": {
+                            "type": "integer",
+                            "description": "Maximum files to return",
+                            "default": 10
+                        },
+                        "file_pattern": {
+                            "type": "string",
+                            "description": "Glob pattern to filter files (e.g., '*.md', 'projects/*.md')",
+                            "default": "*.md"
+                        }
+                    },
+                    "required": ["query"]
+                }
+            },
+            "vault_read": {
+                "name": "vault_read",
+                "description": (
+                    "Read content from an Obsidian vault file. Can read entire file or a specific heading section. "
+                    "Use heading parameter to read just one section (e.g., '## Implementation')."
+                ),
+                "input_schema": {
+                    "type": "object",
+                    "properties": {
+                        "file_path": {
+                            "type": "string",
+                            "description": "Relative path to file within vault (e.g., 'projects/MAIA.md')"
+                        },
+                        "heading": {
+                            "type": "string",
+                            "description": "Optional. Read only this heading section (e.g., '## Notes', '# Overview')"
+                        }
+                    },
+                    "required": ["file_path"]
+                }
             }
         }
 
@@ -293,6 +367,174 @@ class RCNEngine:
         """Rough token estimate (~4 chars per token for English)"""
         return int(len(text) * TOKENS_PER_CHUNK_CHAR)
 
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Vault Operations
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    def _vault_search(
+        self,
+        vault_path: str,
+        query: str,
+        max_results: int = 10,
+        file_pattern: str = "*.md"
+    ) -> list[dict]:
+        """
+        Search vault using ripgrep for fast regex search.
+        Returns list of {file_path, line_num, snippet} dicts.
+        """
+        vault = Path(vault_path)
+        if not vault.exists():
+            return [{"error": f"Vault not found: {vault_path}"}]
+
+        try:
+            # Build ripgrep command
+            # -i: case insensitive, -n: line numbers, -l: files only (then -C for context)
+            cmd = [
+                "rg",
+                "-i",  # case insensitive
+                "-n",  # line numbers
+                "--max-count", "3",  # max matches per file
+                "--max-filesize", "500K",  # skip huge files
+                "--glob", file_pattern,
+                "-C", "1",  # 1 line context
+                query,
+                str(vault)
+            ]
+
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=10
+            )
+
+            if result.returncode not in (0, 1):  # 1 = no matches (ok)
+                logger.warning(f"ripgrep error: {result.stderr}")
+                return [{"error": f"Search failed: {result.stderr[:200]}"}]
+
+            # Parse ripgrep output
+            results = []
+            current_file = None
+            current_lines = []
+
+            for line in result.stdout.split('\n'):
+                if not line:
+                    continue
+
+                # Format: /path/to/file.md:123:matched line
+                # Or context: /path/to/file.md-122-context line
+                if ':' in line or '-' in line:
+                    # Try to parse file:line:content
+                    parts = line.split(':', 2) if ':' in line else line.split('-', 2)
+                    if len(parts) >= 3:
+                        file_path = parts[0]
+                        try:
+                            line_num = int(parts[1])
+                            content = parts[2]
+
+                            # Make path relative to vault
+                            try:
+                                rel_path = str(Path(file_path).relative_to(vault))
+                            except ValueError:
+                                rel_path = file_path
+
+                            # Group by file
+                            if current_file != rel_path:
+                                if current_file and current_lines:
+                                    results.append({
+                                        "file_path": current_file,
+                                        "line_num": current_lines[0]["line_num"],
+                                        "snippet": "\n".join(l["content"] for l in current_lines[:3])
+                                    })
+                                current_file = rel_path
+                                current_lines = []
+
+                            current_lines.append({"line_num": line_num, "content": content})
+                        except (ValueError, IndexError):
+                            continue
+
+            # Don't forget the last file
+            if current_file and current_lines:
+                results.append({
+                    "file_path": current_file,
+                    "line_num": current_lines[0]["line_num"],
+                    "snippet": "\n".join(l["content"] for l in current_lines[:3])
+                })
+
+            return results[:max_results]
+
+        except subprocess.TimeoutExpired:
+            return [{"error": "Search timed out"}]
+        except FileNotFoundError:
+            return [{"error": "ripgrep not installed (brew install ripgrep)"}]
+        except Exception as e:
+            return [{"error": f"Search error: {str(e)}"}]
+
+    def _vault_read(
+        self,
+        vault_path: str,
+        file_path: str,
+        heading: Optional[str] = None
+    ) -> tuple[str, Optional[str]]:
+        """
+        Read vault file content, optionally extracting a specific heading section.
+        Returns (content, actual_heading_found).
+        """
+        vault = Path(vault_path)
+        full_path = vault / file_path
+
+        # Security: prevent path traversal
+        try:
+            full_path.resolve().relative_to(vault.resolve())
+        except ValueError:
+            return f"Error: Path traversal not allowed: {file_path}", None
+
+        if not full_path.exists():
+            return f"Error: File not found: {file_path}", None
+
+        if full_path.stat().st_size > VAULT_MAX_FILE_SIZE:
+            return f"Error: File too large (>{VAULT_MAX_FILE_SIZE} bytes)", None
+
+        try:
+            content = full_path.read_text(encoding='utf-8')
+        except Exception as e:
+            return f"Error reading file: {e}", None
+
+        # If no heading specified, return full content
+        if not heading:
+            return content, None
+
+        # Extract heading section
+        # Normalize heading (remove leading #s for matching)
+        heading_text = heading.lstrip('#').strip()
+        heading_level = len(heading) - len(heading.lstrip('#'))
+        if heading_level == 0:
+            heading_level = 2  # Default to H2 if no # provided
+
+        # Find the heading in content
+        heading_pattern = rf'^(#{{{heading_level}}})\s+{re.escape(heading_text)}\s*$'
+        lines = content.split('\n')
+        start_idx = None
+        end_idx = None
+
+        for i, line in enumerate(lines):
+            if start_idx is None:
+                # Look for the heading
+                if re.match(heading_pattern, line, re.IGNORECASE):
+                    start_idx = i
+            else:
+                # Look for next heading of same or higher level
+                if re.match(rf'^#{{1,{heading_level}}}\s+', line):
+                    end_idx = i
+                    break
+
+        if start_idx is None:
+            return f"Heading not found: {heading}", None
+
+        section_lines = lines[start_idx:end_idx] if end_idx else lines[start_idx:]
+        actual_heading = lines[start_idx].strip()
+        return '\n'.join(section_lines), actual_heading
+
     def _execute_tool(
         self,
         tool_name: str,
@@ -300,7 +542,8 @@ class RCNEngine:
         corpus: list[str],
         provenance: list[ChunkProvenance],
         chunks_read_count: int,
-        run_id: str
+        run_id: str,
+        vault_path: Optional[str] = None
     ) -> tuple[str, list[ChunkProvenance], int, list[int], int]:
         """
         Execute a tool call against the corpus environment.
@@ -371,6 +614,54 @@ class RCNEngine:
             result = json.dumps(tool_input)
             tokens_estimate += self._estimate_tokens(result)
             return result, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
+
+        # ═══════════════════════════════════════════════════════════════════
+        # Vault Tools
+        # ═══════════════════════════════════════════════════════════════════
+
+        elif tool_name == "vault_search":
+            if not vault_path:
+                return json.dumps({"error": "No vault_path configured"}), provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
+
+            query = tool_input.get("query", "")
+            max_results = tool_input.get("max_results", 10)
+            file_pattern = tool_input.get("file_pattern", "*.md")
+
+            search_results = self._vault_search(vault_path, query, max_results, file_pattern)
+            result = json.dumps({"results": search_results, "total": len(search_results)})
+            tokens_estimate += self._estimate_tokens(result)
+            logger.debug(f"[{run_id}] vault_search({query}): {len(search_results)} results")
+            return result, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
+
+        elif tool_name == "vault_read":
+            if not vault_path:
+                return json.dumps({"error": "No vault_path configured"}), provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
+
+            file_path = tool_input.get("file_path", "")
+            heading = tool_input.get("heading")
+
+            content, actual_heading = self._vault_read(vault_path, file_path, heading)
+
+            # Track as a read for budget purposes
+            chunks_read_count += 1
+            # Use negative chunk_id to indicate vault file (not corpus chunk)
+            vault_chunk_id = -(chunks_read_count)
+            chunks_read_this_call.append(vault_chunk_id)
+
+            # Add vault-specific provenance
+            provenance.append(ChunkProvenance(
+                chunk_id=vault_chunk_id,
+                content_hash=self._hash_chunk(content),
+                char_count=len(content),
+                accessed_at=datetime.now(timezone.utc).isoformat(),
+                access_order=chunks_read_count,
+                file_path=file_path,
+                heading=actual_heading
+            ))
+
+            tokens_estimate += self._estimate_tokens(content)
+            logger.debug(f"[{run_id}] vault_read({file_path}, heading={heading}): {len(content)} chars")
+            return content, provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
         return "Unknown tool", provenance, chunks_read_count, chunks_read_this_call, tokens_estimate
 
@@ -478,6 +769,7 @@ class RCNEngine:
         start_time = time.time()
         corpus = query.corpus or []
         budget = query.budget
+        vault_path = query.vault_path or DEFAULT_VAULT_PATH if query.corpus_type == "vault" else None
         messages = []
         reasoning_trace: list[ExecutionTrace] = []
         provenance: list[ChunkProvenance] = []
@@ -491,7 +783,23 @@ class RCNEngine:
         tools = self._get_filtered_tools(query.tools_enabled)
         tool_names = [t["name"] for t in tools]
 
-        logger.info(f"[{run_id}] Starting RCN: corpus={len(corpus)} chunks, tools={tool_names}, budget={budget.max_tool_calls}/{budget.max_chunks_read}/{budget.timeout_ms}ms")
+        # Determine corpus description based on type
+        if query.corpus_type == "vault":
+            corpus_desc = f"Obsidian vault at: {vault_path}"
+            strategy = """Strategy:
+1. Use vault_search to find relevant notes (regex supported)
+2. Use vault_read to read full files or specific heading sections
+3. Follow links between notes if needed
+4. Submit answer when confident"""
+            logger.info(f"[{run_id}] Starting RCN: vault={vault_path}, tools={tool_names}, budget={budget.max_tool_calls}/{budget.max_chunks_read}/{budget.timeout_ms}ms")
+        else:
+            corpus_desc = f"Total chunks available: {len(corpus)}"
+            strategy = """Strategy:
+1. Search for relevant information
+2. Read promising chunks (be selective - you have limits)
+3. Navigate to related content if needed
+4. Submit answer when confident"""
+            logger.info(f"[{run_id}] Starting RCN: corpus={len(corpus)} chunks, tools={tool_names}, budget={budget.max_tool_calls}/{budget.max_chunks_read}/{budget.timeout_ms}ms")
 
         # System prompt for RCN behavior
         system = f"""You are a recursive corpus navigator processing a query against a corpus environment.
@@ -500,18 +808,14 @@ Instead of seeing the entire corpus, you navigate it using tools:
 {chr(10).join(f'- {t["name"]}: {t["description"].split(".")[0]}' for t in tools)}
 
 Corpus type: {query.corpus_type}
-Total chunks available: {len(corpus)}
+{corpus_desc}
 
 BUDGET LIMITS (will be enforced - plan accordingly):
 - Max tool calls: {budget.max_tool_calls}
-- Max chunks to read: {budget.max_chunks_read}
+- Max reads: {budget.max_chunks_read}
 - Time limit: {budget.timeout_ms}ms
 
-Strategy:
-1. Search for relevant information
-2. Read promising chunks (be selective - you have limits)
-3. Navigate to related content if needed
-4. Submit answer when confident
+{strategy}
 
 IMPORTANT: If you are unsure or budget-limited, you MUST put uncertainties in the `not_verified` array field. The `answer` field must contain ONLY the answer - no caveats, uncertainty lists, or "I didn't verify" statements.
 
@@ -685,8 +989,8 @@ When ready, call submit_answer with your response."""
                                 rerun_suggestion=rerun_suggestion
                             )
 
-                        # Check chunk read budget
-                        if block.name == "read_chunk" and chunks_read_count >= budget.max_chunks_read:
+                        # Check chunk/vault read budget
+                        if block.name in ("read_chunk", "vault_read") and chunks_read_count >= budget.max_chunks_read:
                             tool_results.append({
                                 "type": "tool_result",
                                 "tool_use_id": block.id,
@@ -703,7 +1007,8 @@ When ready, call submit_answer with your response."""
                             corpus,
                             provenance,
                             chunks_read_count,
-                            run_id
+                            run_id,
+                            vault_path
                         )
                         chunks_read_this_step.extend(chunks_this_call)
                         step_input_tokens += tool_tokens

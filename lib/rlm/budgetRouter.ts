@@ -12,7 +12,7 @@ import type { BudgetLimits, BudgetUsage, RecursiveResult } from './client';
 // Types
 // ═══════════════════════════════════════════════════════════════════════════════
 
-export type CorpusType = 'general' | 'docs' | 'transcript' | 'codebase';
+export type CorpusType = 'general' | 'docs' | 'transcript' | 'codebase' | 'vault';
 export type RcnMode = 'quick' | 'standard' | 'deep';
 
 export type RcnIntent =
@@ -90,6 +90,13 @@ function applyCorpusTuning(base: BudgetLimits, corpusType: CorpusType): BudgetLi
     b.maxChunksRead = clamp(Math.floor((b.maxChunksRead ?? 0) * 0.75), 1, 100);
     b.maxToolCalls = clamp((b.maxToolCalls ?? 0) + 6, 1, 50);
     b.timeoutMs = clamp((b.timeoutMs ?? 0) + 10_000, 1_000, 300_000);
+  }
+
+  // Vault: balance between search and read, allow more time for file I/O
+  if (corpusType === 'vault') {
+    b.maxChunksRead = clamp((b.maxChunksRead ?? 0) + 5, 1, 100);  // Vault files can be read efficiently
+    b.maxToolCalls = clamp((b.maxToolCalls ?? 0) + 4, 1, 50);     // Search + read combos
+    b.timeoutMs = clamp((b.timeoutMs ?? 0) + 15_000, 1_000, 300_000); // File I/O overhead
   }
 
   return b;

@@ -33,11 +33,13 @@ export interface RecursiveQuery {
   /** Corpus chunks to search/navigate */
   corpus?: string[];
   /** Type of corpus for optimized handling */
-  corpusType?: 'general' | 'codebase' | 'docs' | 'transcript';
+  corpusType?: 'general' | 'codebase' | 'docs' | 'transcript' | 'vault';
   /** Available tools (default: search, read, navigate) */
   toolsEnabled?: string[];
   /** Hard budget limits to prevent runaway recursion */
   budget?: BudgetLimits;
+  /** Path to Obsidian vault (for corpusType='vault') */
+  vaultPath?: string;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -45,7 +47,7 @@ export interface RecursiveQuery {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export interface ChunkProvenance {
-  /** Chunk ID that was accessed */
+  /** Chunk ID that was accessed (negative for vault files) */
   chunkId: number;
   /** SHA256 hash (first 16 chars) of chunk content */
   contentHash: string;
@@ -55,6 +57,10 @@ export interface ChunkProvenance {
   accessedAt: string;
   /** Order in which it was accessed (1-based) */
   accessOrder: number;
+  /** Relative path within vault (vault corpus only) */
+  filePath?: string;
+  /** Heading section read (vault corpus only) */
+  heading?: string;
 }
 
 export interface ExecutionTrace {
@@ -224,6 +230,9 @@ export class RCNClient {
         charCount: p.char_count as number,
         accessedAt: p.accessed_at as string,
         accessOrder: p.access_order as number,
+        // Vault-specific fields (null → undefined coercion)
+        filePath: (p.file_path ?? undefined) as string | undefined,
+        heading: (p.heading ?? undefined) as string | undefined,
       })),
       budgetUsage: {
         recursionsUsed: budgetUsage.recursions_used as number,
@@ -270,6 +279,7 @@ export class RCNClient {
         corpus_type: query.corpusType || 'general',
         tools_enabled: query.toolsEnabled || ['search', 'read', 'navigate'],
         budget: this.toSnakeCase(query.budget),
+        vault_path: query.vaultPath,
       }),
     });
 
@@ -368,6 +378,38 @@ export class RCNClient {
         maxToolCalls: 15,
         maxChunksRead: 20,
         timeoutMs: 30000,
+        ...budget,
+      },
+    });
+  }
+
+  /**
+   * Process Obsidian vault with optimized budget for note navigation
+   *
+   * @example
+   * ```typescript
+   * const result = await rcn.processVault(
+   *   "What are the main themes in my MAIA project notes?",
+   *   "/Users/me/vault"
+   * );
+   * console.log(result.answer);
+   * console.log(`Read ${result.provenance.length} files`);
+   * result.provenance.forEach(p => {
+   *   if (p.filePath) console.log(`  - ${p.filePath}${p.heading ? ` (${p.heading})` : ''}`);
+   * });
+   * ```
+   */
+  async processVault(prompt: string, vaultPath: string, budget?: Partial<BudgetLimits>): Promise<RecursiveResult> {
+    return this.process({
+      prompt,
+      corpusType: 'vault',
+      vaultPath,
+      toolsEnabled: ['vault_search', 'vault_read'],
+      budget: {
+        maxRecursions: 8,
+        maxToolCalls: 25,
+        maxChunksRead: 20,
+        timeoutMs: 60000,
         ...budget,
       },
     });
