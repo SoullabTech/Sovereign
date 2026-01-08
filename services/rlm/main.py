@@ -373,9 +373,19 @@ class RCNEngine:
         """
         import re
 
-        # If not_verified already populated, trust it
-        if not_verified and len(not_verified) > 0:
-            return answer, not_verified
+        # Normalize not_verified: strip items, drop blanks/placeholders
+        placeholder_values = {"", "n/a", "na", "none", "nothing", "-", "null"}
+        if not_verified:
+            normalized = [
+                item.strip() for item in not_verified
+                if item and item.strip().lower() not in placeholder_values
+            ]
+        else:
+            normalized = []
+
+        # If not_verified has real items after normalization, trust it
+        if normalized:
+            return answer, normalized
 
         # Markers that suggest stuffing
         markers = [
