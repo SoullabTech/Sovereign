@@ -255,6 +255,37 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # RLM - Recursive Language Models Service
+  # ═════════════════════════════════════════════════════════════════════════════
+  # MIT OASYS paradigm: corpus-as-environment for scalable context handling.
+  # Model navigates corpus via tool calls instead of context stuffing.
+  #
+  # Usage: docker compose -f docker-compose.production.yml up -d rlm
+  rlm:
+    build:
+      context: ./services/rlm
+      dockerfile: Dockerfile
+    container_name: maia-rlm
+    restart: unless-stopped
+
+    env_file:
+      - .env.production
+
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      RLM_MODEL: ${RLM_MODEL:-claude-sonnet-4-20250514}
+
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # Ollama - Local LLM (Optional)
   # ═════════════════════════════════════════════════════════════════════════════
   # Uncomment to run Ollama in a container
