@@ -24,7 +24,7 @@ function generateGiftEmailHtml(
 ): string {
   const greeting = gifterName
     ? `${gifterName} thinks you'd love this...`
-    : 'You've been invited to something special...';
+    : "You've been invited to something special...";
 
   return `
 <!DOCTYPE html>
