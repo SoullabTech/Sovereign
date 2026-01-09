@@ -63,6 +63,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const nativeAudioLevelListenerRef = useRef<any>(null); // Store audioLevel listener handle for UV visualizer
   const nativeSilenceTimerRef = useRef<NodeJS.Timeout | null>(null); // Silence detection timer for auto-submit
   const nativeStatusRef = useRef<'started' | 'stopped'>('stopped'); // 🔑 Single source of truth for native listening state
+  const smoothedAudioLevelRef = useRef<number>(0); // EMA-smoothed audio level for UV visualizer
+  const lastHighAudioTimeRef = useRef<number>(0); // Track when we last had speech (for silence detection)
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -963,32 +965,47 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Note: 'audioLevel' is a custom event we added to the patched plugin
         nativeAudioLevelListenerRef.current = await (NativeSpeechRecognition as any).addListener('audioLevel', (data: { level: number }) => {
           const rawLevel = data.level || 0;
+          const now = Date.now();
 
           // 🔊 AMPLIFY: iOS native mic levels are inherently quiet (0.001-0.03 range)
           // Amplify by 30x to scale into visualizer range (0-1)
-          const level = Math.min(1.0, rawLevel * 30);
+          const amplifiedLevel = Math.min(1.0, rawLevel * 30);
 
-          // 🌈 DEBUG: Log audio levels to verify native→JS bridge works
-          if (rawLevel > 0.001) {
-            console.log('🌈 audioLevel raw:', rawLevel.toFixed(4), 'amplified:', level.toFixed(2));
+          // 🌊 EMA SMOOTHING: Make UV visualizer feel alive, not twitchy
+          // smoothed = smoothed * 0.85 + new * 0.15 (adjust to taste)
+          smoothedAudioLevelRef.current = smoothedAudioLevelRef.current * 0.85 + amplifiedLevel * 0.15;
+
+          // 🌟 FLOOR: When mic is on, always show a minimum "alive" level
+          // This makes the field feel "on" without faking speech peaks
+          const displayLevel = Math.max(smoothedAudioLevelRef.current, 0.03);
+
+          // Track when we last had high audio (for silence detection)
+          if (rawLevel >= 0.02) {
+            lastHighAudioTimeRef.current = now;
           }
 
           // Update audio level for UV visualizer animation
-          setAudioLevel(level);
-          audioLevelRef.current = level;
+          setAudioLevel(displayLevel);
+          audioLevelRef.current = displayLevel;
 
           // 🔥 CRITICAL: Call onAudioLevelChange to update OracleConversation visualizer
-          onAudioLevelChange?.(level, isRecordingRef.current);
+          onAudioLevelChange?.(displayLevel, isRecordingRef.current);
 
-          // 🔇 Silence detection: Auto-submit partials after ~1.2s of silence
-          // Use RAW level (not amplified) for accurate silence detection
-          // Raw level < 0.01 = silence, >= 0.01 = speech detected
-          if (rawLevel < 0.01 && accumulatedTranscript.current.trim()) {
+          // 🔇 IMPROVED SILENCE DETECTION
+          // Only start timer if ALL conditions met:
+          // 1. Raw level is low (< 0.01 = silence)
+          // 2. We have any transcript (at least 1 char - don't gate on length, SR already handles this)
+          // 3. We had recent speech (high audio within last 2s) - prevents false triggers on ambient noise
+          const transcript = accumulatedTranscript.current.trim();
+          const hasRecentSpeech = (now - lastHighAudioTimeRef.current) < 2000; // 2s window for natural pauses
+          const hasAnyTranscript = transcript.length > 0;
+
+          if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
             // Start silence timer if not already running
             if (!nativeSilenceTimerRef.current) {
-              console.log('🔕 [Native] Starting silence timer (raw level:', rawLevel.toFixed(4), ')');
+              console.log('🔕 [Native] Silence detected after speech, starting 1.2s timer');
               nativeSilenceTimerRef.current = setTimeout(() => {
-                // If still have transcript after silence period, submit it
+                // Double-check we still have transcript
                 if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
                   const finalTranscript = accumulatedTranscript.current.trim();
                   console.log('⏱️ [Native] Silence timeout - auto-submitting:', finalTranscript);
@@ -1001,8 +1018,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 nativeSilenceTimerRef.current = null;
               }, 1200); // 1.2s of silence = end of speech
             }
-          } else if (rawLevel >= 0.01) {
-            // Clear silence timer if audio detected
+          } else if (rawLevel >= 0.02) {
+            // Clear silence timer if speech detected (higher threshold than silence)
             if (nativeSilenceTimerRef.current) {
               clearTimeout(nativeSilenceTimerRef.current);
               nativeSilenceTimerRef.current = null;
@@ -1221,6 +1238,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     setIsRecording(false);
     isRecordingRef.current = false; // Update ref immediately
     setAudioLevel(0);
+    smoothedAudioLevelRef.current = 0; // Reset EMA smoothing
     nativeStatusRef.current = 'stopped'; // 🔑 Reset native status immediately
 
     // Stop native speech recognition on iOS/Android
