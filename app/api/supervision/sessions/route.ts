@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
       totalDurationMs: session.total_duration_ms,
       speakerCount: session.speaker_count,
       hasRecording: !!session.recording_path,
-      hasTranscript: (session as { transcript_count?: number }).transcript_count > 0,
-      transcriptCount: (session as { transcript_count?: number }).transcript_count || 0,
+      hasTranscript: (session.transcript_count ?? 0) > 0,
+      transcriptCount: session.transcript_count ?? 0,
       createdAt: session.created_at
     }));
 

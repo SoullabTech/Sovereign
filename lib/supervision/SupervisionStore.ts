@@ -24,6 +24,8 @@ export interface SupervisionSession {
   metadata: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  // Computed fields (from listSessions query)
+  transcript_count?: number;
 }
 
 export interface TranscriptSegment {
@@ -201,9 +203,9 @@ export async function listSessions(params: {
 
   values.push(limit, offset);
 
-  const result = await query<SupervisionSession & { transcript_count: number }>(`
+  const result = await query<SupervisionSession>(`
     SELECT s.*,
-      (SELECT COUNT(*) FROM supervision_transcript_segments seg WHERE seg.session_id = s.id) AS transcript_count
+      (SELECT COUNT(*)::int FROM supervision_transcript_segments seg WHERE seg.session_id = s.id) AS transcript_count
     FROM supervision_sessions s
     ${whereClause}
     ORDER BY s.started_at DESC
