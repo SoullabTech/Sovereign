@@ -1,21 +1,36 @@
 'use client';
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Users, MessageSquare, ChevronDown } from 'lucide-react';
+import { MessageSquare, ChevronDown } from 'lucide-react';
+import { apiUrl } from '@/lib/http/apiBase';
 
 interface TranscriptSegment {
   id: string;
   speaker: string;
   speakerConfidence?: number;
-  startMs: number;
-  endMs: number;
+  startMs: number | null;
+  endMs: number | null;
   text: string;
   confidence?: number;
+  createdAt?: string;
+}
+
+interface TranscriptResponse {
+  success: boolean;
+  segments?: TranscriptSegment[];
+  transcript?: TranscriptSegment[]; // Legacy field
+  cursor?: { afterMs: number };
+  error?: string;
 }
 
 interface TranscriptViewerProps {
-  segments: TranscriptSegment[];
+  // New mode: self-managed with polling
+  sessionId?: string | null;
+  pollIntervalMs?: number;
+  // Legacy mode: parent-managed segments
+  segments?: TranscriptSegment[];
+  // Shared props
   isLive?: boolean;
   highlightedSegmentId?: string;
   onSegmentClick?: (segment: TranscriptSegment) => void;
@@ -28,7 +43,6 @@ const SPEAKER_COLORS: Record<string, { bg: string; border: string; text: string 
   client: { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
   supervisor: { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' },
   unknown: { bg: 'bg-stone-500/10', border: 'border-stone-500/30', text: 'text-stone-400' },
-  // Fallback for numbered speakers
   'speaker_0': { bg: 'bg-emerald-500/10', border: 'border-emerald-500/30', text: 'text-emerald-400' },
   'speaker_1': { bg: 'bg-blue-500/10', border: 'border-blue-500/30', text: 'text-blue-400' },
   'speaker_2': { bg: 'bg-purple-500/10', border: 'border-purple-500/30', text: 'text-purple-400' },
@@ -40,7 +54,8 @@ function getSpeakerColor(speaker: string) {
   return SPEAKER_COLORS[normalized] || SPEAKER_COLORS.unknown;
 }
 
-function formatTimestamp(ms: number) {
+function formatTimestamp(ms: number | null) {
+  if (ms === null) return '0:00';
   const totalSeconds = Math.floor(ms / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -48,7 +63,9 @@ function formatTimestamp(ms: number) {
 }
 
 export function TranscriptViewer({
-  segments,
+  sessionId,
+  pollIntervalMs = 1000,
+  segments: externalSegments,
   isLive = false,
   highlightedSegmentId,
   onSegmentClick,
@@ -58,12 +75,126 @@ export function TranscriptViewer({
   const [autoScroll, setAutoScroll] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
 
-  // Auto-scroll to bottom when new segments arrive (if enabled)
-  useEffect(() => {
-    if (autoScroll && scrollRef.current && isLive) {
+  // Self-managed state (only used when sessionId is provided)
+  const [internalSegments, setInternalSegments] = useState<TranscriptSegment[]>([]);
+  const [afterMs, setAfterMs] = useState<number>(-1);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Use external segments if provided, otherwise use internal state
+  const segments = externalSegments ?? internalSegments;
+  const isSelfManaged = sessionId && !externalSegments;
+
+  // Merge new segments into existing (deduped by id, sorted by time)
+  const mergeSegments = useCallback((incoming: TranscriptSegment[]) => {
+    if (!incoming.length) return;
+
+    setInternalSegments(prev => {
+      const byId = new Map(prev.map(s => [s.id, s]));
+      for (const s of incoming) byId.set(s.id, s);
+
+      return Array.from(byId.values()).sort((a, b) => {
+        const am = (a.endMs ?? a.startMs ?? 0);
+        const bm = (b.endMs ?? b.startMs ?? 0);
+        if (am !== bm) return am - bm;
+        return (a.createdAt ?? '').localeCompare(b.createdAt ?? '');
+      });
+    });
+  }, []);
+
+  // Scroll to bottom if user hasn't scrolled up
+  const scrollToBottomIfAuto = useCallback(() => {
+    if (autoScroll && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [segments, autoScroll, isLive]);
+  }, [autoScroll]);
+
+  // Initial fetch when session changes
+  useEffect(() => {
+    if (!isSelfManaged) return;
+
+    setInternalSegments([]);
+    setAfterMs(-1);
+
+    let cancelled = false;
+
+    (async () => {
+      setIsLoading(true);
+      try {
+        const res = await fetch(
+          apiUrl(`/api/supervision/transcript?sessionId=${encodeURIComponent(sessionId!)}&afterMs=-1&limit=500`),
+          { cache: 'no-store' }
+        );
+        const data = (await res.json()) as TranscriptResponse;
+        if (cancelled || !data.success) return;
+
+        const segs = data.segments ?? data.transcript ?? [];
+        mergeSegments(segs);
+
+        if (data.cursor && typeof data.cursor.afterMs === 'number') {
+          setAfterMs(data.cursor.afterMs);
+        } else if (segs.length > 0) {
+          const max = Math.max(...segs.map(s => (s.endMs ?? s.startMs ?? 0)));
+          setAfterMs(max);
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [sessionId, isSelfManaged, mergeSegments]);
+
+  // Live polling loop
+  useEffect(() => {
+    if (!isSelfManaged || !isLive) return;
+
+    let alive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const tick = async () => {
+      if (!alive) return;
+
+      try {
+        const res = await fetch(
+          apiUrl(`/api/supervision/transcript?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMs}&limit=200`),
+          { cache: 'no-store' }
+        );
+        const data = (await res.json()) as TranscriptResponse;
+        if (!alive || !data.success) return;
+
+        const segs = data.segments ?? data.transcript ?? [];
+        if (segs.length > 0) {
+          mergeSegments(segs);
+          scrollToBottomIfAuto();
+        }
+
+        if (data.cursor && typeof data.cursor.afterMs === 'number') {
+          setAfterMs(data.cursor.afterMs);
+        } else if (segs.length > 0) {
+          const max = Math.max(...segs.map(s => (s.endMs ?? s.startMs ?? 0)));
+          setAfterMs(prev => Math.max(prev, max));
+        }
+      } catch {
+        // Ignore transient network errors
+      } finally {
+        if (alive) timer = setTimeout(tick, pollIntervalMs);
+      }
+    };
+
+    timer = setTimeout(tick, pollIntervalMs);
+
+    return () => {
+      alive = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [sessionId, isSelfManaged, isLive, pollIntervalMs, afterMs, mergeSegments, scrollToBottomIfAuto]);
+
+  // Auto-scroll when segments change (for external segments mode)
+  useEffect(() => {
+    if (!isSelfManaged) {
+      scrollToBottomIfAuto();
+    }
+  }, [segments, isSelfManaged, scrollToBottomIfAuto]);
 
   // Track scroll position
   const handleScroll = () => {
@@ -82,22 +213,24 @@ export function TranscriptViewer({
   };
 
   // Group consecutive segments by speaker
-  const groupedSegments = segments.reduce<Array<TranscriptSegment[]>>((groups, segment) => {
-    const lastGroup = groups[groups.length - 1];
-    if (lastGroup && lastGroup[0].speaker === segment.speaker) {
-      lastGroup.push(segment);
-    } else {
-      groups.push([segment]);
-    }
-    return groups;
-  }, []);
+  const groupedSegments = useMemo(() => {
+    return segments.reduce<Array<TranscriptSegment[]>>((groups, segment) => {
+      const lastGroup = groups[groups.length - 1];
+      if (lastGroup && lastGroup[0].speaker === segment.speaker) {
+        lastGroup.push(segment);
+      } else {
+        groups.push([segment]);
+      }
+      return groups;
+    }, []);
+  }, [segments]);
 
   if (segments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-64 text-stone-500">
         <MessageSquare className="w-12 h-12 mb-3 opacity-30" />
         <p className="text-sm">
-          {isLive ? 'Waiting for transcript...' : 'No transcript available'}
+          {isLoading ? 'Loading transcript...' : isLive ? 'Waiting for transcript...' : 'No transcript available'}
         </p>
       </div>
     );

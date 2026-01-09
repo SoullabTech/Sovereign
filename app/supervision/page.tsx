@@ -55,12 +55,13 @@ type ViewMode = 'live' | 'history';
 export default function SupervisionDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>('live');
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
-  const [transcript, setTranscript] = useState<TranscriptSegment[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
   const [insights, setInsights] = useState<Record<string, Insight[]>>({});
   const [isLoadingInsights, setIsLoadingInsights] = useState(false);
   const [pastSessions, setPastSessions] = useState<SessionSummary[]>([]);
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [selectedInsightId, setSelectedInsightId] = useState<string | undefined>();
+  const [selectedHistorySessionId, setSelectedHistorySessionId] = useState<string | null>(null);
 
   // Fetch past sessions
   const fetchSessions = useCallback(async () => {
@@ -106,23 +107,15 @@ export default function SupervisionDashboard() {
   // Handle session start
   const handleSessionStart = (sessionId: string) => {
     setActiveSessionId(sessionId);
-    setTranscript([]);
+    setIsRecording(true);
     setInsights({});
   };
 
   // Handle session stop
   const handleSessionStop = async (sessionId: string) => {
+    setIsRecording(false);
     // Fetch final insights after processing
     setTimeout(() => fetchInsights(sessionId), 2000);
-  };
-
-  // Handle transcript updates (real-time)
-  const handleTranscriptUpdate = (segments: TranscriptSegment[]) => {
-    setTranscript(segments);
-    // Periodically fetch insights during recording
-    if (activeSessionId && segments.length > 0 && segments.length % 10 === 0) {
-      fetchInsights(activeSessionId);
-    }
   };
 
   // Handle insight click to highlight related transcript
@@ -131,24 +124,11 @@ export default function SupervisionDashboard() {
     // Could also scroll transcript to the relevant time range
   };
 
-  // Load session from history
+  // Load session from history (TranscriptViewer handles its own fetching)
   const loadSession = async (sessionId: string) => {
-    setActiveSessionId(sessionId);
-    setIsLoadingInsights(true);
-
-    try {
-      // Fetch transcript
-      const transcriptRes = await fetch(apiUrl(`/api/supervision/transcript?sessionId=${sessionId}`));
-      const transcriptData = await transcriptRes.json();
-      if (transcriptData.success) {
-        setTranscript(transcriptData.transcript || []);
-      }
-
-      // Fetch insights
-      await fetchInsights(sessionId);
-    } catch (err) {
-      console.error('Failed to load session:', err);
-    }
+    setSelectedHistorySessionId(sessionId);
+    // Fetch insights (transcript is self-managed by TranscriptViewer)
+    await fetchInsights(sessionId);
   };
 
   // Format duration
@@ -220,7 +200,6 @@ export default function SupervisionDashboard() {
               <SupervisionRecorder
                 onSessionStart={handleSessionStart}
                 onSessionStop={handleSessionStop}
-                onTranscriptUpdate={handleTranscriptUpdate}
               />
 
               {/* Live Transcript */}
@@ -229,8 +208,9 @@ export default function SupervisionDashboard() {
                   Live Transcript
                 </h3>
                 <TranscriptViewer
-                  segments={transcript}
-                  isLive={!!activeSessionId}
+                  sessionId={activeSessionId}
+                  isLive={isRecording}
+                  pollIntervalMs={1000}
                   maxHeight="500px"
                 />
               </div>
@@ -288,7 +268,7 @@ export default function SupervisionDashboard() {
                       key={session.id}
                       onClick={() => loadSession(session.id)}
                       className={`w-full text-left p-3 rounded-lg transition-colors ${
-                        activeSessionId === session.id
+                        selectedHistorySessionId === session.id
                           ? 'bg-amber-500/20 border border-amber-500/30'
                           : 'bg-stone-800/50 hover:bg-stone-800/80 border border-transparent'
                       }`}
@@ -331,7 +311,7 @@ export default function SupervisionDashboard() {
                   Session Transcript
                 </h3>
                 <TranscriptViewer
-                  segments={transcript}
+                  sessionId={selectedHistorySessionId}
                   isLive={false}
                   maxHeight="600px"
                 />

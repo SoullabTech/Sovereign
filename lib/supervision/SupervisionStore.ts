@@ -269,6 +269,32 @@ export async function getRecentTranscript(sessionId: string, lastMs: number): Pr
   return result.rows;
 }
 
+/**
+ * Get transcript segments with cursor-based pagination for live polling.
+ * Uses end_ms as cursor (more monotonic for streaming).
+ */
+export async function getTranscriptSegments(
+  sessionId: string,
+  opts?: { afterMs?: number; limit?: number }
+): Promise<TranscriptSegment[]> {
+  const afterMs = opts?.afterMs ?? -1;
+  const limit = Math.min(Math.max(opts?.limit ?? 200, 1), 1000);
+
+  const result = await query<TranscriptSegment>(
+    `
+    SELECT *
+    FROM supervision_transcript_segments
+    WHERE session_id = $1
+      AND COALESCE(end_ms, start_ms, 0) > $2
+    ORDER BY COALESCE(end_ms, start_ms, 0) ASC, created_at ASC
+    LIMIT $3
+    `,
+    [sessionId, afterMs, limit]
+  );
+
+  return result.rows;
+}
+
 // Insights
 
 export async function addInsight(params: {

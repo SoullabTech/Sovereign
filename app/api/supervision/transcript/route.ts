@@ -15,6 +15,7 @@ import {
   getSession,
   getTranscript,
   getRecentTranscript,
+  getTranscriptSegments,
   addTranscriptSegment
 } from '@/lib/supervision/SupervisionStore';
 
@@ -34,8 +35,9 @@ export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const sessionId = searchParams.get('sessionId');
-    const sinceMs = searchParams.get('sinceMs');
-    const limit = searchParams.get('limit');
+    const afterMsRaw = searchParams.get('afterMs');
+    const sinceMs = searchParams.get('sinceMs'); // Legacy param
+    const limitRaw = searchParams.get('limit');
 
     if (!sessionId) {
       return NextResponse.json({
@@ -53,38 +55,49 @@ export async function GET(request: NextRequest) {
       }, { status: 404 });
     }
 
-    // Get transcript (optionally filtered by time)
+    // Parse params
+    const afterMs = afterMsRaw ? Number(afterMsRaw) : undefined;
+    const limit = limitRaw ? Number(limitRaw) : undefined;
+
+    // Get transcript - use new cursor-based fetch if afterMs provided
     let segments;
-    if (sinceMs) {
+    if (Number.isFinite(afterMs)) {
+      segments = await getTranscriptSegments(sessionId, {
+        afterMs: afterMs as number,
+        limit: Number.isFinite(limit) ? limit : undefined
+      });
+    } else if (sinceMs) {
+      // Legacy support
       segments = await getRecentTranscript(sessionId, parseInt(sinceMs, 10));
+      if (limit) segments = segments.slice(-limit);
     } else {
       segments = await getTranscript(sessionId);
-    }
-
-    // Apply limit if specified
-    if (limit) {
-      const limitNum = parseInt(limit, 10);
-      segments = segments.slice(-limitNum);
+      if (limit) segments = segments.slice(-limit);
     }
 
     // Format for response
     const formattedSegments = segments.map(seg => ({
       id: seg.id,
       speaker: seg.speaker,
-      speakerConfidence: seg.speaker_confidence,
-      startMs: seg.start_ms,
-      endMs: seg.end_ms,
+      speakerConfidence: seg.speaker_confidence ?? undefined,
+      startMs: seg.start_ms ?? null,
+      endMs: seg.end_ms ?? null,
       text: seg.text,
-      confidence: seg.transcription_confidence,
+      confidence: seg.transcription_confidence ?? undefined,
       language: seg.language,
       isFinal: seg.is_final,
       createdAt: seg.created_at
     }));
 
+    // Calculate next cursor (max end_ms we returned)
+    const nextAfterMs = segments.length > 0
+      ? Math.max(...segments.map(s => (s.end_ms ?? s.start_ms ?? 0)))
+      : (Number.isFinite(afterMs) ? (afterMs as number) : -1);
+
     // Calculate session duration from segments
     const firstSegment = segments[0];
     const lastSegment = segments[segments.length - 1];
-    const durationMs = lastSegment ? lastSegment.end_ms - (firstSegment?.start_ms || 0) : 0;
+    const durationMs = lastSegment ? (lastSegment.end_ms ?? 0) - (firstSegment?.start_ms ?? 0) : 0;
 
     // Count unique speakers
     const speakers = [...new Set(segments.map(s => s.speaker))];
@@ -96,7 +109,10 @@ export async function GET(request: NextRequest) {
         title: session.title,
         processingStatus: session.processing_status
       },
+      segments: formattedSegments,
+      // Legacy field for backward compatibility
       transcript: formattedSegments,
+      cursor: { afterMs: nextAfterMs },
       stats: {
         segmentCount: segments.length,
         durationMs,
