@@ -1003,7 +1003,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
             // Start silence timer if not already running
             if (!nativeSilenceTimerRef.current) {
-              console.log('🔕 [Native] Silence detected after speech, starting 1.2s timer');
+              console.log('🔕 [Native] Silence detected after speech, starting 2.0s timer');
               nativeSilenceTimerRef.current = setTimeout(() => {
                 // Double-check we still have transcript
                 if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
@@ -1016,7 +1016,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   onTranscript(finalTranscript);
                 }
                 nativeSilenceTimerRef.current = null;
-              }, 1200); // 1.2s of silence = end of speech
+              }, 2000); // 2.0s of silence = end of speech (increased from 1.2s to prevent truncation)
             }
           } else if (rawLevel >= 0.02) {
             // Clear silence timer if speech detected (higher threshold than silence)
