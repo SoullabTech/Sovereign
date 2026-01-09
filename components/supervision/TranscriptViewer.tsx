@@ -77,7 +77,7 @@ export function TranscriptViewer({
 
   // Self-managed state (only used when sessionId is provided)
   const [internalSegments, setInternalSegments] = useState<TranscriptSegment[]>([]);
-  const [afterMs, setAfterMs] = useState<number>(-1);
+  const afterMsRef = useRef<number>(-1);  // useRef to avoid polling effect restarts
   const [isLoading, setIsLoading] = useState(false);
 
   // Use external segments if provided, otherwise use internal state
@@ -113,7 +113,7 @@ export function TranscriptViewer({
     if (!isSelfManaged) return;
 
     setInternalSegments([]);
-    setAfterMs(-1);
+    afterMsRef.current = -1;
 
     let cancelled = false;
 
@@ -131,10 +131,10 @@ export function TranscriptViewer({
         mergeSegments(segs);
 
         if (data.cursor && typeof data.cursor.afterMs === 'number') {
-          setAfterMs(data.cursor.afterMs);
+          afterMsRef.current = data.cursor.afterMs;
         } else if (segs.length > 0) {
           const max = Math.max(...segs.map(s => (s.endMs ?? s.startMs ?? 0)));
-          setAfterMs(max);
+          afterMsRef.current = max;
         }
       } finally {
         if (!cancelled) setIsLoading(false);
@@ -144,7 +144,7 @@ export function TranscriptViewer({
     return () => { cancelled = true; };
   }, [sessionId, isSelfManaged, mergeSegments]);
 
-  // Live polling loop
+  // Live polling loop (uses ref to avoid effect restarts on cursor change)
   useEffect(() => {
     if (!isSelfManaged || !isLive) return;
 
@@ -156,7 +156,7 @@ export function TranscriptViewer({
 
       try {
         const res = await fetch(
-          apiUrl(`/api/supervision/transcript?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMs}&limit=200`),
+          apiUrl(`/api/supervision/transcript?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMsRef.current}&limit=200`),
           { cache: 'no-store' }
         );
         const data = (await res.json()) as TranscriptResponse;
@@ -168,11 +168,12 @@ export function TranscriptViewer({
           scrollToBottomIfAuto();
         }
 
+        // Update cursor ref (no re-render, no effect restart)
         if (data.cursor && typeof data.cursor.afterMs === 'number') {
-          setAfterMs(data.cursor.afterMs);
+          afterMsRef.current = data.cursor.afterMs;
         } else if (segs.length > 0) {
           const max = Math.max(...segs.map(s => (s.endMs ?? s.startMs ?? 0)));
-          setAfterMs(prev => Math.max(prev, max));
+          afterMsRef.current = Math.max(afterMsRef.current, max);
         }
       } catch {
         // Ignore transient network errors
@@ -187,7 +188,7 @@ export function TranscriptViewer({
       alive = false;
       if (timer) clearTimeout(timer);
     };
-  }, [sessionId, isSelfManaged, isLive, pollIntervalMs, afterMs, mergeSegments, scrollToBottomIfAuto]);
+  }, [sessionId, isSelfManaged, isLive, pollIntervalMs, mergeSegments, scrollToBottomIfAuto]);
 
   // Auto-scroll when segments change (for external segments mode)
   useEffect(() => {
