@@ -16,6 +16,7 @@ import {
   TranscriptViewer,
   InsightPanel
 } from '@/components/supervision';
+import InsightsViewer from '@/components/supervision/InsightsViewer';
 
 interface TranscriptSegment {
   id: string;
@@ -222,12 +223,16 @@ export default function SupervisionDashboard() {
                 <h3 className="text-lg font-medium text-stone-200 mb-4">
                   Clinical Insights
                 </h3>
-                <InsightPanel
-                  insights={insights}
-                  isLoading={isLoadingInsights}
-                  onInsightClick={handleInsightClick}
-                  selectedInsightId={selectedInsightId}
-                />
+                {activeSessionId ? (
+                  <InsightsViewer
+                    sessionId={activeSessionId}
+                    isLive={isRecording}
+                  />
+                ) : (
+                  <div className="text-stone-500 text-sm">
+                    Start a session to see live insights.
+                  </div>
+                )}
               </div>
 
               {/* HIPAA Notice */}
