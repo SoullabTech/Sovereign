@@ -2223,7 +2223,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
         // ECHO SUPPRESSION: Define cooldown for streaming audio path
-        const streamingCooldownMs = 3000; // 3 second cooldown - prevents mic catching MAIA's voice tail
+        const streamingCooldownMs = 1500; // 1.5 second cooldown - prevents mic catching MAIA's voice tail
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
@@ -2254,27 +2254,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 setIsMicrophonePaused(false);
                 console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
 
-                // 🔥 FIX: Use voiceMicRef to determine voice mode at RUNTIME (not stale closure)
-                // If voiceMicRef.current exists with startListening, we're in voice mode
-                if (voiceMicRef.current?.startListening) {
-                  // Triple-check: not processing, not responding, and audio has actually stopped
-                  const canRestart = !isProcessingRef.current &&
-                                     !isRespondingRef.current &&
-                                     !isAudioPlayingRef.current;
-                  if (canRestart) {
-                    setIsMuted(false);
-                    voiceMicRef.current.startListening();
-                    console.log('🎤 [STREAM] Microphone auto-resumed after streaming audio complete');
-                  } else {
-                    console.log('⏸️ [STREAM] Skipped mic restart - still processing', {
-                      isProcessing: isProcessingRef.current,
-                      isResponding: isRespondingRef.current,
-                      isAudioPlaying: isAudioPlayingRef.current
-                    });
+                // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
+                const attemptMicRestart = (attempt: number) => {
+                  if (attempt > 3) {
+                    console.log('⏸️ [STREAM] Gave up on mic restart after 3 attempts');
+                    return;
                   }
-                } else {
-                  console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
-                }
+
+                  if (voiceMicRef.current?.startListening) {
+                    const canRestart = !isProcessingRef.current &&
+                                       !isRespondingRef.current &&
+                                       !isAudioPlayingRef.current;
+                    if (canRestart) {
+                      setIsMuted(false);
+                      console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
+                      voiceMicRef.current.startListening();
+                      console.log('🎤 [STREAM] Microphone auto-resumed after streaming audio');
+                    } else {
+                      console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 150ms...`);
+                      setTimeout(() => attemptMicRestart(attempt + 1), 150);
+                    }
+                  } else {
+                    console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
+                  }
+                };
+
+                // Start first attempt after 200ms for React state to propagate
+                setTimeout(() => attemptMicRestart(1), 200);
               }, streamingCooldownMs);
             },
           });
@@ -2659,7 +2665,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('🧹 Cleaned for voice:', cleanVoiceText);
 
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
-        const cooldownMs = 3000; // 3 second cooldown - prevents mic catching MAIA's voice tail
+        const cooldownMs = 1500; // 1.5 second cooldown - prevents mic catching MAIA's voice tail
 
         try {
           // Start speaking immediately
@@ -2729,29 +2735,31 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
 
-            // 🔥 FIX: React state updates are ASYNC! We need to wait for the next tick
-            // so ContinuousConversation's isSpeaking prop updates before calling startListening.
-            // Otherwise, its guard (isSpeakingRef.current) will block the call.
-            setTimeout(() => {
-              // Check voiceMicRef again after state has propagated
+            // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
+            // ContinuousConversation's isSpeaking guard will block if state hasn't updated yet.
+            const attemptMicRestart = (attempt: number) => {
+              if (attempt > 3) {
+                console.log('⏸️ [NON-STREAM] Gave up on mic restart after 3 attempts');
+                return;
+              }
+
               if (voiceMicRef.current?.startListening) {
-                // Triple-check: not processing, not responding
-                const canRestart = !isProcessingRef.current &&
-                                   !isRespondingRef.current;
+                const canRestart = !isProcessingRef.current && !isRespondingRef.current;
                 if (canRestart) {
-                  console.log('🎤 [NON-STREAM] Attempting mic restart after state propagation...');
+                  console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
                   voiceMicRef.current.startListening();
                   console.log('🎤 [NON-STREAM] Microphone auto-resumed after cooldown');
                 } else {
-                  console.log('⏸️ [NON-STREAM] Skipped mic restart - still processing', {
-                    isProcessing: isProcessingRef.current,
-                    isResponding: isRespondingRef.current
-                  });
+                  console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 150ms...`);
+                  setTimeout(() => attemptMicRestart(attempt + 1), 150);
                 }
               } else {
                 console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
               }
-            }, 100); // Small delay for React state to propagate
+            };
+
+            // Start first attempt after 200ms for React state to propagate
+            setTimeout(() => attemptMicRestart(1), 200);
           }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
