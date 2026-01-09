@@ -10,18 +10,19 @@ import type { SupervisionInsight } from '@/lib/supervision/SupervisionStore';
 
 type ConnectionState = 'idle' | 'sse' | 'polling' | 'reconnecting';
 
+// Unified insight type for callbacks
+type InsightLike = { id: string } & Record<string, unknown>;
+
 type InsightsViewerProps = {
   sessionId: string;
   isLive?: boolean;
 
   // Optional: controlled mode (if parent provides insights)
   insights?: SupervisionInsight[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onInsightsChange?: (insights: any[]) => void;
+  onInsightsChange?: (insights: InsightLike[]) => void;
 
   // Selection handling
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onInsightClick?: (insight: any) => void;
+  onInsightClick?: (insight: InsightLike) => void;
   selectedInsightId?: string;
 
   className?: string;

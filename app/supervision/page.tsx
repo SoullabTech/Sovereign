@@ -53,6 +53,27 @@ interface SessionSummary {
 
 type ViewMode = 'live' | 'history';
 
+// Unified insight type for SSE and history modes
+type InsightLike = {
+  id: string;
+  time_range_start_ms?: number;
+  time_range_end_ms?: number;
+  timeRangeStartMs?: number;
+  timeRangeEndMs?: number;
+} & Record<string, unknown>;
+
+function getInsightStartMs(i: InsightLike): number | null {
+  const raw =
+    i.time_range_start_ms ??
+    i.timeRangeStartMs ??
+    (i as Record<string, unknown>).start_ms ??
+    (i as Record<string, unknown>).startMs ??
+    null;
+
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
+
 export default function SupervisionDashboard() {
   const [viewMode, setViewMode] = useState<ViewMode>('live');
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
@@ -63,10 +84,12 @@ export default function SupervisionDashboard() {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [selectedInsightId, setSelectedInsightId] = useState<string | undefined>();
   const [selectedHistorySessionId, setSelectedHistorySessionId] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [liveInsights, setLiveInsights] = useState<any[]>([]);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [selectedInsight, setSelectedInsight] = useState<any | null>(null);
+  const [liveInsights, setLiveInsights] = useState<InsightLike[]>([]);
+  const [selectedInsight, setSelectedInsight] = useState<InsightLike | null>(null);
+
+  // Transcript jump state
+  const [jumpToMs, setJumpToMs] = useState<number | null>(null);
+  const [jumpNonce, setJumpNonce] = useState(0);
 
   // Fetch past sessions
   const fetchSessions = useCallback(async () => {
@@ -114,6 +137,8 @@ export default function SupervisionDashboard() {
     setSelectedInsightId(undefined);
     setSelectedInsight(null);
     setLiveInsights([]);
+    setJumpToMs(null);
+    setJumpNonce(0);
   }, [activeSessionId]);
 
   // Handle session start
@@ -130,13 +155,16 @@ export default function SupervisionDashboard() {
     setTimeout(() => fetchInsights(sessionId), 2000);
   };
 
-  // Handle insight click to highlight related transcript
-  // Accepts both local Insight and SupervisionInsight from SSE stream
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleInsightClick = (insight: any) => {
+  // Handle insight click to highlight related transcript + jump to time
+  const handleInsightClick = (insight: InsightLike) => {
     setSelectedInsightId(insight.id);
     setSelectedInsight(insight);
-    // Could also scroll transcript to the relevant time range
+
+    const startMs = getInsightStartMs(insight);
+    if (startMs !== null) {
+      setJumpToMs(startMs);
+      setJumpNonce((n) => n + 1); // re-trigger even if clicking same insight twice
+    }
   };
 
   // Compute the opened insight from either live or history source
@@ -261,6 +289,8 @@ export default function SupervisionDashboard() {
                   isLive={isRecording}
                   pollIntervalMs={1000}
                   maxHeight="500px"
+                  jumpToMs={jumpToMs}
+                  jumpNonce={jumpNonce}
                 />
               </div>
             </div>
@@ -284,7 +314,7 @@ export default function SupervisionDashboard() {
                     <InsightPanel
                       insights={insights}
                       isLoading={isLoadingInsights}
-                      onInsightClick={handleInsightClick}
+                      onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
                       selectedInsightId={selectedInsightId}
                     />
                   )
@@ -411,6 +441,8 @@ export default function SupervisionDashboard() {
                   sessionId={selectedHistorySessionId}
                   isLive={false}
                   maxHeight="600px"
+                  jumpToMs={jumpToMs}
+                  jumpNonce={jumpNonce}
                 />
               </div>
             </div>
@@ -424,7 +456,7 @@ export default function SupervisionDashboard() {
                 <InsightPanel
                   insights={insights}
                   isLoading={isLoadingInsights}
-                  onInsightClick={handleInsightClick}
+                  onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
                   selectedInsightId={selectedInsightId}
                 />
               </div>

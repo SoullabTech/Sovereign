@@ -35,6 +35,29 @@ interface TranscriptViewerProps {
   highlightedSegmentId?: string;
   onSegmentClick?: (segment: TranscriptSegment) => void;
   maxHeight?: string;
+  // Jump to specific time (triggered by insight click)
+  jumpToMs?: number | null;
+  jumpNonce?: number;
+}
+
+function findClosestSegmentId(
+  segs: TranscriptSegment[],
+  targetMs: number
+): string | null {
+  if (!segs.length) return null;
+
+  let bestId = segs[0].id;
+  let bestDist = Infinity;
+
+  for (const s of segs) {
+    const ms = Number(s.startMs ?? 0);
+    const dist = Math.abs(ms - targetMs);
+    if (dist < bestDist) {
+      bestDist = dist;
+      bestId = s.id;
+    }
+  }
+  return bestId ?? null;
 }
 
 // Speaker colors mapping
@@ -69,11 +92,14 @@ export function TranscriptViewer({
   isLive = false,
   highlightedSegmentId,
   onSegmentClick,
-  maxHeight = '400px'
+  maxHeight = '400px',
+  jumpToMs,
+  jumpNonce
 }: TranscriptViewerProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [focusedSegmentId, setFocusedSegmentId] = useState<string | null>(null);
 
   // Self-managed state (only used when sessionId is provided)
   const [internalSegments, setInternalSegments] = useState<TranscriptSegment[]>([]);
@@ -238,6 +264,36 @@ export function TranscriptViewer({
     }
   }, [segments, isSelfManaged, scrollToBottomIfAuto]);
 
+  // Jump to specific time when insight clicked
+  useEffect(() => {
+    if (jumpToMs == null || !Number.isFinite(jumpToMs)) return;
+    if (!segments?.length) return;
+
+    const targetId = findClosestSegmentId(segments, jumpToMs);
+    if (!targetId) return;
+
+    // Wait a frame so DOM is rendered
+    requestAnimationFrame(() => {
+      const el = document.querySelector(
+        `[data-transcript-segment-id="${targetId}"]`
+      ) as HTMLElement | null;
+
+      if (!el) return;
+
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setFocusedSegmentId(targetId);
+      setAutoScroll(false); // Disable auto-scroll when jumping
+
+      // Clear focus highlight after 2 seconds
+      const timer = window.setTimeout(() => {
+        setFocusedSegmentId((curr) => (curr === targetId ? null : curr));
+      }, 2000);
+
+      return () => clearTimeout(timer);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [jumpNonce, jumpToMs, segments?.length]);
+
   // Track scroll position
   const handleScroll = () => {
     if (!scrollRef.current) return;
@@ -313,16 +369,20 @@ export function TranscriptViewer({
                 <div className="space-y-1">
                   {group.map((segment) => {
                     const isHighlighted = segment.id === highlightedSegmentId;
+                    const isFocused = segment.id === focusedSegmentId;
 
                     return (
                       <motion.div
                         key={segment.id}
+                        data-transcript-segment-id={segment.id}
                         onClick={() => onSegmentClick?.(segment)}
                         className={`
                           py-1.5 px-2 rounded-lg cursor-pointer transition-colors
-                          ${isHighlighted
-                            ? 'bg-amber-500/20 border border-amber-500/30'
-                            : `${colors.bg} hover:bg-stone-700/30`
+                          ${isFocused
+                            ? 'ring-2 ring-amber-500/60 bg-amber-500/10'
+                            : isHighlighted
+                              ? 'bg-amber-500/20 border border-amber-500/30'
+                              : `${colors.bg} hover:bg-stone-700/30`
                           }
                         `}
                       >
