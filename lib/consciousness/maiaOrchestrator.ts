@@ -27,6 +27,7 @@ import { resolveMemoryMode, logMemoryGateDenial } from '@/lib/memory/MemoryGate'
 import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 import { getMCPConsciousnessIntegration, type OracleContextEnrichment } from '@/lib/mcp/integrations';
 import { retrieveForMode, formatForPrompt, type RetrievalResult } from '@/lib/ain/knowledge/RetrievalService';
+import { computeFacetDecision, type FacetDecisionPacket } from '@/lib/consciousness/FacetDecisionLoop';
 
 // ─── Recall Quality Helpers ───────────────────────────────────────────────────
 function clamp01(n: number) {
@@ -270,6 +271,29 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
   console.log(`🎯 Message complexity: ${complexityAnalysis.level} | Required layers: ${complexityAnalysis.requiredLayers.join(', ')}`);
   console.log(`💭 Reasoning: ${complexityAnalysis.reasoning}`);
 
+  // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
+  // Determines active facet, integrity risks, and response posture
+  let facetDecision: FacetDecisionPacket | null = null;
+  try {
+    facetDecision = computeFacetDecision(
+      message,
+      conversationHistory.map(h => ({ role: h.role || 'user', content: h.content || '' })),
+      undefined // previousFacet - could be tracked in session
+    );
+    console.log(`🌀 Facet Decision: ${facetDecision.activeFacet} | Posture: ${facetDecision.posture}`);
+    if (facetDecision.integrityFlags.water_rush_risk) {
+      console.log(`⚠️ INTEGRITY: Water rush risk detected`);
+    }
+    if (facetDecision.integrityFlags.threshold_collapse_risk) {
+      console.log(`⚠️ INTEGRITY: Threshold collapse risk detected`);
+    }
+    if (facetDecision.handoff) {
+      console.log(`🔄 Handoff ready: ${facetDecision.handoff.from} → ${facetDecision.handoff.to}`);
+    }
+  } catch (error) {
+    console.warn('Facet decision computation failed (continuing without):', error);
+  }
+
   // 🚀 CLAUDE DEVELOPMENT MODE: Initialize development analysis context
   const devModeContext: DevModeContext = {
     sessionId,
@@ -476,7 +500,16 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
           messageCount: conversationContext.getSpine().messageCount,
           depthConfig: depthConfig,
           contextPrompt: contextPrompt
-        }
+        },
+        // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
+        facetDecision: facetDecision ? {
+          activeFacet: facetDecision.activeFacet,
+          posture: facetDecision.posture,
+          integrityFlags: facetDecision.integrityFlags,
+          languageHints: facetDecision.languageHints,
+          handoff: facetDecision.handoff,
+          regulation: facetDecision.regulation,
+        } : undefined,
       },
     });
     const maiaCoreTime = Date.now() - maiaPaiStartTime;
@@ -717,6 +750,15 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       },
       // Claude development mode analysis (only in development)
       claudeDevAnalysis: process.env.NODE_ENV === 'development' ? claudeDevAnalysis : null,
+      // 🌀 FACET DECISION LOOP: Spiralogic circulatory governor
+      facetDecision: facetDecision ? {
+        activeFacet: facetDecision.activeFacet,
+        posture: facetDecision.posture,
+        integrityFlags: facetDecision.integrityFlags,
+        languageHints: facetDecision.languageHints,
+        handoffReady: !!facetDecision.handoff,
+        regulationNeeded: !!facetDecision.regulation,
+      } : null,
       // 🔒 SECURITY: Signal to UI when input contained sensitive data (not stored)
       sensitiveInput: containsSensitiveData(message),
       // 🧠 MEMORY PIPELINE DATA (full details in dev, minimal in prod)
