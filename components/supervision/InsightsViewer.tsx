@@ -18,6 +18,10 @@ type InsightsViewerProps = {
   insights?: SupervisionInsight[];
   onInsightsChange?: (insights: SupervisionInsight[]) => void;
 
+  // Selection handling
+  onInsightClick?: (insight: SupervisionInsight) => void;
+  selectedInsightId?: string;
+
   className?: string;
 };
 
@@ -74,6 +78,8 @@ export default function InsightsViewer({
   isLive = false,
   insights: externalInsights,
   onInsightsChange,
+  onInsightClick,
+  selectedInsightId,
   className,
 }: InsightsViewerProps) {
   const isSelfManaged = !externalInsights;
@@ -273,6 +279,7 @@ export default function InsightsViewer({
                 const title = getInsightTitle(i);
                 const body = getInsightBody(i);
                 const createdAt = getInsightCreatedAt(i);
+                const isSelected = selectedInsightId === id;
 
                 return (
                   <motion.div
@@ -281,7 +288,14 @@ export default function InsightsViewer({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.2 }}
-                    className="rounded-xl border border-white/10 bg-white/5 p-3"
+                    onClick={() => onInsightClick?.(i)}
+                    className={[
+                      'rounded-xl border p-3 transition-colors',
+                      onInsightClick ? 'cursor-pointer' : '',
+                      isSelected
+                        ? 'border-amber-500/50 bg-amber-500/10'
+                        : 'border-white/10 bg-white/5 hover:bg-white/10',
+                    ].join(' ')}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="text-stone-100 text-sm font-medium">{title}</div>

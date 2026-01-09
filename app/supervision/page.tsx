@@ -224,10 +224,21 @@ export default function SupervisionDashboard() {
                   Clinical Insights
                 </h3>
                 {activeSessionId ? (
-                  <InsightsViewer
-                    sessionId={activeSessionId}
-                    isLive={isRecording}
-                  />
+                  isRecording ? (
+                    <InsightsViewer
+                      sessionId={activeSessionId}
+                      isLive={true}
+                      onInsightClick={(insight) => setSelectedInsightId(insight.id)}
+                      selectedInsightId={selectedInsightId}
+                    />
+                  ) : (
+                    <InsightPanel
+                      insights={insights}
+                      isLoading={isLoadingInsights}
+                      onInsightClick={handleInsightClick}
+                      selectedInsightId={selectedInsightId}
+                    />
+                  )
                 ) : (
                   <div className="text-stone-500 text-sm">
                     Start a session to see live insights.
