@@ -108,7 +108,7 @@ Frame as invitation to deeper relational work.`
     'Is this a familiar feeling in relationships?',
     'What happens when you need something from someone?',
     'Can you let me matter to you right now?',
-    'What would it be like if I didn't leave/reject/judge?',
+    "What would it be like if I didn't leave/reject/judge?",
     'Who else have you felt this way with?'
   ]
 };

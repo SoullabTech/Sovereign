@@ -89,8 +89,8 @@ Frame as developmental invitation, celebrating what they already do.`
     'Can you breathe into that?',
     'What happens if you put your hand there?',
     'Where does that live in you physically?',
-    'What's the felt sense of that?',
-    'Can we slow down and notice what's happening in your body?',
-    'What does your body know about this that your mind doesn't?'
+    "What's the felt sense of that?",
+    "Can we slow down and notice what's happening in your body?",
+    "What does your body know about this that your mind doesn't?"
   ]
 };
