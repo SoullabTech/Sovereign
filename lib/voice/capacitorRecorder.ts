@@ -4,6 +4,7 @@
 
 import { Capacitor } from '@capacitor/core';
 import { CapacitorVoiceRecorder } from '@lgicc/capacitor-voice-recorder';
+import { VoiceController } from './AudioSessionManager';
 
 // Diagnostic: Log platform info on module load
 console.log('[NativeRecorder] Module loaded. Platform:', Capacitor.getPlatform(), 'isNative:', Capacitor.isNativePlatform());
@@ -107,8 +108,26 @@ export async function startNativeRecording(): Promise<void> {
     platform: Capacitor.getPlatform(),
     isNative: Capacitor.isNativePlatform()
   });
+
+  // Step 1: Prepare audio session for listening (iOS audio session gatekeeper)
+  // This performs a full teardown of any TTS/playback before configuring for input
+  if (VoiceController.isNativeIOS()) {
+    console.log('[NativeRecorder] Preparing audio session for listening...');
+    const prepared = await VoiceController.prepareForListening();
+    if (!prepared) {
+      console.error('[NativeRecorder] Failed to prepare audio session for listening');
+      // Log diagnostics for debugging
+      await VoiceController.logDiagnostics();
+      throw new Error('AUDIO_SESSION_PREPARE_FAILED');
+    }
+    console.log('[NativeRecorder] Audio session ready for listening');
+  }
+
+  // Step 2: Ensure microphone permission
   await ensureNativeMicPermission();
   console.log('[NativeRecorder] Permission verified, calling startRecording()...');
+
+  // Step 3: Start recording
   await CapacitorVoiceRecorder.startRecording();
   console.log('[NativeRecorder] ✅ Recording started successfully');
 }
@@ -120,6 +139,12 @@ export async function startNativeRecording(): Promise<void> {
 export async function stopNativeRecording(): Promise<NativeVoiceStopResult> {
   console.log('[NativeRecorder] Stopping recording...');
   const result = await CapacitorVoiceRecorder.stopRecording();
+
+  // Return audio session to idle state after recording stops
+  if (VoiceController.isNativeIOS()) {
+    console.log('[NativeRecorder] Returning audio session to idle...');
+    await VoiceController.stopAllAudio();
+  }
 
   // DIAGNOSTIC: Log detailed info about captured audio
   const hasDataUriPrefix = result.base64?.includes('base64,') || false;

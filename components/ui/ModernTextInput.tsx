@@ -14,13 +14,16 @@ import {
   Image as ImageIcon,
   FileText,
   MoreHorizontal,
-  Download
+  Download,
+  Square
 } from 'lucide-react';
+import { useVoiceInput } from '@/lib/hooks/useVoiceInput';
 
 interface ModernTextInputProps {
   value?: string;
   onChange?: (value: string) => void;
   onSubmit?: (message: string, files?: File[]) => void;
+  onVoiceMessage?: (transcript: string) => void; // Called when voice message completes
   placeholder?: string;
   disabled?: boolean;
   isProcessing?: boolean;
@@ -38,12 +41,14 @@ interface ModernTextInputProps {
   currentPhase?: string;
   relationshipDepth?: 'new' | 'developing' | 'deep' | 'profound';
   mode?: 'normal' | 'patient' | 'session'; // MAIA mode: normal=dialogue, patient=counsel, session=scribe
+  externalValue?: string; // Alias for value (used by OracleConversation)
 }
 
 export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputProps>(({
-  value: externalValue,
+  value: valueProp,
   onChange,
   onSubmit,
+  onVoiceMessage,
   placeholder = "Message MAIA...",
   disabled = false,
   isProcessing = false,
@@ -60,15 +65,59 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
   lastConnectionTime,
   currentPhase,
   relationshipDepth = 'new',
-  mode = 'normal'
+  mode = 'normal',
+  externalValue
 }, ref) => {
+  // Support both value and externalValue props
+  const initialValue = valueProp ?? externalValue ?? '';
+
   // Scribe/session mode allows unlimited input for full transcript uploads
   const maxLength = mode === 'session' ? undefined : maxLengthProp;
-  const [value, setValue] = useState(externalValue || '');
+  const [value, setValue] = useState(initialValue);
   const [isFocused, setIsFocused] = useState(false);
   const [showTools, setShowTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Voice input hook - ChatGPT-style voice recording
+  const {
+    isRecording,
+    isTranscribing,
+    transcript,
+    startRecording,
+    stopRecording,
+    error: voiceError
+  } = useVoiceInput({
+    onResult: (text, isFinal) => {
+      if (isFinal && text.trim()) {
+        // Auto-send voice message
+        if (onVoiceMessage) {
+          onVoiceMessage(text.trim());
+        } else {
+          onSubmit?.(text.trim());
+        }
+      }
+    },
+    onAutoStop: (finalText) => {
+      if (finalText.trim()) {
+        if (onVoiceMessage) {
+          onVoiceMessage(finalText.trim());
+        } else {
+          onSubmit?.(finalText.trim());
+        }
+      }
+    },
+    silenceTimeoutMs: 2000,
+    minSpeechLengthChars: 2
+  });
+
+  const handleMicClick = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   // Generate intimate, relationship-aware placeholder
   const getIntimatePlaceholder = () => {
@@ -118,12 +167,13 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     }
   }, [ref]);
 
-  // Sync external value
+  // Sync external value (support both valueProp and externalValue)
   useEffect(() => {
-    if (externalValue !== undefined && externalValue !== value) {
-      setValue(externalValue);
+    const extVal = valueProp ?? externalValue;
+    if (extVal !== undefined && extVal !== value) {
+      setValue(extVal);
     }
-  }, [externalValue, value]);
+  }, [valueProp, externalValue, value]);
 
   // Auto-resize textarea
   const adjustHeight = () => {
@@ -174,7 +224,8 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
     fileInputRef.current?.click();
   };
 
-  const canSubmit = value.trim().length > 0 && !disabled && !isProcessing && !enableVoiceInput;
+  const canSubmit = value.trim().length > 0 && !disabled && !isProcessing && !enableVoiceInput && !isRecording;
+  const showMic = value.trim().length === 0 && !isRecording && !disabled && !isProcessing;
 
   return (
     <div className="relative w-full max-w-4xl mx-auto">
@@ -290,6 +341,51 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
         </motion.div>
       )}
 
+      {/* Voice Recording Indicator - ChatGPT style */}
+      <AnimatePresence>
+        {(isRecording || isTranscribing) && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            className="mb-2"
+          >
+            <div className="flex items-center gap-3 p-3 bg-amber-500/10 rounded-xl border border-amber-400/30">
+              {/* Waveform visualization */}
+              <div className="flex items-center gap-0.5">
+                {[...Array(5)].map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className="w-1 bg-amber-400 rounded-full"
+                    animate={{
+                      height: isRecording ? [8, 24, 8] : 8
+                    }}
+                    transition={{
+                      duration: 0.5,
+                      repeat: Infinity,
+                      delay: i * 0.1
+                    }}
+                  />
+                ))}
+              </div>
+              <span className="text-amber-400 text-sm">
+                {isTranscribing ? 'Transcribing...' : 'Listening...'}
+              </span>
+              {transcript && (
+                <span className="text-white/60 text-sm truncate flex-1">
+                  "{transcript}"
+                </span>
+              )}
+              <motion.div
+                className="w-2 h-2 rounded-full bg-red-500"
+                animate={{ opacity: [1, 0.3, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Main Input Container */}
       <motion.div
         className={`relative rounded-3xl transition-all duration-200 ${
@@ -297,11 +393,13 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
             ? 'bg-gradient-to-r from-[#1a1f2e]/95 via-[#1e2332]/95 to-[#1a1f2e]/95 shadow-2xl shadow-gold-divine/10'
             : 'bg-[#1a1f2e]/90 hover:bg-[#1e2332]/90'
         } backdrop-blur-xl border ${
-          isFocused
-            ? 'border-gold-divine/40'
-            : enableVoiceInput
-              ? 'border-blue-400/40'
-              : 'border-gold-divine/20 hover:border-gold-divine/30'
+          isRecording
+            ? 'border-amber-400/50'
+            : isFocused
+              ? 'border-gold-divine/40'
+              : enableVoiceInput
+                ? 'border-blue-400/40'
+                : 'border-gold-divine/20 hover:border-gold-divine/30'
         }`}
         animate={{
           scale: isFocused ? 1.01 : 1
@@ -314,11 +412,12 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
           <button
             type="button"
             onClick={() => setShowTools(!showTools)}
+            disabled={isRecording}
             className={`flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 touch-manipulation ${
               showTools
                 ? 'bg-gold-divine/20 text-gold-divine'
                 : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white/70'
-            }`}
+            } ${isRecording ? 'opacity-50 cursor-not-allowed' : ''}`}
             title="Tools"
           >
             <Plus className={`w-3 h-3 transition-transform duration-200 ${showTools ? 'rotate-45' : ''}`} />
@@ -333,13 +432,13 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               onKeyDown={handleKeyDown}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder={getIntimatePlaceholder()}
-              disabled={disabled || enableVoiceInput}
+              placeholder={isRecording ? 'Listening...' : getIntimatePlaceholder()}
+              disabled={disabled || enableVoiceInput || isRecording}
               autoFocus={autoFocus}
               maxLength={maxLength}
               className={`w-full min-h-[40px] max-h-[120px] bg-transparent border-none outline-none resize-none
-                       text-sm leading-relaxed placeholder:text-white/40 transition-colors pr-20
-                       ${enableVoiceInput
+                       text-sm leading-relaxed placeholder:text-white/40 transition-colors pr-12
+                       ${enableVoiceInput || isRecording
                          ? 'text-blue-300 cursor-not-allowed'
                          : 'text-white/90'
                        }`}
@@ -351,19 +450,41 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               rows={1}
             />
 
-            {/* Action Buttons - Positioned in lower right */}
+            {/* Action Buttons - ChatGPT pattern: Mic when empty, Send when text, Stop when recording */}
             <div className="absolute bottom-1 right-1 flex items-center gap-1">
-              {/* Voice Input Toggle - Removed since voice toggle is now in upper right navigation */}
+              {/* Mic Button - shows when input is empty */}
+              {showMic && (
+                <button
+                  type="button"
+                  onClick={handleMicClick}
+                  className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 flex items-center justify-center transition-all duration-200 touch-manipulation"
+                  title="Voice input"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+              )}
 
-              {/* Send Button - Small arrow like ChatGPT */}
+              {/* Stop Button - shows when recording */}
+              {isRecording && (
+                <button
+                  type="button"
+                  onClick={handleMicClick}
+                  className="w-8 h-8 rounded-full bg-red-500 text-white hover:bg-red-600 flex items-center justify-center transition-all duration-200 touch-manipulation"
+                  title="Stop recording"
+                >
+                  <Square className="w-3 h-3" />
+                </button>
+              )}
+
+              {/* Send Button - shows when there's text */}
               {canSubmit && (
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="w-7 h-7 rounded-lg bg-gold-divine/20 text-gold-divine hover:bg-gold-divine/30 flex items-center justify-center transition-all duration-200 touch-manipulation"
+                  className="w-8 h-8 rounded-full bg-gold-divine/20 text-gold-divine hover:bg-gold-divine/30 flex items-center justify-center transition-all duration-200 touch-manipulation"
                   title="Send message"
                 >
-                  <Send className="w-3 h-3" />
+                  <Send className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -381,6 +502,17 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
           </div>
         )}
       </motion.div>
+
+      {/* Voice Error Display */}
+      {voiceError && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-red-400 text-xs mt-2 px-2"
+        >
+          {voiceError}
+        </motion.p>
+      )}
 
       {/* Hidden File Input */}
       <input

@@ -3,6 +3,7 @@
  */
 
 import { mayaVoice } from '@/lib/voice/maya-voice';
+import { VoiceController } from '@/lib/voice/AudioSessionManager';
 
 export interface TTSOptions {
   text: string;
@@ -36,6 +37,20 @@ export async function synthesizeWithFallback(options: TTSOptions): Promise<TTSRe
       source: 'failed',
       error: 'No text provided'
     };
+  }
+
+  // Prepare audio session for speaking (iOS audio session gatekeeper)
+  // This performs a full teardown of any recording before configuring for output
+  if (VoiceController.isNativeIOS()) {
+    console.log('🎵 Preparing audio session for speaking...');
+    const prepared = await VoiceController.prepareForSpeaking();
+    if (!prepared) {
+      console.error('🎵 Failed to prepare audio session for speaking');
+      await VoiceController.logDiagnostics();
+      // Continue anyway - browser TTS might still work
+    } else {
+      console.log('🎵 Audio session ready for speaking');
+    }
   }
 
   let lastError: string = '';
