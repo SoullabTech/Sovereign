@@ -46,18 +46,65 @@ function findClosestSegmentId(
 ): string | null {
   if (!segs.length) return null;
 
-  let bestId = segs[0].id;
+  // 1) Prefer exact containment: startMs <= targetMs <= endMs
+  const contained: Array<{
+    id: string;
+    start: number;
+    end: number;
+    span: number;
+    midDist: number;
+  }> = [];
+
+  for (const s of segs) {
+    const start = s.startMs;
+    const end = s.endMs;
+
+    if (start == null || end == null) continue;
+    if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
+    if (end < start) continue;
+
+    if (start <= targetMs && targetMs <= end) {
+      const span = end - start;
+      const mid = start + span / 2;
+      contained.push({
+        id: s.id,
+        start,
+        end,
+        span,
+        midDist: Math.abs(mid - targetMs),
+      });
+    }
+  }
+
+  if (contained.length) {
+    // Choose the most "precise" containing segment:
+    //   - smallest span
+    //   - then closest midpoint to target
+    //   - then earliest start
+    contained.sort((a, b) => {
+      if (a.span !== b.span) return a.span - b.span;
+      if (a.midDist !== b.midDist) return a.midDist - b.midDist;
+      return a.start - b.start;
+    });
+    return contained[0].id;
+  }
+
+  // 2) Fallback: closest startMs (ignoring nulls)
+  let bestId: string | null = null;
   let bestDist = Infinity;
 
   for (const s of segs) {
-    const ms = Number(s.startMs ?? 0);
-    const dist = Math.abs(ms - targetMs);
+    const start = s.startMs;
+    if (start == null || !Number.isFinite(start)) continue;
+
+    const dist = Math.abs(start - targetMs);
     if (dist < bestDist) {
       bestDist = dist;
       bestId = s.id;
     }
   }
-  return bestId ?? null;
+
+  return bestId ?? segs[0]?.id ?? null;
 }
 
 // Speaker colors mapping
