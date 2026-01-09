@@ -120,7 +120,8 @@ export default function SupervisionDashboard() {
   };
 
   // Handle insight click to highlight related transcript
-  const handleInsightClick = (insight: Insight) => {
+  // Accepts both local Insight and SupervisionInsight from SSE stream
+  const handleInsightClick = (insight: { id: string }) => {
     setSelectedInsightId(insight.id);
     // Could also scroll transcript to the relevant time range
   };
@@ -228,7 +229,7 @@ export default function SupervisionDashboard() {
                     <InsightsViewer
                       sessionId={activeSessionId}
                       isLive={true}
-                      onInsightClick={(insight) => setSelectedInsightId(insight.id)}
+                      onInsightClick={handleInsightClick}
                       selectedInsightId={selectedInsightId}
                     />
                   ) : (
