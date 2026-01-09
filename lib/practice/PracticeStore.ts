@@ -126,11 +126,38 @@ export async function createSession(params: {
 }
 
 export async function getSession(sessionId: string): Promise<PracticeSession | null> {
-  const result = await query<PracticeSession>(`
+  // First check practice_sessions
+  const practiceResult = await query<PracticeSession>(`
     SELECT * FROM practice_sessions WHERE id = $1
   `, [sessionId]);
 
-  return result.rows[0] || null;
+  if (practiceResult.rows[0]) {
+    return practiceResult.rows[0];
+  }
+
+  // Also check supervision_sessions (for Practice mode in /supervision)
+  const supervisionResult = await query<PracticeSession>(`
+    SELECT
+      id,
+      practitioner_id,
+      title,
+      NULL as client_alias,
+      '{}'::text[] as modalities_tagged,
+      session_type,
+      started_at,
+      ended_at,
+      NULL as total_duration_ms,
+      processing_status,
+      recording_path,
+      transcript_path,
+      NULL as notes,
+      '{}'::text[] as tags,
+      created_at,
+      created_at as updated_at
+    FROM supervision_sessions WHERE id = $1
+  `, [sessionId]);
+
+  return supervisionResult.rows[0] || null;
 }
 
 export async function updateSession(
@@ -268,7 +295,8 @@ export async function getTranscriptSegments(
   const afterMs = opts?.afterMs ?? -1;
   const limit = Math.min(Math.max(opts?.limit ?? 200, 1), 1000);
 
-  const result = await query<PracticeTranscriptSegment>(`
+  // First try practice_transcript_segments
+  const practiceResult = await query<PracticeTranscriptSegment>(`
     SELECT *
     FROM practice_transcript_segments
     WHERE session_id = $1
@@ -277,17 +305,66 @@ export async function getTranscriptSegments(
     LIMIT $3
   `, [sessionId, afterMs, limit]);
 
-  return result.rows;
+  if (practiceResult.rows.length > 0) {
+    return practiceResult.rows;
+  }
+
+  // Also check supervision_transcript_segments (for Practice mode in /supervision)
+  const supervisionResult = await query<PracticeTranscriptSegment>(`
+    SELECT
+      id,
+      session_id,
+      speaker,
+      speaker_confidence,
+      start_ms,
+      end_ms,
+      text,
+      transcription_confidence,
+      COALESCE(language, 'en') as language,
+      COALESCE(is_final, true) as is_final,
+      created_at
+    FROM supervision_transcript_segments
+    WHERE session_id = $1
+      AND COALESCE(end_ms, start_ms, 0) > $2
+    ORDER BY COALESCE(end_ms, start_ms, 0) ASC, created_at ASC
+    LIMIT $3
+  `, [sessionId, afterMs, limit]);
+
+  return supervisionResult.rows;
 }
 
 export async function getFullTranscript(sessionId: string): Promise<PracticeTranscriptSegment[]> {
-  const result = await query<PracticeTranscriptSegment>(`
+  // First try practice_transcript_segments
+  const practiceResult = await query<PracticeTranscriptSegment>(`
     SELECT * FROM practice_transcript_segments
     WHERE session_id = $1 AND is_final = TRUE
     ORDER BY start_ms ASC
   `, [sessionId]);
 
-  return result.rows;
+  if (practiceResult.rows.length > 0) {
+    return practiceResult.rows;
+  }
+
+  // Also check supervision_transcript_segments
+  const supervisionResult = await query<PracticeTranscriptSegment>(`
+    SELECT
+      id,
+      session_id,
+      speaker,
+      speaker_confidence,
+      start_ms,
+      end_ms,
+      text,
+      transcription_confidence,
+      COALESCE(language, 'en') as language,
+      COALESCE(is_final, true) as is_final,
+      created_at
+    FROM supervision_transcript_segments
+    WHERE session_id = $1 AND COALESCE(is_final, true) = TRUE
+    ORDER BY start_ms ASC
+  `, [sessionId]);
+
+  return supervisionResult.rows;
 }
 
 // Session Insights
