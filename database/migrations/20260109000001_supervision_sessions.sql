@@ -2,11 +2,11 @@
 -- HIPAA-compliant local supervision with real-time transcription and analysis
 -- All processing happens locally (Whisper, Ollama) - no PHI to external APIs
 
--- Supervision sessions (links to existing practitioner_cases)
+-- Supervision sessions (standalone - no foreign key constraints to allow independent use)
 CREATE TABLE IF NOT EXISTS supervision_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  practitioner_id UUID REFERENCES members(id) ON DELETE SET NULL,
-  case_id UUID REFERENCES practitioner_cases(id) ON DELETE SET NULL,
+  practitioner_id UUID,    -- Optional link to practitioners
+  case_id UUID,            -- Optional link to cases
   session_type VARCHAR(30) CHECK (session_type IN (
     'individual', 'group', 'peer', 'consultation', 'team_meeting'
   )),
