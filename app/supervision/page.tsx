@@ -364,27 +364,27 @@ export default function SupervisionDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-200">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-stone-950/90 backdrop-blur-xl border-b border-stone-800">
+    <div className="min-h-screen bg-[#0D0A07] text-[#E6DCC6]">
+      {/* Header - Dune Aesthetic */}
+      <header className="sticky top-0 z-50 bg-[#0D0A07]/95 backdrop-blur-xl border-b border-[#8B6F47]/30">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Brain className="w-6 h-6 text-amber-500" />
-              <h1 className="text-xl font-semibold">
+              <Brain className="w-6 h-6 text-[#FF8C42] drop-shadow-[0_0_8px_rgba(255,140,66,0.5)]" />
+              <h1 className="text-xl font-semibold font-cinzel tracking-wide text-[#D4B896]">
                 {supervisionMode === 'clinical' ? 'Clinical Supervision' : 'Practice Development'}
               </h1>
             </div>
 
             <div className="flex items-center gap-4">
               {/* Supervision Mode Toggle (Clinical vs Practice) */}
-              <div className="flex items-center gap-1 bg-stone-800/50 rounded-lg p-1">
+              <div className="flex items-center gap-1 bg-[#1A1510]/80 rounded-lg p-1 border border-[#3D2F20]/50">
                 <button
                   onClick={() => setSupervisionMode('clinical')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all duration-300 ${
                     supervisionMode === 'clinical'
-                      ? 'bg-emerald-600 text-white'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-[#2C7873] text-[#E6DCC6] shadow-[0_0_12px_rgba(44,120,115,0.4)]'
+                      : 'text-[#A89880] hover:text-[#D4B896]'
                   }`}
                 >
                   <Stethoscope className="w-4 h-4" />
@@ -392,10 +392,10 @@ export default function SupervisionDashboard() {
                 </button>
                 <button
                   onClick={() => setSupervisionMode('practice')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all duration-300 ${
                     supervisionMode === 'practice'
-                      ? 'bg-violet-600 text-white'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-[#6A4C93] text-[#E6DCC6] shadow-[0_0_12px_rgba(106,76,147,0.4)]'
+                      : 'text-[#A89880] hover:text-[#D4B896]'
                   }`}
                 >
                   <Sparkles className="w-4 h-4" />
@@ -404,13 +404,13 @@ export default function SupervisionDashboard() {
               </div>
 
               {/* View Mode Toggle (Live vs History) */}
-              <div className="flex items-center gap-1 bg-stone-800/50 rounded-lg p-1">
+              <div className="flex items-center gap-1 bg-[#1A1510]/80 rounded-lg p-1 border border-[#3D2F20]/50">
                 <button
                   onClick={() => setViewMode('live')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all duration-300 ${
                     viewMode === 'live'
-                      ? 'bg-amber-600 text-white'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-[#FF8C42] text-[#0D0A07] shadow-[0_0_12px_rgba(255,140,66,0.5)]'
+                      : 'text-[#A89880] hover:text-[#D4B896]'
                   }`}
                 >
                   <Clock className="w-4 h-4" />
@@ -418,10 +418,10 @@ export default function SupervisionDashboard() {
                 </button>
                 <button
                   onClick={() => setViewMode('history')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-all duration-300 ${
                     viewMode === 'history'
-                      ? 'bg-amber-600 text-white'
-                      : 'text-stone-400 hover:text-stone-200'
+                      ? 'bg-[#FF8C42] text-[#0D0A07] shadow-[0_0_12px_rgba(255,140,66,0.5)]'
+                      : 'text-[#A89880] hover:text-[#D4B896]'
                   }`}
                 >
                   <History className="w-4 h-4" />
@@ -445,8 +445,8 @@ export default function SupervisionDashboard() {
               />
 
               {/* Live Transcript */}
-              <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-medium text-stone-200 mb-4">
+              <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#8B6F47]/30 rounded-2xl p-6 shadow-[0_4px_20px_rgba(139,111,71,0.15)]">
+                <h3 className="text-lg font-medium text-[#D4B896] mb-4 font-cinzel tracking-wide">
                   Live Transcript
                 </h3>
                 <TranscriptViewer
@@ -465,8 +465,8 @@ export default function SupervisionDashboard() {
             <div className="space-y-6">
               {supervisionMode === 'clinical' ? (
                 /* Clinical Insights */
-                <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
-                  <h3 className="text-lg font-medium text-stone-200 mb-4">
+                <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#2C7873]/40 rounded-2xl p-6 shadow-[0_4px_20px_rgba(44,120,115,0.15)]">
+                  <h3 className="text-lg font-medium text-[#5FA8A3] mb-4 font-cinzel tracking-wide">
                     Clinical Insights
                   </h3>
                   {activeSessionId ? (
@@ -487,48 +487,48 @@ export default function SupervisionDashboard() {
                       />
                     )
                   ) : (
-                    <div className="text-stone-500 text-sm">
+                    <div className="text-[#8B7355] text-sm italic">
                       Start a session to see live insights.
                     </div>
                   )}
 
                   {/* Clinical Insight Detail Panel */}
                   {openedInsight ? (
-                    <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className="mt-4 rounded-xl border border-[#2C7873]/30 bg-[#2C7873]/10 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-stone-100 text-sm font-medium capitalize">
+                          <div className="text-[#5FA8A3] text-sm font-medium capitalize">
                             {String(openedTitle).replace(/_/g, ' ')}
                           </div>
                           {openedCreated && (
-                            <div className="text-stone-500 text-xs mt-1">
+                            <div className="text-[#8B7355] text-xs mt-1">
                               {new Date(String(openedCreated)).toLocaleString()}
                             </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="mt-3 text-stone-200 text-sm whitespace-pre-wrap">
+                      <div className="mt-3 text-[#E6DCC6] text-sm whitespace-pre-wrap">
                         {openedBody ? (
                           String(openedBody)
                         ) : (
-                          <pre className="text-stone-300 text-xs whitespace-pre-wrap">
+                          <pre className="text-[#A89880] text-xs whitespace-pre-wrap">
                             {JSON.stringify(openedInsight, null, 2)}
                           </pre>
                         )}
                       </div>
                     </div>
                   ) : activeSessionId ? (
-                    <div className="mt-4 text-stone-500 text-sm">
+                    <div className="mt-4 text-[#8B7355] text-sm italic">
                       Click an insight to view details.
                     </div>
                   ) : null}
                 </div>
               ) : (
                 /* Practice Development Insights */
-                <div className="bg-stone-900/80 backdrop-blur-xl border border-violet-700/30 rounded-2xl p-6">
-                  <h3 className="text-lg font-medium text-stone-200 mb-4 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-violet-400" />
+                <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#6A4C93]/40 rounded-2xl p-6 shadow-[0_4px_20px_rgba(106,76,147,0.15)]">
+                  <h3 className="text-lg font-medium text-[#9D7FBF] mb-4 flex items-center gap-2 font-cinzel tracking-wide">
+                    <Sparkles className="w-5 h-5 text-[#9D7FBF] drop-shadow-[0_0_6px_rgba(157,127,191,0.5)]" />
                     Practice Insights
                   </h3>
                   <PracticePanel
@@ -539,18 +539,18 @@ export default function SupervisionDashboard() {
 
                   {/* Practice Insight Detail Panel */}
                   {selectedPracticeInsight && (
-                    <div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/5 p-4">
+                    <div className="mt-4 rounded-xl border border-[#6A4C93]/30 bg-[#6A4C93]/10 p-4">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <div className="text-violet-300 text-xs font-medium uppercase tracking-wide">
+                          <div className="text-[#9D7FBF] text-xs font-medium uppercase tracking-wide">
                             {selectedPracticeInsight.world_code.replace(/_/g, ' ')}
                           </div>
-                          <div className="text-stone-100 text-sm font-medium capitalize mt-1">
+                          <div className="text-[#E6DCC6] text-sm font-medium capitalize mt-1">
                             {selectedPracticeInsight.insight_type.replace(/_/g, ' ')}
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 text-stone-200 text-sm whitespace-pre-wrap">
+                      <div className="mt-3 text-[#E6DCC6] text-sm whitespace-pre-wrap">
                         {selectedPracticeInsight.content}
                       </div>
                     </div>
@@ -558,12 +558,12 @@ export default function SupervisionDashboard() {
                 </div>
               )}
 
-              {/* HIPAA Notice */}
-              <div className={`${supervisionMode === 'clinical' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-violet-500/10 border-violet-500/30'} border rounded-xl p-4`}>
-                <h4 className={`text-sm font-medium ${supervisionMode === 'clinical' ? 'text-emerald-400' : 'text-violet-400'} mb-1`}>
+              {/* Sovereignty Notice */}
+              <div className={`${supervisionMode === 'clinical' ? 'bg-[#2C7873]/10 border-[#2C7873]/30' : 'bg-[#6A4C93]/10 border-[#6A4C93]/30'} border rounded-xl p-4`}>
+                <h4 className={`text-sm font-medium ${supervisionMode === 'clinical' ? 'text-[#5FA8A3]' : 'text-[#9D7FBF]'} mb-1`}>
                   {supervisionMode === 'clinical' ? 'HIPAA Compliant' : 'Local Processing'}
                 </h4>
-                <p className="text-xs text-stone-400">
+                <p className="text-xs text-[#8B7355]">
                   All audio capture, transcription, and analysis occurs locally.
                   No patient data is sent to external servers.
                 </p>
@@ -575,12 +575,12 @@ export default function SupervisionDashboard() {
           <div className="grid lg:grid-cols-4 gap-6">
             {/* Left: Session List */}
             <div className="lg:col-span-1">
-              <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-4">
+              <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#8B6F47]/30 rounded-2xl p-4 shadow-[0_4px_20px_rgba(139,111,71,0.15)]">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-medium text-stone-200">Past Sessions</h3>
+                  <h3 className="font-medium text-[#D4B896] font-cinzel tracking-wide">Past Sessions</h3>
                   <button
                     onClick={fetchSessions}
-                    className="p-1.5 text-stone-400 hover:text-stone-200 transition-colors"
+                    className="p-1.5 text-[#A89880] hover:text-[#FF8C42] transition-colors"
                   >
                     {isLoadingSessions ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -595,16 +595,16 @@ export default function SupervisionDashboard() {
                     <button
                       key={session.id}
                       onClick={() => loadSession(session.id)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors ${
+                      className={`w-full text-left p-3 rounded-lg transition-all duration-300 ${
                         selectedHistorySessionId === session.id
-                          ? 'bg-amber-500/20 border border-amber-500/30'
-                          : 'bg-stone-800/50 hover:bg-stone-800/80 border border-transparent'
+                          ? 'bg-[#FF8C42]/20 border border-[#FF8C42]/40 shadow-[0_0_12px_rgba(255,140,66,0.2)]'
+                          : 'bg-[#2A1F18]/50 hover:bg-[#2A1F18]/80 border border-transparent hover:border-[#8B6F47]/30'
                       }`}
                     >
-                      <div className="font-medium text-sm text-stone-200 truncate">
+                      <div className="font-medium text-sm text-[#E6DCC6] truncate">
                         {session.title || 'Untitled Session'}
                       </div>
-                      <div className="flex items-center gap-2 mt-1 text-xs text-stone-500">
+                      <div className="flex items-center gap-2 mt-1 text-xs text-[#8B7355]">
                         <span>{formatDate(session.startedAt)}</span>
                         <span>•</span>
                         <span>{formatDuration(session.totalDurationMs)}</span>
@@ -612,10 +612,10 @@ export default function SupervisionDashboard() {
                       <div className="mt-1">
                         <span className={`text-xs px-1.5 py-0.5 rounded ${
                           session.processingStatus === 'complete'
-                            ? 'bg-emerald-500/20 text-emerald-400'
+                            ? 'bg-[#2C7873]/20 text-[#5FA8A3]'
                             : session.processingStatus === 'error'
-                            ? 'bg-red-500/20 text-red-400'
-                            : 'bg-amber-500/20 text-amber-400'
+                            ? 'bg-[#8B0000]/20 text-[#D4726A]'
+                            : 'bg-[#FF8C42]/20 text-[#FFA85C]'
                         }`}>
                           {session.processingStatus}
                         </span>
@@ -624,7 +624,7 @@ export default function SupervisionDashboard() {
                   ))}
 
                   {pastSessions.length === 0 && !isLoadingSessions && (
-                    <p className="text-sm text-stone-500 text-center py-8">
+                    <p className="text-sm text-[#8B7355] text-center py-8 italic">
                       No sessions yet
                     </p>
                   )}
@@ -634,8 +634,8 @@ export default function SupervisionDashboard() {
 
             {/* Center: Transcript */}
             <div className="lg:col-span-2">
-              <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-medium text-stone-200 mb-4">
+              <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#8B6F47]/30 rounded-2xl p-6 shadow-[0_4px_20px_rgba(139,111,71,0.15)]">
+                <h3 className="text-lg font-medium text-[#D4B896] mb-4 font-cinzel tracking-wide">
                   Session Transcript
                 </h3>
                 <TranscriptViewer
@@ -652,8 +652,8 @@ export default function SupervisionDashboard() {
             {/* Right: Insights (Clinical or Practice based on mode) */}
             <div className="lg:col-span-1">
               {supervisionMode === 'clinical' ? (
-                <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
-                  <h3 className="text-lg font-medium text-stone-200 mb-4">
+                <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#2C7873]/40 rounded-2xl p-6 shadow-[0_4px_20px_rgba(44,120,115,0.15)]">
+                  <h3 className="text-lg font-medium text-[#5FA8A3] mb-4 font-cinzel tracking-wide">
                     Clinical Insights
                   </h3>
                   <InsightPanel
@@ -664,9 +664,9 @@ export default function SupervisionDashboard() {
                   />
                 </div>
               ) : (
-                <div className="bg-stone-900/80 backdrop-blur-xl border border-violet-700/30 rounded-2xl p-6">
-                  <h3 className="text-lg font-medium text-stone-200 mb-4 flex items-center gap-2">
-                    <Sparkles className="w-5 h-5 text-violet-400" />
+                <div className="bg-[#1A1510]/90 backdrop-blur-xl border border-[#6A4C93]/40 rounded-2xl p-6 shadow-[0_4px_20px_rgba(106,76,147,0.15)]">
+                  <h3 className="text-lg font-medium text-[#9D7FBF] mb-4 flex items-center gap-2 font-cinzel tracking-wide">
+                    <Sparkles className="w-5 h-5 text-[#9D7FBF] drop-shadow-[0_0_6px_rgba(157,127,191,0.5)]" />
                     Practice Insights
                   </h3>
                   <PracticePanel
@@ -681,12 +681,17 @@ export default function SupervisionDashboard() {
         )}
       </main>
 
-      {/* Footer Notice */}
-      <footer className="mt-auto py-4 border-t border-stone-800">
+      {/* Footer Notice - HIPAA/Sovereignty */}
+      <footer className="mt-auto py-4 border-t border-[#3D2F20]/40">
         <div className="max-w-7xl mx-auto px-4">
-          <p className="text-center text-xs text-stone-500">
-            Clinical Supervision powered by local AI (Ollama/DeepSeek).
-            Audio transcription via local Whisper. All data stored locally.
+          <p className={`text-center text-xs ${
+            supervisionMode === 'clinical'
+              ? 'text-[#5FA8A3]/70'
+              : 'text-[#9D7FBF]/70'
+          }`}>
+            {supervisionMode === 'clinical'
+              ? 'Clinical Supervision powered by local AI (Ollama/DeepSeek). HIPAA-compliant: all data stored locally.'
+              : 'Practice Development powered by local AI. Audio transcription via local Whisper. All data stored locally.'}
           </p>
         </div>
       </footer>
