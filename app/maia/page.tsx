@@ -27,10 +27,11 @@ import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { CaptureToggle } from '@/components/capture/CaptureToggle';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
+import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
@@ -272,6 +273,7 @@ function MAIAPageContent() {
   const [sustainingAmount, setSustainingAmount] = useState(25);
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
+  const [showShadowWork, setShowShadowWork] = useState(false);
   const [showHelpHub, setShowHelpHub] = useState(false);
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
   const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
@@ -709,6 +711,19 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-3 h-3" />
                   <span className="text-xs">Journal</span>
+                </motion.button>
+
+                {/* Shadow Work Button - Mobile */}
+                <motion.button
+                  onClick={() => setShowShadowWork(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-violet-500/10 hover:bg-violet-500/20
+                           border border-violet-500/20 hover:border-violet-500/40
+                           text-violet-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Shadow Work"
+                >
+                  <Moon className="w-3 h-3" />
+                  <span className="text-xs">Shadow</span>
                 </motion.button>
 
                 {/* Capture Mode Toggle - Mobile */}
@@ -1186,6 +1201,16 @@ function MAIAPageContent() {
                   : `Something I'm sitting with:\n\n${content}`
               }
             }));
+          }}
+        />
+
+        {/* Shadow Work Sheet */}
+        <ShadowWorkSheet
+          isOpen={showShadowWork}
+          onClose={() => setShowShadowWork(false)}
+          userId={explorerId}
+          onComplete={(responses) => {
+            console.log('🌙 [MAIA] Shadow work completed:', Object.keys(responses).length, 'responses');
           }}
         />
 
