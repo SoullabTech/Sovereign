@@ -46,64 +46,39 @@ function findClosestSegmentId(
 ): string | null {
   if (!segs.length) return null;
 
-  // 1) Prefer exact containment: startMs <= targetMs <= endMs
-  const contained: Array<{
-    id: string;
-    start: number;
-    end: number;
-    span: number;
-    midDist: number;
-  }> = [];
+  // 1) Prefer exact containment: startMs <= target <= endMs
+  // If multiple contain (unlikely), pick the one whose center is closest to target.
+  let bestContainedId: string | null = null;
+  let bestContainedScore = Infinity;
 
   for (const s of segs) {
-    const start = s.startMs;
-    const end = s.endMs;
-
-    if (start == null || end == null) continue;
-    if (!Number.isFinite(start) || !Number.isFinite(end)) continue;
-    if (end < start) continue;
-
-    if (start <= targetMs && targetMs <= end) {
-      const span = end - start;
-      const mid = start + span / 2;
-      contained.push({
-        id: s.id,
-        start,
-        end,
-        span,
-        midDist: Math.abs(mid - targetMs),
-      });
+    if (s.startMs == null || s.endMs == null) continue;
+    if (s.startMs <= targetMs && targetMs <= s.endMs) {
+      const center = (s.startMs + s.endMs) / 2;
+      const score = Math.abs(center - targetMs);
+      if (score < bestContainedScore) {
+        bestContainedScore = score;
+        bestContainedId = s.id;
+      }
     }
   }
 
-  if (contained.length) {
-    // Choose the most "precise" containing segment:
-    //   - smallest span
-    //   - then closest midpoint to target
-    //   - then earliest start
-    contained.sort((a, b) => {
-      if (a.span !== b.span) return a.span - b.span;
-      if (a.midDist !== b.midDist) return a.midDist - b.midDist;
-      return a.start - b.start;
-    });
-    return contained[0].id;
-  }
+  if (bestContainedId) return bestContainedId;
 
-  // 2) Fallback: closest startMs (ignoring nulls)
+  // 2) Fallback: closest startMs (ignore null startMs)
   let bestId: string | null = null;
   let bestDist = Infinity;
 
   for (const s of segs) {
-    const start = s.startMs;
-    if (start == null || !Number.isFinite(start)) continue;
-
-    const dist = Math.abs(start - targetMs);
+    if (s.startMs == null) continue;
+    const dist = Math.abs(s.startMs - targetMs);
     if (dist < bestDist) {
       bestDist = dist;
       bestId = s.id;
     }
   }
 
+  // 3) Last resort: if all startMs are null, fall back to first segment id
   return bestId ?? segs[0]?.id ?? null;
 }
 
