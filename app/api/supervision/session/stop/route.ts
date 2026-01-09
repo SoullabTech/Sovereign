@@ -43,11 +43,17 @@ export async function POST(request: NextRequest) {
       // Check if session exists but is already stopped
       const existingSession = await getSession(body.sessionId);
       if (existingSession) {
+        // Idempotent: already stopped is success (handles double-click, retries)
         return NextResponse.json({
-          success: false,
-          error: 'Session already stopped',
-          session: existingSession
-        }, { status: 409 });
+          success: true,
+          session: {
+            id: existingSession.id,
+            endedAt: existingSession.ended_at,
+            processingStatus: existingSession.processing_status
+          },
+          analysisQueued: false,
+          alreadyStopped: true
+        });
       }
 
       return NextResponse.json({
