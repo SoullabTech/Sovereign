@@ -9,6 +9,9 @@ import { Holoflower } from '@/components/ui/Holoflower';
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  if (!searchParams) return null;
+
   const token = searchParams.get('token');
 
   const [mode, setMode] = useState<'loading' | 'request' | 'reset' | 'success' | 'error'>('loading');

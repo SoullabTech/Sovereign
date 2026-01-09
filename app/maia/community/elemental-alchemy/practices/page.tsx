@@ -63,6 +63,9 @@ type ViewState = 'library' | 'session';
 function PracticesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  if (!searchParams) return null;
+
   const initialElement = (searchParams.get('element') as ElementKey | 'all') || null;
 
   const [view, setView] = useState<ViewState>('library');

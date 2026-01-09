@@ -9,7 +9,13 @@ import type { PractitionerCase, CreateNoteInput } from '@/lib/caseload/types';
 export default function NewNotePage() {
   const router = useRouter();
   const params = useParams();
-  const caseId = params.caseId as string;
+
+  if (!params) return null;
+
+  const caseIdParam = params.caseId as string | string[] | undefined;
+  const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam;
+
+  if (!caseId) return null;
 
   const [caseData, setCaseData] = useState<PractitionerCase | null>(null);
   const [loading, setLoading] = useState(true);

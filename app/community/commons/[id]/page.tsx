@@ -24,7 +24,13 @@ interface Post {
 export default function PostPage() {
   const router = useRouter();
   const params = useParams();
-  const postId = params.id as string;
+
+  if (!params) return null;
+
+  const idParam = params.id as string | string[] | undefined;
+  const postId = Array.isArray(idParam) ? idParam[0] : idParam;
+
+  if (!postId) return null;
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);

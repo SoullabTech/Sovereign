@@ -79,6 +79,9 @@ const faqs = [
 // Separate component for search params (needs Suspense boundary)
 function PatronsContent() {
   const searchParams = useSearchParams();
+
+  if (!searchParams) return null;
+
   const success = searchParams.get('success');
   const canceled = searchParams.get('canceled');
   const [loading, setLoading] = useState<string | null>(null);

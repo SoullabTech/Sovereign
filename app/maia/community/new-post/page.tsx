@@ -106,6 +106,9 @@ const ELEMENTS = [
 function NewPostContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  if (!searchParams) return null;
+
   const preselectedTerritory = searchParams.get('territory');
 
   // Form state

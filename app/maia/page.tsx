@@ -147,7 +147,7 @@ async function getInitialUserData() {
   });
 
   // Try to fetch from API using stored userId (only if it's a valid member ID)
-  if (isValidMemberId(storedUserId)) {
+  if (storedUserId && isValidMemberId(storedUserId)) {
     try {
       const params = new URLSearchParams();
       params.append('userId', storedUserId);

@@ -148,7 +148,7 @@ export default function ChatGPTStyleInput({
   const handleCameraClick = () => {
     setIsPlusMenuOpen(false);
     // Request camera access and capture photo
-    if (navigator.mediaDevices?.getUserMedia) {
+    if (navigator.mediaDevices) {
       // For now, just show a file picker with capture attribute
       const input = document.createElement('input');
       input.type = 'file';

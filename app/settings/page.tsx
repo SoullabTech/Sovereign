@@ -8,6 +8,9 @@ import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 function SettingsContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
+
+  if (!searchParams) return null;
+
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('');
 

@@ -10,6 +10,9 @@ import { CustomProfessionalContext, PartnerContextData } from '@/lib/types/partn
 function PartnerWelcomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  if (!searchParams) return null;
+
   const [userName, setUserName] = useState<string>('');
   const [showCustomContext, setShowCustomContext] = useState<boolean>(false);
   const [customContext, setCustomContext] = useState<CustomProfessionalContext>({

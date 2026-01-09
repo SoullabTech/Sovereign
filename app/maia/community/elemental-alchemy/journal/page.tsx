@@ -46,6 +46,8 @@ function ElementalJournalContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  if (!searchParams) return null;
+
   // Pre-fill from URL params (from practices page)
   const prefillElement = searchParams.get('element') as ElementKey | null;
   const prefillPractice = searchParams.get('practice');

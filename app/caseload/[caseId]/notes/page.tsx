@@ -27,7 +27,13 @@ const noteTypeConfig: Record<NoteType, { label: string; icon: string; color: str
 export default function NotesTimelinePage() {
   const router = useRouter();
   const params = useParams();
-  const caseId = params.caseId as string;
+
+  if (!params) return null;
+
+  const caseIdParam = params.caseId as string | string[] | undefined;
+  const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam;
+
+  if (!caseId) return null;
 
   const [caseData, setCaseData] = useState<PractitionerCase | null>(null);
   const [notes, setNotes] = useState<CaseNote[]>([]);

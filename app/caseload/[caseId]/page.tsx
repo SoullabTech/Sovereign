@@ -38,7 +38,13 @@ const noteTypeConfig: Record<string, { label: string; icon: string; color: strin
 export default function CaseDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const caseId = params.caseId as string;
+
+  if (!params) return null;
+
+  const caseIdParam = params.caseId as string | string[] | undefined;
+  const caseId = Array.isArray(caseIdParam) ? caseIdParam[0] : caseIdParam;
+
+  if (!caseId) return null;
 
   const [caseData, setCaseData] = useState<CaseWithStats | null>(null);
   const [notes, setNotes] = useState<CaseNote[]>([]);

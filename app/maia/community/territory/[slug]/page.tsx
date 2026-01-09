@@ -87,7 +87,15 @@ const ELEMENT_COLORS: Record<string, string> = {
 export default function TerritoryPage() {
   const router = useRouter();
   const params = useParams();
-  const slug = params.slug as string;
+
+  if (!params) return null;
+
+  const slugParam = params.slug as string | string[] | undefined;
+  const rawSlug = Array.isArray(slugParam) ? slugParam[0] : slugParam;
+
+  if (!rawSlug) return null;
+
+  const slug: string = rawSlug;
 
   // State
   const [territory, setTerritory] = useState<Territory | null>(null);
