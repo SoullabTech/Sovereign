@@ -778,6 +778,12 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🔮 [FAST] Reflection lens applied: ${reflectionLensAddendum.split('\n')[0]}`);
   }
 
+  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  const governorAddendum = (meta as any)?.governorAddendum as string | undefined;
+  if (governorAddendum) {
+    console.log(`🌀 [FAST] Governor addendum applied: posture guidance injected`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   const currentUserName = (meta as any)?.userName as string | undefined;
@@ -798,7 +804,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -968,6 +974,8 @@ async function corePathResponse(
     // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
     therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
     reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
+    // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
+    governorAddendum: (meta as any)?.governorAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -1392,6 +1400,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses
         therapeuticFrameworkAddendum: (meta as any)?.therapeuticFrameworkAddendum as string | undefined,
         reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
+        // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
+        governorAddendum: (meta as any)?.governorAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

@@ -64,6 +64,8 @@ export interface MaiaContext {
   reflectionLensAddendum?: string;
   // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
   astrologicalContextAddendum?: string;
+  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  governorAddendum?: string;
 }
 
 /**
@@ -586,6 +588,12 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (context.astrologicalContextAddendum) {
     adaptedPrompt += `\n\n${context.astrologicalContextAddendum}`;
     console.log(`🌟 [Astrology] Birth data available for personalized cosmic context`);
+  }
+
+  // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
+  if (context.governorAddendum) {
+    adaptedPrompt += `\n\n${context.governorAddendum}`;
+    console.log(`🌀 [Governor] Posture guidance injected`);
   }
 
   return adaptedPrompt.trim();

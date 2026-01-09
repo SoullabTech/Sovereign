@@ -30,6 +30,7 @@ import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, 
 import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
+import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -823,6 +824,16 @@ export async function POST(req: NextRequest) {
     console.log('[Chat API] Effective userId:', effectiveUserId);
     console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
 
+    // 🌀 DECISION GOVERNOR: Spiralogic posture selection (preflight)
+    const decision = decisionPreflight(message);
+    (normalizedMeta as Record<string, unknown>).decision = decision;
+    console.log('[Chat API] 🧭 Decision Governor:', {
+      activeElement: decision.activeElement,
+      handoffEligibility: decision.handoffEligibility,
+      modeHint: decision.modeHint,
+      integrityFlags: Object.entries(decision.integrityFlags).filter(([, v]) => v).map(([k]) => k),
+    });
+
     // 💾 ENSURE SESSION EXISTS: Create or update session record for persistence
     await ensureSession(safeSessionId);
     console.log(`[Chat API] Session ensured: ${safeSessionId}`);
@@ -1235,6 +1246,9 @@ export async function POST(req: NextRequest) {
     // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
     const astrologicalContextAddendum = await buildAstrologicalContextAddendum(birthData);
 
+    // 🌀 DECISION GOVERNOR: Build addendum for system prompt injection
+    const governorAddendum = buildGovernorAddendum(decision);
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
@@ -1255,6 +1269,7 @@ export async function POST(req: NextRequest) {
         therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
         reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
         astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
+        governorAddendum, // 🌀 Spiralogic posture constraints
       }
     });
 
