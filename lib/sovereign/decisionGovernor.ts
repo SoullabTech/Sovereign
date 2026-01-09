@@ -112,7 +112,13 @@ export function decisionPreflight(userText: string): DecisionPacket {
   ]);
 
   let activeElement: DecisionPacket["activeElement"] = "unknown";
-  if (isWater && !isAir) activeElement = "water";
+  // Handle dual-element cases first (regulatory pairs)
+  // Water + Air: feeling + wanting to understand → water-dominant (regulate toward air)
+  // Fire + Earth: vision + grounding → fire-dominant (regulate toward earth)
+  if (isWater && isAir) activeElement = "water";
+  else if (isFire && isEarth) activeElement = "fire";
+  // Single-element cases
+  else if (isWater && !isAir) activeElement = "water";
   else if (isAir && !isWater) activeElement = "air";
   else if (isFire && !isEarth) activeElement = "fire";
   else if (isEarth && !isFire) activeElement = "earth";
