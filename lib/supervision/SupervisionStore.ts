@@ -1,0 +1,388 @@
+/**
+ * MAIA Clinical Supervision - PostgreSQL Storage
+ *
+ * All supervision data stored in local PostgreSQL.
+ * HIPAA compliant - no cloud storage.
+ */
+
+import { query } from '@/lib/db/postgres';
+
+// Types
+export interface SupervisionSession {
+  id: string;
+  practitioner_id: string | null;
+  case_id: string | null;
+  session_type: 'individual' | 'group' | 'peer' | 'consultation' | 'team_meeting';
+  title: string | null;
+  started_at: string;
+  ended_at: string | null;
+  recording_path: string | null;
+  transcript_path: string | null;
+  processing_status: 'recording' | 'processing' | 'transcribing' | 'analyzing' | 'complete' | 'error';
+  total_duration_ms: number | null;
+  speaker_count: number | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TranscriptSegment {
+  id: string;
+  session_id: string;
+  speaker: string;
+  speaker_confidence: number | null;
+  start_ms: number;
+  end_ms: number;
+  text: string;
+  transcription_confidence: number | null;
+  language: string;
+  is_final: boolean;
+  created_at: string;
+}
+
+export interface SupervisionInsight {
+  id: string;
+  session_id: string;
+  insight_type: 'pattern' | 'countertransference' | 'intervention' | 'stuck_point' | 'rupture' | 'attunement' | 'transference' | 'documentation' | 'recommendation';
+  content: string;
+  segment_refs: string[] | null;
+  time_range_start_ms: number | null;
+  time_range_end_ms: number | null;
+  significance: number | null;
+  model_used: string | null;
+  processing_time_ms: number | null;
+  created_at: string;
+}
+
+export interface SupervisionJob {
+  id: string;
+  session_id: string;
+  job_type: 'transcribe' | 'diarize' | 'analyze_patterns' | 'analyze_countertransference' | 'analyze_interventions' | 'detect_ruptures' | 'generate_documentation' | 'generate_summary';
+  status: 'pending' | 'processing' | 'complete' | 'error' | 'cancelled';
+  priority: number;
+  input_data: Record<string, unknown>;
+  output_data: Record<string, unknown>;
+  attempts: number;
+  max_attempts: number;
+  last_error: string | null;
+  created_at: string;
+  started_at: string | null;
+  completed_at: string | null;
+}
+
+// Session CRUD
+
+export async function createSession(params: {
+  practitionerId?: string;
+  caseId?: string;
+  sessionType?: SupervisionSession['session_type'];
+  title?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<SupervisionSession> {
+  const result = await query<SupervisionSession>(`
+    INSERT INTO supervision_sessions (
+      practitioner_id, case_id, session_type, title, metadata
+    ) VALUES ($1, $2, $3, $4, $5)
+    RETURNING *
+  `, [
+    params.practitionerId || null,
+    params.caseId || null,
+    params.sessionType || 'consultation',
+    params.title || null,
+    JSON.stringify(params.metadata || {})
+  ]);
+
+  return result.rows[0];
+}
+
+export async function getSession(sessionId: string): Promise<SupervisionSession | null> {
+  const result = await query<SupervisionSession>(`
+    SELECT * FROM supervision_sessions WHERE id = $1
+  `, [sessionId]);
+
+  return result.rows[0] || null;
+}
+
+export async function getActiveSession(practitionerId: string): Promise<SupervisionSession | null> {
+  const result = await query<SupervisionSession>(`
+    SELECT * FROM supervision_sessions
+    WHERE practitioner_id = $1 AND ended_at IS NULL
+    ORDER BY started_at DESC
+    LIMIT 1
+  `, [practitionerId]);
+
+  return result.rows[0] || null;
+}
+
+export async function updateSession(
+  sessionId: string,
+  updates: Partial<Pick<SupervisionSession, 'ended_at' | 'recording_path' | 'transcript_path' | 'processing_status' | 'total_duration_ms' | 'speaker_count' | 'metadata'>>
+): Promise<SupervisionSession | null> {
+  const setClauses: string[] = [];
+  const values: unknown[] = [];
+  let paramIndex = 1;
+
+  if (updates.ended_at !== undefined) {
+    setClauses.push(`ended_at = $${paramIndex++}`);
+    values.push(updates.ended_at);
+  }
+  if (updates.recording_path !== undefined) {
+    setClauses.push(`recording_path = $${paramIndex++}`);
+    values.push(updates.recording_path);
+  }
+  if (updates.transcript_path !== undefined) {
+    setClauses.push(`transcript_path = $${paramIndex++}`);
+    values.push(updates.transcript_path);
+  }
+  if (updates.processing_status !== undefined) {
+    setClauses.push(`processing_status = $${paramIndex++}`);
+    values.push(updates.processing_status);
+  }
+  if (updates.total_duration_ms !== undefined) {
+    setClauses.push(`total_duration_ms = $${paramIndex++}`);
+    values.push(updates.total_duration_ms);
+  }
+  if (updates.speaker_count !== undefined) {
+    setClauses.push(`speaker_count = $${paramIndex++}`);
+    values.push(updates.speaker_count);
+  }
+  if (updates.metadata !== undefined) {
+    setClauses.push(`metadata = $${paramIndex++}`);
+    values.push(JSON.stringify(updates.metadata));
+  }
+
+  if (setClauses.length === 0) return getSession(sessionId);
+
+  values.push(sessionId);
+
+  const result = await query<SupervisionSession>(`
+    UPDATE supervision_sessions
+    SET ${setClauses.join(', ')}
+    WHERE id = $${paramIndex}
+    RETURNING *
+  `, values);
+
+  return result.rows[0] || null;
+}
+
+export async function stopSession(sessionId: string): Promise<SupervisionSession | null> {
+  const result = await query<SupervisionSession>(`
+    UPDATE supervision_sessions
+    SET ended_at = NOW(), processing_status = 'processing'
+    WHERE id = $1 AND ended_at IS NULL
+    RETURNING *
+  `, [sessionId]);
+
+  return result.rows[0] || null;
+}
+
+export async function listSessions(params: {
+  practitionerId?: string;
+  caseId?: string;
+  limit?: number;
+  offset?: number;
+}): Promise<SupervisionSession[]> {
+  const conditions: string[] = [];
+  const values: unknown[] = [];
+  let paramIndex = 1;
+
+  if (params.practitionerId) {
+    conditions.push(`practitioner_id = $${paramIndex++}`);
+    values.push(params.practitionerId);
+  }
+  if (params.caseId) {
+    conditions.push(`case_id = $${paramIndex++}`);
+    values.push(params.caseId);
+  }
+
+  const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
+  const limit = params.limit || 50;
+  const offset = params.offset || 0;
+
+  values.push(limit, offset);
+
+  const result = await query<SupervisionSession>(`
+    SELECT * FROM supervision_sessions
+    ${whereClause}
+    ORDER BY started_at DESC
+    LIMIT $${paramIndex++} OFFSET $${paramIndex}
+  `, values);
+
+  return result.rows;
+}
+
+// Transcript Segments
+
+export async function addTranscriptSegment(params: {
+  sessionId: string;
+  speaker: string;
+  speakerConfidence?: number;
+  startMs: number;
+  endMs: number;
+  text: string;
+  transcriptionConfidence?: number;
+  language?: string;
+  isFinal?: boolean;
+}): Promise<TranscriptSegment> {
+  const result = await query<TranscriptSegment>(`
+    INSERT INTO supervision_transcript_segments (
+      session_id, speaker, speaker_confidence, start_ms, end_ms,
+      text, transcription_confidence, language, is_final
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *
+  `, [
+    params.sessionId,
+    params.speaker,
+    params.speakerConfidence ?? null,
+    params.startMs,
+    params.endMs,
+    params.text,
+    params.transcriptionConfidence ?? null,
+    params.language || 'en',
+    params.isFinal ?? true
+  ]);
+
+  return result.rows[0];
+}
+
+export async function getTranscript(sessionId: string): Promise<TranscriptSegment[]> {
+  const result = await query<TranscriptSegment>(`
+    SELECT * FROM supervision_transcript_segments
+    WHERE session_id = $1 AND is_final = TRUE
+    ORDER BY start_ms ASC
+  `, [sessionId]);
+
+  return result.rows;
+}
+
+export async function getRecentTranscript(sessionId: string, lastMs: number): Promise<TranscriptSegment[]> {
+  const result = await query<TranscriptSegment>(`
+    SELECT * FROM supervision_transcript_segments
+    WHERE session_id = $1 AND is_final = TRUE AND start_ms >= $2
+    ORDER BY start_ms ASC
+  `, [sessionId, lastMs]);
+
+  return result.rows;
+}
+
+// Insights
+
+export async function addInsight(params: {
+  sessionId: string;
+  insightType: SupervisionInsight['insight_type'];
+  content: string;
+  segmentRefs?: string[];
+  timeRangeStartMs?: number;
+  timeRangeEndMs?: number;
+  significance?: number;
+  modelUsed?: string;
+  processingTimeMs?: number;
+}): Promise<SupervisionInsight> {
+  const result = await query<SupervisionInsight>(`
+    INSERT INTO supervision_insights (
+      session_id, insight_type, content, segment_refs,
+      time_range_start_ms, time_range_end_ms, significance,
+      model_used, processing_time_ms
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    RETURNING *
+  `, [
+    params.sessionId,
+    params.insightType,
+    params.content,
+    params.segmentRefs ? `{${params.segmentRefs.join(',')}}` : null,
+    params.timeRangeStartMs ?? null,
+    params.timeRangeEndMs ?? null,
+    params.significance ?? null,
+    params.modelUsed ?? null,
+    params.processingTimeMs ?? null
+  ]);
+
+  return result.rows[0];
+}
+
+export async function getInsights(sessionId: string, type?: SupervisionInsight['insight_type']): Promise<SupervisionInsight[]> {
+  if (type) {
+    const result = await query<SupervisionInsight>(`
+      SELECT * FROM supervision_insights
+      WHERE session_id = $1 AND insight_type = $2
+      ORDER BY created_at DESC
+    `, [sessionId, type]);
+    return result.rows;
+  }
+
+  const result = await query<SupervisionInsight>(`
+    SELECT * FROM supervision_insights
+    WHERE session_id = $1
+    ORDER BY created_at DESC
+  `, [sessionId]);
+
+  return result.rows;
+}
+
+// Jobs Queue
+
+export async function enqueueJob(params: {
+  sessionId: string;
+  jobType: SupervisionJob['job_type'];
+  priority?: number;
+  inputData?: Record<string, unknown>;
+}): Promise<SupervisionJob> {
+  const result = await query<SupervisionJob>(`
+    INSERT INTO supervision_jobs (
+      session_id, job_type, priority, input_data
+    ) VALUES ($1, $2, $3, $4)
+    ON CONFLICT DO NOTHING
+    RETURNING *
+  `, [
+    params.sessionId,
+    params.jobType,
+    params.priority ?? 5,
+    JSON.stringify(params.inputData || {})
+  ]);
+
+  return result.rows[0];
+}
+
+export async function claimNextJob(): Promise<SupervisionJob | null> {
+  const result = await query<SupervisionJob>(`
+    UPDATE supervision_jobs
+    SET status = 'processing', started_at = NOW(), locked_at = NOW(), attempts = attempts + 1
+    WHERE id = (
+      SELECT id FROM supervision_jobs
+      WHERE status = 'pending' AND attempts < max_attempts
+      ORDER BY priority ASC, created_at ASC
+      FOR UPDATE SKIP LOCKED
+      LIMIT 1
+    )
+    RETURNING *
+  `, []);
+
+  return result.rows[0] || null;
+}
+
+export async function completeJob(jobId: string, outputData?: Record<string, unknown>): Promise<void> {
+  await query(`
+    UPDATE supervision_jobs
+    SET status = 'complete', completed_at = NOW(), output_data = $2
+    WHERE id = $1
+  `, [jobId, JSON.stringify(outputData || {})]);
+}
+
+export async function failJob(jobId: string, error: string): Promise<void> {
+  await query(`
+    UPDATE supervision_jobs
+    SET status = CASE WHEN attempts >= max_attempts THEN 'error' ELSE 'pending' END,
+        last_error = $2, locked_at = NULL
+    WHERE id = $1
+  `, [jobId, error]);
+}
+
+export async function getJobsForSession(sessionId: string): Promise<SupervisionJob[]> {
+  const result = await query<SupervisionJob>(`
+    SELECT * FROM supervision_jobs
+    WHERE session_id = $1
+    ORDER BY created_at ASC
+  `, [sessionId]);
+
+  return result.rows;
+}
