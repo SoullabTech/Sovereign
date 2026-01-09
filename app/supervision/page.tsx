@@ -66,7 +66,9 @@ export default function SupervisionDashboard() {
   const fetchSessions = useCallback(async () => {
     setIsLoadingSessions(true);
     try {
-      const response = await fetch(apiUrl('/api/supervision/sessions?limit=20'));
+      const response = await fetch(apiUrl('/api/supervision/sessions?limit=20'), {
+        cache: 'no-store'
+      });
       const data = await response.json();
       if (data.success) {
         setPastSessions(data.sessions);

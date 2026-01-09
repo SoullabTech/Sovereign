@@ -70,7 +70,10 @@ export async function POST(request: NextRequest) {
     const triggerAnalysis = body.triggerAnalysis !== false;
     let analysisQueued = false;
 
-    if (triggerAnalysis) {
+    // If not triggering analysis, mark as complete immediately
+    if (!triggerAnalysis) {
+      await updateSession(body.sessionId, { processing_status: 'complete' });
+    } else if (triggerAnalysis) {
       // Get transcript for analysis
       const transcript = await getTranscript(body.sessionId);
 
@@ -121,12 +124,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Get updated session to return correct status
+    const updatedSession = await getSession(body.sessionId);
+
     return NextResponse.json({
       success: true,
       session: {
         id: session.id,
-        endedAt: session.ended_at,
-        processingStatus: session.processing_status
+        endedAt: updatedSession?.ended_at || session.ended_at,
+        processingStatus: updatedSession?.processing_status || 'complete'
       },
       analysisQueued
     });
