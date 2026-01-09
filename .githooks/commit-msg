@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+MSG_FILE="$1"
+
+if rg -n "Co-Authored-By:\s*Claude|Generated with.*Claude Code" "$MSG_FILE" >/dev/null; then
+  echo "❌ Commit message contains Claude attribution. Remove it and retry."
+  exit 1
+fi

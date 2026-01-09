@@ -80,6 +80,7 @@ export function TranscriptViewer({
   const afterMsRef = useRef<number>(-1);  // useRef to avoid polling effect restarts
   const [isLoading, setIsLoading] = useState(false);
   const [usePolling, setUsePolling] = useState(false); // SSE primary, polling fallback
+  const [connectionState, setConnectionState] = useState<'idle' | 'sse' | 'polling' | 'reconnecting'>('idle');
 
   // Use external segments if provided, otherwise use internal state
   const segments = externalSegments ?? internalSegments;
@@ -149,10 +150,16 @@ export function TranscriptViewer({
   useEffect(() => {
     if (!isSelfManaged || !isLive || usePolling) return;
 
+    setConnectionState('reconnecting');
+
     const url = apiUrl(
       `/api/supervision/transcript/stream?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMsRef.current}`
     );
     const es = new EventSource(url);
+
+    es.addEventListener('ready', () => {
+      setConnectionState('sse');
+    });
 
     es.addEventListener('segments', (evt) => {
       try {
@@ -169,6 +176,7 @@ export function TranscriptViewer({
 
     es.onerror = () => {
       es.close();
+      setConnectionState('reconnecting');
       // Fallback to polling on SSE failure
       setUsePolling(true);
     };
@@ -180,6 +188,7 @@ export function TranscriptViewer({
   useEffect(() => {
     if (!isSelfManaged || !isLive || !usePolling) return;
 
+    setConnectionState('polling');
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -334,15 +343,25 @@ export function TranscriptViewer({
           })}
         </AnimatePresence>
 
-        {/* Live indicator */}
+        {/* Live indicator with connection state */}
         {isLive && (
           <motion.div
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
             className="flex items-center gap-2 text-stone-500 text-sm"
           >
-            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-            Transcribing...
+            <div className={`w-2 h-2 rounded-full ${
+              connectionState === 'sse' ? 'bg-emerald-500' :
+              connectionState === 'polling' ? 'bg-amber-500' :
+              connectionState === 'reconnecting' ? 'bg-red-500' :
+              'bg-stone-500'
+            }`} />
+            <span>
+              {connectionState === 'sse' && 'LIVE'}
+              {connectionState === 'polling' && 'LIVE (fallback)'}
+              {connectionState === 'reconnecting' && 'Reconnecting...'}
+              {connectionState === 'idle' && 'Transcribing...'}
+            </span>
           </motion.div>
         )}
       </div>

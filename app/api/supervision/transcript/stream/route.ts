@@ -4,6 +4,9 @@ import { getTranscriptSegments } from '@/lib/supervision/SupervisionStore';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+// Backoff intervals (ms): start at 1s, back off when idle
+const INTERVALS = [1000, 2000, 3000, 5000];
+
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const sessionId = url.searchParams.get('sessionId');
@@ -12,21 +15,31 @@ export async function GET(req: NextRequest) {
     return new Response('Missing sessionId', { status: 400 });
   }
 
+  // Support Last-Event-ID for automatic reconnect resume
+  const lastEventId = req.headers.get('last-event-id');
   let afterMs = Number(url.searchParams.get('afterMs') ?? -1);
+  if (lastEventId && !Number.isNaN(Number(lastEventId))) {
+    afterMs = Math.max(afterMs, Number(lastEventId));
+  }
   if (!Number.isFinite(afterMs)) afterMs = -1;
 
   const encoder = new TextEncoder();
 
   const stream = new ReadableStream({
     start(controller) {
-      const send = (event: string, data: unknown) => {
-        controller.enqueue(encoder.encode(`event: ${event}\n`));
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify(data)}\n\n`));
+      let idleCycles = 0;
+      let currentInterval = INTERVALS[0];
+      let timer: ReturnType<typeof setTimeout> | null = null;
+
+      const emit = (lines: string[]) => {
+        controller.enqueue(encoder.encode(lines.join('\n') + '\n\n'));
       };
 
-      send('ready', { sessionId, afterMs });
+      // Send retry hint so browser reconnects after 2s on drop
+      emit(['retry: 2000']);
+      emit(['event: ready', `data: ${JSON.stringify({ sessionId, afterMs })}`]);
 
-      const interval = setInterval(async () => {
+      const tick = async () => {
         try {
           const segs = await getTranscriptSegments(sessionId, { afterMs });
 
@@ -44,17 +57,42 @@ export async function GET(req: NextRequest) {
             }));
 
             afterMs = Math.max(afterMs, ...segs.map(s => s.start_ms ?? 0));
-            send('segments', { segments: transformed, afterMs });
+
+            // Include id: for Last-Event-ID resume
+            emit([
+              `id: ${afterMs}`,
+              'event: segments',
+              `data: ${JSON.stringify({ segments: transformed, afterMs })}`
+            ]);
+
+            // Reset backoff on activity
+            idleCycles = 0;
+            currentInterval = INTERVALS[0];
           } else {
-            send('keepalive', { t: Date.now() });
+            // SSE comment keepalive (proxy-friendly)
+            emit([`: keepalive ${Date.now()}`]);
+
+            // Backoff when idle
+            idleCycles++;
+            const idx = Math.min(idleCycles, INTERVALS.length - 1);
+            currentInterval = INTERVALS[idx];
           }
         } catch (err) {
-          send('error', { message: err instanceof Error ? err.message : String(err) });
+          emit([
+            'event: error',
+            `data: ${JSON.stringify({ message: err instanceof Error ? err.message : String(err) })}`
+          ]);
         }
-      }, 1000);
+
+        // Schedule next tick with current interval
+        timer = setTimeout(tick, currentInterval);
+      };
+
+      // Start polling
+      timer = setTimeout(tick, currentInterval);
 
       req.signal.addEventListener('abort', () => {
-        clearInterval(interval);
+        if (timer) clearTimeout(timer);
         try { controller.close(); } catch { /* ignore */ }
       });
     }
