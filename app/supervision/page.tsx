@@ -8,7 +8,9 @@ import {
   History,
   Settings,
   Upload,
-  Loader2
+  Loader2,
+  Stethoscope,
+  Sparkles
 } from 'lucide-react';
 import { apiUrl } from '@/lib/http/apiBase';
 import {
@@ -17,6 +19,7 @@ import {
   InsightPanel
 } from '@/components/supervision';
 import InsightsViewer from '@/components/supervision/InsightsViewer';
+import PracticePanel from '@/components/supervision/PracticePanel';
 
 interface TranscriptSegment {
   id: string;
@@ -52,6 +55,7 @@ interface SessionSummary {
 }
 
 type ViewMode = 'live' | 'history';
+type SupervisionMode = 'clinical' | 'practice';
 
 // Unified insight type for SSE and history modes
 type InsightLike = {
@@ -75,6 +79,7 @@ function getInsightStartMs(i: InsightLike): number | null {
 }
 
 export default function SupervisionDashboard() {
+  const [supervisionMode, setSupervisionMode] = useState<SupervisionMode>('clinical');
   const [viewMode, setViewMode] = useState<ViewMode>('live');
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -86,6 +91,12 @@ export default function SupervisionDashboard() {
   const [selectedHistorySessionId, setSelectedHistorySessionId] = useState<string | null>(null);
   const [liveInsights, setLiveInsights] = useState<InsightLike[]>([]);
   const [selectedInsight, setSelectedInsight] = useState<InsightLike | null>(null);
+  const [selectedPracticeInsight, setSelectedPracticeInsight] = useState<{
+    id: string;
+    content: string;
+    insight_type: string;
+    world_code: string;
+  } | null>(null);
 
   // Transcript jump state
   const [jumpToMs, setJumpToMs] = useState<number | null>(null);
@@ -236,33 +247,63 @@ export default function SupervisionDashboard() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Brain className="w-6 h-6 text-amber-500" />
-              <h1 className="text-xl font-semibold">Clinical Supervision</h1>
+              <h1 className="text-xl font-semibold">
+                {supervisionMode === 'clinical' ? 'Clinical Supervision' : 'Practice Development'}
+              </h1>
             </div>
 
-            {/* View Mode Toggle */}
-            <div className="flex items-center gap-2 bg-stone-800/50 rounded-lg p-1">
-              <button
-                onClick={() => setViewMode('live')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                  viewMode === 'live'
-                    ? 'bg-amber-600 text-white'
-                    : 'text-stone-400 hover:text-stone-200'
-                }`}
-              >
-                <Clock className="w-4 h-4" />
-                Live
-              </button>
-              <button
-                onClick={() => setViewMode('history')}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
-                  viewMode === 'history'
-                    ? 'bg-amber-600 text-white'
-                    : 'text-stone-400 hover:text-stone-200'
-                }`}
-              >
-                <History className="w-4 h-4" />
-                History
-              </button>
+            <div className="flex items-center gap-4">
+              {/* Supervision Mode Toggle (Clinical vs Practice) */}
+              <div className="flex items-center gap-1 bg-stone-800/50 rounded-lg p-1">
+                <button
+                  onClick={() => setSupervisionMode('clinical')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    supervisionMode === 'clinical'
+                      ? 'bg-emerald-600 text-white'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  <Stethoscope className="w-4 h-4" />
+                  Clinical
+                </button>
+                <button
+                  onClick={() => setSupervisionMode('practice')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    supervisionMode === 'practice'
+                      ? 'bg-violet-600 text-white'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Practice
+                </button>
+              </div>
+
+              {/* View Mode Toggle (Live vs History) */}
+              <div className="flex items-center gap-1 bg-stone-800/50 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('live')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    viewMode === 'live'
+                      ? 'bg-amber-600 text-white'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  <Clock className="w-4 h-4" />
+                  Live
+                </button>
+                <button
+                  onClick={() => setViewMode('history')}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors ${
+                    viewMode === 'history'
+                      ? 'bg-amber-600 text-white'
+                      : 'text-stone-400 hover:text-stone-200'
+                  }`}
+                >
+                  <History className="w-4 h-4" />
+                  History
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -295,72 +336,107 @@ export default function SupervisionDashboard() {
               </div>
             </div>
 
-            {/* Right: Insights */}
+            {/* Right: Insights (Clinical or Practice based on mode) */}
             <div className="space-y-6">
-              <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-medium text-stone-200 mb-4">
-                  Clinical Insights
-                </h3>
-                {activeSessionId ? (
-                  isRecording ? (
-                    <InsightsViewer
-                      sessionId={activeSessionId}
-                      isLive={true}
-                      onInsightsChange={setLiveInsights}
-                      onInsightClick={handleInsightClick}
-                      selectedInsightId={selectedInsightId}
-                    />
+              {supervisionMode === 'clinical' ? (
+                /* Clinical Insights */
+                <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
+                  <h3 className="text-lg font-medium text-stone-200 mb-4">
+                    Clinical Insights
+                  </h3>
+                  {activeSessionId ? (
+                    isRecording ? (
+                      <InsightsViewer
+                        sessionId={activeSessionId}
+                        isLive={true}
+                        onInsightsChange={setLiveInsights}
+                        onInsightClick={handleInsightClick}
+                        selectedInsightId={selectedInsightId}
+                      />
+                    ) : (
+                      <InsightPanel
+                        insights={insights}
+                        isLoading={isLoadingInsights}
+                        onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
+                        selectedInsightId={selectedInsightId}
+                      />
+                    )
                   ) : (
-                    <InsightPanel
-                      insights={insights}
-                      isLoading={isLoadingInsights}
-                      onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
-                      selectedInsightId={selectedInsightId}
-                    />
-                  )
-                ) : (
-                  <div className="text-stone-500 text-sm">
-                    Start a session to see live insights.
-                  </div>
-                )}
+                    <div className="text-stone-500 text-sm">
+                      Start a session to see live insights.
+                    </div>
+                  )}
 
-                {/* Insight Detail Panel */}
-                {openedInsight ? (
-                  <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="text-stone-100 text-sm font-medium capitalize">
-                          {String(openedTitle).replace(/_/g, ' ')}
-                        </div>
-                        {openedCreated && (
-                          <div className="text-stone-500 text-xs mt-1">
-                            {new Date(String(openedCreated)).toLocaleString()}
+                  {/* Clinical Insight Detail Panel */}
+                  {openedInsight ? (
+                    <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-stone-100 text-sm font-medium capitalize">
+                            {String(openedTitle).replace(/_/g, ' ')}
                           </div>
+                          {openedCreated && (
+                            <div className="text-stone-500 text-xs mt-1">
+                              {new Date(String(openedCreated)).toLocaleString()}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="mt-3 text-stone-200 text-sm whitespace-pre-wrap">
+                        {openedBody ? (
+                          String(openedBody)
+                        ) : (
+                          <pre className="text-stone-300 text-xs whitespace-pre-wrap">
+                            {JSON.stringify(openedInsight, null, 2)}
+                          </pre>
                         )}
                       </div>
                     </div>
-
-                    <div className="mt-3 text-stone-200 text-sm whitespace-pre-wrap">
-                      {openedBody ? (
-                        String(openedBody)
-                      ) : (
-                        <pre className="text-stone-300 text-xs whitespace-pre-wrap">
-                          {JSON.stringify(openedInsight, null, 2)}
-                        </pre>
-                      )}
+                  ) : activeSessionId ? (
+                    <div className="mt-4 text-stone-500 text-sm">
+                      Click an insight to view details.
                     </div>
-                  </div>
-                ) : activeSessionId ? (
-                  <div className="mt-4 text-stone-500 text-sm">
-                    Click an insight to view details.
-                  </div>
-                ) : null}
-              </div>
+                  ) : null}
+                </div>
+              ) : (
+                /* Practice Development Insights */
+                <div className="bg-stone-900/80 backdrop-blur-xl border border-violet-700/30 rounded-2xl p-6">
+                  <h3 className="text-lg font-medium text-stone-200 mb-4 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-violet-400" />
+                    Practice Insights
+                  </h3>
+                  <PracticePanel
+                    sessionId={activeSessionId}
+                    onInsightClick={(insight) => setSelectedPracticeInsight(insight)}
+                    selectedInsightId={selectedPracticeInsight?.id}
+                  />
+
+                  {/* Practice Insight Detail Panel */}
+                  {selectedPracticeInsight && (
+                    <div className="mt-4 rounded-xl border border-violet-500/20 bg-violet-500/5 p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-violet-300 text-xs font-medium uppercase tracking-wide">
+                            {selectedPracticeInsight.world_code.replace(/_/g, ' ')}
+                          </div>
+                          <div className="text-stone-100 text-sm font-medium capitalize mt-1">
+                            {selectedPracticeInsight.insight_type.replace(/_/g, ' ')}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-stone-200 text-sm whitespace-pre-wrap">
+                        {selectedPracticeInsight.content}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* HIPAA Notice */}
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4">
-                <h4 className="text-sm font-medium text-emerald-400 mb-1">
-                  HIPAA Compliant
+              <div className={`${supervisionMode === 'clinical' ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-violet-500/10 border-violet-500/30'} border rounded-xl p-4`}>
+                <h4 className={`text-sm font-medium ${supervisionMode === 'clinical' ? 'text-emerald-400' : 'text-violet-400'} mb-1`}>
+                  {supervisionMode === 'clinical' ? 'HIPAA Compliant' : 'Local Processing'}
                 </h4>
                 <p className="text-xs text-stone-400">
                   All audio capture, transcription, and analysis occurs locally.
@@ -447,19 +523,33 @@ export default function SupervisionDashboard() {
               </div>
             </div>
 
-            {/* Right: Insights */}
+            {/* Right: Insights (Clinical or Practice based on mode) */}
             <div className="lg:col-span-1">
-              <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
-                <h3 className="text-lg font-medium text-stone-200 mb-4">
-                  Insights
-                </h3>
-                <InsightPanel
-                  insights={insights}
-                  isLoading={isLoadingInsights}
-                  onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
-                  selectedInsightId={selectedInsightId}
-                />
-              </div>
+              {supervisionMode === 'clinical' ? (
+                <div className="bg-stone-900/80 backdrop-blur-xl border border-stone-700/50 rounded-2xl p-6">
+                  <h3 className="text-lg font-medium text-stone-200 mb-4">
+                    Clinical Insights
+                  </h3>
+                  <InsightPanel
+                    insights={insights}
+                    isLoading={isLoadingInsights}
+                    onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
+                    selectedInsightId={selectedInsightId}
+                  />
+                </div>
+              ) : (
+                <div className="bg-stone-900/80 backdrop-blur-xl border border-violet-700/30 rounded-2xl p-6">
+                  <h3 className="text-lg font-medium text-stone-200 mb-4 flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-violet-400" />
+                    Practice Insights
+                  </h3>
+                  <PracticePanel
+                    sessionId={selectedHistorySessionId}
+                    onInsightClick={(insight) => setSelectedPracticeInsight(insight)}
+                    selectedInsightId={selectedPracticeInsight?.id}
+                  />
+                </div>
+              )}
             </div>
           </div>
         )}
