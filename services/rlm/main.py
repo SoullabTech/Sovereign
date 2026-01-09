@@ -405,7 +405,7 @@ class RCNEngine:
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=10
+                timeout=30  # 30s for large vaults with iCloud latency
             )
 
             if result.returncode not in (0, 1):  # 1 = no matches (ok)
