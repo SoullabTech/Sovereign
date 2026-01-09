@@ -58,20 +58,45 @@ type ViewMode = 'live' | 'history';
 type SupervisionMode = 'clinical' | 'practice';
 
 // Unified insight type for SSE and history modes
+// Uses explicit optional fields so that `Insight` is assignable without casts
 type InsightLike = {
   id: string;
+  // snake_case variants (from DB/SSE)
   time_range_start_ms?: number;
   time_range_end_ms?: number;
+  start_ms?: number;
+  // camelCase variants (from transformed payloads)
   timeRangeStartMs?: number;
   timeRangeEndMs?: number;
-} & Record<string, unknown>;
+  startMs?: number;
+  // content fields (for detail panel)
+  title?: string;
+  summary?: string;
+  kind?: string;
+  insight_type?: string;
+  type?: string;
+  body?: string;
+  content?: string;
+  text?: string;
+  message?: string;
+  created_at?: string;
+  createdAt?: string;
+  timestamp?: string;
+  // timeRange from local Insight type
+  timeRange?: { startMs: number | null; endMs: number | null };
+};
 
 function getInsightStartMs(i: InsightLike): number | null {
+  // Check timeRange object first (local Insight type)
+  if (i.timeRange?.startMs != null) {
+    return i.timeRange.startMs;
+  }
+
   const raw =
     i.time_range_start_ms ??
     i.timeRangeStartMs ??
-    (i as Record<string, unknown>).start_ms ??
-    (i as Record<string, unknown>).startMs ??
+    i.start_ms ??
+    i.startMs ??
     null;
 
   const n = Number(raw);
@@ -191,25 +216,28 @@ export default function SupervisionDashboard() {
     return fromList ?? selectedInsight;
   }, [isRecording, liveInsights, insights, selectedInsightId, selectedInsight]);
 
+  // Cast to InsightLike for field access (InsightLike has all optional field variants)
+  const insightData = openedInsight as InsightLike | null;
+
   const openedTitle =
-    (openedInsight as Record<string, unknown>)?.title ??
-    (openedInsight as Record<string, unknown>)?.summary ??
-    (openedInsight as Record<string, unknown>)?.kind ??
-    (openedInsight as Record<string, unknown>)?.insight_type ??
-    (openedInsight as Record<string, unknown>)?.type ??
+    insightData?.title ??
+    insightData?.summary ??
+    insightData?.kind ??
+    insightData?.insight_type ??
+    insightData?.type ??
     'Insight';
 
   const openedBody =
-    (openedInsight as Record<string, unknown>)?.body ??
-    (openedInsight as Record<string, unknown>)?.content ??
-    (openedInsight as Record<string, unknown>)?.text ??
-    (openedInsight as Record<string, unknown>)?.message ??
+    insightData?.body ??
+    insightData?.content ??
+    insightData?.text ??
+    insightData?.message ??
     '';
 
   const openedCreated =
-    (openedInsight as Record<string, unknown>)?.created_at ??
-    (openedInsight as Record<string, unknown>)?.createdAt ??
-    (openedInsight as Record<string, unknown>)?.timestamp ??
+    insightData?.created_at ??
+    insightData?.createdAt ??
+    insightData?.timestamp ??
     null;
 
   // Load session from history (TranscriptViewer handles its own fetching)
@@ -357,7 +385,7 @@ export default function SupervisionDashboard() {
                       <InsightPanel
                         insights={insights}
                         isLoading={isLoadingInsights}
-                        onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
+                        onInsightClick={handleInsightClick}
                         selectedInsightId={selectedInsightId}
                       />
                     )
@@ -533,7 +561,7 @@ export default function SupervisionDashboard() {
                   <InsightPanel
                     insights={insights}
                     isLoading={isLoadingInsights}
-                    onInsightClick={handleInsightClick as unknown as (insight: Insight) => void}
+                    onInsightClick={handleInsightClick}
                     selectedInsightId={selectedInsightId}
                   />
                 </div>

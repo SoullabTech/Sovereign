@@ -10,8 +10,8 @@ import type { SupervisionInsight } from '@/lib/supervision/SupervisionStore';
 
 type ConnectionState = 'idle' | 'sse' | 'polling' | 'reconnecting';
 
-// Unified insight type for callbacks
-type InsightLike = { id: string } & Record<string, unknown>;
+// Minimal type for callbacks - parent can narrow further
+type InsightLike = { id: string };
 
 type InsightsViewerProps = {
   sessionId: string;

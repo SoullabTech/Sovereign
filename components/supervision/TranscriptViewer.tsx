@@ -272,8 +272,10 @@ export function TranscriptViewer({
     const targetId = findClosestSegmentId(segments, jumpToMs);
     if (!targetId) return;
 
+    let timeoutId: number | null = null;
+
     // Wait a frame so DOM is rendered
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       const el = document.querySelector(
         `[data-transcript-segment-id="${targetId}"]`
       ) as HTMLElement | null;
@@ -285,14 +287,16 @@ export function TranscriptViewer({
       setAutoScroll(false); // Disable auto-scroll when jumping
 
       // Clear focus highlight after 2 seconds
-      const timer = window.setTimeout(() => {
+      timeoutId = window.setTimeout(() => {
         setFocusedSegmentId((curr) => (curr === targetId ? null : curr));
       }, 2000);
-
-      return () => clearTimeout(timer);
     });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jumpNonce, jumpToMs, segments?.length]);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+      if (timeoutId) window.clearTimeout(timeoutId);
+    };
+  }, [jumpNonce, jumpToMs, segments]);
 
   // Track scroll position
   const handleScroll = () => {
