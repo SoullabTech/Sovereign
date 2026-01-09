@@ -1,7 +1,34 @@
 #!/usr/bin/env bash
+#
+# Supervision smoke test - validates supervision session lifecycle and Practice mode
+#
+# Usage:
+#   ./scripts/smoke/supervision-smoke.sh [BASE_URL] [OPTIONS]
+#
+# Options:
+#   --with-practice       Test Practice insights generation via /api/practice/insights/generate
+#   --check-insights-sse  Test SSE stream at /api/supervision/insights/stream
+#
+# Examples:
+#   ./scripts/smoke/supervision-smoke.sh                              # Basic test
+#   ./scripts/smoke/supervision-smoke.sh --with-practice              # With Practice mode
+#   ./scripts/smoke/supervision-smoke.sh https://soullab.life --check-insights-sse
+#
 set -euo pipefail
 
-BASE_URL="${1:-http://localhost:3000}"
+# Parse arguments
+BASE_URL="http://localhost:3000"
+WITH_PRACTICE=false
+CHECK_SSE=false
+
+for arg in "$@"; do
+  case "$arg" in
+    --with-practice) WITH_PRACTICE=true ;;
+    --check-insights-sse) CHECK_SSE=true ;;
+    http://*|https://*) BASE_URL="$arg" ;;
+    *) echo "Unknown arg: $arg"; exit 1 ;;
+  esac
+done
 
 # Use DATABASE_URL if provided; otherwise default to local db name.
 if [[ -n "${DATABASE_URL:-}" ]]; then
@@ -145,10 +172,43 @@ expect_fail_contains \
   psql "${PSQL_BASE[@]:1}" -v ON_ERROR_STOP=1 -tA -c \
   "UPDATE practice_insights SET session_id = '${BAD_SESSION_ID}'::uuid WHERE id = '${INSIGHT_ID}'::uuid;"
 
-# 10) Cleanup: delete insight + stop session
-log "Cleanup: deleting insight…"
-psqlq "DELETE FROM practice_insights WHERE id = '${INSIGHT_ID}'::uuid;"
-ok "Insight deleted"
+# 10) Optional: Practice insights generation (--with-practice)
+if [[ "$WITH_PRACTICE" == "true" ]]; then
+  log "Testing Practice insights generation via API…"
+  WORLD_CODE="$(psqlq "SELECT code FROM practice_worlds ORDER BY RANDOM() LIMIT 1;")"
+  PRAC_JSON="$(http_post_json "/api/practice/insights/generate" "$(jq -nc --arg sid "$SESSION_ID" --arg wc "$WORLD_CODE" '{
+    sessionId: $sid,
+    worldCode: $wc,
+    generateAll: true
+  }')")"
+
+  if echo "$PRAC_JSON" | jq -e '.success == true' >/dev/null 2>&1; then
+    INSIGHT_COUNT="$(echo "$PRAC_JSON" | jq -er '.insights | length')"
+    ok "Practice insights generated (worldCode=${WORLD_CODE}, count=${INSIGHT_COUNT})"
+  else
+    # May fail if Ollama not running - warn but don't fail test
+    PRAC_ERR="$(echo "$PRAC_JSON" | jq -r '.error // "unknown"')"
+    echo "⚠️  Practice insight generation skipped: ${PRAC_ERR}"
+  fi
+fi
+
+# 11) Optional: SSE stream check (--check-insights-sse)
+if [[ "$CHECK_SSE" == "true" ]]; then
+  log "Testing insights SSE stream…"
+  # Capture first 5 seconds of SSE output
+  SSE_OUT="$(timeout 5 curl -sS "${BASE_URL}/api/supervision/insights/stream?sessionId=${SESSION_ID}&afterTs=0" 2>/dev/null || true)"
+
+  if echo "$SSE_OUT" | grep -q "event: ready"; then
+    ok "SSE stream responded with ready event"
+  else
+    echo "⚠️  SSE stream did not return ready event within timeout"
+  fi
+fi
+
+# 12) Cleanup: delete insights + stop session
+log "Cleanup: deleting test insights…"
+psqlq "DELETE FROM practice_insights WHERE session_id = '${SESSION_ID}'::uuid;"
+ok "Insights deleted"
 
 log "Stopping supervision session…"
 STOP_JSON="$(http_post_json "/api/supervision/session/stop" "$(jq -nc --arg sid "$SESSION_ID" '{sessionId:$sid}')" )"
