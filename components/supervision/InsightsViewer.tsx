@@ -16,10 +16,12 @@ type InsightsViewerProps = {
 
   // Optional: controlled mode (if parent provides insights)
   insights?: SupervisionInsight[];
-  onInsightsChange?: (insights: SupervisionInsight[]) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onInsightsChange?: (insights: any[]) => void;
 
   // Selection handling
-  onInsightClick?: (insight: SupervisionInsight) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  onInsightClick?: (insight: any) => void;
   selectedInsightId?: string;
 
   className?: string;
@@ -288,7 +290,7 @@ export default function InsightsViewer({
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.2 }}
-                    onClick={() => onInsightClick?.(i)}
+                    onClick={() => onInsightClick?.({ ...i, id })}
                     className={[
                       'rounded-xl border p-3 transition-colors',
                       onInsightClick ? 'cursor-pointer' : '',

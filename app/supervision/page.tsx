@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Brain,
@@ -63,6 +63,10 @@ export default function SupervisionDashboard() {
   const [isLoadingSessions, setIsLoadingSessions] = useState(false);
   const [selectedInsightId, setSelectedInsightId] = useState<string | undefined>();
   const [selectedHistorySessionId, setSelectedHistorySessionId] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [liveInsights, setLiveInsights] = useState<any[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [selectedInsight, setSelectedInsight] = useState<any | null>(null);
 
   // Fetch past sessions
   const fetchSessions = useCallback(async () => {
@@ -121,10 +125,46 @@ export default function SupervisionDashboard() {
 
   // Handle insight click to highlight related transcript
   // Accepts both local Insight and SupervisionInsight from SSE stream
-  const handleInsightClick = (insight: { id: string }) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleInsightClick = (insight: any) => {
     setSelectedInsightId(insight.id);
+    setSelectedInsight(insight);
     // Could also scroll transcript to the relevant time range
   };
+
+  // Compute the opened insight from either live or history source
+  const openedInsight = useMemo(() => {
+    // Flatten history insights (Record<string, Insight[]>) to array
+    const historyFlat = Object.values(insights).flat();
+    const source = isRecording ? liveInsights : historyFlat;
+    const fromList = selectedInsightId
+      ? source.find((x) => (x as { id?: string })?.id === selectedInsightId)
+      : null;
+
+    // Prefer the newest from the list (has freshest body), fallback to last clicked object
+    return fromList ?? selectedInsight;
+  }, [isRecording, liveInsights, insights, selectedInsightId, selectedInsight]);
+
+  const openedTitle =
+    (openedInsight as Record<string, unknown>)?.title ??
+    (openedInsight as Record<string, unknown>)?.summary ??
+    (openedInsight as Record<string, unknown>)?.kind ??
+    (openedInsight as Record<string, unknown>)?.insight_type ??
+    (openedInsight as Record<string, unknown>)?.type ??
+    'Insight';
+
+  const openedBody =
+    (openedInsight as Record<string, unknown>)?.body ??
+    (openedInsight as Record<string, unknown>)?.content ??
+    (openedInsight as Record<string, unknown>)?.text ??
+    (openedInsight as Record<string, unknown>)?.message ??
+    '';
+
+  const openedCreated =
+    (openedInsight as Record<string, unknown>)?.created_at ??
+    (openedInsight as Record<string, unknown>)?.createdAt ??
+    (openedInsight as Record<string, unknown>)?.timestamp ??
+    null;
 
   // Load session from history (TranscriptViewer handles its own fetching)
   const loadSession = async (sessionId: string) => {
@@ -229,6 +269,7 @@ export default function SupervisionDashboard() {
                     <InsightsViewer
                       sessionId={activeSessionId}
                       isLive={true}
+                      onInsightsChange={setLiveInsights}
                       onInsightClick={handleInsightClick}
                       selectedInsightId={selectedInsightId}
                     />
@@ -245,6 +286,38 @@ export default function SupervisionDashboard() {
                     Start a session to see live insights.
                   </div>
                 )}
+
+                {/* Insight Detail Panel */}
+                {openedInsight ? (
+                  <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-stone-100 text-sm font-medium capitalize">
+                          {String(openedTitle).replace(/_/g, ' ')}
+                        </div>
+                        {openedCreated && (
+                          <div className="text-stone-500 text-xs mt-1">
+                            {new Date(String(openedCreated)).toLocaleString()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 text-stone-200 text-sm whitespace-pre-wrap">
+                      {openedBody ? (
+                        String(openedBody)
+                      ) : (
+                        <pre className="text-stone-300 text-xs whitespace-pre-wrap">
+                          {JSON.stringify(openedInsight, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  </div>
+                ) : activeSessionId ? (
+                  <div className="mt-4 text-stone-500 text-sm">
+                    Click an insight to view details.
+                  </div>
+                ) : null}
               </div>
 
               {/* HIPAA Notice */}
