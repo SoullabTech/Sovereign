@@ -114,8 +114,8 @@ function generateGiftEmailHtml(
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td style="padding: 8px 0; color: rgba(255,255,255,0.8); font-size: 15px;">
-                    <span style="color: #D4B896; margin-right: 12px;">☉</span>
-                    Your cosmic blueprint — Sun, Moon, Rising, and beyond
+                    <span style="color: #D4B896; margin-right: 12px;">✦</span>
+                    Deep self-understanding through meaningful conversation
                   </td>
                 </tr>
                 <tr>
@@ -189,7 +189,7 @@ YOUR PERSONAL PASSKEY: ${passkey}
 Visit soullab.life/begin and enter your passkey to begin.
 
 WHAT AWAITS YOU:
-☉ Your cosmic blueprint — Sun, Moon, Rising, and beyond
+✦ Deep self-understanding through meaningful conversation
 🔮 Archetypal insights from 34 years of research
 💫 A companion who remembers, learns, and grows with you
 🛡️ Complete privacy — your data stays yours, always
