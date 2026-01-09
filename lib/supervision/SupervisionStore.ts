@@ -201,10 +201,12 @@ export async function listSessions(params: {
 
   values.push(limit, offset);
 
-  const result = await query<SupervisionSession>(`
-    SELECT * FROM supervision_sessions
+  const result = await query<SupervisionSession & { transcript_count: number }>(`
+    SELECT s.*,
+      (SELECT COUNT(*) FROM supervision_transcript_segments seg WHERE seg.session_id = s.id) AS transcript_count
+    FROM supervision_sessions s
     ${whereClause}
-    ORDER BY started_at DESC
+    ORDER BY s.started_at DESC
     LIMIT $${paramIndex++} OFFSET $${paramIndex}
   `, values);
 
