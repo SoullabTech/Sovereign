@@ -36,6 +36,12 @@ import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 import { AlchemicalSymbol } from './AlchemicalSymbols';
 import { Mission, MissionLayerSettings } from '@/lib/story/types';
 import { MissionDot, MissionPopup } from './MissionDot';
+import {
+  detectAllPatterns,
+  type AspectPattern,
+  type Aspect as PatternAspect,
+  type Planet as PatternPlanet,
+} from '@/lib/astrology/aspectPatternDetector';
 
 interface Planet {
   name: string;
@@ -282,6 +288,32 @@ export function SacredHouseWheel({
   const [revealedAspects, setRevealedAspects] = useState(false);
   const [showSacredGeometry, setShowSacredGeometry] = useState(true); // Fremen alchemist mode
   const [showNodalAxisPanel, setShowNodalAxisPanel] = useState(false); // Destiny Path insight
+  const [showPatternsPanel, setShowPatternsPanel] = useState(false); // Aspect Patterns insight
+  const [selectedPattern, setSelectedPattern] = useState<AspectPattern | null>(null);
+
+  // Detect aspect patterns from natal chart
+  const detectedPatterns = (() => {
+    if (!planets || planets.length === 0 || !aspects || aspects.length === 0) return [];
+
+    // Convert to pattern detector types (add longitude if not present)
+    const patternPlanets: PatternPlanet[] = planets.map(p => ({
+      name: p.name,
+      sign: p.sign,
+      house: p.house,
+      degree: p.degree,
+      longitude: p.degree + (spiralogicOrder.indexOf(p.house) * 30), // Approximate longitude
+    }));
+
+    // Add quincunx support if not in aspects (pattern detector needs it)
+    const patternAspects: PatternAspect[] = aspects.map(a => ({
+      planet1: a.planet1,
+      planet2: a.planet2,
+      type: a.type as PatternAspect['type'],
+      orb: a.orb,
+    }));
+
+    return detectAllPatterns(patternAspects, patternPlanets);
+  })();
 
   // Wheel is fixed - no rotation (consciousness states are stable)
 
@@ -1580,6 +1612,130 @@ export function SacredHouseWheel({
               }
               return null;
             })}
+          </g>
+        )}
+
+        {/* ASPECT PATTERNS - Sacred Geometry Configurations */}
+        {detectedPatterns.length > 0 && revealedAspects && (
+          <g className="aspect-patterns-layer">
+            {detectedPatterns.slice(0, 3).map((pattern, idx) => {
+              // Get positions for pattern planets
+              const patternPositions = pattern.planets
+                .map(name => planetPositions[name])
+                .filter(Boolean);
+
+              if (patternPositions.length < 3) return null;
+
+              // Pattern-specific colors
+              const patternColors: Record<string, string> = {
+                'grand-trine': isDayMode ? '#10B981' : '#34D399', // Green - flow
+                't-square': isDayMode ? '#EF4444' : '#F87171', // Red - tension
+                'grand-cross': isDayMode ? '#DC2626' : '#EF4444', // Deep red - challenge
+                'yod': isDayMode ? '#8B5CF6' : '#A78BFA', // Purple - fate
+                'stellium': isDayMode ? '#F59E0B' : '#FBBF24', // Amber - concentration
+                'mystic-rectangle': isDayMode ? '#3B82F6' : '#60A5FA', // Blue - harmony
+              };
+
+              const color = patternColors[pattern.type] || (isDayMode ? '#6B7280' : '#9CA3AF');
+
+              // Draw pattern shape
+              const points = patternPositions.map(p => `${p.x},${p.y}`).join(' ');
+
+              return (
+                <g
+                  key={`pattern-${idx}`}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    setSelectedPattern(pattern);
+                    setShowPatternsPanel(true);
+                  }}
+                >
+                  {/* Pattern fill */}
+                  <motion.polygon
+                    points={points}
+                    fill={color}
+                    fillOpacity={0.05 + (pattern.strength * 0.1)}
+                    stroke={color}
+                    strokeWidth="1"
+                    strokeOpacity={0.3}
+                    strokeDasharray={pattern.type === 'yod' ? '4,2' : undefined}
+                    initial={{ opacity: 0 }}
+                    animate={{
+                      opacity: [0.3, 0.5, 0.3],
+                      fillOpacity: [0.05, 0.15, 0.05],
+                    }}
+                    transition={{
+                      duration: 3 + idx,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                    }}
+                  />
+
+                  {/* Pattern center indicator */}
+                  {(() => {
+                    const centerX = patternPositions.reduce((sum, p) => sum + p.x, 0) / patternPositions.length;
+                    const centerY = patternPositions.reduce((sum, p) => sum + p.y, 0) / patternPositions.length;
+                    return (
+                      <motion.circle
+                        cx={centerX}
+                        cy={centerY}
+                        r="4"
+                        fill={color}
+                        fillOpacity="0.6"
+                        animate={{
+                          r: [4, 6, 4],
+                          fillOpacity: [0.6, 0.9, 0.6],
+                        }}
+                        transition={{
+                          duration: 2,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                    );
+                  })()}
+                </g>
+              );
+            })}
+          </g>
+        )}
+
+        {/* Patterns indicator badge (shows count when aspects revealed) */}
+        {detectedPatterns.length > 0 && revealedAspects && (
+          <g
+            className="cursor-pointer"
+            onClick={() => setShowPatternsPanel(true)}
+            style={{ pointerEvents: 'auto' }}
+          >
+            <motion.circle
+              cx="360"
+              cy="40"
+              r="16"
+              fill={isDayMode ? '#FBBF24' : '#F59E0B'}
+              fillOpacity="0.9"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.5, type: 'spring' }}
+            />
+            <text
+              x="360"
+              y="44"
+              textAnchor="middle"
+              fontSize="11"
+              fontWeight="bold"
+              fill={isDayMode ? '#000' : '#000'}
+            >
+              {detectedPatterns.length}
+            </text>
+            <text
+              x="360"
+              y="60"
+              textAnchor="middle"
+              fontSize="8"
+              fill={isDayMode ? '#78716C' : '#A8A29E'}
+            >
+              Patterns
+            </text>
           </g>
         )}
 
@@ -2972,6 +3128,237 @@ export function SacredHouseWheel({
             </motion.div>
           );
         })()}
+
+        {/* Aspect Patterns Panel - Sacred Geometry Configurations */}
+        {showPatternsPanel && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+            onClick={() => {
+              setShowPatternsPanel(false);
+              setSelectedPattern(null);
+            }}
+          >
+            <div
+              className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full max-h-[80vh] overflow-y-auto ${
+                isDayMode
+                  ? 'bg-white/95 border-stone-200/60'
+                  : 'bg-black/95 border-stone-700/60'
+              }`}
+              style={{
+                boxShadow: isDayMode
+                  ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
+                  : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(139, 92, 246, 0.15)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div
+                className={`px-6 py-4 border-b ${isDayMode ? 'bg-gradient-to-r from-violet-50 to-amber-50' : 'bg-gradient-to-r from-violet-900/20 to-amber-900/20'}`}
+                style={{
+                  borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                      style={{
+                        background: isDayMode ? 'rgba(139, 92, 246, 0.1)' : 'rgba(139, 92, 246, 0.2)',
+                        color: isDayMode ? '#8B5CF6' : '#A78BFA',
+                      }}
+                    >
+                      ⬡
+                    </div>
+                    <div>
+                      <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
+                        Aspect Patterns
+                      </h3>
+                      <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                        Sacred Geometry in Your Chart
+                      </p>
+                    </div>
+                  </div>
+                  <span
+                    className="px-2 py-0.5 rounded-full text-xs font-medium"
+                    style={{
+                      background: isDayMode ? 'rgba(139, 92, 246, 0.15)' : 'rgba(139, 92, 246, 0.25)',
+                      color: isDayMode ? '#7C3AED' : '#A78BFA',
+                    }}
+                  >
+                    {detectedPatterns.length} Found
+                  </span>
+                </div>
+              </div>
+
+              {/* Patterns List */}
+              <div className="p-4 space-y-3">
+                {detectedPatterns.length === 0 ? (
+                  <div className={`text-center py-8 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                    <p className="text-sm">No major aspect patterns detected in your chart.</p>
+                    <p className="text-xs mt-2">This is rare — most charts have at least one configuration.</p>
+                  </div>
+                ) : (
+                  detectedPatterns.map((pattern, idx) => {
+                    const isSelected = selectedPattern?.type === pattern.type &&
+                      JSON.stringify(selectedPattern?.planets) === JSON.stringify(pattern.planets);
+
+                    // Pattern icons and colors
+                    const patternMeta: Record<string, { icon: string; color: string; meaning: string }> = {
+                      'grand-trine': {
+                        icon: '△',
+                        color: '#10B981',
+                        meaning: 'Natural talents and flowing gifts',
+                      },
+                      't-square': {
+                        icon: '⊤',
+                        color: '#EF4444',
+                        meaning: 'Dynamic tension driving growth',
+                      },
+                      'grand-cross': {
+                        icon: '✚',
+                        color: '#DC2626',
+                        meaning: 'Crucible of transformation',
+                      },
+                      'yod': {
+                        icon: '☉',
+                        color: '#8B5CF6',
+                        meaning: 'Finger of fate pointing to destiny',
+                      },
+                      'stellium': {
+                        icon: '⚝',
+                        color: '#F59E0B',
+                        meaning: 'Concentrated energy and focus',
+                      },
+                      'mystic-rectangle': {
+                        icon: '▭',
+                        color: '#3B82F6',
+                        meaning: 'Harmonious integration of opposites',
+                      },
+                    };
+
+                    const meta = patternMeta[pattern.type] || { icon: '◇', color: '#6B7280', meaning: 'Complex configuration' };
+                    const strengthPercent = Math.round(pattern.strength * 100);
+
+                    return (
+                      <div
+                        key={`pattern-card-${idx}`}
+                        className={`rounded-xl border cursor-pointer transition-all ${
+                          isSelected
+                            ? isDayMode ? 'bg-violet-50 border-violet-200' : 'bg-violet-900/20 border-violet-700'
+                            : isDayMode ? 'bg-stone-50 border-stone-200 hover:bg-stone-100' : 'bg-stone-800/30 border-stone-700 hover:bg-stone-800/50'
+                        }`}
+                        onClick={() => setSelectedPattern(isSelected ? null : pattern)}
+                      >
+                        <div className="p-4">
+                          {/* Pattern Header */}
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg font-bold"
+                                style={{
+                                  background: `${meta.color}15`,
+                                  color: meta.color,
+                                }}
+                              >
+                                {meta.icon}
+                              </div>
+                              <div>
+                                <h4 className={`text-sm font-semibold capitalize ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                                  {pattern.type.replace('-', ' ')}
+                                </h4>
+                                <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                                  {pattern.planets.join(' · ')}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className={`text-xs font-medium ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                Strength
+                              </div>
+                              <div
+                                className="text-sm font-bold"
+                                style={{ color: meta.color }}
+                              >
+                                {strengthPercent}%
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Element/Modality Badge */}
+                          {(pattern.element || pattern.modality || pattern.sign) && (
+                            <div className="flex gap-2 mb-2">
+                              {pattern.element && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs capitalize ${isDayMode ? 'bg-stone-200' : 'bg-stone-700'}`}
+                                >
+                                  {pattern.element}
+                                </span>
+                              )}
+                              {pattern.modality && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs capitalize ${isDayMode ? 'bg-stone-200' : 'bg-stone-700'}`}
+                                >
+                                  {pattern.modality}
+                                </span>
+                              )}
+                              {pattern.sign && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs ${isDayMode ? 'bg-amber-100 text-amber-800' : 'bg-amber-900/30 text-amber-300'}`}
+                                >
+                                  {pattern.sign}
+                                </span>
+                              )}
+                              {pattern.focalPlanet && (
+                                <span
+                                  className={`px-2 py-0.5 rounded text-xs ${isDayMode ? 'bg-red-100 text-red-800' : 'bg-red-900/30 text-red-300'}`}
+                                >
+                                  Focal: {pattern.focalPlanet}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Interpretation (expanded when selected) */}
+                          {isSelected && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: 'auto' }}
+                              exit={{ opacity: 0, height: 0 }}
+                              className={`mt-3 pt-3 border-t ${isDayMode ? 'border-stone-200' : 'border-stone-600'}`}
+                            >
+                              <p className={`text-xs font-medium mb-1 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                                {meta.meaning}
+                              </p>
+                              <p className={`text-sm leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                                {pattern.interpretation}
+                              </p>
+                            </motion.div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Footer */}
+              <div
+                className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
+                style={{
+                  borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                }}
+              >
+                <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
+                  ⬡ Ask MAIA about your aspect patterns for deeper configuration insights
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </AnimatePresence>
 
       {/* Mission Popup - Shows mission details */}
