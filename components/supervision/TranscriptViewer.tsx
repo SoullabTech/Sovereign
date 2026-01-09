@@ -79,6 +79,7 @@ export function TranscriptViewer({
   const [internalSegments, setInternalSegments] = useState<TranscriptSegment[]>([]);
   const afterMsRef = useRef<number>(-1);  // useRef to avoid polling effect restarts
   const [isLoading, setIsLoading] = useState(false);
+  const [usePolling, setUsePolling] = useState(false); // SSE primary, polling fallback
 
   // Use external segments if provided, otherwise use internal state
   const segments = externalSegments ?? internalSegments;
@@ -144,9 +145,40 @@ export function TranscriptViewer({
     return () => { cancelled = true; };
   }, [sessionId, isSelfManaged, mergeSegments]);
 
-  // Live polling loop (uses ref to avoid effect restarts on cursor change)
+  // SSE streaming (primary method when live)
   useEffect(() => {
-    if (!isSelfManaged || !isLive) return;
+    if (!isSelfManaged || !isLive || usePolling) return;
+
+    const url = apiUrl(
+      `/api/supervision/transcript/stream?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMsRef.current}`
+    );
+    const es = new EventSource(url);
+
+    es.addEventListener('segments', (evt) => {
+      try {
+        const { segments: newSegs, afterMs } = JSON.parse((evt as MessageEvent).data);
+        mergeSegments(newSegs);
+        scrollToBottomIfAuto();
+        if (typeof afterMs === 'number') {
+          afterMsRef.current = afterMs;
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    });
+
+    es.onerror = () => {
+      es.close();
+      // Fallback to polling on SSE failure
+      setUsePolling(true);
+    };
+
+    return () => es.close();
+  }, [sessionId, isSelfManaged, isLive, usePolling, mergeSegments, scrollToBottomIfAuto]);
+
+  // Live polling loop (fallback when SSE fails)
+  useEffect(() => {
+    if (!isSelfManaged || !isLive || !usePolling) return;
 
     let alive = true;
     let timer: ReturnType<typeof setTimeout> | null = null;
