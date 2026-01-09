@@ -116,7 +116,7 @@ export default function AstrologyPage() {
           ))}
         </div>
         <div className="text-center relative z-10">
-          <p className="text-dune-dune-amber mb-4">No birth chart data available</p>
+          <p className="text-dune-amber mb-4">No birth chart data available</p>
           <Link href="/settings" className="text-dune-spice-orange hover:text-dune-spice-glow">
             Calculate your chart
           </Link>
@@ -155,13 +155,13 @@ export default function AstrologyPage() {
         {/* Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-dune-dune-amber mb-2">Your Cosmic Blueprint</h1>
+            <h1 className="text-4xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint</h1>
             <p className="text-dune-spice-sand">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
           </div>
 
           {/* Archetypal Profile */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-dune-amber mb-4">Your Archetypal Profile</h2>
+            <h2 className="text-2xl font-bold text-dune-amber mb-4">Your Archetypal Profile</h2>
             <p className="text-dune-spice-sand/80 mb-6">
               The core archetypal energies shaping your soul's journey
             </p>
@@ -186,7 +186,7 @@ export default function AstrologyPage() {
                   <span className="text-2xl">☉</span>
                 </div>
                 <div>
-                  <h3 className="text-dune-dune-amber font-semibold">Sun · Core Identity</h3>
+                  <h3 className="text-dune-amber font-semibold">Sun · Core Identity</h3>
                   <p className="text-sm text-dune-spice-sand/80">Conscious Expression</p>
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function AstrologyPage() {
                 <p className="text-sm text-dune-spice-sand/70">
                   {chartData.sun.degree.toFixed(1)}° · House {chartData.sun.house}
                 </p>
-                <p className="text-sm text-dune-dune-amber/80 italic mt-2">
+                <p className="text-sm text-dune-amber/80 italic mt-2">
                   {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Archetypal essence'}
                 </p>
                 <Link
@@ -216,7 +216,7 @@ export default function AstrologyPage() {
                   <span className="text-2xl text-white">☽</span>
                 </div>
                 <div>
-                  <h3 className="text-dune-dune-amber font-semibold">Moon · Emotional Truth</h3>
+                  <h3 className="text-dune-amber font-semibold">Moon · Emotional Truth</h3>
                   <p className="text-sm text-dune-spice-sand/80">Subconscious Landscape</p>
                 </div>
               </div>
@@ -227,7 +227,7 @@ export default function AstrologyPage() {
                 <p className="text-sm text-dune-spice-sand/70">
                   {chartData.moon.degree.toFixed(1)}° · House {chartData.moon.house}
                 </p>
-                <p className="text-sm text-dune-dune-amber/80 italic mt-2">
+                <p className="text-sm text-dune-amber/80 italic mt-2">
                   {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Emotional archetype'}
                 </p>
                 <Link
@@ -246,7 +246,7 @@ export default function AstrologyPage() {
                   <span className="text-2xl">⇡</span>
                 </div>
                 <div>
-                  <h3 className="text-dune-dune-amber font-semibold">Ascendant · Life Portal</h3>
+                  <h3 className="text-dune-amber font-semibold">Ascendant · Life Portal</h3>
                   <p className="text-sm text-dune-spice-sand/80">How You Meet the World</p>
                 </div>
               </div>
@@ -257,12 +257,12 @@ export default function AstrologyPage() {
                 <p className="text-sm text-dune-spice-sand/70">
                   {chartData.ascendant.degree.toFixed(1)}°
                 </p>
-                <p className="text-sm text-dune-dune-amber/80 italic mt-2">
+                <p className="text-sm text-dune-amber/80 italic mt-2">
                   {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Rising energy'}
                 </p>
                 <Link
                   href={`/astrology/placements/ascendant`}
-                  className="text-sm text-dune-bene-gesserit-gold hover:text-dune-dune-amber hover:underline inline-flex items-center gap-1"
+                  className="text-sm text-dune-bene-gesserit-gold hover:text-dune-amber hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
                 </Link>
@@ -272,7 +272,7 @@ export default function AstrologyPage() {
 
           {/* Major Aspects */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-orange/30 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-dune-amber mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
               <TrendingUp className="w-6 h-6 text-dune-spice-orange" />
               Major Aspects
             </h2>
@@ -301,7 +301,7 @@ export default function AstrologyPage() {
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
                         <span className={`text-2xl ${aspectColor}`}>{aspectIcon}</span>
-                        <span className="text-dune-dune-amber font-semibold">
+                        <span className="text-dune-amber font-semibold">
                           {aspect.planet1} {aspect.type} {aspect.planet2}
                         </span>
                       </div>
@@ -320,7 +320,7 @@ export default function AstrologyPage() {
 
           {/* North & South Nodes */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-navigator-purple/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-dune-amber mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
               <span className="text-3xl">☊☋</span>
               North & South Nodes
             </h2>
@@ -335,7 +335,7 @@ export default function AstrologyPage() {
                   <span className="text-2xl">☊</span>
                   <h3 className="text-xl font-bold text-dune-atreides-green">North Node</h3>
                 </div>
-                <p className="text-lg font-semibold text-dune-dune-amber mb-2">Gemini in 11th House</p>
+                <p className="text-lg font-semibold text-dune-amber mb-2">Gemini in 11th House</p>
                 <p className="text-dune-spice-sand/70 text-sm mb-3">
                   Your soul's calling toward communication, community connections, and intellectual exchange.
                   Learning to embrace curiosity and share ideas within collective networks.
@@ -351,7 +351,7 @@ export default function AstrologyPage() {
                   <span className="text-2xl">☋</span>
                   <h3 className="text-xl font-bold text-dune-sienna-rock">South Node</h3>
                 </div>
-                <p className="text-lg font-semibold text-dune-dune-amber mb-2">Sagittarius in 5th House</p>
+                <p className="text-lg font-semibold text-dune-amber mb-2">Sagittarius in 5th House</p>
                 <p className="text-dune-spice-sand/70 text-sm mb-3">
                   Past life mastery in philosophical wisdom and creative self-expression.
                   Comfortable with teaching and sharing truth, but now evolving toward listening and collaboration.
@@ -365,7 +365,7 @@ export default function AstrologyPage() {
 
           {/* Current Transits */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-blue/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-dune-amber mb-6 flex items-center gap-2">
+            <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
               <span className="text-2xl">🌙</span>
               Current Transits & Activations
             </h2>
@@ -398,7 +398,7 @@ export default function AstrologyPage() {
 
           {/* Spiralogic Pathways */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-orange/30 rounded-lg p-6 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-dune-amber mb-6">Spiralogic Pathways</h2>
+            <h2 className="text-2xl font-bold text-dune-amber mb-6">Spiralogic Pathways</h2>
             <p className="text-dune-spice-sand/80 mb-6">
               The 12 houses organized by elemental pathways and consciousness functions
             </p>
@@ -412,7 +412,7 @@ export default function AstrologyPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">🔥</div>
                   <div>
-                    <h3 className="text-xl font-bold text-dune-dune-amber">Fire Pathway</h3>
+                    <h3 className="text-xl font-bold text-dune-amber">Fire Pathway</h3>
                     <p className="text-sm text-dune-spice-sand/70">Houses 1, 5, 9 · Vision & Projection</p>
                   </div>
                 </div>
@@ -429,7 +429,7 @@ export default function AstrologyPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">💧</div>
                   <div>
-                    <h3 className="text-xl font-bold text-dune-dune-amber">Water Pathway</h3>
+                    <h3 className="text-xl font-bold text-dune-amber">Water Pathway</h3>
                     <p className="text-sm text-dune-spice-sand/70">Houses 4, 8, 12 · Introspection & Depth</p>
                   </div>
                 </div>
@@ -446,7 +446,7 @@ export default function AstrologyPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">🌍</div>
                   <div>
-                    <h3 className="text-xl font-bold text-dune-dune-amber">Earth Pathway</h3>
+                    <h3 className="text-xl font-bold text-dune-amber">Earth Pathway</h3>
                     <p className="text-sm text-dune-spice-sand/70">Houses 2, 6, 10 · Manifestation & Grounding</p>
                   </div>
                 </div>
@@ -463,7 +463,7 @@ export default function AstrologyPage() {
                 <div className="flex items-center gap-3 mb-4">
                   <div className="text-3xl">🌬</div>
                   <div>
-                    <h3 className="text-xl font-bold text-dune-dune-amber">Air Pathway</h3>
+                    <h3 className="text-xl font-bold text-dune-amber">Air Pathway</h3>
                     <p className="text-sm text-dune-spice-sand/70">Houses 3, 7, 11 · Communication & Connection</p>
                   </div>
                 </div>
@@ -482,7 +482,7 @@ export default function AstrologyPage() {
                 <div className="flex items-start gap-4">
                   <div className="text-5xl">📖</div>
                   <div className="flex-1">
-                    <h3 className="text-2xl font-bold text-dune-dune-amber group-hover:text-dune-spice-orange transition-colors mb-2">
+                    <h3 className="text-2xl font-bold text-dune-amber group-hover:text-dune-spice-orange transition-colors mb-2">
                       The Deep Dive: Elemental Alchemy
                     </h3>
                     <p className="text-dune-spice-sand/70 mb-3">
@@ -500,22 +500,6 @@ export default function AstrologyPage() {
 
             {/* Additional Astrological Systems */}
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Synastry - Relationship Comparison */}
-              <Link
-                href="/astrology/synastry"
-                className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-dune-navigator-purple/40 hover:border-dune-navigator-purple/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-dune-navigator-purple/20"
-              >
-                <div className="text-4xl">💫</div>
-                <div className="text-left">
-                  <h3 className="text-xl font-bold text-dune-dune-amber group-hover:text-dune-navigator-purple transition-colors">
-                    Synastry
-                  </h3>
-                  <p className="text-dune-spice-sand/70 text-sm">
-                    Compare two charts to reveal relationship dynamics →
-                  </p>
-                </div>
-              </Link>
-
               {/* Mayan Astrology */}
               <Link
                 href="/astrology/mayan"
@@ -523,11 +507,27 @@ export default function AstrologyPage() {
               >
                 <div className="text-4xl">☀️</div>
                 <div className="text-left">
-                  <h3 className="text-xl font-bold text-dune-dune-amber group-hover:text-dune-bene-gesserit-gold transition-colors">
+                  <h3 className="text-xl font-bold text-dune-amber group-hover:text-dune-bene-gesserit-gold transition-colors">
                     Mayan Astrology
                   </h3>
                   <p className="text-dune-spice-sand/70 text-sm">
-                    Discover your Galactic Signature in the Tzolk'in Sacred Calendar →
+                    Discover your Galactic Signature in the Tzolk&apos;in Sacred Calendar →
+                  </p>
+                </div>
+              </Link>
+
+              {/* Synastry */}
+              <Link
+                href="/astrology/synastry"
+                className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-violet-500/40 hover:border-violet-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-violet-500/20"
+              >
+                <div className="text-4xl">💞</div>
+                <div className="text-left">
+                  <h3 className="text-xl font-bold text-dune-amber group-hover:text-violet-300 transition-colors">
+                    Synastry
+                  </h3>
+                  <p className="text-dune-spice-sand/70 text-sm">
+                    Compare two charts for harmony, friction, and soul-growth vectors →
                   </p>
                 </div>
               </Link>
@@ -539,7 +539,7 @@ export default function AstrologyPage() {
               >
                 <div className="text-4xl">🐉</div>
                 <div className="text-left">
-                  <h3 className="text-xl font-bold text-dune-dune-amber group-hover:text-red-400 transition-colors">
+                  <h3 className="text-xl font-bold text-dune-amber group-hover:text-red-400 transition-colors">
                     Chinese Astrology
                   </h3>
                   <p className="text-dune-spice-sand/70 text-sm">
