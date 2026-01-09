@@ -211,7 +211,8 @@ psqlq "DELETE FROM practice_insights WHERE session_id = '${SESSION_ID}'::uuid;"
 ok "Insights deleted"
 
 log "Stopping supervision session…"
-STOP_JSON="$(http_post_json "/api/supervision/session/stop" "$(jq -nc --arg sid "$SESSION_ID" '{sessionId:$sid}')" )"
+# Skip analysis to keep smoke test fast (triggerAnalysis: false)
+STOP_JSON="$(http_post_json "/api/supervision/session/stop" "$(jq -nc --arg sid "$SESSION_ID" '{sessionId:$sid, triggerAnalysis:false}')" )"
 echo "$STOP_JSON" | jq -e '.success == true' >/dev/null || no "Stop session failed: $STOP_JSON"
 ok "Session stopped"
 
