@@ -1,4 +1,4 @@
-package com.maiaconsciousnesstemp
+package life.soullab.maia
 
 import android.app.Application
 import com.facebook.react.PackageList

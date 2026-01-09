@@ -99,7 +99,7 @@ export default function HomeScreen(): JSX.Element {
   };
 
   const renderConnectionStatus = () => {
-    const isConnected = field.isConnectedToField();
+    const isConnected = field.isFieldConnected();
     const statusColor = isConnected ? '#10B981' : '#EF4444';
     const statusText = isConnected ? 'Connected to Field' : 'Limited Connection';
 
@@ -256,7 +256,7 @@ export default function HomeScreen(): JSX.Element {
           <TouchableOpacity
             style={[styles.actionButton, styles.fieldButton]}
             onPress={() => {
-              if (field.isConnectedToField()) {
+              if (field.isFieldConnected()) {
                 field.disconnectFromField();
               } else {
                 field.connectToField();
@@ -264,10 +264,10 @@ export default function HomeScreen(): JSX.Element {
             }}
           >
             <Text style={styles.actionEmoji}>
-              {field.isConnectedToField() ? '📡' : '🔌'}
+              {field.isFieldConnected() ? '📡' : '🔌'}
             </Text>
             <Text style={styles.actionText}>
-              {field.isConnectedToField() ? 'Connected' : 'Connect'}
+              {field.isFieldConnected() ? 'Connected' : 'Connect'}
             </Text>
           </TouchableOpacity>
         </View>

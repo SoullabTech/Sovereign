@@ -42,6 +42,7 @@ import {
   type Aspect as PatternAspect,
   type Planet as PatternPlanet,
 } from '@/lib/astrology/aspectPatternDetector';
+import HouseDeepDiveSheet from './HouseDeepDiveSheet';
 
 interface Planet {
   name: string;
@@ -282,6 +283,7 @@ export function SacredHouseWheel({
   const [hoveredPlanet, setHoveredPlanet] = useState<Planet | null>(null);
   const [clickedPlanet, setClickedPlanet] = useState<Planet | null>(null);
   const [clickedHouse, setClickedHouse] = useState<number | null>(null);
+  const [deepDiveHouse, setDeepDiveHouse] = useState<number | null>(null);
   const [clickedMission, setClickedMission] = useState<Mission | null>(null);
   const [hoveredTransit, setHoveredTransit] = useState<Transit | null>(null);
   const [clickedTransit, setClickedTransit] = useState<Transit | null>(null);
@@ -2904,9 +2906,9 @@ export function SacredHouseWheel({
                       </div>
                     </div>
 
-                    {/* Footer */}
+                    {/* Footer with Deep Dive button */}
                     <div
-                      className={`px-8 py-4 text-center ${
+                      className={`px-8 py-4 flex items-center justify-between ${
                         isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'
                       }`}
                       style={{
@@ -2914,8 +2916,22 @@ export function SacredHouseWheel({
                       }}
                     >
                       <p className={`text-xs italic ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-                        Click outside to close · Click any house to explore its alchemical process
+                        Click outside to close
                       </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeepDiveHouse(clickedHouse);
+                          setClickedHouse(null);
+                        }}
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                          isDayMode
+                            ? 'bg-stone-800 text-white hover:bg-stone-700'
+                            : 'bg-amber-100 text-stone-900 hover:bg-amber-200'
+                        }`}
+                      >
+                        Deep Dive →
+                      </button>
                     </div>
                   </>
                 );
@@ -3370,6 +3386,26 @@ export function SacredHouseWheel({
           />
         )}
       </AnimatePresence>
+
+      {/* House Deep Dive Sheet - Comprehensive house exploration */}
+      <HouseDeepDiveSheet
+        house={deepDiveHouse || 1}
+        isOpen={deepDiveHouse !== null}
+        onClose={() => setDeepDiveHouse(null)}
+        planetsInHouse={planets?.filter(p => p.house === deepDiveHouse) || []}
+        rulerPlanet={(() => {
+          if (!deepDiveHouse || !planets) return undefined;
+          const HOUSE_RULERS: Record<number, string> = {
+            1: 'Mars', 2: 'Venus', 3: 'Mercury', 4: 'Moon',
+            5: 'Sun', 6: 'Mercury', 7: 'Venus', 8: 'Pluto',
+            9: 'Jupiter', 10: 'Saturn', 11: 'Uranus', 12: 'Neptune',
+          };
+          const rulerName = HOUSE_RULERS[deepDiveHouse];
+          const ruler = planets.find(p => p.name === rulerName);
+          return ruler ? { name: ruler.name, sign: ruler.sign, house: ruler.house } : undefined;
+        })()}
+        isDayMode={isDayMode}
+      />
     </div>
   );
 }
