@@ -140,20 +140,20 @@ export async function getSession(sessionId: string): Promise<PracticeSession | n
     SELECT
       id,
       practitioner_id,
-      title,
-      NULL as client_alias,
+      COALESCE(title, 'Supervision Session') as title,
+      '' as client_alias,
       '{}'::text[] as modalities_tagged,
-      session_type,
+      COALESCE(session_type, 'consultation') as session_type,
       started_at,
       ended_at,
-      NULL as total_duration_ms,
-      processing_status,
-      recording_path,
-      transcript_path,
-      NULL as notes,
+      0 as total_duration_ms,
+      COALESCE(processing_status, 'recording') as processing_status,
+      COALESCE(recording_path, '') as recording_path,
+      COALESCE(transcript_path, '') as transcript_path,
+      '' as notes,
       '{}'::text[] as tags,
       created_at,
-      created_at as updated_at
+      COALESCE(ended_at, created_at) as updated_at
     FROM supervision_sessions WHERE id = $1
   `, [sessionId]);
 
