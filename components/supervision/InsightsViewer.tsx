@@ -122,13 +122,21 @@ export default function InsightsViewer({
       setInternalInsights(prev => {
         const merged = [...prev, ...deduped];
         merged.sort((a, b) => safeDateMs(getInsightCreatedAt(a)) - safeDateMs(getInsightCreatedAt(b)));
+
+        // Normalize with id for parent lookup, then notify
+        const normalized = merged.map(x => ({ ...x, id: getInsightId(x) }));
+        onInsightsChange?.(normalized);
+
         return merged;
       });
     } else {
       // controlled mode
       const merged = [...(externalInsights ?? []), ...deduped];
       merged.sort((a, b) => safeDateMs(getInsightCreatedAt(a)) - safeDateMs(getInsightCreatedAt(b)));
-      onInsightsChange?.(merged);
+
+      // Normalize with id for parent lookup
+      const normalized = merged.map(x => ({ ...x, id: getInsightId(x) }));
+      onInsightsChange?.(normalized);
     }
   };
 

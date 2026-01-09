@@ -109,6 +109,13 @@ export default function SupervisionDashboard() {
     }
   }, [viewMode, fetchSessions]);
 
+  // Reset insight selection when session changes
+  useEffect(() => {
+    setSelectedInsightId(undefined);
+    setSelectedInsight(null);
+    setLiveInsights([]);
+  }, [activeSessionId]);
+
   // Handle session start
   const handleSessionStart = (sessionId: string) => {
     setActiveSessionId(sessionId);
