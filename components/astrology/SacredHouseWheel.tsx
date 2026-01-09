@@ -281,6 +281,7 @@ export function SacredHouseWheel({
   const [clickedTransit, setClickedTransit] = useState<Transit | null>(null);
   const [revealedAspects, setRevealedAspects] = useState(false);
   const [showSacredGeometry, setShowSacredGeometry] = useState(true); // Fremen alchemist mode
+  const [showNodalAxisPanel, setShowNodalAxisPanel] = useState(false); // Destiny Path insight
 
   // Wheel is fixed - no rotation (consciousness states are stable)
 
@@ -1582,6 +1583,143 @@ export function SacredHouseWheel({
           </g>
         )}
 
+        {/* NODAL AXIS - Destiny Path Layer (soul's evolutionary trajectory) */}
+        {(() => {
+          const northNode = planets.find(p => p.name === 'North Node');
+          const southNode = planets.find(p => p.name === 'South Node');
+          if (!northNode || !southNode) return null;
+
+          const nnPos = planetPositions['North Node'] || { x: 200, y: 200 };
+          const snPos = planetPositions['South Node'] || { x: 200, y: 200 };
+          const center = { x: 200, y: 200 };
+
+          // Nodal axis colors
+          const northColor = isDayMode ? '#D97706' : '#F59E0B'; // Gold/amber (future)
+          const southColor = isDayMode ? '#6B7280' : '#9CA3AF'; // Silver/gray (past)
+
+          // Calculate axis angle for gradient
+          const angle = Math.atan2(nnPos.y - snPos.y, nnPos.x - snPos.x) * 180 / Math.PI;
+          const gradientId = `nodal-axis-gradient-${isDayMode ? 'day' : 'night'}`;
+
+          return (
+            <g
+              className="nodal-axis-layer cursor-pointer"
+              onClick={() => setShowNodalAxisPanel(true)}
+              style={{ pointerEvents: 'auto' }}
+            >
+              {/* Gradient definition */}
+              <defs>
+                <linearGradient id={gradientId} gradientTransform={`rotate(${angle}, 0.5, 0.5)`}>
+                  <stop offset="0%" stopColor={southColor} stopOpacity="0.6" />
+                  <stop offset="40%" stopColor={southColor} stopOpacity="0.2" />
+                  <stop offset="60%" stopColor={northColor} stopOpacity="0.2" />
+                  <stop offset="100%" stopColor={northColor} stopOpacity="0.6" />
+                </linearGradient>
+                {/* Animated pulse filter */}
+                <filter id="nodal-glow">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Outer glow line */}
+              <motion.line
+                x1={snPos.x}
+                y1={snPos.y}
+                x2={nnPos.x}
+                y2={nnPos.y}
+                stroke={`url(#${gradientId})`}
+                strokeWidth="6"
+                strokeOpacity="0.15"
+                strokeLinecap="round"
+                initial={{ pathLength: 0 }}
+                animate={{
+                  pathLength: 1,
+                  opacity: [0.1, 0.2, 0.1]
+                }}
+                transition={{
+                  pathLength: { duration: 1.5, ease: 'easeOut' },
+                  opacity: { duration: 4, repeat: Infinity, ease: 'easeInOut' }
+                }}
+              />
+
+              {/* Core axis line */}
+              <motion.line
+                x1={snPos.x}
+                y1={snPos.y}
+                x2={nnPos.x}
+                y2={nnPos.y}
+                stroke={`url(#${gradientId})`}
+                strokeWidth="1.5"
+                strokeOpacity="0.5"
+                strokeLinecap="round"
+                strokeDasharray="8,4"
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: 1 }}
+                transition={{ duration: 1.5, ease: 'easeOut' }}
+                filter="url(#nodal-glow)"
+              />
+
+              {/* Direction indicator (small arrow toward North Node) */}
+              {(() => {
+                // Calculate midpoint slightly toward North Node
+                const midX = center.x + (nnPos.x - center.x) * 0.3;
+                const midY = center.y + (nnPos.y - center.y) * 0.3;
+                const arrowAngle = Math.atan2(nnPos.y - snPos.y, nnPos.x - snPos.x);
+                const arrowSize = 6;
+
+                return (
+                  <motion.polygon
+                    points={`
+                      ${midX + Math.cos(arrowAngle) * arrowSize},${midY + Math.sin(arrowAngle) * arrowSize}
+                      ${midX + Math.cos(arrowAngle + 2.5) * arrowSize * 0.6},${midY + Math.sin(arrowAngle + 2.5) * arrowSize * 0.6}
+                      ${midX + Math.cos(arrowAngle - 2.5) * arrowSize * 0.6},${midY + Math.sin(arrowAngle - 2.5) * arrowSize * 0.6}
+                    `}
+                    fill={northColor}
+                    fillOpacity="0.6"
+                    initial={{ opacity: 0, scale: 0.5 }}
+                    animate={{
+                      opacity: [0.4, 0.7, 0.4],
+                      scale: [0.9, 1.1, 0.9]
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: 'easeInOut',
+                      delay: 1.5
+                    }}
+                  />
+                );
+              })()}
+
+              {/* Center crossing marker (Aether point) */}
+              <motion.circle
+                cx={center.x}
+                cy={center.y}
+                r="3"
+                fill="none"
+                stroke={isDayMode ? '#9B8FAA' : '#818CF8'}
+                strokeWidth="1"
+                strokeOpacity="0.4"
+                initial={{ scale: 0 }}
+                animate={{
+                  scale: [1, 1.3, 1],
+                  opacity: [0.3, 0.5, 0.3]
+                }}
+                transition={{
+                  duration: 4,
+                  repeat: Infinity,
+                  ease: 'easeInOut',
+                  delay: 2
+                }}
+              />
+            </g>
+          );
+        })()}
+
         {/* Planets as constellation points - static (not rotating) */}
         {planets.map((planet) => {
           const pos = planetPositions[planet.name] || { x: 200, y: 200 };
@@ -2629,6 +2767,211 @@ export function SacredHouseWheel({
             </motion.div>
           </motion.div>
         )}
+
+        {/* Nodal Axis Destiny Path Panel - Soul's evolutionary trajectory */}
+        {showNodalAxisPanel && (() => {
+          const northNode = planets.find(p => p.name === 'North Node');
+          const southNode = planets.find(p => p.name === 'South Node');
+          if (!northNode || !southNode) return null;
+
+          const nnElement = houseElements[northNode.house as keyof typeof houseElements] as keyof typeof elementalColors;
+          const snElement = houseElements[southNode.house as keyof typeof houseElements] as keyof typeof elementalColors;
+          const nnColor = isDayMode ? elementalColors[nnElement].day : elementalColors[nnElement].night;
+          const snColor = isDayMode ? elementalColors[snElement].day : elementalColors[snElement].night;
+          const nnHouseData = getSpiralogicHouseData(northNode.house);
+          const snHouseData = getSpiralogicHouseData(southNode.house);
+
+          // House meanings for destiny interpretation
+          const houseMeanings: Record<number, { destiny: string; gifts: string }> = {
+            1: { destiny: 'developing authentic identity and self-expression', gifts: 'strong partnership skills and consideration for others' },
+            2: { destiny: 'building material security and self-worth', gifts: 'psychological depth and ability to transform through crisis' },
+            3: { destiny: 'communication, learning, and connecting with community', gifts: 'philosophical wisdom and understanding of bigger picture' },
+            4: { destiny: 'creating emotional foundation and family roots', gifts: 'career achievement and public recognition' },
+            5: { destiny: 'creative self-expression, joy, and following your heart', gifts: 'humanitarian vision and community thinking' },
+            6: { destiny: 'service, health practices, and daily devotion', gifts: 'spiritual connection and transcendence' },
+            7: { destiny: 'partnership, collaboration, and relating to others', gifts: 'strong sense of self and independent initiative' },
+            8: { destiny: 'deep transformation, shared resources, and psychological depth', gifts: 'material stability and practical values' },
+            9: { destiny: 'expanding horizons, philosophy, and higher meaning', gifts: 'intellectual versatility and local connections' },
+            10: { destiny: 'public contribution, career, and legacy', gifts: 'emotional intelligence and family bonds' },
+            11: { destiny: 'community leadership, vision, and collective impact', gifts: 'creative talent and personal magnetism' },
+            12: { destiny: 'spiritual surrender, transcendence, and universal compassion', gifts: 'practical skills and attention to detail' },
+          };
+
+          const nnMeaning = houseMeanings[northNode.house] || { destiny: 'evolutionary growth', gifts: 'past mastery' };
+          const snMeaning = houseMeanings[southNode.house] || { destiny: 'evolutionary growth', gifts: 'past mastery' };
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+              className="fixed inset-0 flex items-center justify-center z-[100] p-4 bg-black/60"
+              onClick={() => setShowNodalAxisPanel(false)}
+            >
+              <div
+                className={`backdrop-blur-xl rounded-2xl border shadow-2xl overflow-hidden max-w-2xl w-full ${
+                  isDayMode
+                    ? 'bg-white/95 border-stone-200/60'
+                    : 'bg-black/95 border-stone-700/60'
+                }`}
+                style={{
+                  boxShadow: isDayMode
+                    ? '0 20px 60px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.1)'
+                    : '0 20px 60px rgba(0,0,0,0.5), 0 0 40px rgba(245, 158, 11, 0.15)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Header with gradient showing axis */}
+                <div
+                  className="px-6 py-4 border-b"
+                  style={{
+                    background: `linear-gradient(90deg, ${snColor}15 0%, transparent 50%, ${nnColor}15 100%)`,
+                    borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                          style={{
+                            background: `linear-gradient(135deg, ${snColor}30, transparent)`,
+                            color: snColor,
+                          }}
+                        >
+                          ☋
+                        </div>
+                        <div className={`text-lg ${isDayMode ? 'text-stone-400' : 'text-stone-500'}`}>→</div>
+                        <div
+                          className="w-10 h-10 rounded-full flex items-center justify-center text-xl"
+                          style={{
+                            background: `linear-gradient(135deg, ${nnColor}30, ${nnColor}10)`,
+                            boxShadow: `0 0 20px ${nnColor}40`,
+                            color: nnColor,
+                          }}
+                        >
+                          ☊
+                        </div>
+                      </div>
+                      <div>
+                        <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>
+                          Destiny Path
+                        </h3>
+                        <p className={`text-xs ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                          Soul&apos;s Evolutionary Trajectory
+                        </p>
+                      </div>
+                    </div>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                      style={{ background: `${nnColor}25`, color: nnColor }}
+                    >
+                      Nodal Axis
+                    </span>
+                  </div>
+                </div>
+
+                {/* Content Grid */}
+                <div className="p-6 grid grid-cols-2 gap-6">
+                  {/* Left Column - South Node (Past) */}
+                  <div className="space-y-4">
+                    <div
+                      className={`p-4 rounded-xl ${isDayMode ? 'bg-stone-100' : 'bg-stone-800/50'}`}
+                      style={{ borderLeft: `3px solid ${snColor}` }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg" style={{ color: snColor }}>☋</span>
+                        <h4 className={`text-sm uppercase tracking-wider font-semibold ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                          South Node · Past Mastery
+                        </h4>
+                      </div>
+                      <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                        {southNode.sign} · House {southNode.house}
+                      </p>
+                      <p className={`text-xs mb-2 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                        {southNode.degree.toFixed(1)}° · {snHouseData?.facet || 'Unknown Facet'}
+                      </p>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                        <strong>Gifts you bring:</strong> {snMeaning.gifts}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                        Comfort Zone to Transcend
+                      </h4>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                        The South Node represents skills and patterns you&apos;ve already mastered — perhaps over many lifetimes.
+                        While these come naturally, over-reliance keeps you from growing.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Right Column - North Node (Future) */}
+                  <div className="space-y-4">
+                    <div
+                      className={`p-4 rounded-xl ${isDayMode ? 'bg-amber-50' : 'bg-amber-900/20'}`}
+                      style={{ borderLeft: `3px solid ${nnColor}` }}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-lg" style={{ color: nnColor }}>☊</span>
+                        <h4 className={`text-sm uppercase tracking-wider font-semibold ${isDayMode ? 'text-amber-700' : 'text-amber-400'}`}>
+                          North Node · Soul Purpose
+                        </h4>
+                      </div>
+                      <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-900' : 'text-stone-100'}`}>
+                        {northNode.sign} · House {northNode.house}
+                      </p>
+                      <p className={`text-xs mb-2 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                        {northNode.degree.toFixed(1)}° · {nnHouseData?.facet || 'Unknown Facet'}
+                      </p>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-amber-800' : 'text-amber-200'}`}>
+                        <strong>Your evolutionary edge:</strong> {nnMeaning.destiny}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-500' : 'text-stone-400'}`}>
+                        Growth Direction
+                      </h4>
+                      <p className={`text-xs leading-relaxed ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
+                        The North Node points toward unfamiliar territory — qualities and experiences
+                        that feel uncomfortable but lead to fulfillment. Lean into this edge.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Synthesis */}
+                <div
+                  className={`mx-6 mb-4 p-4 rounded-xl ${isDayMode ? 'bg-gradient-to-r from-stone-50 to-amber-50' : 'bg-gradient-to-r from-stone-800/30 to-amber-900/20'}`}
+                >
+                  <h4 className={`text-xs uppercase tracking-wider font-semibold mb-2 ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
+                    ✨ Your Destiny Path Synthesis
+                  </h4>
+                  <p className={`text-sm italic leading-relaxed ${isDayMode ? 'text-stone-800' : 'text-stone-200'}`}>
+                    You&apos;re moving from {southNode.sign} energy (House {southNode.house}: {snMeaning.gifts.split(' ').slice(0, 3).join(' ')}...)
+                    toward {northNode.sign} expression (House {northNode.house}: {nnMeaning.destiny.split(' ').slice(0, 3).join(' ')}...).
+                    Use your natural gifts as a foundation, but keep reaching toward the North Node&apos;s call.
+                  </p>
+                </div>
+
+                {/* Footer */}
+                <div
+                  className={`px-6 py-3 border-t text-center ${isDayMode ? 'bg-stone-50/50' : 'bg-stone-900/30'}`}
+                  style={{
+                    borderColor: isDayMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.05)',
+                  }}
+                >
+                  <p className={`text-xs ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
+                    ☊ Ask MAIA about your nodal axis for deeper destiny insights
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })()}
       </AnimatePresence>
 
       {/* Mission Popup - Shows mission details */}
