@@ -57,6 +57,14 @@ import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/qualit
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { query } from '../db/postgres';
 import { routeWisdom, type WisdomRoutingResult } from '../consciousness/WisdomRouter';
+import {
+  maiaRcnProcess,
+  checkRcnHealth,
+  formatRcnForMaia,
+  extractTrustReceipt,
+  type MaiaRcnContext,
+  type MaiaRcnResult
+} from '../rlm/rcnIntegration';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -1884,6 +1892,64 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
     // 🔮 Request-local provider tracking (not module-level - safe for serverless concurrency)
     let provider: ProviderMeta | undefined;
+    // 🧬 RCN tracking
+    let rcnResult: MaiaRcnResult | null = null;
+
+    // 🔄 RCN ROUTING: Check if query should use Recursive Corpus Navigator
+    // RCN is best for: compare, verify, audit, find_canonical intents with corpus
+    const rcnContext: MaiaRcnContext = {
+      userId: effectiveUserId || sessionId,
+      mode: normalizeMode((meta as any)?.mode),
+      isSanctuary: !!(meta as any)?.sanctuary,
+      vaultPath: (meta as any)?.vaultPath,
+      activeElement: (meta as any)?.element,
+      processingDepth: processingProfile,
+    };
+
+    // Try RCN for appropriate queries (non-blocking - falls back to standard paths)
+    try {
+      const rcnDecision = await maiaRcnProcess(input, rcnContext);
+      if (rcnDecision.used) {
+        rcnResult = rcnDecision.result;
+        console.log(`🔄 [RCN] Query routed to RCN: intent=${rcnResult.intent}, corpus=${rcnResult.corpusType}, confidence=${rcnResult.confidence.toFixed(2)}`);
+
+        // If RCN provided a high-confidence answer, use it directly
+        if (rcnResult.confidence >= 0.7 && rcnResult.completedNormally) {
+          rawResponse = formatRcnForMaia(rcnResult, rcnContext);
+          const trustReceipt = extractTrustReceipt(rcnResult);
+          console.log(`✅ [RCN] High-confidence response: ${trustReceipt.chunksRead} chunks read in ${trustReceipt.processingTimeMs}ms`);
+
+          // Store conversation and return early
+          await addConversationExchange(sessionId, input, rawResponse, {
+            ...meta,
+            processingProfile: 'RCN',
+            rcnIntent: rcnResult.intent,
+            rcnCorpusType: rcnResult.corpusType,
+            rcnConfidence: rcnResult.confidence,
+            rcnChunksRead: trustReceipt.chunksRead,
+            processingTimeMs: Date.now() - startTime,
+          });
+
+          return {
+            text: rawResponse,
+            processingProfile: 'DEEP', // Report as DEEP for client compatibility
+            processingTimeMs: Date.now() - startTime,
+            rcn: {
+              used: true,
+              intent: rcnResult.intent,
+              confidence: rcnResult.confidence,
+              chunksRead: trustReceipt.chunksRead,
+            },
+          } as MaiaResponse;
+        } else if (rcnResult) {
+          // Low confidence or incomplete - log but continue to standard paths
+          console.log(`⚠️ [RCN] Low confidence (${rcnResult.confidence.toFixed(2)}) or incomplete - falling back to standard path`);
+        }
+      }
+    } catch (rcnError) {
+      // RCN failure is non-blocking - fall back to standard paths
+      console.warn('⚠️ [RCN] Processing failed (non-blocking):', rcnError);
+    }
 
     // Route to appropriate processing path (with optional MindContext for PFI integration)
     switch (processingProfile) {
