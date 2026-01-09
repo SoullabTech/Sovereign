@@ -342,6 +342,75 @@ async function sendGiftEmail(
   }
 }
 
+// PATCH: Resend gift email
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { passkey, adminSecret } = body;
+
+    if (adminSecret !== ADMIN_SECRET) {
+      return NextResponse.json(
+        { error: 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (!passkey) {
+      return NextResponse.json(
+        { error: 'Passkey is required' },
+        { status: 400 }
+      );
+    }
+
+    // Get the gift record
+    const result = await query(
+      `SELECT passkey, recipient_name, recipient_email, gifter_name, personal_message
+       FROM gift_passkeys WHERE passkey = $1`,
+      [passkey]
+    );
+
+    if (result.rows.length === 0) {
+      return NextResponse.json(
+        { error: 'Gift not found' },
+        { status: 404 }
+      );
+    }
+
+    const gift = result.rows[0];
+
+    // Resend the email
+    const emailResult = await sendGiftEmail(
+      gift.passkey,
+      gift.recipient_name,
+      gift.recipient_email,
+      gift.gifter_name,
+      gift.personal_message
+    );
+
+    // Update email_sent_at if successful
+    if (emailResult.success) {
+      await query(
+        'UPDATE gift_passkeys SET email_sent_at = NOW() WHERE passkey = $1',
+        [passkey]
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      emailSent: emailResult.success,
+      emailId: emailResult.id,
+      emailError: emailResult.error
+    });
+
+  } catch (error: any) {
+    console.error('Gift resend error:', error);
+    return NextResponse.json(
+      { error: error.message || 'Failed to resend gift' },
+      { status: 500 }
+    );
+  }
+}
+
 // GET: List all gift passkeys
 export async function GET(request: NextRequest) {
   try {

@@ -9,7 +9,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Gift, Send, Check, AlertCircle, Sparkles, Users, Mail, Clock } from 'lucide-react';
+import { Gift, Send, Check, AlertCircle, Sparkles, Users, Mail, Clock, RefreshCw } from 'lucide-react';
 
 interface GiftRecord {
   id: string;
@@ -38,6 +38,7 @@ export default function GiftCreatorPage() {
   const [result, setResult] = useState<{ success: boolean; passkey?: string; error?: string } | null>(null);
   const [gifts, setGifts] = useState<GiftRecord[]>([]);
   const [loadingGifts, setLoadingGifts] = useState(false);
+  const [resendingPasskey, setResendingPasskey] = useState<string | null>(null);
 
   // Check for saved secret
   useEffect(() => {
@@ -67,6 +68,27 @@ export default function GiftCreatorPage() {
     localStorage.setItem('labtools_secret', adminSecret);
     setAuthenticated(true);
     loadGifts(adminSecret);
+  };
+
+  const handleResend = async (passkey: string) => {
+    setResendingPasskey(passkey);
+    try {
+      const response = await fetch('/api/labtools/gifts', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ passkey, adminSecret })
+      });
+      const data = await response.json();
+      if (data.emailSent) {
+        // Reload gifts to update status
+        loadGifts(adminSecret);
+      } else {
+        alert(`Failed to send email: ${data.emailError || 'Unknown error'}`);
+      }
+    } catch (error: any) {
+      alert(`Error: ${error.message}`);
+    }
+    setResendingPasskey(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -377,6 +399,26 @@ export default function GiftCreatorPage() {
                           <span className="text-white/30">Not used</span>
                         )}
                       </div>
+                      {/* Resend button - show if email not sent */}
+                      {!gift.email_sent_at && (
+                        <button
+                          onClick={() => handleResend(gift.passkey)}
+                          disabled={resendingPasskey === gift.passkey}
+                          className="ml-auto px-3 py-1 text-xs bg-[#D4B896]/20 hover:bg-[#D4B896]/30 text-[#D4B896] rounded-md flex items-center gap-1 transition-colors disabled:opacity-50"
+                        >
+                          {resendingPasskey === gift.passkey ? (
+                            <>
+                              <RefreshCw className="w-3 h-3 animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            <>
+                              <RefreshCw className="w-3 h-3" />
+                              Resend
+                            </>
+                          )}
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}
