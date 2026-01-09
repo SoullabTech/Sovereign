@@ -61,6 +61,11 @@ type SupervisionMode = 'clinical' | 'practice';
 // Uses explicit optional fields so that `Insight` is assignable without casts
 type InsightLike = {
   id: string;
+  // segment anchors (preferred over time - exact jump)
+  segment_refs?: string[] | null;
+  segmentRefs?: string[];
+  segmentId?: string;
+  segment_id?: string;
   // snake_case variants (from DB/SSE)
   time_range_start_ms?: number;
   time_range_end_ms?: number;
@@ -85,6 +90,17 @@ type InsightLike = {
   // timeRange from local Insight type
   timeRange?: { startMs: number | null; endMs: number | null };
 };
+
+function getInsightSegmentId(i: InsightLike): string | null {
+  // Prefer single segment anchor, then first from array
+  return (
+    i.segmentId ??
+    i.segment_id ??
+    i.segmentRefs?.[0] ??
+    i.segment_refs?.[0] ??
+    null
+  );
+}
 
 function getInsightStartMs(i: InsightLike): number | null {
   // Check timeRange object first (local Insight type)
@@ -123,7 +139,8 @@ export default function SupervisionDashboard() {
     world_code: string;
   } | null>(null);
 
-  // Transcript jump state
+  // Transcript jump state (segmentId preferred, ms as fallback)
+  const [jumpToSegmentId, setJumpToSegmentId] = useState<string | null>(null);
   const [jumpToMs, setJumpToMs] = useState<number | null>(null);
   const [jumpNonce, setJumpNonce] = useState(0);
 
@@ -173,6 +190,7 @@ export default function SupervisionDashboard() {
     setSelectedInsightId(undefined);
     setSelectedInsight(null);
     setLiveInsights([]);
+    setJumpToSegmentId(null);
     setJumpToMs(null);
     setJumpNonce(0);
   }, [activeSessionId]);
@@ -191,15 +209,25 @@ export default function SupervisionDashboard() {
     setTimeout(() => fetchInsights(sessionId), 2000);
   };
 
-  // Handle insight click to highlight related transcript + jump to time
+  // Handle insight click to highlight related transcript + jump to segment/time
   const handleInsightClick = (insight: InsightLike) => {
     setSelectedInsightId(insight.id);
     setSelectedInsight(insight);
 
+    // Prefer segment anchor (exact jump) over time anchor (closest match)
+    const segId = getInsightSegmentId(insight);
+    if (segId) {
+      setJumpToSegmentId(segId);
+      setJumpToMs(null);
+      setJumpNonce((n) => n + 1);
+      return;
+    }
+
     const startMs = getInsightStartMs(insight);
     if (startMs !== null) {
+      setJumpToSegmentId(null);
       setJumpToMs(startMs);
-      setJumpNonce((n) => n + 1); // re-trigger even if clicking same insight twice
+      setJumpNonce((n) => n + 1);
     }
   };
 
@@ -358,6 +386,7 @@ export default function SupervisionDashboard() {
                   isLive={isRecording}
                   pollIntervalMs={1000}
                   maxHeight="500px"
+                  jumpToSegmentId={jumpToSegmentId}
                   jumpToMs={jumpToMs}
                   jumpNonce={jumpNonce}
                 />
@@ -545,6 +574,7 @@ export default function SupervisionDashboard() {
                   sessionId={selectedHistorySessionId}
                   isLive={false}
                   maxHeight="600px"
+                  jumpToSegmentId={jumpToSegmentId}
                   jumpToMs={jumpToMs}
                   jumpNonce={jumpNonce}
                 />

@@ -35,8 +35,9 @@ interface TranscriptViewerProps {
   highlightedSegmentId?: string;
   onSegmentClick?: (segment: TranscriptSegment) => void;
   maxHeight?: string;
-  // Jump to specific time (triggered by insight click)
-  jumpToMs?: number | null;
+  // Jump to specific segment/time (triggered by insight click)
+  jumpToSegmentId?: string | null; // Preferred: exact segment
+  jumpToMs?: number | null;        // Fallback: closest by time
   jumpNonce?: number;
 }
 
@@ -115,6 +116,7 @@ export function TranscriptViewer({
   highlightedSegmentId,
   onSegmentClick,
   maxHeight = '400px',
+  jumpToSegmentId,
   jumpToMs,
   jumpNonce
 }: TranscriptViewerProps) {
@@ -286,12 +288,15 @@ export function TranscriptViewer({
     }
   }, [segments, isSelfManaged, scrollToBottomIfAuto]);
 
-  // Jump to specific time when insight clicked
+  // Jump to specific segment/time when insight clicked
   useEffect(() => {
-    if (jumpToMs == null || !Number.isFinite(jumpToMs)) return;
-    if (!segments?.length) return;
+    // Prefer exact segment anchor, fallback to time-based search
+    const targetId = jumpToSegmentId
+      ? jumpToSegmentId
+      : jumpToMs != null && Number.isFinite(jumpToMs) && segments?.length
+        ? findClosestSegmentId(segments, jumpToMs)
+        : null;
 
-    const targetId = findClosestSegmentId(segments, jumpToMs);
     if (!targetId) return;
 
     let timeoutId: number | null = null;
@@ -318,7 +323,7 @@ export function TranscriptViewer({
       cancelAnimationFrame(rafId);
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [jumpNonce, jumpToMs, segments]);
+  }, [jumpNonce, jumpToSegmentId, jumpToMs, segments]);
 
   // Track scroll position
   const handleScroll = () => {
