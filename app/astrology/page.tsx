@@ -499,7 +499,23 @@ export default function AstrologyPage() {
             </div>
 
             {/* Additional Astrological Systems */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Synastry - Relationship Comparison */}
+              <Link
+                href="/astrology/synastry"
+                className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-dune-navigator-purple/40 hover:border-dune-navigator-purple/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-dune-navigator-purple/20"
+              >
+                <div className="text-4xl">💫</div>
+                <div className="text-left">
+                  <h3 className="text-xl font-bold text-dune-dune-amber group-hover:text-dune-navigator-purple transition-colors">
+                    Synastry
+                  </h3>
+                  <p className="text-dune-spice-sand/70 text-sm">
+                    Compare two charts to reveal relationship dynamics →
+                  </p>
+                </div>
+              </Link>
+
               {/* Mayan Astrology */}
               <Link
                 href="/astrology/mayan"
