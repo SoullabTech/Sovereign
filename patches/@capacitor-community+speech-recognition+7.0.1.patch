@@ -1,8 +1,8 @@
 diff --git a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
-index 5d1b35b..e9a0710 100644
+index 5d1b35b..21c0be9 100644
 --- a/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
 +++ b/node_modules/@capacitor-community/speech-recognition/ios/Plugin/Plugin.swift
-@@ -1,208 +1,259 @@
+@@ -1,208 +1,267 @@
  import Foundation
  import Capacitor
  import Speech
@@ -255,6 +255,11 @@ index 5d1b35b..e9a0710 100644
 +                self.notifyListeners("listeningState", data: ["status": "stopped"])
              }
 +        }
++
++        // 8. Install tap on input node with audio level emission for UV visualizer
++        var levelEmitCounter = 0
++        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
++            self?.recognitionRequest?.append(buffer)
  
 -            self.audioEngine?.prepare()
 -            do {
@@ -262,21 +267,24 @@ index 5d1b35b..e9a0710 100644
 -                self.notifyListeners("listeningState", data: ["status": "started"])
 -                if partialResults {
 -                    call.resolve()
-+        // 8. Install tap on input node with peak logging
-+        var peakLogCounter = 0
-+        inputNode.installTap(onBus: 0, bufferSize: 1024, format: recordingFormat) { [weak self] buffer, _ in
-+            self?.recognitionRequest?.append(buffer)
-+
-+            // Log audio peak every ~1 second to verify we're getting audio
-+            peakLogCounter += 1
-+            if peakLogCounter % 47 == 0 { // ~1 sec at 48kHz/1024
++            // Emit audio level every ~50ms for smooth UV visualizer animation
++            levelEmitCounter += 1
++            if levelEmitCounter % 2 == 0 { // ~50ms at 48kHz/1024
 +                if let channelData = buffer.floatChannelData?[0] {
 +                    let frameLength = Int(buffer.frameLength)
 +                    var peak: Float = 0
 +                    for i in 0..<frameLength {
 +                        peak = max(peak, abs(channelData[i]))
 +                    }
-+                    print("[SR] Audio peak:", peak, peak > 0.01 ? "✓ AUDIO" : "⚠️ SILENT")
++                    // Emit audio level to JS for UV visualizer (0.0-1.0 normalized)
++                    // Amplify low levels for better visualization (voice is typically 0.01-0.3)
++                    let normalizedLevel = min(1.0, peak * 3.0)
++                    self?.notifyListeners("audioLevel", data: ["level": normalizedLevel])
++
++                    // Log every ~1 second for debugging
++                    if levelEmitCounter % 47 == 0 {
++                        print("[SR] Audio peak:", peak, peak > 0.01 ? "✓ AUDIO" : "⚠️ SILENT")
++                    }
                  }
 -            } catch {
 -                call.reject(self.messageUnknown)

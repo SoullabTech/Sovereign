@@ -3726,17 +3726,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                   // SAFETY: Don't start mic while MAIA is speaking
                   if (isAudioPlayingRef.current || isRespondingRef.current) {
                     console.log('⏸️ Cannot start mic - MAIA is still speaking');
+                    toast.error('Cannot start mic - MAIA is speaking');
                     return;
                   }
                   // Start listening
                   console.log('🎤 Starting voice via holoflower...');
+                  toast('🎤 Starting voice...', { duration: 2000 });
                   setIsMuted(false);
                   setIsListening(true); // Immediately show visual indicator
                   try {
                     await voiceMicRef.current.startListening();
                     console.log('✅ Voice started successfully');
+                    toast.success('✅ Voice started!');
                   } catch (error: any) {
                     console.error('❌ Failed to start microphone:', error);
+                    toast.error(`❌ Mic error: ${error?.message || error}`);
                     setIsMuted(true); // Reset on error
 
                     // Show specific error messages for different scenarios
@@ -3766,6 +3770,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 }
               } else {
                 console.warn('⚠️ Voice ref not available');
+                toast.error('⚠️ Voice component not mounted!');
               }
             }}
           >
