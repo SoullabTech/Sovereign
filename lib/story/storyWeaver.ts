@@ -94,12 +94,9 @@ function generateChartPatternNarrative(chartData: BirthChartData): string {
         `You are not meant to be well-rounded. You are meant to be precisely, powerfully directed.`
       );
 
-    case 'Funnel':
-      return (
-        `The cosmos arranged itself in a **Funnel** pattern - nine planets flowing toward a single point of focus. ` +
-        `This is the signature of someone who channels universal energy through a specific calling. ` +
-        `Everything flows toward your focal planet - your life's work lives there.`
-      );
+    // Note: 'Funnel' is sometimes used as a Bucket variant
+    // case 'Funnel':
+    //   return `The cosmos arranged itself in a **Funnel** pattern...`;
 
     case 'Bowl':
       return (
@@ -241,13 +238,13 @@ function buildChapterWeavingPrompt(prompt: ChapterWeavingPrompt): string {
 **What You Know:**
 
 **Birth Chart Context:**
-${JSON.stringify(context.chartData, null, 2)}
+${JSON.stringify(context.birthChart, null, 2)}
 
 **Recent Sessions:**
 ${context.recentSessions?.map(s => `- ${s.date}: ${s.insights?.join('; ')}`).join('\n') || 'None yet'}
 
 **Journal Entries:**
-${context.journalEntries?.map(j => `- ${j.date}: "${j.excerpt}"`).join('\n') || 'None yet'}
+${context.recentJournals?.map((j: { date: string; excerpt: string }) => `- ${j.date}: "${j.excerpt}"`).join('\n') || 'None yet'}
 
 **Active Threads:**
 ${context.activeThreads?.map(t => `- ${t.name}: ${t.description}`).join('\n') || 'None yet'}
