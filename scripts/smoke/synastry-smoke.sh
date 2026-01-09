@@ -3,15 +3,30 @@
 # Synastry smoke test - validates cross-chart aspect calculation
 #
 # Usage:
-#   ./scripts/smoke/synastry-smoke.sh [BASE_URL]
+#   ./scripts/smoke/synastry-smoke.sh [--persist] [BASE_URL]
 #
 # Examples:
-#   ./scripts/smoke/synastry-smoke.sh                    # Local
+#   ./scripts/smoke/synastry-smoke.sh                    # Local, no persist
+#   ./scripts/smoke/synastry-smoke.sh --persist          # Local, test persistence
 #   ./scripts/smoke/synastry-smoke.sh https://soullab.life
+#   ./scripts/smoke/synastry-smoke.sh --persist https://soullab.life
 #
 set -euo pipefail
 
-BASE_URL="${1:-http://localhost:3000}"
+# Parse arguments
+PERSIST_FLAG=false
+BASE_URL="http://localhost:3000"
+
+for arg in "$@"; do
+  case "$arg" in
+    --persist)
+      PERSIST_FLAG=true
+      ;;
+    http*|https*)
+      BASE_URL="$arg"
+      ;;
+  esac
+done
 
 need() { command -v "$1" >/dev/null 2>&1 || { echo "❌ Missing dependency: $1"; exit 1; }; }
 need curl
@@ -132,5 +147,46 @@ ok "Aspect structure is valid"
 
 # Print sample aspect for visibility
 log "Sample aspect: ${ABODY} ${ASPECT_TYPE} ${BBODY} (strength: ${STRENGTH})"
+
+# Test 5 & 6: Persistence tests (only if --persist flag is set)
+if [[ "$PERSIST_FLAG" == "true" ]]; then
+  log "Test 5: Persist synastry analysis to database…"
+  PERSIST_JSON="$(http_post_json "/api/astrology/synastry" "$(jq -nc '{
+    a: { birth: { date: "1992-01-15", time: "09:00", timezone: "America/Chicago" } },
+    b: { birth: { date: "1994-06-21", time: "16:30", timezone: "America/Denver" } },
+    persist: true
+  }')")"
+
+  if ! echo "$PERSIST_JSON" | jq -e '.success == true' >/dev/null 2>&1; then
+    echo "Response: $PERSIST_JSON"
+    no "Persist synastry failed"
+  fi
+
+  ANALYSIS_ID="$(echo "$PERSIST_JSON" | jq -r '.analysisId')"
+  PERSISTED_AT="$(echo "$PERSIST_JSON" | jq -r '.persistedAt')"
+
+  [[ -n "$ANALYSIS_ID" && "$ANALYSIS_ID" != "null" ]] || no "Missing analysisId in persist response"
+  [[ -n "$PERSISTED_AT" && "$PERSISTED_AT" != "null" ]] || no "Missing persistedAt in persist response"
+  ok "Persisted with analysisId=${ANALYSIS_ID}"
+
+  log "Test 6: Retrieve persisted analysis via GET…"
+  GET_JSON="$(curl -sS "${BASE_URL}/api/astrology/synastry?analysisId=${ANALYSIS_ID}")"
+
+  if ! echo "$GET_JSON" | jq -e '.success == true' >/dev/null 2>&1; then
+    echo "Response: $GET_JSON"
+    no "GET persisted analysis failed"
+  fi
+
+  GET_ID="$(echo "$GET_JSON" | jq -r '.analysisId')"
+  [[ "$GET_ID" == "$ANALYSIS_ID" ]] || no "Retrieved analysisId mismatch: expected $ANALYSIS_ID, got $GET_ID"
+  ok "Retrieved persisted analysis successfully"
+
+  # Verify synastry data is present in GET response
+  GET_ASPECTS="$(echo "$GET_JSON" | jq -r '.synastry.aspects | length')"
+  [[ "$GET_ASPECTS" -gt 0 ]] || no "GET response missing synastry aspects"
+  ok "GET response contains ${GET_ASPECTS} aspects"
+else
+  log "(Skipping persistence tests - run with --persist to test)"
+fi
 
 ok "Synastry smoke test PASSED ✅"

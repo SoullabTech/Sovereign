@@ -2,14 +2,17 @@
  * Synastry API
  *
  * POST /api/astrology/synastry
+ *   Calculate cross-chart aspects between two people's birth charts.
+ *   Supports both member IDs (fetches from DB) and raw birth data.
+ *   Request body:
+ *     a: { memberId: string } | { birth: { date, time?, timezone?, lat?, lng? } }
+ *     b: { memberId: string } | { birth: { date, time?, timezone?, lat?, lng? } }
+ *     options?: { aspects?, orbs?, includeAngles?, includeNodes?, maxAspects? }
+ *     persist?: boolean - Save result for later retrieval
+ *     requestedByMemberId?: string - Member who requested (for audit)
  *
- * Calculate cross-chart aspects between two people's birth charts.
- * Supports both member IDs (fetches from DB) and raw birth data.
- *
- * Request body:
- *   a: { memberId: string } | { birth: { date, time?, timezone?, lat?, lng? } }
- *   b: { memberId: string } | { birth: { date, time?, timezone?, lat?, lng? } }
- *   options?: { aspects?, orbs?, includeAngles?, includeNodes?, maxAspects? }
+ * GET /api/astrology/synastry?analysisId=<uuid>
+ *   Retrieve a previously persisted synastry analysis.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,6 +20,7 @@ import { query } from '@/lib/db/postgres';
 import { calculateBirthChart, type BirthData, type BirthChart } from '@/lib/astrology/ephemerisCalculator';
 import { calculateSynastryFromCharts, chartToLongitudes } from '@/lib/astrology/synastry/calculateSynastry';
 import type { SynastryRequest, SynastryResponse, SynastryOptions } from '@/lib/astrology/synastry/types';
+import { createSynastryAnalysis, getSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
 
 export const dynamic = 'force-dynamic';
 
@@ -91,6 +95,51 @@ function getChartSummary(chart: BirthChart, memberId?: string) {
   };
 }
 
+/**
+ * GET - Retrieve a persisted synastry analysis by ID
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const analysisId = searchParams.get('analysisId');
+
+    if (!analysisId) {
+      return NextResponse.json({
+        success: false,
+        error: 'analysisId query parameter is required',
+      }, { status: 400 });
+    }
+
+    const row = await getSynastryAnalysisById(analysisId);
+
+    if (!row) {
+      return NextResponse.json({
+        success: false,
+        error: `Analysis ${analysisId} not found`,
+      }, { status: 404 });
+    }
+
+    // Return the stored result with metadata
+    const result = row.result as Record<string, unknown>;
+    return NextResponse.json({
+      success: true,
+      ...result,
+      analysisId: row.id,
+      persistedAt: row.created_at,
+    });
+
+  } catch (error) {
+    console.error('[Synastry API] GET error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to retrieve synastry analysis',
+    }, { status: 500 });
+  }
+}
+
+/**
+ * POST - Calculate synastry between two charts (with optional persistence)
+ */
 export async function POST(request: NextRequest) {
   try {
     const body: SynastryRequest = await request.json();
@@ -185,12 +234,35 @@ export async function POST(request: NextRequest) {
 
     console.log(`[Synastry API] Found ${synastry.aspects.length} aspects, ${synastry.highlights.length} highlights`);
 
-    return NextResponse.json({
+    // Build response payload
+    const responsePayload = {
       success: true,
       synastry,
       chartA: getChartSummary(chartA, memberIdA),
       chartB: getChartSummary(chartB, memberIdB),
-    } as SynastryResponse);
+    };
+
+    // Persist if requested
+    if (body.persist) {
+      console.log('[Synastry API] Persisting analysis...');
+      const saved = await createSynastryAnalysis({
+        aMemberId: memberIdA ?? null,
+        bMemberId: memberIdB ?? null,
+        aBirth: body.a.birth ?? null,
+        bBirth: body.b.birth ?? null,
+        requestedByMemberId: body.requestedByMemberId ?? null,
+        result: responsePayload,
+      });
+      console.log(`[Synastry API] Persisted as ${saved.id}`);
+
+      return NextResponse.json({
+        ...responsePayload,
+        analysisId: saved.id,
+        persistedAt: saved.created_at,
+      } as SynastryResponse);
+    }
+
+    return NextResponse.json(responsePayload as SynastryResponse);
 
   } catch (error) {
     console.error('[Synastry API] Error:', error);

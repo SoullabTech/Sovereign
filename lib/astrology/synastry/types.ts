@@ -69,12 +69,16 @@ export interface SynastryRequest {
     };
   };
   options?: SynastryOptions;
+  persist?: boolean;            // Save result for later retrieval
+  requestedByMemberId?: string; // Member who requested (for audit)
 }
 
 export interface SynastryResponse {
   success: boolean;
   synastry?: SynastryResult;
-  chartA?: { memberId?: string; sunSign?: string; moonSign?: string };
-  chartB?: { memberId?: string; sunSign?: string; moonSign?: string };
+  chartA?: { memberId?: string; sunSign?: string; moonSign?: string; ascendantSign?: string };
+  chartB?: { memberId?: string; sunSign?: string; moonSign?: string; ascendantSign?: string };
+  analysisId?: string;    // Present if persist=true
+  persistedAt?: string;   // ISO timestamp if persisted
   error?: string;
 }
