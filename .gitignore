@@ -358,3 +358,10 @@ pyvenv.cfg
 
 # Voice journal audio files
 storage/audio/
+
+# Local AIN sources (do not commit)
+data/ain/source/
+
+# Python cache
+__pycache__/
+*.pyc
