@@ -120,12 +120,13 @@ export async function GET(request: NextRequest) {
     }
 
     // Return the stored result with metadata
+    // Note: result already contains success:true from when it was persisted
     const result = row.result as Record<string, unknown>;
     return NextResponse.json({
-      success: true,
       ...result,
       analysisId: row.id,
       persistedAt: row.created_at,
+      updatedAt: row.updated_at,
     });
 
   } catch (error) {
