@@ -108,7 +108,7 @@ Frame as invitation to the deep.`
     'What does your dream want you to know?',
     'What are you refusing to see in yourself that you see so clearly in them?',
     'Where is the gold in this darkness?',
-    'What wants to emerge that you've been keeping down?',
+    "What wants to emerge that you've been keeping down?",
     'If you let go of who you think you should be, who might you become?'
   ]
 };
