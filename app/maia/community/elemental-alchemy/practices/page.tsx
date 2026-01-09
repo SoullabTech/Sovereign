@@ -82,6 +82,8 @@ function PracticesContent() {
   const [currentStep, setCurrentStep] = useState(0);
   const [showReflection, setShowReflection] = useState(false);
   const [reflectionText, setReflectionText] = useState('');
+  const [impactRating, setImpactRating] = useState<number | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Load completed practices from localStorage
   useEffect(() => {
@@ -150,7 +152,7 @@ function PracticesContent() {
     setReflectionText('');
   };
 
-  const completePractice = () => {
+  const completePractice = async () => {
     if (activePractice) {
       const newCompleted = { ...completedPractices, [activePractice.id]: true };
       setCompletedPractices(newCompleted);
@@ -160,6 +162,39 @@ function PracticesContent() {
     }
     setShowReflection(true);
     setTimerRunning(false);
+    setImpactRating(null);
+  };
+
+  const savePracticeCompletion = async (withReflection: boolean) => {
+    if (!activePractice) return;
+
+    setIsSaving(true);
+    try {
+      // Get userId from localStorage (beta_user)
+      const betaUser = typeof window !== 'undefined'
+        ? JSON.parse(localStorage.getItem('beta_user') || '{}')
+        : {};
+      const userId = betaUser.passkey || 'anonymous';
+
+      await fetch('/api/elemental-alchemy/practices/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          practiceId: activePractice.id,
+          element: activePractice.element,
+          durationSeconds: timerSeconds,
+          stepsCompleted: currentStep + 1,
+          totalSteps: activePractice.instructions.length,
+          impactRating,
+          reflectionSaved: withReflection && reflectionText.trim().length > 0,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save practice completion:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const exitSession = () => {
@@ -168,7 +203,10 @@ function PracticesContent() {
     setTimerRunning(false);
   };
 
-  const saveToJournal = () => {
+  const saveToJournal = async () => {
+    // Save completion to server first
+    await savePracticeCompletion(!!reflectionText.trim());
+
     if (activePractice && reflectionText.trim()) {
       // Navigate to journal with pre-filled data
       const params = new URLSearchParams({
@@ -592,10 +630,34 @@ function PracticesContent() {
                     <p className="text-white/50">Time: {formatTime(timerSeconds)}</p>
                   </div>
 
+                  {/* Impact Rating */}
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-6">
+                    <h3 className="text-sm font-medium text-white/70 mb-3">How did this practice impact you?</h3>
+                    <div className="flex items-center justify-center gap-3">
+                      {[1, 2, 3, 4, 5].map((rating) => (
+                        <button
+                          key={rating}
+                          onClick={() => setImpactRating(rating)}
+                          className={`w-12 h-12 rounded-full transition-all flex items-center justify-center text-lg
+                                   ${impactRating === rating
+                                     ? 'bg-amber-500 text-white scale-110'
+                                     : 'bg-white/5 text-white/50 hover:bg-white/10'
+                                   }`}
+                        >
+                          {rating}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex justify-between text-xs text-white/40 mt-2 px-2">
+                      <span>Neutral</span>
+                      <span>Transformative</span>
+                    </div>
+                  </div>
+
                   {activePractice.reflectionPrompt && (
                     <div className="bg-white/5 border border-white/10 rounded-xl p-6">
                       <h3 className="text-sm font-medium text-white/70 mb-3">Reflection</h3>
-                      <p className="text-white/80 mb-4 italic">"{activePractice.reflectionPrompt}"</p>
+                      <p className="text-white/80 mb-4 italic">&quot;{activePractice.reflectionPrompt}&quot;</p>
                       <textarea
                         value={reflectionText}
                         onChange={(e) => setReflectionText(e.target.value)}
