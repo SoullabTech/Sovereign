@@ -18,7 +18,7 @@ import { query } from '@/lib/db/postgres';
 interface QuickJournalEntry {
   id: string;
   user_id: string;
-  entry_type: 'dream' | 'day';
+  entry_type: 'dream' | 'day' | 'handwriting';
   content: string;
   tags: string[];
   source: string;
@@ -29,6 +29,13 @@ interface QuickJournalEntry {
   audio_duration_ms?: number;
   transcript_source?: string;
   transcript_confidence?: number;
+  // OCR metadata (optional - present for handwriting entries)
+  meta?: {
+    ocrProvider?: string;
+    ocrConfidence?: number;
+    hasImage?: boolean;
+    imageSize?: number;
+  };
 }
 
 // Ensure table exists (runs once on first request)
@@ -37,12 +44,36 @@ async function ensureTableExists() {
     CREATE TABLE IF NOT EXISTS quick_journal_entries (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       user_id TEXT NOT NULL,
-      entry_type TEXT NOT NULL CHECK (entry_type IN ('dream', 'day')),
+      entry_type TEXT NOT NULL CHECK (entry_type IN ('dream', 'day', 'handwriting')),
       content TEXT NOT NULL,
       tags TEXT[] DEFAULT '{}',
       source TEXT DEFAULT 'quick_sheet',
+      meta JSONB DEFAULT NULL,
       created_at TIMESTAMPTZ DEFAULT NOW()
     )
+  `);
+
+  // Add meta column if it doesn't exist (for existing tables)
+  await query(`
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'quick_journal_entries' AND column_name = 'meta') THEN
+        ALTER TABLE quick_journal_entries ADD COLUMN meta JSONB DEFAULT NULL;
+      END IF;
+    END $$;
+  `);
+
+  // Update constraint to include 'handwriting' if needed
+  await query(`
+    DO $$
+    BEGIN
+      ALTER TABLE quick_journal_entries DROP CONSTRAINT IF EXISTS quick_journal_entries_entry_type_check;
+      ALTER TABLE quick_journal_entries ADD CONSTRAINT quick_journal_entries_entry_type_check
+        CHECK (entry_type IN ('dream', 'day', 'handwriting'));
+    EXCEPTION WHEN others THEN
+      NULL;
+    END $$;
   `);
 
   // Create indexes if they don't exist
@@ -60,7 +91,7 @@ async function ensureTableExists() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, entryType, content, tags = [], source = 'quick_sheet' } = body;
+    const { userId, entryType, content, tags = [], source = 'quick_sheet', meta = null } = body;
 
     // Validation
     if (!userId) {
@@ -70,9 +101,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!entryType || !['dream', 'day'].includes(entryType)) {
+    if (!entryType || !['dream', 'day', 'handwriting'].includes(entryType)) {
       return NextResponse.json(
-        { success: false, error: 'entryType must be "dream" or "day"' },
+        { success: false, error: 'entryType must be "dream", "day", or "handwriting"' },
         { status: 400 }
       );
     }
@@ -87,12 +118,12 @@ export async function POST(request: NextRequest) {
     // Ensure table exists
     await ensureTableExists();
 
-    // Insert entry
+    // Insert entry (with optional meta for handwriting OCR data)
     const result = await query<QuickJournalEntry>(`
-      INSERT INTO quick_journal_entries (user_id, entry_type, content, tags, source)
-      VALUES ($1, $2, $3, $4, $5)
+      INSERT INTO quick_journal_entries (user_id, entry_type, content, tags, source, meta)
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
-    `, [userId, entryType, content.trim(), tags, source]);
+    `, [userId, entryType, content.trim(), tags, source, meta ? JSON.stringify(meta) : null]);
 
     const entry = result.rows[0];
 
@@ -163,7 +194,7 @@ export async function GET(request: NextRequest) {
     `;
     const params: (string | number)[] = [...userIds];
 
-    if (entryType && ['dream', 'day'].includes(entryType)) {
+    if (entryType && ['dream', 'day', 'handwriting'].includes(entryType)) {
       queryStr += ` AND entry_type = $${params.length + 1}`;
       params.push(entryType);
     }
