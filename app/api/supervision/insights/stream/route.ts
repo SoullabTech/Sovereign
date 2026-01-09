@@ -1,11 +1,11 @@
 import { NextRequest } from 'next/server';
-import { getTranscriptSegments } from '@/lib/supervision/SupervisionStore';
+import { getInsightsSince } from '@/lib/supervision/SupervisionStore';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-// Backoff intervals (ms): start at 1s, back off when idle
-const INTERVALS = [1000, 2000, 3000, 5000];
+// Backoff intervals (ms): start at 2s (insights less frequent than transcript)
+const INTERVALS = [2000, 3000, 5000, 10000];
 
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
@@ -17,11 +17,11 @@ export async function GET(req: NextRequest) {
 
   // Support Last-Event-ID for automatic reconnect resume
   const lastEventId = req.headers.get('last-event-id');
-  let afterMs = Number(url.searchParams.get('afterMs') ?? -1);
+  let afterTs = Number(url.searchParams.get('afterTs') ?? 0);
   if (lastEventId && !Number.isNaN(Number(lastEventId))) {
-    afterMs = Math.max(afterMs, Number(lastEventId));
+    afterTs = Math.max(afterTs, Number(lastEventId));
   }
-  if (!Number.isFinite(afterMs)) afterMs = -1;
+  if (!Number.isFinite(afterTs)) afterTs = 0;
 
   const encoder = new TextEncoder();
 
@@ -35,34 +35,39 @@ export async function GET(req: NextRequest) {
         controller.enqueue(encoder.encode(lines.join('\n') + '\n\n'));
       };
 
-      // Send retry hint so browser reconnects after 2s on drop
-      emit(['retry: 2000']);
-      emit(['event: ready', `data: ${JSON.stringify({ sessionId, afterMs })}`]);
+      // Send retry hint so browser reconnects after 3s on drop
+      emit(['retry: 3000']);
+      emit(['event: ready', `data: ${JSON.stringify({ sessionId, afterTs })}`]);
 
       const tick = async () => {
         try {
-          const segs = await getTranscriptSegments(sessionId, { afterMs });
+          const insights = await getInsightsSince(sessionId, { afterTs });
 
-          if (segs.length) {
+          if (insights.length) {
             // Transform snake_case to camelCase for frontend
-            const transformed = segs.map(s => ({
-              id: s.id,
-              speaker: s.speaker,
-              speakerConfidence: s.speaker_confidence,
-              startMs: s.start_ms,
-              endMs: s.end_ms,
-              text: s.text,
-              confidence: s.transcription_confidence,
-              createdAt: s.created_at,
+            const transformed = insights.map(i => ({
+              id: i.id,
+              sessionId: i.session_id,
+              insightType: i.insight_type,
+              content: i.content,
+              segmentRefs: i.segment_refs,
+              timeRangeStartMs: i.time_range_start_ms,
+              timeRangeEndMs: i.time_range_end_ms,
+              significance: i.significance,
+              modelUsed: i.model_used,
+              processingTimeMs: i.processing_time_ms,
+              createdAt: i.created_at,
             }));
 
-            afterMs = Math.max(afterMs, ...segs.map(s => s.start_ms ?? 0));
+            // Update cursor to latest created_at timestamp
+            const maxTs = Math.max(...insights.map(i => new Date(i.created_at).getTime()));
+            afterTs = maxTs;
 
             // Include id: for Last-Event-ID resume
             emit([
-              `id: ${afterMs}`,
-              'event: segments',
-              `data: ${JSON.stringify({ segments: transformed, afterMs })}`
+              `id: ${afterTs}`,
+              'event: insights',
+              `data: ${JSON.stringify({ insights: transformed, afterTs })}`
             ]);
 
             // Reset backoff on activity

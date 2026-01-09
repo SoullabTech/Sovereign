@@ -349,6 +349,31 @@ export async function getInsights(sessionId: string, type?: SupervisionInsight['
   return result.rows;
 }
 
+/**
+ * Get insights since a given timestamp (for SSE streaming).
+ * Uses created_at as cursor.
+ */
+export async function getInsightsSince(
+  sessionId: string,
+  opts?: { afterTs?: number; limit?: number }
+): Promise<SupervisionInsight[]> {
+  const afterTs = opts?.afterTs ?? 0;
+  const limit = Math.min(Math.max(opts?.limit ?? 50, 1), 200);
+
+  // Convert afterTs (epoch ms) to timestamp for comparison
+  const afterDate = new Date(afterTs).toISOString();
+
+  const result = await query<SupervisionInsight>(`
+    SELECT * FROM supervision_insights
+    WHERE session_id = $1
+      AND created_at > $2
+    ORDER BY created_at ASC
+    LIMIT $3
+  `, [sessionId, afterDate, limit]);
+
+  return result.rows;
+}
+
 // Jobs Queue
 
 export async function enqueueJob(params: {
