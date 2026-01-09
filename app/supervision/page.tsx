@@ -91,15 +91,83 @@ type InsightLike = {
   timeRange?: { startMs: number | null; endMs: number | null };
 };
 
+// Parse segmentRefs reliably (handles ["a"], "{a,b}", "a,b", etc.)
+function parseSegmentRefs(raw: unknown): string[] {
+  if (!raw) return [];
+
+  // Already an array
+  if (Array.isArray(raw)) {
+    return raw.map(String).map(s => s.trim()).filter(Boolean);
+  }
+
+  if (typeof raw !== 'string') return [];
+
+  const s = raw.trim();
+  if (!s) return [];
+
+  // JSON array as string: '["a","b"]'
+  if (s.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(s);
+      if (Array.isArray(parsed)) {
+        return parsed.map(String).map(x => x.trim()).filter(Boolean);
+      }
+    } catch {
+      // fall through
+    }
+  }
+
+  // Postgres array literal: '{a,b}' or '{"a","b"}'
+  if (s.startsWith('{') && s.endsWith('}')) {
+    const inner = s.slice(1, -1).trim();
+    if (!inner) return [];
+
+    const out: string[] = [];
+    let cur = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < inner.length; i++) {
+      const ch = inner[i];
+
+      if (ch === '"' && inner[i - 1] !== '\\') {
+        inQuotes = !inQuotes;
+        continue;
+      }
+
+      if (ch === ',' && !inQuotes) {
+        out.push(cur);
+        cur = '';
+        continue;
+      }
+
+      cur += ch;
+    }
+    if (cur) out.push(cur);
+
+    return out
+      .map(x => x.trim().replace(/^"|"$/g, '').replace(/\\"/g, '"'))
+      .map(x => x.trim())
+      .filter(Boolean);
+  }
+
+  // Comma-separated fallback: 'a,b'
+  if (s.includes(',')) {
+    return s.split(',').map(x => x.trim()).filter(Boolean);
+  }
+
+  // Single id string
+  return [s];
+}
+
 function getInsightSegmentId(i: InsightLike): string | null {
-  // Prefer single segment anchor, then first from array
-  return (
-    i.segmentId ??
-    i.segment_id ??
-    i.segmentRefs?.[0] ??
-    i.segment_refs?.[0] ??
-    null
-  );
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const insight = i as any;
+  const direct = insight?.segmentId ?? insight?.segment_id ?? null;
+  if (typeof direct === 'string' && direct.trim()) return direct.trim();
+
+  const refsRaw = insight?.segmentRefs ?? insight?.segment_refs ?? null;
+  const refs = parseSegmentRefs(refsRaw);
+  return refs[0] ?? null;
 }
 
 function getInsightStartMs(i: InsightLike): number | null {

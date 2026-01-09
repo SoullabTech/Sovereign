@@ -288,7 +288,7 @@ export function TranscriptViewer({
     }
   }, [segments, isSelfManaged, scrollToBottomIfAuto]);
 
-  // Jump to specific segment/time when insight clicked
+  // Jump to specific segment/time when insight clicked (with retry for DOM timing)
   useEffect(() => {
     // Prefer exact segment anchor, fallback to time-based search
     const targetId = jumpToSegmentId
@@ -299,28 +299,40 @@ export function TranscriptViewer({
 
     if (!targetId) return;
 
+    let rafId: number | null = null;
     let timeoutId: number | null = null;
+    let cancelled = false;
 
-    // Wait a frame so DOM is rendered
-    const rafId = requestAnimationFrame(() => {
-      const el = document.querySelector(
+    const tryScroll = (attemptsLeft: number) => {
+      if (cancelled) return;
+
+      const container = scrollRef.current;
+      const el = container?.querySelector(
         `[data-transcript-segment-id="${targetId}"]`
       ) as HTMLElement | null;
 
-      if (!el) return;
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setFocusedSegmentId(targetId);
+        setAutoScroll(false); // Disable auto-scroll when jumping
 
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      setFocusedSegmentId(targetId);
-      setAutoScroll(false); // Disable auto-scroll when jumping
+        // Clear focus highlight after 2 seconds
+        timeoutId = window.setTimeout(() => {
+          setFocusedSegmentId((curr) => (curr === targetId ? null : curr));
+        }, 2000);
+        return;
+      }
 
-      // Clear focus highlight after 2 seconds
-      timeoutId = window.setTimeout(() => {
-        setFocusedSegmentId((curr) => (curr === targetId ? null : curr));
-      }, 2000);
-    });
+      // Retry if DOM not ready yet (~30 frames ≈ ~0.5s at 60fps)
+      if (attemptsLeft <= 0) return;
+      rafId = requestAnimationFrame(() => tryScroll(attemptsLeft - 1));
+    };
+
+    tryScroll(30);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      cancelled = true;
+      if (rafId) cancelAnimationFrame(rafId);
       if (timeoutId) window.clearTimeout(timeoutId);
     };
   }, [jumpNonce, jumpToSegmentId, jumpToMs, segments]);
