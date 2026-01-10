@@ -92,22 +92,22 @@ interface SacredHouseWheelProps {
   transitAspects?: TransitAspect[];
 }
 
-// Spiralogic Spiral Order - Clockwise from top
-// Fire (1-3) → Water (4-6) → Earth (7-9) → Air (10-12)
-// Houses maintain their traditional numbers but flow in elemental spiral
+// Spiralogic Spiral Order - House 1 at 9 o'clock (traditional ASC position)
+// Clockwise from 12:00: Water → Earth → Air → Fire
+// Elemental quadrants maintained, Fire section at 9-12 o'clock
 const spiralogicOrder = [
-  1,   // Fire 1 - Identity/Self
-  5,   // Fire 2 - Creativity/Joy
-  9,   // Fire 3 - Philosophy/Expansion
-  4,   // Water 1 - Home/Roots
-  8,   // Water 2 - Transformation/Intimacy
-  12,  // Water 3 - Spirituality/Dissolution
-  10,  // Earth 1 - Career/Legacy
-  2,   // Earth 2 - Resources/Values
-  6,   // Earth 3 - Service/Health
-  7,   // Air 1 - Relationships/Other
-  11,  // Air 2 - Community/Vision
-  3,   // Air 3 - Communication/Learning
+  4,   // Position 0 (12:00) - Water 1 - Home/Roots (Heart)
+  8,   // Position 1 (1:00) - Water 2 - Transformation/Intimacy (Healing)
+  12,  // Position 2 (2:00) - Water 3 - Spirituality/Dissolution (Holiness)
+  10,  // Position 3 (3:00) - Earth 1 - Career/Legacy (Mission)
+  2,   // Position 4 (4:00) - Earth 2 - Resources/Values (Means)
+  6,   // Position 5 (5:00) - Earth 3 - Service/Health (Medicine)
+  7,   // Position 6 (6:00) - Air 1 - Relationships/Other (Connection)
+  11,  // Position 7 (7:00) - Air 2 - Community/Vision (Community)
+  3,   // Position 8 (8:00) - Air 3 - Communication/Learning (Consciousness)
+  1,   // Position 9 (9:00) - Fire 1 - Identity/Self (Experience) ← ASC position
+  5,   // Position 10 (10:00) - Fire 2 - Creativity/Joy (Expression)
+  9,   // Position 11 (11:00) - Fire 3 - Philosophy/Expansion
 ];
 
 // Traditional Western Chart Order - Counterclockwise from Ascendant (9 o'clock)
