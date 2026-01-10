@@ -27,7 +27,8 @@ import {
   Eye,
   Zap,
   Shield,
-  Star
+  Star,
+  Search,
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -159,6 +160,12 @@ export default function LabToolsPage() {
           label: 'Pioneer Circle',
           path: '/labtools/beta-testing',
           description: 'Beta testing with 10-participant sacred laboratory'
+        },
+        {
+          icon: Search,
+          label: 'RLM Navigator',
+          path: '/labtools/rlm',
+          description: 'Codebase bloodhound: "what file should I open next?"'
         },
       ],
     },

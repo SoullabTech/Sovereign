@@ -35,7 +35,7 @@ interface BirthChartData {
 
 interface SavedSynastryItem {
   analysisId: string;
-  savedAt: string;
+  savedAt?: string;  // Optional - edge cases may omit
   chartA?: { sunSign?: string; moonSign?: string; name?: string };
   chartB?: { sunSign?: string; moonSign?: string; name?: string };
   scores?: { attraction?: number; harmony?: number; friction?: number; growth?: number };
@@ -624,7 +624,12 @@ export default function AstrologyPage() {
                     No saved synastry yet. Run one and hit <span className="text-white/80">Save to Timeline</span>.
                   </div>
                 ) : (
-                  savedSynastry.map((item) => {
+                  // Sort by savedAt descending (most recent first), with null-safe fallback
+                  [...savedSynastry]
+                    .sort((a, b) =>
+                      (b.savedAt ? Date.parse(b.savedAt) : 0) - (a.savedAt ? Date.parse(a.savedAt) : 0)
+                    )
+                    .map((item) => {
                     const a = item.chartA?.sunSign ?? 'Person A';
                     const b = item.chartB?.sunSign ?? 'Person B';
                     const when = item.savedAt ? new Date(item.savedAt).toLocaleDateString() : '';
