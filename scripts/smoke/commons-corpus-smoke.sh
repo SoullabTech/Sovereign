@@ -74,9 +74,17 @@ else
 
   if [[ "$EXISTING_DOCS" -lt 3 ]]; then
     log "Ingesting Community Commons docs (limited to 5)..."
-    # Use awk instead of head to avoid SIGPIPE killing the producer early
+    # Capture full log for debugging, show first 40 lines
+    INGEST_LOG="${TMPDIR:-/tmp}/commons-corpus-ingest.$$.log"
     DATABASE_URL="$DATABASE_URL" npx tsx scripts/ingest/commons-corpus.ts --max-docs 5 2>&1 \
+      | tee "$INGEST_LOG" \
       | awk 'NR<=40'
+    # Show tail on failure (pipefail will catch it)
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+      log "Ingestion failed. Last 40 lines:"
+      tail -40 "$INGEST_LOG"
+      exit 1
+    fi
   else
     log "Corpus already has ${EXISTING_DOCS} docs, skipping re-ingestion"
   fi
