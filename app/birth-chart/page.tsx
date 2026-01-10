@@ -272,6 +272,7 @@ export default function BirthChartPage() {
                       )}
                     isDayMode={false}
                     layoutMode="traditional"
+                    showAspects={true}
                     className="max-h-[500px]"
                   />
                 </div>

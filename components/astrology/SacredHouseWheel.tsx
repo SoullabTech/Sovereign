@@ -1626,8 +1626,8 @@ export function SacredHouseWheel({
           })}
         </g>
 
-        {/* Aspect lines - sacred geometry revealed on hover */}
-        {revealedAspects && aspects.length > 0 && (
+        {/* Aspect lines - sacred geometry revealed on hover or when showAspects is true */}
+        {(showAspects || revealedAspects) && aspects.length > 0 && (
           <g opacity="0.6">
             {aspects.map((aspect) => {
               const planet1 = planets.find(p => p.name === aspect.planet1);
@@ -1641,7 +1641,7 @@ export function SacredHouseWheel({
         )}
 
         {/* ASPECT PATTERNS - Sacred Geometry Configurations */}
-        {detectedPatterns.length > 0 && revealedAspects && (
+        {detectedPatterns.length > 0 && (showAspects || revealedAspects) && (
           <g className="aspect-patterns-layer">
             {detectedPatterns.slice(0, 3).map((pattern, idx) => {
               // Get positions for pattern planets
@@ -1726,7 +1726,7 @@ export function SacredHouseWheel({
         )}
 
         {/* Patterns indicator badge (shows count when aspects revealed) */}
-        {detectedPatterns.length > 0 && revealedAspects && (
+        {detectedPatterns.length > 0 && (showAspects || revealedAspects) && (
           <g
             className="cursor-pointer"
             onClick={() => setShowPatternsPanel(true)}
@@ -2196,7 +2196,7 @@ export function SacredHouseWheel({
       </svg>
 
       {/* Legend - appears on aspect reveal */}
-      {revealedAspects && aspects.length > 0 && (
+      {(showAspects || revealedAspects) && aspects.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
