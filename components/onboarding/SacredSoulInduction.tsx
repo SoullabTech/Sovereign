@@ -86,6 +86,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
   const [isRecognizing, setIsRecognizing] = useState(false);
   const [recognizedSoul, setRecognizedSoul] = useState<GaneshaContact | null>(null);
   const [blessings, setBlessings] = useState<string[]>([]);
+  const [email, setEmail] = useState('');
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [serverMember, setServerMember] = useState<{ id: string; username: string; name: string } | null>(null);
@@ -186,8 +187,11 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
         // Member already registered - redirect to sign in
         setIsRecognizing(false);
         if (checkData.onboarded) {
-          // Fully onboarded - go to sign in
-          router.replace('/signin');
+          // Fully onboarded - show message and go to sign in
+          setError(`Welcome back${checkData.name ? `, ${checkData.name}` : ''}! Redirecting you to sign in...`);
+          setTimeout(() => {
+            router.replace('/signin');
+          }, 1500);
           return;
         } else {
           // Started but not finished - continue from where they left off
@@ -292,6 +296,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
           password,
           name: name.trim(),
           preferredName: preferredName.trim() || name.trim(),
+          email: email.trim().toLowerCase() || undefined,
         }),
       });
 
@@ -347,6 +352,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
             password,
             name: name.trim(),
             preferredName: preferredName.trim() || name.trim(),
+            email: email.trim().toLowerCase() || undefined,
           }),
         });
 
@@ -495,9 +501,24 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-red-600 text-sm font-light text-center bg-red-50/80 rounded-lg p-3 border border-red-200"
+                        className={`text-sm font-light text-center rounded-lg p-3 border ${
+                          error.toLowerCase().includes('welcome back')
+                            ? 'text-teal-700 bg-teal-50/80 border-teal-200'
+                            : 'text-red-600 bg-red-50/80 border-red-200'
+                        }`}
                       >
                         {error}
+                        {error.toLowerCase().includes('already registered') && (
+                          <div className="mt-2">
+                            <button
+                              type="button"
+                              onClick={() => router.push('/signin')}
+                              className="text-amber-700 hover:text-amber-800 font-medium underline underline-offset-2"
+                            >
+                              Sign in to your account
+                            </button>
+                          </div>
+                        )}
                       </motion.div>
                     )}
 
@@ -586,6 +607,17 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       className="!text-gray-500 hover:!text-gray-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                     >
                       Don't remember your passkey?
+                    </button>
+                  </div>
+
+                  {/* Returning user sign in link */}
+                  <div className="text-center mt-4">
+                    <button
+                      type="button"
+                      onClick={() => router.push('/signin')}
+                      className="text-amber-600 hover:text-amber-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                    >
+                      Already have an account? Sign in
                     </button>
                   </div>
 
@@ -684,6 +716,25 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                       <div>
                         <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
+                          Email <span className="text-teal-600/60 text-xs font-light normal-case">(for password recovery)</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.05em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(110, 231, 183, 0.2), rgba(127, 181, 179, 0.15))',
+                            border: '1px solid rgba(14, 116, 144, 0.3)',
+                            color: '#134e4a',
+                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0, 0, 0, 0.2)',
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Password
                         </label>
                         <div className="relative">
@@ -717,6 +768,17 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           className="text-rose-400 text-sm font-light text-center bg-rose-900/20 rounded-lg p-3 border border-rose-500/20"
                         >
                           {error}
+                          {error.toLowerCase().includes('already registered') && (
+                            <div className="mt-2">
+                              <button
+                                type="button"
+                                onClick={() => router.push('/signin')}
+                                className="text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2"
+                              >
+                                Sign in to your account
+                              </button>
+                            </div>
+                          )}
                         </motion.div>
                       )}
 
@@ -876,6 +938,25 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                       <div>
                         <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
+                          Email <span className="text-teal-600/60 text-xs font-light normal-case">(for password recovery)</span>
+                        </label>
+                        <input
+                          type="email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          placeholder="your@email.com"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.05em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(110, 231, 183, 0.2), rgba(127, 181, 179, 0.15))',
+                            border: '1px solid rgba(14, 116, 144, 0.3)',
+                            color: '#134e4a',
+                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0, 0, 0, 0.2)',
+                          }}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
                           Password
                         </label>
                         <div className="relative">
@@ -937,6 +1018,17 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           className="text-rose-400 text-sm font-light text-center bg-rose-900/20 rounded-lg p-3 border border-rose-500/20"
                         >
                           {error}
+                          {error.toLowerCase().includes('already registered') && (
+                            <div className="mt-2">
+                              <button
+                                type="button"
+                                onClick={() => router.push('/signin')}
+                                className="text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2"
+                              >
+                                Sign in to your account
+                              </button>
+                            </div>
+                          )}
                         </motion.div>
                       )}
 
