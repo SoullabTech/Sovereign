@@ -1913,16 +1913,21 @@ export function SacredHouseWheel({
               key={planet.name}
               onMouseEnter={() => setHoveredPlanet(planet)}
               onMouseLeave={() => setHoveredPlanet(null)}
-              onClick={() => setClickedPlanet(clickedPlanet?.name === planet.name ? null : planet)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setClickedPlanet(clickedPlanet?.name === planet.name ? null : planet);
+              }}
               className="cursor-pointer"
+              style={{ pointerEvents: 'auto' }}
             >
-              {/* Invisible larger hover target */}
+              {/* Invisible larger click/hover target - increased size for better touch targets */}
               <circle
                 cx={pos.x}
                 cy={pos.y}
-                r={16}
-                fill="transparent"
+                r={20}
+                fill="rgba(0,0,0,0.001)"
                 className="cursor-pointer"
+                style={{ pointerEvents: 'auto' }}
               />
               {/* Planet glow */}
               <motion.circle
