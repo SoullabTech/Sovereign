@@ -7,6 +7,7 @@
  */
 
 import { useMemo, useState } from 'react';
+import { RlmFileViewer } from '@/components/rlm/RlmFileViewer';
 
 type RLMFileHit = {
   file: string;
@@ -30,6 +31,13 @@ export default function RLMPage() {
   const [query, setQuery] = useState('');
   const [res, setRes] = useState<RLMResponse | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // File viewer state
+  const [openPath, setOpenPath] = useState<string | null>(null);
+  const [openContent, setOpenContent] = useState<string | null>(null);
+  const [openTruncated, setOpenTruncated] = useState(false);
+  const [openErr, setOpenErr] = useState<string | null>(null);
+  const [openLoading, setOpenLoading] = useState(false);
 
   const canRun = useMemo(() => query.trim().length >= 2, [query]);
 
@@ -56,6 +64,38 @@ export default function RLMPage() {
     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey) && canRun && !loading) {
       run();
     }
+  }
+
+  async function openFile(p: string) {
+    setOpenErr(null);
+    setOpenPath(p);
+    setOpenContent(null);
+    setOpenTruncated(false);
+    setOpenLoading(true);
+
+    try {
+      const r = await fetch('/api/rlm/open', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: p }),
+      });
+
+      const data = await r.json();
+      if (!data?.success) throw new Error(data?.error || 'Open failed');
+
+      setOpenContent(data.content ?? '');
+      setOpenTruncated(Boolean(data.truncated));
+    } catch (e: unknown) {
+      setOpenErr(e instanceof Error ? e.message : 'Open failed');
+    } finally {
+      setOpenLoading(false);
+    }
+  }
+
+  function closeViewer() {
+    setOpenPath(null);
+    setOpenContent(null);
+    setOpenErr(null);
   }
 
   return (
@@ -119,15 +159,23 @@ export default function RLMPage() {
                     className="rounded-xl border border-white/10 bg-black/30 p-3 space-y-2"
                   >
                     <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm text-white font-mono">
+                      <div className="text-sm text-white font-mono truncate">
                         {h.file}
                       </div>
-                      <button
-                        onClick={() => navigator.clipboard.writeText(h.file)}
-                        className="text-xs rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-white/70 hover:bg-white/10"
-                      >
-                        Copy
-                      </button>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button
+                          onClick={() => openFile(h.file)}
+                          className="text-xs rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-amber-200/90 hover:bg-amber-500/20"
+                        >
+                          Open
+                        </button>
+                        <button
+                          onClick={() => navigator.clipboard.writeText(h.file)}
+                          className="text-xs rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-white/70 hover:bg-white/10"
+                        >
+                          Copy
+                        </button>
+                      </div>
                     </div>
                     <div className="text-xs text-white/50">
                       score {h.score} · {h.why.join(' · ')}
@@ -167,6 +215,20 @@ export default function RLMPage() {
             </section>
           </div>
         )}
+
+        {/* File Viewer */}
+        {openErr && (
+          <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
+            {openErr}
+          </div>
+        )}
+
+        <RlmFileViewer
+          filePath={openPath}
+          content={openLoading ? null : openContent}
+          truncated={openTruncated}
+          onClose={closeViewer}
+        />
       </div>
     </main>
   );

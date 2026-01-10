@@ -11,27 +11,14 @@ import {
   navigateCodebase,
   type RLMNavigateRequest,
 } from '@/lib/rlm/navigate';
+import { isRlmAllowed } from '@/lib/rlm/access';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-function isAllowed(req: Request): boolean {
-  // Dev: always on
-  if (process.env.NODE_ENV !== 'production') return true;
-
-  // Prod: require explicit enable + key
-  if (process.env.RLM_ENABLED !== '1') return false;
-
-  const expected = process.env.RLM_DEVTOOLS_KEY;
-  if (!expected) return false;
-
-  const got = req.headers.get('x-rlm-key');
-  return Boolean(got && got === expected);
-}
-
 export async function POST(req: Request) {
   try {
-    if (!isAllowed(req)) {
+    if (!isRlmAllowed(req)) {
       return NextResponse.json(
         { success: false, error: 'not_found' },
         { status: 404 }

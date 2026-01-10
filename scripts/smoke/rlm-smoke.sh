@@ -90,6 +90,29 @@ grep_count=$(echo "$resp" | jq -r '.grepQueries | length')
 [[ "$grep_count" -gt 0 ]] || no "Expected grep queries, got none"
 ok "Generated $grep_count grep queries"
 
+# Test 5: Open file endpoint
+log "Test 5: Open file endpoint…"
+
+resp="$(curl -sS -X POST "$BASE_URL/api/rlm/open" \
+  -H "Content-Type: application/json" \
+  -d '{"path":"lib/rlm/navigate.ts"}')"
+
+echo "$resp" | jq -e '.success == true and (.content | type == "string") and (.content | length > 20)' >/dev/null \
+  || no "Open file failed"
+ok "Open file works"
+
+# Test 6: Open file blocks sensitive paths
+log "Test 6: Open file security…"
+
+resp="$(curl -sS -X POST "$BASE_URL/api/rlm/open" \
+  -H "Content-Type: application/json" \
+  -d '{"path":".env.local"}' \
+  -w "\n%{http_code}" || true)"
+
+http_code=$(echo "$resp" | tail -1)
+[[ "$http_code" == "400" ]] || no "Expected 400 for .env path, got $http_code"
+ok "Sensitive paths blocked"
+
 # Summary
 echo ""
 ok "RLM Navigator smoke test PASSED"
