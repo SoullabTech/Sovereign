@@ -7,9 +7,9 @@
  * Spiralogic interpretation framework.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Sparkles, Sun, Moon, Star, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Sparkles, Sun, Moon, Star, ChevronDown, ChevronUp, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { BirthDataForm } from '@/components/astrology/BirthDataForm';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
@@ -127,6 +127,23 @@ export default function BirthChartPage() {
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+
+  // Load saved chart data from localStorage on mount
+  useEffect(() => {
+    const savedChartJson = localStorage.getItem('birthChartData');
+    if (savedChartJson) {
+      try {
+        const savedChart = JSON.parse(savedChartJson);
+        // Check if it has calculated chart data (not just birth input)
+        if (savedChart.sun && savedChart.moon && savedChart.ascendant) {
+          setChartData(savedChart);
+        }
+      } catch (e) {
+        console.error('Error loading saved chart:', e);
+      }
+    }
+  }, []);
 
   const handleCalculate = async (data: any) => {
     setLoading(true);
@@ -143,6 +160,9 @@ export default function BirthChartPage() {
 
       if (result.success && result.data) {
         setChartData(result.data);
+        setShowForm(false);
+        // Save to localStorage for persistence
+        localStorage.setItem('birthChartData', JSON.stringify(result.data));
       } else {
         setError(result.error || 'Failed to calculate chart');
       }
@@ -152,6 +172,11 @@ export default function BirthChartPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleNewChart = () => {
+    setChartData(null);
+    setShowForm(true);
   };
 
   const elementalBalance = chartData ? calculateElementalBalance(chartData) : null;
@@ -171,14 +196,26 @@ export default function BirthChartPage() {
             Lab Tools
           </button>
 
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-[#D4B896]" />
-            <span className="text-[#D4B896]/60 text-sm">Cosmic Blueprint</span>
+          <div className="flex items-center gap-4">
+            {chartData && !showForm && (
+              <button
+                onClick={handleNewChart}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-violet-500/10
+                         border border-violet-500/20 text-violet-300 hover:bg-violet-500/20 transition-all text-sm"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                New Chart
+              </button>
+            )}
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#D4B896]" />
+              <span className="text-[#D4B896]/60 text-sm">Cosmic Blueprint</span>
+            </div>
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {!chartData ? (
+          {!chartData || showForm ? (
             /* Birth Data Form */
             <motion.div
               key="form"
