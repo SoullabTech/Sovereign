@@ -537,6 +537,7 @@ export function SacredHouseWheel({
         height="1280"
         viewBox="-80 -80 560 560"
         className="w-full h-full"
+        style={{ pointerEvents: 'auto' }}
         onMouseEnter={() => setRevealedAspects(true)}
         onMouseLeave={() => setRevealedAspects(false)}
       >

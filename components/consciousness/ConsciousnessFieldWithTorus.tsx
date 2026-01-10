@@ -190,7 +190,7 @@ export default function ConsciousnessFieldWithTorus({
         </Canvas>
       </div>
 
-      {/* Consciousness map in the center */}
+      {/* Consciousness map in the center - explicit pointer-events for click handling */}
       <div
         style={{
           position: 'absolute',
@@ -202,7 +202,8 @@ export default function ConsciousnessFieldWithTorus({
           height: '98%',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          pointerEvents: 'auto'
         }}
       >
         {children}
