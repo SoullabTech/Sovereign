@@ -82,6 +82,8 @@ interface SacredHouseWheelProps {
   isDayMode?: boolean;
   showAspects?: boolean;
   className?: string;
+  // CHART LAYOUT - Traditional western vs Spiralogic elemental
+  layoutMode?: 'traditional' | 'spiralogic';
   // MISSION TRACKING - Pulsing dots for creative manifestations
   missions?: Mission[];
   missionLayerSettings?: MissionLayerSettings;
@@ -106,6 +108,24 @@ const spiralogicOrder = [
   7,   // Air 1 - Relationships/Other
   11,  // Air 2 - Community/Vision
   3,   // Air 3 - Communication/Learning
+];
+
+// Traditional Western Chart Order - Counterclockwise from Ascendant (9 o'clock)
+// Position index maps clockwise from 12 o'clock, but houses go counterclockwise
+// Position 0 (12:00) = H10 MC, Position 3 (3:00) = H7 DSC, Position 6 (6:00) = H4 IC, Position 9 (9:00) = H1 ASC
+const traditionalOrder = [
+  10,  // Position 0 (12:00) - MC / Midheaven
+  9,   // Position 1 (1:00)
+  8,   // Position 2 (2:00)
+  7,   // Position 3 (3:00) - DSC / Descendant
+  6,   // Position 4 (4:00)
+  5,   // Position 5 (5:00)
+  4,   // Position 6 (6:00) - IC / Imum Coeli
+  3,   // Position 7 (7:00)
+  2,   // Position 8 (8:00)
+  1,   // Position 9 (9:00) - ASC / Ascendant
+  12,  // Position 10 (10:00)
+  11,  // Position 11 (11:00)
 ];
 
 // House-element mapping (Spiralogic system)
@@ -267,6 +287,7 @@ export function SacredHouseWheel({
   isDayMode = true,
   showAspects = false,
   className = '',
+  layoutMode = 'spiralogic',
   missions = [],
   missionLayerSettings = {
     showEmerging: true,
@@ -279,6 +300,8 @@ export function SacredHouseWheel({
   transits = [],
   transitAspects = [],
 }: SacredHouseWheelProps) {
+  // Select house order based on layout mode
+  const houseOrder = layoutMode === 'traditional' ? traditionalOrder : spiralogicOrder;
   const [hoveredHouse, setHoveredHouse] = useState<number | null>(null);
   const [hoveredPlanet, setHoveredPlanet] = useState<Planet | null>(null);
   const [clickedPlanet, setClickedPlanet] = useState<Planet | null>(null);
@@ -320,10 +343,10 @@ export function SacredHouseWheel({
   // Wheel is fixed - no rotation (consciousness states are stable)
 
   // Calculate position on wheel for a given house (1-12)
-  // Uses Spiralogic spiral order for positioning
+  // Uses selected layout order for positioning
   const getHousePosition = (house: number) => {
-    // Find position in spiral order
-    const spiralIndex = spiralogicOrder.indexOf(house);
+    // Find position in house order
+    const spiralIndex = houseOrder.indexOf(house);
     // Start at top (12 o'clock) and go clockwise
     const angle = (spiralIndex * 30 - 90) * (Math.PI / 180);
     const radius = 140;
@@ -342,8 +365,8 @@ export function SacredHouseWheel({
     const positions: { [key: string]: { x: number; y: number; adjustedAngle: number } } = {};
     const sortedPlanets = [...planetsArray].sort((a, b) => {
       // Sort by house first, then by degree within house
-      const aSpiral = spiralogicOrder.indexOf(a.house);
-      const bSpiral = spiralogicOrder.indexOf(b.house);
+      const aSpiral = houseOrder.indexOf(a.house);
+      const bSpiral = houseOrder.indexOf(b.house);
       if (aSpiral !== bSpiral) return aSpiral - bSpiral;
       return (a.degree % 30) - (b.degree % 30);
     });
@@ -351,8 +374,8 @@ export function SacredHouseWheel({
     const occupiedAngles: number[] = [];
 
     sortedPlanets.forEach((planet) => {
-      // Find house position in spiral order
-      const spiralIndex = spiralogicOrder.indexOf(planet.house);
+      // Find house position in selected layout order
+      const spiralIndex = houseOrder.indexOf(planet.house);
       const houseStartAngle = spiralIndex * 30;
       const idealAngle = (houseStartAngle + (planet.degree % 30)) - 90;
 
@@ -1215,9 +1238,9 @@ export function SacredHouseWheel({
             />
 
             {/* Metatron's Cube - Connecting all 12 house centers */}
-            {spiralogicOrder.map((house1, i) => {
+            {houseOrder.map((house1, i) => {
               const pos1 = getHousePosition(house1);
-              return spiralogicOrder.slice(i + 1).map((house2, j) => {
+              return houseOrder.slice(i + 1).map((house2, j) => {
                 const pos2 = getHousePosition(house2);
                 return (
                   <line
@@ -1339,9 +1362,9 @@ export function SacredHouseWheel({
           </g>
         )}
 
-        {/* 12 House segments - Spiralogic spiral order, clockwise */}
+        {/* 12 House segments - Layout-dependent order, clockwise from top */}
         <g>
-          {spiralogicOrder.map((house, i) => {
+          {houseOrder.map((house, i) => {
             const element = houseElements[house as keyof typeof houseElements] as keyof typeof elementalColors;
             const elementColor = elementalColors[element];
             const color = isDayMode ? elementColor.day : elementColor.night;

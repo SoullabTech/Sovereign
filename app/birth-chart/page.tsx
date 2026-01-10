@@ -234,6 +234,7 @@ export default function BirthChartPage() {
                         ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
                       )}
                     isDayMode={false}
+                    layoutMode="traditional"
                     className="max-h-[500px]"
                   />
                 </div>
