@@ -5,11 +5,19 @@ export const dynamic = 'force-dynamic';
 /**
  * Register new member
  * Called after passkey validation during onboarding
+ *
+ * Supports both:
+ * - Admin-issued passkeys (SOULLAB-TESTER, etc.)
+ * - Member-created invite passkeys (SOULLAB-AURORA-123, etc.)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { createHash } from 'crypto';
+import {
+  calculateCanInviteAfter,
+  getInitialInvites,
+} from '@/lib/auth/inviteConfig';
 
 // Simple password hashing (for production, use bcrypt)
 function hashPassword(password: string): string {
@@ -28,10 +36,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if passkey already exists
+    const normalizedPasskey = passkey.toUpperCase();
+
+    // Check if passkey already exists as a member
     const existing = await query(
       'SELECT id FROM members WHERE passkey = $1',
-      [passkey.toUpperCase()]
+      [normalizedPasskey]
     );
 
     if (existing.rows.length > 0) {
@@ -39,6 +49,42 @@ export async function POST(request: NextRequest) {
         { error: 'Passkey already registered' },
         { status: 409 }
       );
+    }
+
+    // Check if this is a member-created invite
+    let inviterId: string | null = null;
+    let inviteId: string | null = null;
+
+    const inviteResult = await query(
+      `SELECT id, created_by, status, expires_at
+       FROM invites
+       WHERE passkey = $1`,
+      [normalizedPasskey]
+    );
+
+    if (inviteResult.rows.length > 0) {
+      const invite = inviteResult.rows[0];
+
+      // Check invite status
+      if (invite.status !== 'pending') {
+        return NextResponse.json(
+          { error: `This invite has already been ${invite.status}` },
+          { status: 400 }
+        );
+      }
+
+      // Check if expired
+      if (new Date(invite.expires_at) < new Date()) {
+        // Mark as expired
+        await query('UPDATE invites SET status = $1 WHERE id = $2', ['expired', invite.id]);
+        return NextResponse.json(
+          { error: 'This invite has expired. Please request a new one.' },
+          { status: 400 }
+        );
+      }
+
+      inviterId = invite.created_by;
+      inviteId = invite.id;
     }
 
     // Check if username already exists
@@ -57,14 +103,44 @@ export async function POST(request: NextRequest) {
     // Hash password and insert member
     const passwordHash = hashPassword(password);
 
+    // Calculate invite settings for new member
+    const canInviteAfter = calculateCanInviteAfter('standard');
+    const initialInvites = getInitialInvites('standard');
+
     const result = await query(
-      `INSERT INTO members (passkey, username, password_hash, name, preferred_name, email, onboarding_step)
-       VALUES ($1, $2, $3, $4, $5, $6, 'test-elemental')
+      `INSERT INTO members (
+         passkey, username, password_hash, name, preferred_name, email,
+         onboarding_step, invited_by, invites_remaining, can_invite_after, invite_tier
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, 'test-elemental', $7, $8, $9, 'standard')
        RETURNING id, username, name, preferred_name, onboarded, onboarding_step, created_at`,
-      [passkey.toUpperCase(), username.toLowerCase(), passwordHash, name || username, preferredName || name || username, email]
+      [
+        normalizedPasskey,
+        username.toLowerCase(),
+        passwordHash,
+        name || username,
+        preferredName || name || username,
+        email,
+        inviterId,
+        initialInvites,
+        canInviteAfter
+      ]
     );
 
     const member = result.rows[0];
+
+    // If this was an invite, mark it as redeemed
+    if (inviteId) {
+      await query(
+        `UPDATE invites SET status = 'redeemed', redeemed_by = $1, redeemed_at = NOW() WHERE id = $2`,
+        [member.id, inviteId]
+      );
+
+      // Log the invite chain
+      const inviterResult = await query('SELECT username FROM members WHERE id = $1', [inviterId]);
+      const inviterUsername = inviterResult.rows[0]?.username;
+      console.log(`[MEMBERS] ${member.username} joined via invite from ${inviterUsername}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -74,7 +150,8 @@ export async function POST(request: NextRequest) {
         name: member.name,
         preferredName: member.preferred_name,
         onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step
+        onboardingStep: member.onboarding_step,
+        invitedBy: inviterId,
       }
     });
   } catch (error) {
