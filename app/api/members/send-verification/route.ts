@@ -11,7 +11,17 @@ import { betaConfig } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy initialization to avoid build-time errors
+let resend: Resend | null = null;
+function getResend(): Resend {
+  if (!resend) {
+    if (!process.env.RESEND_API_KEY) {
+      throw new Error('RESEND_API_KEY is not configured');
+    }
+    resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return resend;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -72,7 +82,7 @@ export async function POST(request: NextRequest) {
     const verificationUrl = `${baseUrl}/verify-email?token=${token}`;
 
     // Send verification email
-    const { error: sendError } = await resend.emails.send({
+    const { error: sendError } = await getResend().emails.send({
       from: 'Kelly Nezat <kelly@soullab.life>',
       to: targetEmail,
       subject: 'Verify your Soullab email',
