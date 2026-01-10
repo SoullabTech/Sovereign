@@ -216,6 +216,17 @@ export default function SigninPage() {
           {error && (
             <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
               {error}
+              {error.toLowerCase().includes('invalid') && (
+                <div className="mt-2 pt-2 border-t border-red-200/30">
+                  <button
+                    type="button"
+                    onClick={() => router.push('/reset-password')}
+                    className="text-amber-700 hover:text-amber-600 font-medium underline underline-offset-2 transition-colors"
+                  >
+                    Reset your password
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

@@ -822,6 +822,17 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         </motion.button>
                       </div>
                     </form>
+
+                    {/* Already signed up link */}
+                    <div className="text-center mt-6 pt-4 border-t border-amber-200/30">
+                      <button
+                        type="button"
+                        onClick={() => router.push('/signin')}
+                        className="text-amber-700 hover:text-amber-800 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                      >
+                        Already signed up? Sign in
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -1072,6 +1083,17 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         </motion.button>
                       </div>
                     </form>
+
+                    {/* Already signed up link */}
+                    <div className="text-center mt-6 pt-4 border-t border-amber-200/30">
+                      <button
+                        type="button"
+                        onClick={() => router.push('/signin')}
+                        className="text-amber-700 hover:text-amber-800 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                      >
+                        Already signed up? Sign in
+                      </button>
+                    </div>
                   </div>
                 </div>
 
