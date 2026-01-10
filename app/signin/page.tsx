@@ -3,9 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail } from 'lucide-react';
+import { Mail, ArrowRightLeft } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
+
+interface MigrationPreview {
+  oldUserId: string;
+  totalRecords: number;
+  tables: { table: string; count: number }[];
+}
 
 export default function SigninPage() {
   const router = useRouter();
@@ -16,6 +22,12 @@ export default function SigninPage() {
   const [showRecovery, setShowRecovery] = useState(false);
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+
+  // Migration state
+  const [showMigration, setShowMigration] = useState(false);
+  const [migrationPreview, setMigrationPreview] = useState<MigrationPreview | null>(null);
+  const [migrationStatus, setMigrationStatus] = useState<'idle' | 'migrating' | 'done' | 'error'>('idle');
+  const [pendingUser, setPendingUser] = useState<{ id: string; onboarded: boolean } | null>(null);
 
   // Check if already authenticated
   useEffect(() => {
@@ -65,6 +77,38 @@ export default function SigninPage() {
           preferredName: validName,
           onboarded: data.member.onboarded,
         };
+
+        // Check for existing local data that could be migrated
+        const existingExplorerId = localStorage.getItem('explorerId');
+        const hasExistingData = existingExplorerId && existingExplorerId !== user.id;
+
+        if (hasExistingData) {
+          // Check if there's data to migrate
+          try {
+            const previewResponse = await fetch(`/api/members/migrate-data?oldUserId=${encodeURIComponent(existingExplorerId)}`);
+            if (previewResponse.ok) {
+              const preview = await previewResponse.json();
+              if (preview.totalRecords > 0) {
+                // There's data to migrate - show the modal
+                setMigrationPreview(preview);
+                setPendingUser({ id: user.id, onboarded: user.onboarded });
+                setShowMigration(true);
+                setIsLoading(false);
+
+                // Store user data but don't redirect yet
+                localStorage.setItem('beta_user', JSON.stringify(user));
+                localStorage.setItem('explorerName', validName);
+                localStorage.setItem('explorerPreferredName', validName);
+                localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
+                localStorage.setItem('maia_session_version', '2');
+                return;
+              }
+            }
+          } catch (previewError) {
+            console.warn('Migration preview failed:', previewError);
+            // Continue with normal flow if preview fails
+          }
+        }
 
         localStorage.setItem('beta_user', JSON.stringify(user));
         localStorage.setItem('explorerId', user.id);
@@ -150,6 +194,58 @@ export default function SigninPage() {
       console.error('Recovery error:', err);
       setError('Unable to process recovery request. Please try again.');
       setRecoveryStatus('idle');
+    }
+  };
+
+  const handleMigration = async (migrate: boolean) => {
+    if (!pendingUser || !migrationPreview) return;
+
+    if (migrate) {
+      setMigrationStatus('migrating');
+      try {
+        const response = await fetch('/api/members/migrate-data', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            oldUserId: migrationPreview.oldUserId,
+            newUserId: pendingUser.id,
+          }),
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          console.log('Migration complete:', result);
+          setMigrationStatus('done');
+
+          // Update explorerId to new member ID
+          localStorage.setItem('explorerId', pendingUser.id);
+
+          // Wait a moment to show success, then redirect
+          setTimeout(() => {
+            if (pendingUser.onboarded) {
+              router.push('/maia');
+            } else {
+              router.push('/begin');
+            }
+          }, 1500);
+        } else {
+          console.error('Migration failed');
+          setMigrationStatus('error');
+        }
+      } catch (err) {
+        console.error('Migration error:', err);
+        setMigrationStatus('error');
+      }
+    } else {
+      // Skip migration - just update explorerId and continue
+      localStorage.setItem('explorerId', pendingUser.id);
+      setShowMigration(false);
+
+      if (pendingUser.onboarded) {
+        router.push('/maia');
+      } else {
+        router.push('/begin');
+      }
     }
   };
 
@@ -396,6 +492,101 @@ export default function SigninPage() {
                   Cancel
                 </button>
               </form>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Migration Modal */}
+      {showMigration && migrationPreview && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            className="rounded-2xl p-8 max-w-md w-full shadow-2xl border"
+            style={{
+              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9))',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <div className="flex justify-center mb-6">
+              <ArrowRightLeft className="w-12 h-12 text-amber-600/80" />
+            </div>
+
+            <h2 className="text-xl font-light text-teal-900 text-center mb-4 tracking-wide">
+              Link Your Conversation History
+            </h2>
+
+            {migrationStatus === 'idle' && (
+              <>
+                <p className="text-teal-800/70 text-sm text-center mb-4">
+                  We found <span className="font-semibold text-teal-900">{migrationPreview.totalRecords} records</span> from
+                  your previous sessions on this device. Would you like to link them to your account?
+                </p>
+
+                <div className="bg-amber-50/60 rounded-lg p-4 mb-6 border border-amber-200/40">
+                  <p className="text-amber-800/80 text-xs font-medium mb-2">Data to link:</p>
+                  <ul className="text-amber-700/70 text-xs space-y-1">
+                    {migrationPreview.tables.slice(0, 5).map((t) => (
+                      <li key={t.table}>• {t.table.replace(/_/g, ' ')}: {t.count} items</li>
+                    ))}
+                    {migrationPreview.tables.length > 5 && (
+                      <li>• ...and {migrationPreview.tables.length - 5} more categories</li>
+                    )}
+                  </ul>
+                </div>
+
+                <div className="space-y-3">
+                  <motion.button
+                    onClick={() => handleMigration(true)}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="w-full py-3 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300"
+                  >
+                    Yes, Link My History
+                  </motion.button>
+
+                  <button
+                    onClick={() => handleMigration(false)}
+                    className="w-full py-2 text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+                  >
+                    No thanks, start fresh
+                  </button>
+                </div>
+              </>
+            )}
+
+            {migrationStatus === 'migrating' && (
+              <div className="text-center py-8">
+                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-teal-800/70">Linking your history...</p>
+              </div>
+            )}
+
+            {migrationStatus === 'done' && (
+              <div className="text-center py-8">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-emerald-600 text-2xl">✓</span>
+                </div>
+                <p className="text-emerald-800 font-medium">History linked successfully!</p>
+                <p className="text-teal-700/60 text-sm mt-2">Redirecting...</p>
+              </div>
+            )}
+
+            {migrationStatus === 'error' && (
+              <div className="text-center py-4">
+                <p className="text-red-700 mb-4">Something went wrong. Your data is safe.</p>
+                <button
+                  onClick={() => handleMigration(false)}
+                  className="px-6 py-2 bg-teal-500/80 hover:bg-teal-500 text-white rounded-xl transition-colors"
+                >
+                  Continue without linking
+                </button>
+              </div>
             )}
           </motion.div>
         </motion.div>
