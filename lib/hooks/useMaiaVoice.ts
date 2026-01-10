@@ -13,6 +13,7 @@ export interface VoiceMessage {
 
 export interface UseMaiaVoiceOptions {
   userId?: string;
+  sessionId?: string; // Session ID for persistence
   element?: string;
   conversationStyle?: 'natural' | 'consciousness' | 'adaptive';
   voice?: 'alloy' | 'echo' | 'shimmer' | 'ash' | 'ballad' | 'coral' | 'sage' | 'verse';
@@ -20,7 +21,9 @@ export interface UseMaiaVoiceOptions {
   autoConnect?: boolean;
   autoReconnect?: boolean; // Auto-reconnect on disconnection (default: true)
   maxReconnectAttempts?: number; // Max reconnection attempts (default: 3)
+  isSanctuary?: boolean; // Skip persistence for sanctuary mode
   onTranscript?: (text: string, isUser: boolean) => void;
+  onExchangePersisted?: (userMessage: string, assistantMessage: string) => void;
 }
 
 export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
@@ -34,12 +37,90 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
   const clientRef = useRef<MaiaRealtimeWebRTC | null>(null);
   const userTranscriptBuffer = useRef<string>('');
   const assistantTranscriptBuffer = useRef<string>('');
+  const lastUserMessageRef = useRef<string>(''); // Hold user message for persistence
   const reconnectAttemptsRef = useRef(0);
   const wasConnectedRef = useRef(false); // Track if we were successfully connected
   const intentionalDisconnectRef = useRef(false); // Track if disconnect was intentional
 
   const autoReconnect = options.autoReconnect ?? true;
   const maxReconnectAttempts = options.maxReconnectAttempts ?? 3;
+
+  // Self-discover session and user IDs from localStorage if not provided
+  const getSessionId = useCallback(() => {
+    if (options.sessionId) return options.sessionId;
+    if (typeof window === 'undefined') return undefined;
+
+    // Try to get session ID from localStorage
+    const betaUser = localStorage.getItem('beta_user');
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        if (userData.sessionId) return userData.sessionId;
+        if (userData.id) return userData.id; // Use user ID as session fallback
+      } catch (e) { /* ignore */ }
+    }
+
+    const explorerId = localStorage.getItem('explorerId');
+    if (explorerId) return explorerId;
+
+    return undefined;
+  }, [options.sessionId]);
+
+  const getUserId = useCallback(() => {
+    if (options.userId && options.userId !== 'anonymous') return options.userId;
+    if (typeof window === 'undefined') return 'anonymous';
+
+    const explorerId = localStorage.getItem('explorerId');
+    if (explorerId) return explorerId;
+
+    const betaUser = localStorage.getItem('beta_user');
+    if (betaUser) {
+      try {
+        const userData = JSON.parse(betaUser);
+        if (userData.id) return userData.id;
+      } catch (e) { /* ignore */ }
+    }
+
+    return 'anonymous';
+  }, [options.userId]);
+
+  // Persist voice exchange to database
+  const persistExchange = useCallback(async (userMessage: string, assistantMessage: string) => {
+    if (options.isSanctuary) {
+      console.log('[VoicePersist] Sanctuary mode - skipping persistence');
+      return;
+    }
+
+    if (!userMessage.trim() || !assistantMessage.trim()) {
+      return; // Don't persist empty exchanges
+    }
+
+    const sessionId = getSessionId();
+    const userId = getUserId();
+
+    try {
+      const response = await fetch('/api/voice/persist', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userMessage: userMessage.trim(),
+          assistantMessage: assistantMessage.trim(),
+          userId,
+          sessionId,
+          isSanctuary: options.isSanctuary,
+        }),
+      });
+
+      if (response.ok) {
+        console.log('[VoicePersist] Voice exchange saved successfully');
+        options.onExchangePersisted?.(userMessage.trim(), assistantMessage.trim());
+      } else {
+        console.error('[VoicePersist] Failed to save voice exchange:', await response.text());
+      }
+    } catch (error) {
+      console.error('[VoicePersist] Error saving voice exchange:', error);
+    }
+  }, [options.isSanctuary, options.onExchangePersisted, getSessionId, getUserId]);
 
   const addMessage = useCallback((text: string, isUser: boolean) => {
     const message: VoiceMessage = {
@@ -128,16 +209,26 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
           setIsSpeaking(true);
           // Save user transcript when Maia starts responding
           if (userTranscriptBuffer.current.trim()) {
-            addMessage(userTranscriptBuffer.current.trim(), true);
+            const userMsg = userTranscriptBuffer.current.trim();
+            lastUserMessageRef.current = userMsg; // Store for persistence
+            addMessage(userMsg, true);
             userTranscriptBuffer.current = '';
           }
         },
         onAudioEnd: () => {
           setIsSpeaking(false);
           setIsListening(true);
-          // Save assistant transcript
+          // Save assistant transcript and persist the exchange
           if (assistantTranscriptBuffer.current.trim()) {
-            addMessage(assistantTranscriptBuffer.current.trim(), false);
+            const assistantMsg = assistantTranscriptBuffer.current.trim();
+            addMessage(assistantMsg, false);
+
+            // Persist the complete exchange (user + assistant)
+            if (lastUserMessageRef.current) {
+              persistExchange(lastUserMessageRef.current, assistantMsg);
+              lastUserMessageRef.current = ''; // Clear after persistence
+            }
+
             assistantTranscriptBuffer.current = '';
           }
         },
@@ -177,7 +268,7 @@ export function useMaiaVoice(options: UseMaiaVoiceOptions = {}) {
       console.error('Failed to connect:', err);
       throw err; // Re-throw for reconnection logic
     }
-  }, [options, addMessage, autoReconnect, attemptReconnect]);
+  }, [options, addMessage, persistExchange, autoReconnect, attemptReconnect]);
 
   const connect = useCallback(async () => {
     reconnectAttemptsRef.current = 0;
