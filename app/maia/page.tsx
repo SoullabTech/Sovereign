@@ -36,6 +36,7 @@ import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, Fla
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
+import { SyncAccountPrompt } from '@/components/auth/SyncAccountPrompt';
 import {
   getCounselFramework,
   getScribeLens,
@@ -470,6 +471,9 @@ function MAIAPageContent() {
   // Onboarding removed - direct access only
   return (
     <ErrorBoundary>
+      {/* Prompt for users with local data but no server account */}
+      <SyncAccountPrompt />
+
       <SwipeNavigation currentPage="maia">
         {/* DirectionalHints removed - keyboard shortcuts now active (arrow keys + ESC) */}
 
