@@ -60,11 +60,12 @@ export default function AstrologyPage() {
 
   // Memoized sort - avoid re-sorting on every render
   const sortedSavedSynastry = useMemo(() => {
-    return [...savedSynastry].sort(
-      (a, b) =>
-        (b.savedAt ? Date.parse(b.savedAt) : 0) -
-        (a.savedAt ? Date.parse(a.savedAt) : 0)
-    );
+    // NaN-safe timestamp parser (handles malformed dates gracefully)
+    const ts = (s?: string) => {
+      const n = s ? Date.parse(s) : 0;
+      return Number.isFinite(n) ? n : 0;
+    };
+    return [...savedSynastry].sort((a, b) => ts(b.savedAt) - ts(a.savedAt));
   }, [savedSynastry]);
 
   useEffect(() => {
