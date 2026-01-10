@@ -2,19 +2,22 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, MicOff, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, ChevronDown, ChevronUp, Play, Square, Trash2 } from 'lucide-react';
+import { X, Mic, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, ChevronDown, ChevronUp, Square, Trash2, PenTool, Camera, Upload, Info } from 'lucide-react';
 import { apiUrl } from '@/lib/http/apiBase';
+import { Capacitor } from '@capacitor/core';
+import HandwritingOCR from '@/lib/capacitor/HandwritingOCR';
 
 interface JournalEntry {
   id: string;
-  entry_type: 'dream' | 'day';
+  entry_type: 'dream' | 'day' | 'handwriting';
   content: string;
   created_at: string;
   audio_path?: string;
   audio_duration_ms?: number;
 }
 
-type JournalType = 'dream' | 'day';
+type JournalType = 'dream' | 'day' | 'handwriting';
+type OCRProvider = 'ios_vision' | 'manual_paste' | 'none';
 
 interface QuickJournalSheetProps {
   isOpen: boolean;
@@ -44,6 +47,15 @@ export function QuickJournalSheet({
   const [showRecent, setShowRecent] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Handwriting state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [ocrAvailable, setOcrAvailable] = useState<boolean | null>(null);
+  const [ocrConfidence, setOcrConfidence] = useState<number | null>(null);
+  const [ocrProvider, setOcrProvider] = useState<OCRProvider>('none');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Voice recording state
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<BlobPart[]>([]);
@@ -53,6 +65,13 @@ export function QuickJournalSheet({
   const [liveTranscript, setLiveTranscript] = useState<string>('');
   const speechRef = useRef<SpeechRecognition | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+
+  // Check OCR availability on mount
+  useEffect(() => {
+    HandwritingOCR.isAvailable().then(result => {
+      setOcrAvailable(result.available);
+    });
+  }, []);
 
   // Reset content when sheet opens and fetch recent entries
   useEffect(() => {
@@ -66,8 +85,16 @@ export function QuickJournalSheet({
       setRecordDurationMs(0);
       setLiveTranscript('');
       setIsRecording(false);
-      // Focus textarea after animation
-      setTimeout(() => textareaRef.current?.focus(), 300);
+      // Reset handwriting state
+      setSelectedFile(null);
+      setPreviewUrl(null);
+      setIsExtracting(false);
+      setOcrConfidence(null);
+      setOcrProvider('none');
+      // Focus textarea after animation (unless handwriting tab)
+      if (defaultTab !== 'handwriting') {
+        setTimeout(() => textareaRef.current?.focus(), 300);
+      }
 
       // Fetch recent entries
       if (userId) {
@@ -97,6 +124,11 @@ export function QuickJournalSheet({
     if (activeTab === 'dream') {
       return "What did you dream? Let it flow without editing...";
     }
+    if (activeTab === 'handwriting') {
+      return ocrAvailable
+        ? 'Extracted text will appear here. Edit as needed...'
+        : 'Paste your text here (use Live Text or Google Lens to copy from image)...';
+    }
     return "What's alive in you right now? Capture this moment...";
   };
 
@@ -105,9 +137,80 @@ export function QuickJournalSheet({
     if (activeTab === 'dream') {
       return hour < 12 ? 'Morning Dream Capture' : 'Dream Recall';
     }
+    if (activeTab === 'handwriting') {
+      return 'Handwriting Capture';
+    }
     if (hour < 12) return 'Morning Reflection';
     if (hour < 17) return 'Midday Check-in';
     return 'Evening Reflection';
+  };
+
+  const isNative = Capacitor.isNativePlatform();
+
+  // Handwriting: file to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.onload = () => resolve(reader.result as string);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  // Handwriting: extract text using OCR
+  const extractText = async (file: File) => {
+    setIsExtracting(true);
+    setSaveError(null);
+
+    try {
+      const base64 = await fileToBase64(file);
+
+      if (Capacitor.isNativePlatform()) {
+        // Use native Vision OCR
+        const result = await HandwritingOCR.recognize({
+          base64,
+          languages: ['en-US'],
+        });
+
+        if (result.text) {
+          setContent(result.text);
+          setOcrConfidence(result.confidence);
+          setOcrProvider('ios_vision');
+        } else {
+          setSaveError('No text found in image. Try a clearer photo or paste manually.');
+          setOcrProvider('manual_paste');
+        }
+      } else {
+        // Web: no OCR available
+        setOcrProvider('manual_paste');
+      }
+    } catch (err) {
+      console.error('OCR extraction failed:', err);
+      setSaveError('Text extraction failed. Please paste your text manually.');
+      setOcrProvider('manual_paste');
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  // Handwriting: handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSelectedFile(file);
+    setSaveError(null);
+    setContent('');
+    setOcrConfidence(null);
+
+    // Create preview URL
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    // Auto-extract if OCR is available
+    if (ocrAvailable) {
+      await extractText(file);
+    }
   };
 
   const handleSave = async (askMaia: boolean = false) => {
@@ -116,32 +219,55 @@ export function QuickJournalSheet({
     setIsSaving(true);
     setSaveError(null);
     try {
+      // Build request body based on entry type
+      const isHandwriting = activeTab === 'handwriting';
+      const body: Record<string, unknown> = {
+        userId,
+        entryType: activeTab,
+        content: content.trim(),
+        tags: isHandwriting
+          ? ['handwriting', ocrProvider === 'ios_vision' ? 'ocr' : 'manual']
+          : [activeTab, 'quick_capture'],
+        source: isHandwriting
+          ? (ocrProvider === 'ios_vision' ? 'handwriting_ocr' : 'handwriting_paste')
+          : 'quick_sheet',
+      };
+
+      // Add handwriting-specific metadata
+      if (isHandwriting) {
+        body.meta = {
+          ocrProvider,
+          ocrConfidence: ocrConfidence ?? undefined,
+          hasImage: !!selectedFile,
+          imageSize: selectedFile?.size,
+        };
+      }
+
       const response = await fetch(apiUrl('/api/journal/quick'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          entryType: activeTab,
-          content: content.trim(),
-          tags: [activeTab, 'quick_capture'],
-          source: 'quick_sheet'
-        })
+        body: JSON.stringify(body),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        // Upload audio if we have a recording
-        if (recordedBlob) {
+        // Upload audio if we have a recording (not for handwriting)
+        if (recordedBlob && !isHandwriting) {
           try {
             await uploadAudio(data.entryId);
             setSavedMessage(activeTab === 'dream' ? 'Dream + audio captured ✓' : 'Saved with audio ✓');
-          } catch (e: any) {
+          } catch (e: unknown) {
             console.error('Audio upload failed:', e);
             setSavedMessage(activeTab === 'dream' ? 'Dream captured (audio failed)' : 'Saved (audio failed)');
           }
         } else {
-          setSavedMessage(activeTab === 'dream' ? 'Dream captured ✓' : 'Saved ✓');
+          const messages: Record<JournalType, string> = {
+            dream: 'Dream captured ✓',
+            day: 'Saved ✓',
+            handwriting: 'Handwriting saved ✓',
+          };
+          setSavedMessage(messages[activeTab]);
         }
 
         onSaved?.(data.entryId);
@@ -157,6 +283,8 @@ export function QuickJournalSheet({
           setTimeout(() => {
             setContent('');
             setRecordedBlob(null);
+            setSelectedFile(null);
+            setPreviewUrl(null);
             onClose();
           }, 1200);
         }
@@ -346,6 +474,8 @@ export function QuickJournalSheet({
               <div className="flex items-center gap-2">
                 {activeTab === 'dream' ? (
                   <Moon className="w-5 h-5 text-indigo-400" />
+                ) : activeTab === 'handwriting' ? (
+                  <PenTool className="w-5 h-5 text-amber-400" />
                 ) : (
                   <Sun className="w-5 h-5 text-amber-400" />
                 )}
@@ -363,7 +493,7 @@ export function QuickJournalSheet({
             <div className="flex gap-2 px-4 mb-4">
               <button
                 onClick={() => setActiveTab('dream')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
                   activeTab === 'dream'
                     ? 'bg-indigo-500/20 border border-indigo-500/40 text-indigo-300'
                     : 'bg-stone-800/50 border border-stone-700/50 text-stone-400 hover:bg-stone-700/50'
@@ -374,7 +504,7 @@ export function QuickJournalSheet({
               </button>
               <button
                 onClick={() => setActiveTab('day')}
-                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl transition-all ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
                   activeTab === 'day'
                     ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
                     : 'bg-stone-800/50 border border-stone-700/50 text-stone-400 hover:bg-stone-700/50'
@@ -383,48 +513,149 @@ export function QuickJournalSheet({
                 <Sun className="w-4 h-4" />
                 <span className="text-sm font-medium">Day</span>
               </button>
+              <button
+                onClick={() => setActiveTab('handwriting')}
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl transition-all ${
+                  activeTab === 'handwriting'
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-300'
+                    : 'bg-stone-800/50 border border-stone-700/50 text-stone-400 hover:bg-stone-700/50'
+                }`}
+              >
+                <PenTool className="w-4 h-4" />
+                <span className="text-sm font-medium">Ink</span>
+              </button>
             </div>
 
             {/* Content Area */}
-            <div className="px-4 pb-4">
-              {/* Textarea */}
-              <div className="relative">
-                <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder={getPlaceholder()}
-                  className={`w-full min-h-[120px] max-h-[200px] p-4 bg-stone-800/50 border rounded-xl resize-none focus:outline-none focus:ring-2 text-white placeholder-stone-500 text-base leading-relaxed ${
-                    activeTab === 'dream'
-                      ? 'border-indigo-500/30 focus:ring-indigo-500/30'
-                      : 'border-amber-500/30 focus:ring-amber-500/30'
-                  }`}
-                  disabled={isSaving}
-                />
+            <div className="px-4 pb-4 overflow-y-auto max-h-[calc(85vh-160px)]">
+              {/* Handwriting: Upload Section (before file selected) */}
+              {activeTab === 'handwriting' && !selectedFile && (
+                <div className="space-y-4 mb-4">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="w-full p-5 border-2 border-dashed border-amber-500/30 rounded-2xl bg-amber-500/5 hover:bg-amber-500/10 transition-colors"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      {isNative ? (
+                        <Camera className="w-8 h-8 text-amber-400" />
+                      ) : (
+                        <Upload className="w-8 h-8 text-amber-400" />
+                      )}
+                      <div className="text-center">
+                        <p className="text-white font-medium text-sm">
+                          {isNative ? 'Take Photo or Choose Image' : 'Upload Image'}
+                        </p>
+                        <p className="text-stone-400 text-xs mt-0.5">
+                          {isNative
+                            ? 'MAIA will extract the text automatically'
+                            : 'Then paste the text manually below'}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
 
-                {/* Voice Button (inside textarea area) */}
-                <button
-                  onClick={handleVoiceToggle}
-                  disabled={isSaving}
-                  className={`absolute bottom-3 right-3 p-2 rounded-lg transition-all ${
-                    isRecording
-                      ? 'bg-red-500/20 text-red-400 animate-pulse'
-                      : recordedBlob
-                      ? 'bg-green-500/20 text-green-400'
-                      : 'bg-stone-700/50 text-stone-400 hover:bg-stone-600/50'
-                  }`}
-                  title={isRecording ? 'Stop recording' : recordedBlob ? 'Re-record' : 'Record voice note'}
-                >
-                  {isRecording ? (
-                    <Square className="w-5 h-5" />
-                  ) : (
-                    <Mic className="w-5 h-5" />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture={isNative ? 'environment' : undefined}
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+
+                  {/* Web fallback guidance */}
+                  {!isNative && (
+                    <div className="flex items-start gap-2 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                      <Info className="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-xs">
+                        <p className="text-blue-200 font-medium">On-device OCR not available</p>
+                        <p className="text-blue-300/70 mt-0.5">
+                          Use <strong>Live Text</strong> (iOS) or <strong>Google Lens</strong> (Android) to copy text, then paste below.
+                        </p>
+                      </div>
+                    </div>
                   )}
-                </button>
-              </div>
+                </div>
+              )}
 
-              {/* Recording indicator */}
-              {isRecording && (
+              {/* Handwriting: Image Preview */}
+              {activeTab === 'handwriting' && selectedFile && previewUrl && (
+                <div className="relative rounded-xl overflow-hidden border border-stone-700 mb-4">
+                  <img
+                    src={previewUrl}
+                    alt="Handwritten page"
+                    className="w-full max-h-36 object-contain bg-stone-800"
+                  />
+                  <button
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPreviewUrl(null);
+                      setContent('');
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-black/50 rounded-lg hover:bg-black/70 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              )}
+
+              {/* Handwriting: Extraction Status */}
+              {activeTab === 'handwriting' && isExtracting && (
+                <div className="flex items-center gap-3 p-3 mb-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                  <Loader2 className="w-4 h-4 text-amber-400 animate-spin" />
+                  <span className="text-amber-200 text-sm">Extracting text...</span>
+                </div>
+              )}
+
+              {/* Handwriting: OCR Confidence */}
+              {activeTab === 'handwriting' && ocrConfidence !== null && ocrConfidence > 0 && (
+                <div className="text-xs text-stone-400 mb-2">
+                  Recognition confidence: {Math.round(ocrConfidence * 100)}%
+                </div>
+              )}
+
+              {/* Textarea (show for all tabs, but after upload UI for handwriting) */}
+              {(activeTab !== 'handwriting' || selectedFile || !isNative) && (
+                <div className="relative">
+                  <textarea
+                    ref={textareaRef}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder={getPlaceholder()}
+                    className={`w-full min-h-[120px] max-h-[200px] p-4 bg-stone-800/50 border rounded-xl resize-none focus:outline-none focus:ring-2 text-white placeholder-stone-500 text-base leading-relaxed ${
+                      activeTab === 'dream'
+                        ? 'border-indigo-500/30 focus:ring-indigo-500/30'
+                        : 'border-amber-500/30 focus:ring-amber-500/30'
+                    }`}
+                    disabled={isSaving || isExtracting}
+                  />
+
+                  {/* Voice Button (inside textarea area) - not for handwriting */}
+                  {activeTab !== 'handwriting' && (
+                    <button
+                      onClick={handleVoiceToggle}
+                      disabled={isSaving}
+                      className={`absolute bottom-3 right-3 p-2 rounded-lg transition-all ${
+                        isRecording
+                          ? 'bg-red-500/20 text-red-400 animate-pulse'
+                          : recordedBlob
+                          ? 'bg-green-500/20 text-green-400'
+                          : 'bg-stone-700/50 text-stone-400 hover:bg-stone-600/50'
+                      }`}
+                      title={isRecording ? 'Stop recording' : recordedBlob ? 'Re-record' : 'Record voice note'}
+                    >
+                      {isRecording ? (
+                        <Square className="w-5 h-5" />
+                      ) : (
+                        <Mic className="w-5 h-5" />
+                      )}
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Recording indicator (not for handwriting) */}
+              {activeTab !== 'handwriting' && isRecording && (
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -434,14 +665,14 @@ export function QuickJournalSheet({
                   <span>Recording... speak now</span>
                   {liveTranscript && (
                     <span className="text-stone-400 text-xs truncate max-w-[200px]">
-                      "{liveTranscript.slice(-50)}"
+                      &quot;{liveTranscript.slice(-50)}&quot;
                     </span>
                   )}
                 </motion.div>
               )}
 
-              {/* Recorded audio indicator */}
-              {recordedBlob && !isRecording && (
+              {/* Recorded audio indicator (not for handwriting) */}
+              {activeTab !== 'handwriting' && recordedBlob && !isRecording && (
                 <motion.div
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -562,6 +793,8 @@ export function QuickJournalSheet({
                               <div className="flex items-center gap-2 mb-1">
                                 {entry.entry_type === 'dream' ? (
                                   <Moon className="w-3 h-3 text-indigo-400" />
+                                ) : entry.entry_type === 'handwriting' ? (
+                                  <PenTool className="w-3 h-3 text-amber-400" />
                                 ) : (
                                   <Sun className="w-3 h-3 text-amber-400" />
                                 )}
@@ -615,6 +848,8 @@ export function QuickJournalSheet({
               <p className="text-center text-xs text-stone-500 mt-3">
                 {activeTab === 'dream'
                   ? 'Capture before it fades. Details matter.'
+                  : activeTab === 'handwriting'
+                  ? 'Your handwritten wisdom, preserved and searchable.'
                   : 'A moment of presence. What wants to be witnessed?'}
               </p>
             </div>
