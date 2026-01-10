@@ -627,7 +627,7 @@ export default function AstrologyPage() {
                   // Sort by savedAt descending (most recent first), with null-safe fallback
                   [...savedSynastry]
                     .sort((a, b) =>
-                      (b.savedAt ? Date.parse(b.savedAt) : 0) - (a.savedAt ? Date.parse(a.savedAt) : 0)
+                      (b.savedAt ? Date.parse(b.savedAt) || 0 : 0) - (a.savedAt ? Date.parse(a.savedAt) || 0 : 0)
                     )
                     .map((item) => {
                     const a = item.chartA?.sunSign ?? 'Person A';
