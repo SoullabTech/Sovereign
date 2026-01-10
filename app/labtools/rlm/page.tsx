@@ -39,6 +39,10 @@ export default function RLMPage() {
   const [openErr, setOpenErr] = useState<string | null>(null);
   const [openLoading, setOpenLoading] = useState(false);
 
+  // Persistent focus state (survives across manual searches)
+  type RLMFocus = { path: string; content: string };
+  const [lastFocus, setLastFocus] = useState<RLMFocus | null>(null);
+
   const canRun = useMemo(() => query.trim().length >= 2, [query]);
 
   async function run(opts?: { focus?: { path: string; content: string } }) {
@@ -53,10 +57,12 @@ export default function RLMPage() {
         focus?: { path: string; content: string };
       } = { query, limit: 5, includeSnippets: true };
 
-      if (opts?.focus?.path && opts?.focus?.content) {
+      // Use explicit focus if provided, else fall back to lastFocus
+      const focusToUse = opts?.focus ?? lastFocus ?? undefined;
+      if (focusToUse?.path && focusToUse?.content) {
         payload.focus = {
-          path: opts.focus.path,
-          content: opts.focus.content,
+          path: focusToUse.path,
+          content: focusToUse.content,
         };
       }
 
@@ -148,6 +154,21 @@ export default function RLMPage() {
             )}
           </div>
         </div>
+
+        {/* Persistent focus indicator */}
+        {lastFocus && (
+          <div className="flex items-center justify-between rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2">
+            <div className="text-xs text-emerald-200/80 font-mono truncate">
+              Focus: {lastFocus.path}
+            </div>
+            <button
+              onClick={() => setLastFocus(null)}
+              className="text-xs rounded-lg border border-emerald-500/30 bg-black/30 px-2 py-1 text-emerald-200/90 hover:bg-black/40"
+            >
+              Clear focus
+            </button>
+          </div>
+        )}
 
         {res && !res.success && (
           <div className="rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
@@ -248,7 +269,9 @@ export default function RLMPage() {
                 disabled={!openContent || openLoading || loading}
                 onClick={() => {
                   if (!openPath || !openContent) return;
-                  run({ focus: { path: openPath, content: openContent } });
+                  const nextFocus = { path: openPath, content: openContent };
+                  setLastFocus(nextFocus);
+                  run({ focus: nextFocus });
                 }}
                 className="text-xs rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-emerald-200/90 hover:bg-emerald-500/20 disabled:opacity-50"
               >
