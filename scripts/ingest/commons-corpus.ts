@@ -8,6 +8,7 @@
  * Usage:
  *   DATABASE_URL="..." npx tsx scripts/ingest/commons-corpus.ts
  *   DATABASE_URL="..." npx tsx scripts/ingest/commons-corpus.ts --dry-run
+ *   DATABASE_URL="..." npx tsx scripts/ingest/commons-corpus.ts --max-docs 5
  */
 
 import { createHash } from 'crypto';
@@ -37,15 +38,53 @@ interface IngestionSummary {
   errors: string[];
   started_at: string;
   finished_at?: string;
+  interrupted?: boolean;
 }
 
+// CLI flags
 const isDryRun = process.argv.includes('--dry-run');
+const maxDocsArg = process.argv.find(a => a.startsWith('--max-docs'));
+const maxDocs = maxDocsArg ? parseInt(maxDocsArg.split('=')[1] || process.argv[process.argv.indexOf('--max-docs') + 1] || '0', 10) : 0;
+
+// Signal handling for graceful shutdown
+let interrupted = false;
+let currentIngestionId: string | null = null;
+let currentSummary: IngestionSummary | null = null;
+
+async function markIngestionFailed(reason: string) {
+  if (currentIngestionId && currentSummary) {
+    currentSummary.errors.push(reason);
+    currentSummary.interrupted = true;
+    currentSummary.finished_at = new Date().toISOString();
+    try {
+      await query(
+        `UPDATE corpus_ingestions SET status = 'failed', finished_at = NOW(), summary = $1 WHERE id = $2`,
+        [JSON.stringify(currentSummary), currentIngestionId]
+      );
+    } catch (e) {
+      console.error('Failed to update ingestion status:', e);
+    }
+  }
+}
+
+function installSignalHandlers() {
+  const handler = async (signal: string) => {
+    if (interrupted) return; // Prevent double-handling
+    interrupted = true;
+    console.error(`\n⚠️  Interrupted (${signal}). Marking ingestion failed...`);
+    await markIngestionFailed(`Interrupted by ${signal}`);
+    process.exit(1);
+  };
+  process.on('SIGINT', () => handler('SIGINT'));
+  process.on('SIGTERM', () => handler('SIGTERM'));
+}
 
 async function main() {
   console.log('🔮 Community Commons Corpus Ingestion');
   console.log(`   Source: ${SOURCE_DIR}`);
   console.log(`   Corpus: ${CORPUS_SLUG}`);
   console.log(`   Dry run: ${isDryRun}`);
+  if (maxDocs > 0) console.log(`   Max docs: ${maxDocs}`);
   console.log('');
 
   // Get corpus config
@@ -77,6 +116,7 @@ async function main() {
       [corpus.id]
     );
     ingestionId = ingResult.rows[0].id;
+    currentIngestionId = ingestionId;
   }
 
   const summary: IngestionSummary = {
@@ -88,14 +128,30 @@ async function main() {
     errors: [],
     started_at: new Date().toISOString(),
   };
+  currentSummary = summary;
+
+  // Install signal handlers after we have ingestionId
+  installSignalHandlers();
 
   try {
     // Discover markdown files
-    const files = await discoverFiles(SOURCE_DIR, FILE_PATTERN);
+    let files = await discoverFiles(SOURCE_DIR, FILE_PATTERN);
     console.log(`📚 Found ${files.length} documents`);
+
+    // Apply --max-docs limit
+    if (maxDocs > 0 && files.length > maxDocs) {
+      console.log(`   Limiting to first ${maxDocs} docs`);
+      files = files.slice(0, maxDocs);
+    }
     console.log('');
 
     for (const filePath of files) {
+      // Check for interruption
+      if (interrupted) {
+        console.log('⚠️  Interruption detected, stopping...');
+        break;
+      }
+
       try {
         await processDocument(filePath, corpus.id, strategy, summary);
       } catch (err) {

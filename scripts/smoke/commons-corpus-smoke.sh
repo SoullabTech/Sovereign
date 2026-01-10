@@ -56,8 +56,8 @@ if [[ -z "$CORPUS_ID" || "$CORPUS_ID" == "" ]]; then
 fi
 ok "Corpus commons.manuals exists: ${CORPUS_ID:0:8}..."
 
-# Test 3: Run ingestion (small scale)
-log "Test 3: Running ingestion (first 3 docs)…"
+# Test 3: Run ingestion (small scale - 5 docs max for smoke test)
+log "Test 3: Running ingestion (max 5 docs)…"
 
 # Check if Ollama is available for embeddings
 OLLAMA_HEALTH=$(curl -s http://localhost:11434/api/version 2>/dev/null || echo "offline")
@@ -73,8 +73,8 @@ else
   EXISTING_DOCS=$(psql "$DATABASE_URL" -t -c "SELECT COUNT(*) FROM corpus_documents WHERE corpus_id = '$CORPUS_ID'" | tr -d ' ')
 
   if [[ "$EXISTING_DOCS" -lt 3 ]]; then
-    log "Ingesting Community Commons docs..."
-    DATABASE_URL="$DATABASE_URL" npx tsx scripts/ingest/commons-corpus.ts 2>&1 | head -30
+    log "Ingesting Community Commons docs (limited to 5)..."
+    DATABASE_URL="$DATABASE_URL" npx tsx scripts/ingest/commons-corpus.ts --max-docs 5 2>&1 | head -40
   else
     log "Corpus already has ${EXISTING_DOCS} docs, skipping re-ingestion"
   fi
