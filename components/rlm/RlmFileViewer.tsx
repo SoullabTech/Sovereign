@@ -1,43 +1,81 @@
 'use client';
 
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export function RlmFileViewer(props: {
   filePath: string | null;
   content: string | null;
   truncated?: boolean;
+  startLine?: number;
+  highlight?: string;
   onClose?: () => void;
 }) {
-  const { filePath, content, truncated, onClose } = props;
+  const { filePath, content, truncated, startLine = 1, highlight } = props;
 
   if (!filePath) return null;
 
-  return (
-    <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-      <div className="mb-3 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-xs text-white/50">Open file</div>
-          <div className="truncate text-sm font-semibold text-white">
-            {filePath}
-          </div>
-          {truncated ? (
-            <div className="text-xs text-amber-200/70">
-              Showing first chunk (truncated)
-            </div>
-          ) : null}
-        </div>
+  const terms = (highlight ?? '')
+    .split(/\s+/)
+    .map((t) => t.trim())
+    .filter((t) => t.length >= 3)
+    .slice(0, 8);
 
-        {onClose ? (
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-xs text-white/70 hover:bg-white/10"
-          >
-            Close
-          </button>
-        ) : null}
+  const re =
+    terms.length > 0
+      ? new RegExp(`(${terms.map(escapeRegExp).join('|')})`, 'ig')
+      : null;
+
+  const lines = (content ?? '').split('\n');
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-black/30">
+      <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
+        <div className="text-xs text-white/60 font-mono truncate">
+          {filePath}
+          {truncated ? <span className="ml-2 text-white/40">(truncated)</span> : null}
+        </div>
       </div>
 
-      <pre className="max-h-[60vh] overflow-auto rounded-lg border border-white/10 bg-black/40 p-3 text-xs text-white/80">
-        {content ?? 'Loading...'}
-      </pre>
+      {!content ? (
+        <div className="p-3 text-sm text-white/50">Loading...</div>
+      ) : (
+        <div className="p-3 overflow-auto max-h-[60vh]">
+          <pre className="text-xs leading-5 text-white/80 font-mono whitespace-pre">
+            {lines.map((line, i) => {
+              const n = startLine + i;
+              const parts = re ? line.split(re) : [line];
+
+              return (
+                <div key={i} className="flex gap-3">
+                  <span className="w-10 shrink-0 text-right text-white/30 select-none">
+                    {n}
+                  </span>
+                  <span className="min-w-0">
+                    {parts.map((p, j) => {
+                      const isHit = re ? re.test(p) : false;
+                      // reset lastIndex side effects since we used re.test
+                      if (re) re.lastIndex = 0;
+
+                      return isHit ? (
+                        <mark
+                          key={j}
+                          className="rounded px-0.5 bg-amber-500/20 text-amber-100"
+                        >
+                          {p}
+                        </mark>
+                      ) : (
+                        <span key={j}>{p}</span>
+                      );
+                    })}
+                  </span>
+                </div>
+              );
+            })}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }

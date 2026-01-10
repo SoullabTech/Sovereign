@@ -630,6 +630,21 @@ export default function RLMPage() {
                 </button>
               )}
 
+              <button
+                disabled={!openPath || !openContent || openLoading}
+                onClick={() => {
+                  if (!openPath || !openContent) return;
+                  const range = openRange
+                    ? `:${openRange.startLine}-${openRange.endLine}`
+                    : '';
+                  const text = `# ${openPath}${range}\n\n${openContent}`;
+                  navigator.clipboard.writeText(text);
+                }}
+                className="text-xs rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-white/70 hover:bg-white/10 disabled:opacity-50"
+              >
+                Copy excerpt
+              </button>
+
               {mode === 'navigate' && (
                 <button
                   disabled={!openContent || openLoading || loading}
@@ -659,6 +674,8 @@ export default function RLMPage() {
           filePath={openPath}
           content={openLoading ? null : openContent}
           truncated={openTruncated}
+          startLine={openRange?.startLine ?? 1}
+          highlight={query}
           onClose={closeViewer}
         />
       </div>
