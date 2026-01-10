@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Smartphone, Check } from 'lucide-react';
+import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
 
 /**
  * SyncAccountPrompt
@@ -21,6 +22,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
@@ -92,8 +94,16 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
       return;
     }
 
-    if (password.length < 4) {
-      setError('Password must be at least 4 characters');
+    // Use betaConfig for validation
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
+      setError(passwordValidation.error || 'Invalid password');
+      return;
+    }
+
+    const emailValidation = validateEmail(email || undefined);
+    if (!emailValidation.valid) {
+      setError(emailValidation.error || 'Invalid email');
       return;
     }
 
@@ -106,6 +116,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
         body: JSON.stringify({
           username: username.toLowerCase().trim(),
           password,
+          email: email.trim() || undefined,
           name: explorerName || username,
           explorerId,
         }),
@@ -255,6 +266,23 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
                         placeholder="Choose a username"
                         required
                         autoComplete="username"
+                        disabled={isLoading}
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="sync-email" className="block text-sm font-light text-teal-800 mb-1.5">
+                        Email {!betaConfig.requireEmail && <span className="text-teal-600/50">(optional)</span>}
+                      </label>
+                      <input
+                        type="email"
+                        id="sync-email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full px-3 py-2.5 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 text-sm"
+                        placeholder="For account recovery"
+                        required={betaConfig.requireEmail}
+                        autoComplete="email"
                         disabled={isLoading}
                       />
                     </div>

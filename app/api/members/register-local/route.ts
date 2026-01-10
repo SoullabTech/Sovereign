@@ -4,16 +4,21 @@
  * Allows users with existing local data to create a server account
  * without needing a passkey. This enables cross-device sync for
  * users who've been using the app locally.
+ *
+ * Security features are controlled by betaConfig:
+ * - During beta: simplified registration (short passwords, no email required)
+ * - After beta: full security enforcement
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { username, password, name, explorerId } = body;
+    const { username, password, email, name, explorerId } = body;
 
     // Validate required fields
     if (!username || !password) {
@@ -23,9 +28,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (password.length < 4) {
+    // Use betaConfig for password validation
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.valid) {
       return NextResponse.json(
-        { error: 'Password must be at least 4 characters' },
+        { error: passwordValidation.error },
+        { status: 400 }
+      );
+    }
+
+    // Use betaConfig for email validation
+    const emailValidation = validateEmail(email);
+    if (!emailValidation.valid) {
+      return NextResponse.json(
+        { error: emailValidation.error },
         { status: 400 }
       );
     }
@@ -57,9 +73,9 @@ export async function POST(request: NextRequest) {
 
     // Create member
     await query(
-      `INSERT INTO members (id, username, password_hash, name, passkey, onboarded, onboarding_step, created_at)
-       VALUES ($1, $2, $3, $4, $5, true, 'complete', NOW())`,
-      [memberId, normalizedUsername, passwordHash, name || username, passkey]
+      `INSERT INTO members (id, username, password_hash, name, email, passkey, onboarded, onboarding_step, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, true, 'complete', NOW())`,
+      [memberId, normalizedUsername, passwordHash, name || username, email || null, passkey]
     );
 
     console.log(`[RegisterLocal] Created account for ${normalizedUsername} (${memberId})`);
@@ -87,14 +103,36 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Send verification email if email provided and verification is required
+    let verificationSent = false;
+    if (email && betaConfig.requireEmailVerification) {
+      try {
+        const verificationResponse = await fetch(new URL('/api/members/send-verification', request.url), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ memberId, email }),
+        });
+
+        if (verificationResponse.ok) {
+          verificationSent = true;
+          console.log(`[RegisterLocal] Verification email sent to ${email}`);
+        }
+      } catch (verificationError) {
+        console.warn('[RegisterLocal] Verification email failed, but account created:', verificationError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       member: {
         id: memberId,
         username: normalizedUsername,
         name: name || username,
+        email: email || null,
         passkey,
         onboarded: true,
+        emailVerificationRequired: betaConfig.requireEmailVerification,
+        emailVerificationSent: verificationSent,
       },
     });
 
