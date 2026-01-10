@@ -19,7 +19,7 @@
  * 6. Repeat until model returns 'answer' action or budget exhausted
  */
 
-import { executeAction } from './tools';
+import { executeAction, normalizePath } from './tools';
 import type {
   RLMConfig,
   RLMContext,
@@ -338,7 +338,8 @@ Return ONE valid JSON action object only. No prose.
     // Anti-hallucination guard for read
     if (action.type === 'read') {
       const readAction = action as ReadAction;
-      const path = readAction.filePath;
+      // Normalize path for consistent comparison (handles ./ prefix, backslashes)
+      const path = normalizePath(readAction.filePath);
 
       if (!allowedPaths.has(path)) {
         guardMessages.push(`[GUARD] Rejected read("${path}") - path not from tools. Use search/list first.`);

@@ -6,7 +6,15 @@
  */
 
 export { navigateCodebase, askAboutCode } from './CodebaseNavigator';
-export { searchCode, readFileContent, listFiles, executeAction, isDeniedPath } from './tools';
+export {
+  searchCode,
+  readFileContent,
+  listFiles,
+  executeAction,
+  isDeniedPath,
+  normalizePath,
+  isPathWithinRepo,
+} from './tools';
 export type {
   RLMActionType,
   RLMAction,
