@@ -481,6 +481,12 @@ export default function AstrologyPage() {
     if (chartData.chiron?.house === houseNumber) planetsInHouse.push({ name: 'Chiron', ...chartData.chiron });
     if (chartData.northNode?.house === houseNumber) planetsInHouse.push({ name: 'North Node', ...chartData.northNode });
     if (chartData.southNode?.house === houseNumber) planetsInHouse.push({ name: 'South Node', ...chartData.southNode });
+    // Asteroids - Feminine Archetypes
+    if (chartData.lilith?.house === houseNumber) planetsInHouse.push({ name: 'Lilith', ...chartData.lilith });
+    if (chartData.ceres?.house === houseNumber) planetsInHouse.push({ name: 'Ceres', ...chartData.ceres });
+    if (chartData.pallas?.house === houseNumber) planetsInHouse.push({ name: 'Pallas', ...chartData.pallas });
+    if (chartData.juno?.house === houseNumber) planetsInHouse.push({ name: 'Juno', ...chartData.juno });
+    if (chartData.vesta?.house === houseNumber) planetsInHouse.push({ name: 'Vesta', ...chartData.vesta });
 
     return planetsInHouse;
   };
