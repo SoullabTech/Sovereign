@@ -73,8 +73,21 @@ export default function RLMPage() {
 
   const canRun = useMemo(() => query.trim().length >= 2, [query]);
 
+  // Cleanup on unmount - cancel any pending request and clear timer
+  useEffect(() => {
+    return () => {
+      abortRef.current?.abort();
+      if (loadingTimerRef.current) {
+        clearInterval(loadingTimerRef.current);
+      }
+    };
+  }, []);
+
   async function run(opts?: { focus?: { path: string; content: string } }) {
     if (!canRun) return;
+
+    // Bump request ID - stale responses will be ignored
+    const thisReq = ++reqIdRef.current;
 
     // Reset UI
     setError(null);
@@ -86,14 +99,20 @@ export default function RLMPage() {
     const ac = new AbortController();
     abortRef.current = ac;
 
+    // Clear any existing timer before starting new one
+    if (loadingTimerRef.current) {
+      clearInterval(loadingTimerRef.current);
+    }
+
     // Clear the "other mode" result
     if (mode === 'navigate') setAskRes(null);
     if (mode === 'ask') setNavigateRes(null);
 
-    // Start loading timer
-    loadingTimerRef.current = setInterval(() => {
+    // Start loading timer (capture local handle)
+    const timer = setInterval(() => {
       setLoadingTime((t) => t + 1);
     }, 1000);
+    loadingTimerRef.current = timer;
 
     const endpoint = mode === 'ask' ? '/api/rlm/ask' : '/api/rlm/navigate';
 
@@ -120,6 +139,9 @@ export default function RLMPage() {
 
       const data = await res.json().catch(() => null);
 
+      // Stale response check - a newer request has started
+      if (thisReq !== reqIdRef.current) return;
+
       if (!res.ok) {
         const detail = data?.detail || data?.error || `HTTP_${res.status}`;
         throw new Error(detail);
@@ -131,6 +153,9 @@ export default function RLMPage() {
         setAskRes({ ...data, success: true } as RLMResult & { success: true });
       }
     } catch (e: unknown) {
+      // Stale response check - ignore errors from old requests
+      if (thisReq !== reqIdRef.current) return;
+
       if (e instanceof Error && e.name === 'AbortError') {
         setError('Cancelled.');
       } else {
@@ -143,9 +168,12 @@ export default function RLMPage() {
         setError(msg);
       }
     } finally {
+      // Stale response check - don't clear state for newer requests
+      if (thisReq !== reqIdRef.current) return;
+
       setLoading(false);
-      if (loadingTimerRef.current) {
-        clearInterval(loadingTimerRef.current);
+      clearInterval(timer);
+      if (loadingTimerRef.current === timer) {
         loadingTimerRef.current = null;
       }
     }
