@@ -19,6 +19,7 @@ import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp } from 'luc
 import { motion } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
+import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 
 interface BirthChartData {
   sun: { sign: string; degree: number; house: number };
@@ -30,6 +31,14 @@ interface BirthChartData {
     type: string;
     orb: number;
   }>;
+}
+
+interface SavedSynastryItem {
+  analysisId: string;
+  savedAt: string;
+  chartA?: { sunSign?: string; moonSign?: string; name?: string };
+  chartB?: { sunSign?: string; moonSign?: string; name?: string };
+  scores?: { attraction?: number; harmony?: number; friction?: number; growth?: number };
 }
 
 export default function AstrologyPage() {
@@ -45,9 +54,40 @@ export default function AstrologyPage() {
   // Circadian rhythm - detect time of day for color transitions
   const [isDayMode, setIsDayMode] = useState(true);
 
+  // Saved synastry for timeline surfacing
+  const [savedSynastry, setSavedSynastry] = useState<SavedSynastryItem[]>([]);
+  const [savedSynastryLoading, setSavedSynastryLoading] = useState(false);
+
   useEffect(() => {
     const hour = new Date().getHours();
     setIsDayMode(hour >= 6 && hour < 20); // Day mode 6am-8pm
+  }, []);
+
+  // Fetch saved synastry
+  useEffect(() => {
+    const memberId = getOrCreateExplorerId();
+    if (!memberId) return;
+
+    let isMounted = true;
+
+    (async () => {
+      try {
+        setSavedSynastryLoading(true);
+        const res = await fetch(
+          `/api/astrology/synastry/saved?memberId=${encodeURIComponent(memberId)}&limit=3`,
+          { cache: 'no-store' }
+        );
+        const json = await res.json();
+        const items = Array.isArray(json?.items) ? json.items : [];
+        if (isMounted) setSavedSynastry(items);
+      } catch {
+        // Silent fail - not critical
+      } finally {
+        if (isMounted) setSavedSynastryLoading(false);
+      }
+    })();
+
+    return () => { isMounted = false; };
   }, []);
 
   useEffect(() => {
@@ -547,6 +587,69 @@ export default function AstrologyPage() {
                   </p>
                 </div>
               </Link>
+            </div>
+
+            {/* Saved Synastry */}
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-5 shadow-lg">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Saved Synastry</h2>
+                  <p className="text-sm text-white/60">Your recent relationship analyses</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href="/astrology/synastry"
+                    className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/70 hover:bg-white/10"
+                  >
+                    New
+                  </Link>
+                  <Link
+                    href="/astrology/synastry/saved"
+                    className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/70 hover:bg-white/10"
+                  >
+                    View all
+                  </Link>
+                </div>
+              </div>
+
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                {savedSynastryLoading ? (
+                  <>
+                    <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
+                    <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
+                    <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
+                  </>
+                ) : savedSynastry.length === 0 ? (
+                  <div className="col-span-3 text-sm text-white/60 py-4">
+                    No saved synastry yet. Run one and hit <span className="text-white/80">Save to Timeline</span>.
+                  </div>
+                ) : (
+                  savedSynastry.map((item) => {
+                    const a = item.chartA?.sunSign ?? 'Person A';
+                    const b = item.chartB?.sunSign ?? 'Person B';
+                    const when = item.savedAt ? new Date(item.savedAt).toLocaleDateString() : '';
+                    const s = item.scores ?? {};
+                    return (
+                      <Link
+                        key={item.analysisId}
+                        href={`/astrology/synastry/${item.analysisId}`}
+                        className="group rounded-xl border border-white/10 bg-black/20 p-4 hover:border-violet-500/40 hover:bg-black/30 transition"
+                      >
+                        <div className="text-sm font-semibold text-white group-hover:text-violet-200">
+                          {a} × {b}
+                        </div>
+                        <div className="mt-1 text-xs text-white/50">Saved {when}</div>
+                        <div className="mt-2 flex flex-wrap gap-2 text-[10px] text-white/50">
+                          {typeof s.attraction === 'number' && <span>A:{s.attraction.toFixed(1)}</span>}
+                          {typeof s.harmony === 'number' && <span>H:{s.harmony.toFixed(1)}</span>}
+                          {typeof s.friction === 'number' && <span>F:{s.friction.toFixed(1)}</span>}
+                          {typeof s.growth === 'number' && <span>G:{s.growth.toFixed(1)}</span>}
+                        </div>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         </div>
