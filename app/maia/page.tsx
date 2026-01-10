@@ -25,13 +25,14 @@ import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
+import { HandwritingUploadSheet } from '@/components/journal/HandwritingUploadSheet';
 import { CaptureToggle } from '@/components/capture/CaptureToggle';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, PenTool } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
@@ -273,6 +274,7 @@ function MAIAPageContent() {
   const [sustainingAmount, setSustainingAmount] = useState(25);
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
+  const [showHandwritingSheet, setShowHandwritingSheet] = useState(false);
   const [showShadowWork, setShowShadowWork] = useState(false);
   const [showHelpHub, setShowHelpHub] = useState(false);
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
@@ -713,6 +715,19 @@ function MAIAPageContent() {
                   <span className="text-xs">Journal</span>
                 </motion.button>
 
+                {/* Handwriting OCR Button - Mobile */}
+                <motion.button
+                  onClick={() => setShowHandwritingSheet(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Upload Handwriting"
+                >
+                  <PenTool className="w-3 h-3" />
+                  <span className="text-xs">Handwriting</span>
+                </motion.button>
+
                 {/* Shadow Work Button - Mobile */}
                 <motion.button
                   onClick={() => setShowShadowWork(true)}
@@ -924,6 +939,21 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-4 h-4" />
                   <span className="hidden sm:inline">Journal</span>
+                </motion.button>
+
+                {/* Handwriting OCR Button - Desktop */}
+                <motion.button
+                  onClick={() => setShowHandwritingSheet(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Upload Handwriting"
+                >
+                  <PenTool className="w-4 h-4" />
+                  <span className="hidden sm:inline">Handwriting</span>
                 </motion.button>
 
                 {/* Capture Mode Toggle - Desktop */}
@@ -1199,6 +1229,28 @@ function MAIAPageContent() {
                 prompt: type === 'dream'
                   ? `Here's a dream I just captured:\n\n${content}`
                   : `Something I'm sitting with:\n\n${content}`
+              }
+            }));
+          }}
+        />
+
+        {/* Handwriting Upload Sheet */}
+        <HandwritingUploadSheet
+          isOpen={showHandwritingSheet}
+          onClose={() => setShowHandwritingSheet(false)}
+          userId={explorerId}
+          onSaved={(entryId) => {
+            console.log('✍️ [MAIA] Handwriting entry saved:', entryId);
+          }}
+          onAskMaia={(content) => {
+            // Close handwriting sheet and send content to MAIA conversation
+            setShowHandwritingSheet(false);
+            // Dispatch event that OracleConversation can listen to
+            window.dispatchEvent(new CustomEvent('journalAskMaia', {
+              detail: {
+                content,
+                type: 'handwriting',
+                prompt: `Here's something I wrote by hand:\n\n${content}`
               }
             }));
           }}
