@@ -16,11 +16,23 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
-import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
+import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
+import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
+import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
+import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
+import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+
+// Elemental colors for planet insights
+const elementalColors = {
+  fire: { color: '#F5A362', glow: 'rgba(245, 163, 98, 0.3)' },
+  water: { color: '#8BADD6', glow: 'rgba(139, 173, 214, 0.3)' },
+  earth: { color: '#A8C69F', glow: 'rgba(168, 198, 159, 0.3)' },
+  air: { color: '#F5D565', glow: 'rgba(245, 213, 101, 0.3)' },
+};
 
 interface PlanetPosition {
   sign: string;
@@ -66,6 +78,43 @@ interface SavedSynastryItem {
   scores?: { attraction?: number; harmony?: number; friction?: number; growth?: number };
 }
 
+// Transform chartData into planets array for SacredHouseWheel
+function chartDataToPlanets(chart: BirthChartData) {
+  const planetKeys = [
+    { key: 'sun', name: 'Sun' },
+    { key: 'moon', name: 'Moon' },
+    { key: 'mercury', name: 'Mercury' },
+    { key: 'venus', name: 'Venus' },
+    { key: 'mars', name: 'Mars' },
+    { key: 'jupiter', name: 'Jupiter' },
+    { key: 'saturn', name: 'Saturn' },
+    { key: 'uranus', name: 'Uranus' },
+    { key: 'neptune', name: 'Neptune' },
+    { key: 'pluto', name: 'Pluto' },
+    { key: 'chiron', name: 'Chiron' },
+    { key: 'northNode', name: 'North Node' },
+    { key: 'southNode', name: 'South Node' },
+    { key: 'lilith', name: 'Lilith' },
+    { key: 'ceres', name: 'Ceres' },
+    { key: 'pallas', name: 'Pallas' },
+    { key: 'juno', name: 'Juno' },
+    { key: 'vesta', name: 'Vesta' },
+  ];
+
+  return planetKeys
+    .map(({ key, name }) => {
+      const pos = chart[key as keyof BirthChartData] as PlanetPosition | undefined;
+      if (!pos?.sign) return null;
+      return {
+        name,
+        sign: pos.sign,
+        house: pos.house || 1,
+        degree: pos.degree || 0,
+      };
+    })
+    .filter(Boolean) as { name: string; sign: string; house: number; degree: number }[];
+}
+
 export default function AstrologyPage() {
   const router = useRouter();
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
@@ -80,6 +129,9 @@ export default function AstrologyPage() {
 
   // Circadian rhythm - detect time of day for color transitions
   const [isDayMode, setIsDayMode] = useState(true);
+
+  // Expanded planet for planetary positions panel
+  const [expandedPlanet, setExpandedPlanet] = useState<string | null>(null);
 
   // Saved synastry for timeline surfacing
   const [savedSynastry, setSavedSynastry] = useState<SavedSynastryItem[]>([]);
@@ -449,6 +501,232 @@ export default function AstrologyPage() {
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
                 </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* House Wheel & Planetary Positions */}
+          <div className="grid md:grid-cols-2 gap-8 mb-12">
+            {/* House Wheel */}
+            <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl overflow-visible relative" style={{ zIndex: 10 }}>
+              <h3 className="text-dune-amber font-semibold mb-4 text-center">House Wheel</h3>
+              <p className="text-dune-spice-sand/50 text-xs mb-4 text-center italic">Click a planet on the wheel for insights</p>
+              <SacredHouseWheel
+                planets={chartDataToPlanets(chartData)}
+                aspects={(chartData.aspects || [])
+                  .filter((a): a is typeof a & { type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' } =>
+                    ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
+                  )}
+                isDayMode={false}
+                layoutMode="traditional"
+                showAspects={true}
+                className="max-h-[500px]"
+              />
+            </div>
+
+            {/* Planetary Positions - Clickable with Insights */}
+            <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl">
+              <h3 className="text-dune-amber font-semibold mb-4">Planetary Positions</h3>
+              <p className="text-dune-spice-sand/50 text-xs mb-4 italic">Click a planet to reveal archetypal insights</p>
+              <div className="space-y-1 text-sm max-h-[500px] overflow-y-auto">
+                {[
+                  { name: 'Sun', icon: '☉', data: chartData.sun },
+                  { name: 'Moon', icon: '☽', data: chartData.moon },
+                  { name: 'Mercury', icon: '☿', data: chartData.mercury },
+                  { name: 'Venus', icon: '♀', data: chartData.venus },
+                  { name: 'Mars', icon: '♂', data: chartData.mars },
+                  { name: 'Jupiter', icon: '♃', data: chartData.jupiter },
+                  { name: 'Saturn', icon: '♄', data: chartData.saturn },
+                  { name: 'Uranus', icon: '♅', data: chartData.uranus },
+                  { name: 'Neptune', icon: '♆', data: chartData.neptune },
+                  { name: 'Pluto', icon: '♇', data: chartData.pluto },
+                  { name: 'Chiron', icon: '⚷', data: chartData.chiron },
+                  { name: 'North Node', icon: '☊', data: chartData.northNode },
+                  { name: 'South Node', icon: '☋', data: chartData.southNode },
+                  { name: 'Lilith', icon: '⚸', data: chartData.lilith },
+                  { name: 'Ceres', icon: '⚳', data: chartData.ceres },
+                  { name: 'Pallas', icon: '⚴', data: chartData.pallas },
+                  { name: 'Juno', icon: '⚵', data: chartData.juno },
+                  { name: 'Vesta', icon: '⚶', data: chartData.vesta },
+                ].filter(p => p.data?.sign).map(({ name, icon, data }) => {
+                  const isExpanded = expandedPlanet === name;
+                  const zodiacArchetype = data?.sign ? getZodiacArchetype(data.sign) : null;
+                  const planetArchetype = getPlanetaryArchetype(name);
+                  const houseData = data?.house ? getSpiralogicHouseData(data.house) : null;
+                  const element = zodiacArchetype?.element || 'fire';
+                  const elementStyle = elementalColors[element as keyof typeof elementalColors];
+                  const planetAspects = chartData.aspects?.filter(
+                    a => a.planet1 === name || a.planet2 === name
+                  ) || [];
+
+                  return (
+                    <div key={name}>
+                      {/* Planet Row - Clickable */}
+                      <div
+                        className={`flex items-center justify-between py-2 px-2 rounded-lg cursor-pointer transition-all duration-200 ${
+                          isExpanded
+                            ? 'bg-dune-amber/10 border border-dune-amber/30'
+                            : 'hover:bg-white/5 border border-transparent'
+                        }`}
+                        onClick={() => setExpandedPlanet(isExpanded ? null : name)}
+                      >
+                        <span className="text-dune-spice-sand/80 flex items-center gap-2">
+                          <span className="text-lg">{icon}</span>
+                          {name}
+                          {(data as PlanetPosition)?.retrograde && <span className="text-red-400 text-xs">℞</span>}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-dune-amber">
+                            {data?.sign} {data?.degree?.toFixed(1)}°
+                            <span className="text-dune-spice-sand/50 ml-2">H{(data as PlanetPosition)?.house}</span>
+                          </span>
+                          {isExpanded ? (
+                            <ChevronUp className="w-4 h-4 text-dune-amber/60" />
+                          ) : (
+                            <ChevronDown className="w-4 h-4 text-dune-spice-sand/40" />
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Expanded Insight Panel */}
+                      <AnimatePresence>
+                        {isExpanded && data?.sign && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div
+                              className="mx-2 mb-3 p-4 rounded-lg border"
+                              style={{
+                                background: `linear-gradient(135deg, ${elementStyle.color}10, transparent)`,
+                                borderColor: `${elementStyle.color}30`,
+                              }}
+                            >
+                              {/* Element & Modality Tags */}
+                              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                <span
+                                  className="px-2 py-0.5 rounded-full text-xs font-medium uppercase tracking-wide"
+                                  style={{ background: `${elementStyle.color}20`, color: elementStyle.color }}
+                                >
+                                  {zodiacArchetype?.element || 'Unknown'}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full text-xs bg-white/10 text-white/60 uppercase tracking-wide">
+                                  {zodiacArchetype?.modality || 'Unknown'}
+                                </span>
+                                {zodiacArchetype?.temperament && (
+                                  <span className="px-2 py-0.5 rounded-full text-xs bg-purple-500/20 text-purple-300 uppercase tracking-wide">
+                                    {zodiacArchetype.temperament}
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Archetype Info */}
+                              <div className="space-y-3">
+                                {/* Planetary Archetype */}
+                                <div>
+                                  <h5 className="text-xs uppercase tracking-wider text-dune-spice-sand/50 mb-1">
+                                    {name} Archetype
+                                  </h5>
+                                  <p className="text-dune-spice-sand/90 text-sm font-medium">
+                                    {planetArchetype?.archetype || 'The Guide'}
+                                  </p>
+                                  <p className="text-dune-spice-sand/50 text-xs mt-1">
+                                    {planetArchetype?.description}
+                                  </p>
+                                </div>
+
+                                {/* Sign Facet */}
+                                <div>
+                                  <h5 className="text-xs uppercase tracking-wider text-dune-spice-sand/50 mb-1">
+                                    {data.sign} Expression
+                                  </h5>
+                                  <p className="text-dune-amber text-sm font-medium">
+                                    {zodiacArchetype?.facetName}
+                                  </p>
+                                  {zodiacArchetype?.archetypes?.mythological && (
+                                    <p className="text-dune-spice-sand/50 text-xs mt-1 italic">
+                                      {zodiacArchetype.archetypes.mythological.slice(0, 2).join(', ')}
+                                    </p>
+                                  )}
+                                </div>
+
+                                {/* House Activation */}
+                                {houseData && (
+                                  <div>
+                                    <h5 className="text-xs uppercase tracking-wider text-dune-spice-sand/50 mb-1">
+                                      House {(data as PlanetPosition).house} Activation
+                                    </h5>
+                                    <p className="text-dune-spice-sand/90 text-sm font-medium">
+                                      {houseData.facet}
+                                    </p>
+                                    <p className="text-dune-spice-sand/50 text-xs mt-1">
+                                      {houseData.lesson}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {/* Aspects */}
+                                {planetAspects.length > 0 && (
+                                  <div>
+                                    <h5 className="text-xs uppercase tracking-wider text-dune-spice-sand/50 mb-1">
+                                      Connections ({planetAspects.length})
+                                    </h5>
+                                    <div className="space-y-1">
+                                      {planetAspects.slice(0, 3).map((aspect, idx) => {
+                                        const otherPlanet = aspect.planet1 === name ? aspect.planet2 : aspect.planet1;
+                                        const aspectSynthesis = synthesizeAspect(
+                                          name,
+                                          otherPlanet,
+                                          aspect.type as AspectType
+                                        );
+                                        return (
+                                          <div key={idx} className="text-xs">
+                                            <span className={`font-medium ${
+                                              aspect.type === 'conjunction' ? 'text-amber-400' :
+                                              aspect.type === 'trine' ? 'text-blue-400' :
+                                              aspect.type === 'square' ? 'text-red-400' :
+                                              aspect.type === 'opposition' ? 'text-purple-400' :
+                                              'text-green-400'
+                                            }`}>
+                                              {aspect.type}
+                                            </span>
+                                            <span className="text-dune-spice-sand/60"> with {otherPlanet}</span>
+                                            {aspectSynthesis?.coreQuestion && (
+                                              <p className="text-dune-spice-sand/40 text-xs italic mt-0.5 pl-2 border-l border-white/10">
+                                                {aspectSynthesis.coreQuestion}
+                                              </p>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                      {planetAspects.length > 3 && (
+                                        <p className="text-dune-spice-sand/30 text-xs italic">
+                                          +{planetAspects.length - 3} more
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Synthesis Quote */}
+                              {generateArchetypalDescription(name, data.sign, (data as PlanetPosition).house) && (
+                                <div className="mt-3 pt-3 border-t border-white/10">
+                                  <p className="text-xs italic text-dune-amber/80">
+                                    "{generateArchetypalDescription(name, data.sign, (data as PlanetPosition).house)}"
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>
