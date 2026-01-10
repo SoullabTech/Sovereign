@@ -1,14 +1,22 @@
 /**
- * Codebase Navigator - RLM Loop for Code Exploration
+ * Codebase Navigator - Hardened RLM Loop for Code Exploration
  *
  * Uses a local LLM to iteratively search, read, and understand code.
  * The model decides which tools to call based on the question.
  *
+ * Security features:
+ * - Strict JSON validation with repair passes
+ * - Anti-hallucination guards (can only read paths from tool outputs)
+ * - Budget limits (max calls per tool type)
+ * - Source tracing (every answer cites files/lines)
+ *
  * Pattern:
  * 1. Ask model what action to take given question + context
- * 2. Execute the action (search/read/list)
- * 3. Add result to context
- * 4. Repeat until model returns 'answer' action
+ * 2. Validate action is well-formed JSON
+ * 3. Guard: reject reads of paths not seen in search/list
+ * 4. Execute the action (search/read/list)
+ * 5. Track allowed paths from tool outputs
+ * 6. Repeat until model returns 'answer' action or budget exhausted
  */
 
 import { executeAction } from './tools';
@@ -18,10 +26,19 @@ import type {
   RLMResult,
   AnyRLMAction,
   AnswerAction,
+  SearchAction,
+  ReadAction,
+  ListAction,
+  SourceRef,
+  RLMBudget,
 } from './types';
 
+// ============================================================================
+// Ollama integration
+// ============================================================================
+
 const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434';
-// Use a faster instruction-following model for RLM loop (deepseek-r1 is too slow for iteration)
+// Use a faster instruction-following model for RLM loop
 const DEFAULT_MODEL = process.env.RLM_MODEL || 'llama3.1:8b-instruct-q8_0';
 
 interface OllamaGenerateParams {
@@ -39,9 +56,6 @@ interface OllamaGenerateResponse {
   done: boolean;
 }
 
-/**
- * Direct Ollama generate call for RLM loop
- */
 async function generateWithOllama(params: OllamaGenerateParams): Promise<OllamaGenerateResponse> {
   const { model = DEFAULT_MODEL, prompt, system, options } = params;
 
@@ -64,50 +78,137 @@ async function generateWithOllama(params: OllamaGenerateParams): Promise<OllamaG
   return response.json();
 }
 
+// ============================================================================
+// JSON validation helpers
+// ============================================================================
+
+function safeJsonParse(text: string): { ok: true; value: unknown } | { ok: false; error: string } {
+  try {
+    const trimmed = text.trim();
+    // Handle markdown code blocks
+    const jsonMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
+    const json = jsonMatch ? jsonMatch[1].trim() : trimmed;
+    // Extract JSON object
+    const objectMatch = json.match(/\{[\s\S]*\}/);
+    if (!objectMatch) {
+      return { ok: false, error: 'no_json_object_found' };
+    }
+    return { ok: true, value: JSON.parse(objectMatch[0]) };
+  } catch (e: unknown) {
+    return { ok: false, error: (e as Error)?.message ?? 'json_parse_error' };
+  }
+}
+
+function isNonEmptyString(v: unknown): v is string {
+  return typeof v === 'string' && v.trim().length > 0;
+}
+
+function validateActionShape(a: unknown): a is AnyRLMAction {
+  if (!a || typeof a !== 'object') return false;
+  const obj = a as Record<string, unknown>;
+  if (!isNonEmptyString(obj.type)) return false;
+
+  if (obj.type === 'search') return isNonEmptyString(obj.query);
+  if (obj.type === 'list') return isNonEmptyString(obj.glob) || isNonEmptyString(obj.pattern);
+  if (obj.type === 'read') return isNonEmptyString(obj.filePath) || isNonEmptyString(obj.path);
+  if (obj.type === 'answer') {
+    // Support both legacy format and new payload format
+    if (obj.payload && typeof obj.payload === 'object') {
+      const p = obj.payload as Record<string, unknown>;
+      return isNonEmptyString(p.answer) && typeof p.confidence === 'number';
+    }
+    return isNonEmptyString(obj.answer);
+  }
+  return false;
+}
+
+function normalizeAction(a: unknown): AnyRLMAction {
+  const obj = a as Record<string, unknown>;
+  // Normalize field names
+  if (obj.type === 'read' && obj.path && !obj.filePath) {
+    obj.filePath = obj.path;
+  }
+  if (obj.type === 'list' && obj.pattern && !obj.glob) {
+    obj.glob = obj.pattern;
+  }
+  return obj as unknown as AnyRLMAction;
+}
+
+// ============================================================================
+// System prompt
+// ============================================================================
+
 const DEFAULT_CONFIG: RLMConfig = {
   maxIterations: 8,
   maxContextChars: 24000,
   verbose: false,
+  budget: { search: 8, list: 6, read: 12 },
 };
 
-const SYSTEM_PROMPT = `You are a code navigation assistant. Given a question about a codebase, you decide what actions to take to find the answer.
+const RLM_SYSTEM_PROMPT = `
+You are a codebase navigation agent.
 
-Available actions (respond with valid JSON):
+You MUST respond with exactly ONE JSON object. No prose, no markdown, no code fences.
+Valid actions:
 
-1. Search for code:
-{"type":"search","query":"what to search for","pattern":"optional regex","fileGlob":"**/*.ts","reasoning":"why"}
+1) search:
+{"type":"search","query":"...","fileGlob":"optional glob"}
 
-2. Read a file:
-{"type":"read","filePath":"path/to/file.ts","startLine":1,"endLine":50,"reasoning":"why"}
+2) list:
+{"type":"list","glob":"glob pattern"}
 
-3. List files:
-{"type":"list","glob":"lib/**/*.ts","reasoning":"why"}
+3) read:
+{"type":"read","filePath":"exact file path","startLine":optional_number,"endLine":optional_number}
 
-4. Provide final answer:
-{"type":"answer","answer":"your answer here","confidence":0.9,"sources":["file1.ts","file2.ts"],"reasoning":"why"}
+4) answer:
+{"type":"answer","answer":"...","confidence":0_to_1,"sources":["path:line",...]}
 
-Rules:
-- Start by searching for relevant patterns or keywords
-- Read files that look relevant based on search results
-- Once you have enough context, provide your answer
-- Be specific about file paths when reading
-- Include line numbers in sources when citing code
-- If you can't find the answer after several searches, say so honestly
+Hard rules:
+- NEVER invent file paths. For "read", filePath MUST be one you have already seen in tool outputs (search/list).
+- If you need a path, do "search" or "list" first.
+- Prefer fewer steps. If you can answer with current evidence, answer.
+- Keep confidence honest. If you have weak evidence, lower confidence.
+- Sources should include line numbers when citing specific code: "lib/foo.ts:42"
 
-Respond ONLY with a single JSON action object, no other text.`;
+Respond ONLY with a single JSON action object, no other text.
+`.trim();
 
-/**
- * Build the prompt for the current iteration
- */
-function buildPrompt(ctx: RLMContext): string {
+// ============================================================================
+// Prompt building
+// ============================================================================
+
+function buildPrompt(
+  ctx: RLMContext,
+  allowedPaths: Set<string>,
+  budget: RLMBudget,
+  used: { search: number; list: number; read: number },
+  guardMessages: string[]
+): string {
   let prompt = `Question: ${ctx.question}\n\n`;
 
+  // Show allowed paths (what model can read)
+  if (allowedPaths.size > 0) {
+    const pathList = Array.from(allowedPaths).slice(0, 80).join(', ');
+    prompt += `Allowed paths for read (${allowedPaths.size} total): ${pathList}\n\n`;
+  } else {
+    prompt += `No paths discovered yet. Use search or list first.\n\n`;
+  }
+
+  // Show budget
+  prompt += `Budget remaining: search=${budget.search - used.search}, list=${budget.list - used.list}, read=${budget.read - used.read}\n\n`;
+
+  // Show guard messages
+  if (guardMessages.length > 0) {
+    prompt += `Guards:\n${guardMessages.join('\n')}\n\n`;
+  }
+
+  // Show history
   if (ctx.history.length > 0) {
     prompt += `Previous actions and results:\n\n`;
 
     for (const { action, result } of ctx.history) {
       prompt += `Action: ${JSON.stringify(action)}\n`;
-      prompt += `Result: ${result.content.slice(0, 2000)}`;
+      prompt += `Result: ${result.content.slice(0, 1500)}`;
       if (result.truncated) prompt += '\n(truncated)';
       prompt += '\n\n';
     }
@@ -118,47 +219,16 @@ function buildPrompt(ctx: RLMContext): string {
   return prompt;
 }
 
-/**
- * Parse the model's response into an action
- */
-function parseAction(response: string): AnyRLMAction | null {
-  try {
-    // Extract JSON from response (handle markdown code blocks)
-    let json = response.trim();
-    const jsonMatch = json.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (jsonMatch) {
-      json = jsonMatch[1].trim();
-    }
+// ============================================================================
+// Main RLM loop
+// ============================================================================
 
-    // Try to find JSON object
-    const objectMatch = json.match(/\{[\s\S]*\}/);
-    if (objectMatch) {
-      json = objectMatch[0];
-    }
-
-    const action = JSON.parse(json);
-
-    // Validate action has required fields
-    if (!action.type) {
-      console.error('Action missing type:', action);
-      return null;
-    }
-
-    return action as AnyRLMAction;
-  } catch (err) {
-    console.error('Failed to parse action:', err, '\nResponse:', response);
-    return null;
-  }
-}
-
-/**
- * Main RLM loop for codebase navigation
- */
 export async function navigateCodebase(
   question: string,
   config: Partial<RLMConfig> = {}
 ): Promise<RLMResult> {
   const cfg = { ...DEFAULT_CONFIG, ...config };
+  const budget = cfg.budget ?? { search: 8, list: 6, read: 12 };
 
   const ctx: RLMContext = {
     question,
@@ -167,6 +237,10 @@ export async function navigateCodebase(
     searchesPerformed: [],
   };
 
+  // Anti-hallucination: only paths from tool outputs are allowed
+  const allowedPaths = new Set<string>();
+  const used = { search: 0, list: 0, read: 0 };
+  const guardMessages: string[] = [];
   let totalChars = 0;
 
   for (let i = 0; i < cfg.maxIterations; i++) {
@@ -182,27 +256,57 @@ export async function navigateCodebase(
       break;
     }
 
-    // Get next action from model
-    const prompt = buildPrompt(ctx);
+    // Build prompt with allowed paths and budget
+    const prompt = buildPrompt(ctx, allowedPaths, budget, used, guardMessages);
 
+    // Get action from model
     const response = await generateWithOllama({
       model: cfg.modelId,
       prompt,
-      system: SYSTEM_PROMPT,
+      system: RLM_SYSTEM_PROMPT,
       options: {
         temperature: 0.1,
         num_predict: 500,
       },
     });
 
-    const action = parseAction(response.response);
+    // Parse and validate
+    let parsed = safeJsonParse(response.response);
+    let action: AnyRLMAction | null = null;
 
-    if (!action) {
+    if (parsed.ok && validateActionShape(parsed.value)) {
+      action = normalizeAction(parsed.value);
+    } else {
+      // Repair pass
       if (cfg.verbose) {
-        console.log('Failed to parse action, retrying...');
+        console.log('Invalid action, attempting repair...');
       }
-      continue;
+
+      const errorMsg = parsed.ok === false ? parsed.error : 'schema_invalid';
+      const repairPrompt = `
+The previous response was invalid. Error: ${errorMsg}.
+Return ONE valid JSON action object only. No prose.
+`.trim();
+
+      const repair = await generateWithOllama({
+        model: cfg.modelId,
+        prompt: repairPrompt,
+        system: RLM_SYSTEM_PROMPT,
+        options: { temperature: 0.0, num_predict: 300 },
+      });
+
+      const repaired = safeJsonParse(repair.response);
+      if (repaired.ok && validateActionShape(repaired.value)) {
+        action = normalizeAction(repaired.value);
+      } else {
+        if (cfg.verbose) {
+          console.log('Repair failed, skipping iteration');
+        }
+        continue;
+      }
     }
+
+    if (!action) continue;
 
     if (cfg.verbose) {
       console.log('Action:', JSON.stringify(action, null, 2));
@@ -212,60 +316,104 @@ export async function navigateCodebase(
     if (action.type === 'answer') {
       const answerAction = action as AnswerAction;
       return {
-        answer: answerAction.answer,
-        confidence: answerAction.confidence ?? 0.5,
-        sources: answerAction.sources ?? [],
+        answer: answerAction.payload?.answer ?? answerAction.answer,
+        confidence: answerAction.payload?.confidence ?? answerAction.confidence ?? 0.5,
+        sources: answerAction.payload?.sources?.map((s: SourceRef) => `${s.path}:${s.lineStart ?? ''}`)
+          ?? answerAction.sources ?? [],
         iterations: i + 1,
         totalTokensEst: Math.ceil(totalChars / 4),
       };
     }
 
-    // Execute tool action
-    const result = await executeAction(action);
+    // Budget check
+    const actionType = action.type as 'search' | 'list' | 'read';
+    if (used[actionType] >= budget[actionType]) {
+      guardMessages.push(`[BUDGET] ${actionType} budget exhausted. Use remaining tools or answer.`);
+      if (cfg.verbose) {
+        console.log(`Budget exhausted for ${actionType}`);
+      }
+      continue;
+    }
+
+    // Anti-hallucination guard for read
+    if (action.type === 'read') {
+      const readAction = action as ReadAction;
+      const path = readAction.filePath;
+
+      if (!allowedPaths.has(path)) {
+        guardMessages.push(`[GUARD] Rejected read("${path}") - path not from tools. Use search/list first.`);
+        if (cfg.verbose) {
+          console.log(`Guard: rejected hallucinated path ${path}`);
+        }
+        continue;
+      }
+    }
+
+    // Execute action
+    used[actionType]++;
+    const result = await executeAction(action as SearchAction | ReadAction | ListAction);
 
     if (cfg.verbose) {
-      console.log(
-        'Result:',
-        result.content.slice(0, 200),
-        result.truncated ? '...' : ''
-      );
+      console.log('Result:', result.content.slice(0, 200), result.truncated ? '...' : '');
+    }
+
+    // Track allowed paths from tool outputs
+    if (action.type === 'search' && result.meta?.matches) {
+      for (const m of result.meta.matches) {
+        allowedPaths.add(m.path);
+      }
+    }
+    if (action.type === 'list' && result.meta?.files) {
+      for (const f of result.meta.files) {
+        allowedPaths.add(f);
+      }
+    }
+    if (action.type === 'read') {
+      ctx.filesRead.add((action as ReadAction).filePath);
     }
 
     // Update context
     ctx.history.push({ action, result });
     totalChars += result.content.length;
 
-    if (action.type === 'read') {
-      ctx.filesRead.add(action.filePath);
-    } else if (action.type === 'search') {
-      ctx.searchesPerformed.push(action.query);
+    if (action.type === 'search') {
+      ctx.searchesPerformed.push((action as SearchAction).query);
     }
+
+    // Clear guard messages after successful action
+    guardMessages.length = 0;
   }
 
-  // Fallback: ask model to synthesize from collected context
-  const finalPrompt = buildPrompt(ctx) + '\n\nYou must provide an answer now.';
+  // Fallback: force answer with current context
+  const finalPrompt = buildPrompt(ctx, allowedPaths, budget, used, [
+    '[FINAL] You must provide an answer now with your best understanding.',
+  ]);
 
   const finalResponse = await generateWithOllama({
     model: cfg.modelId,
     prompt: finalPrompt,
-    system: SYSTEM_PROMPT,
+    system: RLM_SYSTEM_PROMPT,
     options: {
       temperature: 0.1,
       num_predict: 1000,
     },
   });
 
-  const finalAction = parseAction(finalResponse.response);
+  const finalParsed = safeJsonParse(finalResponse.response);
 
-  if (finalAction?.type === 'answer') {
-    const answerAction = finalAction as AnswerAction;
-    return {
-      answer: answerAction.answer,
-      confidence: answerAction.confidence ?? 0.3,
-      sources: answerAction.sources ?? Array.from(ctx.filesRead),
-      iterations: cfg.maxIterations,
-      totalTokensEst: Math.ceil(totalChars / 4),
-    };
+  if (finalParsed.ok && validateActionShape(finalParsed.value)) {
+    const finalAction = normalizeAction(finalParsed.value);
+    if (finalAction.type === 'answer') {
+      const answerAction = finalAction as AnswerAction;
+      return {
+        answer: answerAction.payload?.answer ?? answerAction.answer,
+        confidence: answerAction.payload?.confidence ?? answerAction.confidence ?? 0.3,
+        sources: answerAction.payload?.sources?.map((s: SourceRef) => `${s.path}:${s.lineStart ?? ''}`)
+          ?? answerAction.sources ?? Array.from(ctx.filesRead),
+        iterations: cfg.maxIterations,
+        totalTokensEst: Math.ceil(totalChars / 4),
+      };
+    }
   }
 
   // Last resort

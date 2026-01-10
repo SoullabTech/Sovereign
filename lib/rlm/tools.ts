@@ -3,19 +3,102 @@
  *
  * Wraps filesystem operations for use by the RLM loop.
  * These tools provide structured access to codebase exploration.
+ * Includes denylist for sensitive files and structured output parsing.
  */
 
 import { readFile } from 'fs/promises';
 import { glob } from 'glob';
 import { execSync } from 'child_process';
-import type { SearchAction, ReadAction, ListAction, ToolResult } from './types';
+import type { SearchAction, ReadAction, ListAction, ToolResult, SearchMatch } from './types';
 
 const MAX_CONTENT_CHARS = 8000;
 const MAX_SEARCH_RESULTS = 20;
 const MAX_LIST_RESULTS = 50;
+const MAX_READ_BYTES = 120_000;
+
+// ============================================================================
+// Denylist: Never read or return these paths
+// ============================================================================
+
+const DENY_PATH_PARTS = [
+  '/.git/',
+  '/node_modules/',
+  '/.next/',
+  '/dist/',
+  '/build/',
+  '/.beads/',
+];
+
+const DENY_FILENAMES = [
+  '.env',
+  '.env.local',
+  '.env.production',
+  '.env.development',
+  'credentials.json',
+  'serviceAccountKey.json',
+];
 
 /**
- * Search code using ripgrep (rg) or grep
+ * Check if a path should be denied (secrets, node_modules, etc.)
+ */
+export function isDeniedPath(p: string): boolean {
+  const norm = p.replace(/\\/g, '/');
+
+  // Check path parts
+  if (DENY_PATH_PARTS.some(part => norm.includes(part))) return true;
+
+  // Check filename
+  const base = norm.split('/').pop() || norm;
+  if (DENY_FILENAMES.includes(base)) return true;
+
+  // Check for secret-like names
+  const baseLower = base.toLowerCase();
+  if (baseLower.includes('secret')) return true;
+  if (baseLower.includes('apikey')) return true;
+  if (baseLower.includes('privatekey')) return true;
+  if (baseLower.includes('credentials')) return true;
+  if (baseLower.endsWith('.pem')) return true;
+  if (baseLower.endsWith('.key')) return true;
+
+  return false;
+}
+
+// ============================================================================
+// Ripgrep output parsing
+// ============================================================================
+
+/**
+ * Parse ripgrep output into structured matches
+ * rg format: path:line:content
+ */
+function parseRgOutput(output: string): SearchMatch[] {
+  const matches: SearchMatch[] = [];
+
+  for (const line of output.split('\n')) {
+    // Match: ./path/to/file.ts:123:content here
+    const m = line.match(/^(.+?):(\d+):(.*)$/);
+    if (!m) continue;
+
+    const path = m[1].replace(/^\.\//, ''); // normalize ./path to path
+    const lineNum = Number(m[2]);
+    const preview = (m[3] ?? '').slice(0, 300);
+
+    if (!Number.isFinite(lineNum)) continue;
+    if (isDeniedPath(path)) continue;
+
+    matches.push({ path, line: lineNum, preview });
+  }
+
+  return matches;
+}
+
+// ============================================================================
+// Tool implementations
+// ============================================================================
+
+/**
+ * Search code using ripgrep (rg)
+ * Returns structured matches with paths that can be used for reading
  */
 export async function searchCode(action: SearchAction): Promise<ToolResult> {
   try {
@@ -41,8 +124,10 @@ export async function searchCode(action: SearchAction): Promise<ToolResult> {
       };
     }
 
-    // Build rg command
+    // Build rg command - exclude denied paths
     let cmd = `rg --line-number --max-count=5 --max-columns=200 -i`;
+    cmd += ` --glob '!node_modules/**' --glob '!.git/**' --glob '!.next/**' --glob '!dist/**'`;
+    cmd += ` --glob '!*.env*' --glob '!*secret*' --glob '!*credential*'`;
     if (fileGlob) {
       cmd += ` --glob '${fileGlob}'`;
     }
@@ -55,23 +140,28 @@ export async function searchCode(action: SearchAction): Promise<ToolResult> {
       encoding: 'utf-8',
     });
 
-    const lines = output.trim().split('\n').filter(Boolean);
-    const truncated = lines.length > MAX_SEARCH_RESULTS;
-    const results = lines.slice(0, MAX_SEARCH_RESULTS).join('\n');
+    const matches = parseRgOutput(output);
+    const truncated = matches.length > MAX_SEARCH_RESULTS;
+    const limitedMatches = matches.slice(0, MAX_SEARCH_RESULTS);
 
-    if (!results) {
+    if (limitedMatches.length === 0) {
       return {
         success: true,
         content: `No matches found for: ${searchPattern}`,
-        metadata: { matchCount: 0 },
+        meta: { matches: [] },
       };
     }
 
+    // Format for display
+    const content = limitedMatches
+      .map(m => `${m.path}:${m.line}: ${m.preview}`)
+      .join('\n');
+
     return {
       success: true,
-      content: results,
+      content,
       truncated,
-      metadata: { matchCount: lines.length },
+      meta: { matches: limitedMatches },
     };
   } catch (err) {
     return {
@@ -83,12 +173,27 @@ export async function searchCode(action: SearchAction): Promise<ToolResult> {
 
 /**
  * Read a file or section of a file
+ * Enforces denylist and size limits
  */
 export async function readFileContent(action: ReadAction): Promise<ToolResult> {
   try {
     const { filePath, startLine, endLine } = action;
 
-    const content = await readFile(filePath, 'utf-8');
+    // Enforce denylist
+    if (isDeniedPath(filePath)) {
+      return {
+        success: false,
+        content: `Denied: ${filePath} is a protected file`,
+      };
+    }
+
+    const buf = await readFile(filePath);
+
+    // Enforce size limit
+    const content = buf.length > MAX_READ_BYTES
+      ? buf.subarray(0, MAX_READ_BYTES).toString('utf-8')
+      : buf.toString('utf-8');
+
     const lines = content.split('\n');
 
     let selectedLines: string[];
@@ -104,8 +209,8 @@ export async function readFileContent(action: ReadAction): Promise<ToolResult> {
       .map((line, i) => `${(startLine ?? 1) + i}: ${line}`)
       .join('\n');
 
-    const truncated = result.length > MAX_CONTENT_CHARS;
-    if (truncated) {
+    const truncated = result.length > MAX_CONTENT_CHARS || buf.length > MAX_READ_BYTES;
+    if (result.length > MAX_CONTENT_CHARS) {
       result = result.slice(0, MAX_CONTENT_CHARS) + '\n... (truncated)';
     }
 
@@ -113,10 +218,7 @@ export async function readFileContent(action: ReadAction): Promise<ToolResult> {
       success: true,
       content: result,
       truncated,
-      metadata: {
-        totalLines: lines.length,
-        selectedLines: selectedLines.length,
-      },
+      meta: { linesRead: selectedLines.length },
     };
   } catch (err) {
     return {
@@ -128,17 +230,20 @@ export async function readFileContent(action: ReadAction): Promise<ToolResult> {
 
 /**
  * List files matching a glob pattern
+ * Filters out denied paths
  */
 export async function listFiles(action: ListAction): Promise<ToolResult> {
   try {
     const { glob: pattern, maxResults = MAX_LIST_RESULTS } = action;
 
-    const files = await glob(pattern, {
+    const allFiles = await glob(pattern, {
       cwd: process.cwd(),
-      ignore: ['node_modules/**', '.git/**', 'dist/**', '.next/**'],
+      ignore: ['node_modules/**', '.git/**', 'dist/**', '.next/**', '.beads/**'],
       nodir: true,
     });
 
+    // Filter denied paths
+    const files = allFiles.filter(f => !isDeniedPath(f));
     const truncated = files.length > maxResults;
     const results = files.slice(0, maxResults);
 
@@ -146,7 +251,7 @@ export async function listFiles(action: ListAction): Promise<ToolResult> {
       success: true,
       content: results.join('\n') || 'No files matched',
       truncated,
-      metadata: { fileCount: files.length },
+      meta: { files: results },
     };
   } catch (err) {
     return {

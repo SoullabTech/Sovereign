@@ -6,7 +6,7 @@
  */
 
 export { navigateCodebase, askAboutCode } from './CodebaseNavigator';
-export { searchCode, readFileContent, listFiles, executeAction } from './tools';
+export { searchCode, readFileContent, listFiles, executeAction, isDeniedPath } from './tools';
 export type {
   RLMActionType,
   RLMAction,
@@ -19,4 +19,8 @@ export type {
   RLMContext,
   RLMConfig,
   RLMResult,
+  RLMBudget,
+  SourceRef,
+  AnswerPayload,
+  SearchMatch,
 } from './types';
