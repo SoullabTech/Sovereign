@@ -20,6 +20,7 @@ import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft,
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
+import { MiniHoloflower } from '@/components/holoflower/MiniHoloflower';
 import { getZodiacArchetype, generateArchetypalDescription } from '@/lib/astrology/archetypeLibrary';
 import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
 import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
@@ -323,7 +324,9 @@ export default function AstrologyPage() {
           ))}
         </div>
         <div className="text-center relative z-10">
-          <Sparkle className="w-16 h-16 text-dune-amber mx-auto mb-6 opacity-60" />
+          <div className="mx-auto mb-6 flex justify-center">
+            <MiniHoloflower size={80} isDayMode={false} animated={true} />
+          </div>
           <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
           <p className="text-dune-spice-sand/80 mb-6 max-w-md mx-auto">
             Enter your birth details to unlock your personalized astrological map
