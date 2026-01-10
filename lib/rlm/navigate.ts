@@ -25,6 +25,8 @@ export type RLMFileHit = {
   score: number; // higher = better
   why: string[]; // short reasons
   snippet?: string; // small excerpt (optional)
+  snippetStartLine?: number; // 1-based line range for snippet
+  snippetEndLine?: number;
 };
 
 export type RLMNavigateResponse = {
@@ -230,23 +232,42 @@ function scoreFile(
   return { score, why };
 }
 
+type SnippetInfo = {
+  snippet: string;
+  snippetStartLine: number; // 1-based
+  snippetEndLine: number; // 1-based
+};
+
 async function makeSnippet(
   rootAbs: string,
   relFile: string,
   qTokens: string[]
-): Promise<string | undefined> {
+): Promise<SnippetInfo | undefined> {
   try {
     const abs = path.join(rootAbs, relFile);
     const src = await fs.readFile(abs, 'utf8');
     const lines = src.split('\n');
 
     const needle = qTokens.find((t) => t && src.toLowerCase().includes(t));
-    if (!needle) return lines.slice(0, 20).join('\n');
+    if (!needle) {
+      // No match - return first 20 lines
+      const end = Math.min(lines.length, 20);
+      return {
+        snippet: lines.slice(0, end).join('\n'),
+        snippetStartLine: 1,
+        snippetEndLine: end,
+      };
+    }
 
+    // Found needle - center snippet around match (0-based idx)
     const idx = lines.findIndex((l) => l.toLowerCase().includes(needle));
     const start = Math.max(0, idx - 8);
     const end = Math.min(lines.length, idx + 12);
-    return lines.slice(start, end).join('\n');
+    return {
+      snippet: lines.slice(start, end).join('\n'),
+      snippetStartLine: start + 1, // convert to 1-based
+      snippetEndLine: end, // end is already exclusive, so this is correct
+    };
   } catch {
     return undefined;
   }
@@ -315,13 +336,17 @@ export async function navigateCodebase(
 
   const nextFiles: RLMFileHit[] = [];
   for (const item of scored.slice(0, limit)) {
+    const snippetInfo = includeSnippets
+      ? await makeSnippet(rootAbs, item.f.file, qTokens)
+      : undefined;
+
     nextFiles.push({
       file: item.f.file,
       score: item.score,
       why: item.why.slice(0, 3),
-      snippet: includeSnippets
-        ? await makeSnippet(rootAbs, item.f.file, qTokens)
-        : undefined,
+      snippet: snippetInfo?.snippet,
+      snippetStartLine: snippetInfo?.snippetStartLine,
+      snippetEndLine: snippetInfo?.snippetEndLine,
     });
   }
 

@@ -8,7 +8,7 @@
  * - Ask: Agentic Q&A with Ollama (full proof objects + trace)
  */
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { RlmFileViewer } from '@/components/rlm/RlmFileViewer';
 import type { RLMResult, RLMSourceRef, RLMUsage } from '@/lib/rlm/types';
 
@@ -19,6 +19,8 @@ type RLMFileHit = {
   score: number;
   why: string[];
   snippet?: string;
+  snippetStartLine?: number;
+  snippetEndLine?: number;
 };
 
 type RLMNavigateResponse = {
@@ -49,10 +51,13 @@ export default function RLMPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loadingTime, setLoadingTime] = useState(0);
-  const loadingTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const loadingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // AbortController for cancellation
   const abortRef = useRef<AbortController | null>(null);
+
+  // Request ID for stale response detection
+  const reqIdRef = useRef(0);
 
   // File viewer state
   const [openPath, setOpenPath] = useState<string | null>(null);
@@ -60,6 +65,7 @@ export default function RLMPage() {
   const [openTruncated, setOpenTruncated] = useState(false);
   const [openErr, setOpenErr] = useState<string | null>(null);
   const [openLoading, setOpenLoading] = useState(false);
+  const [openRange, setOpenRange] = useState<{ startLine: number; endLine: number } | null>(null);
 
   // Persistent focus state (survives across manual searches)
   type RLMFocus = { path: string; content: string };
@@ -155,18 +161,25 @@ export default function RLMPage() {
     }
   }
 
-  async function openFile(p: string) {
+  async function openFile(p: string, range?: { startLine: number; endLine: number }) {
     setOpenErr(null);
     setOpenPath(p);
     setOpenContent(null);
     setOpenTruncated(false);
     setOpenLoading(true);
+    setOpenRange(range ?? null);
 
     try {
+      const body: { path: string; startLine?: number; endLine?: number } = { path: p };
+      if (range?.startLine && range?.endLine) {
+        body.startLine = range.startLine;
+        body.endLine = range.endLine;
+      }
+
       const r = await fetch('/api/rlm/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ path: p }),
+        body: JSON.stringify(body),
       });
 
       const data = await r.json();
@@ -366,7 +379,14 @@ export default function RLMPage() {
                       <div className="text-sm text-white font-mono truncate">{h.file}</div>
                       <div className="flex items-center gap-2 shrink-0">
                         <button
-                          onClick={() => openFile(h.file)}
+                          onClick={() =>
+                            openFile(
+                              h.file,
+                              h.snippetStartLine && h.snippetEndLine
+                                ? { startLine: h.snippetStartLine, endLine: h.snippetEndLine }
+                                : undefined
+                            )
+                          }
                           className="text-xs rounded-lg border border-amber-500/30 bg-amber-500/10 px-2 py-1 text-amber-200/90 hover:bg-amber-500/20"
                         >
                           Open
@@ -522,9 +542,25 @@ export default function RLMPage() {
 
         {openPath && (
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-3 py-2">
-            <div className="text-xs text-white/60 font-mono truncate">{openPath}</div>
+            <div className="text-xs text-white/60 font-mono truncate">
+              {openPath}
+              {openRange && (
+                <span className="ml-2 text-white/40">
+                  Lines {openRange.startLine}–{openRange.endLine}
+                </span>
+              )}
+            </div>
 
             <div className="flex items-center gap-2">
+              {openRange && (
+                <button
+                  onClick={() => openPath && openFile(openPath)}
+                  className="text-xs rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-white/70 hover:bg-white/10"
+                >
+                  Open full
+                </button>
+              )}
+
               {mode === 'navigate' && (
                 <button
                   disabled={!openContent || openLoading || loading}
