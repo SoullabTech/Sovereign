@@ -79,6 +79,25 @@ interface SavedSynastryItem {
   scores?: { attraction?: number; harmony?: number; friction?: number; growth?: number };
 }
 
+// House system options with descriptions
+type HouseSystemType = 'porphyry' | 'placidus' | 'whole-sign' | 'equal' | 'koch';
+
+const HOUSE_SYSTEMS: { value: HouseSystemType; label: string; description: string }[] = [
+  { value: 'porphyry', label: 'Porphyry', description: 'Destiny spine — crisp identity + vocation clarity' },
+  { value: 'placidus', label: 'Placidus', description: 'Lived experience — where life pressure actually lands' },
+  { value: 'whole-sign', label: 'Whole Sign', description: 'Mythic map — each sign a clear chapter of your journey' },
+  { value: 'equal', label: 'Equal', description: 'Clean structure — stable, straightforward house map' },
+  { value: 'koch', label: 'Koch', description: 'Inner growth — how you unfold through thresholds' },
+];
+
+// Transit position interface for current sky
+interface TransitPosition {
+  planet: string;
+  sign: string;
+  degree: number;
+  longitude: number;
+}
+
 // Transform chartData into planets array for SacredHouseWheel
 function chartDataToPlanets(chart: BirthChartData) {
   const planetKeys = [
@@ -138,6 +157,15 @@ export default function AstrologyPage() {
   const [savedSynastry, setSavedSynastry] = useState<SavedSynastryItem[]>([]);
   const [savedSynastryLoading, setSavedSynastryLoading] = useState(false);
 
+  // House system selection
+  const [houseSystem, setHouseSystem] = useState<HouseSystemType>('porphyry');
+  const [houseSystemLoading, setHouseSystemLoading] = useState(false);
+
+  // Transits display
+  const [showTransits, setShowTransits] = useState(false);
+  const [transitPositions, setTransitPositions] = useState<TransitPosition[]>([]);
+  const [transitLoading, setTransitLoading] = useState(false);
+
   // Memoized sort - avoid re-sorting on every render
   const sortedSavedSynastry = useMemo(() => {
     // NaN-safe timestamp parser (handles malformed dates gracefully)
@@ -194,6 +222,10 @@ export default function AstrologyPage() {
           if (savedChart.sun && savedChart.moon && savedChart.ascendant) {
             setChartData(savedChart);
             setHasBirthData(true);
+            // Initialize house system from saved chart
+            if (savedChart.houseSystem && HOUSE_SYSTEMS.some(h => h.value === savedChart.houseSystem)) {
+              setHouseSystem(savedChart.houseSystem);
+            }
 
             // Calculate elemental balance from chart
             const planets = [
@@ -265,6 +297,78 @@ export default function AstrologyPage() {
 
     loadChartData();
   }, []);
+
+  // Handle house system change - recalculate chart with new system
+  const handleHouseSystemChange = async (newSystem: HouseSystemType) => {
+    if (!chartData || newSystem === houseSystem) return;
+
+    setHouseSystemLoading(true);
+    try {
+      const savedChartJson = localStorage.getItem('birthChartData');
+      if (!savedChartJson) return;
+
+      const savedChart = JSON.parse(savedChartJson);
+      if (!savedChart.date || !savedChart.time || !savedChart.location) {
+        console.error('Missing birth data for recalculation');
+        return;
+      }
+
+      const res = await fetch('/api/astrology/birth-chart', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: savedChart.date,
+          time: savedChart.time,
+          location: savedChart.location,
+          houseSystem: newSystem,
+        }),
+      });
+
+      if (res.ok) {
+        const { data } = await res.json();
+        const fullChart = { ...savedChart, ...data, houseSystem: newSystem };
+        localStorage.setItem('birthChartData', JSON.stringify(fullChart));
+        setChartData(fullChart);
+        setHouseSystem(newSystem);
+      }
+    } catch (error) {
+      console.error('Error changing house system:', error);
+    } finally {
+      setHouseSystemLoading(false);
+    }
+  };
+
+  // Fetch current transit positions
+  const fetchTransits = async () => {
+    setTransitLoading(true);
+    try {
+      const res = await fetch('/api/astrology/current-transits');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data?.positions) {
+          // Transform to our TransitPosition interface
+          const positions = json.data.positions.map((p: { planet: string; sign: string; degree: number; longitude: number }) => ({
+            planet: p.planet,
+            sign: p.sign,
+            degree: p.degree,
+            longitude: p.longitude,
+          }));
+          setTransitPositions(positions);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching transits:', error);
+    } finally {
+      setTransitLoading(false);
+    }
+  };
+
+  // Fetch transits when toggle is enabled
+  useEffect(() => {
+    if (showTransits && transitPositions.length === 0) {
+      fetchTransits();
+    }
+  }, [showTransits, transitPositions.length]);
 
   if (loading) {
     return (
@@ -513,13 +617,64 @@ export default function AstrologyPage() {
             {/* House Wheel */}
             <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl overflow-visible relative" style={{ zIndex: 10 }}>
               <h3 className="text-dune-amber font-semibold mb-4 text-center">House Wheel</h3>
-              <p className="text-dune-spice-sand/50 text-xs mb-4 text-center italic">Click a planet on the wheel for insights</p>
+
+              {/* House System Selector & Transits Toggle */}
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                {/* House System Dropdown */}
+                <div className="flex-1 relative">
+                  <label className="block text-xs text-dune-spice-sand/60 mb-1">House System</label>
+                  <select
+                    value={houseSystem}
+                    onChange={(e) => handleHouseSystemChange(e.target.value as HouseSystemType)}
+                    disabled={houseSystemLoading}
+                    className="w-full bg-black/50 border border-dune-bene-gesserit-gold/30 rounded-lg px-3 py-2 text-sm text-dune-spice-sand appearance-none cursor-pointer hover:border-dune-amber/50 transition-colors disabled:opacity-50"
+                  >
+                    {HOUSE_SYSTEMS.map((sys) => (
+                      <option key={sys.value} value={sys.value}>
+                        {sys.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-7 w-4 h-4 text-dune-spice-sand/40 pointer-events-none" />
+                  {houseSystemLoading && (
+                    <div className="absolute right-8 top-7">
+                      <div className="w-4 h-4 border-2 border-dune-amber/30 border-t-dune-amber rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+
+                {/* Transits Toggle */}
+                <div className="flex items-end">
+                  <button
+                    onClick={() => setShowTransits(!showTransits)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+                      showTransits
+                        ? 'bg-dune-amber/20 border-dune-amber text-dune-amber'
+                        : 'bg-black/30 border-dune-bene-gesserit-gold/30 text-dune-spice-sand/70 hover:border-dune-amber/50'
+                    }`}
+                  >
+                    {transitLoading ? (
+                      <div className="w-4 h-4 border-2 border-dune-amber/30 border-t-dune-amber rounded-full animate-spin" />
+                    ) : (
+                      <span className="text-lg">🌙</span>
+                    )}
+                    <span className="text-sm">Transits</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* House System Description */}
+              <p className="text-dune-spice-sand/50 text-xs mb-4 text-center italic">
+                {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.description || 'Click a planet on the wheel for insights'}
+              </p>
+
               <SacredHouseWheel
                 planets={chartDataToPlanets(chartData)}
                 aspects={(chartData.aspects || [])
                   .filter((a): a is typeof a & { type: 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition' } =>
                     ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
                   )}
+                transits={showTransits ? transitPositions : undefined}
                 isDayMode={false}
                 layoutMode="traditional"
                 showAspects={true}
