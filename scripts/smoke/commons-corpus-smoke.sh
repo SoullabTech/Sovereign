@@ -76,7 +76,7 @@ else
     log "Ingesting Community Commons docs (limited to 5)..."
     # Use awk instead of head to avoid SIGPIPE killing the producer early
     DATABASE_URL="$DATABASE_URL" npx tsx scripts/ingest/commons-corpus.ts --max-docs 5 2>&1 \
-      | awk 'NR<=40{print} {next}'
+      | awk 'NR<=40'
   else
     log "Corpus already has ${EXISTING_DOCS} docs, skipping re-ingestion"
   fi
