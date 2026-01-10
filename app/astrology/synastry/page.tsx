@@ -1,7 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 
 type BirthInput = {
   name?: string;
@@ -62,6 +64,11 @@ export default function SynastryPage() {
   const [b, setB] = useState<BirthInput>({ date: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [memberId, setMemberId] = useState<string>('');
+
+  useEffect(() => {
+    setMemberId(getOrCreateExplorerId());
+  }, []);
 
   const canSubmit = useMemo(() => Boolean(a.date && b.date), [a.date, b.date]);
 
@@ -79,6 +86,7 @@ export default function SynastryPage() {
           persist: true,
           a: { birth: a },
           b: { birth: b },
+          requestedByMemberId: memberId || undefined,
         }),
       });
 
@@ -100,13 +108,21 @@ export default function SynastryPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand px-4 py-8">
       <div className="mx-auto max-w-4xl space-y-6">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold text-white">Synastry</h1>
-          <p className="text-sm text-white/60">
-            Compare two charts and generate a persisted analysis.
-          </p>
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold text-white">Synastry</h1>
+            <p className="text-sm text-white/60">
+              Compare two charts and generate a persisted analysis.
+            </p>
+          </div>
+          <Link
+            href="/astrology/synastry/saved"
+            className="rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs text-white/70 hover:bg-white/10"
+          >
+            Saved
+          </Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">

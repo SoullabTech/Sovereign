@@ -128,6 +128,7 @@ export async function GET(request: NextRequest) {
       analysisId: row.id,
       persistedAt: row.created_at,
       updatedAt: row.updated_at,
+      savedAt: row.saved_at, // null if not saved to timeline
     });
 
   } catch (error) {

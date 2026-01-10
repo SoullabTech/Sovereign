@@ -16,6 +16,7 @@ export interface SynastryAnalysisRow {
   result: unknown; // stored JSON payload
   created_at: string;
   updated_at: string;
+  saved_at: string | null; // When user saved to timeline (NULL = not saved)
 }
 
 export interface CreateSynastryAnalysisInput {
@@ -122,6 +123,53 @@ export async function listRecentSynastryAnalyses(
     LIMIT $1 OFFSET $2
     `,
     [limit, offset]
+  );
+
+  return res.rows;
+}
+
+/**
+ * Toggle saved_at for a synastry analysis (Save to Timeline)
+ */
+export async function setSynastryAnalysisSaved(
+  analysisId: string,
+  requestedByMemberId: string,
+  saved: boolean
+): Promise<{ id: string; saved_at: string | null } | null> {
+  const res = await query<{ id: string; saved_at: string | null }>(
+    `
+    UPDATE synastry_analyses
+    SET saved_at = CASE WHEN $3 THEN NOW() ELSE NULL END,
+        updated_at = NOW()
+    WHERE id = $1::uuid
+      AND requested_by_member_id = $2
+    RETURNING id, saved_at
+    `,
+    [analysisId, requestedByMemberId, saved]
+  );
+
+  return res.rows[0] ?? null;
+}
+
+/**
+ * List saved synastry analyses for a member
+ */
+export async function listSavedSynastryAnalyses(
+  memberId: string,
+  options?: { limit?: number; offset?: number }
+): Promise<SynastryAnalysisRow[]> {
+  const limit = options?.limit ?? 20;
+  const offset = options?.offset ?? 0;
+
+  const res = await query<SynastryAnalysisRow>(
+    `
+    SELECT * FROM synastry_analyses
+    WHERE requested_by_member_id = $1
+      AND saved_at IS NOT NULL
+    ORDER BY saved_at DESC
+    LIMIT $2 OFFSET $3
+    `,
+    [memberId, limit, offset]
   );
 
   return res.rows;

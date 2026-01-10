@@ -1,4 +1,5 @@
 import { SynastryGrid, type SynastryCell } from '@/components/astrology/SynastryGrid';
+import { SynastryActions } from '@/components/astrology/SynastryActions';
 
 type SynastryAspect = {
   aBody: string;
@@ -13,6 +14,7 @@ type SynastryResult = {
   analysisId: string;
   persistedAt?: string;
   updatedAt?: string;
+  savedAt?: string | null;
   synastry?: {
     aspects: SynastryAspect[];
     highlights: SynastryAspect[];
@@ -65,14 +67,20 @@ export default async function SynastryAnalysisPage({
   const scores = data.synastry?.scores;
 
   return (
-    <main className="min-h-screen px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand px-4 py-8">
       <div className="mx-auto max-w-6xl space-y-6">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-white">Synastry</h1>
-          <div className="text-xs text-white/50">
-            Analysis: {data.analysisId}
-            {data.updatedAt ? ` · Updated: ${new Date(data.updatedAt).toLocaleString()}` : ''}
+        <div className="flex items-start justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold text-white">Synastry</h1>
+            <div className="text-xs text-white/50">
+              Analysis: {data.analysisId}
+              {data.updatedAt ? ` · Updated: ${new Date(data.updatedAt).toLocaleString()}` : ''}
+            </div>
           </div>
+          <SynastryActions
+            analysisId={data.analysisId}
+            initialSavedAt={data.savedAt ?? null}
+          />
         </div>
 
         {/* Chart summaries */}
