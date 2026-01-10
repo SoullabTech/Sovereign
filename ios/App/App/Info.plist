@@ -22,6 +22,10 @@
 	<string>80</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>MAIA uses your camera to capture handwritten journal pages for text extraction.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MAIA accesses your photo library to import handwritten journal pages.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>MAIA needs microphone access to hear your voice during conversations.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
