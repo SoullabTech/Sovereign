@@ -66,6 +66,8 @@ export default function RLMPage() {
   const [openErr, setOpenErr] = useState<string | null>(null);
   const [openLoading, setOpenLoading] = useState(false);
   const [openRange, setOpenRange] = useState<{ startLine: number; endLine: number } | null>(null);
+  const [openOriginalRange, setOpenOriginalRange] = useState<{ startLine: number; endLine: number } | null>(null);
+  const [openPad, setOpenPad] = useState<0 | 10 | 20 | 40>(10);
 
   // Persistent focus state (survives across manual searches)
   type RLMFocus = { path: string; content: string };
@@ -189,19 +191,32 @@ export default function RLMPage() {
     }
   }
 
-  async function openFile(p: string, range?: { startLine: number; endLine: number }) {
+  async function openFile(
+    p: string,
+    range?: { startLine: number; endLine: number },
+    pad: 0 | 10 | 20 | 40 = openPad
+  ) {
     setOpenErr(null);
     setOpenPath(p);
     setOpenContent(null);
     setOpenTruncated(false);
     setOpenLoading(true);
-    setOpenRange(range ?? null);
+    setOpenOriginalRange(range ?? null);
+
+    // Apply padding to range
+    const paddedRange = range
+      ? {
+          startLine: Math.max(1, range.startLine - pad),
+          endLine: range.endLine + pad,
+        }
+      : null;
+    setOpenRange(paddedRange);
 
     try {
       const body: { path: string; startLine?: number; endLine?: number } = { path: p };
-      if (range?.startLine && range?.endLine) {
-        body.startLine = range.startLine;
-        body.endLine = range.endLine;
+      if (paddedRange) {
+        body.startLine = paddedRange.startLine;
+        body.endLine = paddedRange.endLine;
       }
 
       const r = await fetch('/api/rlm/open', {
@@ -575,17 +590,43 @@ export default function RLMPage() {
               {openRange && (
                 <span className="ml-2 text-white/40">
                   Lines {openRange.startLine}–{openRange.endLine}
+                  {openPad > 0 && openOriginalRange && ` (+${openPad})`}
                 </span>
               )}
             </div>
 
             <div className="flex items-center gap-2">
-              {openRange && (
+              {/* Radius selector - only show when we have original range */}
+              {openOriginalRange && (
+                <div className="flex items-center gap-1 text-xs">
+                  <span className="text-white/40">±</span>
+                  {([0, 10, 20, 40] as const).map((r) => (
+                    <button
+                      key={r}
+                      onClick={() => {
+                        setOpenPad(r);
+                        if (openPath && openOriginalRange) {
+                          openFile(openPath, openOriginalRange, r);
+                        }
+                      }}
+                      className={`px-1.5 py-0.5 rounded border ${
+                        openPad === r
+                          ? 'border-amber-500/40 bg-amber-500/20 text-amber-200'
+                          : 'border-white/10 bg-white/5 text-white/50 hover:bg-white/10'
+                      }`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {openOriginalRange && (
                 <button
-                  onClick={() => openPath && openFile(openPath)}
+                  onClick={() => openPath && openFile(openPath, undefined, 0)}
                   className="text-xs rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-white/70 hover:bg-white/10"
                 >
-                  Open full
+                  Full
                 </button>
               )}
 
