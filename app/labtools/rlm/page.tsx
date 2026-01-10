@@ -41,15 +41,29 @@ export default function RLMPage() {
 
   const canRun = useMemo(() => query.trim().length >= 2, [query]);
 
-  async function run() {
+  async function run(opts?: { focus?: { path: string; content: string } }) {
     setLoading(true);
     setRes(null);
 
     try {
+      const payload: {
+        query: string;
+        limit: number;
+        includeSnippets: boolean;
+        focus?: { path: string; content: string };
+      } = { query, limit: 5, includeSnippets: true };
+
+      if (opts?.focus?.path && opts?.focus?.content) {
+        payload.focus = {
+          path: opts.focus.path,
+          content: opts.focus.content,
+        };
+      }
+
       const r = await fetch('/api/rlm/navigate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, limit: 5, includeSnippets: true }),
+        body: JSON.stringify(payload),
       });
       const data = (await r.json()) as RLMResponse;
       setRes(data);
@@ -119,7 +133,7 @@ export default function RLMPage() {
           />
           <div className="flex items-center gap-3">
             <button
-              onClick={run}
+              onClick={() => run()}
               disabled={!canRun || loading}
               className="rounded-xl bg-white/10 hover:bg-white/15 border border-white/15 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
@@ -216,10 +230,38 @@ export default function RLMPage() {
           </div>
         )}
 
-        {/* File Viewer */}
+        {/* File Viewer with Context Actions */}
         {openErr && (
           <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-sm text-red-200">
             {openErr}
+          </div>
+        )}
+
+        {openPath && (
+          <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/30 px-3 py-2">
+            <div className="text-xs text-white/60 font-mono truncate">
+              {openPath}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                disabled={!openContent || openLoading || loading}
+                onClick={() => {
+                  if (!openPath || !openContent) return;
+                  run({ focus: { path: openPath, content: openContent } });
+                }}
+                className="text-xs rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-2 py-1 text-emerald-200/90 hover:bg-emerald-500/20 disabled:opacity-50"
+              >
+                Use as context
+              </button>
+
+              <button
+                onClick={closeViewer}
+                className="text-xs rounded-lg border border-white/15 bg-white/5 px-2 py-1 text-white/70 hover:bg-white/10"
+              >
+                Close
+              </button>
+            </div>
           </div>
         )}
 

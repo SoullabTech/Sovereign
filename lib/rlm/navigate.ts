@@ -14,6 +14,10 @@ export type RLMNavigateRequest = {
   query: string;
   limit?: number; // default 5
   includeSnippets?: boolean; // default true
+  focus?: {
+    path: string;
+    content: string; // from /api/rlm/open (already allowlisted + size-capped)
+  };
 };
 
 export type RLMFileHit = {
@@ -255,8 +259,21 @@ export async function navigateCodebase(
   const query = (req.query ?? '').trim();
   const limit = Math.max(1, Math.min(req.limit ?? 5, 12));
   const includeSnippets = req.includeSnippets ?? true;
+  const focus = req.focus;
 
-  const qTokens = tokenizeQuery(query);
+  // Build effective query tokens (include focus content tokens if present)
+  let qTokens = tokenizeQuery(query);
+
+  // Focus context: extract additional tokens from focus content
+  let focusDir: string | null = null;
+  if (focus?.path && focus?.content) {
+    focusDir = path.dirname(focus.path);
+    // Extract tokens from focus content (capped for safety)
+    const focusText = String(focus.content).slice(0, 12_000);
+    const focusTokens = extractTokensFromSource(focusText);
+    // Add top focus tokens to query tokens (don't overwhelm)
+    qTokens = [...qTokens, ...focusTokens.slice(0, 8)];
+  }
 
   const rootAbs = process.cwd();
   const now = Date.now();
@@ -270,7 +287,23 @@ export async function navigateCodebase(
 
   const scored = index
     .map((f) => {
-      const { score, why } = scoreFile(qTokens, f);
+      let { score, why } = scoreFile(qTokens, f);
+
+      // Focus boost: files in same directory get magnetized
+      if (focusDir) {
+        const fileDir = path.dirname(f.file);
+        if (fileDir === focusDir) {
+          score += 15;
+          why = [...why, 'same dir as focus'];
+        } else if (f.file.startsWith(focusDir + '/')) {
+          score += 8;
+          why = [...why, 'child of focus dir'];
+        } else if (focusDir.startsWith(path.dirname(fileDir) + '/')) {
+          score += 5;
+          why = [...why, 'sibling dir'];
+        }
+      }
+
       return { f, score, why };
     })
     .filter((x) => x.score > 0)
