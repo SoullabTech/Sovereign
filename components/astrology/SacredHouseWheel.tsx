@@ -92,23 +92,22 @@ interface SacredHouseWheelProps {
   transitAspects?: TransitAspect[];
 }
 
-// Spiralogic Spiral Order - House 1 at 9 o'clock (ASC/horizon line)
-// Counter-clockwise rotated 1/12 from previous layout
-// Clockwise from 12:00: Water → Earth → Air → Fire
-// Elemental quadrants maintained
+// Spiralogic Spiral Order - House 1 at 12 o'clock (top of wheel)
+// Clockwise from 12:00: Fire → Water → Earth → Air
+// Elemental quadrants: Fire (12-3), Water (3-6), Earth (6-9), Air (9-12)
 const spiralogicOrder = [
-  4,   // Position 0 (12:00) - Water 1 - Home/Roots (Heart)
-  8,   // Position 1 (1:00) - Water 2 - Transformation/Intimacy (Healing)
-  12,  // Position 2 (2:00) - Water 3 - Spirituality/Dissolution (Holiness)
-  10,  // Position 3 (3:00) - Earth 1 - Career/Legacy (Mission)
-  2,   // Position 4 (4:00) - Earth 2 - Resources/Values (Means)
-  6,   // Position 5 (5:00) - Earth 3 - Service/Health (Medicine)
-  7,   // Position 6 (6:00) - Air 1 - Relationships/Other (Connection)
-  11,  // Position 7 (7:00) - Air 2 - Community/Vision (Community)
-  3,   // Position 8 (8:00) - Air 3 - Communication/Learning (Consciousness)
-  1,   // Position 9 (9:00) - Fire 1 - Identity/Self (Experience) ← HORIZON
-  5,   // Position 10 (10:00) - Fire 2 - Creativity/Joy (Expression)
-  9,   // Position 11 (11:00) - Fire 3 - Philosophy/Expansion
+  1,   // Position 0 (12:00) - Fire 1 - Identity/Self (Experience)
+  5,   // Position 1 (1:00) - Fire 2 - Creativity/Joy (Expression)
+  9,   // Position 2 (2:00) - Fire 3 - Philosophy/Expansion
+  4,   // Position 3 (3:00) - Water 1 - Home/Roots (Heart)
+  8,   // Position 4 (4:00) - Water 2 - Transformation/Intimacy (Healing)
+  12,  // Position 5 (5:00) - Water 3 - Spirituality/Dissolution (Holiness)
+  10,  // Position 6 (6:00) - Earth 1 - Career/Legacy (Mission)
+  2,   // Position 7 (7:00) - Earth 2 - Resources/Values (Means)
+  6,   // Position 8 (8:00) - Earth 3 - Service/Health (Medicine)
+  7,   // Position 9 (9:00) - Air 1 - Relationships/Other (Connection)
+  11,  // Position 10 (10:00) - Air 2 - Community/Vision (Community)
+  3,   // Position 11 (11:00) - Air 3 - Communication/Learning (Consciousness)
 ];
 
 // Traditional Western Chart Order - Counterclockwise from Ascendant (9 o'clock)
