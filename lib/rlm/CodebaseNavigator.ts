@@ -182,14 +182,16 @@ function sourceRefsFromPayload(sources?: SourceRef[]): RLMSourceRef[] {
   if (!sources || !Array.isArray(sources)) return [];
   const refs: RLMSourceRef[] = [];
   for (const s of sources) {
-    const start = asLine((s as Record<string, unknown>).lineStart ?? (s as Record<string, unknown>).startLine, 1);
-    const end = asLine((s as Record<string, unknown>).lineEnd ?? (s as Record<string, unknown>).endLine, start);
+    // Cast to unknown first for safe property access (SourceRef may have extra fields)
+    const rec = s as unknown as Record<string, unknown>;
+    const start = asLine(rec.lineStart ?? rec.startLine, 1);
+    const end = asLine(rec.lineEnd ?? rec.endLine, start);
     if (!s.path) continue;
     refs.push({
       path: s.path,
       startLine: start,
       endLine: Math.max(start, end),
-      excerpt: (s as Record<string, unknown>).excerpt as string | undefined,
+      excerpt: rec.excerpt as string | undefined,
     });
   }
   return uniqSourceRefs(refs);
