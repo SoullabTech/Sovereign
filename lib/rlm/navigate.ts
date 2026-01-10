@@ -41,6 +41,7 @@ export type RLMNavigateResponse = {
   // Proof objects (sovereignty-grade audit trails)
   sourceRefs?: RLMSourceRef[];
   usage?: RLMUsage;
+  warnings?: string[];
 };
 
 type IndexedFile = {
@@ -292,13 +293,15 @@ export async function navigateCodebase(
       // Focus boost: files in same directory get magnetized
       if (focusDir) {
         const fileDir = path.dirname(f.file);
+        const focusParent = path.dirname(focusDir);
+
         if (fileDir === focusDir) {
           score += 15;
           why = [...why, 'same dir as focus'];
         } else if (f.file.startsWith(focusDir + '/')) {
           score += 8;
           why = [...why, 'child of focus dir'];
-        } else if (focusDir.startsWith(path.dirname(fileDir) + '/')) {
+        } else if (focusParent && path.dirname(fileDir) === focusParent) {
           score += 5;
           why = [...why, 'sibling dir'];
         }
@@ -328,27 +331,37 @@ export async function navigateCodebase(
     `rg -n "${qTokens.join('|')}" app lib components`,
   ].slice(0, 5);
 
-  const confidence = Math.max(
-    0,
-    Math.min(
-      1,
-      nextFiles.length === 0 ? 0.1 : Math.min(0.95, nextFiles[0].score / 60)
-    )
-  );
+  const warnings: string[] = [];
+
+  // Enforce contract: confidence > 0.1 requires at least one sourceRef
+  // If no hits, clamp confidence to 0.1 max
+  const rawConfidence = nextFiles.length === 0
+    ? 0.1
+    : Math.min(0.95, nextFiles[0].score / 60);
+  const confidence = Math.max(0, Math.min(1, rawConfidence));
 
   // Build sourceRefs from nextFiles (proof anchor)
-  // If confidence > 0.4, guarantee at least one sourceRef
-  const sourceRefs: RLMSourceRef[] = nextFiles.slice(0, 5).map((hit) => ({
-    path: hit.file,
-    startLine: 1,
-    endLine: 1, // Coarse ref - bloodhound doesn't track lines
-  }));
+  // Contract: if confidence > 0.1, at least one sourceRef exists
+  const sourceRefs: RLMSourceRef[] | undefined =
+    nextFiles.length > 0
+      ? nextFiles.slice(0, 5).map((hit) => ({
+          path: hit.file,
+          startLine: 1,
+          endLine: 1, // Coarse ref - bloodhound doesn't track lines
+        }))
+      : undefined;
+
+  if (confidence > 0.1 && !sourceRefs?.length) {
+    warnings.push('confidence_without_proof_anchor');
+  }
 
   // Bloodhound doesn't use budget (pure local indexing)
+  // Usage zeros are explicit "not applicable" - not "no calls made"
   const usage: RLMUsage = {
     budgets: { search: 0, read: 0, list: 0 },
     used: { search: 0, read: 0, list: 0 },
   };
+  warnings.push('usage_not_applicable_bloodhound');
 
   return {
     success: true,
@@ -361,7 +374,8 @@ export async function navigateCodebase(
       searchedFiles: index.length,
       ms: Date.now() - t0,
     },
-    sourceRefs: sourceRefs.length > 0 ? sourceRefs : undefined,
+    sourceRefs,
     usage,
+    warnings: warnings.length > 0 ? warnings : undefined,
   };
 }
