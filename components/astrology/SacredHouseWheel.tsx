@@ -1964,6 +1964,12 @@ export function SacredHouseWheel({
                 {planet.name === 'Chiron' && '⚷'}
                 {planet.name === 'North Node' && '☊'}
                 {planet.name === 'South Node' && '☋'}
+                {/* Asteroids - Feminine Archetypes */}
+                {planet.name === 'Lilith' && '⚸'}
+                {planet.name === 'Ceres' && '⚳'}
+                {planet.name === 'Pallas' && '⚴'}
+                {planet.name === 'Juno' && '⚵'}
+                {planet.name === 'Vesta' && '⚶'}
               </motion.text>
             </g>
           );
@@ -2100,6 +2106,14 @@ export function SacredHouseWheel({
                     {transit.planet === 'Uranus' && '♅'}
                     {transit.planet === 'Neptune' && '♆'}
                     {transit.planet === 'Pluto' && '♇'}
+                    {transit.planet === 'Chiron' && '⚷'}
+                    {transit.planet === 'North Node' && '☊'}
+                    {/* Asteroids - if included in transit data */}
+                    {transit.planet === 'Lilith' && '⚸'}
+                    {transit.planet === 'Ceres' && '⚳'}
+                    {transit.planet === 'Pallas' && '⚴'}
+                    {transit.planet === 'Juno' && '⚵'}
+                    {transit.planet === 'Vesta' && '⚶'}
                   </motion.text>
                 </g>
               );
@@ -2446,6 +2460,12 @@ export function SacredHouseWheel({
                             {activePlanet.name === 'Chiron' && '⚷'}
                             {activePlanet.name === 'North Node' && '☊'}
                             {activePlanet.name === 'South Node' && '☋'}
+                            {/* Asteroids - Feminine Archetypes */}
+                            {activePlanet.name === 'Lilith' && '⚸'}
+                            {activePlanet.name === 'Ceres' && '⚳'}
+                            {activePlanet.name === 'Pallas' && '⚴'}
+                            {activePlanet.name === 'Juno' && '⚵'}
+                            {activePlanet.name === 'Vesta' && '⚶'}
                           </div>
                           <div>
                             <h3 className={`text-lg font-semibold ${isDayMode ? 'text-stone-900' : 'text-stone-200'}`}>

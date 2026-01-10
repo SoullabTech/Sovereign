@@ -42,6 +42,12 @@ interface BirthChartData {
   chiron?: { sign: string; degree: number; house: number };
   northNode?: { sign: string; degree: number; house: number };
   southNode?: { sign: string; degree: number; house: number };
+  // Asteroids - Feminine Archetypes
+  lilith?: { sign: string; degree: number; house: number };
+  ceres?: { sign: string; degree: number; house: number };
+  pallas?: { sign: string; degree: number; house: number };
+  juno?: { sign: string; degree: number; house: number };
+  vesta?: { sign: string; degree: number; house: number };
   ascendant: { sign: string; degree: number };
   midheaven?: { sign: string; degree: number };
   houses?: number[]; // Array of 12 house cusp degrees
@@ -770,6 +776,12 @@ export default function AstrologyPage() {
                         ...(chartData.chiron ? [{ name: 'Chiron', sign: chartData.chiron.sign, house: chartData.chiron.house, degree: chartData.chiron.degree }] : []),
                         ...(chartData.northNode ? [{ name: 'North Node', sign: chartData.northNode.sign, house: chartData.northNode.house, degree: chartData.northNode.degree }] : []),
                         ...(chartData.southNode ? [{ name: 'South Node', sign: chartData.southNode.sign, house: chartData.southNode.house, degree: chartData.southNode.degree }] : []),
+                        // Asteroids - Feminine Archetypes
+                        ...(chartData.lilith ? [{ name: 'Lilith', sign: chartData.lilith.sign, house: chartData.lilith.house, degree: chartData.lilith.degree }] : []),
+                        ...(chartData.ceres ? [{ name: 'Ceres', sign: chartData.ceres.sign, house: chartData.ceres.house, degree: chartData.ceres.degree }] : []),
+                        ...(chartData.pallas ? [{ name: 'Pallas', sign: chartData.pallas.sign, house: chartData.pallas.house, degree: chartData.pallas.degree }] : []),
+                        ...(chartData.juno ? [{ name: 'Juno', sign: chartData.juno.sign, house: chartData.juno.house, degree: chartData.juno.degree }] : []),
+                        ...(chartData.vesta ? [{ name: 'Vesta', sign: chartData.vesta.sign, house: chartData.vesta.house, degree: chartData.vesta.degree }] : []),
                       ]}
                       aspects={chartData.aspects}
                       isDayMode={isDayMode}

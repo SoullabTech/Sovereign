@@ -338,6 +338,32 @@ export const PLANETARY_ARCHETYPES: Record<string, {
     archetype: 'The Wounded Healer',
     description: 'Core wounds that become sources of healing wisdom',
   },
+  // Asteroids - Feminine Archetypes
+  lilith: {
+    name: 'Lilith',
+    archetype: 'The Dark Feminine & Primal Power',
+    description: 'Raw instinct, untamed sexuality, and the reclamation of rejected power',
+  },
+  ceres: {
+    name: 'Ceres',
+    archetype: 'The Great Mother & Nurturer',
+    description: 'Nurturing patterns, grief cycles, and the mother-child bond',
+  },
+  pallas: {
+    name: 'Pallas',
+    archetype: 'The Strategist & Wisdom Keeper',
+    description: 'Creative intelligence, pattern recognition, and warrior wisdom',
+  },
+  juno: {
+    name: 'Juno',
+    archetype: 'The Sacred Partner & Commitment Keeper',
+    description: 'Partnership dynamics, sacred union, and relational soul contracts',
+  },
+  vesta: {
+    name: 'Vesta',
+    archetype: 'The Sacred Flame & Devoted One',
+    description: 'Inner flame, sacred work, devotion, and spiritual focus',
+  },
 };
 
 /**

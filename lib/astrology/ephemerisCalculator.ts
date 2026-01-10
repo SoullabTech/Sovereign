@@ -48,6 +48,12 @@ export interface BirthChart {
   chiron: PlanetPosition;
   northNode: PlanetPosition;
   southNode: PlanetPosition;
+  // Asteroids - Feminine Archetypes
+  lilith: PlanetPosition;   // Black Moon Lilith - Primal Feminine
+  ceres: PlanetPosition;    // Nurturing, Grief, Motherhood
+  pallas: PlanetPosition;   // Wisdom, Strategy, Creative Intelligence
+  juno: PlanetPosition;     // Partnership, Commitment, Sacred Union
+  vesta: PlanetPosition;    // Devotion, Sacred Work, Inner Flame
   ascendant: { sign: string; degree: number };
   midheaven: { sign: string; degree: number };
   houses: number[]; // 12 house cusps in degrees
@@ -362,6 +368,119 @@ function calculateChironApprox(date: Date): number {
   return ((longitude % 360) + 360) % 360;
 }
 
+/**
+ * Calculate Mean Black Moon Lilith (Mean Lunar Apogee)
+ * Lilith represents the lunar apogee - the point where the Moon is farthest from Earth
+ * The mean apogee precesses with a period of about 8.85 years
+ */
+function calculateMeanLilith(date: Date): number {
+  // Reference: Mean Lilith was at 0° Aries on Jan 1, 2000 (J2000.0)
+  const j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+  const currentDate = date.getTime();
+
+  // Days since J2000
+  const daysSince = (currentDate - j2000) / (1000 * 60 * 60 * 24);
+
+  // Mean Lilith at J2000.0 epoch: approximately 83.353° (23° Gemini)
+  const lilithAtEpoch = 83.353;
+
+  // Mean motion: ~0.111404° per day (completes circle in ~8.85 years = 3231.5 days)
+  const meanMotion = 360 / 3231.5;
+
+  const longitude = (lilithAtEpoch + (daysSince * meanMotion)) % 360;
+
+  return ((longitude % 360) + 360) % 360;
+}
+
+/**
+ * Calculate approximate Ceres position
+ * Ceres is the largest object in the asteroid belt
+ * Orbital period: ~4.6 years
+ */
+function calculateCeresApprox(date: Date): number {
+  // Reference: Ceres was at 0° Aries on Jan 1, 2000
+  const j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+  const currentDate = date.getTime();
+
+  const daysSince = (currentDate - j2000) / (1000 * 60 * 60 * 24);
+
+  // Ceres at J2000.0: approximately 168.8° (18° Virgo)
+  const ceresAtEpoch = 168.8;
+
+  // Mean motion: ~0.214° per day (4.6 year period = 1680 days)
+  const meanMotion = 360 / 1680;
+
+  const longitude = (ceresAtEpoch + (daysSince * meanMotion)) % 360;
+
+  return ((longitude % 360) + 360) % 360;
+}
+
+/**
+ * Calculate approximate Pallas position
+ * Pallas is the third largest asteroid
+ * Orbital period: ~4.62 years
+ */
+function calculatePallasApprox(date: Date): number {
+  const j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+  const currentDate = date.getTime();
+
+  const daysSince = (currentDate - j2000) / (1000 * 60 * 60 * 24);
+
+  // Pallas at J2000.0: approximately 252.8° (12° Sagittarius)
+  const pallasAtEpoch = 252.8;
+
+  // Mean motion: ~0.213° per day (4.62 year period = 1687 days)
+  const meanMotion = 360 / 1687;
+
+  const longitude = (pallasAtEpoch + (daysSince * meanMotion)) % 360;
+
+  return ((longitude % 360) + 360) % 360;
+}
+
+/**
+ * Calculate approximate Juno position
+ * Juno is one of the larger asteroids
+ * Orbital period: ~4.36 years
+ */
+function calculateJunoApprox(date: Date): number {
+  const j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+  const currentDate = date.getTime();
+
+  const daysSince = (currentDate - j2000) / (1000 * 60 * 60 * 24);
+
+  // Juno at J2000.0: approximately 196.4° (16° Libra)
+  const junoAtEpoch = 196.4;
+
+  // Mean motion: ~0.226° per day (4.36 year period = 1593 days)
+  const meanMotion = 360 / 1593;
+
+  const longitude = (junoAtEpoch + (daysSince * meanMotion)) % 360;
+
+  return ((longitude % 360) + 360) % 360;
+}
+
+/**
+ * Calculate approximate Vesta position
+ * Vesta is the second largest asteroid
+ * Orbital period: ~3.63 years
+ */
+function calculateVestaApprox(date: Date): number {
+  const j2000 = new Date('2000-01-01T12:00:00Z').getTime();
+  const currentDate = date.getTime();
+
+  const daysSince = (currentDate - j2000) / (1000 * 60 * 60 * 24);
+
+  // Vesta at J2000.0: approximately 288.5° (18° Capricorn)
+  const vestaAtEpoch = 288.5;
+
+  // Mean motion: ~0.271° per day (3.63 year period = 1326 days)
+  const meanMotion = 360 / 1326;
+
+  const longitude = (vestaAtEpoch + (daysSince * meanMotion)) % 360;
+
+  return ((longitude % 360) + 360) % 360;
+}
+
 // Calculate aspects between planets
 function calculateAspects(planets: Record<string, number>): Aspect[] {
   const aspects: Aspect[] = [];
@@ -573,6 +692,27 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
     const chironLon = calculateChironApprox(birthDate);
     planetLongitudes.Chiron = chironLon;
 
+    // Asteroids - Feminine Archetypes
+    // Black Moon Lilith (Mean Lunar Apogee)
+    const lilithLon = calculateMeanLilith(birthDate);
+    planetLongitudes.Lilith = lilithLon;
+
+    // Ceres - Nurturing, Grief, Motherhood
+    const ceresLon = calculateCeresApprox(birthDate);
+    planetLongitudes.Ceres = ceresLon;
+
+    // Pallas - Wisdom, Strategy, Creative Intelligence
+    const pallasLon = calculatePallasApprox(birthDate);
+    planetLongitudes.Pallas = pallasLon;
+
+    // Juno - Partnership, Commitment, Sacred Union
+    const junoLon = calculateJunoApprox(birthDate);
+    planetLongitudes.Juno = junoLon;
+
+    // Vesta - Devotion, Sacred Work, Inner Flame
+    const vestaLon = calculateVestaApprox(birthDate);
+    planetLongitudes.Vesta = vestaLon;
+
     // DEBUG: Log all calculated longitudes for comparison
     console.log('\n=== CALCULATED PLANETARY LONGITUDES ===');
     Object.entries(planetLongitudes).forEach(([planet, lon]) => {
@@ -661,6 +801,37 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
       retrograde: false // Simplified - would need velocity calculation
     };
 
+    // Asteroids - Feminine Archetypes
+    const lilith = {
+      ...longitudeToZodiac(planetLongitudes.Lilith),
+      house: calculateHouse(planetLongitudes.Lilith, houseCusps),
+      retrograde: false // Lilith always moves direct
+    };
+
+    const ceres = {
+      ...longitudeToZodiac(planetLongitudes.Ceres),
+      house: calculateHouse(planetLongitudes.Ceres, houseCusps),
+      retrograde: false // Simplified
+    };
+
+    const pallas = {
+      ...longitudeToZodiac(planetLongitudes.Pallas),
+      house: calculateHouse(planetLongitudes.Pallas, houseCusps),
+      retrograde: false // Simplified
+    };
+
+    const juno = {
+      ...longitudeToZodiac(planetLongitudes.Juno),
+      house: calculateHouse(planetLongitudes.Juno, houseCusps),
+      retrograde: false // Simplified
+    };
+
+    const vesta = {
+      ...longitudeToZodiac(planetLongitudes.Vesta),
+      house: calculateHouse(planetLongitudes.Vesta, houseCusps),
+      retrograde: false // Simplified
+    };
+
     // Calculate Ascendant and Midheaven
     const ascendant = longitudeToZodiac(houseCusps[0]);
     const midheaven = longitudeToZodiac(houseCusps[9]); // 10th house cusp
@@ -682,6 +853,11 @@ export async function calculateBirthChart(birthData: BirthData): Promise<BirthCh
       chiron,
       northNode,
       southNode,
+      lilith,
+      ceres,
+      pallas,
+      juno,
+      vesta,
       ascendant,
       midheaven,
       houses: houseCusps,
