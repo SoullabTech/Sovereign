@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 function escapeRegExp(s: string) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -29,6 +31,19 @@ export function RlmFileViewer(props: {
 
   const lines = (content ?? '').split('\n');
 
+  const [copiedLine, setCopiedLine] = useState<number | null>(null);
+
+  async function copyLineRef(lineNo: number, lineText: string, withText: boolean) {
+    if (!filePath) return;
+
+    const ref = `${filePath}:${lineNo}`;
+    const payload = withText ? `${ref}\n${lineText}` : ref;
+
+    await navigator.clipboard.writeText(payload);
+    setCopiedLine(lineNo);
+    window.setTimeout(() => setCopiedLine(null), 900);
+  }
+
   return (
     <div className="rounded-2xl border border-white/10 bg-black/30">
       <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
@@ -49,9 +64,16 @@ export function RlmFileViewer(props: {
 
               return (
                 <div key={i} className="flex gap-3">
-                  <span className="w-10 shrink-0 text-right text-white/30 select-none">
-                    {n}
-                  </span>
+                  <button
+                    type="button"
+                    title="Copy path:line (Shift-click copies line text too)"
+                    onClick={(e) => {
+                      void copyLineRef(n, line, e.shiftKey);
+                    }}
+                    className="w-10 shrink-0 text-right text-white/30 select-none hover:text-white/70 cursor-copy"
+                  >
+                    {copiedLine === n ? '✓' : n}
+                  </button>
                   <span className="min-w-0">
                     {parts.map((p, j) => {
                       const isHit = re ? re.test(p) : false;
