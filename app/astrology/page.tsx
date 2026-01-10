@@ -15,16 +15,41 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 
+interface PlanetPosition {
+  sign: string;
+  degree: number;
+  house: number;
+  retrograde?: boolean;
+}
+
 interface BirthChartData {
-  sun: { sign: string; degree: number; house: number };
-  moon: { sign: string; degree: number; house: number };
+  sun: PlanetPosition;
+  moon: PlanetPosition;
+  mercury?: PlanetPosition;
+  venus?: PlanetPosition;
+  mars?: PlanetPosition;
+  jupiter?: PlanetPosition;
+  saturn?: PlanetPosition;
+  uranus?: PlanetPosition;
+  neptune?: PlanetPosition;
+  pluto?: PlanetPosition;
+  chiron?: PlanetPosition;
+  northNode?: PlanetPosition;
+  southNode?: PlanetPosition;
+  lilith?: PlanetPosition;
+  ceres?: PlanetPosition;
+  pallas?: PlanetPosition;
+  juno?: PlanetPosition;
+  vesta?: PlanetPosition;
   ascendant: { sign: string; degree: number };
+  midheaven?: { sign: string; degree: number };
   aspects: Array<{
     planet1: string;
     planet2: string;
@@ -42,8 +67,10 @@ interface SavedSynastryItem {
 }
 
 export default function AstrologyPage() {
+  const router = useRouter();
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [hasBirthData, setHasBirthData] = useState(false);
   const [elementalBalance, setElementalBalance] = useState({
     fire: 0.28,
     water: 0.38,
@@ -100,21 +127,90 @@ export default function AstrologyPage() {
     return () => { isMounted = false; };
   }, []);
 
+  // Load birth chart data from localStorage or redirect to /journey
   useEffect(() => {
-    // TODO: Fetch real birth chart from API
-    // For now, use archetypal example data
-    setChartData({
-      sun: { sign: 'Sagittarius', degree: 17.23, house: 4 },
-      moon: { sign: 'Pisces', degree: 23.45, house: 7 },
-      ascendant: { sign: 'Leo', degree: 28.12 },
-      aspects: [
-        { planet1: 'Sun', planet2: 'Saturn', type: 'square', orb: 5.89 },
-        { planet1: 'Moon', planet2: 'Saturn', type: 'conjunction', orb: 0.33 },
-        { planet1: 'Sun', planet2: 'Jupiter', type: 'quincunx', orb: 9.2 },
-        { planet1: 'Moon', planet2: 'Neptune', type: 'trine', orb: 0.56 },
-      ],
-    });
-    setLoading(false);
+    const loadChartData = async () => {
+      try {
+        // Check localStorage for existing chart data
+        const savedChartJson = localStorage.getItem('birthChartData');
+
+        if (savedChartJson) {
+          const savedChart = JSON.parse(savedChartJson);
+
+          // If we have calculated chart data (with planets), use it directly
+          if (savedChart.sun && savedChart.moon && savedChart.ascendant) {
+            setChartData(savedChart);
+            setHasBirthData(true);
+
+            // Calculate elemental balance from chart
+            const planets = [
+              savedChart.sun, savedChart.moon, savedChart.mercury, savedChart.venus,
+              savedChart.mars, savedChart.jupiter, savedChart.saturn
+            ].filter(Boolean);
+
+            const elementCounts = { fire: 0, water: 0, earth: 0, air: 0 };
+            const fireSign = ['Aries', 'Leo', 'Sagittarius'];
+            const waterSigns = ['Cancer', 'Scorpio', 'Pisces'];
+            const earthSigns = ['Taurus', 'Virgo', 'Capricorn'];
+            const airSigns = ['Gemini', 'Libra', 'Aquarius'];
+
+            planets.forEach(p => {
+              if (fireSign.includes(p.sign)) elementCounts.fire++;
+              else if (waterSigns.includes(p.sign)) elementCounts.water++;
+              else if (earthSigns.includes(p.sign)) elementCounts.earth++;
+              else if (airSigns.includes(p.sign)) elementCounts.air++;
+            });
+
+            const total = planets.length || 1;
+            setElementalBalance({
+              fire: elementCounts.fire / total,
+              water: elementCounts.water / total,
+              earth: elementCounts.earth / total,
+              air: elementCounts.air / total,
+            });
+
+            setLoading(false);
+            return;
+          }
+
+          // If we only have birth data (not calculated), recalculate
+          if (savedChart.date && savedChart.time && savedChart.location) {
+            const res = await fetch('/api/astrology/birth-chart', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                date: savedChart.date,
+                time: savedChart.time,
+                location: savedChart.location,
+                houseSystem: savedChart.houseSystem || 'porphyry',
+              }),
+            });
+
+            if (res.ok) {
+              const { data } = await res.json();
+              // Merge birth data with calculated chart
+              const fullChart = { ...savedChart, ...data };
+              localStorage.setItem('birthChartData', JSON.stringify(fullChart));
+              setChartData(fullChart);
+              setHasBirthData(true);
+              setLoading(false);
+              return;
+            }
+          }
+        }
+
+        // No valid chart data found - redirect to /journey to collect birth data
+        setLoading(false);
+        setHasBirthData(false);
+
+      } catch (error) {
+        console.error('Error loading chart data:', error);
+        setLoading(false);
+        setHasBirthData(false);
+      }
+    };
+
+    loadChartData();
   }, []);
 
   if (loading) {
@@ -147,9 +243,18 @@ export default function AstrologyPage() {
     );
   }
 
-  if (!chartData) {
+  if (!chartData || !hasBirthData) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand flex items-center justify-center relative overflow-hidden">
+        {/* Back to MAIA */}
+        <Link
+          href="/maia"
+          className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">MAIA</span>
+        </Link>
+
         {/* Starfield background */}
         <div className="absolute inset-0 opacity-30">
           {[...Array(100)].map((_, i) => (
@@ -166,9 +271,17 @@ export default function AstrologyPage() {
           ))}
         </div>
         <div className="text-center relative z-10">
-          <p className="text-dune-amber mb-4">No birth chart data available</p>
-          <Link href="/settings" className="text-dune-spice-orange hover:text-dune-spice-glow">
-            Calculate your chart
+          <Sparkle className="w-16 h-16 text-dune-amber mx-auto mb-6 opacity-60" />
+          <h2 className="text-2xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint Awaits</h2>
+          <p className="text-dune-spice-sand/80 mb-6 max-w-md mx-auto">
+            Enter your birth details to unlock your personalized astrological map
+          </p>
+          <Link
+            href="/journey"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-dune-spice-orange/80 hover:bg-dune-spice-orange text-white font-semibold rounded-lg transition-colors"
+          >
+            <Sparkles className="w-5 h-5" />
+            Enter Birth Details
           </Link>
         </div>
       </div>
@@ -177,6 +290,26 @@ export default function AstrologyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand relative overflow-hidden">
+      {/* Fixed Navigation Header */}
+      <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
+        <Link
+          href="/maia"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">MAIA</span>
+        </Link>
+
+        <Link
+          href="/journey"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+          title="Edit birth data"
+        >
+          <Settings2 className="w-4 h-4" />
+          <span className="text-sm font-medium hidden sm:inline">Edit Birth Data</span>
+        </Link>
+      </div>
+
       {/* Arrakis Night Sky - Starfield */}
       <div className="absolute inset-0 opacity-40">
         {[...Array(150)].map((_, i) => (
@@ -369,6 +502,7 @@ export default function AstrologyPage() {
           </div>
 
           {/* North & South Nodes */}
+          {(chartData.northNode || chartData.southNode) && (
           <div className="bg-black/40 backdrop-blur-md border border-dune-navigator-purple/40 rounded-lg p-6 mb-12 shadow-xl">
             <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
               <span className="text-3xl">☊☋</span>
@@ -380,38 +514,55 @@ export default function AstrologyPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* North Node */}
+              {chartData.northNode && (
               <div className="bg-black/30 border border-dune-atreides-green/40 rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">☊</span>
                   <h3 className="text-xl font-bold text-dune-atreides-green">North Node</h3>
                 </div>
-                <p className="text-lg font-semibold text-dune-amber mb-2">Gemini in 11th House</p>
-                <p className="text-dune-spice-sand/70 text-sm mb-3">
-                  Your soul's calling toward communication, community connections, and intellectual exchange.
-                  Learning to embrace curiosity and share ideas within collective networks.
+                <p className="text-lg font-semibold text-dune-amber mb-2">
+                  {chartData.northNode.sign} in {chartData.northNode.house}
+                  {chartData.northNode.house === 1 ? 'st' :
+                   chartData.northNode.house === 2 ? 'nd' :
+                   chartData.northNode.house === 3 ? 'rd' : 'th'} House
                 </p>
-                <div className="text-xs text-dune-spice-sand/60">
-                  Keywords: Communication, Networks, Ideas, Community
-                </div>
+                <p className="text-sm text-dune-spice-sand/70 mb-2">
+                  {chartData.northNode.degree.toFixed(1)}°
+                </p>
+                <p className="text-dune-spice-sand/70 text-sm mb-3">
+                  Your soul's calling toward {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.facetName?.toLowerCase() || 'growth'} energy.
+                  {getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.archetypes?.mythological?.[0] &&
+                   ` Embrace the archetype of ${getZodiacArchetype(chartData.northNode.sign.toLowerCase())?.archetypes?.mythological?.[0]}.`}
+                </p>
               </div>
+              )}
 
               {/* South Node */}
+              {chartData.southNode && (
               <div className="bg-black/30 border border-dune-sienna-rock/40 rounded-lg p-5">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-2xl">☋</span>
                   <h3 className="text-xl font-bold text-dune-sienna-rock">South Node</h3>
                 </div>
-                <p className="text-lg font-semibold text-dune-amber mb-2">Sagittarius in 5th House</p>
-                <p className="text-dune-spice-sand/70 text-sm mb-3">
-                  Past life mastery in philosophical wisdom and creative self-expression.
-                  Comfortable with teaching and sharing truth, but now evolving toward listening and collaboration.
+                <p className="text-lg font-semibold text-dune-amber mb-2">
+                  {chartData.southNode.sign} in {chartData.southNode.house}
+                  {chartData.southNode.house === 1 ? 'st' :
+                   chartData.southNode.house === 2 ? 'nd' :
+                   chartData.southNode.house === 3 ? 'rd' : 'th'} House
                 </p>
-                <div className="text-xs text-dune-spice-sand/60">
-                  Keywords: Philosophy, Teaching, Creativity, Independence
-                </div>
+                <p className="text-sm text-dune-spice-sand/70 mb-2">
+                  {chartData.southNode.degree.toFixed(1)}°
+                </p>
+                <p className="text-dune-spice-sand/70 text-sm mb-3">
+                  Past life mastery in {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.facetName?.toLowerCase() || 'expression'} energy.
+                  {getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.archetypes?.mythological?.[0] &&
+                   ` Release the shadow of ${getZodiacArchetype(chartData.southNode.sign.toLowerCase())?.archetypes?.mythological?.[0]}.`}
+                </p>
               </div>
+              )}
             </div>
           </div>
+          )}
 
           {/* Current Transits */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-blue/40 rounded-lg p-6 mb-12 shadow-xl">

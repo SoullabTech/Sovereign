@@ -2,6 +2,8 @@
 'use client'
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { ChineseZodiacAnimal, ChineseElement } from '@/lib/astrology/chineseAstrology';
 
 interface ChineseReadingData {
@@ -113,6 +115,23 @@ export default function ChineseAstrologyPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-900 via-orange-800 to-yellow-900">
+      {/* Navigation */}
+      <div className="fixed top-4 left-4 z-50 flex gap-2">
+        <Link
+          href="/maia"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">MAIA</span>
+        </Link>
+        <Link
+          href="/astrology"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <span className="text-sm font-medium">Blueprint</span>
+        </Link>
+      </div>
+
       {/* Floating Elements */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-br from-red-500/20 to-orange-500/20 rounded-full blur-xl animate-pulse"></div>

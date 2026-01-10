@@ -3,6 +3,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 
 type BirthInput = {
@@ -109,7 +110,24 @@ export default function SynastryPage() {
 
   return (
     <main className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand px-4 py-8">
-      <div className="mx-auto max-w-4xl space-y-6">
+      {/* Navigation */}
+      <div className="fixed top-4 left-4 z-50 flex gap-2">
+        <Link
+          href="/maia"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          <span className="text-sm font-medium">MAIA</span>
+        </Link>
+        <Link
+          href="/astrology"
+          className="flex items-center gap-2 px-3 py-2 rounded-lg backdrop-blur-sm bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-colors"
+        >
+          <span className="text-sm font-medium">Blueprint</span>
+        </Link>
+      </div>
+
+      <div className="mx-auto max-w-4xl space-y-6 pt-12">
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-2">
             <h1 className="text-2xl font-semibold text-white">Synastry</h1>
