@@ -31,6 +31,9 @@ import type {
   ListAction,
   SourceRef,
   RLMBudget,
+  RLMSourceRef,
+  RLMUsage,
+  RLMTraceStep,
 } from './types';
 
 // ============================================================================
@@ -143,7 +146,138 @@ const DEFAULT_CONFIG: RLMConfig = {
   maxContextChars: 24000,
   verbose: false,
   budget: { search: 8, list: 6, read: 12 },
+  includeTrace: false,
 };
+
+// ============================================================================
+// Proof / usage / trace helpers
+// ============================================================================
+
+function asLine(n: unknown, fallback: number): number {
+  const v = typeof n === 'number' ? n : Number(n);
+  return Number.isFinite(v) && v > 0 ? Math.floor(v) : fallback;
+}
+
+function buildUsage(cfg: RLMConfig, used: { search: number; read: number; list: number }): RLMUsage {
+  const b = cfg.budget ?? { search: 8, read: 12, list: 6 };
+  return {
+    budgets: { search: b.search, read: b.read, list: b.list },
+    used: { search: used.search, read: used.read, list: used.list },
+  };
+}
+
+function uniqSourceRefs(refs: RLMSourceRef[]): RLMSourceRef[] {
+  const seen = new Set<string>();
+  const out: RLMSourceRef[] = [];
+  for (const r of refs) {
+    const key = `${r.path}:${r.startLine}-${r.endLine}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  return out;
+}
+
+function sourceRefsFromPayload(sources?: SourceRef[]): RLMSourceRef[] {
+  if (!sources || !Array.isArray(sources)) return [];
+  const refs: RLMSourceRef[] = [];
+  for (const s of sources) {
+    const start = asLine((s as Record<string, unknown>).lineStart ?? (s as Record<string, unknown>).startLine, 1);
+    const end = asLine((s as Record<string, unknown>).lineEnd ?? (s as Record<string, unknown>).endLine, start);
+    if (!s.path) continue;
+    refs.push({
+      path: s.path,
+      startLine: start,
+      endLine: Math.max(start, end),
+      excerpt: (s as Record<string, unknown>).excerpt as string | undefined,
+    });
+  }
+  return uniqSourceRefs(refs);
+}
+
+function sourceRefsFallback(ctx: RLMContext): RLMSourceRef[] {
+  const refs: RLMSourceRef[] = [];
+  // Prefer read actions with explicit line ranges if available
+  for (const h of ctx.history ?? []) {
+    const a = h.action;
+    if (!a || a.type !== 'read') continue;
+    const readAction = a as ReadAction;
+    const path = readAction.filePath;
+    if (!path) continue;
+    const start = asLine(readAction.startLine, 1);
+    const end = asLine(readAction.endLine, start);
+    refs.push({ path, startLine: start, endLine: Math.max(start, end) });
+  }
+  // Otherwise fall back to "files read" with a minimal 1..1 range
+  for (const p of ctx.filesRead ?? []) {
+    refs.push({ path: p, startLine: 1, endLine: 1 });
+  }
+  return uniqSourceRefs(refs);
+}
+
+function buildTrace(cfg: RLMConfig, ctx: RLMContext): RLMTraceStep[] | undefined {
+  if (!cfg.includeTrace) return undefined;
+  const trace: RLMTraceStep[] = [];
+  for (const h of ctx.history ?? []) {
+    const a = h.action;
+    const r = h.result;
+    const ms = asLine((h as Record<string, unknown>).ms ?? r?.metadata?.ms, 0);
+    if (!a) continue;
+
+    // Convert failures into explicit deny trace steps when possible
+    if (r && r.success === false) {
+      const msg = String(r.content ?? '').toLowerCase();
+      const reason: 'denylist' | 'path_not_allowed' | 'budget_exceeded' =
+        msg.includes('budget') ? 'budget_exceeded'
+        : msg.includes('allowed') || msg.includes('path') ? 'path_not_allowed'
+        : 'denylist';
+      trace.push({ tool: 'deny', reason, detail: String(r.content ?? 'denied'), ms });
+      continue;
+    }
+
+    if (a.type === 'search') {
+      const searchAction = a as SearchAction;
+      const hitsRaw = (r?.meta?.matches ?? []) as Array<{ path: string; line: number; preview: string }>;
+      const hits = Array.isArray(hitsRaw)
+        ? hitsRaw.slice(0, 20).map((m) => ({
+            path: String(m.path ?? ''),
+            line: asLine(m.line, 1),
+            preview: String(m.preview ?? '').slice(0, 240),
+          }))
+        : [];
+      trace.push({ tool: 'search', query: searchAction.query, fileGlob: searchAction.fileGlob, hits, ms });
+      continue;
+    }
+
+    if (a.type === 'read') {
+      const readAction = a as ReadAction;
+      trace.push({
+        tool: 'read',
+        path: readAction.filePath,
+        startLine: readAction.startLine,
+        endLine: readAction.endLine,
+        ms,
+      });
+      continue;
+    }
+
+    if (a.type === 'list') {
+      const listAction = a as ListAction;
+      const results = Array.isArray(r?.meta?.files) ? (r.meta.files as string[]) : [];
+      trace.push({ tool: 'list', glob: listAction.glob, results, ms });
+      continue;
+    }
+  }
+  return trace;
+}
+
+function finalizeConfidence(raw: number, refs: RLMSourceRef[], warnings: string[]): number {
+  if (raw > 0.4 && refs.length === 0) {
+    warnings.push('No proof-grade sourceRefs produced; confidence clamped.');
+    return 0.35;
+  }
+  return raw;
+}
 
 const RLM_SYSTEM_PROMPT = `
 You are a codebase navigation agent.
@@ -315,11 +449,24 @@ Return ONE valid JSON action object only. No prose.
     // Handle answer action
     if (action.type === 'answer') {
       const answerAction = action as AnswerAction;
+      const warnings: string[] = [];
+      const payloadRefs = sourceRefsFromPayload(answerAction.payload?.sources);
+      const fallbackRefs = payloadRefs.length ? [] : sourceRefsFallback(ctx);
+      const sourceRefs = payloadRefs.length ? payloadRefs : fallbackRefs;
+      const rawConfidence = answerAction.payload?.confidence ?? answerAction.confidence ?? 0.5;
+      const confidence = finalizeConfidence(rawConfidence, sourceRefs, warnings);
+
       return {
         answer: answerAction.payload?.answer ?? answerAction.answer,
-        confidence: answerAction.payload?.confidence ?? answerAction.confidence ?? 0.5,
-        sources: answerAction.payload?.sources?.map((s: SourceRef) => `${s.path}:${s.lineStart ?? ''}`)
-          ?? answerAction.sources ?? [],
+        confidence,
+        sources:
+          answerAction.payload?.sources?.map((s: SourceRef) => `${s.path}:${s.lineStart ?? ''}`) ??
+          answerAction.sources ??
+          [],
+        sourceRefs,
+        usage: buildUsage(cfg, used),
+        trace: buildTrace(cfg, ctx),
+        warnings: warnings.length ? warnings : undefined,
         iterations: i + 1,
         totalTokensEst: Math.ceil(totalChars / 4),
       };
@@ -406,11 +553,24 @@ Return ONE valid JSON action object only. No prose.
     const finalAction = normalizeAction(finalParsed.value);
     if (finalAction.type === 'answer') {
       const answerAction = finalAction as AnswerAction;
+      const warnings: string[] = [];
+      const payloadRefs = sourceRefsFromPayload(answerAction.payload?.sources);
+      const fallbackRefs = payloadRefs.length ? [] : sourceRefsFallback(ctx);
+      const sourceRefs = payloadRefs.length ? payloadRefs : fallbackRefs;
+      const rawConfidence = answerAction.payload?.confidence ?? answerAction.confidence ?? 0.3;
+      const confidence = finalizeConfidence(rawConfidence, sourceRefs, warnings);
+
       return {
         answer: answerAction.payload?.answer ?? answerAction.answer,
-        confidence: answerAction.payload?.confidence ?? answerAction.confidence ?? 0.3,
-        sources: answerAction.payload?.sources?.map((s: SourceRef) => `${s.path}:${s.lineStart ?? ''}`)
-          ?? answerAction.sources ?? Array.from(ctx.filesRead),
+        confidence,
+        sources:
+          answerAction.payload?.sources?.map((s: SourceRef) => `${s.path}:${s.lineStart ?? ''}`) ??
+          answerAction.sources ??
+          Array.from(ctx.filesRead),
+        sourceRefs,
+        usage: buildUsage(cfg, used),
+        trace: buildTrace(cfg, ctx),
+        warnings: warnings.length ? warnings : undefined,
         iterations: cfg.maxIterations,
         totalTokensEst: Math.ceil(totalChars / 4),
       };
@@ -418,10 +578,16 @@ Return ONE valid JSON action object only. No prose.
   }
 
   // Last resort
+  const lastResortWarnings: string[] = ['Last resort result (no synthesized answer).'];
+  const lastResortSourceRefs = sourceRefsFallback(ctx);
   return {
     answer: `Unable to find a clear answer after ${cfg.maxIterations} iterations. Searched: ${ctx.searchesPerformed.join(', ')}. Read files: ${Array.from(ctx.filesRead).join(', ')}.`,
     confidence: 0.1,
     sources: Array.from(ctx.filesRead),
+    sourceRefs: lastResortSourceRefs.length ? lastResortSourceRefs : undefined,
+    usage: buildUsage(cfg, used),
+    trace: buildTrace(cfg, ctx),
+    warnings: lastResortWarnings,
     iterations: cfg.maxIterations,
     totalTokensEst: Math.ceil(totalChars / 4),
   };
