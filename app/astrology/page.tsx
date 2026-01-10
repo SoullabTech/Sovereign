@@ -13,7 +13,7 @@
  * - Circadian color rhythm (day/night transitions)
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -57,6 +57,15 @@ export default function AstrologyPage() {
   // Saved synastry for timeline surfacing
   const [savedSynastry, setSavedSynastry] = useState<SavedSynastryItem[]>([]);
   const [savedSynastryLoading, setSavedSynastryLoading] = useState(false);
+
+  // Memoized sort - avoid re-sorting on every render
+  const sortedSavedSynastry = useMemo(() => {
+    return [...savedSynastry].sort(
+      (a, b) =>
+        (b.savedAt ? Date.parse(b.savedAt) : 0) -
+        (a.savedAt ? Date.parse(a.savedAt) : 0)
+    );
+  }, [savedSynastry]);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -619,17 +628,12 @@ export default function AstrologyPage() {
                     <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
                     <div className="h-20 rounded-xl bg-white/5 animate-pulse" />
                   </>
-                ) : savedSynastry.length === 0 ? (
+                ) : sortedSavedSynastry.length === 0 ? (
                   <div className="col-span-3 text-sm text-white/60 py-4">
                     No saved synastry yet. Run one and hit <span className="text-white/80">Save to Timeline</span>.
                   </div>
                 ) : (
-                  // Sort by savedAt descending (most recent first), with null-safe fallback
-                  [...savedSynastry]
-                    .sort((a, b) =>
-                      (b.savedAt ? Date.parse(b.savedAt) || 0 : 0) - (a.savedAt ? Date.parse(a.savedAt) || 0 : 0)
-                    )
-                    .map((item) => {
+                  sortedSavedSynastry.map((item) => {
                     const a = item.chartA?.sunSign ?? 'Person A';
                     const b = item.chartB?.sunSign ?? 'Person B';
                     const when = item.savedAt ? new Date(item.savedAt).toLocaleDateString() : '';
