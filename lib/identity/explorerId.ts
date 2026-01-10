@@ -5,7 +5,7 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export const EXPLORER_ID_KEY = 'maia-explorer-id';
 
-// UUID v4 regex pattern
+// UUID format regex (8-4-4-4-12 hex pattern, any version)
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Check if an ID is a valid member identifier (must be UUID, not placeholder)
