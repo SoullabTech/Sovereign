@@ -108,13 +108,98 @@ export interface RLMConfig {
   modelId?: string; // defaults to local Ollama
   verbose?: boolean;
   budget?: RLMBudget;
+  includeTrace?: boolean; // include tool-by-tool trace in result
 }
+
+// ============================================================================
+// Proof objects (sovereignty-grade)
+// Every confidence-bearing claim should be traceable to file + line ranges.
+// ============================================================================
+
+/**
+ * Proof-grade source reference with line ranges.
+ * Use this for audit-able citations.
+ */
+export type RLMSourceRef = {
+  path: string;      // repo-relative
+  startLine: number; // 1-indexed
+  endLine: number;   // 1-indexed
+  excerpt?: string;  // optional small snippet for UI
+};
+
+/**
+ * Budget accounting for tool calls.
+ */
+export type RLMUsage = {
+  budgets: { search: number; read: number; list: number };
+  used: { search: number; read: number; list: number };
+};
+
+/**
+ * Tool-by-tool trace for debugging or "show your work" UI.
+ */
+export type RLMTraceStep =
+  | {
+      tool: 'search';
+      query: string;
+      fileGlob?: string;
+      hits: Array<{ path: string; line: number; preview: string }>;
+      ms: number;
+    }
+  | {
+      tool: 'read';
+      path: string;
+      startLine?: number;
+      endLine?: number;
+      ms: number;
+    }
+  | {
+      tool: 'list';
+      glob: string;
+      results: string[];
+      ms: number;
+    }
+  | {
+      tool: 'deny';
+      reason: 'denylist' | 'path_not_allowed' | 'budget_exceeded';
+      detail: string;
+      ms: number;
+    };
 
 /** Final result from RLM query */
 export interface RLMResult {
   answer: string;
   confidence: number;
+
+  /**
+   * Back-compat: paths-only sources (legacy).
+   * Prefer `sourceRefs` for proof-grade citations.
+   */
   sources: string[];
+
+  /**
+   * Proof-grade sources: file + line ranges.
+   * Populate this whenever possible (especially if confidence > ~0.4).
+   */
+  sourceRefs?: RLMSourceRef[];
+
+  /**
+   * Budget accounting for tool calls (search/read/list).
+   */
+  usage?: RLMUsage;
+
+  /**
+   * Optional tool-by-tool trace for debugging or "show your work" UI.
+   * Gate behind config.includeTrace flag.
+   */
+  trace?: RLMTraceStep[];
+
+  /**
+   * Extra stats.
+   */
+  stats?: { ms?: number };
+
+  warnings?: string[];
   iterations: number;
   totalTokensEst: number;
 }

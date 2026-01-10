@@ -31,4 +31,8 @@ export type {
   SourceRef,
   AnswerPayload,
   SearchMatch,
+  // Proof objects (sovereignty-grade)
+  RLMSourceRef,
+  RLMUsage,
+  RLMTraceStep,
 } from './types';
