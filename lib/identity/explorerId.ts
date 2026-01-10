@@ -5,12 +5,16 @@ import { generateUUID } from '@/lib/utils/uuid';
 
 export const EXPLORER_ID_KEY = 'maia-explorer-id';
 
-// Check if an ID is a valid member identifier (not a placeholder)
+// UUID v4 regex pattern
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+// Check if an ID is a valid member identifier (must be UUID, not placeholder)
 function isValidMemberId(id: string | null): boolean {
   if (!id) return false;
   // Filter out placeholder/guest IDs
   if (id === 'guest' || id.startsWith('guest_') || id === 'anonymous') return false;
-  return true;
+  // Must be a valid UUID (prevents "test-user-123" or legacy string IDs)
+  return UUID_REGEX.test(id);
 }
 
 export function getOrCreateExplorerId(): string {
