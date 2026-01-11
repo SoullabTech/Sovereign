@@ -17,6 +17,8 @@ You may see older references to:
 That subdomain is **intentionally disabled** until DNS is enabled.
 This prevents SSL certificate noise and keeps production stable.
 
+If you see `chart.soullab.life` referenced elsewhere, nothing's broken — it's simply not live yet.
+
 ---
 
 ## If you're a member

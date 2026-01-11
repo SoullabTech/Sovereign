@@ -30,3 +30,12 @@ Avoids repeated TLS certificate acquisition failures and log noise when DNS retu
 ## Notes
 
 The chart block is commented out (lines ~70-95 in Caddyfile). When DNS is ready, simply remove the `#` prefix from each line in that block.
+
+## Caddyfile intent comment
+
+The block includes this header for future clarity:
+
+```caddyfile
+# chart.soullab.life block is intentionally disabled until DNS A record exists.
+# Re-enable when ready: uncomment block, restart caddy.
+```
