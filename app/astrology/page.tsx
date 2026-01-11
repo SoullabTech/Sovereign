@@ -82,12 +82,12 @@ interface SavedSynastryItem {
 // House system options with descriptions
 type HouseSystemType = 'porphyry' | 'placidus' | 'whole-sign' | 'equal' | 'koch';
 
-const HOUSE_SYSTEMS: { value: HouseSystemType; label: string; description: string }[] = [
+const HOUSE_SYSTEMS: { value: HouseSystemType; label: string; description: string; fallback?: boolean }[] = [
   { value: 'porphyry', label: 'Porphyry', description: 'Destiny spine — crisp identity + vocation clarity' },
-  { value: 'placidus', label: 'Placidus', description: 'Lived experience — where life pressure actually lands' },
+  { value: 'placidus', label: 'Placidus*', description: 'Lived experience — where life pressure actually lands', fallback: true },
   { value: 'whole-sign', label: 'Whole Sign', description: 'Mythic map — each sign a clear chapter of your journey' },
   { value: 'equal', label: 'Equal', description: 'Clean structure — stable, straightforward house map' },
-  { value: 'koch', label: 'Koch', description: 'Inner growth — how you unfold through thresholds' },
+  { value: 'koch', label: 'Koch*', description: 'Inner growth — how you unfold through thresholds', fallback: true },
 ];
 
 // Transit position interface for current sky
@@ -165,6 +165,9 @@ export default function AstrologyPage() {
   const [showTransits, setShowTransits] = useState(false);
   const [transitPositions, setTransitPositions] = useState<TransitPosition[]>([]);
   const [transitLoading, setTransitLoading] = useState(false);
+
+  // House system guide toggle
+  const [showHouseGuide, setShowHouseGuide] = useState(false);
 
   // Memoized sort - avoid re-sorting on every render
   const sortedSavedSynastry = useMemo(() => {
@@ -663,10 +666,48 @@ export default function AstrologyPage() {
                 </div>
               </div>
 
-              {/* House System Description */}
-              <p className="text-dune-spice-sand/50 text-xs mb-4 text-center italic">
-                {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.description || 'Click a planet on the wheel for insights'}
-              </p>
+              {/* House System Description + Fallback footnote */}
+              <div className="mb-3">
+                <p className="text-dune-spice-sand/50 text-xs text-center italic">
+                  {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.description || 'Click a planet on the wheel for insights'}
+                </p>
+                {HOUSE_SYSTEMS.find(s => s.value === houseSystem)?.fallback && (
+                  <p className="text-dune-spice-sand/40 text-[10px] mt-1 text-center">
+                    *Uses Porphyry calculation — true {houseSystem === 'placidus' ? 'Placidus' : 'Koch'} requires complex iterative solving
+                  </p>
+                )}
+              </div>
+
+              {/* Collapsible House System Guide */}
+              <div className="mb-4">
+                <button
+                  onClick={() => setShowHouseGuide(!showHouseGuide)}
+                  className="w-full flex items-center justify-center gap-1 text-dune-spice-sand/40 hover:text-dune-spice-sand/60 text-[10px] transition-colors"
+                >
+                  <span>Which lens fits your inquiry?</span>
+                  {showHouseGuide ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+                </button>
+                <AnimatePresence>
+                  {showHouseGuide && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 p-3 bg-black/30 rounded-lg border border-dune-bene-gesserit-gold/20 text-[10px] text-dune-spice-sand/60 space-y-2">
+                        <p><span className="text-dune-amber">Inner growth:</span> Koch — how you unfold through thresholds</p>
+                        <p><span className="text-dune-amber">Timing & transits:</span> Whole Sign — cleanest for house-based prediction</p>
+                        <p><span className="text-dune-amber">Soul story:</span> Whole Sign — each sign a chapter of the journey</p>
+                        <p><span className="text-dune-amber">Lived experience:</span> Placidus — where life pressure actually lands</p>
+                        <p><span className="text-dune-amber">Clean structure:</span> Equal — stable, straightforward for learning</p>
+                        <p><span className="text-dune-amber">Destiny spine:</span> Porphyry — crisp identity + vocation clarity</p>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
 
               <SacredHouseWheel
                 planets={chartDataToPlanets(chartData)}
