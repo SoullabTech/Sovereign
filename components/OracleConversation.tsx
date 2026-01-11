@@ -1506,13 +1506,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   }, []);
 
   // Update motion state based on voice activity
+  // NOTE: isListening is controlled by handleRecordingStateChange (from ContinuousConversation)
+  // and the holoflower click handler. DO NOT set isListening here based on userVoiceState
+  // because that would hide the visualizer when the mic is listening but user hasn't spoken yet.
   useEffect(() => {
     if (userVoiceState?.isSpeaking) {
       setCurrentMotionState('listening');
-      setIsListening(true);
-    } else {
-      setIsListening(false);
     }
+    // Don't set isListening to false here - that's controlled by the recording state
   }, [userVoiceState]);
 
   // Note: Voice amplitude is now driven by real-time audio analysis in startAudioAnalysis()
