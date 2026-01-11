@@ -40,3 +40,25 @@ When they diverge, explore the complexity.
 ## One-Liner
 
 "Three ancient maps, one truth: when they align, that's signal."
+
+---
+
+## Audience Variants
+
+**Mystic / Soul-Forward**
+> "When ancient maps converge, the soul is being spoken to from more than one direction."
+
+*Tone: initiatory, reverent, imaginal*
+*Best for: mystics, seekers, ceremonial language, depth work*
+
+**Pragmatic / Practitioner**
+> "When multiple wisdom systems point to the same theme, that's a signal worth acting on."
+
+*Tone: grounded, clear, decision-oriented*
+*Best for: clinicians, coaches, developers, people who want actionable insight*
+
+**Product / Platform Pitch**
+> "MAIA cross-checks multiple astrology systems—alignment means confidence, divergence reveals nuance."
+
+*Tone: intelligent, modern, trustworthy*
+*Best for: product pages, onboarding copy, investors, technically minded users*
