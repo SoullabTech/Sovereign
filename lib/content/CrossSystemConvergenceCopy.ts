@@ -54,9 +54,9 @@ export const TOOLTIPS: Record<TooltipSize, AudienceCopy> = {
     product: "Cross-checked insights: alignment = confidence, divergence = nuance."
   },
   s: {
-    mystic: "Convergence = the same message arriving through multiple symbols.",
+    mystic: "When different symbols tell the same story, pay attention.",
     pragmatic: "Two or more systems agree → higher confidence.",
-    product: "MAIA triangulates across systems to strengthen decisions."
+    product: "Cross-checking multiple systems reduces false certainty."
   }
 };
 
@@ -64,9 +64,9 @@ export const TOOLTIPS: Record<TooltipSize, AudienceCopy> = {
  * Card copy (dashboard / "How MAIA Thinks")
  */
 export const CARD_COPY: AudienceCopy = {
-  mystic: "When multiple maps converge, the soul is being addressed from more than one direction.",
-  pragmatic: "When multiple systems point to the same theme, that's a signal worth acting on.",
-  product: "MAIA cross-checks systems—alignment boosts confidence; divergence reveals nuance."
+  mystic: "When several maps echo the same theme, it's not noise—it's a summons toward what wants to be lived.",
+  pragmatic: "When multiple systems point to the same theme, that's a signal you can act on.",
+  product: "Alignment increases confidence. Divergence isn't failure—it's information about context and timing."
 };
 
 /**
