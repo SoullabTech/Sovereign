@@ -29,7 +29,7 @@ export default function MayanAstrologyPage() {
   const [todaySign, setTodaySign] = useState<MayanBirthSign | null>(null);
   const [showToday, setShowToday] = useState(false);
   const [completeProfile, setCompleteProfile] = useState<CompleteMayanProfile | null>(null);
-  const [activeView, setActiveView] = useState<'signature' | 'pillars' | 'today'>('signature');
+  const [activeView, setActiveView] = useState<'signature' | 'pillars' | 'today'>('pillars');
 
   useEffect(() => {
     // Load saved birth date
@@ -493,6 +493,9 @@ export default function MayanAstrologyPage() {
               </div>
             </button>
           </div>
+          <p className="text-xs text-amber-400/50 text-center mt-2">
+            Path of Life shows your 3-pillar developmental arc. Signature reveals your core day-sign imprint.
+          </p>
         )}
 
         {/* Sign Display */}
