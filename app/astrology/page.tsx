@@ -28,6 +28,8 @@ import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTooltip, CARD_COPY } from '@/lib/content/CrossSystemConvergenceCopy';
+import { useUserAuth } from '@/lib/hooks/useUserAuth';
+import { mapAudienceMode } from '@/lib/content/audienceMode';
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -170,6 +172,13 @@ export default function AstrologyPage() {
 
   // House system guide toggle
   const [showHouseGuide, setShowHouseGuide] = useState(false);
+
+  // Audience mode for convergence copy (profile-adaptive)
+  const { oracleAgent, preferences } = useUserAuth();
+  const audienceMode = mapAudienceMode({
+    consciousness_archetype: oracleAgent?.archetype,
+    communication_style: preferences?.style,
+  });
 
   // Memoized sort - avoid re-sorting on every render
   const sortedSavedSynastry = useMemo(() => {
@@ -1196,13 +1205,13 @@ export default function AstrologyPage() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p>{getTooltip('s', 'pragmatic')}</p>
+                      <p>{getTooltip('s', audienceMode)}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <p className="text-sm text-white/50 mb-4">
-                {CARD_COPY.pragmatic}
+                {CARD_COPY[audienceMode]}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Mayan Astrology */}
