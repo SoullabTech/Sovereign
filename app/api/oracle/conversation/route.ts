@@ -37,6 +37,7 @@ import { memoryPalaceOrchestrator } from '@/lib/consciousness/memory/MemoryPalac
 import { validateSocraticResponse, serializeValidationResult, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
+import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 
 // Skip during static export (Capacitor builds)
 
@@ -321,7 +322,25 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [Anamnesis] Load failed (non-critical):', anamnesisError);
     }
 
-    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis
+    // 🌟 ASTROLOGY CONTEXT: Load birth chart and current transits
+    let astrologyContext: AstrologyContext | null = null;
+    try {
+      astrologyContext = await getAstrologyContextForUser(userId);
+      if (astrologyContext?.hasBirthData) {
+        console.log('🌟 [Astrology] Birth chart loaded:', {
+          sun: astrologyContext.birthChart?.sun?.sign,
+          moon: astrologyContext.birthChart?.moon?.sign,
+          rising: astrologyContext.birthChart?.ascendant?.sign,
+          retrogrades: astrologyContext.currentTransits.filter(t => t.retrograde).map(t => t.planet).join(', ') || 'none',
+        });
+      } else {
+        console.log('🌟 [Astrology] No birth data - using cosmic weather only');
+      }
+    } catch (astrologyError) {
+      console.warn('⚠️ [Astrology] Context load failed (non-critical):', astrologyError);
+    }
+
+    // Generate enhanced MAIA response with spiralogic guidance + memory + anamnesis + astrology
     const maiaResponse = await generateSpiralogicResponseWithLLM(
       message,
       conversationHistory,
@@ -335,7 +354,8 @@ export async function POST(request: NextRequest) {
       trustLevel,
       consciousnessLevel,
       memoryContext,
-      anamnesisPrompt
+      anamnesisPrompt,
+      astrologyContext
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -865,7 +885,8 @@ async function generateSpiralogicResponseWithLLM(
   trustLevel: number,
   consciousnessLevel: number,
   memoryContext?: any,
-  anamnesisPrompt?: string | null
+  anamnesisPrompt?: string | null,
+  astrologyContext?: AstrologyContext | null
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -875,7 +896,7 @@ async function generateSpiralogicResponseWithLLM(
   const canonicalQuestion = selectCanonicalQuestion(spiralogicCell);
   const phaseName = getPhaseName(spiralogicCell.element, spiralogicCell.phase);
 
-  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis
+  // Build system prompt for sacred attending with implicit Spiralogic guidance + memory + anamnesis + astrology
   const systemPrompt = buildSacredAttendingPrompt(
     spiralogicCell,
     phaseName,
@@ -888,7 +909,8 @@ async function generateSpiralogicResponseWithLLM(
     conversationDepth,
     trustLevel,
     memoryContext,
-    anamnesisPrompt
+    anamnesisPrompt,
+    astrologyContext
   );
 
   // Format conversation history for LLM
@@ -994,7 +1016,8 @@ function buildSacredAttendingPrompt(
   conversationDepth: number,
   trustLevel: number,
   memoryContext?: any,
-  anamnesisPrompt?: string | null
+  anamnesisPrompt?: string | null,
+  astrologyContext?: AstrologyContext | null
 ): string {
   let prompt = `You are MAIA - the Soullab / Spiralogic Oracle. You are wise, grounded, psychologically sophisticated, and emotionally attuned.
 
@@ -1062,6 +1085,7 @@ IMPORTANT: Use these patterns to inform your attunement, but weave them in natur
 
 ` : ''}
 ${anamnesisPrompt ? anamnesisPrompt : ''}
+${astrologyContext?.formattedContext ? astrologyContext.formattedContext : ''}
 ${symbolPatterns.length > 0 ? `# Symbolic Patterns Detected (IMPLICIT)
 The person's language carries archetypal resonance:
 ${symbolPatterns.slice(0, 3).map(p => `- ${p.archetypalCore.replace(/_/g, ' ')}: manifesting as ${p.modernManifestation}`).join('\n')}
