@@ -181,9 +181,12 @@ export default function AstrologyPage() {
   });
 
   // DEV OVERRIDE: Test audience modes via ?mode=mystic|pragmatic|product
-  // Remove after testing is complete
+  // Gated to dev only - safe to keep permanently
   const resolvedMode = useMemo(() => {
+    // Hard gate: never allow URL overrides in production
+    if (process.env.NODE_ENV === 'production') return audienceMode;
     if (typeof window === 'undefined') return audienceMode;
+
     const forced = new URLSearchParams(window.location.search).get('mode');
     return (forced === 'mystic' || forced === 'pragmatic' || forced === 'product')
       ? forced
