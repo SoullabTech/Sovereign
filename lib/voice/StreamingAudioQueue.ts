@@ -30,6 +30,9 @@ export class StreamingAudioQueue {
   private audioUnlocked: boolean = false;
   // Track whether all sentences have been enqueued (streaming complete)
   private streamingComplete: boolean = false;
+  // 🔥 FIX: Track audio chunks through pipeline
+  private chunksEnqueued: number = 0;
+  private chunksPlayed: number = 0;
 
   constructor(callbacks?: {
     onPlayingChange?: (isPlaying: boolean) => void;
@@ -54,10 +57,12 @@ export class StreamingAudioQueue {
    * Add audio chunk to queue and start playing if not already playing
    */
   enqueue(item: AudioQueueItem): void {
-    console.log('🎵 [StreamingQueue] Enqueuing audio chunk:', item.text.length, 'chars'); // Never log content
+    this.chunksEnqueued++;
+    console.log(`🎵 [StreamingQueue] Enqueuing audio chunk #${this.chunksEnqueued}:`, item.text.length, 'chars'); // Never log content
     this.queue.push(item);
 
     if (!this.isPlaying) {
+      console.log(`▶️ [StreamingQueue] Starting playback (queue was idle)`);
       this.playNext();
     }
   }
@@ -68,15 +73,20 @@ export class StreamingAudioQueue {
   private async playNext(): Promise<void> {
     if (this.queue.length === 0) {
       // Only call onComplete if streaming is done (all sentences enqueued)
-      // Otherwise, more sentences may still be coming - wait for them
-      if (this.streamingComplete) {
-        console.log('✅ [StreamingQueue] Queue empty AND streaming complete - truly done');
+      // 🔥 FIX: Also verify all enqueued chunks have been played
+      const allChunksPlayed = this.chunksPlayed >= this.chunksEnqueued;
+
+      if (this.streamingComplete && allChunksPlayed) {
+        console.log(`✅ [StreamingQueue] Queue empty AND streaming complete - truly done (played ${this.chunksPlayed}/${this.chunksEnqueued} chunks)`);
         this.isPlaying = false;
         this.currentAudio = null;
         this.onPlayingChange?.(false);
         this.onComplete?.();
+      } else if (this.streamingComplete) {
+        console.log(`⏳ [StreamingQueue] Queue empty, streaming complete, but only played ${this.chunksPlayed}/${this.chunksEnqueued} chunks - waiting...`);
+        this.isPlaying = false;
       } else {
-        console.log('⏳ [StreamingQueue] Queue empty but streaming not complete - waiting for more sentences');
+        console.log(`⏳ [StreamingQueue] Queue empty but streaming not complete - waiting for more sentences (played ${this.chunksPlayed}/${this.chunksEnqueued})`);
         this.isPlaying = false;
         // DON'T call onComplete - more sentences may be coming
       }
@@ -124,10 +134,12 @@ export class StreamingAudioQueue {
       item.audio.onended = () => {
         const playedTime = item.audio.currentTime;
         const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
+        // 🔥 FIX: Track successfully played chunks
+        this.chunksPlayed++;
         if (completionRatio < 0.9) {
-          console.warn(`⚠️ [StreamingQueue] Chunk may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
+          console.warn(`⚠️ [StreamingQueue] Chunk #${this.chunksPlayed} may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
         } else {
-          console.log(`✅ [StreamingQueue] Chunk finished completely (${playedTime.toFixed(1)}s)`);
+          console.log(`✅ [StreamingQueue] Chunk #${this.chunksPlayed}/${this.chunksEnqueued} finished completely (${playedTime.toFixed(1)}s)`);
         }
         // DON'T unregister - we never registered it
         // this.feedbackPrevention.unregisterAudioElement(item.audio);
@@ -136,7 +148,9 @@ export class StreamingAudioQueue {
       };
 
       item.audio.onerror = (error) => {
-        console.error('❌ [StreamingQueue] Audio error:', error);
+        // 🔥 FIX: Still count failed chunks so we don't wait forever
+        this.chunksPlayed++;
+        console.error(`❌ [StreamingQueue] Audio error on chunk #${this.chunksPlayed}:`, error);
         console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`);
         // DON'T unregister - we never registered it
         // this.feedbackPrevention.unregisterAudioElement(item.audio);
@@ -146,7 +160,9 @@ export class StreamingAudioQueue {
 
       // Start playback with Safari unlock check
       item.audio.play().catch(async (error) => {
-        console.error('❌ [StreamingQueue] Play failed:', error);
+        // 🔥 FIX: Count failed plays
+        this.chunksPlayed++;
+        console.error(`❌ [StreamingQueue] Play failed for chunk #${this.chunksPlayed}:`, error);
 
         // Check if this is a Safari NotAllowedError that requires audio unlock
         if (error.name === 'NotAllowedError' && !this.audioUnlocked) {
@@ -170,7 +186,7 @@ export class StreamingAudioQueue {
    * Stop playback and clear queue (for interruptions)
    */
   stop(): void {
-    console.log('🛑 [StreamingQueue] Stopping playback and clearing queue');
+    console.log(`🛑 [StreamingQueue] Stopping playback and clearing queue (played ${this.chunksPlayed}/${this.chunksEnqueued})`);
 
     // Stop current audio (no feedback prevention registration for streaming)
     if (this.currentAudio) {
@@ -181,10 +197,12 @@ export class StreamingAudioQueue {
       this.currentAudio = null;
     }
 
-    // Clear queue
+    // Clear queue and reset counters
     this.queue = [];
     this.isPlaying = false;
     this.streamingComplete = false; // Reset for next use
+    this.chunksEnqueued = 0;
+    this.chunksPlayed = 0;
     this.onPlayingChange?.(false);
   }
 
@@ -193,14 +211,19 @@ export class StreamingAudioQueue {
    * Call this when the text stream ends and all sentences have been sent to TTS
    */
   markStreamingComplete(): void {
-    console.log('🏁 [StreamingQueue] Streaming marked complete - no more sentences coming');
+    console.log(`🏁 [StreamingQueue] Streaming marked complete - ${this.chunksEnqueued} chunks enqueued, ${this.chunksPlayed} played`);
     this.streamingComplete = true;
 
-    // If queue is already empty and not playing, trigger completion now
-    if (this.queue.length === 0 && !this.isPlaying) {
-      console.log('✅ [StreamingQueue] Queue already empty - triggering completion');
+    // 🔥 FIX: Only trigger completion if ALL enqueued chunks have been played
+    const allChunksPlayed = this.chunksPlayed >= this.chunksEnqueued;
+
+    // If queue is already empty, not playing, AND all chunks have been played
+    if (this.queue.length === 0 && !this.isPlaying && allChunksPlayed) {
+      console.log(`✅ [StreamingQueue] Queue already empty and all ${this.chunksPlayed} chunks played - triggering completion`);
       this.onPlayingChange?.(false);
       this.onComplete?.();
+    } else if (this.queue.length === 0 && !this.isPlaying) {
+      console.log(`⏳ [StreamingQueue] Queue empty but only ${this.chunksPlayed}/${this.chunksEnqueued} chunks played - waiting`);
     }
     // Otherwise, playNext() will handle completion when queue empties
   }
@@ -214,6 +237,9 @@ export class StreamingAudioQueue {
     this.queue = [];
     this.isPlaying = false;
     this.currentAudio = null;
+    // 🔥 FIX: Reset counters
+    this.chunksEnqueued = 0;
+    this.chunksPlayed = 0;
   }
 
   /**

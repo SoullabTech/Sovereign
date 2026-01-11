@@ -2410,25 +2410,43 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                             pendingTTSCount++;
                             console.log(`📤 [STREAM] TTS request started (pending: ${pendingTTSCount})`);
 
+                            // 🔥 FIX: Generate audio with retry logic for transient failures
+                            const generateWithRetry = async (text: string, retries: number = 2): Promise<HTMLAudioElement | null> => {
+                              for (let attempt = 1; attempt <= retries; attempt++) {
+                                try {
+                                  return await generateAudioChunk(text, {
+                                    agentVoice: 'maya',
+                                    element,
+                                  });
+                                } catch (err) {
+                                  console.warn(`⚠️ [STREAM] TTS attempt ${attempt}/${retries} failed:`, err);
+                                  if (attempt < retries) {
+                                    await new Promise(r => setTimeout(r, 300 * attempt)); // Exponential backoff
+                                  }
+                                }
+                              }
+                              return null;
+                            };
+
                             // Generate and queue audio asynchronously (don't await - let it run in background)
-                            generateAudioChunk(sentence, {
-                              agentVoice: 'maya',
-                              element,
-                            }).then(audio => {
-                              audioQueue!.enqueue({
-                                audio,
-                                text: sentence,
-                                element,
-                              });
-                              // 🔥 FIX: TTS completed successfully
+                            generateWithRetry(sentence).then(audio => {
+                              if (audio) {
+                                audioQueue!.enqueue({
+                                  audio,
+                                  text: sentence,
+                                  element,
+                                });
+                                console.log(`📥 [STREAM] TTS request completed (pending: ${pendingTTSCount - 1})`);
+                              } else {
+                                console.error(`❌ [STREAM] TTS failed after all retries for: "${sentence.substring(0, 30)}..."`);
+                              }
+                              // 🔥 FIX: TTS completed (success or permanent failure)
                               pendingTTSCount--;
-                              console.log(`📥 [STREAM] TTS request completed (pending: ${pendingTTSCount})`);
                               checkFinalize();
                             }).catch(err => {
-                              console.error('❌ [STREAM] Failed to generate audio:', err);
-                              // 🔥 FIX: TTS failed, still decrement counter
+                              // This shouldn't happen as generateWithRetry catches errors, but just in case
+                              console.error('❌ [STREAM] Unexpected TTS error:', err);
                               pendingTTSCount--;
-                              console.log(`📥 [STREAM] TTS request failed (pending: ${pendingTTSCount})`);
                               checkFinalize();
                             });
                           }
