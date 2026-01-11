@@ -7,10 +7,12 @@ import { ArrowLeft, Calendar, User, Compass, Clock } from 'lucide-react';
 import {
   ChineseZodiacAnimal,
   ChineseElement,
+  ElementHolisticProfile,
   getChineseZodiacAnimal,
   getChineseElement,
   getYinYang,
-  getSexagenaryPosition
+  getSexagenaryPosition,
+  getElementHolisticProfile
 } from '@/lib/astrology/chineseAstrology';
 import DaYunTimeline from '@/components/astrology/DaYunTimeline';
 import type { Gender } from '@/lib/astrology/types/daYun';
@@ -44,6 +46,7 @@ interface ChineseReadingData {
     challenging: string[];
     analysis: string;
   };
+  holisticProfile: ElementHolisticProfile | null;
 }
 
 export default function ChineseAstrologyPage() {
@@ -80,11 +83,15 @@ export default function ChineseAstrologyPage() {
 
       const spiralogicMapping = spiralogicMap[element.name] || { primary: 'Earth', secondary: ['Fire', 'Water'] };
 
+      // Get the holistic profile for this element
+      const holisticProfile = getElementHolisticProfile(element.name);
+
       const readingData: ChineseReadingData = {
         zodiacAnimal,
         element,
         yinYang,
         cycleYear: cyclePosition,
+        holisticProfile,
         personalityProfile: [
           `${zodiacAnimal.archetype} with ${element.name} energy`,
           `${element.name.charAt(0).toUpperCase() + element.name.slice(1)} element brings ${element.characteristics.slice(0, 2).join(' and ')}`,
@@ -506,6 +513,241 @@ export default function ChineseAstrologyPage() {
                 </ul>
               </div>
             </div>
+
+            {/* Five Element Holistic Reading */}
+            {reading.holisticProfile && (
+              <>
+                {/* Physical Health Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-emerald-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-emerald-300 mb-2">Physical Body & Health</h2>
+                  <p className="text-emerald-200/60 text-sm mb-6">Traditional Chinese Medicine organ correspondences for {reading.element.name} element</p>
+
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div className="space-y-4">
+                      <h4 className="text-xl font-bold text-emerald-200">Organ Systems</h4>
+                      <div className="space-y-2 text-emerald-100">
+                        <p><span className="text-emerald-400 font-semibold">Yin Organ:</span> {reading.holisticProfile.physical.yinOrgan}</p>
+                        <p><span className="text-emerald-400 font-semibold">Yang Organ:</span> {reading.holisticProfile.physical.yangOrgan}</p>
+                        <p><span className="text-emerald-400 font-semibold">Body Tissue:</span> {reading.holisticProfile.physical.bodyTissue}</p>
+                        <p><span className="text-emerald-400 font-semibold">Sensory Organ:</span> {reading.holisticProfile.physical.sensoryOrgan}</p>
+                        <p><span className="text-emerald-400 font-semibold">Body Fluid:</span> {reading.holisticProfile.physical.bodyFluid}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <h4 className="text-xl font-bold text-emerald-200">Health Tendencies</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.physical.healthTendencies.map((tendency, index) => (
+                          <li key={index} className="text-emerald-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">!</span>
+                            <span>{tendency}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-emerald-200 mb-4">Support Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.physical.supportPractices.map((practice, index) => (
+                        <li key={index} className="text-emerald-100 flex items-start space-x-2">
+                          <span className="text-emerald-400 mt-1">+</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Emotional Patterns Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-rose-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-rose-300 mb-2">Emotional Patterns</h2>
+                  <p className="text-rose-200/60 text-sm mb-6">The {reading.element.name} element's emotional landscape</p>
+
+                  <div className="grid md:grid-cols-3 gap-6 mb-8">
+                    <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                      <h4 className="text-rose-300 font-semibold mb-2">Primary Emotion</h4>
+                      <p className="text-rose-100 text-lg">{reading.holisticProfile.emotional.primaryEmotion}</p>
+                    </div>
+                    <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                      <h4 className="text-rose-300 font-semibold mb-2">Shadow Expression</h4>
+                      <p className="text-rose-100 text-lg">{reading.holisticProfile.emotional.shadowEmotion}</p>
+                    </div>
+                    <div className="bg-rose-900/20 rounded-xl p-4 text-center">
+                      <h4 className="text-rose-300 font-semibold mb-2">Balanced Expression</h4>
+                      <p className="text-rose-100 text-lg">{reading.holisticProfile.emotional.balancedExpression}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="text-xl font-bold text-rose-200 mb-4">Imbalance Signals</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.emotional.imbalanceSignals.map((signal, index) => (
+                          <li key={index} className="text-rose-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">~</span>
+                            <span>{signal}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-rose-200 mb-4">Healing Practices</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.emotional.healingPractices.map((practice, index) => (
+                          <li key={index} className="text-rose-100 flex items-start space-x-2">
+                            <span className="text-rose-400 mt-1">+</span>
+                            <span>{practice}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mental Qualities Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-cyan-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-cyan-300 mb-2">Mental Qualities</h2>
+                  <p className="text-cyan-200/60 text-sm mb-6">Cognitive patterns of the {reading.element.name} mind</p>
+
+                  <div className="bg-cyan-900/20 rounded-xl p-6 mb-8">
+                    <h4 className="text-cyan-300 font-semibold mb-2">Thinking Style</h4>
+                    <p className="text-cyan-100 text-xl">{reading.holisticProfile.mental.thinkingStyle}</p>
+                    <p className="text-cyan-200/70 mt-3">
+                      <span className="font-semibold">Learning Style:</span> {reading.holisticProfile.mental.learningStyle}
+                    </p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8">
+                    <div>
+                      <h4 className="text-xl font-bold text-cyan-200 mb-4">Cognitive Strengths</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.mental.cognitiveStrengths.map((strength, index) => (
+                          <li key={index} className="text-cyan-100 flex items-start space-x-2">
+                            <span className="text-cyan-400 mt-1">*</span>
+                            <span>{strength}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-cyan-200 mb-4">Mental Challenges</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.mental.mentalChallenges.map((challenge, index) => (
+                          <li key={index} className="text-cyan-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">~</span>
+                            <span>{challenge}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <h4 className="text-xl font-bold text-cyan-200 mb-4">Support Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.mental.supportPractices.map((practice, index) => (
+                        <li key={index} className="text-cyan-100 flex items-start space-x-2">
+                          <span className="text-cyan-400 mt-1">+</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Spiritual Themes Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-violet-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-violet-300 mb-2">Spiritual Themes</h2>
+                  <p className="text-violet-200/60 text-sm mb-6">Soul lessons and gifts of the {reading.element.name} path</p>
+
+                  <div className="grid md:grid-cols-2 gap-6 mb-8">
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Soul Lesson</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.soulLesson}</p>
+                    </div>
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Spiritual Gift</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.spiritualGift}</p>
+                    </div>
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Karmic Pattern</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.karmicPattern}</p>
+                    </div>
+                    <div className="bg-violet-900/20 rounded-xl p-5">
+                      <h4 className="text-violet-300 font-semibold mb-2">Evolutionary Path</h4>
+                      <p className="text-violet-100">{reading.holisticProfile.spiritual.evolutionaryPath}</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-violet-200 mb-4">Spiritual Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.spiritual.practices.map((practice, index) => (
+                        <li key={index} className="text-violet-100 flex items-start space-x-2">
+                          <span className="text-violet-400 mt-1">*</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+
+                {/* Ancestral Patterns Section */}
+                <div className="bg-black/30 backdrop-blur-sm border border-amber-500/30 rounded-2xl p-8">
+                  <h2 className="text-3xl font-bold text-amber-300 mb-2">Ancestral Patterns</h2>
+                  <p className="text-amber-200/60 text-sm mb-6">Lineage themes of the {reading.element.name} element</p>
+
+                  <div className="bg-amber-900/20 rounded-xl p-6 mb-8 text-center">
+                    <h4 className="text-amber-300 font-semibold mb-2">Lineage Theme</h4>
+                    <p className="text-amber-100 text-xl">{reading.holisticProfile.ancestral.lineageTheme}</p>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-8 mb-8">
+                    <div>
+                      <h4 className="text-xl font-bold text-amber-200 mb-4">Inherited Strengths</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.ancestral.inheritedStrengths.map((strength, index) => (
+                          <li key={index} className="text-amber-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">+</span>
+                            <span>{strength}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-amber-200 mb-4">Inherited Challenges</h4>
+                      <ul className="space-y-2">
+                        {reading.holisticProfile.ancestral.inheritedChallenges.map((challenge, index) => (
+                          <li key={index} className="text-amber-100 flex items-start space-x-2">
+                            <span className="text-amber-400 mt-1">~</span>
+                            <span>{challenge}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-900/20 rounded-xl p-5 mb-6">
+                    <h4 className="text-amber-300 font-semibold mb-2">Ancestral Healing Focus</h4>
+                    <p className="text-amber-100">{reading.holisticProfile.ancestral.ancestralHealing}</p>
+                  </div>
+
+                  <div>
+                    <h4 className="text-xl font-bold text-amber-200 mb-4">Honoring Practices</h4>
+                    <ul className="grid md:grid-cols-2 gap-3">
+                      {reading.holisticProfile.ancestral.honoringPractices.map((practice, index) => (
+                        <li key={index} className="text-amber-100 flex items-start space-x-2">
+                          <span className="text-amber-400 mt-1">*</span>
+                          <span>{practice}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </>
+            )}
 
             {/* Compatibility */}
             <div className="bg-black/30 backdrop-blur-sm border border-indigo-500/30 rounded-2xl p-8">
