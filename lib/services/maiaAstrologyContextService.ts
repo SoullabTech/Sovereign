@@ -361,13 +361,12 @@ function formatAstrologyContextForMAIA(
   }
 
   context += `## How to Use This (IMPORTANT)
-- ONLY reference astrology when the person EXPLICITLY asks about it
-- Do NOT proactively bring up astrological patterns, transits, or chart placements
-- If they ask about their chart, current transits, or astrological themes - then share freely
-- If they ask "what's going on astrologically?" or "is Mercury retrograde?" - answer naturally
-- NEVER lecture about astrology or bring it up unsolicited
-- This context is background knowledge, not something to volunteer
-- Always prioritize their lived experience over astrological interpretations
+- In REGULAR CONVERSATION: Do not proactively mention astrology unless they ask
+- In FULL ASSESSMENTS: Weave astrological insights implicitly into your holistic understanding
+- If they EXPLICITLY ASK about astrology: Share insights openly and specifically
+- This context informs your deeper understanding of their patterns and timing
+- Never lecture or make astrology the focus unless requested
+- Always prioritize their lived experience - astrology is one lens among many
 
 `;
 
