@@ -73,9 +73,9 @@ export default function LabToolsPage() {
         },
         {
           icon: Compass,
-          label: 'Oracle Consultation',
+          label: 'Oracle',
           path: '/oracle',
-          description: 'Divine guidance & insight'
+          description: 'I Ching • Tarot • Runes'
         },
       ],
     },
