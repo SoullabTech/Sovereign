@@ -182,10 +182,13 @@ export default function AstrologyPage() {
 
   // DEV OVERRIDE: Test audience modes via ?mode=mystic|pragmatic|product
   // Remove after testing is complete
-  const searchParams =
-    typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-  const forcedMode = searchParams?.get('mode') as 'mystic' | 'pragmatic' | 'product' | null;
-  const resolvedMode = forcedMode ?? audienceMode;
+  const resolvedMode = useMemo(() => {
+    if (typeof window === 'undefined') return audienceMode;
+    const forced = new URLSearchParams(window.location.search).get('mode');
+    return (forced === 'mystic' || forced === 'pragmatic' || forced === 'product')
+      ? forced
+      : audienceMode;
+  }, [audienceMode]);
 
   // Memoized sort - avoid re-sorting on every render
   const sortedSavedSynastry = useMemo(() => {

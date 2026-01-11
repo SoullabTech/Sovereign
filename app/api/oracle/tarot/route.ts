@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   performReading,
-  dailyDraw,
   threeCardReading,
   celticCrossReading,
   getSpread,
@@ -38,7 +37,7 @@ export async function POST(request: NextRequest) {
     switch (spreadType) {
       case 'single':
       case 'daily':
-        tarotReading = dailyDraw(query);
+        tarotReading = performReading(query, 'single');
         break;
       case 'three-card':
       case 'past-present-future':

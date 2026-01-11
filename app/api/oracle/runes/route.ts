@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
   castRunes,
-  dailyRuneDraw,
   nornsReading,
   getRuneSpread,
   RuneReading
@@ -37,7 +36,7 @@ export async function POST(request: NextRequest) {
     // Use specialized reading functions for common spreads
     switch (spreadType) {
       case 'single':
-        runeReading = dailyRuneDraw(query);
+        runeReading = castRunes(query, 'single');
         break;
       case 'norns':
       case 'three-norns':
@@ -49,7 +48,7 @@ export async function POST(request: NextRequest) {
         if (elementsSpread) {
           runeReading = castRunes(query, elementsSpread.name);
         } else {
-          runeReading = dailyRuneDraw(query);
+          runeReading = castRunes(query, 'single');
         }
         break;
       case 'week':
@@ -58,7 +57,7 @@ export async function POST(request: NextRequest) {
         if (weekSpread) {
           runeReading = castRunes(query, weekSpread.name);
         } else {
-          runeReading = dailyRuneDraw(query);
+          runeReading = castRunes(query, 'single');
         }
         break;
       default:
@@ -68,7 +67,7 @@ export async function POST(request: NextRequest) {
           runeReading = castRunes(query, spread.name);
         } else {
           // Default to single rune
-          runeReading = dailyRuneDraw(query);
+          runeReading = castRunes(query, 'single');
         }
     }
 

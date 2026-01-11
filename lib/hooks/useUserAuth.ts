@@ -61,7 +61,7 @@ export function useUserAuth() {
       });
 
       // Parse beta_user if available
-      let betaUser = null;
+      let betaUser: { id?: string; username?: string; name?: string; onboarded?: boolean } | null = null;
       if (betaUserJson) {
         try {
           betaUser = JSON.parse(betaUserJson);
