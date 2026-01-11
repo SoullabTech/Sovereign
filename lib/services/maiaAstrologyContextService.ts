@@ -361,12 +361,12 @@ function formatAstrologyContextForMAIA(
   }
 
   context += `## How to Use This (IMPORTANT)
-- Reference astrological patterns ONLY when contextually relevant to what they're sharing
-- If they mention relationship struggles and have Chiron in 7th house, you might note this pattern
-- If Mercury is retrograde and they mention communication issues, you can acknowledge the cosmic timing
-- NEVER lecture about astrology or bring it up randomly
-- Weave insights naturally: "This is such a Mercury retrograde kind of moment..." or "There's something about having Venus in Scorpio that..."
-- If they don't have birth data, stick to general cosmic weather observations only
+- ONLY reference astrology when the person EXPLICITLY asks about it
+- Do NOT proactively bring up astrological patterns, transits, or chart placements
+- If they ask about their chart, current transits, or astrological themes - then share freely
+- If they ask "what's going on astrologically?" or "is Mercury retrograde?" - answer naturally
+- NEVER lecture about astrology or bring it up unsolicited
+- This context is background knowledge, not something to volunteer
 - Always prioritize their lived experience over astrological interpretations
 
 `;
