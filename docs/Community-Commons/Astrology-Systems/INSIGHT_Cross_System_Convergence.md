@@ -62,3 +62,51 @@ When they diverge, explore the complexity.
 
 *Tone: intelligent, modern, trustworthy*
 *Best for: product pages, onboarding copy, investors, technically minded users*
+
+---
+
+## Tooltip Microcopy (by audience)
+
+### Mystic / Soul-Forward
+- **XS:** "When maps converge, Spirit is speaking twice."
+- **S:** "Convergence = the same message arriving through multiple symbols."
+
+### Pragmatic / Practitioner
+- **XS:** "When systems agree, treat it as a strong signal."
+- **S:** "Two or more systems agree → higher confidence."
+
+### Product / Platform
+- **XS:** "Cross-checked insights: alignment = confidence, divergence = nuance."
+- **S:** "MAIA triangulates across systems to strengthen decisions."
+
+---
+
+## UI Context Mapping
+
+### Card (dashboard / "How MAIA Thinks")
+- **Mystic:** "When multiple maps converge, the soul is being addressed from more than one direction."
+- **Pragmatic:** "When multiple systems point to the same theme, that's a signal worth acting on."
+- **Product:** "MAIA cross-checks systems—alignment boosts confidence; divergence reveals nuance."
+
+### Modal (first-time explainer)
+**Title:** "Cross-System Convergence"
+- **Mystic body:** "Different symbolic languages can carry the same message. Agreement is a chorus; disagreement is a prism."
+- **Pragmatic body:** "We compare multiple systems. Agreement increases confidence; differences show which layer you're working on."
+- **Product body:** "We triangulate insights across astrology frameworks to reduce noise and surface stronger patterns."
+
+### Inline Explainer (beneath results / "Why this matters")
+- **Mystic:** "Convergence = confirmation. Divergence = deeper dimensionality."
+- **Pragmatic:** "Convergence = act. Divergence = clarify the question."
+- **Product:** "Convergence = reliability. Divergence = resolution."
+
+---
+
+## Adaptive Line (profile-switchable)
+
+Same meaning, different register:
+- **Mystic →** "When the maps converge, the message is asking to be trusted."
+- **Neutral →** "When the maps converge, the theme is likely real."
+- **Pragmatic →** "When the maps converge, confidence goes up."
+
+**Universal (no explicit mode):**
+> "When the maps converge, take it as a stronger signal."
