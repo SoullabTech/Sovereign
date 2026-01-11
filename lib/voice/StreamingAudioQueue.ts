@@ -98,8 +98,37 @@ export class StreamingAudioQueue {
     // this.feedbackPrevention.registerAudioElement(item.audio);
 
     return new Promise((resolve) => {
+      // 🔍 DEBUG: Track playback progress to detect unexpected cutoffs
+      let playbackStarted = false;
+      let expectedDuration = 0;
+
+      item.audio.onloadedmetadata = () => {
+        expectedDuration = item.audio.duration;
+        console.log(`⏱️ [StreamingQueue] Chunk metadata loaded: ${expectedDuration.toFixed(1)}s duration`);
+      };
+
+      item.audio.onplay = () => {
+        playbackStarted = true;
+        console.log(`▶️ [StreamingQueue] Chunk playback started`);
+      };
+
+      // 🔍 DEBUG: Detect unexpected pause (before audio ends naturally)
+      item.audio.onpause = () => {
+        if (!item.audio.ended) {
+          const playedTime = item.audio.currentTime;
+          console.warn(`⚠️ [StreamingQueue] UNEXPECTED PAUSE at ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s - audio stopped before completing!`);
+          console.warn(`⚠️ [StreamingQueue] Text chunk that was cut off: "${item.text.substring(0, 50)}..."`);
+        }
+      };
+
       item.audio.onended = () => {
-        console.log('✅ [StreamingQueue] Chunk finished');
+        const playedTime = item.audio.currentTime;
+        const completionRatio = expectedDuration > 0 ? playedTime / expectedDuration : 1;
+        if (completionRatio < 0.9) {
+          console.warn(`⚠️ [StreamingQueue] Chunk may have been cut short: played ${playedTime.toFixed(1)}s of ${expectedDuration.toFixed(1)}s (${(completionRatio * 100).toFixed(0)}%)`);
+        } else {
+          console.log(`✅ [StreamingQueue] Chunk finished completely (${playedTime.toFixed(1)}s)`);
+        }
         // DON'T unregister - we never registered it
         // this.feedbackPrevention.unregisterAudioElement(item.audio);
         resolve();
@@ -108,6 +137,7 @@ export class StreamingAudioQueue {
 
       item.audio.onerror = (error) => {
         console.error('❌ [StreamingQueue] Audio error:', error);
+        console.error(`❌ [StreamingQueue] Failed chunk: "${item.text.substring(0, 50)}..."`);
         // DON'T unregister - we never registered it
         // this.feedbackPrevention.unregisterAudioElement(item.audio);
         resolve();

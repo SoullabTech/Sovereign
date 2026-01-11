@@ -2256,31 +2256,43 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
                 // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
                 const attemptMicRestart = (attempt: number) => {
-                  if (attempt > 3) {
-                    console.log('⏸️ [STREAM] Gave up on mic restart after 3 attempts');
+                  if (attempt > 5) {
+                    console.log('⏸️ [STREAM] Gave up on mic restart after 5 attempts');
                     return;
                   }
 
                   if (voiceMicRef.current?.startListening) {
+                    // Check ALL blocking conditions including mic pause state
                     const canRestart = !isProcessingRef.current &&
                                        !isRespondingRef.current &&
-                                       !isAudioPlayingRef.current;
+                                       !isAudioPlayingRef.current &&
+                                       !isMicrophonePausedRef.current;
                     if (canRestart) {
                       setIsMuted(false);
                       console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
                       voiceMicRef.current.startListening();
-                      console.log('🎤 [STREAM] Microphone auto-resumed after streaming audio');
+                      // Verify mic actually started after a brief delay
+                      setTimeout(() => {
+                        if (voiceMicRef.current?.isListening) {
+                          console.log('✅ [STREAM] Microphone auto-resumed successfully');
+                        } else {
+                          console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                          if (attempt < 5) {
+                            setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                          }
+                        }
+                      }, 100);
                     } else {
-                      console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 150ms...`);
-                      setTimeout(() => attemptMicRestart(attempt + 1), 150);
+                      console.log(`⏸️ [STREAM] Attempt ${attempt} blocked (proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}), retrying in 250ms...`);
+                      setTimeout(() => attemptMicRestart(attempt + 1), 250);
                     }
                   } else {
                     console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
                   }
                 };
 
-                // Start first attempt after 200ms for React state to propagate
-                setTimeout(() => attemptMicRestart(1), 200);
+                // Start first attempt after 400ms for React state to propagate
+                setTimeout(() => attemptMicRestart(1), 400);
               }, streamingCooldownMs);
             },
           });
@@ -2738,28 +2750,42 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
             // ContinuousConversation's isSpeaking guard will block if state hasn't updated yet.
             const attemptMicRestart = (attempt: number) => {
-              if (attempt > 3) {
-                console.log('⏸️ [NON-STREAM] Gave up on mic restart after 3 attempts');
+              if (attempt > 5) {
+                console.log('⏸️ [NON-STREAM] Gave up on mic restart after 5 attempts');
                 return;
               }
 
               if (voiceMicRef.current?.startListening) {
-                const canRestart = !isProcessingRef.current && !isRespondingRef.current;
+                // Check ALL blocking conditions including mic pause and audio states
+                const canRestart = !isProcessingRef.current &&
+                                   !isRespondingRef.current &&
+                                   !isAudioPlayingRef.current &&
+                                   !isMicrophonePausedRef.current;
                 if (canRestart) {
                   console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
                   voiceMicRef.current.startListening();
-                  console.log('🎤 [NON-STREAM] Microphone auto-resumed after cooldown');
+                  // Verify mic actually started after a brief delay
+                  setTimeout(() => {
+                    if (voiceMicRef.current?.isListening) {
+                      console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
+                    } else {
+                      console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                      if (attempt < 5) {
+                        setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                      }
+                    }
+                  }, 100);
                 } else {
-                  console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 150ms...`);
-                  setTimeout(() => attemptMicRestart(attempt + 1), 150);
+                  console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked (proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}), retrying in 250ms...`);
+                  setTimeout(() => attemptMicRestart(attempt + 1), 250);
                 }
               } else {
                 console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
               }
             };
 
-            // Start first attempt after 200ms for React state to propagate
-            setTimeout(() => attemptMicRestart(1), 200);
+            // Start first attempt after 400ms for React state to propagate
+            setTimeout(() => attemptMicRestart(1), 400);
           }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
