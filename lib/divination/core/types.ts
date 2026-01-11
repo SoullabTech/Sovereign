@@ -130,46 +130,35 @@ export interface TarotCard {
   path?: string; // Kabbalistic path
 }
 
-export type SpreadType =
-  | 'single'
-  | 'three_card'
-  | 'celtic_cross'
-  | 'relationship'
-  | 'chakra'
-  | 'year_ahead'
-  | 'elemental'
-  | 'shadow_work';
-
 export interface SpreadPosition {
-  id: string;
   name: string;
   description: string;
   index: number;
+  element?: Element;
 }
 
 export interface TarotSpread {
-  type: SpreadType;
   name: string;
   description: string;
-  positions: SpreadPosition[];
   cardCount: number;
+  positions: SpreadPosition[];
+  purpose: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
 export interface DrawnCard {
   card: TarotCard;
   position: SpreadPosition;
-  reversed: boolean;
+  isReversed: boolean;
   interpretation: string;
 }
 
 export interface TarotReading {
   query: string;
   spread: TarotSpread;
-  cards: DrawnCard[];
-  overallMessage: string;
-  soulInsight: string;
-  advice: string;
-  elementalBalance: ElementalSignature;
+  drawnCards: DrawnCard[];
+  insight: string;
+  soulGuidance: string;
   ritual?: DivinationRitual;
   timestamp: Date;
 }
@@ -178,58 +167,55 @@ export interface TarotReading {
 // RUNES TYPES
 // =============================================================================
 
-export type Aett = 'freya' | 'heimdall' | 'tyr';
+export type RuneAett = 'freya' | 'heimdall' | 'tyr';
+
+export interface RuneAssociations {
+  deity?: string;
+  tree?: string;
+  herb?: string;
+  color?: string;
+  animal?: string;
+}
 
 export interface Rune {
   name: string;
   letter: string;
   symbol: string;
-  unicodeSymbol: string;
-  aett: Aett;
-  position: number; // 1-8 within aett
-  element: Element;
   meaning: string;
-  reversedMeaning?: string; // Some runes can't be reversed
+  aett: RuneAett;
+  position: number; // 1-24 overall, or 1-8 within aett
+  element: Element;
   keywords: string[];
+  uprightMeaning: string;
+  reversedMeaning?: string; // Some runes can't be reversed
   soulGuidance: string;
   magicalUse: string;
-  associatedDeity?: string;
-  associatedTree?: string;
-  associatedHerb?: string;
-  divinatoryMeaning: string;
-  merkstave?: string; // Meaning when reversed/murkstave
+  associations?: RuneAssociations;
+  elementalResonance?: ElementalSignature;
 }
 
-export type RuneSpreadType =
-  | 'single'
-  | 'three_norns'
-  | 'five_cross'
-  | 'nine_grid'
-  | 'runic_cross';
-
 export interface RuneSpread {
-  type: RuneSpreadType;
   name: string;
   description: string;
-  positions: SpreadPosition[];
   runeCount: number;
+  positions: SpreadPosition[];
+  purpose: string;
+  method: string;
 }
 
 export interface DrawnRune {
   rune: Rune;
   position: SpreadPosition;
-  reversed: boolean;
+  isReversed: boolean;
   interpretation: string;
 }
 
 export interface RuneReading {
   query: string;
   spread: RuneSpread;
-  runes: DrawnRune[];
-  overallMessage: string;
-  soulInsight: string;
-  advice: string;
-  elementalBalance: ElementalSignature;
+  drawnRunes: DrawnRune[];
+  insight: string;
+  soulGuidance: string;
   ritual?: DivinationRitual;
   timestamp: Date;
 }
@@ -264,39 +250,25 @@ export interface OracleReading {
 
 export interface UnifiedReading {
   query: string;
-  primaryMethod: DivinationMethod;
-  iching?: IChingReading;
-  tarot?: TarotReading;
-  runes?: RuneReading;
-  synthesis: {
-    overallTheme: string;
-    keyMessage: string;
-    guidance: string;
-    archetypalPattern: string;
-    timingGuidance: string;
-    elementalBalance: ElementalSignature;
-  };
-  ritual: DivinationRitual;
   timestamp: Date;
+  iching: IChingReading;
+  tarot: TarotReading;
+  runes: RuneReading;
+  synthesis: string;
+  elementalBalance: ElementalSignature;
+  combinedRitual: DivinationRitual;
+  soulMessage: string;
 }
 
 export interface DailyOracleGuidance {
   date: Date;
-  iching?: {
-    hexagram: Hexagram;
-    message: string;
-  };
-  tarot?: {
-    card: TarotCard;
-    message: string;
-  };
-  rune?: {
-    rune: Rune;
-    message: string;
-  };
-  combinedGuidance: string;
-  elementOfTheDay: Element;
-  ritual?: DivinationRitual;
+  hexagram: Hexagram;
+  card: TarotCard;
+  rune: Rune;
+  combinedInsight: string;
+  elementalTheme: string;
+  recommendedFocus: string;
+  ritual: DivinationRitual;
 }
 
 // =============================================================================
@@ -329,9 +301,9 @@ export function isIChingReading(reading: OracleReading['result']): reading is IC
 }
 
 export function isTarotReading(reading: OracleReading['result']): reading is TarotReading {
-  return 'spread' in reading && 'cards' in reading;
+  return 'spread' in reading && 'drawnCards' in reading;
 }
 
 export function isRuneReading(reading: OracleReading['result']): reading is RuneReading {
-  return 'runes' in reading;
+  return 'drawnRunes' in reading;
 }

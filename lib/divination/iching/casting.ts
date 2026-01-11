@@ -108,7 +108,7 @@ function calculateHexagramNumber(upper: TrigramKey, lower: TrigramKey): number {
     'heaven-lake': 10,
     'earth-heaven': 11,
     'heaven-earth': 12,
-    'fire-heaven': 13,
+    'heaven-fire': 13,
     'fire-heaven': 14,
     'earth-mountain': 15,
     'thunder-earth': 16,

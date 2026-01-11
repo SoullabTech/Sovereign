@@ -524,9 +524,9 @@ export function getCourtCards(): TarotCard[] {
 }
 
 /**
- * Get cards by element
+ * Get minor arcana cards by element
  */
-export function getCardsByElement(element: Element): TarotCard[] {
+export function getMinorArcanaByElement(element: Element): TarotCard[] {
   return MINOR_ARCANA.filter(card => card.element === element);
 }
 
