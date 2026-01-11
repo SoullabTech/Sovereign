@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Calendar, User, Compass, Clock } from 'lucide-react';
 import {
   ChineseZodiacAnimal,
   ChineseElement,
@@ -12,6 +12,10 @@ import {
   getYinYang,
   getSexagenaryPosition
 } from '@/lib/astrology/chineseAstrology';
+import DaYunTimeline from '@/components/astrology/DaYunTimeline';
+import type { Gender } from '@/lib/astrology/types/daYun';
+
+type ViewMode = 'profile' | 'da-yun';
 
 interface ChineseReadingData {
   zodiacAnimal: ChineseZodiacAnimal;
@@ -43,7 +47,11 @@ interface ChineseReadingData {
 }
 
 export default function ChineseAstrologyPage() {
+  const [viewMode, setViewMode] = useState<ViewMode>('profile');
   const [birthYear, setBirthYear] = useState<string>('');
+  const [birthDate, setBirthDate] = useState<string>('');
+  const [birthTime, setBirthTime] = useState<string>('');
+  const [gender, setGender] = useState<Gender | ''>('');
   const [reading, setReading] = useState<ChineseReadingData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
 
@@ -156,48 +164,170 @@ export default function ChineseAstrologyPage() {
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-6xl font-bold bg-gradient-to-r from-red-300 via-orange-200 to-yellow-300 bg-clip-text text-transparent mb-4">
+        <div className="text-center mb-8">
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-red-300 via-orange-200 to-yellow-300 bg-clip-text text-transparent mb-4">
             Chinese Astrology Portal
           </h1>
-          <p className="text-xl text-orange-200 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-orange-200 max-w-3xl mx-auto leading-relaxed">
             Discover the ancient wisdom of Chinese zodiac animals, five elements, and the cosmic cycles
             that shape your destiny through thousands of years of celestial observation.
           </p>
         </div>
 
-        {/* Year Input Section */}
+        {/* View Mode Toggle */}
+        <div className="flex justify-center gap-2 mb-8">
+          <button
+            onClick={() => setViewMode('profile')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              viewMode === 'profile'
+                ? 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                : 'bg-black/30 text-orange-200/60 hover:bg-black/40 border border-transparent'
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Zodiac Profile</span>
+          </button>
+          <button
+            onClick={() => setViewMode('da-yun')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              viewMode === 'da-yun'
+                ? 'bg-orange-500/30 text-orange-200 border border-orange-500/50'
+                : 'bg-black/30 text-orange-200/60 hover:bg-black/40 border border-transparent'
+            }`}
+          >
+            <Compass className="w-4 h-4" />
+            <span>Da Yun (10-Year Cycles)</span>
+          </button>
+        </div>
+
+        {/* Input Section - Different based on view mode */}
         <div className="max-w-2xl mx-auto mb-12">
           <div className="bg-black/30 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8">
-            <h2 className="text-2xl font-bold text-orange-200 mb-6 text-center">
-              Enter Your Birth Year
-            </h2>
+            {viewMode === 'profile' ? (
+              <>
+                <h2 className="text-2xl font-bold text-orange-200 mb-6 text-center">
+                  Enter Your Birth Year
+                </h2>
 
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-              <select
-                value={birthYear}
-                onChange={(e) => setBirthYear(e.target.value)}
-                className="bg-black/50 border border-orange-500/50 rounded-xl px-6 py-4 text-orange-200 text-lg w-full sm:w-auto focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
-              >
-                <option value="">Select Year...</option>
-                {yearOptions.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
+                  <select
+                    value={birthYear}
+                    onChange={(e) => setBirthYear(e.target.value)}
+                    className="bg-black/50 border border-orange-500/50 rounded-xl px-6 py-4 text-orange-200 text-lg w-full sm:w-auto focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                  >
+                    <option value="">Select Year...</option>
+                    {yearOptions.map(year => (
+                      <option key={year} value={year}>{year}</option>
+                    ))}
+                  </select>
 
-              <button
-                onClick={generateReading}
-                disabled={!birthYear || isCalculating}
-                className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 w-full sm:w-auto disabled:cursor-not-allowed"
-              >
-                {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
-              </button>
-            </div>
+                  <button
+                    onClick={generateReading}
+                    disabled={!birthYear || isCalculating}
+                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 w-full sm:w-auto disabled:cursor-not-allowed"
+                  >
+                    {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-orange-200 mb-2 text-center">
+                  Four Pillars & Da Yun
+                </h2>
+                <p className="text-orange-200/60 text-sm text-center mb-6">
+                  See your complete Ba Zi chart and 10-year luck cycles
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {/* Birth Date */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Calendar className="w-4 h-4" />
+                      Birth Date
+                    </label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => {
+                        setBirthDate(e.target.value);
+                        // Also update birthYear for profile view sync
+                        if (e.target.value) {
+                          setBirthYear(e.target.value.split('-')[0]);
+                        }
+                      }}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
+
+                  {/* Birth Time (Optional) */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Clock className="w-4 h-4" />
+                      Birth Time <span className="text-orange-200/40">(optional)</span>
+                    </label>
+                    <input
+                      type="time"
+                      value={birthTime}
+                      onChange={(e) => setBirthTime(e.target.value)}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
+
+                  {/* Gender */}
+                  <div className="sm:col-span-2">
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <User className="w-4 h-4" />
+                      Gender <span className="text-orange-200/40">(affects cycle direction)</span>
+                    </label>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => setGender('male')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                          gender === 'male'
+                            ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
+                            : 'bg-black/30 border-orange-500/30 text-orange-200/60 hover:border-orange-500/50'
+                        }`}
+                      >
+                        Male
+                      </button>
+                      <button
+                        onClick={() => setGender('female')}
+                        className={`flex-1 py-3 px-4 rounded-xl border transition-all ${
+                          gender === 'female'
+                            ? 'bg-orange-500/30 border-orange-500/50 text-orange-200'
+                            : 'bg-black/30 border-orange-500/30 text-orange-200/60 hover:border-orange-500/50'
+                        }`}
+                      >
+                        Female
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Helper text */}
+                <p className="text-orange-200/40 text-xs text-center">
+                  Da Yun (大運) reveals the major 10-year periods that shape your life journey.
+                  Birth time is optional but improves hour pillar accuracy.
+                </p>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Reading Results */}
-        {reading && (
+        {/* Da Yun Timeline View */}
+        {viewMode === 'da-yun' && (
+          <div className="max-w-6xl mx-auto">
+            <DaYunTimeline
+              birthDate={birthDate}
+              birthTime={birthTime || undefined}
+              gender={gender || undefined}
+            />
+          </div>
+        )}
+
+        {/* Profile Reading Results */}
+        {viewMode === 'profile' && reading && (
           <div className="max-w-6xl mx-auto space-y-8">
             {/* Core Identity */}
             <div className="bg-black/30 backdrop-blur-sm border border-red-500/30 rounded-2xl p-8">
