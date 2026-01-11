@@ -24,6 +24,8 @@ If you see `chart.soullab.life` referenced elsewhere, nothing's broken — it's 
 
 Use **/chart** on the main site and you're good.
 
+**[Go to your birth chart now →](https://soullab.life/chart)**
+
 ---
 
 *Part of the MAIA Consciousness System - Community Commons*
