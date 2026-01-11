@@ -4,7 +4,7 @@ import {
   findHexagramFromLines,
   getHexagram,
   LineValue
-} from '@/lib/divination/iching';
+} from '@/lib/divination';
 
 /**
  * I Ching Oracle API

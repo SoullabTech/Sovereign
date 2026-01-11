@@ -6,7 +6,7 @@ import {
   celticCrossReading,
   getSpread,
   TarotReading
-} from '@/lib/divination/tarot';
+} from '@/lib/divination';
 
 /**
  * Tarot Oracle API

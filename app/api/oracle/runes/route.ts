@@ -5,7 +5,7 @@ import {
   nornsReading,
   getRuneSpread,
   RuneReading
-} from '@/lib/divination/runes';
+} from '@/lib/divination';
 
 /**
  * Runes Oracle API
