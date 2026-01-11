@@ -2,11 +2,11 @@
  * MAIA Divination System
  * Complete oracle framework integrating I Ching, Tarot, and Runes
  *
+ * This barrel is the public contract. Do not export internal modules from here.
+ * All functions and types exported below are stable API surface.
+ *
  * @module divination
  */
-
-// Core types
-export * from './core/types';
 
 // Unified Oracle Engine
 export {
