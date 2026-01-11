@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Calendar, User, Compass, Clock } from 'lucide-react';
 import {
@@ -57,6 +57,24 @@ export default function ChineseAstrologyPage() {
   const [gender, setGender] = useState<Gender | ''>('');
   const [reading, setReading] = useState<ChineseReadingData | null>(null);
   const [isCalculating, setIsCalculating] = useState(false);
+  const didAutoLoad = useRef(false);
+
+  // Auto-load saved birth date (parity with Mayan page)
+  useEffect(() => {
+    if (didAutoLoad.current) return;
+    const saved = localStorage.getItem('birthDate');
+    if (saved) {
+      setBirthDate(saved);
+      didAutoLoad.current = true;
+    }
+  }, []);
+
+  // Auto-calculate when birthDate is set from localStorage
+  useEffect(() => {
+    if (birthDate && didAutoLoad.current && !reading) {
+      generateReading();
+    }
+  }, [birthDate]);
 
   const generateReading = async () => {
     if (!birthDate) return;
@@ -262,6 +280,9 @@ export default function ChineseAstrologyPage() {
                 >
                   {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
                 </button>
+                <p className="text-xs text-orange-400/50 text-center mt-3">
+                  Reveals your animal sign, element, and five-layer profile (physical, emotional, mental, spiritual, ancestral).
+                </p>
               </>
             ) : (
               <>
