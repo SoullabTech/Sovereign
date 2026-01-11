@@ -17,6 +17,12 @@ import {
   type BirthChart,
   type PlanetPosition,
 } from '@/lib/astrology/ephemerisCalculator';
+import {
+  calculateCompleteMayanProfile,
+  getTodaysMayanSign,
+  type CompleteMayanProfile,
+  type MayanBirthSign,
+} from '@/lib/astrology/mayanAstrology';
 
 // ==================== TYPES ====================
 
@@ -48,6 +54,8 @@ export interface TransitHighlight {
 export interface AstrologyContext {
   hasBirthData: boolean;
   birthChart: BirthChart | null;
+  mayanProfile: CompleteMayanProfile | null;
+  todaysMayanSign: MayanBirthSign | null;
   currentTransits: CurrentTransit[];
   transitHighlights: TransitHighlight[];
   relevantPatterns: string[];
@@ -117,6 +125,7 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     const hasBirthData = !!member.birth_date;
 
     let birthChart: BirthChart | null = null;
+    let mayanProfile: CompleteMayanProfile | null = null;
     let relevantPatterns: string[] = [];
 
     // Calculate birth chart if we have the data
@@ -139,13 +148,28 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
       }
     }
 
+    // Calculate Mayan profile if we have birth date (doesn't need location/time)
+    if (hasBirthData) {
+      try {
+        const birthDate = new Date(member.birth_date);
+        mayanProfile = calculateCompleteMayanProfile(birthDate);
+      } catch (mayanError) {
+        console.warn('[AstrologyContext] Mayan profile calculation failed:', mayanError);
+      }
+    }
+
     // Get current transits (works even without birth data)
     const currentTransits = await getCurrentTransitPositions();
     const transitHighlights = generateTransitHighlights(currentTransits, birthChart);
 
+    // Get today's Mayan sign (always available)
+    const todaysMayanSign = getTodaysMayanSign();
+
     // Format the context for MAIA
     const formattedContext = formatAstrologyContextForMAIA(
       birthChart,
+      mayanProfile,
+      todaysMayanSign,
       currentTransits,
       transitHighlights,
       relevantPatterns,
@@ -155,6 +179,8 @@ export async function getAstrologyContextForUser(memberId: string): Promise<Astr
     return {
       hasBirthData,
       birthChart,
+      mayanProfile,
+      todaysMayanSign,
       currentTransits,
       transitHighlights,
       relevantPatterns,
@@ -311,6 +337,8 @@ function generateTransitHighlights(
  */
 function formatAstrologyContextForMAIA(
   birthChart: BirthChart | null,
+  mayanProfile: CompleteMayanProfile | null,
+  todaysMayanSign: MayanBirthSign | null,
   currentTransits: CurrentTransit[],
   transitHighlights: TransitHighlight[],
   relevantPatterns: string[],
@@ -331,11 +359,18 @@ function formatAstrologyContextForMAIA(
       context += `- ${h.description}\n`;
     }
   });
+
+  // Today's Mayan energy
+  if (todaysMayanSign) {
+    context += `\n**Today's Mayan Day Sign:** ${todaysMayanSign.tone} ${todaysMayanSign.daySign.name} (${todaysMayanSign.daySign.glyph})\n`;
+    context += `- Energy: ${todaysMayanSign.daySign.meaning}\n`;
+    context += `- Tone ${todaysMayanSign.tone}: ${getToneMeaning(todaysMayanSign.tone)}\n`;
+  }
   context += '\n';
 
   // Birth chart (if available)
   if (birthChart) {
-    context += '## This Person\'s Birth Chart\n';
+    context += '## This Person\'s Western Birth Chart\n';
     if (birthTimeUnknown) {
       context += '*Note: Birth time unknown, house placements are approximate*\n\n';
     }
@@ -357,13 +392,42 @@ function formatAstrologyContextForMAIA(
       context += '\n';
     }
   } else {
-    context += '*No birth data available for this person - use general cosmic weather only*\n\n';
+    context += '*No Western birth chart data available - use general cosmic weather only*\n\n';
+  }
+
+  // Mayan profile (if available)
+  if (mayanProfile) {
+    context += '## This Person\'s Mayan Astrology Profile\n\n';
+
+    // Main Tzolk'in sign
+    context += `**Birth Day Sign (Tzolk'in):** ${mayanProfile.tzolkin.tone} ${mayanProfile.tzolkin.daySign.name} (${mayanProfile.tzolkin.daySign.glyph})\n`;
+    context += `- Core essence: ${mayanProfile.tzolkin.daySign.meaning}\n`;
+    context += `- Tone ${mayanProfile.tzolkin.tone} quality: ${getToneMeaning(mayanProfile.tzolkin.tone)}\n\n`;
+
+    // Path of Life (Three Pillars)
+    context += `**Path of Life (Three Pillars):**\n`;
+    context += `- Youth Pillar (birth to ~26): ${mayanProfile.pathOfLife.youth.tone} ${mayanProfile.pathOfLife.youth.daySign.name} - ${mayanProfile.pathOfLife.youth.daySign.meaning}\n`;
+    context += `- Adulthood Pillar (main life): ${mayanProfile.pathOfLife.adulthood.tone} ${mayanProfile.pathOfLife.adulthood.daySign.name} - ${mayanProfile.pathOfLife.adulthood.daySign.meaning}\n`;
+    context += `- Future Pillar (~52+): ${mayanProfile.pathOfLife.future.tone} ${mayanProfile.pathOfLife.future.daySign.name} - ${mayanProfile.pathOfLife.future.daySign.meaning}\n\n`;
+
+    // Life cycle insight
+    context += `**Current Life Phase Insight:** ${mayanProfile.lifeCycleInsight}\n\n`;
+
+    // Cardinal direction
+    context += `**Cardinal Direction:** ${mayanProfile.cardinalDirection.direction.charAt(0).toUpperCase() + mayanProfile.cardinalDirection.direction.slice(1)} (${mayanProfile.cardinalDirection.color})\n`;
+    context += `- Activity: ${mayanProfile.cardinalDirection.activity}\n`;
+    context += `- Meaning: ${mayanProfile.cardinalDirection.description}\n\n`;
+
+    // Haab solar calendar
+    context += `**Haab Solar Calendar:** ${mayanProfile.haab.day} ${mayanProfile.haab.monthName}\n`;
+    context += `- Month meaning: ${mayanProfile.haab.monthMeaning}\n\n`;
   }
 
   context += `## How to Use This (IMPORTANT)
 - In REGULAR CONVERSATION: Do not proactively mention astrology unless they ask
 - In FULL ASSESSMENTS: Weave astrological insights implicitly into your holistic understanding
 - If they EXPLICITLY ASK about astrology: Share insights openly and specifically
+- MAYAN ASTROLOGY: The Three Pillars (Youth/Adulthood/Future) reveal life phases - you can reference which phase they're currently in based on their age
 - This context informs your deeper understanding of their patterns and timing
 - Never lecture or make astrology the focus unless requested
 - Always prioritize their lived experience - astrology is one lens among many
@@ -371,6 +435,28 @@ function formatAstrologyContextForMAIA(
 `;
 
   return context;
+}
+
+/**
+ * Get the meaning of a Mayan tone (1-13)
+ */
+function getToneMeaning(tone: number): string {
+  const toneMeanings: Record<number, string> = {
+    1: 'Unity, beginnings, magnetic attraction',
+    2: 'Duality, challenge, polarity',
+    3: 'Rhythm, action, movement',
+    4: 'Stability, form, foundation',
+    5: 'Radiance, empowerment, center',
+    6: 'Flow, balance, organic growth',
+    7: 'Mystical power, reflection, attunement',
+    8: 'Harmony, integrity, modeling',
+    9: 'Intention, patience, greater cycles',
+    10: 'Manifestation, perfection, producing',
+    11: 'Liberation, change, dissolution',
+    12: 'Cooperation, dedication, complex stability',
+    13: 'Transcendence, presence, cosmic consciousness',
+  };
+  return toneMeanings[tone] || 'Unknown tone';
 }
 
 // ==================== HELPERS ====================
@@ -458,6 +544,50 @@ export function detectAstrologicalRelevance(
     if (context.birthChart.saturn?.house === 10) {
       relevantInsights.push('Saturn in their 10th house suggests career is an area of significant growth through challenge');
     }
+  }
+
+  // Mayan astrology topics
+  if (
+    lowerMessage.includes('mayan') ||
+    lowerMessage.includes('tzolkin') ||
+    lowerMessage.includes('nahual') ||
+    lowerMessage.includes('day sign') ||
+    lowerMessage.includes('galactic')
+  ) {
+    if (context.mayanProfile) {
+      relevantInsights.push(`Their Mayan birth sign is ${context.mayanProfile.tzolkin.tone} ${context.mayanProfile.tzolkin.daySign.name} - share their complete profile if they ask`);
+    }
+    if (context.todaysMayanSign) {
+      relevantInsights.push(`Today's Mayan energy is ${context.todaysMayanSign.tone} ${context.todaysMayanSign.daySign.name}`);
+    }
+  }
+
+  // Life phase/transition themes + Mayan pillars
+  if (
+    (lowerMessage.includes('life phase') ||
+      lowerMessage.includes('transition') ||
+      lowerMessage.includes('turning point') ||
+      lowerMessage.includes('midlife') ||
+      lowerMessage.includes('growing up') ||
+      lowerMessage.includes('getting older') ||
+      lowerMessage.includes('youth') ||
+      lowerMessage.includes('future')) &&
+    context.mayanProfile
+  ) {
+    relevantInsights.push(`Their Mayan Path of Life shows three pillars: Youth (${context.mayanProfile.pathOfLife.youth.daySign.name}), Adulthood (${context.mayanProfile.pathOfLife.adulthood.daySign.name}), and Future (${context.mayanProfile.pathOfLife.future.daySign.name}) - ${context.mayanProfile.lifeCycleInsight}`);
+  }
+
+  // Purpose/destiny themes + Mayan cardinal direction
+  if (
+    (lowerMessage.includes('purpose') ||
+      lowerMessage.includes('destiny') ||
+      lowerMessage.includes('path') ||
+      lowerMessage.includes('direction') ||
+      lowerMessage.includes('meaning')) &&
+    context.mayanProfile
+  ) {
+    const dir = context.mayanProfile.cardinalDirection;
+    relevantInsights.push(`Their Mayan cardinal direction is ${dir.direction} (${dir.color}) - their soul's activity is to ${dir.activity.toLowerCase()}`);
   }
 
   return relevantInsights;
