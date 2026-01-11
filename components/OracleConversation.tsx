@@ -2224,7 +2224,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
         // ECHO SUPPRESSION: Define cooldown for streaming audio path
-        const streamingCooldownMs = 1500; // 1.5 second cooldown - prevents mic catching MAIA's voice tail
+        const streamingCooldownMs = 600; // 600ms cooldown - balance between responsiveness and echo prevention
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
@@ -2705,7 +2705,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('🧹 Cleaned for voice:', cleanVoiceText);
 
         // ECHO SUPPRESSION: Define cooldown OUTSIDE try block so finally can access it
-        const cooldownMs = 1500; // 1.5 second cooldown - prevents mic catching MAIA's voice tail
+        const cooldownMs = 600; // 600ms cooldown - balance between responsiveness and echo prevention
 
         try {
           // Start speaking immediately
