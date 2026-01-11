@@ -2254,45 +2254,54 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                 setIsMicrophonePaused(false);
                 console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
 
-                // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
-                const attemptMicRestart = (attempt: number) => {
-                  if (attempt > 5) {
-                    console.log('⏸️ [STREAM] Gave up on mic restart after 5 attempts');
-                    return;
-                  }
+                // 🔥 FIX: Force React to flush state updates before attempting mic restart
+                // Using requestAnimationFrame ensures we're after the React render cycle
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
+                    const attemptMicRestart = (attempt: number) => {
+                      if (attempt > 8) {
+                        console.log('⏸️ [STREAM] Gave up on mic restart after 8 attempts');
+                        return;
+                      }
 
-                  if (voiceMicRef.current?.startListening) {
-                    // Check ALL blocking conditions including mic pause state
-                    const canRestart = !isProcessingRef.current &&
-                                       !isRespondingRef.current &&
-                                       !isAudioPlayingRef.current &&
-                                       !isMicrophonePausedRef.current;
-                    if (canRestart) {
-                      setIsMuted(false);
-                      console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
-                      voiceMicRef.current.startListening();
-                      // Verify mic actually started after a brief delay
-                      setTimeout(() => {
-                        if (voiceMicRef.current?.isListening) {
-                          console.log('✅ [STREAM] Microphone auto-resumed successfully');
+                      if (voiceMicRef.current?.startListening) {
+                        // Check ALL blocking conditions including mic pause state
+                        const canRestart = !isProcessingRef.current &&
+                                           !isRespondingRef.current &&
+                                           !isAudioPlayingRef.current &&
+                                           !isMicrophonePausedRef.current;
+
+                        console.log(`🔍 [STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
+
+                        if (canRestart) {
+                          setIsMuted(false);
+                          console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
+                          voiceMicRef.current.startListening();
+                          // Verify mic actually started after a brief delay
+                          setTimeout(() => {
+                            if (voiceMicRef.current?.isListening) {
+                              console.log('✅ [STREAM] Microphone auto-resumed successfully');
+                            } else {
+                              console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                              if (attempt < 8) {
+                                setTimeout(() => attemptMicRestart(attempt + 1), 400);
+                              }
+                            }
+                          }, 150);
                         } else {
-                          console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                          if (attempt < 5) {
-                            setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                          }
+                          console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
+                          setTimeout(() => attemptMicRestart(attempt + 1), 300);
                         }
-                      }, 100);
-                    } else {
-                      console.log(`⏸️ [STREAM] Attempt ${attempt} blocked (proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}), retrying in 250ms...`);
-                      setTimeout(() => attemptMicRestart(attempt + 1), 250);
-                    }
-                  } else {
-                    console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
-                  }
-                };
+                      } else {
+                        console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
+                      }
+                    };
 
-                // Start first attempt after 400ms for React state to propagate
-                setTimeout(() => attemptMicRestart(1), 400);
+                    // Start first attempt immediately after React render cycle
+                    attemptMicRestart(1);
+                  });
+                });
               }, streamingCooldownMs);
             },
           });
@@ -2765,45 +2774,53 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             setIsMuted(false); // Ensure mic is unmuted
             console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
 
-            // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
-            // ContinuousConversation's isSpeaking guard will block if state hasn't updated yet.
-            const attemptMicRestart = (attempt: number) => {
-              if (attempt > 5) {
-                console.log('⏸️ [NON-STREAM] Gave up on mic restart after 5 attempts');
-                return;
-              }
+            // 🔥 FIX: Force React to flush state updates before attempting mic restart
+            // Using requestAnimationFrame ensures we're after the React render cycle
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
+                const attemptMicRestart = (attempt: number) => {
+                  if (attempt > 8) {
+                    console.log('⏸️ [NON-STREAM] Gave up on mic restart after 8 attempts');
+                    return;
+                  }
 
-              if (voiceMicRef.current?.startListening) {
-                // Check ALL blocking conditions including mic pause and audio states
-                const canRestart = !isProcessingRef.current &&
-                                   !isRespondingRef.current &&
-                                   !isAudioPlayingRef.current &&
-                                   !isMicrophonePausedRef.current;
-                if (canRestart) {
-                  console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
-                  voiceMicRef.current.startListening();
-                  // Verify mic actually started after a brief delay
-                  setTimeout(() => {
-                    if (voiceMicRef.current?.isListening) {
-                      console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
+                  if (voiceMicRef.current?.startListening) {
+                    // Check ALL blocking conditions including mic pause and audio states
+                    const canRestart = !isProcessingRef.current &&
+                                       !isRespondingRef.current &&
+                                       !isAudioPlayingRef.current &&
+                                       !isMicrophonePausedRef.current;
+
+                    console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
+
+                    if (canRestart) {
+                      console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
+                      voiceMicRef.current.startListening();
+                      // Verify mic actually started after a brief delay
+                      setTimeout(() => {
+                        if (voiceMicRef.current?.isListening) {
+                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
+                        } else {
+                          console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                          if (attempt < 8) {
+                            setTimeout(() => attemptMicRestart(attempt + 1), 400);
+                          }
+                        }
+                      }, 150);
                     } else {
-                      console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
-                      if (attempt < 5) {
-                        setTimeout(() => attemptMicRestart(attempt + 1), 300);
-                      }
+                      console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
+                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
                     }
-                  }, 100);
-                } else {
-                  console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked (proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}), retrying in 250ms...`);
-                  setTimeout(() => attemptMicRestart(attempt + 1), 250);
-                }
-              } else {
-                console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
-              }
-            };
+                  } else {
+                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
+                  }
+                };
 
-            // Start first attempt after 400ms for React state to propagate
-            setTimeout(() => attemptMicRestart(1), 400);
+                // Start first attempt immediately after React render cycle
+                attemptMicRestart(1);
+              });
+            });
           }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
