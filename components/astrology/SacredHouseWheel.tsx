@@ -110,22 +110,22 @@ const spiralogicOrder = [
   3,   // Position 11 (11:00) - Air 3 - Communication/Learning (Consciousness)
 ];
 
-// Traditional Western Chart Order - Counterclockwise from Ascendant (9 o'clock)
-// Position index maps clockwise from 12 o'clock, but houses go counterclockwise
-// Position 0 (12:00) = H10 MC, Position 3 (3:00) = H7 DSC, Position 6 (6:00) = H4 IC, Position 9 (9:00) = H1 ASC
+// Traditional Western Chart Order - Counterclockwise from Ascendant (8 o'clock)
+// Rotated counter-clockwise by 1 house so H1/Ascendant spans 8:00-9:00 sector
+// Position index maps clockwise from 12 o'clock, houses go counterclockwise
 const traditionalOrder = [
-  10,  // Position 0 (12:00) - MC / Midheaven
-  9,   // Position 1 (1:00)
-  8,   // Position 2 (2:00)
-  7,   // Position 3 (3:00) - DSC / Descendant
-  6,   // Position 4 (4:00)
-  5,   // Position 5 (5:00)
-  4,   // Position 6 (6:00) - IC / Imum Coeli
-  3,   // Position 7 (7:00)
-  2,   // Position 8 (8:00)
-  1,   // Position 9 (9:00) - ASC / Ascendant
-  12,  // Position 10 (10:00)
-  11,  // Position 11 (11:00)
+  9,   // Position 0 (12:00)
+  8,   // Position 1 (1:00)
+  7,   // Position 2 (2:00)
+  6,   // Position 3 (3:00)
+  5,   // Position 4 (4:00)
+  4,   // Position 5 (5:00)
+  3,   // Position 6 (6:00)
+  2,   // Position 7 (7:00)
+  1,   // Position 8 (8:00) - ASC / Ascendant (Experience)
+  12,  // Position 9 (9:00)
+  11,  // Position 10 (10:00)
+  10,  // Position 11 (11:00) - MC / Midheaven
 ];
 
 // House-element mapping (Spiralogic system)
