@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import { ArrowLeft } from 'lucide-react';
 import { SynastryGrid, type SynastryCell } from '@/components/astrology/SynastryGrid';
 import { SynastryActions } from '@/components/astrology/SynastryActions';
 
@@ -69,6 +71,15 @@ export default async function SynastryAnalysisPage({
   return (
     <main className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand px-4 py-8">
       <div className="mx-auto max-w-6xl space-y-6">
+        {/* Back to Astrology */}
+        <Link
+          href="/astrology"
+          className="inline-flex items-center gap-2 text-white/60 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Back to Blueprint
+        </Link>
+
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl font-semibold text-white">Synastry</h1>

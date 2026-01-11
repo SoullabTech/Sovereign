@@ -8,47 +8,56 @@
 import AspectDetailClient from './AspectDetailClient';
 
 // Generate static params for all available aspect interpretations
+// URL format: planet1-aspectType-planet2 (e.g., sun-square-saturn)
 export async function generateStaticParams() {
   // Define all aspects we have interpretations for
+  // Format: planet1-aspectType-planet2 (matches link generation in /astrology page)
   const aspectSlugs = [
-    'sun-saturn-square',
-    'sun-saturn-conjunction',
-    'sun-saturn-opposition',
-    'sun-saturn-trine',
-    'sun-moon-conjunction',
-    'sun-moon-opposition',
-    'sun-mars-conjunction',
-    'sun-mars-square',
-    'sun-jupiter-trine',
-    'sun-jupiter-square',
-    'sun-uranus-conjunction',
-    'sun-uranus-square',
-    'sun-neptune-square',
-    'sun-pluto-square',
-    'sun-pluto-conjunction',
-    'moon-saturn-square',
-    'moon-saturn-conjunction',
-    'moon-pluto-conjunction',
-    'moon-pluto-square',
-    'mercury-saturn-conjunction',
-    'mercury-uranus-conjunction',
-    'venus-saturn-square',
-    'venus-pluto-conjunction',
-    'venus-uranus-square',
-    'mars-saturn-square',
-    'mars-pluto-conjunction',
-    'mars-pluto-square',
-    'jupiter-saturn-conjunction',
-    'jupiter-saturn-square',
-    'jupiter-uranus-conjunction',
-    'jupiter-neptune-conjunction',
-    'jupiter-pluto-conjunction',
-    'saturn-uranus-square',
-    'saturn-neptune-square',
-    'saturn-pluto-conjunction',
-    'uranus-neptune-conjunction',
-    'uranus-pluto-conjunction',
-    'neptune-pluto-conjunction',
+    // Sun aspects
+    'sun-square-saturn',
+    'sun-conjunction-saturn',
+    'sun-opposition-saturn',
+    'sun-trine-saturn',
+    'sun-conjunction-moon',
+    'sun-opposition-moon',
+    'sun-conjunction-mars',
+    'sun-square-mars',
+    'sun-trine-jupiter',
+    'sun-square-jupiter',
+    'sun-conjunction-uranus',
+    'sun-square-uranus',
+    'sun-square-neptune',
+    'sun-square-pluto',
+    'sun-conjunction-pluto',
+    // Moon aspects
+    'moon-square-saturn',
+    'moon-conjunction-saturn',
+    'moon-conjunction-pluto',
+    'moon-square-pluto',
+    // Mercury aspects
+    'mercury-conjunction-saturn',
+    'mercury-conjunction-uranus',
+    // Venus aspects
+    'venus-square-saturn',
+    'venus-conjunction-pluto',
+    'venus-square-uranus',
+    // Mars aspects
+    'mars-square-saturn',
+    'mars-conjunction-pluto',
+    'mars-square-pluto',
+    // Jupiter aspects
+    'jupiter-conjunction-saturn',
+    'jupiter-square-saturn',
+    'jupiter-conjunction-uranus',
+    'jupiter-conjunction-neptune',
+    'jupiter-conjunction-pluto',
+    // Outer planet aspects
+    'saturn-square-uranus',
+    'saturn-square-neptune',
+    'saturn-conjunction-pluto',
+    'uranus-conjunction-neptune',
+    'uranus-conjunction-pluto',
+    'neptune-conjunction-pluto',
   ];
 
   return aspectSlugs.map((slug) => ({
