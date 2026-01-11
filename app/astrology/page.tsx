@@ -16,7 +16,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
@@ -26,6 +26,8 @@ import { getPlanetaryArchetype } from '@/lib/astrology/spiralogicMapping';
 import { getSpiralogicHouseData } from '@/lib/astrology/spiralogicHouseMapping';
 import { synthesizeAspect, AspectType } from '@/lib/astrology/aspectSynthesis';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { getTooltip, CARD_COPY } from '@/lib/content/CrossSystemConvergenceCopy';
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -1176,9 +1178,34 @@ export default function AstrologyPage() {
               </Link>
             </div>
 
-            {/* Additional Astrological Systems */}
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* Mayan Astrology */}
+            {/* Cross-System Convergence */}
+            <div className="mt-6">
+              <div className="flex items-center gap-2 mb-4">
+                <h2 className="text-lg font-semibold text-white/80">
+                  Additional Wisdom Systems
+                </h2>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        aria-label="What does cross-system convergence mean?"
+                        className="inline-flex items-center"
+                      >
+                        <Info className="w-4 h-4 text-white/40 hover:text-white/70" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>{getTooltip('s', 'pragmatic')}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+              <p className="text-sm text-white/50 mb-4">
+                {CARD_COPY.pragmatic}
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Mayan Astrology */}
               <Link
                 href="/astrology/mayan"
                 className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-dune-bene-gesserit-gold/40 hover:border-dune-bene-gesserit-gold/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-dune-bene-gesserit-gold/20"
@@ -1225,6 +1252,7 @@ export default function AstrologyPage() {
                   </p>
                 </div>
               </Link>
+              </div>
             </div>
 
             {/* Saved Synastry */}
