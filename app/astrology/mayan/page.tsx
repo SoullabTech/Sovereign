@@ -452,6 +452,7 @@ export default function MayanAstrologyPage() {
 
         {/* View Toggle */}
         {birthSign && todaySign && completeProfile && (
+          <>
           <div className="flex flex-wrap justify-center gap-3 mb-8">
             <button
               onClick={() => setActiveView('signature')}
@@ -496,6 +497,7 @@ export default function MayanAstrologyPage() {
           <p className="text-xs text-amber-400/50 text-center mt-2">
             Path of Life shows your 3-pillar developmental arc. Signature reveals your core day-sign imprint.
           </p>
+          </>
         )}
 
         {/* Sign Display */}

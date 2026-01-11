@@ -180,6 +180,13 @@ export default function AstrologyPage() {
     communication_style: preferences?.style,
   });
 
+  // DEV OVERRIDE: Test audience modes via ?mode=mystic|pragmatic|product
+  // Remove after testing is complete
+  const searchParams =
+    typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const forcedMode = searchParams?.get('mode') as 'mystic' | 'pragmatic' | 'product' | null;
+  const resolvedMode = forcedMode ?? audienceMode;
+
   // Memoized sort - avoid re-sorting on every render
   const sortedSavedSynastry = useMemo(() => {
     // NaN-safe timestamp parser (handles malformed dates gracefully)
@@ -1205,13 +1212,13 @@ export default function AstrologyPage() {
                       </button>
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
-                      <p>{getTooltip('s', audienceMode)}</p>
+                      <p>{getTooltip('s', resolvedMode)}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               </div>
               <p className="text-sm text-white/50 mb-4">
-                {CARD_COPY[audienceMode]}
+                {CARD_COPY[resolvedMode]}
               </p>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Mayan Astrology */}
