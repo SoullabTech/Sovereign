@@ -1,13 +1,24 @@
 /**
  * Astrology Reading Composer
  *
- * One input → multiple engines → one unified payload.
+ * One input -> multiple engines -> one unified payload.
  * No HTTP hops. Engines are direct imports.
+ *
+ * Supports detailLevel: "mini" | "standard" | "full"
+ * - mini: minimal summaries only
+ * - standard (default): summaries, no raw arrays
+ * - full: everything including raw engine data
  */
 
 import type { AstrologyIntake } from "./astrologyIntakeSchema";
 import type { Lens } from "./pickLenses";
-import type { UnifiedAstrologyReading, ComposerSection } from "./types";
+import type {
+  ComposerInput,
+  ComposerSection,
+  DetailLevel,
+  IncludeFlags,
+  UnifiedAstrologyReading,
+} from "./types";
 
 import { runBirthChartEngine, type BirthChartEngineResult } from "./engines/birthChartEngine";
 import { runTransitsEngine, type TransitsEngineResult } from "./engines/transitsEngine";
@@ -19,46 +30,238 @@ function nowMs() {
   return Date.now();
 }
 
-async function timed<T>(fn: () => Promise<T>): Promise<ComposerSection<T>> {
+function defaultInclude(): Required<IncludeFlags> {
+  return {
+    natalChart: true,
+    transits: true,
+    lifeCycles: true,
+    narrative: true,
+    spiralogic: true,
+  };
+}
+
+function mergeInclude(partial?: IncludeFlags): Required<IncludeFlags> {
+  return { ...defaultInclude(), ...(partial ?? {}) };
+}
+
+function wants(lenses: Lens[], lens: Lens) {
+  return lenses.includes(lens);
+}
+
+function shouldIncludeRaw(detailLevel: DetailLevel, debug: boolean) {
+  return debug || detailLevel === "full";
+}
+
+function pickTop<T>(arr: T[] | undefined, n: number): T[] {
+  if (!arr?.length) return [];
+  return arr.slice(0, n);
+}
+
+/**
+ * Wrap engine execution with timing + error handling.
+ */
+async function timed<T>(
+  fn: () => Promise<T>
+): Promise<{ ok: true; data: T; ms: number } | { ok: false; error: string; ms: number }> {
   const t0 = nowMs();
   try {
     const data = await fn();
     const t1 = nowMs();
-    return { ok: true, data: data as T, ms: t1 - t0 };
-  } catch (e: unknown) {
+    return { ok: true, data, ms: t1 - t0 };
+  } catch (e: any) {
     const t1 = nowMs();
-    const message = e instanceof Error ? e.message : String(e);
-    return { ok: false, error: message, ms: t1 - t0 };
+    return { ok: false, error: e?.message ?? String(e), ms: t1 - t0 };
   }
 }
 
-function wants(lenses: Lens[], lens: Lens): boolean {
-  return lenses.includes(lens);
+/**
+ * Build safe summaries from each engine output.
+ * These are intentionally conservative and UI-friendly.
+ */
+function summarizeNatalChart(raw: BirthChartEngineResult | null, detailLevel: DetailLevel) {
+  if (!raw) return undefined;
+
+  const topAspectsCount = detailLevel === "mini" ? 3 : 5;
+
+  return {
+    big3: {
+      sun: raw.summary.sun,
+      moon: raw.summary.moon,
+      rising: raw.summary.ascendant,
+    },
+    aspectCount: raw.summary.aspectCount,
+    topAspects: pickTop(raw.chart?.aspects, topAspectsCount),
+  };
+}
+
+function summarizeTransits(raw: TransitsEngineResult | undefined, detailLevel: DetailLevel) {
+  if (!raw) return undefined;
+
+  const n = detailLevel === "mini" ? 3 : 5;
+
+  return {
+    timestamp: raw.timestamp,
+    aspectCount: raw.aspects?.length ?? 0,
+    topAspects: pickTop(raw.aspects, n),
+    hasPositions: !!raw.positions?.length,
+    positionCount: raw.positions?.length ?? 0,
+  };
+}
+
+function summarizeLifeCycles(raw: LifeCyclesEngineResult | null) {
+  if (!raw) return undefined;
+
+  return {
+    age: raw.currentAge,
+    consciousness: raw.consciousness.structure,
+    saturnReturn: raw.saturnCycle.nextReturn
+      ? {
+          yearsAway: raw.saturnCycle.nextReturn.yearsAway,
+          isActive: raw.saturnCycle.nextReturn.isActive,
+        }
+      : null,
+    uranusOpposition: {
+      progress: raw.uranusOpposition.progress,
+      isActive: raw.uranusOpposition.isActive,
+    },
+    insight: raw.insight,
+  };
+}
+
+function summarizeNarrative(raw: NarrativeEngineResult | null, detailLevel: DetailLevel) {
+  if (!raw) return undefined;
+
+  const maxChars = detailLevel === "mini" ? 500 : 1200;
+
+  return {
+    preview:
+      typeof raw.narrative === "string"
+        ? raw.narrative.slice(0, maxChars) + (raw.narrative.length > maxChars ? "..." : "")
+        : undefined,
+    method: raw.method,
+    focus: raw.focus,
+  };
+}
+
+function summarizeSpiralogic(raw: SpiralogicEngineResult | null) {
+  if (!raw) return undefined;
+
+  return {
+    elementalBalance: raw.elementalBalance,
+    dominantElement: raw.elementalBalance.dominant,
+    deficientElement: raw.elementalBalance.deficient,
+    practices: raw.coherencePractices.slice(0, 3),
+    currentPhase: raw.currentPhase,
+    activeFacetCount: raw.activeFacets.length,
+  };
 }
 
 /**
- * Build interpretation text from engine results
+ * Compose a unified astrology reading from intake data
  */
-function buildInterpretation(args: {
-  intake: AstrologyIntake;
-  lensesUsed: Lens[];
-  natalChart?: ComposerSection<BirthChartEngineResult | null>;
-  transits?: ComposerSection<TransitsEngineResult>;
-  lifeCycles?: ComposerSection<LifeCyclesEngineResult | null>;
-  narrative?: ComposerSection<NarrativeEngineResult | null>;
-  spiralogic?: ComposerSection<SpiralogicEngineResult | null>;
-}): UnifiedAstrologyReading["interpretation"] {
-  const { intake, lensesUsed, natalChart, transits, lifeCycles, narrative, spiralogic } = args;
+export async function composeAstrologyReading(input: ComposerInput): Promise<UnifiedAstrologyReading> {
+  const intake: AstrologyIntake = input.intake;
+  const lensesUsed: Lens[] = input.lensesUsed;
 
+  const detailLevel: DetailLevel = input.detailLevel ?? "standard";
+  const debug = !!input.debug;
+  const include = mergeInclude(input.include);
+
+  const includeRaw = shouldIncludeRaw(detailLevel, debug);
+
+  // Engine run decisions (based on lenses + available data)
+  const shouldRunBirthChart = include.natalChart && !!intake.birth;
+  const shouldRunTransits =
+    include.transits && (wants(lensesUsed, "timing") || !!intake.timing?.transits?.length);
+  const shouldRunLifeCycles = include.lifeCycles && !!intake.birth?.date;
+  const shouldRunNarrative =
+    include.narrative &&
+    (wants(lensesUsed, "mythic") || wants(lensesUsed, "developmental") || wants(lensesUsed, "integration"));
+  const shouldRunSpiralogic = include.spiralogic && wants(lensesUsed, "spiralogic");
+
+  // Run birth chart first since other engines may depend on it
+  let birthChartResult: { ok: true; data: BirthChartEngineResult | null; ms: number } | { ok: false; error: string; ms: number } | null = null;
+  if (shouldRunBirthChart) {
+    birthChartResult = await timed(() => runBirthChartEngine(intake));
+  }
+
+  const birthChart = birthChartResult?.ok ? birthChartResult.data?.chart : undefined;
+
+  // Run remaining engines in parallel
+  const [transitsRes, cyclesRes, narrativeRes, spiralogicRes] = await Promise.all([
+    shouldRunTransits ? timed(() => runTransitsEngine(intake, birthChart)) : Promise.resolve(null),
+    shouldRunLifeCycles ? timed(() => runLifeCyclesEngine(intake, birthChart)) : Promise.resolve(null),
+    shouldRunNarrative
+      ? timed(() => runNarrativeEngine(intake, birthChart, { useFastTemplate: !wants(lensesUsed, "mythic") }))
+      : Promise.resolve(null),
+    shouldRunSpiralogic ? timed(() => runSpiralogicEngine(intake, birthChart)) : Promise.resolve(null),
+  ]);
+
+  // Build sections with summary/raw gating
+  const natalChartSection: ComposerSection | undefined = birthChartResult
+    ? birthChartResult.ok
+      ? {
+          ok: true,
+          ms: birthChartResult.ms,
+          summary: summarizeNatalChart(birthChartResult.data, detailLevel),
+          raw: includeRaw ? birthChartResult.data : undefined,
+        }
+      : { ok: false, ms: birthChartResult.ms, error: birthChartResult.error }
+    : undefined;
+
+  const transitsSection: ComposerSection | undefined = transitsRes
+    ? transitsRes.ok
+      ? {
+          ok: true,
+          ms: transitsRes.ms,
+          summary: summarizeTransits(transitsRes.data as TransitsEngineResult, detailLevel),
+          raw: includeRaw ? transitsRes.data : undefined,
+        }
+      : { ok: false, ms: transitsRes.ms, error: transitsRes.error }
+    : undefined;
+
+  const lifeCyclesSection: ComposerSection | undefined = cyclesRes
+    ? cyclesRes.ok
+      ? {
+          ok: true,
+          ms: cyclesRes.ms,
+          summary: summarizeLifeCycles(cyclesRes.data as LifeCyclesEngineResult | null),
+          raw: includeRaw ? cyclesRes.data : undefined,
+        }
+      : { ok: false, ms: cyclesRes.ms, error: cyclesRes.error }
+    : undefined;
+
+  const narrativeSection: ComposerSection | undefined = narrativeRes
+    ? narrativeRes.ok
+      ? {
+          ok: true,
+          ms: narrativeRes.ms,
+          summary: summarizeNarrative(narrativeRes.data as NarrativeEngineResult | null, detailLevel),
+          raw: includeRaw ? narrativeRes.data : undefined,
+        }
+      : { ok: false, ms: narrativeRes.ms, error: narrativeRes.error }
+    : undefined;
+
+  const spiralogicSection: ComposerSection | undefined = spiralogicRes
+    ? spiralogicRes.ok
+      ? {
+          ok: true,
+          ms: spiralogicRes.ms,
+          summary: summarizeSpiralogic(spiralogicRes.data as SpiralogicEngineResult | null),
+          raw: includeRaw ? spiralogicRes.data : undefined,
+        }
+      : { ok: false, ms: spiralogicRes.ms, error: spiralogicRes.error }
+    : undefined;
+
+  // Build interpretation
   const integrationPath: string[] = [];
   const notes: string[] = [];
 
-  // Core pattern from available data
+  // Core pattern from natal chart
   let corePattern = "";
-
-  if (natalChart?.ok && natalChart.data) {
-    const summary = natalChart.data.summary;
-    corePattern = `Your natal signature: Sun in ${summary.sun}, Moon in ${summary.moon}, ${summary.ascendant} Rising. ${summary.aspectCount} aspects shape your inner dynamics.`;
+  if (natalChartSection?.ok && natalChartSection.summary?.big3) {
+    const b3 = natalChartSection.summary.big3;
+    corePattern = `Your natal signature: Sun in ${b3.sun}, Moon in ${b3.moon}, ${b3.rising} Rising.`;
   } else if (intake.natal?.placements?.length) {
     const sun = intake.natal.placements.find((p) => p.body === "Sun");
     const moon = intake.natal.placements.find((p) => p.body === "Moon");
@@ -66,115 +269,58 @@ function buildInterpretation(args: {
       corePattern = `From your placements: Sun ${sun.pos || sun.sign}, Moon ${moon.pos || moon.sign}.`;
     }
   } else {
-    corePattern = "Provide birth data or placements for a complete natal chart reading.";
-    integrationPath.push("Add birth date, time, and location for full chart calculation.");
+    corePattern = "Reading composed from your selected lenses. Use summaries for quick clarity.";
+    integrationPath.push("Add birth date, time, and location for full natal chart calculation.");
   }
 
   // Current activation from transits
   let currentActivation: string | undefined;
-
-  if (transits?.ok && transits.data?.aspects?.length) {
-    const tightestAspect = transits.data.aspects[0];
-    currentActivation = `Current sky activation: ${tightestAspect.transitPlanet} ${tightestAspect.aspectType} your natal ${tightestAspect.natalPlanet} (orb: ${tightestAspect.orb.toFixed(1)}°).`;
-  } else if (transits?.ok) {
+  const topTransit = (transitsSection?.summary as any)?.topAspects?.[0];
+  if (topTransit) {
+    const tPlanet = topTransit.transitPlanet ?? topTransit.transitingBody ?? "Transit";
+    const aType = topTransit.aspectType ?? topTransit.type ?? "aspecting";
+    const nPlanet = topTransit.natalPlanet ?? topTransit.toNatalBody ?? "natal point";
+    const orb = typeof topTransit.orb === "number" ? `${topTransit.orb.toFixed(1)}deg` : undefined;
+    currentActivation = `Current activation: ${tPlanet} ${aType} ${nPlanet}${orb ? ` (orb ${orb})` : ""}.`;
+  } else if (shouldRunTransits) {
     currentActivation = "Current planetary positions calculated. Add natal chart to see transit aspects.";
   }
 
   // Life cycles insight
-  if (lifeCycles?.ok && lifeCycles.data) {
-    const lc = lifeCycles.data;
-    notes.push(`Age ${lc.currentAge}: ${lc.consciousness.structure} consciousness stage.`);
-    if (lc.saturnCycle.nextReturn) {
-      notes.push(`Saturn return ${lc.saturnCycle.nextReturn.yearsAway > 0 ? `in ${lc.saturnCycle.nextReturn.yearsAway} years` : "active now"}.`);
+  if (lifeCyclesSection?.ok && lifeCyclesSection.summary) {
+    const lc = lifeCyclesSection.summary as any;
+    notes.push(`Age ${lc.age}: ${lc.consciousness} consciousness stage.`);
+    if (lc.saturnReturn?.yearsAway !== undefined) {
+      notes.push(
+        `Saturn return ${lc.saturnReturn.yearsAway > 0 ? `in ${lc.saturnReturn.yearsAway.toFixed(1)} years` : "active now"}.`
+      );
     }
   }
 
-  // Narrative excerpt
-  if (narrative?.ok && narrative.data?.narrative) {
-    const excerpt = narrative.data.narrative.slice(0, 200);
-    notes.push(`Archetypal story: ${excerpt}...`);
-  }
-
-  // Spiralogic coherence
-  if (spiralogic?.ok && spiralogic.data) {
-    const sp = spiralogic.data;
+  // Spiralogic guidance
+  if (spiralogicSection?.ok && spiralogicSection.summary) {
+    const sp = spiralogicSection.summary as any;
     integrationPath.push(
-      `Elemental balance: Fire ${sp.elementalBalance.fire}%, Water ${sp.elementalBalance.water}%, Earth ${sp.elementalBalance.earth}%, Air ${sp.elementalBalance.air}%. Dominant: ${sp.elementalBalance.dominant}, strengthen: ${sp.elementalBalance.deficient}.`
+      `Elemental balance: Dominant ${sp.dominantElement}, strengthen ${sp.deficientElement}.`
     );
-    integrationPath.push(...sp.coherencePractices.slice(0, 2));
+    if (sp.practices?.length) {
+      integrationPath.push(...sp.practices.slice(0, 2));
+    }
   }
 
   // Lens-specific guidance
-  if (wants(lensesUsed, "timing") && !transits?.data?.aspects?.length) {
-    integrationPath.push("For timing analysis: we need your birth chart to show transit aspects.");
+  if (wants(lensesUsed, "timing") && !transitsSection?.summary?.topAspects?.length) {
+    integrationPath.push("For timing analysis: add birth chart to show transit aspects.");
   }
 
-  if (wants(lensesUsed, "mythic") && !narrative?.data) {
+  if (wants(lensesUsed, "mythic") && !narrativeSection?.ok) {
     integrationPath.push("Mythic lens requested but narrative couldn't be generated. Provide sun/moon/rising.");
   }
 
-  if (wants(lensesUsed, "developmental")) {
-    integrationPath.push("Developmental lens: Focus on maturation patterns and growth edges in the chart.");
+  // Hint about full detail
+  if (detailLevel !== "full" && !debug) {
+    integrationPath.push('Want full export (all aspects, all transits, full narrative)? Set detailLevel: "full".');
   }
-
-  return {
-    corePattern,
-    currentActivation,
-    integrationPath,
-    notes: notes.length > 0 ? notes : undefined,
-  };
-}
-
-/**
- * Compose a unified astrology reading from intake data
- */
-export async function composeAstrologyReading(args: {
-  intake: AstrologyIntake;
-  lensesUsed: Lens[];
-}): Promise<UnifiedAstrologyReading> {
-  const { intake, lensesUsed } = args;
-
-  // Decide which engines to run based on lenses + available data
-  const shouldRunBirthChart = !!intake.birth;
-  const shouldRunTransits = wants(lensesUsed, "timing") || !!intake.timing?.transits?.length;
-  const shouldRunLifeCycles = !!intake.birth?.date;
-  const shouldRunNarrative = wants(lensesUsed, "mythic") || wants(lensesUsed, "developmental");
-  const shouldRunSpiralogic = wants(lensesUsed, "spiralogic");
-
-  // Run birth chart first since other engines may depend on it
-  let birthChartResult: ComposerSection<BirthChartEngineResult | null> | undefined;
-  if (shouldRunBirthChart) {
-    birthChartResult = await timed(() => runBirthChartEngine(intake));
-  }
-
-  const birthChart = birthChartResult?.data?.chart;
-
-  // Run remaining engines in parallel
-  const [transits, lifeCycles, narrative, spiralogic] = await Promise.all([
-    shouldRunTransits
-      ? timed(() => runTransitsEngine(intake, birthChart))
-      : Promise.resolve(undefined),
-    shouldRunLifeCycles
-      ? timed(() => runLifeCyclesEngine(intake, birthChart))
-      : Promise.resolve(undefined),
-    shouldRunNarrative
-      ? timed(() => runNarrativeEngine(intake, birthChart, { useFastTemplate: !wants(lensesUsed, "mythic") }))
-      : Promise.resolve(undefined),
-    shouldRunSpiralogic
-      ? timed(() => runSpiralogicEngine(intake, birthChart))
-      : Promise.resolve(undefined),
-  ]);
-
-  // Build interpretation from results
-  const interpretation = buildInterpretation({
-    intake,
-    lensesUsed,
-    natalChart: birthChartResult,
-    transits,
-    lifeCycles,
-    narrative,
-    spiralogic,
-  });
 
   const reading: UnifiedAstrologyReading = {
     ok: true,
@@ -184,6 +330,8 @@ export async function composeAstrologyReading(args: {
       lensesUsed,
       source: intake.meta?.source ?? "other",
       timingIncluded: !!intake.timing?.transits?.length || wants(lensesUsed, "timing"),
+      detailLevel,
+      debug,
     },
     intake: {
       question: intake.question,
@@ -191,12 +339,17 @@ export async function composeAstrologyReading(args: {
       hasNatal: !!intake.natal?.placements?.length,
       hasTiming: !!intake.timing?.transits?.length,
     },
-    natalChart: birthChartResult,
-    transits,
-    lifeCycles,
-    narrative,
-    spiralogic,
-    interpretation,
+    natalChart: natalChartSection,
+    transits: transitsSection,
+    lifeCycles: lifeCyclesSection,
+    narrative: narrativeSection,
+    spiralogic: spiralogicSection,
+    interpretation: {
+      corePattern,
+      currentActivation,
+      integrationPath,
+      notes: notes.length > 0 ? notes : undefined,
+    },
   };
 
   return reading;

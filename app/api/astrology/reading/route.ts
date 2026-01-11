@@ -1,14 +1,3 @@
-/**
- * Astrology Reading API
- *
- * Unified intake endpoint that:
- * - Accepts plain text chart dumps OR structured JSON
- * - Validates via Zod schema
- * - Routes to appropriate lenses based on keywords
- * - Runs engines in parallel (natal chart, transits, life cycles, narrative, spiralogic)
- * - Returns unified reading payload
- */
-
 import { NextResponse } from "next/server";
 import { parseAstrologyIntake } from "@/lib/astrology/parseAstrologyIntake";
 import { pickLenses } from "@/lib/astrology/pickLenses";
@@ -20,7 +9,6 @@ export const revalidate = 0;
 
 async function readBodyAsUnknown(req: Request): Promise<unknown> {
   const contentType = req.headers.get("content-type") || "";
-
   if (contentType.includes("application/json")) {
     try {
       return await req.json();
@@ -28,30 +16,49 @@ async function readBodyAsUnknown(req: Request): Promise<unknown> {
       // fall through to text
     }
   }
+  return await req.text();
+}
 
-  // Default to text
-  const text = await req.text();
-  return text;
+function pickControlFlags(req: Request, body: any) {
+  // Prefer JSON body controls; fall back to query params if needed
+  const url = new URL(req.url);
+
+  const detailLevel =
+    body?.detailLevel ?? url.searchParams.get("detailLevel") ?? "standard";
+
+  const debug = body?.debug ?? (url.searchParams.get("debug") === "true");
+
+  const include = body?.include ?? undefined;
+
+  return { detailLevel, debug, include };
 }
 
 export async function POST(req: Request) {
   try {
     const body = await readBodyAsUnknown(req);
-    const intake = parseAstrologyIntake(body);
+
+    // If JSON object, we can carry control flags alongside intake
+    const bodyObj =
+      typeof body === "object" && body !== null ? (body as any) : null;
+
+    const intake = parseAstrologyIntake(bodyObj?.intake ?? body);
     const lensesUsed = pickLenses(intake);
 
-    // Run the unified composer with all engines
-    const reading = await composeAstrologyReading({ intake, lensesUsed });
+    const { detailLevel, debug, include } = pickControlFlags(req, bodyObj);
+
+    const reading = await composeAstrologyReading({
+      intake,
+      lensesUsed,
+      detailLevel,
+      debug,
+      include,
+    });
 
     return NextResponse.json(reading, { status: 200 });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     return NextResponse.json(
-      {
-        ok: false,
-        error: "Astrology reading failed",
-        detail: message,
-      },
+      { ok: false, error: "Astrology reading failed", detail: message },
       { status: 400 }
     );
   }
@@ -62,25 +69,44 @@ export async function GET() {
     {
       ok: true,
       hint: "POST chart paste or JSON to this endpoint.",
-      lensesAvailable: ["developmental", "mythic", "timing", "integration", "spiralogic"],
-      houseSystemsAvailable: ["whole_sign", "placidus", "porphyry", "equal", "koch"],
+      lensesAvailable: [
+        "developmental",
+        "mythic",
+        "timing",
+        "integration",
+        "spiralogic",
+      ],
+      houseSystemsAvailable: [
+        "whole_sign",
+        "placidus",
+        "porphyry",
+        "equal",
+        "koch",
+      ],
+      controls: {
+        detailLevel: ["mini", "standard", "full"],
+        debug: "true | false",
+        include: {
+          natalChart: "boolean",
+          transits: "boolean",
+          lifeCycles: "boolean",
+          narrative: "boolean",
+          spiralogic: "boolean",
+        },
+      },
       example: {
-        houseSystem: "whole_sign",
-        question: "What is being initiated in me right now and how do I cooperate with it?",
-        birth: {
-          date: "1990-05-15",
-          time: "14:30",
-          location: "30.2672,-97.7431", // lat,lng format
-          timezone: "America/Chicago",
-        },
-        natal: {
-          placements: [
-            { body: "Sun", pos: "Scorpio 18°" },
-            { body: "Moon", pos: "Aquarius 5°" },
-          ],
-        },
-        timing: {
-          transits: [{ transitingBody: "Pluto", toNatalBody: "Sun", type: "conjunction", orbDeg: 0.5 }],
+        detailLevel: "standard",
+        debug: false,
+        include: { spiralogic: true },
+        intake: {
+          houseSystem: "whole_sign",
+          question: "What growth patterns should I focus on?",
+          birth: {
+            date: "1985-03-21",
+            time: "14:30",
+            location: "30.2672,-97.7431",
+            timezone: "America/Chicago",
+          },
         },
       },
     },
