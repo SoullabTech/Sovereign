@@ -56,13 +56,14 @@ export default function ChineseAstrologyPage() {
   const [isCalculating, setIsCalculating] = useState(false);
 
   const generateReading = async () => {
-    if (!birthYear || isNaN(Number(birthYear))) return;
+    if (!birthDate) return;
 
     setIsCalculating(true);
 
-    // Calculate actual Chinese astrology data from the birth year
+    // Calculate actual Chinese astrology data from the birth date
     setTimeout(() => {
-      const year = Number(birthYear);
+      const date = new Date(birthDate);
+      const year = date.getFullYear();
       const zodiacAnimal = getChineseZodiacAnimal(year);
       const element = getChineseElement(year);
       const yinYang = getYinYang(year);
@@ -205,30 +206,55 @@ export default function ChineseAstrologyPage() {
           <div className="bg-black/30 backdrop-blur-sm border border-orange-500/30 rounded-2xl p-8">
             {viewMode === 'profile' ? (
               <>
-                <h2 className="text-2xl font-bold text-orange-200 mb-6 text-center">
-                  Enter Your Birth Year
+                <h2 className="text-2xl font-bold text-orange-200 mb-2 text-center">
+                  Enter Your Birth Data
                 </h2>
+                <p className="text-orange-200/60 text-sm text-center mb-6">
+                  Full date required for Four Pillars. Time optional but improves accuracy.
+                </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
-                  <select
-                    value={birthYear}
-                    onChange={(e) => setBirthYear(e.target.value)}
-                    className="bg-black/50 border border-orange-500/50 rounded-xl px-6 py-4 text-orange-200 text-lg w-full sm:w-auto focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
-                  >
-                    <option value="">Select Year...</option>
-                    {yearOptions.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                  {/* Birth Date */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Calendar className="w-4 h-4" />
+                      Birth Date
+                    </label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => {
+                        setBirthDate(e.target.value);
+                        if (e.target.value) {
+                          setBirthYear(e.target.value.split('-')[0]);
+                        }
+                      }}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
 
-                  <button
-                    onClick={generateReading}
-                    disabled={!birthYear || isCalculating}
-                    className="bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 w-full sm:w-auto disabled:cursor-not-allowed"
-                  >
-                    {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
-                  </button>
+                  {/* Birth Time (Optional) */}
+                  <div>
+                    <label className="flex items-center gap-2 text-orange-200/80 text-sm mb-2">
+                      <Clock className="w-4 h-4" />
+                      Birth Time <span className="text-orange-200/40">(optional)</span>
+                    </label>
+                    <input
+                      type="time"
+                      value={birthTime}
+                      onChange={(e) => setBirthTime(e.target.value)}
+                      className="w-full bg-black/50 border border-orange-500/50 rounded-xl px-4 py-3 text-orange-200 focus:border-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-400/30"
+                    />
+                  </div>
                 </div>
+
+                <button
+                  onClick={generateReading}
+                  disabled={!birthDate || isCalculating}
+                  className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 disabled:from-gray-600 disabled:to-gray-700 text-white px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 disabled:cursor-not-allowed"
+                >
+                  {isCalculating ? 'Calculating...' : 'Reveal Destiny'}
+                </button>
               </>
             ) : (
               <>
