@@ -86,12 +86,12 @@ function getTimeOfDayFromHour(hour: number | undefined): 'morning' | 'afternoon'
 
 // Helper: Map retrieved turns to audit candidates (type-safe)
 function mapTurnsToRetrievedCandidates(
-  turns: Array<{ id?: string | null }>,
+  turns: Array<{ id?: string | number | null }>,
   traceId: string
 ) {
   return turns.map((t, i) => ({
     // Always provide a stable candidate id even if the turn id is missing
-    id: t.id && String(t.id).trim().length > 0 ? String(t.id) : `${traceId}:turn:${i}`,
+    id: t.id != null && String(t.id).trim().length > 0 ? String(t.id) : `${traceId}:turn:${i}`,
     source: 'turn' as const,
     retrievalScore: null,
     semanticScore: null,
@@ -587,10 +587,7 @@ async function fastPathResponse(
               sessionId,
               messageId: traceId,
               userId: effectiveUserId,
-              candidates: mapTurnsToRetrievedCandidates(
-                crossSessionTurns as Array<{ id?: string | null }>,
-                traceId
-              ),
+              candidates: mapTurnsToRetrievedCandidates(crossSessionTurns, traceId),
             });
 
             console.log(

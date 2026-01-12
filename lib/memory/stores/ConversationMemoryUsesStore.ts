@@ -21,6 +21,8 @@ export type MemoryUseType =
 
 export type MemoryUseFeedback = 'helpful' | 'irrelevant' | 'wrong';
 
+export type MemorySource = 'turn' | 'developmental' | 'insight' | 'breakthrough';
+
 export interface ConversationMemoryUse {
   id: string;
   userId: string;
@@ -149,7 +151,7 @@ export const ConversationMemoryUsesStore = {
     userId: string;
     candidates: Array<{
       id: string;
-      source: string;  // 'turn' | 'developmental' | 'insight' | 'breakthrough'
+      source: MemorySource;
       retrievalScore?: number | null;
       semanticScore?: number | null;
       recencyScore?: number | null;
