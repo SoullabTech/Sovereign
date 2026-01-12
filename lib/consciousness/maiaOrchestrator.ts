@@ -760,7 +760,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       })),
       integrationMethod: 'narrative_synthesis',
       finalText: maiaResult.text,
-      coherenceScore: consciousnessAnalysis.analysisMetadata.successRate,
+      coherenceScore: Math.min(1, consciousnessAnalysis.analysisMetadata.successRate),
       depthScore: conversationContext.getSpine().trustLevel,
       elementalMode: (elementalField?.dominantElement as 'fire' | 'water' | 'earth' | 'air' | 'aether') ?? undefined,
       meta: {
