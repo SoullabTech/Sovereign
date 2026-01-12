@@ -145,26 +145,65 @@ export default function CommunityBBSPage() {
     return () => clearTimeout(timer);
   }, [searchQuery, performSearch]);
 
-  // Mock user (replace with real auth)
-  const currentUser = {
-    id: 'beta-user-1',
+  // Real user from session
+  const [currentUser, setCurrentUser] = useState({
+    id: '',
     name: 'Sacred Explorer',
     avatar: 'SE',
-    posts: 23,
-    comments: 67,
-    hearts: 156,
-    breakthroughs: 3,
+    posts: 0,
+    comments: 0,
+    hearts: 0,
+    breakthroughs: 0,
     cohort: 1,
-    joinedDate: 'Oct 2024'
-  };
+    joinedDate: ''
+  });
 
-  // Community stats
-  const communityStats = {
-    totalMembers: 347,
-    onlineNow: 23,
-    totalPosts: territories.reduce((sum, t) => sum + (t.total_posts || t.post_count || 0), 0),
-    breakthroughs: 143
-  };
+  // Real community stats from API
+  const [communityStats, setCommunityStats] = useState({
+    totalMembers: 0,
+    onlineNow: 0,
+    totalPosts: 0,
+    breakthroughs: 0
+  });
+
+  // Load real user and stats
+  useEffect(() => {
+    // Get user from session
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null;
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        setCurrentUser({
+          id: user.id || '',
+          name: user.name || user.username || 'Sacred Explorer',
+          avatar: (user.name || user.username || 'SE').substring(0, 2).toUpperCase(),
+          posts: 0, // Real posts would need tracking
+          comments: 0,
+          hearts: 0,
+          breakthroughs: 0,
+          cohort: 1,
+          joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''
+        });
+      } catch (e) {
+        console.error('Failed to parse user:', e);
+      }
+    }
+
+    // Fetch real stats from API
+    fetch('/api/community/stats')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.stats?.community) {
+          setCommunityStats({
+            totalMembers: data.stats.community.totalMembers || 0,
+            onlineNow: data.stats.community.onlineNow || 0,
+            totalPosts: data.stats.community.totalPosts || 0,
+            breakthroughs: data.stats.community.breakthroughs || 0
+          });
+        }
+      })
+      .catch(err => console.error('Failed to fetch community stats:', err));
+  }, []);
 
   // Get icon for territory
   const getTerritoryIcon = (slug: string): React.ComponentType<{ className?: string }> => {

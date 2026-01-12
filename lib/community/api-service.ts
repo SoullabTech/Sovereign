@@ -298,29 +298,27 @@ class CommunityApiService {
   }
 
   getFallbackStats(): CommunityStats {
+    // Return honest zeros when database unavailable - no fake data
     return {
       community: {
-        totalMembers: 347,
-        onlineNow: 23,
-        totalPosts: 1156,
-        totalComments: 3482,
-        breakthroughs: 143,
-        totalReactions: 892
+        totalMembers: 0,
+        onlineNow: 0,
+        totalPosts: 0,
+        totalComments: 0,
+        breakthroughs: 0,
+        totalReactions: 0
       },
       fieldState: {
-        earth: 0.25,
-        water: 0.30,
+        earth: 0.20,
+        water: 0.20,
         air: 0.20,
-        fire: 0.25,
-        intensity: 0.65,
-        depth: 0.55,
-        coherence: 0.70
+        fire: 0.20,
+        intensity: 0.50,
+        depth: 0.50,
+        coherence: 0.50
       },
       recentActivity: [
-        { type: 'post', user: 'SacredSeeker', action: 'shared a breakthrough in', category: 'Field System Reports', time: '5 min' },
-        { type: 'comment', user: 'WisdomKeeper', action: 'replied to', category: 'Wisdom Traditions', time: '12 min' },
-        { type: 'post', user: 'FieldExplorer', action: 'started discussion in', category: 'Spiralogic Integration', time: '23 min' },
-        { type: 'comment', user: 'ConsciousOne', action: 'commented on', category: 'Sacred Psychology', time: '35 min' }
+        { type: 'info', user: 'System', action: 'Database unavailable', category: 'System', time: 'now' }
       ],
       lastUpdated: new Date().toISOString()
     };
