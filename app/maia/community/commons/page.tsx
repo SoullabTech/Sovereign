@@ -35,6 +35,20 @@ export default function MAIACommunityCommonsPage() {
 
   const knowledgeSections = [
     {
+      title: 'GETTING STARTED',
+      icon: '🌟',
+      items: [
+        {
+          icon: Sparkles,
+          label: 'Working with MAIA',
+          path: '/maia/community/content/guides/working-with-maia',
+          description: 'Your guide to conscious conversation and soul-tending',
+          type: 'practice',
+          readTime: '10 min'
+        },
+      ],
+    },
+    {
       title: 'CORE CONCEPTS',
       icon: '📜',
       items: [
