@@ -6,12 +6,29 @@ set -euo pipefail
 
 : "${DATABASE_URL:?DATABASE_URL is required}"
 
-# Required migrations that the code depends on
-# Add new required migrations here as they're created
-REQUIRED=(
-  "20260112000010_add_origin_route_and_processing_profile.sql"
-  # Add future required migrations here
-)
+# Single source of truth for required migrations
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REQUIRED_FILE="${SCRIPT_DIR}/../database/required_migrations.txt"
+
+if [[ ! -f "$REQUIRED_FILE" ]]; then
+  echo "❌ Required migrations file not found: $REQUIRED_FILE"
+  exit 1
+fi
+
+# Read required migrations (skip comments and empty lines)
+REQUIRED=()
+while IFS= read -r line || [[ -n "$line" ]]; do
+  # Skip comments and empty lines
+  [[ "$line" =~ ^#.*$ ]] && continue
+  [[ -z "${line// }" ]] && continue
+  REQUIRED+=("$line")
+done < "$REQUIRED_FILE"
+
+if [[ ${#REQUIRED[@]} -eq 0 ]]; then
+  echo "⚠️  No required migrations defined in $REQUIRED_FILE"
+  echo "✅ DB schema check skipped (no requirements)."
+  exit 0
+fi
 
 echo "🔎 Checking required DB migrations..."
 missing=0

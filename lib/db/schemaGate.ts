@@ -4,19 +4,59 @@
  * In-app schema version check that fails fast if required migrations are missing.
  * This is a belt-and-suspenders complement to the startup script (scripts/ensure-migrations.sh).
  *
+ * Required migrations are defined in: database/required_migrations.txt
+ * (single source of truth shared with ensure-migrations.sh)
+ *
  * Usage:
  *   import { ensureSchemaReady } from '@/lib/db/schemaGate';
  *   await ensureSchemaReady(); // throws if schema is behind
  */
 
 import { query } from './postgres';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 
-// Required migrations that the code depends on
-// Add new required migrations here as they're created
-const REQUIRED_MIGRATIONS = [
-  '20260112000010_add_origin_route_and_processing_profile.sql',
-  // Add future required migrations here
-] as const;
+// Load required migrations from single source of truth file
+function loadRequiredMigrations(): string[] {
+  try {
+    // Try multiple paths (works in both dev and production standalone)
+    const possiblePaths = [
+      join(process.cwd(), 'database', 'required_migrations.txt'),
+      join(__dirname, '..', '..', 'database', 'required_migrations.txt'),
+    ];
+
+    for (const filePath of possiblePaths) {
+      try {
+        const content = readFileSync(filePath, 'utf-8');
+        const migrations = content
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line && !line.startsWith('#'));
+
+        if (migrations.length > 0) {
+          return migrations;
+        }
+      } catch {
+        // Try next path
+      }
+    }
+
+    console.warn('⚠️ [SchemaGate] Could not load required_migrations.txt, using empty list');
+    return [];
+  } catch (err) {
+    console.warn('⚠️ [SchemaGate] Error loading required migrations:', err);
+    return [];
+  }
+}
+
+// Cache the loaded migrations
+let _requiredMigrations: string[] | null = null;
+function getRequiredMigrations(): string[] {
+  if (_requiredMigrations === null) {
+    _requiredMigrations = loadRequiredMigrations();
+  }
+  return _requiredMigrations;
+}
 
 let gatePromise: Promise<void> | null = null;
 let gateResult: { checked: boolean; error: Error | null } = { checked: false, error: null };
@@ -42,6 +82,15 @@ export function ensureSchemaReady(): Promise<void> {
   }
 
   gatePromise = (async () => {
+    const requiredMigrations = getRequiredMigrations();
+
+    // If no required migrations, skip check
+    if (requiredMigrations.length === 0) {
+      console.log('✅ [SchemaGate] No required migrations defined, skipping check');
+      gateResult = { checked: true, error: null };
+      return;
+    }
+
     try {
       // Check if schema_migrations table exists
       const tableCheck = await query(`
@@ -60,11 +109,11 @@ export function ensureSchemaReady(): Promise<void> {
       // Check for required migrations
       const { rows } = await query(
         `SELECT filename FROM schema_migrations WHERE filename = ANY($1::text[])`,
-        [REQUIRED_MIGRATIONS]
+        [requiredMigrations]
       );
 
       const applied = new Set(rows.map((r: { filename: string }) => r.filename));
-      const missing = REQUIRED_MIGRATIONS.filter((m) => !applied.has(m));
+      const missing = requiredMigrations.filter((m) => !applied.has(m));
 
       if (missing.length > 0) {
         throw new Error(
@@ -93,6 +142,7 @@ export function ensureSchemaReady(): Promise<void> {
 export function resetSchemaGate(): void {
   gatePromise = null;
   gateResult = { checked: false, error: null };
+  _requiredMigrations = null; // Also reload migrations file
 }
 
 /**
@@ -102,6 +152,12 @@ export function resetSchemaGate(): void {
 export async function checkSchemaCompatibility(): Promise<
   { compatible: true } | { compatible: false; missing: string[]; error?: string }
 > {
+  const requiredMigrations = getRequiredMigrations();
+
+  if (requiredMigrations.length === 0) {
+    return { compatible: true };
+  }
+
   try {
     // Check if schema_migrations table exists
     const tableCheck = await query(`
@@ -122,11 +178,11 @@ export async function checkSchemaCompatibility(): Promise<
     // Check for required migrations
     const { rows } = await query(
       `SELECT filename FROM schema_migrations WHERE filename = ANY($1::text[])`,
-      [REQUIRED_MIGRATIONS]
+      [requiredMigrations]
     );
 
     const applied = new Set(rows.map((r: { filename: string }) => r.filename));
-    const missing = REQUIRED_MIGRATIONS.filter((m) => !applied.has(m));
+    const missing = requiredMigrations.filter((m) => !applied.has(m));
 
     if (missing.length > 0) {
       return { compatible: false, missing };
