@@ -782,8 +782,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         layersSuccessful,
         layersFailed,
       },
-      originRoute: '/api/between/chat',
-      processingProfile: 'BETWEEN',
+      originRoute: originRoute ?? '/api/between/chat',
+      processingProfile: processingProfileOverride ?? 'BETWEEN',
     });
     console.log(`🧠 [CorpusCallosum] Integration pass logged | agents=${corpusCallosumRunIds.length} | turnId=${turnId}`);
   }
