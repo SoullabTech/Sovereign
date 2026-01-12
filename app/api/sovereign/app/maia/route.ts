@@ -4,6 +4,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
+import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
@@ -65,6 +66,21 @@ function defaultSovereignResponse() {
 export async function POST(req: NextRequest) {
   const start = Date.now();
   const requestId = randomUUID();
+
+  // 🛡️ SCHEMA GATE: Fail fast if required migrations are missing
+  try {
+    await ensureSchemaReady();
+  } catch (schemaErr: any) {
+    console.error('❌ [SchemaGate] DB schema behind code:', schemaErr.message);
+    return NextResponse.json(
+      {
+        error: 'DB_SCHEMA_BEHIND',
+        message: 'Database schema is behind code. Run migrations.',
+        details: schemaErr.message,
+      },
+      { status: 503 }
+    );
+  }
 
   try {
     const body = await req.json().catch(() => ({}));

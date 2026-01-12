@@ -16,6 +16,7 @@ import {
   type RuptureDetectionResult
 } from '@/lib/consultation/rupture-detection-middleware';
 import { getConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
+import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
 import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
@@ -685,6 +686,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: envCheck.error, errorCode: 'MISSING_ENV_VAR' },
       { status: 500 }
+    );
+  }
+
+  // 🛡️ SCHEMA GATE: Fail fast if required migrations are missing
+  try {
+    await ensureSchemaReady();
+  } catch (schemaErr: any) {
+    console.error('❌ [SchemaGate] DB schema behind code:', schemaErr.message);
+    return NextResponse.json(
+      {
+        error: 'DB_SCHEMA_BEHIND',
+        message: 'Database schema is behind code. Run migrations.',
+        details: schemaErr.message,
+        errorCode: 'SCHEMA_BEHIND',
+      },
+      { status: 503 }
     );
   }
 
