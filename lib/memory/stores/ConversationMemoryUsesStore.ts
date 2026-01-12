@@ -139,6 +139,85 @@ export const ConversationMemoryUsesStore = {
   },
 
   /**
+   * Record retrieved candidates immediately after retrieval (before compression).
+   * This is the canonical "one row per retrieved memory" audit trail.
+   * Call this right after the retriever returns candidates, BEFORE compression.
+   */
+  async recordRetrievedCandidates(args: {
+    sessionId: string;
+    messageId: string;  // traceId (text)
+    userId: string;
+    candidates: Array<{
+      id: string;
+      source: string;  // 'turn' | 'developmental' | 'insight' | 'breakthrough'
+      retrievalScore?: number | null;
+      semanticScore?: number | null;
+      recencyScore?: number | null;
+      confidenceScore?: number | null;
+      usedAs?: MemoryUseType;
+    }>;
+  }): Promise<void> {
+    const { sessionId, messageId, userId, candidates } = args;
+    if (!candidates?.length || !userId) return;
+
+    // Filter out candidates without valid IDs (can't audit what we can't trace)
+    const validCandidates = candidates.filter(c => c.id && c.id.length > 0);
+    if (validCandidates.length === 0) return;
+
+    // Map source to memory_table name
+    const sourceToTable = (source: string): string => {
+      switch (source) {
+        case 'developmental': return 'developmental_memories';
+        case 'turn': return 'conversation_turns';
+        case 'breakthrough': return 'breakthrough_moments';
+        case 'insight': return 'developmental_memories';  // insights are stored as memories
+        default: return source;
+      }
+    };
+
+    // Build batch insert
+    const values: any[] = [];
+    const placeholders: string[] = [];
+    let paramIndex = 1;
+
+    for (const c of validCandidates) {
+      placeholders.push(
+        `($${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++}, $${paramIndex++})`
+      );
+      values.push(
+        userId,
+        sessionId,
+        messageId,
+        sourceToTable(c.source),
+        c.id,
+        c.usedAs ?? 'context',
+        c.retrievalScore ?? null,
+        c.semanticScore ?? null,
+        c.recencyScore ?? null,
+        c.confidenceScore ?? null
+      );
+    }
+
+    try {
+      await query(
+        `
+        INSERT INTO conversation_memory_uses (
+          user_id, session_id, message_id,
+          memory_table, memory_id, used_as,
+          retrieval_score, semantic_score, recency_score, confidence_score
+        )
+        VALUES ${placeholders.join(', ')}
+        `,
+        values
+      );
+      console.log(`📊 [MemoryUsesStore] Recorded ${validCandidates.length} retrieved candidates`);
+    } catch (err) {
+      console.warn('⚠️ [MemoryUsesStore] Failed to record candidates:', err);
+      // Non-blocking - don't fail the retrieval flow
+    }
+  },
+
+  /**
    * Get memories used in a specific message/response
    */
   async getForMessage(messageId: string): Promise<ConversationMemoryUse[]> {

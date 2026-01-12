@@ -15,6 +15,7 @@
  * that return null on error instead of throwing.
  */
 
+import { randomUUID } from 'crypto';
 import { safeGebserAnalysis } from '@/lib/consciousness/safe-gebser';
 import { safeElementalFieldState, safeElementalFieldSummary } from '@/lib/consciousness/safe-elemental-field';
 import { ConversationalElementalIntelligence } from '@/lib/consciousness/conversational-elemental-intelligence';
@@ -238,6 +239,9 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
   const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {} } = input;
 
+  // 📊 Generate traceId for memory audit trail (use existing if provided, else create new)
+  const traceId = (meta as any).traceId || randomUUID();
+
   // 🧠 MAIA-PAI CONVERSATIONAL KERNEL: Initialize conversation context
   const conversationContext = getConversationContext(sessionId);
   conversationContext.updateConversationDepth(message);
@@ -374,6 +378,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         userId,
         currentInput: message,
         sessionId,
+        traceId,  // For memory usage audit trail
         scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
         maxBullets: 5,
       });
@@ -467,6 +472,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         ...meta,     // ✅ Include explorerId/userId from normalized meta
         ...context,
         userId,      // 🔑 Explicitly include userId for TurnsStore cross-session persistence
+        traceId,     // 📊 For memory usage audit trail (consistent across orchestrator + service)
         memoryMode,  // 🧠 Permission gate for memory operations
         // 🧠 MEMORY BUNDLE: Inject compressed context from multi-bucket retrieval
         memoryContext: memoryContext || undefined,

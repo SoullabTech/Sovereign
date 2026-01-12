@@ -14,12 +14,14 @@ import { query } from '@/lib/db/postgres';
 import { TurnsStore } from './stores/TurnsStore';
 import { generateLocalEmbedding } from './embeddings';
 import { calculateDecayedConfidence } from './confidenceDecay';
+import { ConversationMemoryUsesStore } from './stores/ConversationMemoryUsesStore';
 
 // ═══════════════════════════════════════════════════════════════
 // TYPES
 // ═══════════════════════════════════════════════════════════════
 
 export interface MemoryBullet {
+  id?: string;          // Original memory row ID (for audit trail)
   content: string;      // Compressed summary
   source: 'turn' | 'developmental' | 'insight' | 'breakthrough';
   significance: number; // 0-1
@@ -59,6 +61,7 @@ export interface BuildBundleInput {
   userId: string;
   currentInput: string;           // User's current message (for semantic search)
   sessionId?: string;
+  traceId?: string;               // For memory usage audit trail
   facet?: string;                 // Current Spiralogic facet
   scope?: 'session' | 'cross_session' | 'all';  // Permission gate
   maxBullets?: number;            // Default 5
@@ -77,7 +80,7 @@ export const MemoryBundleService = {
    * and returns a structured bundle for prompt injection.
    */
   async build(input: BuildBundleInput): Promise<MemoryBundle> {
-    const { userId, currentInput, sessionId, facet, scope = 'cross_session', maxBullets = 5 } = input;
+    const { userId, currentInput, sessionId, traceId, facet, scope = 'cross_session', maxBullets = 5 } = input;
 
     console.log(`📦 [MemoryBundle] Building for user: ${userId}`);
 
@@ -95,6 +98,29 @@ export const MemoryBundleService = {
       ...semanticMemories,
       ...this.breakthroughsToCandidate(breakthroughs),
     ];
+
+    // 📊 MEMORY AUDIT: Record retrieved candidates BEFORE compression (Option B)
+    // This captures the canonical "one row per retrieved memory" audit trail
+    if (traceId && sessionId && userId && allCandidates.length > 0) {
+      try {
+        await ConversationMemoryUsesStore.recordRetrievedCandidates({
+          sessionId,
+          messageId: traceId,
+          userId,
+          candidates: allCandidates.map(c => ({
+            id: c.id,
+            source: c.source,
+            retrievalScore: c.compositeScore ?? null,
+            semanticScore: c.similarity ?? null,
+            confidenceScore: c.significance ?? null,
+            usedAs: c.source === 'breakthrough' ? 'breakthrough' : c.source === 'insight' ? 'pattern' : 'context',
+          })),
+        });
+      } catch (auditErr) {
+        console.warn('⚠️ [MemoryBundle] Failed to record candidate audit:', auditErr);
+        // Non-blocking
+      }
+    }
 
     // Rank with composite score
     const ranked = this.rankCandidates(allCandidates, currentInput, facet);
@@ -146,7 +172,7 @@ export const MemoryBundleService = {
     userId: string,
     sessionId?: string,
     scope: 'session' | 'cross_session' | 'all' = 'cross_session'
-  ): Promise<Array<{ role: string; content: string; createdAt: string; sessionId?: string }>> {
+  ): Promise<Array<{ id?: string; role: string; content: string; createdAt: string; sessionId?: string }>> {
 
     if (scope === 'session' && sessionId) {
       // Session-only: only return turns from current session
@@ -156,7 +182,7 @@ export const MemoryBundleService = {
     // Cross-session: exclude current session
     if (scope === 'cross_session' && sessionId) {
       const result = await query(`
-        SELECT role, content, created_at as "createdAt", session_id as "sessionId"
+        SELECT id, role, content, created_at as "createdAt", session_id as "sessionId"
         FROM conversation_turns
         WHERE user_id = $1
           AND session_id <> $2
@@ -430,6 +456,7 @@ export const MemoryBundleService = {
     }
 
     return {
+      id: candidate.id || undefined,  // Preserve for audit trail
       content,
       source: candidate.source,
       significance: candidate.significance,
@@ -504,11 +531,11 @@ export const MemoryBundleService = {
   // HELPERS
   // ═══════════════════════════════════════════════════════════════
 
-  turnsToCandidate(turns: Array<{ role: string; content: string; createdAt: string }>): MemoryCandidate[] {
+  turnsToCandidate(turns: Array<{ id?: string; role: string; content: string; createdAt: string }>): MemoryCandidate[] {
     return turns
       .filter(t => t.role === 'user') // Only user messages as candidates
       .map(t => ({
-        id: '',
+        id: t.id || '',  // Preserve turn ID for audit trail
         content: t.content,
         source: 'turn' as const,
         significance: 0.5, // Base significance for turns
