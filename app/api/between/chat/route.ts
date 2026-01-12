@@ -1287,7 +1287,10 @@ export async function POST(req: NextRequest) {
         reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
         astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
         governorAddendum, // 🌀 Spiralogic posture constraints
-      }
+      },
+      // Route/profile tracing for corpus callosum filtering
+      originRoute: '/api/between/chat',
+      processingProfileOverride: 'BETWEEN',
     });
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
