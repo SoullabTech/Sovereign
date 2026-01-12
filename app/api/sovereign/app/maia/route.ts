@@ -8,6 +8,8 @@ import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService
 import { enforceFieldSafety } from '@/lib/field/enforceFieldSafety';
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
+import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
+import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -164,6 +166,42 @@ export async function POST(req: NextRequest) {
 
     let orchestratorResult;
 
+    // 🧠 MEMORY BUNDLE: Build compressed context from multi-bucket retrieval
+    const traceId = randomUUID();
+    const effectiveUserId = userId || session.id;
+    const isSanctuary = (meta as any)?.sanctuary === true;
+
+    // Resolve memory mode (server-side permission check)
+    const modeResolution = resolveMemoryMode(effectiveUserId, (meta as any)?.memoryMode);
+    const memoryMode = modeResolution.effective;
+
+    let memoryBundle: MemoryBundle | null = null;
+    let memoryContext = '';
+
+    // 🔒 SANCTUARY: Skip memory bundle entirely (no cross-session recall)
+    if (isSanctuary) {
+      console.log('🛡️ [Route/MemoryBundle] Skipped - Sanctuary mode');
+    } else if (memoryMode !== 'ephemeral') {
+      try {
+        const memoryBundleStart = Date.now();
+        memoryBundle = await MemoryBundleService.build({
+          userId: effectiveUserId,
+          currentInput: message,
+          sessionId: session.id,
+          traceId,  // For memory usage audit trail
+          scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
+          maxBullets: 5,
+        });
+
+        if (memoryBundle) {
+          memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
+          console.log(`📦 [Route/MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets (${Date.now() - memoryBundleStart}ms)`);
+        }
+      } catch (memErr) {
+        console.warn('⚠️ [Route/MemoryBundle] Build failed (non-blocking):', memErr);
+      }
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeout(
       getMaiaResponse({
@@ -175,7 +213,11 @@ export async function POST(req: NextRequest) {
           chatType: 'sovereign-interface',
           endpoint: '/api/sovereign/app/maia',
           safeMode: SAFE_MODE,
-          userId: userId, // 🧠 Pass userId for Dialectical Scaffold logging
+          userId: effectiveUserId, // 🧠 Pass userId for Dialectical Scaffold logging
+          traceId, // 📊 For memory usage audit trail
+          memoryMode, // 🧠 Server-resolved memory mode
+          memoryBundle, // 📦 Pre-built memory bundle
+          memoryContext, // 📝 Formatted memory context for prompt
           cognitiveProfile, // 🧠 Pass cognitive profile for downstream use
           fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
           fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
