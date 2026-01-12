@@ -107,6 +107,9 @@ export interface MaiaConsciousnessInput {
   conversationHistory?: any[];
   meta?: { explorerId?: string; userId?: string; sessionId?: string; [key: string]: any };
   context?: any;
+  // Route/profile tracing for corpus callosum filtering
+  originRoute?: string;              // e.g. '/api/sovereign/app/maia', '/api/between/chat'
+  processingProfileOverride?: string; // Override computed profile (e.g. 'BETWEEN')
 }
 
 export interface ConsciousnessAnalysis {
@@ -238,7 +241,7 @@ function analyzeMessageComplexity(message: string, conversationHistory: any[] = 
 }
 
 export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<MaiaConsciousnessResponse> {
-  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {} } = input;
+  const { message, userId, sessionId, conversationHistory = [], meta = {}, context = {}, originRoute, processingProfileOverride } = input;
 
   // 📊 Generate traceId for memory audit trail (use existing if provided, else create new)
   const traceId = (meta as any).traceId || randomUUID();
