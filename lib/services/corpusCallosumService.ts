@@ -34,7 +34,7 @@ export type AgentRunInput = {
   userId?: string;
   reqId?: string;
   agentName: string;           // "MythicAtlas", "MaiaVoice", "WisdomRouter", etc.
-  element?: 'fire' | 'water' | 'earth' | 'air' | 'aether';
+  element?: 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow';
   epistemicMode?: EpistemicMode;
   phase?: string;              // "classification", "generation", "validation"
   source?: string;             // "claude-sonnet", "ollama", "local"
