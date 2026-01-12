@@ -65,6 +65,7 @@ import {
   type MaiaRcnContext,
   type MaiaRcnResult
 } from '../rlm/rcnIntegration';
+import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -354,6 +355,8 @@ export type MaiaResponse = {
   provider?: ProviderMeta;  // 🔮 Sovereignty auditing: which model served this response
   metadata?: {
     patterns?: PatternMeta[];
+    turnId?: number;          // 🔄 For feedback linkage
+    deliberationId?: string;  // 🔄 For agent evolution analysis
   };
 };
 
@@ -2319,6 +2322,61 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       // Store turnId in response metadata for feedback widget
       meta.turnId = turnId;
 
+      // 🔄 DECISION PERSISTENCE: Store decision trace for ALL turns (not just uncertain)
+      // This provides the denominator for learning - confident turns are the baseline
+      if (atlasResult && turnId) {
+        try {
+          // Determine trigger reason for analytics
+          const triggerReason = shouldDeliberate
+            ? (atlasResult.deliberationRecommended ? 'atlas_uncertain' : 'gap_below_threshold')
+            : 'confident_classification';
+
+          // Keep candidates separate from votes (votes = [] until real committee exists)
+          // Candidates are atlas alternatives, not agent deliberation
+          const candidates: Candidate[] = atlasResult.alternatives?.slice(0, 5).map((alt, idx) => ({
+            source: 'mythic_atlas',
+            label: alt.label,
+            score: alt.score,
+            rank: idx + 1,
+            rationale: idx === 0 ? `gap=${atlasResult.gapPercent?.toFixed(1)}%` : undefined,
+          })) || [];
+
+          // Votes array - empty until Phase 2 committee is active
+          // When committee is live, this will contain actual agent votes
+          // const votes: CommitteeVote[] = [];
+
+          const decisionId = await persistDecision({
+            sessionId,
+            turnId,
+            finalLabel: atlasResult.primary,
+            finalConfidence: atlasResult.confidence,
+            decidedBy: shouldDeliberate ? 'deliberation_pending' : 'atlas_confident',
+            mode: normalizeMode(meta?.mode),
+            decisionMs: 0,
+            deliberationTriggered: shouldDeliberate,
+            triggerReason,
+            candidates, // Separate from votes - classifier outputs only
+            votes: [], // Empty until real committee runs
+            meta: {
+              gapPercent: atlasResult.gapPercent,
+              deliberationRecommended: atlasResult.deliberationRecommended,
+              element: atlasResult.element,
+              facet: atlasResult.facet,
+              phase: atlasResult.phase,
+            },
+          });
+
+          // Store decisionId for feedback linkage
+          (meta as any).decisionId = decisionId;
+          // Backward compatibility alias
+          (meta as any).deliberationId = decisionId;
+          console.log(`🔄 [Decision] Persisted | id=${decisionId?.slice(0, 8) || 'failed'}... | triggered=${shouldDeliberate} | turnId=${turnId}`);
+        } catch (deliberationError) {
+          console.warn('⚠️ Decision persistence failed (non-blocking):', deliberationError);
+          // Decision persistence failures don't break the conversation
+        }
+      }
+
       console.log(`🧠 Learning integration complete | Turn: ${turnId} | Profile: ${processingProfile}`);
     } catch (learningError) {
       console.warn('⚠️ Learning system error (conversation continues):', learningError);
@@ -2402,13 +2460,25 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // The marker is only for idempotency within the pipeline - never expose to clients
     text = text.replaceAll(SELFLET_MARKER, '');
 
+    // 🔄 Build metadata with feedback linkage IDs
+    const responseMetadata: MaiaResponse['metadata'] = {
+      ...(responsePatterns.length > 0 ? { patterns: responsePatterns } : {}),
+      turnId: (meta as any).turnId as number | undefined,
+      deliberationId: (meta as any).deliberationId as string | undefined,
+    };
+
+    // Only include metadata if there's something to include
+    const hasMetadata = responseMetadata.patterns?.length ||
+      responseMetadata.turnId ||
+      responseMetadata.deliberationId;
+
     return {
       text,
       processingProfile,
       processingTimeMs,
       audio: audioResponse,
       provider,  // 🔮 Sovereignty auditing: request-local, concurrency-safe
-      metadata: responsePatterns.length > 0 ? { patterns: responsePatterns } : undefined
+      metadata: hasMetadata ? responseMetadata : undefined
     };
 
   } catch (error) {

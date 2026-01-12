@@ -217,7 +217,11 @@ export async function POST(req: NextRequest) {
         processingProfile: orchestratorResult.processingProfile,
         processingTimeMs: orchestratorResult.processingTimeMs,
         tierProcessing: true,
-        voiceRequested: includeAudio || false
+        voiceRequested: includeAudio || false,
+        // 🔄 Feedback linkage IDs (for agent evolution analysis)
+        turnId: orchestratorResult.metadata?.turnId,
+        decisionId: orchestratorResult.metadata?.decisionId,  // Clean schema
+        deliberationId: orchestratorResult.metadata?.deliberationId,  // Backward compat
       },
     };
 
