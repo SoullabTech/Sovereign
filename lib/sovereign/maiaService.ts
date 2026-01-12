@@ -2587,6 +2587,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             sessionId,
             turnId,
             userId: effectiveUserId,
+            // Fallback only for direct maiaService calls; edges should set explicitly
             originRoute: originRoute ?? '/api/sovereign/app/maia',
             processingProfile: processingProfileOverride ?? processingProfile,
             atlasResult: atlasResult ? {

@@ -2,6 +2,12 @@
 export const dynamic = 'force-dynamic';
 // backend: app/api/between/chat/route.ts
 
+/**
+ * ROUTING INVARIANT:
+ * Set originRoute + (optional) processingProfileOverride HERE at the HTTP boundary.
+ * Do not infer these deeper in the stack.
+ */
+
 // Force Node.js runtime (Edge runtime can't handle crypto, some libs)
 export const runtime = 'nodejs';
 

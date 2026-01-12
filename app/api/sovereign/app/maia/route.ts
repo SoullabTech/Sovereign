@@ -1,6 +1,12 @@
 // @ts-nocheck - Prototype file, not type-checked
 export const dynamic = 'force-dynamic';
 // backend: app/api/sovereign/app/maia/route.ts
+
+/**
+ * ROUTING INVARIANT:
+ * Set originRoute + (optional) processingProfileOverride HERE at the HTTP boundary.
+ * Do not infer these deeper in the stack.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
