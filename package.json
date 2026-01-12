@@ -37,6 +37,8 @@
     "guardrails": "node scripts/check-nocheck-allowlist.js && node scripts/check-private-routes.js && node scripts/check-backend-imports.js",
     "db:migrate": "bash scripts/apply-migrations.sh",
     "library:index": "npx tsx scripts/build-library-index.ts",
+    "audiobook:generate": "npx tsx scripts/generate-audiobook.ts",
+    "audiobook:preview": "npx tsx scripts/generate-audiobook.ts --dry-run",
     "leak-guard": "bash scripts/ci/leak-guard.sh",
     "validate:critical": "node scripts/validate-critical-files.js",
     "verify:claude": "bash scripts/verify-claude-project.sh",
