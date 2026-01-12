@@ -48,6 +48,9 @@ export type AgentRunInput = {
   intensity?: number;          // 0-1 (emotional/energetic intensity)
   inhibitedBy?: string[];      // Other agents that inhibited this one
   meta?: Record<string, unknown>;
+  // Route/profile tracing for filtering
+  originRoute?: string;        // e.g. "/api/sovereign/app/maia", "/api/between/chat"
+  processingProfile?: string;  // "FAST" | "CORE" | "DEEP" | "BETWEEN"
 };
 
 export type IntegrationPassInput = {
@@ -73,6 +76,9 @@ export type IntegrationPassInput = {
   confidence?: number;         // 0-1
   elementalMode?: 'fire' | 'water' | 'earth' | 'air' | 'aether';
   meta?: Record<string, unknown>;
+  // Route/profile tracing for filtering
+  originRoute?: string;        // e.g. "/api/sovereign/app/maia", "/api/between/chat"
+  processingProfile?: string;  // "FAST" | "CORE" | "DEEP" | "BETWEEN"
 };
 
 // =============================================================================
@@ -96,8 +102,9 @@ export async function logAgentRun(input: AgentRunInput): Promise<string | null> 
         agent_name, element, epistemic_mode, phase, source,
         input_summary, output_text, output_json,
         latency_ms, status, error,
-        confidence, intensity, inhibited_by, meta
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+        confidence, intensity, inhibited_by, meta,
+        origin_route, processing_profile
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
       RETURNING id`,
       [
         input.sessionId,
@@ -119,6 +126,8 @@ export async function logAgentRun(input: AgentRunInput): Promise<string | null> 
         input.intensity ?? null,
         input.inhibitedBy ?? null,
         input.meta ? JSON.stringify(input.meta) : null,
+        input.originRoute ?? null,
+        input.processingProfile ?? null,
       ]
     );
 
@@ -147,8 +156,9 @@ export async function logIntegrationPass(input: IntegrationPassInput): Promise<s
         bridge_agent, inputs, agent_run_ids, integration_method,
         tensions_named, reconciliations, paradoxes_held,
         final_text, coherence_score, depth_score, confidence,
-        elemental_mode, meta
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        elemental_mode, meta,
+        origin_route, processing_profile
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       RETURNING id`,
       [
         input.sessionId,
@@ -168,6 +178,8 @@ export async function logIntegrationPass(input: IntegrationPassInput): Promise<s
         input.confidence ?? null,
         input.elementalMode ?? null,
         input.meta ? JSON.stringify(input.meta) : null,
+        input.originRoute ?? null,
+        input.processingProfile ?? null,
       ]
     );
 
@@ -216,6 +228,10 @@ export type CorpusCallosumTrace = {
   sessionId: string;
   turnId?: number;
   userId?: string;
+
+  // Route/profile tracing for filtering
+  originRoute?: string;        // e.g. "/api/sovereign/app/maia", "/api/between/chat"
+  processingProfile?: string;  // "FAST" | "CORE" | "DEEP" | "BETWEEN"
 
   // Atlas classification
   atlasResult?: {
@@ -303,6 +319,8 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
       latencyMs: trace.atlasResult.latencyMs,
       confidence: trace.atlasResult.confidence,
       status: 'ok',
+      originRoute: trace.originRoute,
+      processingProfile: trace.processingProfile,
     });
 
     if (atlasRunId) {
@@ -335,6 +353,8 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
         processingProfile: trace.maiaResponse.processingProfile,
         fullLength: trace.maiaResponse.text.length,
       },
+      originRoute: trace.originRoute,
+      processingProfile: trace.processingProfile,
     });
 
     if (maiaRunId) {
@@ -363,6 +383,8 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
         toolId: trace.wisdomPatterns.toolId,
       },
       status: 'ok',
+      originRoute: trace.originRoute,
+      processingProfile: trace.processingProfile,
     });
 
     if (wisdomRunId) {
@@ -400,6 +422,8 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
           symbols: agent.symbols,
           fullLength: agent.wisdom.length,
         },
+        originRoute: trace.originRoute,
+        processingProfile: trace.processingProfile,
       });
 
       if (runId) {
@@ -460,6 +484,8 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
         harmonics: trace.elementalSynthesis?.harmonics,
         totalLatencyMs: trace.elementalSynthesis?.latencyMs,
       },
+      originRoute: trace.originRoute,
+      processingProfile: trace.processingProfile,
     });
 
     if (integrationId) {

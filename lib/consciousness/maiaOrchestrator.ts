@@ -585,6 +585,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         latencyMs: layerTimings['gebser-analysis'],
         status: gebserStructure ? 'ok' : 'error',
         confidence: gebserStructure?.confidence ?? null,
+        originRoute: '/api/between/chat',
+        processingProfile: 'BETWEEN',
       });
       if (runId) corpusCallosumRunIds.push(runId);
     }
@@ -633,6 +635,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         latencyMs: layerTimings['elemental-field'],
         status: elementalField ? 'ok' : 'error',
         confidence: elementalField?.confidence ?? null,
+        originRoute: '/api/between/chat',
+        processingProfile: 'BETWEEN',
       });
       if (runId) corpusCallosumRunIds.push(runId);
     }
@@ -675,6 +679,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         outputJson: elementalFieldSummary ?? {},
         latencyMs: layerTimings['elemental-field-summary'],
         status: elementalFieldSummary ? 'ok' : 'error',
+        originRoute: '/api/between/chat',
+        processingProfile: 'BETWEEN',
       });
       if (runId) corpusCallosumRunIds.push(runId);
     }
@@ -724,6 +730,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         outputJson: conversationalElemental ?? {},
         latencyMs: layerTimings['conversational-elemental'],
         status: conversationalElemental ? 'ok' : 'error',
+        originRoute: '/api/between/chat',
+        processingProfile: 'BETWEEN',
       });
       if (runId) corpusCallosumRunIds.push(runId);
     }
@@ -768,6 +776,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         layersSuccessful,
         layersFailed,
       },
+      originRoute: '/api/between/chat',
+      processingProfile: 'BETWEEN',
     });
     console.log(`🧠 [CorpusCallosum] Integration pass logged | agents=${corpusCallosumRunIds.length} | turnId=${turnId}`);
   }

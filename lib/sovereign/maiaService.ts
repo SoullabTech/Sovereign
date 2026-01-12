@@ -1351,7 +1351,8 @@ The current user has not provided their name. Address them as "friend" or "there
       elementalOracle.processAll({
         input,
         primaryElement: conversationContext?.profile?.dominantElement ?? undefined,
-        includeAll: true, // Fan out to all elements for DEEP path
+        includeAll: true, // Fan out to all elements
+        fastMode: true,   // Use pattern matching for fast trace data (~50ms vs 30s+)
       }),
       ELEMENTAL_TIMEOUT_MS
     );
@@ -2513,15 +2514,24 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         try {
           const wisdomRouting = (meta as any)?.wisdomRouting;
 
-          // 🔥 Extract elemental trace data from consciousness orchestration (when available)
-          const corpusCallosumTrace = (consciousnessData as any)?.corpusCallosumTrace;
-          const elementalAgents = corpusCallosumTrace?.elementalAgents;
-          const elementalSynthesis = corpusCallosumTrace?.elementalSynthesis;
+          // 🔥 Extract elemental trace data - check both locations:
+          // 1. meta.elementalResult (from direct ElementalOracleBridge call in maiaService)
+          // 2. consciousnessData.corpusCallosumTrace (from ConsciousnessOrchestrator flow)
+          const directElementalResult = (meta as any)?.elementalResult;
+          const orchestratorTrace = (consciousnessData as any)?.corpusCallosumTrace;
+
+          // Prefer direct result (more reliable), fall back to orchestrator trace
+          const elementalAgents = directElementalResult?.traceData?.elementalAgents
+            ?? orchestratorTrace?.elementalAgents;
+          const elementalSynthesis = directElementalResult?.traceData?.synthesis
+            ?? orchestratorTrace?.elementalSynthesis;
 
           const traceResult = await logCorpusCallosumTrace({
             sessionId,
             turnId,
             userId: effectiveUserId,
+            originRoute: '/api/sovereign/app/maia',
+            processingProfile,
             atlasResult: atlasResult ? {
               primary: atlasResult.primary,
               element: atlasResult.element,
