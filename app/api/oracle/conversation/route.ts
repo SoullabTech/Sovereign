@@ -38,6 +38,8 @@ import { validateSocraticResponse, serializeValidationResult, type SocraticValid
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
+import { persistTrace } from '@/backend/src/services/traceService';
+import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 
 // Skip during static export (Capacitor builds)
 
@@ -96,6 +98,141 @@ function rateLimitOrThrow(ip: string) {
     err.retryAfterSec = retryAfterSec;
     throw err;
   }
+}
+
+/**
+ * 🧠 INSIGHT EXTRACTION: Extract meaningful insights from conversation exchange
+ * Feeds into learning pipeline and memory system
+ */
+function extractConversationInsights(params: {
+  userMessage: string;
+  maiaResponse: string;
+  conversationHistory: any[];
+  spiralogicCell: any;
+  symbolPatterns: any[];
+  axiomSummary: any;
+}): string[] {
+  const { userMessage, maiaResponse, conversationHistory, spiralogicCell, symbolPatterns, axiomSummary } = params;
+  const insights: string[] = [];
+  const userLower = userMessage.toLowerCase();
+  const maiaLower = maiaResponse.toLowerCase();
+
+  // 1. USER REALIZATIONS - detect when user has an "aha" moment
+  const realizationPatterns = [
+    /i (?:just )?realiz(?:e|ed)/i,
+    /i (?:now )?see (?:that|how|why)/i,
+    /that makes (?:so much )?sense/i,
+    /i never (?:thought|noticed|realized)/i,
+    /something (?:just )?clicked/i,
+    /i(?:'m| am) starting to (?:see|understand)/i,
+    /oh(?:,| )(?:wow|that's|i see)/i,
+  ];
+  for (const pattern of realizationPatterns) {
+    if (pattern.test(userMessage)) {
+      // Extract the context around the realization
+      const match = userMessage.match(pattern);
+      if (match) {
+        const contextStart = Math.max(0, match.index! - 20);
+        const contextEnd = Math.min(userMessage.length, match.index! + match[0].length + 100);
+        insights.push(`User realization: "${userMessage.slice(contextStart, contextEnd).trim()}"`);
+      }
+    }
+  }
+
+  // 2. EMOTIONAL SHIFTS - detect emotional content
+  const emotionalMarkers = [
+    { pattern: /i feel (?:so )?(?:much )?(?:better|lighter|clearer|calmer)/i, type: 'positive shift' },
+    { pattern: /relief|relieved/i, type: 'relief' },
+    { pattern: /scared|afraid|anxious|worried/i, type: 'fear awareness' },
+    { pattern: /angry|frustrated|annoyed/i, type: 'anger awareness' },
+    { pattern: /sad|grief|loss|mourning/i, type: 'grief awareness' },
+    { pattern: /grateful|thankful/i, type: 'gratitude' },
+  ];
+  for (const { pattern, type } of emotionalMarkers) {
+    if (pattern.test(userMessage)) {
+      insights.push(`Emotional ${type} expressed in ${spiralogicCell.element} context`);
+    }
+  }
+
+  // 3. GROWTH EDGE QUESTIONS - user asking deep questions
+  const growthEdgePatterns = [
+    /why do i (?:always|keep)/i,
+    /what(?:'s| is) (?:stopping|blocking|holding) me/i,
+    /how (?:do|can) i (?:stop|change|break)/i,
+    /i don(?:'t| not) (?:know|understand) (?:why|how)/i,
+    /what does (?:this|that|it) mean/i,
+    /am i (?:wrong|broken|bad)/i,
+  ];
+  for (const pattern of growthEdgePatterns) {
+    if (pattern.test(userMessage)) {
+      insights.push(`Growth edge inquiry: User exploring "${userMessage.slice(0, 80)}..."`);
+      break; // One growth edge per message
+    }
+  }
+
+  // 4. PATTERN RECOGNITION - user noticing their own patterns
+  const patternPatterns = [
+    /i (?:always|keep|tend to)/i,
+    /this (?:always|keeps) happen/i,
+    /i notice(?:d)? (?:a )?pattern/i,
+    /whenever i/i,
+    /every time/i,
+  ];
+  for (const pattern of patternPatterns) {
+    if (pattern.test(userMessage)) {
+      insights.push(`Pattern recognition: User aware of recurring pattern`);
+      break;
+    }
+  }
+
+  // 5. MAIA'S REFRAMES - capture when MAIA offers a meaningful reframe
+  const reframeMarkers = [
+    /another way to (?:see|think about|understand)/i,
+    /what if/i,
+    /consider (?:that|this)/i,
+    /perhaps/i,
+    /in other words/i,
+    /from (?:a|another) (?:\w+ )?perspective/i,
+  ];
+  for (const { pattern } of reframeMarkers.map(p => ({ pattern: p }))) {
+    if (pattern.test(maiaResponse)) {
+      // Only capture if this was a "gold" response
+      if (axiomSummary?.isGold) {
+        insights.push(`High-quality reframe offered in ${spiralogicCell.element}/${spiralogicCell.phase} context`);
+      }
+      break;
+    }
+  }
+
+  // 6. BREAKTHROUGH SIGNALS - strong indicators of transformation
+  const breakthroughSignals = [
+    /breakthrough/i,
+    /everything (?:just )?(?:changed|shifted)/i,
+    /i(?:'ve| have) never felt/i,
+    /first time i(?:'ve| have)/i,
+    /finally (?:understand|see|get)/i,
+  ];
+  for (const pattern of breakthroughSignals) {
+    if (pattern.test(userMessage)) {
+      insights.push(`BREAKTHROUGH: User reports transformative moment in ${spiralogicCell.element} phase`);
+      break;
+    }
+  }
+
+  // 7. SYMBOL PATTERN INSIGHTS - if archetypal patterns detected
+  for (const pattern of symbolPatterns.slice(0, 2)) {
+    if (pattern.description || pattern.archetype) {
+      insights.push(pattern.description || `Archetypal pattern: ${pattern.archetype}`);
+    }
+  }
+
+  // 8. SPIRALOGIC CONTEXT - record developmental context
+  if (insights.length > 0) {
+    // Add context about where user is in their journey
+    insights.push(`Context: ${spiralogicCell.element}/${spiralogicCell.phase} - ${spiralogicCell.context || 'general exploration'}`);
+  }
+
+  return insights;
 }
 
 type ConversationBody = {
@@ -580,6 +717,20 @@ export async function POST(request: NextRequest) {
       // Don't break the conversation flow if logging fails
     }
 
+    // 🧠 INSIGHT EXTRACTION: Extract insights from this conversation exchange
+    const extractedInsights = extractConversationInsights({
+      userMessage: message,
+      maiaResponse: maiaResponse.coreMessage,
+      conversationHistory,
+      spiralogicCell,
+      symbolPatterns,
+      axiomSummary
+    });
+
+    if (extractedInsights.length > 0) {
+      console.log('🧠 [Insight Extraction] Extracted', extractedInsights.length, 'insights:', extractedInsights.slice(0, 3));
+    }
+
     // 📚 MEMORY STORAGE: Store session pattern for cross-conversation memory
     try {
       await sessionMemoryService.storeSessionPattern(
@@ -595,7 +746,7 @@ export async function POST(request: NextRequest) {
             aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
             coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
           }],
-          insights: symbolPatterns.map((p: any) => p.description || p.archetype),
+          insights: extractedInsights,  // 🧠 Use extracted insights instead of just symbol patterns
           themes: [spiralogicCell.context, ...activeFrameworks],
           spiralIndicators: {
             element: spiralogicCell.element,
@@ -606,7 +757,7 @@ export async function POST(request: NextRequest) {
           }
         }
       );
-      console.log('📚 [Memory] Session pattern stored for cross-conversation continuity');
+      console.log('📚 [Memory] Session pattern stored with', extractedInsights.length, 'insights');
     } catch (memoryError) {
       console.error('⚠️ [Memory] Failed to store session pattern (non-critical):', memoryError);
       // Don't break the conversation flow if memory storage fails
@@ -641,7 +792,7 @@ export async function POST(request: NextRequest) {
           aether: spiralogicCell.element.toLowerCase() === 'aether' ? 0.8 : 0.4,
           coherence: panconsciousField.axisMundi.currentCenteringState.level / 10
         }],
-        insights: symbolPatterns.map((p: any) => p.description || p.archetype),
+        insights: extractedInsights,  // 🧠 Use extracted insights
         themes: [spiralogicCell.context, ...activeFrameworks],
         spiralIndicators: {
           element: spiralogicCell.element,
@@ -651,7 +802,7 @@ export async function POST(request: NextRequest) {
           conversationDepth
         }
       });
-      console.log('🏛️ [Memory Palace] All layers stored successfully');
+      console.log('🏛️ [Memory Palace] All layers stored with', extractedInsights.length, 'insights');
     } catch (palaceError) {
       console.error('⚠️ [Memory Palace] Storage failed (non-critical):', palaceError);
     }
@@ -775,6 +926,57 @@ export async function POST(request: NextRequest) {
       completionTokens: undefined,
       totalTokens: undefined,
     }).catch(err => console.warn('[oracle] logging failed:', err));
+
+    // 🧠 CONSCIOUSNESS TRACE: Full trace spine for observability
+    (async () => {
+      try {
+        const trace: ConsciousnessTrace = {
+          id: requestId,
+          createdAt: new Date().toISOString(),
+          userId,
+          sessionId,
+          requestId,
+          agent: 'oracle.conversation',
+          model: 'claude-opus-4-5-20251101',
+          input: { text: message },
+          safety: {
+            level: fieldSafety?.allowed ? 'safe' : 'blocked',
+            flags: fieldSafety ? [fieldSafety.fieldRouting.realm] : [],
+            notes: cognitiveProfile ? [`altitude=${cognitiveProfile.rollingAverage.toFixed(2)}`] : []
+          },
+          inference: {
+            facet: `${spiralogicCell.element.toUpperCase()}_${spiralogicCell.phase}`,
+            mode: spiralogicCell.context,
+            confidence: cognitiveProfile?.rollingAverage ? cognitiveProfile.rollingAverage / 10 : undefined,
+            rationale: activeFrameworks
+          },
+          routing: {
+            route: 'oracle',
+            reason: ['spiralogic', ...activeFrameworks]
+          },
+          memory: {
+            referencedIds: memoryContext?.sessionMemory?.patterns?.slice(0, 5).map((p: any) => p.id) || []
+          },
+          plan: {
+            steps: suggestedInterventions.map(i => ({ kind: 'intervention' as const, detail: i.flowId }))
+          },
+          events: [
+            { ts: new Date(startedAt).toISOString(), kind: 'input_received', ms_since_start: 0 },
+            { ts: new Date().toISOString(), kind: 'output_sent', ms_since_start: durationMs }
+          ],
+          timings: {
+            startMs: startedAt,
+            endMs: Date.now(),
+            latencyMs: durationMs
+          }
+        };
+
+        await persistTrace({ trace });
+        console.log('🧠 [Consciousness Trace] Persisted trace:', requestId.substring(0, 8) + '...');
+      } catch (traceError) {
+        console.error('⚠️ [Consciousness Trace] Failed to persist (non-critical):', traceError);
+      }
+    })();
 
     // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
     const canonHeaders = makeCanonHeaders({

@@ -472,6 +472,8 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
         memoryContext: memoryContext || undefined,
         memoryBundle: memoryBundle ? {
           bulletCount: memoryBundle.memoryBullets.length,
+          memoryBullets: memoryBundle.memoryBullets,  // 📊 Full array for memory usage logging
+          relationshipSnapshot: memoryBundle.relationshipSnapshot,  // 📊 For context tracking
           encounterCount: memoryBundle.relationshipSnapshot.encounterCount,
           breakthroughCount: memoryBundle.relationshipSnapshot.breakthroughCount,
         } : undefined,
