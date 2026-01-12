@@ -389,6 +389,9 @@ type MaiaRequest = {
   };
   includeAudio?: boolean;
   voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
+  // Route/profile tracing for corpus callosum filtering
+  originRoute?: string;              // e.g. '/api/sovereign/app/maia', '/api/between/chat'
+  processingProfileOverride?: string; // Override computed profile (e.g. 'BETWEEN')
 };
 
 /**
@@ -1690,7 +1693,7 @@ function determineConsultationType(
 }
 
 export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
-  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile } = req;
+  const { sessionId, input, meta = {}, includeAudio = false, voiceProfile, originRoute, processingProfileOverride } = req;
   const startTime = Date.now();
 
   // increment turn count for this session and get the authoritative count
@@ -2584,8 +2587,8 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             sessionId,
             turnId,
             userId: effectiveUserId,
-            originRoute: '/api/sovereign/app/maia',
-            processingProfile,
+            originRoute: originRoute ?? '/api/sovereign/app/maia',
+            processingProfile: processingProfileOverride ?? processingProfile,
             atlasResult: atlasResult ? {
               primary: atlasResult.primary,
               element: atlasResult.element,
