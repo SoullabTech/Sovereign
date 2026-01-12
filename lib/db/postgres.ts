@@ -265,6 +265,18 @@ export async function findMany<T extends QueryResultRow = any>(
   return result.rows;
 }
 
+/**
+ * Helper: Execute query and return first row only
+ * Like query() but returns T | null instead of QueryResult
+ */
+export async function queryOne<T extends QueryResultRow = any>(
+  sql: string,
+  params: any[] = []
+): Promise<T | null> {
+  const result = await query<T>(sql, params);
+  return result.rows[0] || null;
+}
+
 // Export pool for advanced usage
 export { pool };
 

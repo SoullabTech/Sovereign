@@ -40,13 +40,20 @@ const toSmallInt = (value: unknown): number | null => {
 
 function getPool(): Pool {
   if (!pool) {
+    // Check if we're connecting to a local database (no SSL needed)
+    const host = process.env.POSTGRES_HOST || 'localhost';
+    const isLocalDb = host === 'localhost' || host === '127.0.0.1';
+    // Only use SSL for remote production databases
+    const useSSL = process.env.POSTGRES_SSL === 'true' ||
+                   (process.env.NODE_ENV === 'production' && !isLocalDb);
+
     pool = new Pool({
-      host: process.env.POSTGRES_HOST || 'localhost',
+      host,
       port: parseInt(process.env.POSTGRES_PORT || '5432'),
       database: process.env.POSTGRES_DB || 'maia_consciousness',
       user: process.env.POSTGRES_USER || 'postgres',
       password: process.env.POSTGRES_PASSWORD || '',
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      ssl: useSSL ? { rejectUnauthorized: false } : false,
       max: 20,
       idleTimeoutMillis: 30000,
       connectionTimeoutMillis: 2000,
