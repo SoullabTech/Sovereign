@@ -369,3 +369,7 @@ __pycache__/
 # Xcode user state
 *.xcuserstate
 **/xcuserdata/
+
+# Generated audiobook outputs
+audiobook-output/
+public/audiobook/
