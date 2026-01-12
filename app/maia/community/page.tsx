@@ -170,26 +170,47 @@ export default function CommunityBBSPage() {
   useEffect(() => {
     // Get user from session
     const storedUser = typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null;
+    let userId = '';
+
     if (storedUser) {
       try {
         const user = JSON.parse(storedUser);
+        userId = user.id || '';
         setCurrentUser({
-          id: user.id || '',
+          id: userId,
           name: user.name || user.username || 'Sacred Explorer',
           avatar: (user.name || user.username || 'SE').substring(0, 2).toUpperCase(),
-          posts: 0, // Real posts would need tracking
+          posts: 0,
           comments: 0,
           hearts: 0,
           breakthroughs: 0,
           cohort: 1,
           joinedDate: user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : ''
         });
+
+        // Fetch user's personal stats
+        if (userId) {
+          fetch(`/api/community/user-stats?userId=${userId}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.success && data.stats) {
+                setCurrentUser(prev => ({
+                  ...prev,
+                  posts: data.stats.posts || 0,
+                  comments: data.stats.comments || 0,
+                  hearts: data.stats.hearts || 0,
+                  breakthroughs: data.stats.breakthroughs || 0
+                }));
+              }
+            })
+            .catch(err => console.error('Failed to fetch user stats:', err));
+        }
       } catch (e) {
         console.error('Failed to parse user:', e);
       }
     }
 
-    // Fetch real stats from API
+    // Fetch real community stats from API
     fetch('/api/community/stats')
       .then(res => res.json())
       .then(data => {
