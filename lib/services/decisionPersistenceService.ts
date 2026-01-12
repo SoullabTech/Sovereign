@@ -14,6 +14,7 @@
  */
 
 import { query, queryOne } from '../db/postgres';
+import { delegateToExecutor, isDelegationEnabled } from './executorDelegationService';
 
 // =============================================================================
 // TYPES
@@ -198,6 +199,52 @@ export async function persistDecision(
       `| triggered=${input.deliberationTriggered} ` +
       `| candidates=${candidateCount} votes=${voteCount}`
     );
+
+    // ─── AGENT ZERO DELEGATION HOOK ────────────────────────────────────────────
+    // If the decision implies tool execution, delegate to Agent Zero
+    // Check isDelegationEnabled() to ensure Agent Zero is configured
+    if (isDelegationEnabled()) {
+      try {
+        const delegation = await delegateToExecutor(input.finalLabel, {
+          deliberation_id: decisionId,
+          session_id: input.sessionId,
+          user_id: input.meta?.userId || input.meta?.user_id,
+          requires_tools: input.meta?.requires_tools,
+          actions: input.meta?.actions,
+          execution_type: input.meta?.execution_type,
+          execution_risk: input.meta?.execution_risk,
+          execution_title: input.meta?.execution_title,
+          execution_instructions: input.meta?.execution_instructions,
+          decided_by: input.decidedBy,
+        });
+
+        if (delegation.delegated) {
+          // Update the decision row with executor result
+          await query(
+            `UPDATE maia_decisions SET meta = COALESCE(meta, '{}'::jsonb) || $1::jsonb WHERE id = $2`,
+            [JSON.stringify({
+              executor: {
+                provider: 'agent_zero',
+                taskId: delegation.task?.id,
+                ok: delegation.executionResult?.ok,
+                summary: delegation.executionResult?.summary,
+                durationMs: delegation.executionResult?.durationMs,
+              }
+            }), decisionId]
+          );
+
+          console.log(
+            `[Decision] Executor delegation | id=${decisionId.slice(0, 8)}... ` +
+            `| task=${delegation.task?.id?.slice(0, 8) ?? 'N/A'}... ` +
+            `| ok=${delegation.executionResult?.ok}`
+          );
+        }
+      } catch (delegationError) {
+        // Log but don't fail the decision persistence
+        console.warn('[Decision] Executor delegation failed:', delegationError);
+      }
+    }
+    // ─── END AGENT ZERO DELEGATION HOOK ────────────────────────────────────────
 
     return decisionId;
   } catch (error) {

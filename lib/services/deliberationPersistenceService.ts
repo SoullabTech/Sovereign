@@ -13,6 +13,7 @@
 
 import { query } from '../db/postgres';
 import { randomUUID } from 'crypto';
+import { delegateToExecutor, isDelegationEnabled } from './executorDelegationService';
 
 export interface CommitteeVote {
   member: string;
@@ -106,11 +107,60 @@ export async function persistDeliberation(
       );
     }
 
+    // ─── AGENT ZERO DELEGATION HOOK ────────────────────────────────────────────
+    // If the deliberation implies tool execution, delegate to Agent Zero
+    // This is the "single wire" that makes the executor layer live
+    let executorMeta: Record<string, unknown> | undefined;
+
+    if (isDelegationEnabled()) {
+      try {
+        const delegation = await delegateToExecutor(input.finalClassification, {
+          deliberation_id: deliberationId,
+          session_id: input.sessionId,
+          user_id: input.meta?.userId || input.meta?.user_id,
+          requires_tools: input.meta?.requires_tools,
+          actions: input.meta?.actions,
+          execution_type: input.meta?.execution_type,
+          execution_instructions: input.meta?.execution_instructions,
+          allowNetwork: input.meta?.allowNetwork,
+          allowShell: input.meta?.allowShell,
+          allowWrites: input.meta?.allowWrites,
+        });
+
+        if (delegation.delegated) {
+          executorMeta = {
+            provider: 'agent_zero',
+            taskId: delegation.task?.id,
+            ok: delegation.executionResult?.ok,
+            summary: delegation.executionResult?.summary,
+            durationMs: delegation.executionResult?.durationMs,
+          };
+
+          // Update the deliberation row with executor result
+          await query(
+            `UPDATE maia_decisions SET meta = COALESCE(meta, '{}'::jsonb) || $1::jsonb WHERE id = $2`,
+            [JSON.stringify({ executor: executorMeta }), deliberationId]
+          );
+
+          console.log(
+            `[Deliberation] Executor delegation | id=${deliberationId.slice(0, 8)}... ` +
+            `| task=${delegation.task?.id?.slice(0, 8)}... ` +
+            `| ok=${delegation.executionResult?.ok}`
+          );
+        }
+      } catch (delegationError) {
+        // Log but don't fail the deliberation persistence
+        console.warn('[Deliberation] Executor delegation failed:', delegationError);
+      }
+    }
+    // ─── END AGENT ZERO DELEGATION HOOK ────────────────────────────────────────
+
     console.log(
       `[Deliberation] Persisted | id=${deliberationId.slice(0, 8)}... ` +
       `| classification=${input.finalClassification} ` +
       `| confidence=${input.finalConfidence?.toFixed(2) ?? 'N/A'} ` +
-      `| votes=${input.votes.length}`
+      `| votes=${input.votes.length}` +
+      (executorMeta ? ` | executor=${executorMeta.ok ? 'ok' : 'failed'}` : '')
     );
 
     return deliberationId;
