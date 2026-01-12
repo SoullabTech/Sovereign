@@ -14,7 +14,7 @@
  * - Measuring integration quality over time
  * - Auditing the corpus callosum (bridge between knowings)
  *
- * ROUTING INVARIANT (context vs cause):
+ * [ROUTING-INVARIANT] (context vs cause):
  *
  * - origin_route: set at the HTTP boundary; describes WHY this run exists (causal key).
  * - processing_profile: set at the HTTP boundary OR computed by core; describes HOW it was processed.
