@@ -35,13 +35,15 @@ export async function ensureSession(sessionId?: string): Promise<MaiaSession> {
   return result.rows[0];
 }
 
-export async function incrementTurnCount(sessionId: string): Promise<void> {
-  await query(
+export async function incrementTurnCount(sessionId: string): Promise<number> {
+  const result = await query<{ turn_count: number }>(
     `UPDATE maia_sessions
      SET turn_count = turn_count + 1, updated_at = NOW()
-     WHERE id = $1`,
+     WHERE id = $1
+     RETURNING turn_count`,
     [sessionId]
   );
+  return result.rows[0]?.turn_count ?? 1;
 }
 
 export async function addConversationExchange(

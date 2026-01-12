@@ -1534,13 +1534,13 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
   const { sessionId, input, meta = {}, includeAudio = false, voiceProfile } = req;
   const startTime = Date.now();
 
-  // increment turn count for this session
-  await incrementTurnCount(sessionId);
+  // increment turn count for this session and get the authoritative count
+  // NOTE: Using session.turn_count (not history.length) to avoid cap from limited history
+  const turnCount = await incrementTurnCount(sessionId);
 
   try {
-    // Get conversation history for context
+    // Get conversation history for context (limited to 10 for prompt, but turnCount is authoritative)
     const conversationHistory = await getConversationHistory(sessionId, 10);
-    const turnCount = conversationHistory.length + 1;
 
     // 🛡️ FIELD SAFETY GATE: Check ALL paths (FAST/CORE/DEEP) before any processing
     const userId = (meta as any).userId;
