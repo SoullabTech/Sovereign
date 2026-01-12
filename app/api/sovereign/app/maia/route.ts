@@ -168,19 +168,39 @@ export async function POST(req: NextRequest) {
 
     // 🧠 MEMORY BUNDLE: Build compressed context from multi-bucket retrieval
     const traceId = randomUUID();
-    const effectiveUserId = userId || session.id;
     const isSanctuary = (meta as any)?.sanctuary === true;
 
+    // 🛡️ IDENTITY GUARD: Only attempt cross-session memory for recognized users
+    // Anonymous sessions (no userId) can still have in-session context but won't
+    // trigger "0 memories found" alarms from cross-session retrieval
+    const isRecognizedUser = typeof userId === 'string' &&
+      userId.length > 0 &&
+      userId !== 'guest' &&
+      userId !== 'anonymous' &&
+      !userId.startsWith('anon:');
+
+    const effectiveUserId = isRecognizedUser ? userId : session.id;
+    const allowCrossSessionMemory = isRecognizedUser && !isSanctuary;
+
     // Resolve memory mode (server-side permission check)
-    const modeResolution = resolveMemoryMode(effectiveUserId, (meta as any)?.memoryMode);
+    // Force ephemeral for anonymous users to prevent misleading audit trails
+    const requestedMode = isRecognizedUser ? (meta as any)?.memoryMode : 'ephemeral';
+    const modeResolution = resolveMemoryMode(effectiveUserId, requestedMode);
     const memoryMode = modeResolution.effective;
+
+    if (!isRecognizedUser) {
+      console.log(`🛡️ [Route/Identity] Anonymous session - cross-session memory disabled`);
+    }
 
     let memoryBundle: MemoryBundle | null = null;
     let memoryContext = '';
 
     // 🔒 SANCTUARY: Skip memory bundle entirely (no cross-session recall)
+    // 🔒 ANONYMOUS: Skip cross-session to prevent "0 memories" false alarms
     if (isSanctuary) {
       console.log('🛡️ [Route/MemoryBundle] Skipped - Sanctuary mode');
+    } else if (!allowCrossSessionMemory) {
+      console.log('🛡️ [Route/MemoryBundle] Skipped - Anonymous session (no cross-session)');
     } else if (memoryMode !== 'ephemeral') {
       try {
         const memoryBundleStart = Date.now();
