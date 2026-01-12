@@ -605,6 +605,34 @@ async function fastPathResponse(
     }
   }
 
+  // 🔥 ELEMENTAL ORACLE (FAST path): Quick pattern-based elemental classification
+  // This gives corpus callosum trace data without blocking the response
+  let elementalResult: ElementalResponse | null = null;
+  try {
+    const elementalOracle = new ElementalOracleBridge();
+    await elementalOracle.activate();
+
+    console.log(`🌋 [ElementalOracle FAST] Starting pattern-based classification...`);
+    const elementalStart = Date.now();
+
+    elementalResult = await elementalOracle.processAll({
+      input,
+      includeAll: true,
+      fastMode: true, // Pattern matching only - no LLM calls (~50ms)
+    });
+
+    const elementalLatency = Date.now() - elementalStart;
+    console.log(
+      `🌋 [ElementalOracle FAST] Complete | dominant=${elementalResult.dominant} | ` +
+      `agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
+    );
+
+    // Store in meta for corpus callosum logging
+    (meta as any).elementalResult = elementalResult;
+  } catch (err) {
+    console.warn('🌋 [ElementalOracle FAST] Skipped (non-fatal):', err);
+  }
+
   // 🧠 MEMORY RECALL DETECTION: Detect when user is asking about previous conversation
   const isMemoryRecallQuestion = /what (was|did|is) (my|i|the)|remember (when|what)|recall|told you|said (earlier|before)|mentioned|secret code|code phrase/i.test(input);
 
@@ -986,6 +1014,32 @@ async function corePathResponse(
     } catch (error) {
       console.warn('⚠️ Could not load relationship memory for CORE path:', error);
     }
+  }
+
+  // 🔥 ELEMENTAL ORACLE (CORE path): Quick pattern-based elemental classification
+  let elementalResult: ElementalResponse | null = null;
+  try {
+    const elementalOracle = new ElementalOracleBridge();
+    await elementalOracle.activate();
+
+    console.log(`🌋 [ElementalOracle CORE] Starting pattern-based classification...`);
+    const elementalStart = Date.now();
+
+    elementalResult = await elementalOracle.processAll({
+      input,
+      includeAll: true,
+      fastMode: true, // Pattern matching only - no LLM calls (~50ms)
+    });
+
+    const elementalLatency = Date.now() - elementalStart;
+    console.log(
+      `🌋 [ElementalOracle CORE] Complete | dominant=${elementalResult.dominant} | ` +
+      `agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
+    );
+
+    (meta as any).elementalResult = elementalResult;
+  } catch (err) {
+    console.warn('🌋 [ElementalOracle CORE] Skipped (non-fatal):', err);
   }
 
   // 🌀 SELFLET TEMPORAL MESSAGE (Phase 2E: surface past-self messages in prompt)
