@@ -53,6 +53,7 @@ import {
   type RelationshipMemoryContext
 } from '../memory/RelationshipMemoryService';
 import { TurnsStore } from '../memory/stores/TurnsStore';
+import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { query } from '../db/postgres';
@@ -81,6 +82,23 @@ function getTimeOfDayFromHour(hour: number | undefined): 'morning' | 'afternoon'
   if (h >= 12 && h < 17) return 'afternoon';
   if (h >= 17 && h < 21) return 'evening';
   return 'night';
+}
+
+// Helper: Map retrieved turns to audit candidates (type-safe)
+function mapTurnsToRetrievedCandidates(
+  turns: Array<{ id?: string | null }>,
+  traceId: string
+) {
+  return turns.map((t, i) => ({
+    // Always provide a stable candidate id even if the turn id is missing
+    id: t.id && String(t.id).trim().length > 0 ? String(t.id) : `${traceId}:turn:${i}`,
+    source: 'turn' as const,
+    retrievalScore: null,
+    semanticScore: null,
+    recencyScore: null,
+    confidenceScore: null,
+    usedAs: 'context' as const,
+  }));
 }
 
 /**
@@ -555,6 +573,33 @@ async function fastPathResponse(
           `${t.role === 'user' ? 'User' : 'MAIA'}: ${t.content.substring(0, 100)}${t.content.length > 100 ? '...' : ''}`
         ).join('\n');
         console.log(`🔄 [Cross-Session Recall] Loaded ${crossSessionTurns.length} turns from previous sessions`);
+
+        // 📊 MEMORY AUDIT: Record retrieved candidates for FAST path observability
+        const traceId =
+          (meta as { traceId?: string; messageId?: string } | undefined)?.traceId ||
+          (meta as { traceId?: string; messageId?: string } | undefined)?.messageId ||
+          randomUUID();
+
+        try {
+          // Only record when we actually retrieved something AND have a userId
+          if (effectiveUserId && crossSessionTurns.length > 0) {
+            await ConversationMemoryUsesStore.recordRetrievedCandidates({
+              sessionId,
+              messageId: traceId,
+              userId: effectiveUserId,
+              candidates: mapTurnsToRetrievedCandidates(
+                crossSessionTurns as Array<{ id?: string | null }>,
+                traceId
+              ),
+            });
+
+            console.log(
+              `📊 [MemoryAudit][FAST] Recorded ${crossSessionTurns.length} retrieved candidates`
+            );
+          }
+        } catch (auditErr) {
+          console.warn('[MemoryAudit][FAST] Failed to record candidates:', auditErr);
+        }
       }
     } catch (err) {
       console.warn('⚠️ Could not load cross-session turns:', err);
