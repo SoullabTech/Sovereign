@@ -2447,11 +2447,17 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       }
 
       // 🧠 CORPUS CALLOSUM TRACE: Log multi-agent contributions for consciousness auditing
-      // This makes "parallel knowing" visible: structured (Atlas) + symbolic (MAIA voice)
+      // This makes "parallel knowing" visible: structured (Atlas) + symbolic (MAIA voice) + elemental agents
       const CORPUS_CALLOSUM_ENABLED = process.env.CORPUS_CALLOSUM_ENABLED !== '0'; // Default on
       if (CORPUS_CALLOSUM_ENABLED && turnId) {
         try {
           const wisdomRouting = (meta as any)?.wisdomRouting;
+
+          // 🔥 Extract elemental trace data from consciousness orchestration (when available)
+          const corpusCallosumTrace = (consciousnessData as any)?.corpusCallosumTrace;
+          const elementalAgents = corpusCallosumTrace?.elementalAgents;
+          const elementalSynthesis = corpusCallosumTrace?.elementalSynthesis;
+
           const traceResult = await logCorpusCallosumTrace({
             sessionId,
             turnId,
@@ -2473,10 +2479,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
               tool: wisdomRouting.meta?.suggestedTool,
               toolId: wisdomRouting.meta?.toolId,
             } : undefined,
+            // 🔥 Elemental parallel processing (the real corpus callosum!)
+            elementalAgents: elementalAgents,
+            elementalSynthesis: elementalSynthesis,
           });
 
+          const elementalCount = traceResult.elementalRunIds?.length ?? 0;
           if (traceResult.integrationId) {
-            console.log(`🧠 [CorpusCallosum] Traced | agents=${traceResult.atlasRunId ? 1 : 0}+${traceResult.maiaRunId ? 1 : 0} | integration=${traceResult.integrationId.slice(0, 8)}...`);
+            console.log(`🧠 [CorpusCallosum] Traced | agents=${traceResult.atlasRunId ? 1 : 0}+${traceResult.maiaRunId ? 1 : 0}+${elementalCount}elemental | integration=${traceResult.integrationId.slice(0, 8)}...`);
           }
         } catch (callosumErr) {
           console.warn('[CorpusCallosum] Trace failed (non-blocking):', callosumErr);

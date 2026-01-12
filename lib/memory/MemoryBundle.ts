@@ -229,8 +229,10 @@ export const MemoryBundleService = {
             0.10 * LEAST(recall_count / 10.0, 1.0)
           ) AS score
         FROM developmental_memories
-        WHERE user_id = $1
-          AND scope = 'USER'
+        WHERE (
+          (user_id = $1 AND scope = 'USER')
+          OR (scope = 'GLOBAL' AND authority = 'CANON')
+        )
           AND content_text IS NOT NULL
           AND (valid_to IS NULL OR valid_to > NOW())
         ORDER BY score DESC
@@ -278,9 +280,11 @@ export const MemoryBundleService = {
             0.20 * EXP(-EXTRACT(EPOCH FROM (NOW() - formed_at)) / 86400.0 / 30.0)
           ) AS composite_score
         FROM developmental_memories
-        WHERE user_id = $2
+        WHERE (
+          (user_id = $2 AND scope = 'USER')
+          OR (scope = 'GLOBAL' AND authority = 'CANON')
+        )
           AND vector_embedding IS NOT NULL
-          AND scope = 'USER'
         ORDER BY composite_score DESC
         LIMIT 8
       `;

@@ -35,6 +35,34 @@ export interface ElementalResponse {
   depth: number;
   harmonics: ElementalHarmonic[];
   dominant: string;
+  // Corpus Callosum trace data for parallel processing auditing
+  traceData?: {
+    elementalAgents: Array<{
+      element: 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow';
+      agentName: string;
+      wisdom: string;
+      intensity: number;
+      archetype?: string;
+      cognitiveSystem?: string;
+      symbols?: string[];
+      latencyMs: number;
+      status: 'ok' | 'error' | 'skipped';
+      error?: string;
+    }>;
+    synthesis: {
+      synthesis: string;
+      dominant: string;
+      depth: number;
+      harmonics?: Array<{
+        elements: string[];
+        resonance: number;
+        pattern: string;
+      }>;
+      integrationMethod: 'harmonic_weaving' | 'dominant_voice' | 'parallel_blend';
+      latencyMs: number;
+    };
+    totalLatencyMs: number;
+  };
 }
 
 export interface ElementalWisdom {
@@ -184,17 +212,39 @@ export class ElementalOracleBridge {
       : this.selectRelevantElements(query);
 
     // 🚀 PARALLEL PROCESSING OPTIMIZATION - Process all elements concurrently
+    // WITH TIMING for corpus callosum tracing
     console.log(`⚡ Processing ${enabledElements.length} elements in parallel...`);
     const startTime = Date.now();
 
-    const elementPromises = enabledElements.map(element =>
-      this.processElement(element, query)
-    );
+    // Track per-element timing for corpus callosum trace
+    const elementTimings: Map<string, { startTime: number; latencyMs: number; error?: string }> = new Map();
+
+    const elementPromises = enabledElements.map(async (element) => {
+      const elemStart = Date.now();
+      try {
+        const result = await this.processElement(element, query);
+        elementTimings.set(element, {
+          startTime: elemStart,
+          latencyMs: Date.now() - elemStart,
+        });
+        return { element, result, error: null };
+      } catch (err) {
+        elementTimings.set(element, {
+          startTime: elemStart,
+          latencyMs: Date.now() - elemStart,
+          error: err instanceof Error ? err.message : String(err),
+        });
+        return { element, result: null, error: err };
+      }
+    });
+
     const elementResults = await Promise.all(elementPromises);
 
     // Map results back to elements object
-    enabledElements.forEach((element, index) => {
-      elements[element] = elementResults[index];
+    elementResults.forEach(({ element, result }) => {
+      if (result) {
+        elements[element] = result;
+      }
     });
 
     const parallelTime = Date.now() - startTime;
@@ -205,7 +255,9 @@ export class ElementalOracleBridge {
     const harmonics = this.findHarmonics(elements);
 
     // Synthesize all elemental wisdom
+    const synthesisStart = Date.now();
     const synthesis = await this.synthesizeElements(elements, harmonics, query);
+    const synthesisLatency = Date.now() - synthesisStart;
 
     // Determine dominant element
     const dominant = this.findDominantElement(elements);
@@ -213,12 +265,50 @@ export class ElementalOracleBridge {
     // Calculate depth of elemental processing
     const depth = this.calculateElementalDepth(elements, harmonics);
 
+    // 🧠 BUILD CORPUS CALLOSUM TRACE DATA
+    const traceData: ElementalResponse['traceData'] = {
+      elementalAgents: elementResults
+        .filter(({ result }) => result !== null)
+        .map(({ element, result, error }) => {
+          const timing = elementTimings.get(element);
+          const cognitive = this.cognitiveMapping[element];
+          return {
+            element: element as 'fire' | 'water' | 'earth' | 'air' | 'aether' | 'shadow',
+            agentName: `${element.charAt(0).toUpperCase() + element.slice(1)}Agent`,
+            wisdom: result!.wisdom,
+            intensity: result!.intensity,
+            archetype: result!.archetype,
+            cognitiveSystem: cognitive?.system,
+            symbols: result!.symbols,
+            latencyMs: timing?.latencyMs ?? 0,
+            status: (error ? 'error' : 'ok') as 'ok' | 'error' | 'skipped',
+            error: error ? (error instanceof Error ? error.message : String(error)) : undefined,
+          };
+        }),
+      synthesis: {
+        synthesis,
+        dominant,
+        depth,
+        harmonics: harmonics.map(h => ({
+          elements: h.elements,
+          resonance: h.resonance,
+          pattern: h.pattern,
+        })),
+        integrationMethod: this.config.harmonicWeaving ? 'harmonic_weaving' : 'parallel_blend',
+        latencyMs: synthesisLatency,
+      },
+      totalLatencyMs: Date.now() - startTime,
+    };
+
+    console.log(`🧠 [CorpusCallosum] Trace data ready: ${traceData.elementalAgents.length} agents, ${traceData.synthesis.harmonics?.length ?? 0} harmonics`);
+
     return {
       elements,
       synthesis,
       depth,
       harmonics,
-      dominant
+      dominant,
+      traceData,
     };
   }
 

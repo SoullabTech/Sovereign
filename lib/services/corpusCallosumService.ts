@@ -248,20 +248,38 @@ export type CorpusCallosumTrace = {
 };
 
 /**
+ * Map element to epistemic mode for corpus callosum tracing
+ */
+function elementToEpistemicMode(element: string): EpistemicMode {
+  const mapping: Record<string, EpistemicMode> = {
+    fire: 'structured',    // SOAR - goal-oriented, problem-solving
+    water: 'somatic',      // MicroPsi - emotional, felt-sense
+    earth: 'structured',   // ACT-R - grounded, rational
+    air: 'symbolic',       // LIDA - conscious, cognitive
+    aether: 'integrative', // POET - transcendent, synthesis
+    shadow: 'relational',  // Shadow - depth, integration
+  };
+  return mapping[element] ?? 'symbolic';
+}
+
+/**
  * Log a complete corpus callosum trace for a turn
  *
  * This is a convenience wrapper that logs:
  * - Atlas classification as structured agent run
  * - MAIA response as symbolic agent run
- * - Integration pass combining both
+ * - Elemental agents as parallel agent runs (the REAL corpus callosum!)
+ * - Integration pass combining all
  */
 export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promise<{
   atlasRunId: string | null;
   maiaRunId: string | null;
+  elementalRunIds: string[];
   integrationId: string | null;
 }> {
   const agentRunIds: string[] = [];
   const inputs: IntegrationPassInput['inputs'] = [];
+  const elementalRunIds: string[] = [];
 
   // 1) Log Atlas classification
   let atlasRunId: string | null = null;
@@ -357,23 +375,91 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
     }
   }
 
-  // 4) Log integration pass if we have multiple inputs
+  // 4) 🔥 Log elemental agents (the REAL parallel processing!)
+  if (trace.elementalAgents && trace.elementalAgents.length > 0) {
+    // Log each elemental agent as a separate run - this is the corpus callosum
+    for (const agent of trace.elementalAgents) {
+      const runId = await logAgentRun({
+        sessionId: trace.sessionId,
+        turnId: trace.turnId,
+        userId: trace.userId,
+        agentName: agent.agentName,
+        element: agent.element,
+        epistemicMode: elementToEpistemicMode(agent.element),
+        phase: 'elemental-processing',
+        source: 'elemental-oracle',
+        outputText: agent.wisdom.slice(0, 500), // Truncate for storage
+        latencyMs: agent.latencyMs,
+        status: agent.status ?? 'ok',
+        error: agent.error,
+        confidence: agent.intensity, // Use intensity as confidence proxy
+        intensity: agent.intensity,
+        meta: {
+          archetype: agent.archetype,
+          cognitiveSystem: agent.cognitiveSystem,
+          symbols: agent.symbols,
+          fullLength: agent.wisdom.length,
+        },
+      });
+
+      if (runId) {
+        elementalRunIds.push(runId);
+        agentRunIds.push(runId);
+        inputs.push({
+          agentName: agent.agentName,
+          element: agent.element,
+          epistemicMode: elementToEpistemicMode(agent.element),
+          summary: `${agent.archetype ?? agent.element}: ${agent.wisdom.slice(0, 80)}...`,
+        });
+      }
+    }
+
+    console.log(`🧠 [CorpusCallosum] Logged ${elementalRunIds.length} elemental agent runs`);
+  }
+
+  // 5) Log integration pass if we have multiple inputs
   let integrationId: string | null = null;
-  if (inputs.length >= 1) {
+  if (inputs.length >= 2) {
+    // Determine tensions between agents
+    const tensionsNamed: string[] = [];
+    if (inputs.some(i => i.element === 'fire') && inputs.some(i => i.element === 'water')) {
+      tensionsNamed.push('fire_water_opposition');
+    }
+    if (inputs.some(i => i.element === 'earth') && inputs.some(i => i.element === 'air')) {
+      tensionsNamed.push('earth_air_grounding_vs_abstraction');
+    }
+    if (inputs.some(i => i.epistemicMode === 'structured') && inputs.some(i => i.epistemicMode === 'symbolic')) {
+      tensionsNamed.push('structured_vs_symbolic');
+    }
+
     integrationId = await logIntegrationPass({
       sessionId: trace.sessionId,
       turnId: trace.turnId,
       userId: trace.userId,
-      bridgeAgent: 'CorpusCallosum',
+      bridgeAgent: trace.elementalSynthesis ? 'ElementalOracle' : 'CorpusCallosum',
       inputs,
       agentRunIds,
-      integrationMethod: inputs.length > 1 ? 'weighted_blend' : 'single_voice',
-      tensionsNamed: inputs.length > 1 ? ['structured_vs_symbolic'] : [],
-      finalText: trace.maiaResponse?.text?.slice(0, 200),
-      coherenceScore: inputs.length > 1 ? 0.8 : 1.0, // Placeholder
-      elementalMode: trace.atlasResult?.element?.toLowerCase() as any,
+      integrationMethod: trace.elementalSynthesis?.integrationMethod ?? (inputs.length > 1 ? 'weighted_blend' : 'single_voice'),
+      tensionsNamed,
+      reconciliations: trace.elementalSynthesis?.harmonics?.map(h => `${h.pattern}: ${h.elements.join('+')}`) ?? [],
+      paradoxesHeld: tensionsNamed.length > 0 ? ['elemental_oppositions_held'] : [],
+      finalText: trace.elementalSynthesis?.synthesis?.slice(0, 200) ?? trace.maiaResponse?.text?.slice(0, 200),
+      coherenceScore: trace.elementalSynthesis?.depth ?? (inputs.length > 1 ? 0.8 : 1.0),
+      depthScore: trace.elementalSynthesis?.depth,
+      confidence: trace.elementalSynthesis ? 0.85 : 0.7,
+      elementalMode: (trace.elementalSynthesis?.dominant?.toLowerCase() ?? trace.atlasResult?.element?.toLowerCase()) as any,
+      meta: {
+        agentCount: inputs.length,
+        elementalAgentCount: elementalRunIds.length,
+        harmonics: trace.elementalSynthesis?.harmonics,
+        totalLatencyMs: trace.elementalSynthesis?.latencyMs,
+      },
     });
+
+    if (integrationId) {
+      console.log(`🌉 [CorpusCallosum] Integration pass logged: ${inputs.length} agents bridged`);
+    }
   }
 
-  return { atlasRunId, maiaRunId, integrationId };
+  return { atlasRunId, maiaRunId, elementalRunIds, integrationId };
 }

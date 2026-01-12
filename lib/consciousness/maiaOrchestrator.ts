@@ -29,6 +29,7 @@ import { containsSensitiveData } from '@/lib/memory/sensitivePatterns';
 import { getMCPConsciousnessIntegration, type OracleContextEnrichment } from '@/lib/mcp/integrations';
 import { retrieveForMode, formatForPrompt, type RetrievalResult } from '@/lib/ain/knowledge/RetrievalService';
 import { computeFacetDecision, type FacetDecisionPacket } from '@/lib/consciousness/FacetDecisionLoop';
+import { logAgentRun, logIntegrationPass } from '@/lib/services/corpusCallosumService';
 
 // ─── Recall Quality Helpers ───────────────────────────────────────────────────
 function clamp01(n: number) {
@@ -538,6 +539,11 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
     layersFailed.push('maia-core');
   }
 
+  // 🧠 CORPUS CALLOSUM: Extract turnId for agent_runs logging
+  const turnId = (maiaResult as any)?.metadata?.turnId as number | undefined;
+  const turnIndex = (maiaResult as any)?.metadata?.turnIndex as number | undefined;
+  const corpusCallosumRunIds: string[] = [];
+
   // 2️⃣ CONSCIOUSNESS LAYER 1: Gebser Structure Analysis (ADAPTIVE)
   let gebserStructure: any = null;
   if (complexityAnalysis.requiredLayers.includes('gebser-analysis')) {
@@ -563,6 +569,24 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       layerTimings['gebser-analysis'] = gebserTime;
       performanceProfile.stages.gebserAnalysis = gebserTime;
       layersFailed.push('gebser-analysis');
+    }
+
+    // 🧠 CORPUS CALLOSUM: Log gebser-analysis agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'gebser-analysis',
+        element: 'air',
+        epistemicMode: 'structured',
+        outputJson: gebserStructure ?? {},
+        latencyMs: layerTimings['gebser-analysis'],
+        status: gebserStructure ? 'ok' : 'error',
+        confidence: gebserStructure?.confidence ?? null,
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
     }
   } else {
     console.log('🚀 Skipping Gebser analysis - not needed for this complexity level');
@@ -594,6 +618,24 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       performanceProfile.stages.elementalField = elementalTime;
       layersFailed.push('elemental-field');
     }
+
+    // 🧠 CORPUS CALLOSUM: Log elemental-field agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'elemental-field',
+        element: elementalField?.dominantElement ?? null,
+        epistemicMode: 'symbolic',
+        outputJson: elementalField ?? {},
+        latencyMs: layerTimings['elemental-field'],
+        status: elementalField ? 'ok' : 'error',
+        confidence: elementalField?.confidence ?? null,
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
+    }
   } else {
     console.log('🚀 Skipping elemental field analysis - not needed for this complexity level');
   }
@@ -618,6 +660,23 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       layerTimings['elemental-field-summary'] = summaryTime;
       performanceProfile.stages.elementalSummary = summaryTime;
       layersFailed.push('elemental-field-summary');
+    }
+
+    // 🧠 CORPUS CALLOSUM: Log elemental-field-summary agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'elemental-field-summary',
+        element: 'aether',
+        epistemicMode: 'meta',
+        outputJson: elementalFieldSummary ?? {},
+        latencyMs: layerTimings['elemental-field-summary'],
+        status: elementalFieldSummary ? 'ok' : 'error',
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
     }
   } else {
     console.log('🚀 Skipping elemental field summary - not needed for this complexity level');
@@ -651,6 +710,23 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       performanceProfile.stages.conversationalElemental = conversationalTime;
       layersFailed.push('conversational-elemental');
     }
+
+    // 🧠 CORPUS CALLOSUM: Log conversational-elemental agent run
+    if (turnId) {
+      const runId = await logAgentRun({
+        turnId,
+        sessionId,
+        userId,
+        turnIndex,
+        agentName: 'conversational-elemental',
+        element: conversationalElemental?.context?.dominantElement ?? null,
+        epistemicMode: 'relational',
+        outputJson: conversationalElemental ?? {},
+        latencyMs: layerTimings['conversational-elemental'],
+        status: conversationalElemental ? 'ok' : 'error',
+      });
+      if (runId) corpusCallosumRunIds.push(runId);
+    }
   } else {
     console.log('🚀 Skipping conversational elemental intelligence - not needed for this complexity level');
   }
@@ -669,6 +745,32 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       successRate: layersSuccessful.length / totalLayers
     }
   };
+
+  // 🧠 CORPUS CALLOSUM: Log integration pass if multiple agents ran
+  if (turnId && corpusCallosumRunIds.length >= 2) {
+    await logIntegrationPass({
+      turnId,
+      sessionId,
+      userId,
+      bridgeAgent: 'maiaOrchestrator',
+      agentRunIds: corpusCallosumRunIds,
+      inputs: corpusCallosumRunIds.map((id, i) => ({
+        agentName: layersSuccessful[i] ?? `layer-${i}`,
+        summary: `Agent run ${id}`,
+      })),
+      integrationMethod: 'narrative_synthesis',
+      finalText: maiaResult.text,
+      coherenceScore: consciousnessAnalysis.analysisMetadata.successRate,
+      depthScore: conversationContext.getSpine().trustLevel,
+      elementalMode: (elementalField?.dominantElement as 'fire' | 'water' | 'earth' | 'air' | 'aether') ?? undefined,
+      meta: {
+        consciousnessAnalysis,
+        layersSuccessful,
+        layersFailed,
+      },
+    });
+    console.log(`🧠 [CorpusCallosum] Integration pass logged | agents=${corpusCallosumRunIds.length} | turnId=${turnId}`);
+  }
 
   // 🌀 MAIA-PAI CONVERSATIONAL KERNEL: Track this interaction
   const significance = layersFailed.length === 0 ? 'connection' :
