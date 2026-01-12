@@ -68,6 +68,7 @@ import {
 } from '../rlm/rcnIntegration';
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
+import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -2445,6 +2446,43 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         }
       }
 
+      // 🧠 CORPUS CALLOSUM TRACE: Log multi-agent contributions for consciousness auditing
+      // This makes "parallel knowing" visible: structured (Atlas) + symbolic (MAIA voice)
+      const CORPUS_CALLOSUM_ENABLED = process.env.CORPUS_CALLOSUM_ENABLED !== '0'; // Default on
+      if (CORPUS_CALLOSUM_ENABLED && turnId) {
+        try {
+          const wisdomRouting = (meta as any)?.wisdomRouting;
+          const traceResult = await logCorpusCallosumTrace({
+            sessionId,
+            turnId,
+            userId: effectiveUserId,
+            atlasResult: atlasResult ? {
+              primary: atlasResult.primary,
+              element: atlasResult.element,
+              confidence: atlasResult.confidence,
+              gapPercent: atlasResult.gapPercent,
+              alternatives: atlasResult.alternatives,
+            } : undefined,
+            maiaResponse: {
+              text,
+              processingProfile,
+              provider,
+            },
+            wisdomPatterns: wisdomRouting?.activated ? {
+              pattern: wisdomRouting.meta?.patternType,
+              tool: wisdomRouting.meta?.suggestedTool,
+              toolId: wisdomRouting.meta?.toolId,
+            } : undefined,
+          });
+
+          if (traceResult.integrationId) {
+            console.log(`🧠 [CorpusCallosum] Traced | agents=${traceResult.atlasRunId ? 1 : 0}+${traceResult.maiaRunId ? 1 : 0} | integration=${traceResult.integrationId.slice(0, 8)}...`);
+          }
+        } catch (callosumErr) {
+          console.warn('[CorpusCallosum] Trace failed (non-blocking):', callosumErr);
+        }
+      }
+
       console.log(`🧠 Learning integration complete | Turn: ${turnId} | Profile: ${processingProfile}`);
     } catch (learningError) {
       console.warn('⚠️ Learning system error (conversation continues):', learningError);
@@ -2532,12 +2570,14 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     const responseMetadata: MaiaResponse['metadata'] = {
       ...(responsePatterns.length > 0 ? { patterns: responsePatterns } : {}),
       turnId: (meta as any).turnId as number | undefined,
-      deliberationId: (meta as any).deliberationId as string | undefined,
+      decisionId: (meta as any).decisionId as string | undefined,  // Clean schema
+      deliberationId: (meta as any).deliberationId as string | undefined,  // Backward compat
     };
 
     // Only include metadata if there's something to include
     const hasMetadata = responseMetadata.patterns?.length ||
       responseMetadata.turnId ||
+      responseMetadata.decisionId ||
       responseMetadata.deliberationId;
 
     return {
