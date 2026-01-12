@@ -66,6 +66,7 @@ import {
   type MaiaRcnResult
 } from '../rlm/rcnIntegration';
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
+import { detectAndPersistExpansion } from '../services/expansionEventService';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -2374,6 +2375,31 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
         } catch (deliberationError) {
           console.warn('⚠️ Decision persistence failed (non-blocking):', deliberationError);
           // Decision persistence failures don't break the conversation
+        }
+      }
+
+      // 🌱 EXPANSION EVENT DETECTION (silent; does not affect decisions/executor)
+      // Detects growth moments in user text for longitudinal analysis
+      const EXPANSION_EVENTS_ENABLED = process.env.EXPANSION_EVENTS_ENABLED === '1';
+      console.log('[ExpansionEvents] enabled=', EXPANSION_EVENTS_ENABLED, 'turnId=', turnId, 'sessionId=', sessionId, 'userId=', effectiveUserId);
+      if (EXPANSION_EVENTS_ENABLED && turnId) {
+        try {
+          const memoryBundle = (meta as any)?.memoryBundle;
+          const expansionId = await detectAndPersistExpansion({
+            sessionId,
+            turnId,
+            userText: input,
+            maiaText: text,
+            userId: effectiveUserId,
+            memoryWasUsed: !!(memoryBundle?.memoryBullets?.length > 0),
+            decisionId: (meta as any)?.decisionId,
+          });
+          if (expansionId) {
+            console.log(`🌱 [Expansion] Detected | id=${expansionId.slice(0, 8)}...`);
+          }
+        } catch (expansionErr) {
+          // Silent accumulation: never break the response path
+          console.warn('[ExpansionEvents] detectAndPersistExpansion failed:', expansionErr);
         }
       }
 
