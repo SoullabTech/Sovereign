@@ -28,6 +28,7 @@ import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { CaptureToggle } from '@/components/capture/CaptureToggle';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
+import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
@@ -278,6 +279,7 @@ function MAIAPageContent() {
   const [showHelpHub, setShowHelpHub] = useState(false);
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
   const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
+  const [showFeedbackSheet, setShowFeedbackSheet] = useState(false);
 
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
@@ -746,8 +748,8 @@ function MAIAPageContent() {
                 <CaptureToggle userId={explorerId} />
 
                 {/* Feedback Button - Mobile */}
-                <a
-                  href={`mailto:feedback@soullab.life?subject=MAIA%20Feedback%20from%20${encodeURIComponent(explorerName)}&body=Hi%20SOULLAB%20team%2C%0A%0A%5BShare%20your%20feedback%5D%0A%0A---%0AUser%3A%20${encodeURIComponent(explorerName)}`}
+                <button
+                  onClick={() => setShowFeedbackSheet(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
                            bg-green-500/10 hover:bg-green-500/20
                            border border-green-500/20 hover:border-green-500/40
@@ -755,7 +757,7 @@ function MAIAPageContent() {
                   title="Send Feedback"
                 >
                   <MessageCircle className="w-3 h-3" />
-                </a>
+                </button>
 
                 {/* Account Button - Mobile (opens bottom sheet) */}
                 <motion.button
@@ -961,8 +963,8 @@ function MAIAPageContent() {
                 <CaptureToggle userId={explorerId} />
 
                 {/* Feedback Button - Desktop */}
-                <motion.a
-                  href={`mailto:feedback@soullab.life?subject=MAIA%20Feedback%20from%20${encodeURIComponent(explorerName)}&body=Hi%20SOULLAB%20team%2C%0A%0A%5BShare%20your%20feedback%5D%0A%0A---%0AUser%3A%20${encodeURIComponent(explorerName)}`}
+                <motion.button
+                  onClick={() => setShowFeedbackSheet(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                            bg-green-500/10 hover:bg-green-500/20
                            border border-green-500/20 hover:border-green-500/40
@@ -972,7 +974,7 @@ function MAIAPageContent() {
                   title="Send Feedback"
                 >
                   <MessageCircle className="w-4 h-4" />
-                </motion.a>
+                </motion.button>
 
                 {/* Account Button - Desktop (opens bottom sheet) */}
                 <motion.button
@@ -1263,6 +1265,14 @@ function MAIAPageContent() {
         <TestFlightHelpSheet
           isOpen={showTestFlightHelp}
           onClose={() => setShowTestFlightHelp(false)}
+        />
+
+        {/* Feedback Sheet */}
+        <FeedbackSheet
+          isOpen={showFeedbackSheet}
+          onClose={() => setShowFeedbackSheet(false)}
+          userName={explorerName}
+          userId={explorerId}
         />
 
         </div>
@@ -1579,14 +1589,16 @@ function MAIAPageContent() {
                 </button>
 
                 {/* Send Feedback */}
-                <a
-                  href={`mailto:feedback@soullab.life?subject=MAIA%20Beta%20Feedback%20from%20${encodeURIComponent(explorerName)}&body=Hi%20SOULLAB%20team%2C%0A%0A%5BPlease%20share%20your%20feedback%2C%20suggestions%2C%20or%20any%20issues%20you%27ve%20encountered%5D%0A%0A---%0AUser%3A%20${encodeURIComponent(explorerName)}%0ADevice%3A%20${typeof navigator !== 'undefined' ? encodeURIComponent(navigator.userAgent.includes('iPhone') ? 'iPhone' : navigator.userAgent.includes('iPad') ? 'iPad' : 'Desktop') : 'Unknown'}`}
-                  onClick={() => setShowAccountMenu(false)}
+                <button
+                  onClick={() => {
+                    setShowAccountMenu(false);
+                    requestAnimationFrame(() => setShowFeedbackSheet(true));
+                  }}
                   className="flex items-center justify-center gap-4 px-4 py-3 rounded-xl w-full transition-colors hover:bg-green-500/10 text-green-400"
                 >
                   <MessageCircle className="w-5 h-5" />
                   <span className="text-base">Send Feedback</span>
-                </a>
+                </button>
 
                 {/* Divider */}
                 <div className="border-t border-amber-500/20 my-2" />
