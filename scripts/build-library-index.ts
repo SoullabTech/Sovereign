@@ -41,6 +41,11 @@ const IGNORED_PATTERNS = [
   /_Substack/,
 ];
 
+// Strip YAML frontmatter from content
+function stripFrontmatter(content: string): string {
+  return content.replace(/^---[\s\S]*?---\n?/, '');
+}
+
 // Strip emojis from text
 function stripEmojis(text: string): string {
   return text
@@ -55,20 +60,26 @@ function stripEmojis(text: string): string {
 }
 
 function extractTitle(content: string): string {
+  // Strip frontmatter first
+  const cleanContent = stripFrontmatter(content);
+
   // Try to find first # heading
-  const headingMatch = content.match(/^#\s+(.+)$/m);
+  const headingMatch = cleanContent.match(/^#\s+(.+)$/m);
   if (headingMatch) {
     return stripEmojis(headingMatch[1].trim());
   }
 
   // Fallback: first non-empty line
-  const lines = content.split('\n').filter(l => l.trim());
+  const lines = cleanContent.split('\n').filter(l => l.trim());
   return stripEmojis(lines[0]?.replace(/^#+\s*/, '').trim() || 'Untitled');
 }
 
 function extractDescription(content: string): string {
+  // Strip frontmatter first
+  const cleanContent = stripFrontmatter(content);
+
   // Skip title and find first paragraph
-  const lines = content.split('\n');
+  const lines = cleanContent.split('\n');
   let inParagraph = false;
   let paragraph = '';
 
@@ -204,14 +215,17 @@ function scanDirectory(dir: string, articles: ArticleIndex[]): void {
         const content = fs.readFileSync(path.join(process.cwd(), entryPath), 'utf-8');
         const stats = fs.statSync(path.join(process.cwd(), entryPath));
 
+        // Strip frontmatter from content for search snippet
+        const cleanContent = stripFrontmatter(content);
+
         const article: ArticleIndex = {
           id: entryPath.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase(),
           title: extractTitle(content),
           description: extractDescription(content),
-          content: content.slice(0, 500).replace(/\n/g, ' '), // For search
+          content: cleanContent.slice(0, 500).replace(/\n/g, ' '), // For search
           path: entryPath,
           category: getCategoryFromPath(entryPath),
-          tags: extractTags(content, entryPath),
+          tags: extractTags(content, entryPath), // Keep original to extract frontmatter tags
           lastModified: stats.mtime.toISOString(),
         };
 
