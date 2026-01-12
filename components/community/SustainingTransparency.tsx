@@ -85,22 +85,26 @@ export function SustainingTransparency() {
       category: 'Development',
       icon: <Code className="w-4 h-4" />,
       amount: 0,
-      description: 'Volunteer stewardship',
+      description: '100+ hrs/week volunteer',
       breakdown: [
-        { item: 'Core development', cost: 0 },
-        { item: 'Community contributions', cost: 0 }
+        { item: 'Core development (~100 hrs/wk)', cost: 0 },
+        { item: 'If paid @ $150/hr: ~$60,000/mo', cost: 0 }
       ]
     }
   ]
 
-  // Circle contributions (mock data - would come from real tracking)
+  // Circle contributions - honest zeros until real tracking exists
+  // TODO: Connect to Stripe/Ko-fi/Open Collective when contribution system is live
   const circleContributions: CircleContribution[] = [
-    { circle: 'Sustainers', icon: '🕯️', count: 12, monthlyTotal: 108 },
-    { circle: 'Guardians', icon: '🛡️', count: 5, monthlyTotal: 110 },
-    { circle: 'Elders', icon: '🌳', count: 2, monthlyTotal: 88 },
-    { circle: 'Founders', icon: '⭐', count: 8, monthlyTotal: 0 }, // One-time, not monthly
-    { circle: 'Seva', icon: '🙏', count: 15, monthlyTotal: 0 } // Service, not monetary
+    { circle: 'Sustainers', icon: '🕯️', count: 0, monthlyTotal: 0 },
+    { circle: 'Guardians', icon: '🛡️', count: 0, monthlyTotal: 0 },
+    { circle: 'Elders', icon: '🌳', count: 0, monthlyTotal: 0 },
+    { circle: 'Founders', icon: '⭐', count: 0, monthlyTotal: 0 },
+    { circle: 'Seva', icon: '🙏', count: 0, monthlyTotal: 0 }
   ]
+
+  // The real contribution: 100+ hours/week of volunteer development
+  const volunteerHoursPerWeek = 100
 
   const totalCosts = operationalCosts.reduce((sum, c) => sum + c.amount, 0)
   const totalContributions = circleContributions.reduce((sum, c) => sum + c.monthlyTotal, 0)
@@ -251,20 +255,14 @@ export function SustainingTransparency() {
               </div>
             </div>
 
-            {/* Philosophy note */}
+            {/* Current reality */}
             <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10
                           border border-purple-500/20 text-center">
               <p className="text-sm text-white/70 italic">
-                "Consciousness shouldn't be paywalled. Everyone has full access.
+                "Currently sustained entirely by volunteer labor and founder resources.
                 <br />
-                <span className="text-purple-300">Contribution sustains the mission through gratitude, not restriction.</span>"
+                <span className="text-purple-300">Contribution circles coming soon — consciousness shouldn't be paywalled.</span>"
               </p>
-            </div>
-
-            {/* Seva recognition */}
-            <div className="text-center text-xs text-white/40">
-              <span className="text-purple-400">{circleContributions.find(c => c.circle === 'Seva')?.count || 0} Seva contributors</span>
-              {' '}offering their gifts: Content Weavers, Circle Keepers, Bridge Builders, Guides, Builders, Messengers
             </div>
           </div>
         </motion.div>
