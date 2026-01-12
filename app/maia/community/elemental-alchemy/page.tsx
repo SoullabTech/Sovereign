@@ -38,7 +38,65 @@ const cleanTextForSpeech = (text: string): string => {
     .replace(/\.{3,}/g, '...')       // Fix ellipsis
     .replace(/\([^)]+\)/g, '')       // Remove parentheticals
     .replace(/["]/g, '')             // Remove quotes
+    .replace(/!\[\]\[image\d+\]/g, '') // Remove markdown image refs
+    .replace(/\*\*\*/g, '')          // Remove horizontal rules
+    .replace(/\n{3,}/g, '\n\n')      // Normalize line breaks
     .trim()
+}
+
+// Chunk text for TTS (OpenAI has 4096 char limit, use 3500 to be safe)
+const MAX_TTS_CHUNK_SIZE = 3500
+
+const chunkTextForTTS = (text: string): string[] => {
+  const cleanText = cleanTextForSpeech(text)
+  if (cleanText.length <= MAX_TTS_CHUNK_SIZE) {
+    return [cleanText]
+  }
+
+  const chunks: string[] = []
+  let remaining = cleanText
+
+  while (remaining.length > 0) {
+    if (remaining.length <= MAX_TTS_CHUNK_SIZE) {
+      chunks.push(remaining)
+      break
+    }
+
+    // Find a good break point (sentence end) within the limit
+    let breakPoint = MAX_TTS_CHUNK_SIZE
+
+    // Look for sentence boundaries: . ! ? followed by space or newline
+    const searchArea = remaining.slice(0, MAX_TTS_CHUNK_SIZE)
+    const sentenceEndRegex = /[.!?][\s\n]/g
+    let lastSentenceEnd = -1
+    let match
+
+    while ((match = sentenceEndRegex.exec(searchArea)) !== null) {
+      lastSentenceEnd = match.index + 1 // Include the punctuation
+    }
+
+    if (lastSentenceEnd > MAX_TTS_CHUNK_SIZE / 2) {
+      // Found a good sentence break point
+      breakPoint = lastSentenceEnd
+    } else {
+      // No good sentence break, try paragraph break
+      const paragraphBreak = searchArea.lastIndexOf('\n\n')
+      if (paragraphBreak > MAX_TTS_CHUNK_SIZE / 2) {
+        breakPoint = paragraphBreak
+      } else {
+        // Last resort: break at a space
+        const spaceBreak = searchArea.lastIndexOf(' ')
+        if (spaceBreak > MAX_TTS_CHUNK_SIZE / 2) {
+          breakPoint = spaceBreak
+        }
+      }
+    }
+
+    chunks.push(remaining.slice(0, breakPoint).trim())
+    remaining = remaining.slice(breakPoint).trim()
+  }
+
+  return chunks
 }
 
 // Browser TTS fallback
@@ -97,18 +155,19 @@ const speakWithBrowserTTS = (text: string, element: string = 'earth'): Promise<v
 const READING_VOICE = 'onyx'   // Deep, rich voice for book reading
 const MAIA_VOICE = 'alloy'     // For MAIA responses when discussing sections
 
-// High-quality TTS using OpenAI via API
-const speakText = async (text: string, element: string = 'earth'): Promise<void> => {
-  const cleanText = cleanTextForSpeech(text)
-  if (!cleanText) return
+// Track if reading should stop
+let shouldStopReading = false
+
+// High-quality TTS using OpenAI via API (single chunk)
+const speakChunk = async (text: string, element: string = 'earth'): Promise<boolean> => {
+  if (!text || shouldStopReading) return false
 
   try {
-    // Use OpenAI TTS API with fable voice for reading
     const response = await fetch('/api/voice/openai-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        text: cleanText,
+        text,
         voice: READING_VOICE,
         format: 'mp3',
         speed: 1.0
@@ -119,7 +178,6 @@ const speakText = async (text: string, element: string = 'earth'): Promise<void>
       throw new Error('TTS API error')
     }
 
-    // Play the audio
     const audioBlob = await response.blob()
     const audioUrl = URL.createObjectURL(audioBlob)
     const audio = new Audio(audioUrl)
@@ -129,27 +187,53 @@ const speakText = async (text: string, element: string = 'earth'): Promise<void>
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl)
         currentAudio = null
-        resolve()
+        resolve(!shouldStopReading) // Return true to continue, false to stop
       }
       audio.onerror = () => {
         URL.revokeObjectURL(audioUrl)
         currentAudio = null
         // Fall back to browser TTS on audio error
-        speakWithBrowserTTS(cleanText, element).then(resolve)
+        speakWithBrowserTTS(text, element).then(() => resolve(!shouldStopReading))
       }
       audio.play().catch(() => {
         // Fall back to browser TTS if autoplay blocked
-        speakWithBrowserTTS(cleanText, element).then(resolve)
+        speakWithBrowserTTS(text, element).then(() => resolve(!shouldStopReading))
       })
     })
 
   } catch (error) {
     console.log('OpenAI TTS unavailable, using browser TTS:', error)
-    return speakWithBrowserTTS(cleanText, element)
+    await speakWithBrowserTTS(text, element)
+    return !shouldStopReading
+  }
+}
+
+// Speak text with chunking for long content
+const speakText = async (text: string, element: string = 'earth'): Promise<void> => {
+  shouldStopReading = false
+  const chunks = chunkTextForTTS(text)
+
+  console.log(`🎤 TTS: Speaking ${chunks.length} chunk(s)`)
+
+  for (let i = 0; i < chunks.length; i++) {
+    if (shouldStopReading) {
+      console.log('🛑 TTS: Reading stopped by user')
+      break
+    }
+
+    console.log(`🎤 TTS: Playing chunk ${i + 1}/${chunks.length} (${chunks[i].length} chars)`)
+    const shouldContinue = await speakChunk(chunks[i], element)
+
+    if (!shouldContinue) {
+      break
+    }
   }
 }
 
 const stopSpeaking = () => {
+  // Signal chunked reading to stop
+  shouldStopReading = true
+
   // Stop OpenAI audio
   if (currentAudio) {
     currentAudio.pause()

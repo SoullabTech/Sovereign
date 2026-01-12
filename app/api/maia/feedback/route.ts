@@ -1,11 +1,9 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // app/api/maia/feedback/route.ts
 // API endpoint for collecting user feedback on MAIA's responses
 // Uses clean schema: maia_decision_feedback linked to maia_decisions
 
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import { query, queryOne } from '@/lib/database/postgres';
 import { z } from 'zod';
 

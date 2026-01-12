@@ -1,9 +1,7 @@
 // @ts-nocheck - Prototype file, not type-checked
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // backend: app/api/sovereign/app/maia/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { getCognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
