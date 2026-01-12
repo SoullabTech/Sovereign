@@ -451,6 +451,12 @@ export async function logCorpusCallosumTrace(trace: CorpusCallosumTrace): Promis
       meta: {
         agentCount: inputs.length,
         elementalAgentCount: elementalRunIds.length,
+        // Distinguish classical five vs including shadow for semantic clarity
+        elementalAgentCountClassical: elementalRunIds.filter((_, i) => {
+          const agent = trace.elementalAgents?.[i];
+          return agent && agent.element !== 'shadow';
+        }).length,
+        traceAgentCount: trace.elementalAgents?.length ?? 0, // What the bridge produced
         harmonics: trace.elementalSynthesis?.harmonics,
         totalLatencyMs: trace.elementalSynthesis?.latencyMs,
       },

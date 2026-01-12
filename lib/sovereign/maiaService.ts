@@ -1324,19 +1324,37 @@ The current user has not provided their name. Address them as "friend" or "there
 
   // 🔥 ELEMENTAL ORACLE: Parallel processing through Fire/Water/Earth/Air/Aether lenses
   // This is the "corpus callosum" - multiple elemental agents processing in parallel
+  // ⏱️ TIMEOUT: Elemental is instrumentation, not a hard dependency - don't block response
+  const ELEMENTAL_TIMEOUT_MS = 8000; // 8s timeout - enough for fast models, skip if slow
+
+  function withElementalTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+    return new Promise((resolve, reject) => {
+      const timeoutId = setTimeout(() => {
+        reject(new Error(`ElementalOracle timeout after ${ms}ms`));
+      }, ms);
+      promise.then(
+        (value) => { clearTimeout(timeoutId); resolve(value); },
+        (err) => { clearTimeout(timeoutId); reject(err); }
+      );
+    });
+  }
+
   let elementalResult: ElementalResponse | null = null;
   try {
     const elementalOracle = new ElementalOracleBridge();
     await elementalOracle.activate();
 
-    console.log(`🌋 [ElementalOracle] Starting parallel elemental processing...`);
+    console.log(`🌋 [ElementalOracle] Starting parallel elemental processing (${ELEMENTAL_TIMEOUT_MS}ms timeout)...`);
     const elementalStart = Date.now();
 
-    elementalResult = await elementalOracle.processAll({
-      input,
-      primaryElement: conversationContext?.profile?.dominantElement ?? undefined,
-      includeAll: true, // Fan out to all elements for DEEP path
-    });
+    elementalResult = await withElementalTimeout(
+      elementalOracle.processAll({
+        input,
+        primaryElement: conversationContext?.profile?.dominantElement ?? undefined,
+        includeAll: true, // Fan out to all elements for DEEP path
+      }),
+      ELEMENTAL_TIMEOUT_MS
+    );
 
     const elementalLatency = Date.now() - elementalStart;
     console.log(
@@ -1347,7 +1365,7 @@ The current user has not provided their name. Address them as "friend" or "there
     // Store in meta for corpus callosum logging
     (meta as any).elementalResult = elementalResult;
   } catch (err) {
-    console.warn('🌋 [ElementalOracle] Failed (non-fatal):', err);
+    console.warn('🌋 [ElementalOracle] Skipped (non-fatal):', err);
     // Continue without elemental - this is instrumentation, not a hard dependency
   }
 
