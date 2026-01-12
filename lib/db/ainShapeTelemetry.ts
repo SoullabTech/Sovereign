@@ -40,6 +40,17 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
     sessionId
   } = row;
 
+  // Guard: require valid sessionId to prevent orphan rows
+  const normalizedSessionId = (sessionId ?? '').trim();
+  if (!normalizedSessionId) {
+    console.warn('[AINShapeTelemetry] Skipping write: no sessionId', {
+      route,
+      processingProfile,
+      explorerId,
+    });
+    return;
+  }
+
   await query(
     `
     INSERT INTO ain_shape_telemetry
@@ -60,7 +71,7 @@ export async function logAINShapeTelemetry(row: AINShapeTelemetryRow): Promise<v
       processingProfile ?? null,
       model ?? null,
       explorerId ?? null,
-      sessionId ?? null
+      normalizedSessionId
     ]
   );
 }

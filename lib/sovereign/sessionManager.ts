@@ -18,7 +18,11 @@ export type MaiaSession = {
 };
 
 export async function ensureSession(sessionId?: string): Promise<MaiaSession> {
-  const id = sessionId ?? randomUUID();
+  // Normalize: treat empty string as missing (generates new UUID)
+  if (sessionId !== undefined && !sessionId.trim()) {
+    console.warn('[Session] Normalized empty sessionId → new UUID', { source: 'ensureSession' });
+  }
+  const id = (sessionId && sessionId.trim()) || randomUUID();
 
   // Single upsert instead of SELECT + UPDATE/INSERT
   const result = await query<MaiaSession>(
