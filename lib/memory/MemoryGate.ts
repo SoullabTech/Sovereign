@@ -14,12 +14,12 @@ import 'server-only';
  *
  * Permission chain:
  * 1. Client signals intent (memoryMode)
- * 2. Server checks env flag + allowlist
- * 3. Only 'longterm' if BOTH conditions pass
+ * 2. Server checks env flag (allowlist is optional now)
+ * 3. 'longterm' if env flag is set AND (no allowlist OR user in allowlist)
  *
  * Env vars:
  * - MAIA_LONGTERM_WRITEBACK: '1' to enable feature globally
- * - MAIA_LONGTERM_WRITEBACK_ALLOWLIST: comma-separated userIds
+ * - MAIA_LONGTERM_WRITEBACK_ALLOWLIST: comma-separated userIds (optional - if empty, all users allowed)
  */
 
 export type MemoryMode = 'ephemeral' | 'continuity' | 'longterm';
@@ -57,6 +57,7 @@ export function resolveMemoryMode(
     : 'continuity';
 
   // Check if longterm is allowed for this user
+  // Now allows all users when env flag is set (allowlist is optional)
   const envEnabled = process.env.MAIA_LONGTERM_WRITEBACK === '1';
   const allowlistRaw = process.env.MAIA_LONGTERM_WRITEBACK_ALLOWLIST || '';
   const allowlist = new Set(
@@ -65,7 +66,8 @@ export function resolveMemoryMode(
       .map(s => s.trim())
       .filter(Boolean)
   );
-  const allowLongterm = envEnabled && allowlist.has(userId);
+  // Allow if env is enabled AND (no allowlist configured OR user is in allowlist)
+  const allowLongterm = envEnabled && (allowlist.size === 0 || allowlist.has(userId));
 
   // Determine effective mode
   const effective: MemoryMode =

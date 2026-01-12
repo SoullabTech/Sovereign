@@ -1236,11 +1236,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const score = detectBreakthroughPotential(conversationMessages);
     setBreakthroughScore(score);
 
-    // Breakthrough detection PERMANENTLY DISABLED per user request
-    // if (score >= 70 && !showJournalSuggestion && !journalSuggestionDismissed && messages.length >= 6) {
-    //   console.log('📊 [Breakthrough] Score >=70, showing journal suggestion');
-    //   setShowJournalSuggestion(true);
-    // }
+    // Show breakthrough indicator when score is significant (lowered threshold for spiral-relative awareness)
+    if (score >= 50 && !showJournalSuggestion && !journalSuggestionDismissed && messages.length >= 4) {
+      console.log(`⭐ [Breakthrough] Score ${score} >= 50, showing journal suggestion`);
+      setShowJournalSuggestion(true);
+    }
   }, [messages, showJournalSuggestion, journalSuggestionDismissed]);
 
   // Agent configuration with persistence
