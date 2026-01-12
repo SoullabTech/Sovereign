@@ -242,9 +242,9 @@ export function assessAINResponseShape(input: string, output: string): AINShapeR
   if (!mirror) notes.push('Missing mirror: no empathic reflection and low early overlap with user language.');
 
   // 2) BRIDGE: "another lens" gently, or explicit cross-framework signposts
-  // Broadened to catch natural bridging language clinicians use
+  // Broadened to catch natural bridging/reframing language clinicians use
   const bridgePhrases =
-    /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto)/i;
+    /(this\sconnects\s(to|with)|a\spattern\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\sthis\s(points\s?to|suggests)\sis|this\sreminds\sme\sof|in\s(other|different)\swords|another\s(lens|angle|frame|way\sto\ssee\sit)|zoom(ing)?\sout|through\s(a|the)\s\w+\s(lens|frame)|in\s+(ifs|jungian|somatic|cbt|buddhist|mystical|psychodynamic)\s+terms|from\sa\s(jungian|somatic|cbt|ifs|developmental|elemental)\s+perspective|also\sconsider|one\sway\sto\sunderstand\s(this|it)\sis|connective\stissue|bridge|ties?\sinto|links?\sto|here'?s\swhat\s(i'?m|i\sam)\s(noticing|hearing|seeing)|what\s(i'?m|i\sam)\s(noticing|hearing)\sis|isn'?t\s\w+[^.]{0,30}it'?s|not\sjust\s\w+[^.]{0,20}you'?re|that'?s\sa\sreal\s(distinction|shift|difference)|there'?s\ssomething\s\w+\sabout\sthat|naming\sa\sshift|sounds\slike\s(what|you)|so\swhat\s(i'?m|you'?re)\s(hearing|saying|naming))/i;
   const bridge = bridgePhrases.test(out);
   if (!bridge) notes.push('Missing bridge: no sign of a gentle cross-lens weave.');
 
