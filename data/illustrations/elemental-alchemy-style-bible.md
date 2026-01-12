@@ -98,9 +98,12 @@
 [ELEMENT]: Fire/Water/Earth/Air/Aether/Neutral
 [MOOD]: Emotional quality
 [COMPOSITION]: Layout and focal point
-[STYLE]: Modern sacred design, clean geometry, luminous, universal symbolism, [element] color palette, soft gradients, generous negative space, contemplative atmosphere
+[TEMPORAL QUALITY]: timeless / primordial / dawn / emergence / stillness
+[STYLE]: Mythopoetic minimalism, clean ancient geometry, luminous, archetypal, [element] color palette, soft gradients, generous negative space, contemplative atmosphere
 [AVOID]: Specific cultural symbols, literal faces, fantasy tropes, busy backgrounds, harsh shadows
 ```
+
+The `[TEMPORAL QUALITY]` field steers AI away from modern lighting cues and cinematic drama — keeps images feeling recovered rather than rendered.
 
 ---
 
