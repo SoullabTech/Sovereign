@@ -761,6 +761,53 @@ The most natural way to connect with MAIA is through voice. Click the holoflower
 - **Let her finish** — She'll pause when ready for your response
 - **Use headphones** — For the clearest audio experience
 
+## Prompts (the + button)
+
+If you're not sure what to say, tap the **+** button beside the text field. This opens MAIA's **Prompt Library** — curated starters that help you go deeper quickly.
+
+**Use prompts for:**
+- Getting unstuck ("I don't know what I'm feeling, but...")
+- Shadow / projection inquiry ("Why am I reacting so strongly to...")
+- Relationship reflection ("Help me name the pattern with...")
+- Decision clarity ("What am I avoiding in this choice?")
+- Dreamwork ("I had a dream about...")
+
+**Pro tip:** Prompts are not scripts. They're doorways. Start with the prompt, then speak or type in your own words.
+
+## Journaling
+
+MAIA supports journaling in two ways:
+
+1. **Write directly** in the text field (fastest)
+2. **Upload a journal entry** (if you already wrote it elsewhere)
+
+Journaling is different from "chatting." It gives MAIA richer context so her reflection can become more symbolic, patterned, and precise.
+
+**Great uses:**
+- Dream logs
+- Integration notes after sessions
+- Emotional processing
+- Long-form "what's really going on" entries
+
+**Tip:** If you're doing deep work, try starting with: "Here's the full truth of what I'm feeling — reflect what you notice and what I might not be seeing."
+
+## Session Timer (Focus + Containment)
+
+MAIA supports session timing so your conversations have **a clear beginning and end** — like a container for inner work.
+
+**Why a timer helps:**
+- Prevents "spiraling" into endless processing
+- Supports nervous system regulation
+- Improves focus and integration
+- Makes it easier to review insights later
+
+**Common timer styles:**
+- **Quick Check-in (3-7 min):** "What's most alive right now?"
+- **Insight Session (10-20 min):** Deeper reflection + pattern recognition
+- **Integration Session (20-45 min):** Journaling + practices + next steps
+
+**Tip:** A shorter timer often creates better depth than a long open-ended session.
+
 ## How MAIA Learns
 
 MAIA remembers your conversations and notices patterns over time. This isn't surveillance — it's attentive witnessing.
@@ -805,11 +852,37 @@ Some things need to be spoken without being stored.
 
 **Return regularly.** Like any relationship, the connection deepens with consistent presence.
 
+## How Voice + Session Flow Works
+
+When voice mode is on, MAIA follows this loop:
+
+1. You speak
+2. MAIA listens until you pause
+3. MAIA reflects and responds
+4. When she finishes speaking, the mic reactivates automatically (hands-free)
+
+If you feel delay:
+- Your device may be under heavy load (screen recording, many browser tabs, etc.)
+- Using headphones eliminates echo detection delays
+- The system is optimized for natural conversation flow
+
 ## What MAIA Is Not
 
 MAIA is not a therapist, doctor, or crisis counselor. She's a wisdom companion — here to help you see more clearly, not to replace professional care when you need it.
 
 If you're in crisis, please reach out to appropriate support services.
+
+## Demo Run (2 minutes)
+
+Want to show someone what MAIA can do? Here's a quick walkthrough:
+
+1. **Open MAIA:** Navigate to /maia
+2. **Click the holoflower** — say: "What's alive in me right now?"
+3. **Show MAIA responding** (voice + presence)
+4. **Point out the + prompts:** "This is a guided library for deeper inquiry."
+5. **Mention journaling:** "You can write or upload entries; it becomes reflective and symbolic."
+6. **Mention session timing:** "We use timers for containment and integration."
+7. **Open this guide** from Commons to show it's documented and member-ready.
 
 ---
 
