@@ -69,6 +69,7 @@ import {
 import { persistDecision, type Candidate } from '../services/decisionPersistenceService';
 import { detectAndPersistExpansion } from '../services/expansionEventService';
 import { logCorpusCallosumTrace } from '../services/corpusCallosumService';
+import { ElementalOracleBridge, type ElementalResponse } from '../bridges/elemental-oracle-bridge';
 
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
@@ -1321,6 +1322,35 @@ The current user has not provided their name. Address them as "friend" or "there
       `deepRecommended=${fieldRouting.deepWorkRecommended}`,
   );
 
+  // 🔥 ELEMENTAL ORACLE: Parallel processing through Fire/Water/Earth/Air/Aether lenses
+  // This is the "corpus callosum" - multiple elemental agents processing in parallel
+  let elementalResult: ElementalResponse | null = null;
+  try {
+    const elementalOracle = new ElementalOracleBridge();
+    await elementalOracle.activate();
+
+    console.log(`🌋 [ElementalOracle] Starting parallel elemental processing...`);
+    const elementalStart = Date.now();
+
+    elementalResult = await elementalOracle.processAll({
+      input,
+      primaryElement: conversationContext?.profile?.dominantElement ?? undefined,
+      includeAll: true, // Fan out to all elements for DEEP path
+    });
+
+    const elementalLatency = Date.now() - elementalStart;
+    console.log(
+      `🌋 [ElementalOracle] Complete | dominant=${elementalResult.dominant} | depth=${elementalResult.depth.toFixed(2)} | ` +
+      `harmonics=${elementalResult.harmonics.length} | agents=${elementalResult.traceData?.elementalAgents?.length ?? 0} | ${elementalLatency}ms`
+    );
+
+    // Store in meta for corpus callosum logging
+    (meta as any).elementalResult = elementalResult;
+  } catch (err) {
+    console.warn('🌋 [ElementalOracle] Failed (non-fatal):', err);
+    // Continue without elemental - this is instrumentation, not a hard dependency
+  }
+
   // 🧠 THE DIALECTICAL SCAFFOLD - Extract cognitive level for DEEP path
   const bloomDetection = (meta as any).bloomDetection as BloomDetection | undefined;
   let cognitiveScaffoldingNote = '';
@@ -1520,7 +1550,19 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
       depth: consciousnessResponse?.depth,
       observerInsights: consciousnessResponse?.observerInsights,
       evolutionTriggers: consciousnessResponse?.evolutionTriggers,
-      claudeConsultation: consultationData
+      claudeConsultation: consultationData,
+      // 🔥 ELEMENTAL ORACLE: Include trace data for corpus callosum logging
+      corpusCallosumTrace: elementalResult?.traceData ? {
+        elementalAgents: elementalResult.traceData.elementalAgents,
+        elementalSynthesis: elementalResult.traceData.synthesis,
+        totalLatencyMs: elementalResult.traceData.totalLatencyMs,
+      } : null,
+      elementalOracle: elementalResult ? {
+        dominant: elementalResult.dominant,
+        depth: elementalResult.depth,
+        harmonics: elementalResult.harmonics,
+        synthesis: elementalResult.synthesis,
+      } : null,
     },
     // DEEP path uses consciousnessWrapper which doesn't yet track provider
     // Explicit placeholder for audit completeness (not undefined)
