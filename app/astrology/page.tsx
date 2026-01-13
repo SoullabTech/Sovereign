@@ -235,13 +235,120 @@ export default function AstrologyPage() {
     return () => { isMounted = false; };
   }, []);
 
-  // Load birth chart data from localStorage or redirect to /journey
+  // Load birth chart data from profile API, then localStorage fallback
   useEffect(() => {
     const loadChartData = async () => {
       try {
-        // Check localStorage for existing chart data
-        const savedChartJson = localStorage.getItem('birthChartData');
+        // Get member ID from localStorage
+        const storedUser = localStorage.getItem('beta_user');
+        const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
 
+        // 1. First try to fetch from profile API (database)
+        if (memberId) {
+          try {
+            const profileRes = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
+            if (profileRes.ok) {
+              const profile = await profileRes.json();
+              if (profile.birthData?.date) {
+                // We have birth data saved in database - use it to calculate chart
+                const birthData = profile.birthData;
+
+                // Format date for API (YYYY-MM-DD)
+                const dateStr = typeof birthData.date === 'string'
+                  ? birthData.date.split('T')[0]
+                  : new Date(birthData.date).toISOString().split('T')[0];
+
+                // Format time (HH:MM)
+                const timeStr = birthData.time
+                  ? (birthData.time.includes(':') ? birthData.time.substring(0, 5) : birthData.time)
+                  : '12:00';
+
+                // Build location object - use defaults if not saved
+                const location = birthData.location || {
+                  lat: 30.4515, // Default to Baton Rouge if no location
+                  lng: -91.1871,
+                  name: 'Baton Rouge, Louisiana',
+                  timezone: 'America/Chicago',
+                };
+
+                // Calculate the chart
+                const chartRes = await fetch('/api/astrology/birth-chart', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    date: dateStr,
+                    time: timeStr,
+                    location,
+                    houseSystem: 'porphyry',
+                  }),
+                });
+
+                if (chartRes.ok) {
+                  const { data } = await chartRes.json();
+                  const fullChart = {
+                    ...data,
+                    date: dateStr,
+                    time: timeStr,
+                    location,
+                    houseSystem: 'porphyry',
+                  };
+
+                  // Cache in localStorage for faster subsequent loads
+                  localStorage.setItem('birthChartData', JSON.stringify(fullChart));
+
+                  setChartData(fullChart);
+                  setHasBirthData(true);
+                  calculateElementalBalance(fullChart);
+                  setLoading(false);
+                  return;
+                }
+              }
+            }
+          } catch (profileErr) {
+            console.error('Error fetching profile birth data:', profileErr);
+          }
+        }
+
+        // 2. Check beta_user.birthData in localStorage (Settings saves here)
+        if (storedUser) {
+          try {
+            const user = JSON.parse(storedUser);
+            if (user.birthData?.date) {
+              const birthData = user.birthData;
+              const dateStr = typeof birthData.date === 'string'
+                ? birthData.date.split('T')[0]
+                : new Date(birthData.date).toISOString().split('T')[0];
+              const timeStr = birthData.time
+                ? (birthData.time.includes(':') ? birthData.time.substring(0, 5) : birthData.time)
+                : '12:00';
+              const location = birthData.location || {
+                lat: 30.4515, lng: -91.1871, name: 'Default Location', timezone: 'America/Chicago',
+              };
+
+              const chartRes = await fetch('/api/astrology/birth-chart', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: dateStr, time: timeStr, location, houseSystem: 'porphyry' }),
+              });
+
+              if (chartRes.ok) {
+                const { data } = await chartRes.json();
+                const fullChart = { ...data, date: dateStr, time: timeStr, location, houseSystem: 'porphyry' };
+                localStorage.setItem('birthChartData', JSON.stringify(fullChart));
+                setChartData(fullChart);
+                setHasBirthData(true);
+                calculateElementalBalance(fullChart);
+                setLoading(false);
+                return;
+              }
+            }
+          } catch (parseErr) {
+            console.error('Error parsing beta_user:', parseErr);
+          }
+        }
+
+        // 3. Check birthChartData localStorage (legacy/journey flow)
+        const savedChartJson = localStorage.getItem('birthChartData');
         if (savedChartJson) {
           const savedChart = JSON.parse(savedChartJson);
 
@@ -249,38 +356,10 @@ export default function AstrologyPage() {
           if (savedChart.sun && savedChart.moon && savedChart.ascendant) {
             setChartData(savedChart);
             setHasBirthData(true);
-            // Initialize house system from saved chart
             if (savedChart.houseSystem && HOUSE_SYSTEMS.some(h => h.value === savedChart.houseSystem)) {
               setHouseSystem(savedChart.houseSystem);
             }
-
-            // Calculate elemental balance from chart
-            const planets = [
-              savedChart.sun, savedChart.moon, savedChart.mercury, savedChart.venus,
-              savedChart.mars, savedChart.jupiter, savedChart.saturn
-            ].filter(Boolean);
-
-            const elementCounts = { fire: 0, water: 0, earth: 0, air: 0 };
-            const fireSign = ['Aries', 'Leo', 'Sagittarius'];
-            const waterSigns = ['Cancer', 'Scorpio', 'Pisces'];
-            const earthSigns = ['Taurus', 'Virgo', 'Capricorn'];
-            const airSigns = ['Gemini', 'Libra', 'Aquarius'];
-
-            planets.forEach(p => {
-              if (fireSign.includes(p.sign)) elementCounts.fire++;
-              else if (waterSigns.includes(p.sign)) elementCounts.water++;
-              else if (earthSigns.includes(p.sign)) elementCounts.earth++;
-              else if (airSigns.includes(p.sign)) elementCounts.air++;
-            });
-
-            const total = planets.length || 1;
-            setElementalBalance({
-              fire: elementCounts.fire / total,
-              water: elementCounts.water / total,
-              earth: elementCounts.earth / total,
-              air: elementCounts.air / total,
-            });
-
+            calculateElementalBalance(savedChart);
             setLoading(false);
             return;
           }
@@ -300,7 +379,6 @@ export default function AstrologyPage() {
 
             if (res.ok) {
               const { data } = await res.json();
-              // Merge birth data with calculated chart
               const fullChart = { ...savedChart, ...data };
               localStorage.setItem('birthChartData', JSON.stringify(fullChart));
               setChartData(fullChart);
@@ -311,7 +389,7 @@ export default function AstrologyPage() {
           }
         }
 
-        // No valid chart data found - redirect to /journey to collect birth data
+        // No valid chart data found
         setLoading(false);
         setHasBirthData(false);
 
@@ -320,6 +398,35 @@ export default function AstrologyPage() {
         setLoading(false);
         setHasBirthData(false);
       }
+    };
+
+    // Helper function to calculate elemental balance
+    const calculateElementalBalance = (chart: BirthChartData) => {
+      const planets = [
+        chart.sun, chart.moon, chart.mercury, chart.venus,
+        chart.mars, chart.jupiter, chart.saturn
+      ].filter(Boolean);
+
+      const elementCounts = { fire: 0, water: 0, earth: 0, air: 0 };
+      const fireSign = ['Aries', 'Leo', 'Sagittarius'];
+      const waterSigns = ['Cancer', 'Scorpio', 'Pisces'];
+      const earthSigns = ['Taurus', 'Virgo', 'Capricorn'];
+      const airSigns = ['Gemini', 'Libra', 'Aquarius'];
+
+      planets.forEach(p => {
+        if (fireSign.includes(p.sign)) elementCounts.fire++;
+        else if (waterSigns.includes(p.sign)) elementCounts.water++;
+        else if (earthSigns.includes(p.sign)) elementCounts.earth++;
+        else if (airSigns.includes(p.sign)) elementCounts.air++;
+      });
+
+      const total = planets.length || 1;
+      setElementalBalance({
+        fire: elementCounts.fire / total,
+        water: elementCounts.water / total,
+        earth: elementCounts.earth / total,
+        air: elementCounts.air / total,
+      });
     };
 
     loadChartData();
