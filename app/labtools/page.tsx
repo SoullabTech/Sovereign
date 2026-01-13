@@ -182,6 +182,12 @@ export default function LabToolsPage() {
       items: [
         {
           icon: Radio,
+          label: 'Capture',
+          path: '/capture',
+          description: 'Session notes for Descript & Patreon export'
+        },
+        {
+          icon: Radio,
           label: 'Field Protocol',
           path: '/field-protocol',
           description: 'Document consciousness explorations'

@@ -692,18 +692,6 @@ function MAIAPageContent() {
                     </motion.button>
                   )}
 
-                  {/* Guide Button - Mobile */}
-                  <motion.button
-                    onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
-                    className="flex items-center justify-center w-6 h-6 rounded-full
-                             bg-purple-500/10 hover:bg-purple-500/20
-                             border border-purple-500/20 hover:border-purple-500/40
-                             text-purple-400 text-xs font-light transition-all flex-shrink-0"
-                    title="Demo Guide"
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                  </motion.button>
-
                   {/* Help Hub Button - Mobile */}
                   <motion.button
                     onClick={() => setShowHelpHub(true)}
@@ -728,6 +716,19 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-3 h-3" />
                   <span className="text-xs">Journal</span>
+                </motion.button>
+
+                {/* Guide Button - Mobile */}
+                <motion.button
+                  onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-purple-500/10 hover:bg-purple-500/20
+                           border border-purple-500/20 hover:border-purple-500/40
+                           text-purple-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Guide"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-xs">Guide</span>
                 </motion.button>
 
                 {/* Shadow Work Button - Mobile */}
