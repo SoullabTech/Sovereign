@@ -32,6 +32,20 @@ export const inviteConfig = {
     },
   },
 
+  /**
+   * Passkeys that automatically grant founding tier
+   * These are special passkeys for VIP testers and their invitees
+   * Format: INVITE-[SERIES]-[NUMBER]
+   */
+  foundingPasskeys: [
+    // Direct VIP passkeys
+    'SOULLAB-CATH',
+    'SOULLAB-RYAN',
+    // Luminary series - for Cath's VIP network
+    'INVITE-LUMINARY-1', 'INVITE-LUMINARY-2', 'INVITE-LUMINARY-3', 'INVITE-LUMINARY-4', 'INVITE-LUMINARY-5',
+    'INVITE-LUMINARY-6', 'INVITE-LUMINARY-7', 'INVITE-LUMINARY-8', 'INVITE-LUMINARY-9', 'INVITE-LUMINARY-10',
+  ],
+
   /** Words used to generate memorable passkeys */
   passkeyWords: [
     // Consciousness-themed words
@@ -93,4 +107,19 @@ export function getInitialInvites(tier: string = 'standard'): number {
     return tierConfig.initialInvites;
   }
   return inviteConfig.initialInvites;
+}
+
+/**
+ * Check if a passkey should grant founding tier
+ */
+export function isFoundingPasskey(passkey: string): boolean {
+  const normalized = passkey.toUpperCase();
+  return inviteConfig.foundingPasskeys.includes(normalized);
+}
+
+/**
+ * Get the appropriate tier for a passkey
+ */
+export function getTierForPasskey(passkey: string): 'founding' | 'standard' {
+  return isFoundingPasskey(passkey) ? 'founding' : 'standard';
 }

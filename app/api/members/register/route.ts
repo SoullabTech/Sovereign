@@ -17,6 +17,7 @@ import { createHash } from 'crypto';
 import {
   calculateCanInviteAfter,
   getInitialInvites,
+  getTierForPasskey,
 } from '@/lib/auth/inviteConfig';
 
 // Simple password hashing (for production, use bcrypt)
@@ -103,16 +104,21 @@ export async function POST(request: NextRequest) {
     // Hash password and insert member
     const passwordHash = hashPassword(password);
 
-    // Calculate invite settings for new member
-    const canInviteAfter = calculateCanInviteAfter('standard');
-    const initialInvites = getInitialInvites('standard');
+    // Determine tier based on passkey (founding passkeys get VIP treatment)
+    const tier = getTierForPasskey(normalizedPasskey);
+    const canInviteAfter = calculateCanInviteAfter(tier);
+    const initialInvites = getInitialInvites(tier);
+
+    if (tier === 'founding') {
+      console.log(`[MEMBERS] Founding passkey detected: ${normalizedPasskey} - granting 100 invites`);
+    }
 
     const result = await query(
       `INSERT INTO members (
          passkey, username, password_hash, name, preferred_name, email,
          onboarding_step, invited_by, invites_remaining, can_invite_after, invite_tier
        )
-       VALUES ($1, $2, $3, $4, $5, $6, 'test-elemental', $7, $8, $9, 'standard')
+       VALUES ($1, $2, $3, $4, $5, $6, 'test-elemental', $7, $8, $9, $10)
        RETURNING id, username, name, preferred_name, onboarded, onboarding_step, created_at`,
       [
         normalizedPasskey,
@@ -123,7 +129,8 @@ export async function POST(request: NextRequest) {
         email,
         inviterId,
         initialInvites,
-        canInviteAfter
+        canInviteAfter,
+        tier
       ]
     );
 
