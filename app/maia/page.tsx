@@ -25,7 +25,6 @@ import WeekZeroOnboarding from '@/components/onboarding/WeekZeroOnboarding';
 import { BrainTrustMonitor } from '@/components/consciousness/BrainTrustMonitor';
 import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
-import { CaptureToggle } from '@/components/capture/CaptureToggle';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import FeedbackSheet from '@/components/feedback/FeedbackSheet';
@@ -744,9 +743,6 @@ function MAIAPageContent() {
                   <span className="text-xs">Shadow</span>
                 </motion.button>
 
-                {/* Capture Mode Toggle - Mobile */}
-                <CaptureToggle userId={explorerId} />
-
                 {/* Feedback Button - Mobile */}
                 <button
                   onClick={() => setShowFeedbackSheet(true)}
@@ -958,9 +954,6 @@ function MAIAPageContent() {
                   <BookOpen className="w-4 h-4" />
                   <span className="hidden sm:inline">Journal</span>
                 </motion.button>
-
-                {/* Capture Mode Toggle - Desktop */}
-                <CaptureToggle userId={explorerId} />
 
                 {/* Feedback Button - Desktop */}
                 <motion.button
