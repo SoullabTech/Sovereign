@@ -7,7 +7,7 @@
  * Accessible at elementalalchemy.soullab.life
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -22,6 +22,8 @@ import {
   Clock,
   ChevronDown,
   ChevronUp,
+  BookText,
+  X,
 } from 'lucide-react';
 
 interface Chapter {
@@ -30,6 +32,19 @@ interface Chapter {
   folder: string;
   audioFile: string;
   duration?: string;
+}
+
+interface Segment {
+  text: string;
+  startMs: number;
+  endMs: number;
+  type: 'heading' | 'paragraph';
+}
+
+interface Manifest {
+  id: string;
+  title: string;
+  segments: Segment[];
 }
 
 const chapters: Chapter[] = [
@@ -59,6 +74,63 @@ export default function ElementalAlchemyAudiobook() {
   const [duration, setDuration] = useState('0:00');
   const [showAllChapters, setShowAllChapters] = useState(true);
 
+  // Read-along state
+  const [showReadAlong, setShowReadAlong] = useState(false);
+  const [manifest, setManifest] = useState<Manifest | null>(null);
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+  const segmentRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  // Load manifest when chapter changes
+  useEffect(() => {
+    if (!currentChapter) {
+      setManifest(null);
+      return;
+    }
+
+    const loadManifest = async () => {
+      try {
+        const res = await fetch(
+          `/audiobook/elemental-alchemy/${currentChapter.folder}/manifest.json`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setManifest(data);
+          setCurrentSegmentIndex(0);
+          segmentRefs.current = [];
+        }
+      } catch (err) {
+        console.error('Failed to load manifest:', err);
+        setManifest(null);
+      }
+    };
+
+    loadManifest();
+  }, [currentChapter]);
+
+  // Find current segment based on audio time
+  const findCurrentSegment = useCallback(
+    (timeMs: number) => {
+      if (!manifest?.segments) return 0;
+      for (let i = manifest.segments.length - 1; i >= 0; i--) {
+        if (timeMs >= manifest.segments[i].startMs) {
+          return i;
+        }
+      }
+      return 0;
+    },
+    [manifest]
+  );
+
+  // Auto-scroll to current segment
+  useEffect(() => {
+    if (showReadAlong && segmentRefs.current[currentSegmentIndex]) {
+      segmentRefs.current[currentSegmentIndex]?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'center',
+      });
+    }
+  }, [currentSegmentIndex, showReadAlong]);
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -67,6 +139,15 @@ export default function ElementalAlchemyAudiobook() {
       const percent = (audio.currentTime / audio.duration) * 100;
       setProgress(isNaN(percent) ? 0 : percent);
       setCurrentTime(formatTime(audio.currentTime));
+
+      // Update current segment for read-along
+      if (manifest) {
+        const timeMs = audio.currentTime * 1000;
+        const newIndex = findCurrentSegment(timeMs);
+        if (newIndex !== currentSegmentIndex) {
+          setCurrentSegmentIndex(newIndex);
+        }
+      }
     };
 
     const handleLoadedMetadata = () => {
@@ -92,7 +173,18 @@ export default function ElementalAlchemyAudiobook() {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('ended', handleEnded);
     };
-  }, [currentChapter]);
+  }, [currentChapter, manifest, findCurrentSegment, currentSegmentIndex]);
+
+  // Seek to a specific segment when clicked
+  const seekToSegment = (segment: Segment, index: number) => {
+    if (!audioRef.current) return;
+    audioRef.current.currentTime = segment.startMs / 1000;
+    setCurrentSegmentIndex(index);
+    if (!isPlaying) {
+      audioRef.current.play();
+      setIsPlaying(true);
+    }
+  };
 
   const formatTime = (seconds: number) => {
     if (isNaN(seconds)) return '0:00';
@@ -269,9 +361,86 @@ export default function ElementalAlchemyAudiobook() {
                   <Volume2 className="w-5 h-5" />
                 )}
               </button>
+
+              <button
+                onClick={() => setShowReadAlong(!showReadAlong)}
+                className={`p-2 transition-colors ml-2 ${
+                  showReadAlong
+                    ? 'text-amber-400 hover:text-amber-300'
+                    : 'text-purple-300/60 hover:text-purple-300'
+                }`}
+                title="Read Along"
+              >
+                <BookText className="w-5 h-5" />
+              </button>
             </div>
           </motion.div>
         )}
+
+        {/* Read Along Panel */}
+        <AnimatePresence>
+          {showReadAlong && manifest && currentChapter && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-8"
+            >
+              <div className="bg-slate-900/60 rounded-2xl border border-purple-500/20 overflow-hidden">
+                <div className="flex items-center justify-between p-4 border-b border-purple-500/10">
+                  <div className="flex items-center gap-2">
+                    <BookText className="w-4 h-4 text-amber-400" />
+                    <span className="text-sm text-purple-200">Read Along</span>
+                  </div>
+                  <button
+                    onClick={() => setShowReadAlong(false)}
+                    className="p-1 text-purple-300/40 hover:text-purple-300 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="max-h-[60vh] overflow-y-auto p-6 space-y-4">
+                  {manifest.segments.map((segment, index) => (
+                    <div
+                      key={index}
+                      ref={(el) => { segmentRefs.current[index] = el; }}
+                      onClick={() => seekToSegment(segment, index)}
+                      className={`cursor-pointer transition-all duration-300 ${
+                        index === currentSegmentIndex
+                          ? 'bg-purple-900/40 -mx-4 px-4 py-3 rounded-lg border-l-2 border-amber-400'
+                          : 'hover:bg-purple-900/20 -mx-4 px-4 py-2 rounded-lg opacity-60 hover:opacity-100'
+                      }`}
+                    >
+                      {segment.type === 'heading' ? (
+                        <h3
+                          className={`text-lg font-medium ${
+                            index === currentSegmentIndex
+                              ? 'text-amber-300'
+                              : 'text-purple-200'
+                          }`}
+                        >
+                          {segment.text}
+                        </h3>
+                      ) : (
+                        <p
+                          className={`leading-relaxed ${
+                            index === currentSegmentIndex
+                              ? 'text-white'
+                              : 'text-purple-200/80'
+                          }`}
+                          style={{ whiteSpace: 'pre-line' }}
+                        >
+                          {segment.text}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Chapter List */}
         <div className="mb-8">
