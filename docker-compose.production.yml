@@ -79,6 +79,8 @@ services:
       # Selflet Phase 2E: Disabled by default, enable via override file
       MAIA_SELFLET_WRITE_ENABLED: "0"
       MAIA_SELFLET_ALLOW_ANON: "0"
+      # AIN Shape Telemetry: Enable quality monitoring in production
+      AIN_SHAPE_TELEMETRY: "1"
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)
       WHISPER_LOCAL_URL: "http://whisper:8000"
 
