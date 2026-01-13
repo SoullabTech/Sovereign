@@ -95,6 +95,8 @@ export async function POST(req: NextRequest) {
 
         let fullResponse = '';
         let audioChunksEmitted = 0;
+        let sentenceCount = 0;
+        const ttsPromises: Promise<void>[] = [];
 
         // Stream sentences from Claude
         for await (const chunk of claudeService.generateOracleResponseStreaming(
@@ -110,9 +112,10 @@ export async function POST(req: NextRequest) {
             });
 
             fullResponse += chunk.text + ' ';
+            sentenceCount = chunk.index + 1;
 
-            // Generate TTS for this sentence (don't block next sentence)
-            synthesizeSentence(chunk.text, voice).then(audioResult => {
+            // Generate TTS for this sentence (collect promise to await later)
+            const ttsPromise = synthesizeSentence(chunk.text, voice).then(audioResult => {
               if (audioResult) {
                 emit('audio', {
                   index: chunk.index,
@@ -126,14 +129,15 @@ export async function POST(req: NextRequest) {
             }).catch(e => {
               console.error('[StreamConversation] TTS error:', e);
             });
+            ttsPromises.push(ttsPromise);
 
           } else if (chunk.type === 'done') {
-            // Wait a moment for any pending TTS to complete
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Wait for all TTS to complete before closing stream
+            await Promise.all(ttsPromises);
 
             emit('complete', {
               fullResponse: fullResponse.trim(),
-              sentenceCount: chunk.index,
+              sentenceCount,
               audioChunksEmitted,
               timestamp: Date.now()
             });

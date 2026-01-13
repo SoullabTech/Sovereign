@@ -6,7 +6,23 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 
 soullab.life, www.soullab.life {
-    # Reverse proxy to MAIA container
+    # SSE/Streaming endpoints - disable compression and buffering
+    @streaming {
+        path /api/voice/stream-conversation
+        path /api/*/stream*
+    }
+    handle @streaming {
+        reverse_proxy maia:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            # Disable buffering for streaming responses
+            flush_interval -1
+        }
+    }
+
+    # Regular reverse proxy for all other requests
     reverse_proxy maia:3000 {
         # Health checks
         health_uri /api/consciousness/health
@@ -35,7 +51,7 @@ soullab.life, www.soullab.life {
         -Server
     }
 
-    # Compression
+    # Compression (exclude SSE which is handled above)
     encode gzip zstd
 
     # Logging
