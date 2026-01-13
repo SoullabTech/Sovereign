@@ -18,14 +18,11 @@
 
 import { NextRequest } from 'next/server';
 import { getClaudeService } from '@/lib/services/ClaudeService';
+import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Allow up to 60s for long conversations
-
-// TTS endpoint configuration
-const SESAME_URL = process.env.SESAME_URL || process.env.SESAME_CSM_URL || 'http://localhost:8000';
-const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
 
 interface StreamRequest {
   message: string;
@@ -37,74 +34,31 @@ interface StreamRequest {
 }
 
 /**
- * Synthesize a single sentence to audio
+ * Synthesize a single sentence to audio using OpenAI TTS
  * Returns base64 audio data or null on failure
  */
 async function synthesizeSentence(
   text: string,
-  voice: string = 'maya'
+  voice: string = 'nova'
 ): Promise<{ audio: string; format: string } | null> {
-  // Try Sesame first
   try {
-    const response = await fetch(`${SESAME_URL}/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text,
-        voice,
-        format: 'wav',
-        speed: 1.0
-      }),
-      signal: AbortSignal.timeout(10000)
+    // Map voice parameter to OpenAI voices (nova is warm and natural)
+    const openaiVoice = voice === 'maya' ? 'nova' : (voice || 'nova');
+
+    const response = await synthesizeSpeech({
+      text,
+      voice: openaiVoice,
+      format: 'mp3',
+      speed: 1.0
     });
 
-    if (response.ok) {
-      const data = await response.json();
-      if (data.audio) {
-        return { audio: data.audio, format: data.format || 'wav' };
-      }
-    }
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const audio = buffer.toString('base64');
+    return { audio, format: 'mp3' };
   } catch (e) {
-    console.warn('[StreamConversation] Sesame TTS failed, trying ElevenLabs');
+    console.error('[StreamConversation] OpenAI TTS failed:', e);
+    return null;
   }
-
-  // Fallback to ElevenLabs
-  if (ELEVENLABS_API_KEY) {
-    try {
-      const voiceId = 'EXAVITQu4vr4xnSDxMaL'; // Bella - calm, clear
-      const response = await fetch(
-        `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`,
-        {
-          method: 'POST',
-          headers: {
-            'xi-api-key': ELEVENLABS_API_KEY,
-            'Content-Type': 'application/json',
-            Accept: 'audio/mpeg'
-          },
-          body: JSON.stringify({
-            text,
-            model_id: 'eleven_turbo_v2_5',
-            voice_settings: {
-              stability: 0.5,
-              similarity_boost: 0.75,
-              style: 0.5
-            }
-          }),
-          signal: AbortSignal.timeout(10000)
-        }
-      );
-
-      if (response.ok) {
-        const buffer = await response.arrayBuffer();
-        const audio = Buffer.from(buffer).toString('base64');
-        return { audio, format: 'mp3' };
-      }
-    } catch (e) {
-      console.error('[StreamConversation] ElevenLabs TTS failed:', e);
-    }
-  }
-
-  return null;
 }
 
 export async function POST(req: NextRequest) {
