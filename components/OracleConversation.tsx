@@ -886,22 +886,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🌊 STREAMING VOICE: Resume mic when audio playback finishes
   const prevStreamingPlayingRef = useRef(isStreamingPlaying);
+  const prevStreamingCompleteRef = useRef(streamingResponseComplete);
   useEffect(() => {
     console.log('🔍 [StreamingVoice] State check:', {
       prevPlaying: prevStreamingPlayingRef.current,
       nowPlaying: isStreamingPlaying,
-      responseComplete: streamingResponseComplete
+      responseComplete: streamingResponseComplete,
+      prevComplete: prevStreamingCompleteRef.current
     });
 
-    // Detect transition from playing to not playing
-    if (prevStreamingPlayingRef.current && !isStreamingPlaying && streamingResponseComplete) {
+    // Helper to restart mic with retry pattern
+    const restartMicWithRetry = () => {
       console.log('🎤 [StreamingVoice] Audio finished - resuming microphone');
       setIsResponding(false);
       setIsAudioPlaying(false);
       setIsMicrophonePaused(false);
       setStreamingResponseComplete(false);
 
-      // Resume mic with retry pattern (same as standard flow)
       const attemptMicRestart = (attempt: number) => {
         if (attempt > 5) {
           console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
@@ -914,7 +915,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           setIsMuted(false);
           voiceMicRef.current.startListening();
 
-          // Verify mic actually started
           setTimeout(() => {
             if (voiceMicRef.current?.isListening) {
               console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
@@ -928,10 +928,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
       };
 
-      // Start first attempt after short cooldown
       setTimeout(() => attemptMicRestart(1), 300);
+    };
+
+    // Case 1: Audio was playing and just stopped, response is complete
+    if (prevStreamingPlayingRef.current && !isStreamingPlaying && streamingResponseComplete) {
+      restartMicWithRetry();
     }
+    // Case 2: Response just completed and audio is already not playing (TTS was fast or failed)
+    else if (!prevStreamingCompleteRef.current && streamingResponseComplete && !isStreamingPlaying) {
+      console.log('🎤 [StreamingVoice] Response complete, audio already done - resuming mic');
+      // Small delay to ensure any pending audio state has settled
+      setTimeout(restartMicWithRetry, 500);
+    }
+
     prevStreamingPlayingRef.current = isStreamingPlaying;
+    prevStreamingCompleteRef.current = streamingResponseComplete;
   }, [isStreamingPlaying, streamingResponseComplete, showChatInterface, streamingVoiceMode]);
 
   // Sacred Lab Drawer and Voice Menu states now declared earlier (lines 159-160)
