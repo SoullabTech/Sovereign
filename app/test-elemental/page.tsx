@@ -28,10 +28,13 @@ export default function TestElementalPage() {
     }
   }, []);
 
-  const handleSignupComplete = (userData: { name: string; username: string; password: string }) => {
+  const handleSignupComplete = (userData: { name: string; username: string; password: string; memberId?: string }) => {
+    // Use server-assigned member ID, fallback to timestamp for offline mode
+    const memberId = userData.memberId || `local_${Date.now()}`;
+
     // Store user data and mark signup as complete
     const newUser = {
-      id: `user_${Date.now()}`,
+      id: memberId,
       username: userData.username,
       name: userData.name,
       createdAt: new Date().toISOString(),
@@ -39,6 +42,12 @@ export default function TestElementalPage() {
 
     localStorage.setItem('beta_user', JSON.stringify(newUser));
     localStorage.setItem('signup_completed', 'true');
+
+    // Set explorerId for data association - critical for returning user data migration
+    localStorage.setItem('explorerId', memberId);
+    localStorage.setItem('explorerName', userData.name);
+    localStorage.setItem('maia_session_version', '2');
+
     setExplorerName(userData.name);
     setHasCompletedSignup(true);
   };

@@ -13,6 +13,7 @@ interface SacredSoulInductionProps {
     name: string;
     username: string;
     password: string;
+    memberId?: string;  // Server-assigned member ID for proper data association
   }) => void;
 }
 
@@ -321,7 +322,8 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       onComplete({
         name: name.trim(),
         username: username.trim(),
-        password
+        password,
+        memberId: serverMember?.id
       });
     }, 1500);
   };
@@ -377,7 +379,8 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       onComplete({
         name: name.trim(),
         username: username.trim(),
-        password
+        password,
+        memberId: serverMember?.id
       });
     }, 1500);
   };
@@ -672,6 +675,9 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       <h1 className="text-3xl font-medium text-gray-800 mb-6 tracking-wider">
                         {name}, so glad you're here.
                       </h1>
+                      <p className="text-teal-700/80 text-base font-light leading-relaxed">
+                        Any previous conversations and insights from this device will be waiting for you once you complete signup.
+                      </p>
                     </div>
 
 
@@ -683,7 +689,13 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         <input
                           type="text"
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          onChange={(e) => {
+                            setName(e.target.value);
+                            // If preferred name matches old name or is empty, update it too
+                            if (preferredName === name || !preferredName) {
+                              setPreferredName(e.target.value);
+                            }
+                          }}
                           placeholder="NAME"
                           className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
                           style={{
@@ -693,6 +705,28 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             boxShadow: 'inset 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(0, 0, 0, 0.1)',
                           }}
                         />
+                      </div>
+
+                      <div>
+                        <label className="block text-gray-700 text-base font-medium mb-4 tracking-[0.1em] uppercase">
+                          What should MAIA call you?
+                        </label>
+                        <input
+                          type="text"
+                          value={preferredName}
+                          onChange={(e) => setPreferredName(e.target.value)}
+                          placeholder="NICKNAME OR NAME"
+                          className="w-full px-6 py-4 rounded-xl text-center text-lg font-medium tracking-[0.15em] focus:outline-none transition-all duration-500 placeholder:text-gray-500"
+                          style={{
+                            background: 'linear-gradient(to bottom, rgba(110, 231, 183, 0.2), rgba(127, 181, 179, 0.15))',
+                            border: '1px solid rgba(14, 116, 144, 0.3)',
+                            color: '#134e4a',
+                            boxShadow: 'inset 0 4px 12px rgba(0, 0, 0, 0.3), inset 0 2px 6px rgba(0, 0, 0, 0.2)',
+                          }}
+                        />
+                        <p className="text-teal-600/70 text-xs font-light mt-2 text-center">
+                          You can change this anytime by telling MAIA "Call me..."
+                        </p>
                       </div>
 
                       <div>
