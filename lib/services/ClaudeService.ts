@@ -136,7 +136,94 @@ export class ClaudeService {
       throw new Error('Failed to generate Oracle response');
     }
   }
-  
+
+  /**
+   * Streaming Oracle Response Generator
+   * Yields sentence chunks as Claude generates them for immediate TTS processing
+   */
+  async *generateOracleResponseStreaming(
+    input: string,
+    context: OracleContext,
+    systemPrompt?: string
+  ): AsyncGenerator<{ type: 'sentence' | 'done'; text: string; index: number }> {
+    const trimmedInput = (input || '').trim();
+    if (!trimmedInput || trimmedInput.length === 0) {
+      yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
+      yield { type: 'done', text: '', index: 1 };
+      return;
+    }
+
+    const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(context);
+    const messages: Anthropic.MessageParam[] = [];
+
+    if (context.conversationHistory) {
+      context.conversationHistory.slice(-5).forEach(msg => {
+        const content = msg.content?.trim() || '';
+        if (content.length > 0 && msg.role === 'user') {
+          messages.push({ role: 'user', content: msg.content });
+        }
+      });
+    }
+
+    messages.push({ role: 'user', content: trimmedInput });
+
+    try {
+      // Use streaming API
+      const stream = this.client.messages.stream({
+        model: this.model,
+        max_tokens: this.maxTokens,
+        temperature: this.temperature,
+        system: maiaSystemPrompt,
+        messages: messages
+      });
+
+      // Buffer for accumulating text until sentence boundary
+      let buffer = '';
+      let sentenceIndex = 0;
+
+      // Sentence boundary detection regex
+      const sentenceEndRegex = /[.!?]+[\s]+|[.!?]+$/;
+
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          buffer += event.delta.text;
+
+          // Check for complete sentences in buffer
+          let match;
+          while ((match = sentenceEndRegex.exec(buffer)) !== null) {
+            const sentenceEnd = match.index + match[0].length;
+            const sentence = buffer.slice(0, sentenceEnd).trim();
+
+            // Skip metadata blocks
+            if (sentence.includes('---SOUL_METADATA---') || sentence.includes('---END_METADATA---')) {
+              buffer = buffer.slice(sentenceEnd);
+              continue;
+            }
+
+            if (sentence.length > 0) {
+              yield { type: 'sentence', text: sentence, index: sentenceIndex++ };
+            }
+            buffer = buffer.slice(sentenceEnd);
+          }
+        }
+      }
+
+      // Yield any remaining text in buffer
+      const remaining = buffer.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '').trim();
+      if (remaining.length > 0) {
+        yield { type: 'sentence', text: remaining, index: sentenceIndex++ };
+      }
+
+      yield { type: 'done', text: '', index: sentenceIndex };
+
+    } catch (error) {
+      console.error('Claude streaming error:', error);
+      // Fallback to non-streaming on error
+      yield { type: 'sentence', text: "I'm here with you. What's on your mind?", index: 0 };
+      yield { type: 'done', text: '', index: 1 };
+    }
+  }
+
   // Build Maia's personality and context prompt
   private buildMaiaSystemPrompt(context: OracleContext): string {
     const element = context.element || 'aether';

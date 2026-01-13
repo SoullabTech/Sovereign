@@ -415,6 +415,62 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   </div>
                 </motion.div>
 
+                {/* Streaming Voice Mode Toggle - Experimental */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.32 }}
+                >
+                  <motion.button
+                    onClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(5);
+                      const newValue = localStorage.getItem('maia_streaming_voice') !== 'true';
+                      localStorage.setItem('maia_streaming_voice', String(newValue));
+                      window.dispatchEvent(new CustomEvent('maia-streaming-voice-changed', { detail: { enabled: newValue } }));
+                    }}
+                    className={`w-full p-4 rounded-xl border transition-all ${
+                      typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
+                        ? 'border-cyan-500/50 bg-cyan-500/15'
+                        : 'border-white/10 bg-black/20'
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={`p-2 rounded-lg ${
+                          typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
+                            ? 'bg-cyan-500/20 text-cyan-400'
+                            : 'bg-white/5 text-white/40'
+                        }`}>
+                          <Sparkles size={20} />
+                        </div>
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${
+                            typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
+                              ? 'text-cyan-300' : 'text-white/80'
+                          }`}>
+                            Streaming Voice (Beta)
+                          </div>
+                          <div className="text-xs text-white/50 mt-0.5">
+                            Natural flow with sentence-by-sentence TTS
+                          </div>
+                        </div>
+                      </div>
+                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                        typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
+                          ? 'bg-cyan-500' : 'bg-white/20'
+                      }`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-white shadow-md"
+                          animate={{ x: typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true' ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.button>
+                </motion.div>
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

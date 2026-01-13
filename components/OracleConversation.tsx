@@ -7,6 +7,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
+import { useStreamingVoice } from '@/hooks/useStreamingVoice';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
@@ -349,6 +350,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return true;
   });
   const [enableVoiceInput, setEnableVoiceInput] = useState(false); // Voice input mode toggle for chat interface
+
+  // 🌊 STREAMING VOICE MODE: Server-side sentence TTS for natural flow
+  // When enabled, uses Sesame/ElevenLabs streaming instead of OpenAI TTS
+  const [streamingVoiceMode, setStreamingVoiceMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('maia_streaming_voice');
+      return saved === 'true';
+    }
+    return false;
+  });
+
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
   const [oracleAgentId, setOracleAgentId] = useState<string | null>(null);
   const [explorerId, setExplorerId] = useState<string>(''); // Stable cross-session identity
@@ -391,6 +403,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     window.addEventListener('maia-settings-changed', handleSettingsChange as EventListener);
     return () => {
       window.removeEventListener('maia-settings-changed', handleSettingsChange as EventListener);
+    };
+  }, []);
+
+  // Listen for streaming voice mode changes from QuickSettingsSheet
+  useEffect(() => {
+    const handleStreamingVoiceChange = (event: CustomEvent<{ enabled: boolean }>) => {
+      setStreamingVoiceMode(event.detail.enabled);
+      console.log(`🌊 [StreamingVoice] Mode ${event.detail.enabled ? 'ENABLED' : 'disabled'}`);
+    };
+
+    window.addEventListener('maia-streaming-voice-changed', handleStreamingVoiceChange as EventListener);
+    return () => {
+      window.removeEventListener('maia-streaming-voice-changed', handleStreamingVoiceChange as EventListener);
     };
   }, []);
 
@@ -818,6 +843,96 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     downloadTranscript: downloadScribeTranscript,
     getTranscriptForReview
   } = useScribeMode();
+
+  // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
+  const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
+  const {
+    isStreaming: isStreamingVoice,
+    isPlaying: isStreamingPlaying,
+    currentText: streamingCurrentText,
+    fullResponse: streamingFullResponse,
+    sendMessage: sendStreamingMessage,
+    stop: stopStreamingVoice,
+    error: streamingVoiceError
+  } = useStreamingVoice({
+    voice: 'maya',
+    element: undefined, // Will be set dynamically per message
+    onTextChunk: (text, index) => {
+      console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
+      setMaiaResponseText(text);
+    },
+    onComplete: (fullResponse) => {
+      console.log('✅ [StreamingVoice] Text stream complete, waiting for audio to finish...');
+      // Add the full response to messages
+      const oracleMessage: ConversationMessage = {
+        id: `msg-${Date.now()}`,
+        role: 'oracle',
+        text: fullResponse,
+        timestamp: new Date(),
+        source: 'stream'
+      };
+      setMessages(prev => [...prev, oracleMessage]);
+      setMaiaResponseText('');
+      // Mark that text stream is complete - mic will resume when audio finishes
+      setStreamingResponseComplete(true);
+    },
+    onError: (error) => {
+      console.error('❌ [StreamingVoice] Error:', error);
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setStreamingResponseComplete(false);
+    }
+  });
+
+  // 🌊 STREAMING VOICE: Resume mic when audio playback finishes
+  const prevStreamingPlayingRef = useRef(isStreamingPlaying);
+  useEffect(() => {
+    console.log('🔍 [StreamingVoice] State check:', {
+      prevPlaying: prevStreamingPlayingRef.current,
+      nowPlaying: isStreamingPlaying,
+      responseComplete: streamingResponseComplete
+    });
+
+    // Detect transition from playing to not playing
+    if (prevStreamingPlayingRef.current && !isStreamingPlaying && streamingResponseComplete) {
+      console.log('🎤 [StreamingVoice] Audio finished - resuming microphone');
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      setStreamingResponseComplete(false);
+
+      // Resume mic with retry pattern (same as standard flow)
+      const attemptMicRestart = (attempt: number) => {
+        if (attempt > 5) {
+          console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
+          return;
+        }
+
+        console.log(`🎤 [StreamingVoice] Mic restart attempt ${attempt}...`);
+
+        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+          setIsMuted(false);
+          voiceMicRef.current.startListening();
+
+          // Verify mic actually started
+          setTimeout(() => {
+            if (voiceMicRef.current?.isListening) {
+              console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
+            } else {
+              console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
+              setTimeout(() => attemptMicRestart(attempt + 1), 300);
+            }
+          }, 150);
+        } else {
+          console.log('⏸️ [StreamingVoice] Mic restart blocked - not in voice mode or ref unavailable');
+        }
+      };
+
+      // Start first attempt after short cooldown
+      setTimeout(() => attemptMicRestart(1), 300);
+    }
+    prevStreamingPlayingRef.current = isStreamingPlaying;
+  }, [isStreamingPlaying, streamingResponseComplete, showChatInterface, streamingVoiceMode]);
 
   // Sacred Lab Drawer and Voice Menu states now declared earlier (lines 159-160)
   // Listen for header lab drawer events
@@ -3092,7 +3207,49 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
 
     try {
-      // ✅ CORRECT FLOW: Browser STT → /api/between/chat → Browser TTS
+      // 🌊 STREAMING VOICE MODE: Use server-side sentence TTS for natural flow
+      if (streamingVoiceMode && !showChatInterface) {
+        console.log('🌊 [StreamingVoice] Using streaming voice flow...');
+
+        // Reset streaming state for new message
+        setStreamingResponseComplete(false);
+
+        // Add user message to UI
+        const userMessage: ConversationMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'user',
+          text: cleanedText,
+          timestamp: new Date(),
+          source: 'voice'
+        };
+        setMessages(prev => [...prev, userMessage]);
+
+        // Set processing states
+        setIsProcessing(true);
+        setIsResponding(true);
+        setIsAudioPlaying(true);
+        setIsMuted(true); // Mute while MAIA speaks
+
+        // Stop mic while processing
+        if (voiceMicRef.current?.stopListening) {
+          voiceMicRef.current.stopListening();
+        }
+
+        // Send via streaming voice system
+        const conversationHistory = messages.map(msg => ({
+          role: msg.role === 'oracle' ? 'assistant' : 'user',
+          content: msg.text
+        }));
+        await sendStreamingMessage(cleanedText, conversationHistory);
+
+        setIsProcessing(false);
+        const duration = Date.now() - voiceStartTime;
+        trackEvent.voiceResult(userId || 'anonymous', transcript, duration);
+        console.log('✅ [StreamingVoice] Streaming voice flow completed');
+        return;
+      }
+
+      // ✅ STANDARD FLOW: Browser STT → /api/between/chat → Browser TTS
       console.log('🌀 Routing voice through THE BETWEEN...');
       await handleTextMessage(cleanedText);
 
