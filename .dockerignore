@@ -86,6 +86,9 @@ mobile-app/
 android/
 ios/
 
+# Large media files (served via volume mount)
+public/audiobook/
+
 # Other large directories
 videos/
 Desktop/
