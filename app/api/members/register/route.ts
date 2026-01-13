@@ -104,13 +104,27 @@ export async function POST(request: NextRequest) {
     // Hash password and insert member
     const passwordHash = hashPassword(password);
 
-    // Determine tier based on passkey (founding passkeys get VIP treatment)
-    const tier = getTierForPasskey(normalizedPasskey);
+    // Determine tier: check passkey first, then inherit from inviter
+    let tier = getTierForPasskey(normalizedPasskey);
+
+    // If invited by a founding member, inherit their tier (VIP cascade)
+    if (tier === 'standard' && inviterId) {
+      const inviterTierResult = await query(
+        'SELECT invite_tier FROM members WHERE id = $1',
+        [inviterId]
+      );
+      const inviterTier = inviterTierResult.rows[0]?.invite_tier;
+      if (inviterTier === 'founding') {
+        tier = 'founding';
+        console.log(`[MEMBERS] Inheriting founding tier from inviter ${inviterId}`);
+      }
+    }
+
     const canInviteAfter = calculateCanInviteAfter(tier);
     const initialInvites = getInitialInvites(tier);
 
     if (tier === 'founding') {
-      console.log(`[MEMBERS] Founding passkey detected: ${normalizedPasskey} - granting 100 invites`);
+      console.log(`[MEMBERS] Founding tier member: ${normalizedPasskey} - granting 100 invites`);
     }
 
     const result = await query(
