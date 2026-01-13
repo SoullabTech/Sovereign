@@ -29,6 +29,7 @@ import {
   Shield,
   Star,
   Search,
+  Activity,
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -166,6 +167,12 @@ export default function LabToolsPage() {
           label: 'RLM Navigator',
           path: '/labtools/rlm',
           description: 'Codebase bloodhound: "what file should I open next?"'
+        },
+        {
+          icon: Activity,
+          label: 'AIN Shape Telemetry',
+          path: '/labtools/ain',
+          description: 'Structural evaluation of MAIA responses'
         },
       ],
     },
