@@ -281,11 +281,21 @@ export default function ElementalAlchemyAudiobook() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
+          {/* Soullab Media Production Badge */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-white/50 text-xs uppercase tracking-[0.2em] mb-8 font-light"
+          >
+            A Soullab Media Production
+          </motion.p>
+
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="w-48 h-48 mx-auto mb-6 flex items-center justify-center"
+            className="w-64 h-64 mx-auto mb-8 flex items-center justify-center overflow-visible"
           >
             <Holoflower size="xxl" glowIntensity="high" animate={true} />
           </motion.div>
@@ -293,11 +303,11 @@ export default function ElementalAlchemyAudiobook() {
           <h1 className="text-3xl sm:text-4xl font-extralight text-white tracking-wide mb-2">
             Elemental Alchemy
           </h1>
-          <p className="text-teal-100/80 text-lg font-light">
-            A Journey Through the Elements of Consciousness
+          <p className="text-white/70 text-base font-light italic mb-3">
+            The Ancient Art of Living a Phenomenal Life
           </p>
-          <p className="text-teal-100/60 text-sm mt-2 font-light">
-            Written by Ryan Rosh Angelo
+          <p className="text-teal-100/60 text-sm font-light">
+            Written by Kelly Nezat
           </p>
         </motion.div>
 
