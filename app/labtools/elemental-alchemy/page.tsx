@@ -25,7 +25,6 @@ import {
   BookText,
   X,
 } from 'lucide-react';
-import { Holoflower } from '@/components/ui/Holoflower';
 
 interface Chapter {
   id: string;
@@ -295,9 +294,16 @@ export default function ElementalAlchemyAudiobook() {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 1.2, ease: "easeOut" }}
-            className="w-64 h-64 mx-auto mb-8 flex items-center justify-center overflow-visible"
+            className="relative w-56 sm:w-64 mx-auto mb-8"
           >
-            <Holoflower size="xxl" glowIntensity="high" animate={true} />
+            <img
+              src="/Elemental Alchemy Cover.png"
+              alt="Elemental Alchemy Book Cover"
+              className="w-full h-auto rounded-xl shadow-2xl"
+              style={{
+                boxShadow: '0 25px 50px rgba(14, 116, 144, 0.4), 0 10px 20px rgba(0, 0, 0, 0.2)',
+              }}
+            />
           </motion.div>
 
           <h1 className="text-3xl sm:text-4xl font-extralight text-white tracking-wide mb-2">
