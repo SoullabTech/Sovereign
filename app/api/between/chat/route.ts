@@ -716,10 +716,10 @@ export async function POST(req: NextRequest) {
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement, therapeuticFramework, reflectionLens, birthData } = body as {
+    const { message, sessionId, mode: rawMode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement, therapeuticFramework, reflectionLens, birthData } = body as {
       message?: string;
       sessionId?: string;
-      mode?: 'dialogue' | 'counsel' | 'scribe';
+      mode?: 'dialogue' | 'counsel' | 'scribe' | 'normal' | 'patient' | 'session'; // Accept both naming conventions
       userId?: string;
       userName?: string;
       meta?: { explorerId?: string; sessionId?: string };
@@ -740,6 +740,13 @@ export async function POST(req: NextRequest) {
         };
       };
     };
+
+    // 🔄 MODE NORMALIZATION: Map client mode names to API mode names
+    // Client uses: normal/patient/session, API expects: dialogue/counsel/scribe
+    const mode = rawMode === 'patient' ? 'counsel'
+               : rawMode === 'session' ? 'scribe'
+               : rawMode === 'normal' ? 'dialogue'
+               : rawMode; // Pass through if already normalized
 
     // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
     // When true: no content retention, no patterns formed, no training data
@@ -1265,6 +1272,14 @@ export async function POST(req: NextRequest) {
     const effectiveLens = (reflectionLens as ReflectionLens) || 'auto';
     const therapeuticFrameworkAddendum = mode === 'counsel' ? getFrameworkPromptAddendum(effectiveFramework) : null;
     const reflectionLensAddendum = mode === 'scribe' ? getReflectionLensAddendum(effectiveLens) : null;
+
+    // 🧘 LOG: Framework application status
+    if (mode === 'counsel') {
+      console.log(`🧘 [COUNSEL MODE] Framework: ${effectiveFramework}, Addendum applied: ${therapeuticFrameworkAddendum ? 'YES' : 'NO'}`);
+    }
+    if (mode === 'scribe') {
+      console.log(`🔮 [SCRIBE MODE] Lens: ${effectiveLens}, Addendum applied: ${reflectionLensAddendum ? 'YES' : 'NO'}`);
+    }
 
     // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
     const astrologicalContextAddendum = await buildAstrologicalContextAddendum(birthData);
