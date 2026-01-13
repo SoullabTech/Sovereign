@@ -913,6 +913,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           setIsMuted(false);
+          setIsListening(true); // Show ultraviolet field immediately
           voiceMicRef.current.startListening();
 
           setTimeout(() => {
@@ -920,6 +921,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
             } else {
               console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
+              setIsListening(false); // Hide if failed
               setTimeout(() => attemptMicRestart(attempt + 1), 300);
             }
           }, 150);
