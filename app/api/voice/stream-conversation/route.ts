@@ -2,10 +2,14 @@
 /**
  * Streaming Voice Conversation Endpoint
  *
- * Flow: User message → Claude (streaming) → TTS (per sentence) → Audio SSE
+ * SOVEREIGNTY: MAIA is the primary intelligence. Claude serves as her voice,
+ * channeling responses through MAIA's essence, personality, and wisdom.
+ * The system prompt establishes MAIA's identity - Claude never speaks as itself.
+ *
+ * Flow: User message → MAIA (via Claude streaming) → TTS (per sentence) → Audio SSE
  *
  * This creates natural conversational flow by:
- * 1. Streaming Claude's response sentence-by-sentence
+ * 1. Streaming MAIA's response sentence-by-sentence
  * 2. Immediately sending each sentence to TTS
  * 3. Streaming audio chunks back as they're ready
  *
