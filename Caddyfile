@@ -115,6 +115,40 @@ chart.soullab.life {
     }
 }
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Elemental Alchemy Audiobook
+# ═══════════════════════════════════════════════════════════════════════════════
+elementalalchemy.soullab.life {
+    # Rewrite root to audiobook page
+    rewrite / /labtools/elemental-alchemy
+
+    # Reverse proxy to MAIA container
+    reverse_proxy maia:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        X-MAIA-Origin "caddy-sovereign-audiobook"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/audiobook-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
 # Health check endpoint for load balancers
 :8080 {
     respond /health 200
