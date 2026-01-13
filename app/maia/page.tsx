@@ -614,14 +614,16 @@ function MAIAPageContent() {
                       border: maiaMode === 'patient' ? '1px solid #14b8a6' : undefined,
                       fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
                     }}
-                    title="Tap to switch • Double-click for framework"
+                    title="Tap to switch • Double-tap for framework options"
                   >
                     {maiaMode === 'patient' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#5eead4' }} />
                     )}
                     <span className="text-xs">Care</span>
-                    {currentCounselFramework !== 'auto' && (
+                    {currentCounselFramework !== 'auto' ? (
                       <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
+                    ) : (
+                      <span className="text-[9px] opacity-40">▾</span>
                     )}
                   </motion.button>
                   <motion.button
@@ -654,14 +656,16 @@ function MAIAPageContent() {
                       border: maiaMode === 'session' ? '1px solid #3b82f6' : undefined,
                       fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
                     }}
-                    title="Tap to switch • Double-click for lens"
+                    title="Tap to switch • Double-tap for lens options"
                   >
                     {maiaMode === 'session' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
                     )}
                     <span className="text-xs">Note</span>
-                    {currentScribeLens !== 'auto' && (
+                    {currentScribeLens !== 'auto' ? (
                       <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
+                    ) : (
+                      <span className="text-[9px] opacity-40">▾</span>
                     )}
                   </motion.button>
 
@@ -836,14 +840,16 @@ function MAIAPageContent() {
                       border: maiaMode === 'patient' ? '2px solid #14b8a6' : undefined,
                       fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
                     }}
-                    title="Tap to switch • Double-click for framework"
+                    title="Click to switch • Double-click for framework options (Jungian, Somatic, IFS, etc.)"
                   >
                     {maiaMode === 'patient' && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#5eead4' }} />
                     )}
                     Counsel
-                    {currentCounselFramework !== 'auto' && (
+                    {currentCounselFramework !== 'auto' ? (
                       <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
+                    ) : (
+                      <span className="text-[10px] opacity-40">▾</span>
                     )}
                   </motion.button>
                   <motion.button
@@ -877,14 +883,16 @@ function MAIAPageContent() {
                       border: maiaMode === 'session' ? '2px solid #3b82f6' : undefined,
                       fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
                     }}
-                    title="Tap to switch • Double-click for lens"
+                    title="Click to switch • Double-click for lens options (Jungian, Somatic, Archetypal, etc.)"
                   >
                     {maiaMode === 'session' && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
                     )}
                     Scribe
-                    {currentScribeLens !== 'auto' && (
+                    {currentScribeLens !== 'auto' ? (
                       <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
+                    ) : (
+                      <span className="text-[10px] opacity-40">▾</span>
                     )}
                   </motion.button>
                 </div>

@@ -25,6 +25,7 @@ import {
   BookText,
   X,
 } from 'lucide-react';
+import { Holoflower } from '@/components/ui/Holoflower';
 
 interface Chapter {
   id: string;
@@ -250,24 +251,24 @@ export default function ElementalAlchemyAudiobook() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-950 via-purple-950/20 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3]">
       {/* Hidden Audio Element */}
       <audio ref={audioRef} />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-purple-500/10">
+      <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#8FBCBE]/80 border-b border-white/10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             onClick={() => router.push('/labtools')}
-            className="flex items-center gap-2 text-purple-300/60 hover:text-purple-300 transition-colors"
+            className="flex items-center gap-2 text-white/60 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
             <span className="hidden sm:inline">Back to Lab</span>
           </button>
 
           <div className="flex items-center gap-2">
-            <BookOpen className="w-5 h-5 text-amber-400" />
-            <span className="text-sm text-purple-200/60">Audiobook</span>
+            <BookOpen className="w-5 h-5 text-white" />
+            <span className="text-sm text-white/60">Audiobook</span>
           </div>
         </div>
       </header>
@@ -280,17 +281,22 @@ export default function ElementalAlchemyAudiobook() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-12"
         >
-          <div className="w-48 h-48 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-amber-500/20 via-purple-500/20 to-cyan-500/20 border border-purple-500/20 flex items-center justify-center">
-            <div className="text-6xl">🔥</div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, ease: "easeOut" }}
+            className="w-48 h-48 mx-auto mb-6 flex items-center justify-center"
+          >
+            <Holoflower size="xxl" glowIntensity="high" animate={true} />
+          </motion.div>
 
-          <h1 className="text-3xl sm:text-4xl font-light text-white mb-2">
+          <h1 className="text-3xl sm:text-4xl font-extralight text-white tracking-wide mb-2">
             Elemental Alchemy
           </h1>
-          <p className="text-purple-300/60 text-lg">
+          <p className="text-teal-100/80 text-lg font-light">
             A Journey Through the Elements of Consciousness
           </p>
-          <p className="text-purple-300/40 text-sm mt-2">
+          <p className="text-teal-100/60 text-sm mt-2 font-light">
             Written by Ryan Rosh Angelo
           </p>
         </motion.div>
@@ -300,26 +306,32 @@ export default function ElementalAlchemyAudiobook() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-gradient-to-r from-purple-900/30 to-amber-900/20 rounded-2xl p-6 mb-8 border border-purple-500/20"
+            className="rounded-2xl p-6 mb-8"
+            style={{
+              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.15), rgba(110, 231, 183, 0.1), rgba(255, 255, 255, 0.1))',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              boxShadow: '0 15px 35px rgba(14, 116, 144, 0.2)',
+            }}
           >
-            <div className="text-xs text-amber-400/60 uppercase tracking-wider mb-2">
+            <div className="text-xs text-white/60 uppercase tracking-wider mb-2">
               Now Playing
             </div>
-            <h2 className="text-xl text-white mb-4">{currentChapter.title}</h2>
+            <h2 className="text-xl text-white font-light mb-4">{currentChapter.title}</h2>
 
             {/* Progress Bar */}
             <div
-              className="h-2 bg-slate-800 rounded-full cursor-pointer mb-3 overflow-hidden"
+              className="h-2 bg-white/20 rounded-full cursor-pointer mb-3 overflow-hidden"
               onClick={seekTo}
             >
               <motion.div
-                className="h-full bg-gradient-to-r from-amber-500 to-purple-500 rounded-full"
+                className="h-full bg-white rounded-full"
                 style={{ width: `${progress}%` }}
               />
             </div>
 
             {/* Time Display */}
-            <div className="flex justify-between text-xs text-purple-300/40 mb-4">
+            <div className="flex justify-between text-xs text-white/50 mb-4">
               <span>{currentTime}</span>
               <span>{duration}</span>
             </div>
@@ -328,14 +340,14 @@ export default function ElementalAlchemyAudiobook() {
             <div className="flex items-center justify-center gap-6">
               <button
                 onClick={skipPrevious}
-                className="p-2 text-purple-300/60 hover:text-purple-300 transition-colors"
+                className="p-2 text-white/60 hover:text-white transition-colors"
               >
                 <SkipBack className="w-6 h-6" />
               </button>
 
               <button
                 onClick={togglePlayPause}
-                className="p-4 bg-amber-500 hover:bg-amber-400 rounded-full text-slate-900 transition-colors"
+                className="p-4 bg-white/90 hover:bg-white rounded-full text-teal-700 transition-colors"
               >
                 {isPlaying ? (
                   <Pause className="w-8 h-8" />
@@ -346,14 +358,14 @@ export default function ElementalAlchemyAudiobook() {
 
               <button
                 onClick={skipNext}
-                className="p-2 text-purple-300/60 hover:text-purple-300 transition-colors"
+                className="p-2 text-white/60 hover:text-white transition-colors"
               >
                 <SkipForward className="w-6 h-6" />
               </button>
 
               <button
                 onClick={toggleMute}
-                className="p-2 text-purple-300/60 hover:text-purple-300 transition-colors ml-4"
+                className="p-2 text-white/60 hover:text-white transition-colors ml-4"
               >
                 {isMuted ? (
                   <VolumeX className="w-5 h-5" />
@@ -366,8 +378,8 @@ export default function ElementalAlchemyAudiobook() {
                 onClick={() => setShowReadAlong(!showReadAlong)}
                 className={`p-2 transition-colors ml-2 ${
                   showReadAlong
-                    ? 'text-amber-400 hover:text-amber-300'
-                    : 'text-purple-300/60 hover:text-purple-300'
+                    ? 'text-white hover:text-white/80'
+                    : 'text-white/60 hover:text-white'
                 }`}
                 title="Read Along"
               >
@@ -386,15 +398,22 @@ export default function ElementalAlchemyAudiobook() {
               exit={{ opacity: 0, height: 0 }}
               className="mb-8"
             >
-              <div className="bg-slate-900/60 rounded-2xl border border-purple-500/20 overflow-hidden">
-                <div className="flex items-center justify-between p-4 border-b border-purple-500/10">
+              <div
+                className="rounded-2xl overflow-hidden"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                }}
+              >
+                <div className="flex items-center justify-between p-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
-                    <BookText className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm text-purple-200">Read Along</span>
+                    <BookText className="w-4 h-4 text-white" />
+                    <span className="text-sm text-white/80">Read Along</span>
                   </div>
                   <button
                     onClick={() => setShowReadAlong(false)}
-                    className="p-1 text-purple-300/40 hover:text-purple-300 transition-colors"
+                    className="p-1 text-white/40 hover:text-white transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -408,16 +427,16 @@ export default function ElementalAlchemyAudiobook() {
                       onClick={() => seekToSegment(segment, index)}
                       className={`cursor-pointer transition-all duration-300 ${
                         index === currentSegmentIndex
-                          ? 'bg-purple-900/40 -mx-4 px-4 py-3 rounded-lg border-l-2 border-amber-400'
-                          : 'hover:bg-purple-900/20 -mx-4 px-4 py-2 rounded-lg opacity-60 hover:opacity-100'
+                          ? 'bg-white/20 -mx-4 px-4 py-3 rounded-lg border-l-2 border-white'
+                          : 'hover:bg-white/10 -mx-4 px-4 py-2 rounded-lg opacity-60 hover:opacity-100'
                       }`}
                     >
                       {segment.type === 'heading' ? (
                         <h3
                           className={`text-lg font-medium ${
                             index === currentSegmentIndex
-                              ? 'text-amber-300'
-                              : 'text-purple-200'
+                              ? 'text-white'
+                              : 'text-white/80'
                           }`}
                         >
                           {segment.text}
@@ -427,7 +446,7 @@ export default function ElementalAlchemyAudiobook() {
                           className={`leading-relaxed ${
                             index === currentSegmentIndex
                               ? 'text-white'
-                              : 'text-purple-200/80'
+                              : 'text-white/70'
                           }`}
                           style={{ whiteSpace: 'pre-line' }}
                         >
@@ -446,15 +465,20 @@ export default function ElementalAlchemyAudiobook() {
         <div className="mb-8">
           <button
             onClick={() => setShowAllChapters(!showAllChapters)}
-            className="w-full flex items-center justify-between p-4 bg-slate-900/50 rounded-xl border border-purple-500/10 mb-4"
+            className="w-full flex items-center justify-between p-4 rounded-xl mb-4"
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}
           >
-            <span className="text-purple-200">
+            <span className="text-white/80">
               {chapters.length} Chapters • ~8 hours
             </span>
             {showAllChapters ? (
-              <ChevronUp className="w-5 h-5 text-purple-300/60" />
+              <ChevronUp className="w-5 h-5 text-white/60" />
             ) : (
-              <ChevronDown className="w-5 h-5 text-purple-300/60" />
+              <ChevronDown className="w-5 h-5 text-white/60" />
             )}
           </button>
 
@@ -475,15 +499,15 @@ export default function ElementalAlchemyAudiobook() {
                     onClick={() => playChapter(chapter)}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all ${
                       currentChapter?.id === chapter.id
-                        ? 'bg-purple-900/40 border border-purple-500/30'
-                        : 'bg-slate-900/30 border border-transparent hover:bg-slate-900/50 hover:border-purple-500/10'
+                        ? 'bg-white/20 border border-white/30'
+                        : 'bg-white/5 border border-transparent hover:bg-white/10 hover:border-white/10'
                     }`}
                   >
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center ${
                         currentChapter?.id === chapter.id && isPlaying
-                          ? 'bg-amber-500 text-slate-900'
-                          : 'bg-slate-800 text-purple-300/60'
+                          ? 'bg-white text-teal-700'
+                          : 'bg-white/20 text-white/60'
                       }`}
                     >
                       {currentChapter?.id === chapter.id && isPlaying ? (
@@ -497,12 +521,12 @@ export default function ElementalAlchemyAudiobook() {
                       <div className={`${
                         currentChapter?.id === chapter.id
                           ? 'text-white'
-                          : 'text-purple-200/80'
+                          : 'text-white/80'
                       }`}>
                         {chapter.title}
                       </div>
                       {chapter.duration && (
-                        <div className="flex items-center gap-1 text-xs text-purple-300/40 mt-1">
+                        <div className="flex items-center gap-1 text-xs text-white/50 mt-1">
                           <Clock className="w-3 h-3" />
                           {chapter.duration}
                         </div>
@@ -516,9 +540,9 @@ export default function ElementalAlchemyAudiobook() {
         </div>
 
         {/* Footer Note */}
-        <div className="text-center text-purple-300/30 text-sm py-8 border-t border-purple-500/10">
-          <p>Narrated with care. Best experienced with headphones.</p>
-          <p className="mt-2">Part of the Soullab Consciousness Library</p>
+        <div className="text-center text-white/40 text-sm py-8 border-t border-white/10">
+          <p className="font-light">Narrated with care. Best experienced with headphones.</p>
+          <p className="mt-2 font-light">Part of the Soullab Consciousness Library</p>
         </div>
       </main>
     </div>

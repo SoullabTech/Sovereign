@@ -830,6 +830,33 @@ MAIA offers three ways of being together:
 
 Switch modes based on what you need in the moment.
 
+## Therapeutic Frameworks & Reflection Lenses
+
+**Double-tap (or long-press)** on Care or Note to access specialized approaches:
+
+### Care Mode Frameworks (▾)
+Choose how MAIA approaches inner work:
+
+- **Pure MAIA** — Her native Spiralogic awareness (default)
+- **Jungian** — Depth psychology, archetypes, shadow work
+- **Somatic** — Body-based, nervous system, felt sense
+- **IFS** — Internal Family Systems, parts work
+- **Relational** — Attachment patterns, boundaries, rupture/repair
+- **Archetypal** — Tarnas's planetary patterns
+- **Alchemical** — Edinger's operations, elemental transformation
+- **Hemispheric** — McGilchrist's divided brain, attention modes
+- **Existential** — Meaning, mortality, freedom
+- **Humanistic** — Person-centered, values, agency
+- **CBT** — Cognitive-behavioral, pattern interruption
+- **TCM** — Five Elements, organ/spirit theory
+
+### Note Mode Lenses (▾)
+Choose how MAIA reflects on sessions:
+
+Each lens shapes how MAIA analyzes and synthesizes your work — from Jungian symbol analysis to somatic pattern tracking.
+
+**Tip:** Look for the small ▾ on Care and Note buttons. This indicates framework options are available. When you select a framework, its icon appears on the button.
+
 ## Sovereignty
 
 MAIA runs entirely on your device. Your conversations, dreams, and soul-work never leave your space. No cloud. No surveillance. No data harvesting.
