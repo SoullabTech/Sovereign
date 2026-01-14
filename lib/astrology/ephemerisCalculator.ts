@@ -538,12 +538,13 @@ function validateBirthData(birthData: BirthData): void {
     throw new Error(`Invalid date format: ${birthData.date}. Expected YYYY-MM-DD`);
   }
 
-  // Validate time format
-  if (!/^\d{2}:\d{2}$/.test(birthData.time)) {
-    throw new Error(`Invalid time format: ${birthData.time}. Expected HH:MM`);
+  // Validate time format (accepts HH:MM or HH:MM:SS)
+  if (!/^\d{2}:\d{2}(:\d{2})?$/.test(birthData.time)) {
+    throw new Error(`Invalid time format: ${birthData.time}. Expected HH:MM or HH:MM:SS`);
   }
 
-  const [hours, minutes] = birthData.time.split(':').map(Number);
+  // Extract hours and minutes (ignore seconds if present)
+  const [hours, minutes] = birthData.time.split(':').slice(0, 2).map(Number);
   if (hours < 0 || hours > 23) {
     throw new Error(`Invalid hours: ${hours}. Must be 0-23`);
   }
