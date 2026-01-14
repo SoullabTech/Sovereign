@@ -186,7 +186,8 @@ export function detectAnalysisRequest(text: string): boolean {
  */
 export function countDomains(text: string): number {
   const domains = {
-    technical: /code|software|system|architecture|implement|build|develop|engineer/i,
+    technical:
+      /code|software|system|architecture|implement|build|develop|engineer|deploy|deployment|production|ops|devops|infra|infrastructure|hosting|self-host|sovereign|cloud|vercel|render|docker|kubernetes|k8s|ci\/cd|pipeline|release|rollout|rollback|migrate|migration|scal(e|ing)|latency|throughput|uptime|availability|reliability|resilience|failover|outage|incident|monitoring|observability|logging|metrics|tracing/i,
     emotional: /feel|feeling|emotion|heart|soul|mood|anxious|happy|sad/i,
     relational: /relationship|partner|family|friend|colleague|team|communication/i,
     practical: /money|time|schedule|plan|organize|manage|budget|resource/i,
