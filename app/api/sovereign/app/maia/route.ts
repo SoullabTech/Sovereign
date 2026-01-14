@@ -336,69 +336,69 @@ export async function POST(req: NextRequest) {
   } catch (err: any) {
     const duration = Date.now() - start;
 
-    // 🔥 Timeout-specific handling
-    if (err?.code === 'SOVEREIGN_TIMEOUT' || err?.message === 'SOVEREIGN_TIMEOUT') {
-      console.error(
-        `❌ Sovereign MAIA timeout after ${duration}ms – returning safe fallback`
-      );
+    // 🚨 PROVIDERS_UNAVAILABLE: All language models are down
+    // Fail closed with clear status - never pretend to be MAIA
+    if (err?.code === 'PROVIDERS_UNAVAILABLE') {
+      console.error(`🚨 All providers unavailable after ${duration}ms:`, err.message);
       return NextResponse.json(
         {
-          message:
-            "I'm having trouble finishing this response right now, so I'm going to stop here to keep things stable. You didn't do anything wrong. You can try asking the same thing in a simpler way, or ask about a smaller piece of what you're exploring. I'm here with you and we can keep working with this together.",
+          error: 'PROVIDERS_UNAVAILABLE',
+          status: 'Language providers offline (Claude + Ollama). Check API keys and model availability.',
           route: {
             endpoint: '/api/sovereign/app/maia',
             type: 'Sovereign Consciousness Interface',
             operational: false,
-            mode: 'timeout-fallback',
+            mode: 'providers-offline',
           },
-          error: {
-            code: 'SOVEREIGN_TIMEOUT',
+          meta: {
+            durationMs: duration,
+            reason: err.reason || 'unknown',
+          },
+        },
+        { status: 503 }
+      );
+    }
+
+    // 🔥 Timeout-specific handling
+    if (err?.code === 'SOVEREIGN_TIMEOUT' || err?.message === 'SOVEREIGN_TIMEOUT') {
+      console.error(`❌ Sovereign MAIA timeout after ${duration}ms`);
+      return NextResponse.json(
+        {
+          error: 'SOVEREIGN_TIMEOUT',
+          status: 'Request timed out. Try a shorter message or wait a moment.',
+          route: {
+            endpoint: '/api/sovereign/app/maia',
+            type: 'Sovereign Consciousness Interface',
+            operational: false,
+            mode: 'timeout',
+          },
+          meta: {
             durationMs: duration,
           },
         },
-        { status: 504 } // Gateway Timeout
+        { status: 504 }
       );
     }
 
     console.error(`❌ Sovereign MAIA error after ${duration}ms:`, err);
 
-    // 🛡️ Last resort: try emergency fail-soft response before system failure message
-    try {
-      console.log('Attempting emergency fail-soft response...');
-      const emergencyResult = await getMaiaResponse({
-        sessionId: 'emergency-session',
-        input: 'Hello',
-        meta: { emergency: true, forceFast: true }
-      });
-      return NextResponse.json(
-        {
-          message: emergencyResult.text || "I'm present, though experiencing some system complexity right now. What would you like to explore?",
-          route: {
-            endpoint: '/api/sovereign/app/maia',
-            type: 'Sovereign Consciousness Interface',
-            operational: false,
-            mode: 'emergency-fallback',
-          },
-          error: {
-            code: 'SOVEREIGN_ERROR',
-            emergency: true,
-            durationMs: duration,
-          },
+    // Final fallback - neutral status message, not MAIA-voice
+    return NextResponse.json(
+      {
+        error: 'SYSTEM_ERROR',
+        status: 'Service temporarily unavailable. Please try again.',
+        route: {
+          endpoint: '/api/sovereign/app/maia',
+          type: 'Sovereign Consciousness Interface',
+          operational: false,
+          mode: 'error',
         },
-        { status: 500 }
-      );
-    } catch (emergencyErr) {
-      console.error('Emergency system also failed:', emergencyErr);
-
-      // Absolute final fallback - honest human message for true system failure
-      return NextResponse.json(
-        {
-          error: 'CONSCIOUSNESS_SYSTEM_FAILURE',
-          message:
-            "I'm experiencing some technical difficulties right now and need to pause to keep things stable. You didn't do anything wrong. Please try again in a moment, or ask a simpler question. I'm still here with you.",
+        meta: {
+          durationMs: duration,
+          code: err?.code || 'UNKNOWN',
         },
-        { status: 503 } // Service Temporarily Unavailable
-      );
-    }
+      },
+      { status: 503 }
+    );
   }
 }

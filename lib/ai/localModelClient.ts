@@ -124,21 +124,15 @@ async function generateWithOllamaTracked(
     };
 
   } catch (error) {
-    console.warn('Local Ollama model failed, falling back to consciousness engine:', error);
+    // FAIL CLOSED: Never let a fallback pretend to be MAIA.
+    // If both Claude and Ollama fail, return a clear provider error.
+    console.error('🚨 Local Ollama model failed - NO FALLBACK (fail closed):', error);
 
-    // Fallback to template engine
-    const fallbackText = await generateWithConsciousnessEngine(params);
-
-    return {
-      text: fallbackText,
-      provider: {
-        provider: 'consciousness_engine',
-        model: 'template-engine',
-        mode: 'fallback',
-        reason: errReason(error),
-        latencyMs: Date.now() - t0,
-      },
-    };
+    const providerError = new Error('All language providers unavailable (Claude + Ollama). Check API keys and model availability.');
+    (providerError as any).code = 'PROVIDERS_UNAVAILABLE';
+    (providerError as any).httpStatus = 503;
+    (providerError as any).reason = errReason(error);
+    throw providerError;
   }
 }
 
