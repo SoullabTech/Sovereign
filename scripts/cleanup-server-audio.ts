@@ -5,11 +5,12 @@
  * Keeps journal entries (transcripts) intact - only removes raw audio.
  *
  * Usage:
- *   npx tsx scripts/cleanup-server-audio.ts --dry-run  # preview what would be deleted
- *   npx tsx scripts/cleanup-server-audio.ts            # actually delete
+ *   npx tsx scripts/cleanup-server-audio.ts           # dry-run (safe default)
+ *   npx tsx scripts/cleanup-server-audio.ts -v       # dry-run with verbose output
+ *   npx tsx scripts/cleanup-server-audio.ts --apply  # actually delete files
  *
  * Environment:
- *   AUDIO_RETENTION_DAYS=30     # default retention period
+ *   AUDIO_RETENTION_DAYS=30       # default retention period
  *   AUDIO_CLEANUP_BATCH_SIZE=200  # max rows per run
  */
 
@@ -60,7 +61,9 @@ async function fileExists(p: string): Promise<boolean> {
 }
 
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
+  // Default to dry-run for safety; require --apply to actually delete
+  const apply = process.argv.includes('--apply');
+  const dryRun = !apply;
   const verbose = process.argv.includes('-v') || process.argv.includes('--verbose');
 
   console.log(`[cleanup-server-audio] Starting...`);
