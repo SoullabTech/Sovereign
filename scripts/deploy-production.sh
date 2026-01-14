@@ -115,7 +115,9 @@ cmd_deploy() {
 
     # Build and start
     log_info "Building Docker images..."
-    docker compose -f "$COMPOSE_FILE" build
+    export GIT_COMMIT="$(git rev-parse --short HEAD)"
+    log_info "Deploying commit: $GIT_COMMIT"
+    docker compose -f "$COMPOSE_FILE" build --build-arg GIT_COMMIT="$GIT_COMMIT"
 
     log_info "Starting containers..."
     docker compose -f "$COMPOSE_FILE" up -d
@@ -144,7 +146,9 @@ cmd_update() {
     git pull
 
     log_info "Rebuilding and redeploying..."
-    docker compose -f "$COMPOSE_FILE" build
+    export GIT_COMMIT="$(git rev-parse --short HEAD)"
+    log_info "Deploying commit: $GIT_COMMIT"
+    docker compose -f "$COMPOSE_FILE" build --build-arg GIT_COMMIT="$GIT_COMMIT"
     docker compose -f "$COMPOSE_FILE" up -d
 
     log_info "Running migrations..."
