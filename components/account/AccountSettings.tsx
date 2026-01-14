@@ -415,6 +415,14 @@ export function AccountSettings() {
         } : null,
       } : null;
 
+      // Debug logging
+      console.log('[AccountSettings] Saving birth data:', {
+        editBirthDate,
+        editBirthTime,
+        selectedLocation,
+        birthDataToSend: birthData,
+      });
+
       const res = await fetch('/api/members/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -990,12 +998,14 @@ export function AccountSettings() {
                 <button
                   key={idx}
                   onClick={() => {
-                    setSelectedLocation({
+                    const locationObj = {
                       lat: parseFloat(loc.lat),
                       lng: parseFloat(loc.lon),
                       name: loc.display_name,
                       timezone: loc.timezone,
-                    });
+                    };
+                    console.log('[AccountSettings] Location selected:', locationObj);
+                    setSelectedLocation(locationObj);
                     setEditBirthLocation(loc.display_name);
                     setBirthLocationSearch('');
                     setShowLocationResults(false);
