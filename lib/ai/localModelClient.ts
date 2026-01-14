@@ -164,17 +164,29 @@ async function generateWithConsciousnessEngine(
   let response: string;
 
   if (isMaiaPrompt) {
-    // MAIA-specific responses that honor her elder-wise voice
+    // MAIA-specific responses - natural, conversational, varied
     if (isGreeting) {
-      response = "I'm here with you. What's moving through you today that wants attention?";
+      const greetings = [
+        "Hey there. What's on your mind?",
+        "Hi. What brings you here today?",
+        "Hello. I'm listening.",
+        "Hey. What would you like to explore?",
+      ];
+      response = greetings[Math.floor(Math.random() * greetings.length)];
     } else if (isCreative) {
-      response = `I sense the creative fire stirring in your question about "${userInput}". There's something alive here wanting to emerge. What feels ready to break through? What small step might honor this creative impulse right now?`;
+      response = `There's something alive in what you're sharing. What feels ready to emerge?`;
     } else if (isPractical) {
-      response = `You're asking about practical steps - I appreciate the grounded energy in that. From what you're sharing, "${userInput}", there's wisdom in starting where you have the most clarity. What feels most concrete and doable right now?`;
+      response = `What feels like the most concrete next step from where you are right now?`;
     } else if (isReflection) {
-      response = `There's depth in what you're exploring. When you say "${userInput}", I notice there might be wisdom that's already stirring within you. What feels most true when you sit quietly with this question?`;
+      response = `What feels most true when you sit quietly with this?`;
     } else {
-      response = `I hear what you're bringing: "${userInput}". There's often more beneath the surface of what we first notice. What draws your attention most strongly about this right now?`;
+      const openings = [
+        "Tell me more about that.",
+        "What's underneath that for you?",
+        "Say more.",
+        "What else is there?",
+      ];
+      response = openings[Math.floor(Math.random() * openings.length)];
     }
   } else {
     // Generic local AI responses for non-MAIA contexts
@@ -187,18 +199,7 @@ async function generateWithConsciousnessEngine(
     }
   }
 
-  // Add sovereignty affirmation for MAIA responses
-  if (isMaiaPrompt) {
-    const affirmations = [
-      "✨ You are the author of your reality. This moment is yours to shape.",
-      "🌟 You are sovereign over your path. Trust your inner wisdom.",
-      "🔥 Your creative power is limitless. Trust it to guide you.",
-      "🌊 You are perfectly equipped to navigate these depths. Trust your flow.",
-      "🌱 You have access to all the clarity you need. Your perspective is valuable.",
-    ];
-    const randomAffirmation = affirmations[Math.floor(Math.random() * affirmations.length)];
-    response += ` ${randomAffirmation}`;
-  }
+  // Removed emoji affirmations - MAIA should speak naturally without forced taglines
 
   return response;
 }
