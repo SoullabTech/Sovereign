@@ -242,14 +242,19 @@ export default function AstrologyPage() {
         // Get member ID from localStorage
         const storedUser = localStorage.getItem('beta_user');
         const memberId = storedUser ? JSON.parse(storedUser)?.id : null;
+        console.log('[Astrology] Loading chart data, memberId:', memberId);
 
         // 1. First try to fetch from profile API (database)
         if (memberId) {
           try {
+            console.log('[Astrology] Fetching from profile API...');
             const profileRes = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
+            console.log('[Astrology] Profile API response status:', profileRes.status);
             if (profileRes.ok) {
               const profile = await profileRes.json();
+              console.log('[Astrology] Profile data:', profile);
               if (profile.birthData?.date) {
+                console.log('[Astrology] Found birth data in profile:', profile.birthData);
                 // We have birth data saved in database - use it to calculate chart
                 const birthData = profile.birthData;
 
@@ -271,6 +276,8 @@ export default function AstrologyPage() {
                   timezone: 'America/Chicago',
                 };
 
+                console.log('[Astrology] Calculating chart with:', { date: dateStr, time: timeStr, location });
+
                 // Calculate the chart
                 const chartRes = await fetch('/api/astrology/birth-chart', {
                   method: 'POST',
@@ -283,6 +290,7 @@ export default function AstrologyPage() {
                   }),
                 });
 
+                console.log('[Astrology] Chart API response status:', chartRes.status);
                 if (chartRes.ok) {
                   const { data } = await chartRes.json();
                   const fullChart = {
