@@ -20,6 +20,13 @@ x-maia-build: &maia_build
 
 x-maia-image: &maia_image maia-sovereign:prod
 
+# Prevent log files from filling disk
+x-logging: &default_logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
   # ═════════════════════════════════════════════════════════════════════════════
   # Caddy - Automatic HTTPS Reverse Proxy
@@ -32,6 +39,7 @@ services:
     image: caddy:2-alpine
     container_name: maia-caddy
     restart: unless-stopped
+    logging: *default_logging
     ports:
       - "80:80"
       - "443:443"
@@ -58,6 +66,7 @@ services:
     image: *maia_image
     container_name: maia-sovereign
     restart: unless-stopped
+    logging: *default_logging
 
     depends_on:
       postgres:
@@ -114,6 +123,7 @@ services:
     image: *maia_image
     container_name: maia-embed-worker
     restart: unless-stopped
+    logging: *default_logging
 
     depends_on:
       postgres:
@@ -247,6 +257,7 @@ services:
     image: fedirz/faster-whisper-server:latest-cpu
     container_name: maia-whisper
     restart: unless-stopped
+    logging: *default_logging
 
     environment:
       WHISPER__MODEL: base.en
@@ -275,6 +286,7 @@ services:
       dockerfile: Dockerfile
     container_name: maia-rlm
     restart: unless-stopped
+    logging: *default_logging
 
     env_file:
       - .env.production
