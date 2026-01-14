@@ -221,7 +221,20 @@ export function AccountSettings() {
               time: profileData.birthData.time,
               location: profileData.birthData.location,
             });
-            setEditBirthDate(profileData.birthData.date || '');
+            // Parse date to ensure YYYY-MM-DD format for HTML date input
+            let dateStr = '';
+            if (profileData.birthData.date) {
+              const rawDate = profileData.birthData.date;
+              // Handle various formats: ISO string, Date object, or already YYYY-MM-DD
+              if (typeof rawDate === 'string') {
+                // If it's an ISO string like "1966-12-09T00:00:00.000Z", extract just the date part
+                dateStr = rawDate.split('T')[0];
+              } else if (rawDate instanceof Date) {
+                dateStr = rawDate.toISOString().split('T')[0];
+              }
+              console.log('[AccountSettings] Parsed date:', rawDate, '->', dateStr);
+            }
+            setEditBirthDate(dateStr);
             setEditBirthTime(profileData.birthData.time || '');
             if (profileData.birthData.location) {
               setEditBirthLocation(profileData.birthData.location.name || '');
