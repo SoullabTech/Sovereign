@@ -458,39 +458,13 @@ Maximum care: This touches on spiritual/transcendent themes. Remain grounded whi
 
   /**
    * Apply sovereignty protocol to ensure empowering, non-constraining responses
+   * SIMPLIFIED: Sovereignty is expressed through system prompt guidance, not appended taglines.
+   * The model's output should stand on its own without scripted affirmations.
    */
-  private async applySovereigntyProtocol(response: string, request: OracleRequest, element: string): Promise<string> {
-    try {
-      // Create mock analysis for sovereignty protocol
-      const mockAnalysis = {
-        resonances: [{
-          signature: element,
-          content: response
-        }],
-        guidance: response
-      };
-
-      // Apply sovereignty transformations
-      const sovereignAnalysis = SovereigntyProtocol.ensureSovereignSupport(mockAnalysis, {
-        element,
-        userInput: request.input,
-        interactionType: request.type
-      });
-
-      // Extract transformed response with sovereignty affirmation
-      const transformedResponse = `${response}
-
-${sovereignAnalysis.sovereigntyAffirmation}`;
-
-      return transformedResponse;
-
-    } catch (error) {
-      logger.warn('Sovereignty protocol application failed, using original response', {
-        error: error instanceof Error ? error.message : 'Unknown error'
-      });
-
-      return response;
-    }
+  private async applySovereigntyProtocol(response: string, _request: OracleRequest, _element: string): Promise<string> {
+    // Return response unchanged - no appended affirmations
+    // Sovereignty is in the training/prompting, not post-processing
+    return response;
   }
 
   /**

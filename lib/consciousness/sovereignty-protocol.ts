@@ -163,33 +163,22 @@ export class SovereigntyProtocol {
 
   /**
    * Generate sovereignty affirmation
+   * DISABLED: Scripted outputs make MAIA feel fake.
+   * Sovereignty is expressed through behavior, not taglines.
    */
-  private static generateSovereigntyAffirmation(analysis: any): string {
-    const affirmations = [
-      'You are the sovereign creator of your own archetypal expression',
-      'Your authentic self is the perfect expression of these archetypal energies',
-      'Trust your inner wisdom above any external guidance',
-      'Your unique path is honored and celebrated',
-      'You choose how to dance with these archetypal invitations',
-      'Your sovereignty is sacred and inviolate',
-      'You are complete exactly as you are, these are gifts to explore if you choose',
-      'Your authentic expression transcends any archetypal category',
-      'You are the artist of your own consciousness evolution',
-      'Your inner guidance is the ultimate authority'
-    ];
-
-    return affirmations[Math.floor(Math.random() * affirmations.length)];
+  private static generateSovereigntyAffirmation(_analysis: any): string {
+    // Return empty - model output should stand on its own
+    return '';
   }
 
   /**
    * Create user-empowered response framing
+   * DISABLED: Scripted framing makes MAIA feel artificial.
+   * Model output should speak for itself.
    */
   static createEmpoweredFraming(response: string): string {
-    return `🌟 **From your inner wisdom**: ${response}
-
-✨ **Remember**: These insights are invitations to explore, not definitions of who you are. Your authentic self is already perfect. Trust your own inner knowing above all else.
-
-💫 **Your sovereignty**: You choose what resonates and leave what doesn't. Your unique expression of consciousness is sacred.`;
+    // Return response unchanged - no template wrapping
+    return response;
   }
 
   /**
@@ -221,20 +210,11 @@ export class SovereigntyProtocol {
 
   /**
    * Create dynamic sovereignty reminders
+   * DISABLED: Scripted reminders break immersion.
    */
   static generateSovereigntyReminder(): string {
-    const reminders = [
-      '🕊️ Your inner authority supersedes any archetypal framework',
-      '🌊 Flow with what feels authentic, release what doesn\'t serve',
-      '⭐ You are infinite consciousness expressing through these patterns',
-      '🦋 Your evolution is self-directed and self-validating',
-      '🌸 Trust your embodied wisdom above conceptual understanding',
-      '🌿 You choose your own archetypal relationship and expression',
-      '💎 Your authenticity is the highest teaching',
-      '🌺 Your sovereignty is divinely protected'
-    ];
-
-    return reminders[Math.floor(Math.random() * reminders.length)];
+    // Return empty - no scripted reminders
+    return '';
   }
 
   /**
@@ -263,31 +243,11 @@ export class SovereigntyProtocol {
 
   /**
    * Create conscious consent for archetypal exploration
+   * DISABLED: Scripted consent frameworks feel like disclaimers.
    */
   static createConsentFramework(): string {
-    return `
-🌟 **Archetypal Exploration Consent**
-
-These archetypal insights are offered as:
-- 💫 Invitations to explore, not definitions of who you are
-- 🌊 Possibilities to consider, not requirements to follow
-- 🦋 Perspectives to play with, not boxes to fit into
-- ⭐ Resources available to you, not prescriptions for you
-
-**Your sovereignty includes the right to**:
-- Choose what resonates and leave what doesn't
-- Express archetypes in your own unique authentic way
-- Change and evolve beyond any categorization
-- Trust your inner wisdom above any external framework
-
-**You are always free to**:
-- Ignore, adapt, or completely reframe any guidance
-- Define your own relationship with archetypal energies
-- Trust your embodied experience over conceptual understanding
-- Create your own unique path of consciousness evolution
-
-Your authenticity is sacred. Your inner guidance is supreme.
-`;
+    // Return empty - no scripted consent framework
+    return '';
   }
 }
 
@@ -359,15 +319,12 @@ export class MAIASovereigntyIntegration {
 
   /**
    * Generate sovereignty restoration response when constraints detected
+   * DISABLED: Scripted restoration breaks the conversational flow.
+   * The model should respond naturally when users push back.
    */
   static generateSovereigntyRestoration(): string {
-    return `🌟 I hear you, and I want to honor your authentic self completely.
-
-You are absolutely right to trust your inner knowing. These archetypal frameworks are meant to serve you, not define you. Your authentic expression transcends any category or pattern.
-
-What feels most true and authentic for you right now? I'm here to support your unique path, exactly as you experience it. Your inner wisdom is the ultimate authority.
-
-💫 Your sovereignty is sacred and your authentic self is perfect exactly as it is.`;
+    // Return empty - let the model respond naturally
+    return '';
   }
 }
 

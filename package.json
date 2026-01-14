@@ -2,6 +2,7 @@
   "name": "spiralogic-oracle-system",
   "version": "0.1.0",
   "private": true,
+  "workspaces": ["packages/*"],
   "main": "electron/main.js",
   "homepage": "./",
   "scripts": {
@@ -34,6 +35,7 @@
     "check:nocheck": "node scripts/check-nocheck-allowlist.js",
     "check:private-routes": "node scripts/check-private-routes.js",
     "check:backend-imports": "node scripts/check-backend-imports.js",
+    "guard:no-scripted-maia": "npx ts-node scripts/guards/no-scripted-maia.ts",
     "guardrails": "node scripts/check-nocheck-allowlist.js && node scripts/check-private-routes.js && node scripts/check-backend-imports.js",
     "db:migrate": "bash scripts/apply-migrations.sh",
     "library:index": "npx tsx scripts/build-library-index.ts",
@@ -114,7 +116,9 @@
     "pwa:consciousness": "npm run consciousness:pwa && npm run pwa:generate-icons",
     "ios:consciousness": "npm run consciousness:ios && npx cap open ios",
     "android:consciousness": "npm run consciousness:android && npx cap open android",
-    "deploy:all-platforms": "npm run consciousness:deploy"
+    "deploy:all-platforms": "npm run consciousness:deploy",
+    "maia-notes:promote": "npx tsx scripts/maia-notes/promote.ts",
+    "maia-notes:status": "curl -s http://localhost:3000/api/admin/maia-notes/status | jq"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",
