@@ -1166,7 +1166,11 @@ export function AccountSettings() {
                     {/* Paid feature notice for audio server */}
                     {isAudio && !canSaveAudioServer && (
                       <div className="mt-2 text-xs text-amber-300/60 text-center">
-                        Server audio backup is available for paid members
+                        Cloud audio backup is a paid feature.{' '}
+                        <a href="/patrons" className="underline hover:text-amber-200">
+                          Upgrade
+                        </a>{' '}
+                        to enable. Your audio stays on this device unless you opt in.
                       </div>
                     )}
                     {/* Status text when neither enabled */}
