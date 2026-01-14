@@ -6,6 +6,7 @@ import { X, Mic, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, Chevron
 import { apiUrl } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import HandwritingOCR from '@/lib/capacitor/HandwritingOCR';
+import { saveQuickJournal, getStorageDecision } from '@/lib/storage/sovereign';
 
 interface JournalEntry {
   id: string;
@@ -219,47 +220,62 @@ export function QuickJournalSheet({
     setIsSaving(true);
     setSaveError(null);
     try {
-      // Build request body based on entry type
+      // Build entry data based on type
       const isHandwriting = activeTab === 'handwriting';
-      const body: Record<string, unknown> = {
+      const tags = isHandwriting
+        ? ['handwriting', ocrProvider === 'ios_vision' ? 'ocr' : 'manual']
+        : [activeTab, 'quick_capture'];
+      const source = isHandwriting
+        ? (ocrProvider === 'ios_vision' ? 'handwriting_ocr' : 'handwriting_paste')
+        : 'quick_sheet';
+
+      // Build metadata for handwriting
+      const meta = isHandwriting
+        ? {
+            ocrProvider,
+            ocrConfidence: ocrConfidence ?? undefined,
+            hasImage: !!selectedFile,
+            imageSize: selectedFile?.size,
+          }
+        : undefined;
+
+      // Use sovereign storage (respects consent: local, server, both, or ephemeral)
+      const result = await saveQuickJournal(content.trim(), {
         userId,
         entryType: activeTab,
-        content: content.trim(),
-        tags: isHandwriting
-          ? ['handwriting', ocrProvider === 'ios_vision' ? 'ocr' : 'manual']
-          : [activeTab, 'quick_capture'],
-        source: isHandwriting
-          ? (ocrProvider === 'ios_vision' ? 'handwriting_ocr' : 'handwriting_paste')
-          : 'quick_sheet',
-      };
-
-      // Add handwriting-specific metadata
-      if (isHandwriting) {
-        body.meta = {
-          ocrProvider,
-          ocrConfidence: ocrConfidence ?? undefined,
-          hasImage: !!selectedFile,
-          imageSize: selectedFile?.size,
-        };
-      }
-
-      const response = await fetch(apiUrl('/api/journal/quick'), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        source: source as 'quick_sheet' | 'voice' | 'scan' | 'handwriting_ocr' | 'handwriting_paste',
+        tags,
+        meta,
+        audioBlob: recordedBlob || undefined,
+        audioDurationMs: recordDurationMs || undefined,
       });
 
-      const data = await response.json();
+      if (result.success) {
+        console.log(`[JournalSave] Saved: local=${result.local}, server=${result.server}`);
 
-      if (data.success) {
-        // Upload audio if we have a recording (not for handwriting)
+        // Upload audio to server if user consents to server storage and we have audio
         if (recordedBlob && !isHandwriting) {
-          try {
-            await uploadAudio(data.entryId);
+          const audioDecision = await getStorageDecision('audio');
+          if (audioDecision.saveServer) {
+            try {
+              const uploadResult = await uploadAudio(result.id);
+              if (uploadResult.success) {
+                setSavedMessage(activeTab === 'dream' ? 'Dream + audio captured ✓' : 'Saved with audio ✓');
+              } else if (uploadResult.error === 'PAID_FEATURE') {
+                // Paid feature - audio saved locally, server sync requires upgrade
+                setSavedMessage(activeTab === 'dream' ? 'Dream captured (local audio)' : 'Saved (local audio)');
+              } else {
+                // Other error - audio still saved locally
+                setSavedMessage(activeTab === 'dream' ? 'Dream captured (cloud audio pending)' : 'Saved (cloud audio pending)');
+              }
+            } catch (e: unknown) {
+              console.error('Audio upload to server failed:', e);
+              // Audio is still saved locally, so this is just a warning
+              setSavedMessage(activeTab === 'dream' ? 'Dream captured (cloud audio pending)' : 'Saved (cloud audio pending)');
+            }
+          } else {
+            // Audio saved locally only
             setSavedMessage(activeTab === 'dream' ? 'Dream + audio captured ✓' : 'Saved with audio ✓');
-          } catch (e: unknown) {
-            console.error('Audio upload failed:', e);
-            setSavedMessage(activeTab === 'dream' ? 'Dream captured (audio failed)' : 'Saved (audio failed)');
           }
         } else {
           const messages: Record<JournalType, string> = {
@@ -270,7 +286,7 @@ export function QuickJournalSheet({
           setSavedMessage(messages[activeTab]);
         }
 
-        onSaved?.(data.entryId);
+        onSaved?.(result.id);
 
         if (askMaia) {
           // Close sheet and send to MAIA
@@ -289,8 +305,8 @@ export function QuickJournalSheet({
           }, 1200);
         }
       } else {
-        console.error('Failed to save journal entry:', data.error);
-        setSaveError(data.error || 'Failed to save');
+        console.error('Failed to save journal entry');
+        setSaveError('Failed to save - check your storage settings');
       }
     } catch (error) {
       console.error('Error saving journal entry:', error);
@@ -418,11 +434,13 @@ export function QuickJournalSheet({
   }, [isRecording, liveTranscript]);
 
   // Upload audio after text entry is saved
-  const uploadAudio = async (entryId: string): Promise<void> => {
-    if (!recordedBlob) return;
+  // Note: Server reads consent from member_settings.storage_consent (authoritative),
+  // not from client-provided values. userId is still passed until auth middleware exists.
+  const uploadAudio = async (entryId: string): Promise<{ success: boolean; error?: string }> => {
+    if (!recordedBlob) return { success: false, error: 'No audio to upload' };
 
     const fd = new FormData();
-    fd.append('userId', userId);
+    fd.append('userId', userId); // TODO: Remove once auth middleware derives userId from session
     fd.append('entryId', entryId);
     fd.append('durationMs', String(recordDurationMs || 0));
     fd.append('transcriptSource', liveTranscript ? 'web_speech' : 'none');
@@ -430,10 +448,25 @@ export function QuickJournalSheet({
 
     const res = await fetch(apiUrl('/api/journal/quick/audio'), { method: 'POST', body: fd });
     const j = await res.json();
+
+    // Handle paid feature gate (402)
+    if (res.status === 402) {
+      console.log('🔒 Server audio requires paid membership');
+      return { success: false, error: 'PAID_FEATURE' };
+    }
+
+    // Handle consent disabled (403)
+    if (res.status === 403) {
+      console.log('🔒 Server audio disabled by user consent');
+      return { success: false, error: 'CONSENT_DISABLED' };
+    }
+
     if (!j.success) {
       throw new Error(j.error || 'Audio upload failed');
     }
+
     console.log('🎙️ Audio uploaded:', j.audioPath);
+    return { success: true };
   };
 
   // Format duration for display

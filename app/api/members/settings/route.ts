@@ -67,6 +67,8 @@ export async function GET(request: NextRequest) {
         amount: settings.circle_amount,
         joinedAt: settings.circle_joined_at,
       },
+      // Storage consent (server-authoritative)
+      storageConsent: settings.storage_consent || {},
     });
   } catch (error) {
     console.error('[Settings API] Error:', error);
@@ -162,27 +164,48 @@ export async function PUT(request: NextRequest) {
       values.push(updates.circleAmount);
     }
 
-    if (setClauses.length === 0) {
+    // Storage consent (server-authoritative)
+    // Uses dedicated UPSERT to ensure atomicity
+    if (updates.storageConsent !== undefined) {
+      // Handle consent separately with atomic UPSERT
+      await query(
+        `INSERT INTO member_settings (member_id, storage_consent)
+         VALUES ($1, $2::jsonb)
+         ON CONFLICT (member_id)
+         DO UPDATE SET storage_consent = COALESCE(member_settings.storage_consent, '{}'::jsonb) || EXCLUDED.storage_consent,
+                       updated_at = NOW()`,
+        [memberId, JSON.stringify(updates.storageConsent)]
+      );
+    }
+
+    if (setClauses.length === 0 && updates.storageConsent === undefined) {
       return NextResponse.json(
         { error: 'No settings to update' },
         { status: 400 }
       );
     }
 
-    // Upsert: insert if not exists, update if exists
-    await query(
-      `INSERT INTO member_settings (member_id)
-       VALUES ($1)
-       ON CONFLICT (member_id) DO NOTHING`,
-      [memberId]
-    );
+    // For non-consent settings, use two-step upsert
+    if (setClauses.length > 0) {
+      await query(
+        `INSERT INTO member_settings (member_id)
+         VALUES ($1)
+         ON CONFLICT (member_id) DO NOTHING`,
+        [memberId]
+      );
 
+      await query(
+        `UPDATE member_settings
+         SET ${setClauses.join(', ')}
+         WHERE member_id = $1`,
+        values
+      );
+    }
+
+    // Fetch and return the updated settings
     const result = await query(
-      `UPDATE member_settings
-       SET ${setClauses.join(', ')}
-       WHERE member_id = $1
-       RETURNING *`,
-      values
+      `SELECT * FROM member_settings WHERE member_id = $1`,
+      [memberId]
     );
 
     return NextResponse.json({

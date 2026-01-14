@@ -18,13 +18,17 @@ import {
 import {
   setStorageMode,
   setAutoSync,
+  setDataTypeConsent,
+  setSanctuaryDefault,
   getConsentSummary,
   getSyncState,
   subscribeSyncState,
   triggerSync,
   getSyncStatus,
+  DEFAULT_STORAGE_CONSENT,
   type StorageMode,
   type ConsentSummary,
+  type DataType,
 } from '@/lib/storage/sovereign';
 import { Database, HardDrive, Cloud, RefreshCw } from 'lucide-react';
 import ForgettingRitual from '@/components/sovereignty/ForgettingRitual';
@@ -78,7 +82,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -115,6 +119,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User }[] = [
   { id: 'account', label: 'Account', icon: Lock },
   { id: 'astrology', label: 'Birth Chart', icon: Star },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
+  { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
   { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
@@ -262,9 +267,52 @@ export function AccountSettings() {
           });
         }
 
-        // Load sovereignty/consent data
-        const summary = await getConsentSummary();
+        // Load sovereignty/consent data (local first, then reconcile with server)
+        let summary = await getConsentSummary();
         setConsentSummary(summary);
+
+        // Reconcile with server-authoritative consent
+        // Server is the source of truth for *Server consent flags
+        try {
+          const consentRes = await fetch(`/api/account/storage-consent?memberId=${memberId}`);
+          if (consentRes.ok) {
+            const { consent: serverConsent } = await consentRes.json();
+            if (serverConsent && typeof serverConsent === 'object') {
+              // Check each server-relevant flag and update local if different
+              const dataTypes: DataType[] = ['conversations', 'journals', 'audio', 'memories', 'insights'];
+              let needsRefresh = false;
+
+              for (const dt of dataTypes) {
+                const serverKey = `${dt}Server` as keyof typeof serverConsent;
+                const localKey = `${dt}Local` as keyof typeof serverConsent;
+                const serverValue = serverConsent[serverKey];
+                const localValue = serverConsent[localKey];
+                const localDetail = summary.details?.[dt];
+
+                // If server has an explicit value that differs from local, update local
+                if (typeof serverValue === 'boolean' && localDetail?.saveServer !== serverValue) {
+                  console.log(`[Consent] Reconciling ${dt}Server: local=${localDetail?.saveServer} → server=${serverValue}`);
+                  await setDataTypeConsent(dt, localDetail?.saveLocal ?? false, serverValue);
+                  needsRefresh = true;
+                }
+                // Also sync local flags if server has them
+                if (typeof localValue === 'boolean' && localDetail?.saveLocal !== localValue) {
+                  console.log(`[Consent] Reconciling ${dt}Local: local=${localDetail?.saveLocal} → server=${localValue}`);
+                  await setDataTypeConsent(dt, localValue, localDetail?.saveServer ?? false);
+                  needsRefresh = true;
+                }
+              }
+
+              if (needsRefresh) {
+                summary = await getConsentSummary();
+                setConsentSummary(summary);
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('[Consent] Failed to reconcile with server:', e);
+          // Continue with local-only — graceful degradation
+        }
 
         // Get sync status
         const counts = await getSyncStatus(memberId);
@@ -903,6 +951,286 @@ export function AccountSettings() {
     </div>
   );
 
+  // Handler for updating individual data type consent
+  const updateDataTypeConsent = useCallback(async (
+    dataType: DataType,
+    local: boolean,
+    server: boolean
+  ) => {
+    if ('vibrate' in navigator) navigator.vibrate(5);
+    // Update local IndexedDB consent
+    await setDataTypeConsent(dataType, local, server);
+    const summary = await getConsentSummary();
+    setConsentSummary(summary);
+    showSaveIndicator();
+
+    // Sync to server (server-authoritative consent)
+    if (profile?.id) {
+      try {
+        await fetch('/api/account/storage-consent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId: profile.id,
+            [`${dataType}Server`]: server,
+            [`${dataType}Local`]: local
+          })
+        });
+      } catch (e) {
+        console.warn('Failed to sync consent to server:', e);
+      }
+    }
+  }, [showSaveIndicator, profile?.id]);
+
+  const updateSanctuaryDefault = useCallback(async (enabled: boolean) => {
+    if ('vibrate' in navigator) navigator.vibrate(5);
+    await setSanctuaryDefault(enabled);
+    const summary = await getConsentSummary();
+    setConsentSummary(summary);
+    showSaveIndicator();
+  }, [showSaveIndicator]);
+
+  const renderDataPrivacy = () => {
+    const details = consentSummary?.details;
+
+    // Compute live status
+    const getStatusLabel = () => {
+      if (consentSummary?.sanctuaryDefault) {
+        return { text: 'Sanctuary mode — not saved', color: 'text-emerald-400', icon: Shield };
+      }
+      const hasLocal = consentSummary?.localEnabled;
+      const hasServer = consentSummary?.serverEnabled;
+      // Use shared defaults from storage system
+      const audioLocal = details?.audio?.saveLocal ?? DEFAULT_STORAGE_CONSENT.audioLocal;
+      const audioServer = details?.audio?.saveServer ?? DEFAULT_STORAGE_CONSENT.audioServer;
+      const audioSaved = audioLocal || audioServer;
+
+      // Build status text with audio indicator
+      let audioStatus = audioSaved
+        ? (audioLocal && audioServer ? ' | Audio: device + server' : audioLocal ? ' | Audio: device' : ' | Audio: server')
+        : '';
+
+      if (hasLocal && hasServer) {
+        return { text: `Saved locally + synced to server${audioStatus || ' | Audio: off'}`, color: 'text-amber-400', icon: Check };
+      }
+      if (hasLocal) {
+        return { text: `Saved locally only${audioStatus || ' | Audio: off'}`, color: 'text-blue-400', icon: HardDrive };
+      }
+      if (hasServer) {
+        return { text: `Synced to server only${audioStatus || ' | Audio: off'}`, color: 'text-purple-400', icon: Cloud };
+      }
+      return { text: 'Not saving', color: 'text-stone-400', icon: AlertTriangle };
+    };
+
+    const status = getStatusLabel();
+    const StatusIcon = status.icon;
+
+    const DATA_TYPES: { id: DataType; label: string; desc: string; helper?: string }[] = [
+      { id: 'conversations', label: 'Conversations', desc: 'Your chats with MAIA (includes voice transcripts)' },
+      { id: 'journals', label: 'Journals', desc: 'Quick journal entries and reflections' },
+      {
+        id: 'audio',
+        label: 'Audio recordings',
+        desc: 'Raw voice recordings (off by default)',
+        helper: 'Transcript and audio are separate: you can save transcripts without saving raw audio.'
+      },
+    ];
+
+    return (
+      <div className="space-y-6">
+        {/* Live Status Indicator */}
+        <div className={`flex items-center gap-3 p-4 rounded-xl border ${
+          consentSummary?.sanctuaryDefault
+            ? 'bg-emerald-500/10 border-emerald-500/30'
+            : 'bg-white/5 border-white/10'
+        }`}>
+          <StatusIcon size={20} className={status.color} />
+          <span className={`text-sm font-medium ${status.color}`}>{status.text}</span>
+        </div>
+
+        {/* Audio Privacy Banner */}
+        {(() => {
+          // Adaptive footnote based on what's enabled
+          const convoEnabled = details?.conversations?.saveLocal || details?.conversations?.saveServer;
+          const journalEnabled = details?.journals?.saveLocal || details?.journals?.saveServer;
+          const transcriptNote = convoEnabled && journalEnabled
+            ? 'Voice transcripts may be saved in Conversations or Journals.'
+            : convoEnabled
+              ? 'Voice transcripts may be saved in Conversations.'
+              : journalEnabled
+                ? 'Voice transcripts may be saved in Journals.'
+                : 'Voice transcripts won\u2019t be saved unless you enable Conversations or Journals.';
+
+          return (
+            <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl">
+              <div className="flex items-start gap-3">
+                <Mic className="w-5 h-5 text-amber-400 mt-0.5 flex-shrink-0" />
+                <div className="text-sm">
+                  <p className="text-amber-200 font-medium mb-2">Audio privacy (default: off)</p>
+                  <p className="text-white/70 leading-relaxed">
+                    Raw audio recordings are <strong>not saved</strong> unless you enable audio saving below.
+                  </p>
+                  <p className="text-white/60 mt-2 text-xs">
+                    Transcript and audio are separate: you can save transcripts without saving raw audio.
+                  </p>
+                  <p className="text-white/50 mt-1 text-xs">
+                    {transcriptNote} Use <strong>Sanctuary mode</strong> for sessions that aren&apos;t saved at all.
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Sanctuary Mode Toggle */}
+        <div className="flex items-center justify-between p-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-xl border border-emerald-500/20">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400">
+              <Shield size={18} />
+            </div>
+            <div>
+              <div className="text-sm font-medium text-emerald-200">Sanctuary Mode Default</div>
+              <div className="text-xs text-white/50">
+                Ephemeral sessions — no conversations, journals, transcripts, or audio saved
+              </div>
+            </div>
+          </div>
+          {renderToggle(
+            consentSummary?.sanctuaryDefault ?? false,
+            () => updateSanctuaryDefault(!consentSummary?.sanctuaryDefault)
+          )}
+        </div>
+
+        {/* Per-Data-Type Toggles */}
+        {!consentSummary?.sanctuaryDefault && (() => {
+          // Paid feature gate: server audio requires paid membership
+          const memberTier = profile?.membership?.tier || 'explorer';
+          const canSaveAudioServer = memberTier !== 'explorer';
+
+          return (
+          <div>
+            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+              Choose what MAIA saves
+            </label>
+            <div className="space-y-3">
+              {DATA_TYPES.map(({ id, label, desc, helper }) => {
+                const typeDetails = details?.[id];
+                // Use shared defaults from storage system (single source of truth)
+                const localKey = `${id}Local` as keyof typeof DEFAULT_STORAGE_CONSENT;
+                const serverKey = `${id}Server` as keyof typeof DEFAULT_STORAGE_CONSENT;
+                const saveLocal = typeDetails?.saveLocal ?? DEFAULT_STORAGE_CONSENT[localKey];
+                const saveServer = typeDetails?.saveServer ?? DEFAULT_STORAGE_CONSENT[serverKey];
+                const neitherEnabled = !saveLocal && !saveServer;
+
+                // Audio server is gated to paid members
+                const isAudio = id === 'audio';
+                const serverDisabled = isAudio && !canSaveAudioServer;
+
+                return (
+                  <div key={id} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <div className="text-sm font-medium text-white/90">{label}</div>
+                        <div className="text-xs text-white/50">{desc}</div>
+                      </div>
+                    </div>
+                    <div className="flex gap-4">
+                      <button
+                        onClick={() => updateDataTypeConsent(id, !saveLocal, saveServer)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                          saveLocal
+                            ? 'bg-blue-500/20 border border-blue-500/40 text-blue-300'
+                            : 'bg-white/5 border border-white/10 text-white/40'
+                        }`}
+                      >
+                        <HardDrive size={14} />
+                        Device
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (serverDisabled) return;
+                          updateDataTypeConsent(id, saveLocal, !saveServer);
+                        }}
+                        disabled={serverDisabled}
+                        title={serverDisabled ? 'Server audio backup is a paid feature' : undefined}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-medium transition-all ${
+                          saveServer
+                            ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300'
+                            : 'bg-white/5 border border-white/10 text-white/40'
+                        } ${serverDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      >
+                        <Cloud size={14} />
+                        Server{serverDisabled ? ' 🔒' : ''}
+                      </button>
+                    </div>
+                    {/* Paid feature notice for audio server */}
+                    {isAudio && !canSaveAudioServer && (
+                      <div className="mt-2 text-xs text-amber-300/60 text-center">
+                        Server audio backup is available for paid members
+                      </div>
+                    )}
+                    {/* Status text when neither enabled */}
+                    {neitherEnabled && (
+                      <div className="mt-2 text-xs text-white/40 text-center">
+                        {id === 'audio' ? 'Audio recordings will not be stored' : `${label} will not be stored`}
+                      </div>
+                    )}
+                    {/* Helper text (e.g., for audio) */}
+                    {helper && (
+                      <div className="mt-2 text-xs text-amber-300/60 italic">
+                        {helper}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          );
+        })()}
+
+        {/* What MAIA Uses */}
+        <div className="pt-4 border-t border-white/10">
+          <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+            What MAIA uses your data for
+          </label>
+          <div className="space-y-2 text-sm">
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+              <Brain size={16} className="text-amber-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-white/80 font-medium">Continuity</span>
+                <p className="text-white/50 text-xs mt-0.5">
+                  MAIA remembers your patterns, preferences, and growth journey across sessions.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+              <Sparkles size={16} className="text-purple-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-white/80 font-medium">Personalization</span>
+                <p className="text-white/50 text-xs mt-0.5">
+                  Your journals and conversations help MAIA understand what matters to you.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 p-3 bg-white/5 rounded-lg">
+              <RefreshCw size={16} className="text-blue-400 mt-0.5 flex-shrink-0" />
+              <div>
+                <span className="text-white/80 font-medium">Cross-device sync</span>
+                <p className="text-white/50 text-xs mt-0.5">
+                  Server storage enables access from any device you sign into.
+                </p>
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-white/40 mt-4 text-center">
+            MAIA never shares your data with third parties or uses it for advertising.
+          </p>
+        </div>
+      </div>
+    );
+  };
+
   const renderNotifications = () => (
     <div className="space-y-4">
       <p className="text-sm text-white/50 mb-6">
@@ -1287,21 +1615,27 @@ export function AccountSettings() {
           </div>
         )}
 
-        {/* Data Types */}
-        {consentSummary?.dataTypes && (
+        {/* Data Types - only show types that are actually wired/enforced */}
+        {consentSummary?.details && (
           <div>
             <label className="text-sm font-medium text-amber-200/80 mb-3 block">
               What MAIA Stores
             </label>
             <div className="space-y-2">
-              {Object.entries(consentSummary.dataTypes).map(([type, enabled]) => (
-                <div key={type} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
-                  <span className="text-sm text-white/80 capitalize">{type.replace(/_/g, ' ')}</span>
-                  <span className={`text-xs ${enabled ? 'text-emerald-400' : 'text-white/40'}`}>
-                    {enabled ? 'Enabled' : 'Disabled'}
-                  </span>
-                </div>
-              ))}
+              {Object.entries(consentSummary.details)
+                .filter(([type]) => ['conversations', 'journals', 'audio'].includes(type))
+                .map(([type, decision]) => {
+                  const enabled = (decision as { saveLocal: boolean; saveServer: boolean }).saveLocal ||
+                                 (decision as { saveLocal: boolean; saveServer: boolean }).saveServer;
+                  return (
+                    <div key={type} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                      <span className="text-sm text-white/80 capitalize">{type.replace(/_/g, ' ')}</span>
+                      <span className={`text-xs ${enabled ? 'text-emerald-400' : 'text-white/40'}`}>
+                        {enabled ? 'Enabled' : 'Disabled'}
+                      </span>
+                    </div>
+                  );
+                })}
             </div>
           </div>
         )}
@@ -1315,7 +1649,7 @@ export function AccountSettings() {
           >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-violet-500/20 text-violet-300">
-                <TrashIcon size={18} />
+                <Trash2 size={18} />
               </div>
               <div className="text-left">
                 <div className="text-sm font-medium text-violet-200">Forgetting Ritual</div>
@@ -1500,6 +1834,7 @@ export function AccountSettings() {
             {activeSection === 'account' && renderAccount()}
             {activeSection === 'astrology' && renderAstrology()}
             {activeSection === 'maia' && renderMaiaSettings()}
+            {activeSection === 'data-privacy' && renderDataPrivacy()}
             {activeSection === 'sovereignty' && renderSovereignty()}
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}
