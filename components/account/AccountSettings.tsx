@@ -15,6 +15,19 @@ import {
   DEFAULT_ACCOUNT_SETTINGS,
   type AccountSettings as AccountSettingsType,
 } from '@/lib/settings/accountSettings';
+import {
+  setStorageMode,
+  setAutoSync,
+  getConsentSummary,
+  getSyncState,
+  subscribeSyncState,
+  triggerSync,
+  getSyncStatus,
+  type StorageMode,
+  type ConsentSummary,
+} from '@/lib/storage/sovereign';
+import { Database, HardDrive, Cloud, RefreshCw } from 'lucide-react';
+import ForgettingRitual from '@/components/sovereignty/ForgettingRitual';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
 
@@ -65,7 +78,7 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -102,6 +115,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User }[] = [
   { id: 'account', label: 'Account', icon: Lock },
   { id: 'astrology', label: 'Birth Chart', icon: Star },
   { id: 'maia', label: 'MAIA Settings', icon: Brain },
+  { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'privacy', label: 'Privacy', icon: Shield },
   { id: 'membership', label: 'Membership', icon: Crown },
@@ -158,6 +172,12 @@ export function AccountSettings() {
   } | null>(null);
   const [searchingLocation, setSearchingLocation] = useState(false);
 
+  // Sovereignty state
+  const [consentSummary, setConsentSummary] = useState<ConsentSummary | null>(null);
+  const [syncState, setSyncState] = useState({ isSyncing: false, lastSyncAt: null as Date | null, pendingCount: 0 });
+  const [syncCounts, setSyncCounts] = useState({ local: 0, server: 0, pending: 0 });
+  const [showForgettingRitual, setShowForgettingRitual] = useState(false);
+
   // ─────────────────────────────────────────────────────────────────────────
   // Data Loading
   // ─────────────────────────────────────────────────────────────────────────
@@ -166,6 +186,7 @@ export function AccountSettings() {
     const loadData = async () => {
       // Get user from localStorage
       const storedUser = localStorage.getItem('beta_user');
+      console.log('[AccountSettings] Loading data, storedUser:', storedUser ? 'found' : 'not found');
       if (!storedUser) {
         setLoading(false);
         return;
@@ -174,15 +195,20 @@ export function AccountSettings() {
       try {
         const user = JSON.parse(storedUser);
         const memberId = user.id || user.passkey;
+        console.log('[AccountSettings] Member ID:', memberId);
         setUserId(memberId);
 
         // Load MAIA settings from localStorage
         setMaiaSettings(getAccountSettings());
 
         // Load profile from server
+        console.log('[AccountSettings] Fetching profile from API...');
         const profileRes = await fetch(`/api/members/profile?id=${memberId}`);
+        console.log('[AccountSettings] Profile API response status:', profileRes.status);
         if (profileRes.ok) {
           const profileData = await profileRes.json();
+          console.log('[AccountSettings] Profile data received:', profileData);
+          console.log('[AccountSettings] Birth data in profile:', profileData.birthData);
           setProfile(profileData);
           setEditName(profileData.name || '');
           setEditEmail(profileData.email || '');
@@ -190,6 +216,11 @@ export function AccountSettings() {
 
           // Load birth data
           if (profileData.birthData) {
+            console.log('[AccountSettings] Setting birth data fields:', {
+              date: profileData.birthData.date,
+              time: profileData.birthData.time,
+              location: profileData.birthData.location,
+            });
             setEditBirthDate(profileData.birthData.date || '');
             setEditBirthTime(profileData.birthData.time || '');
             if (profileData.birthData.location) {
@@ -201,7 +232,11 @@ export function AccountSettings() {
                 timezone: profileData.birthData.location.timezone || 'UTC',
               });
             }
+          } else {
+            console.log('[AccountSettings] No birth data in profile response');
           }
+        } else {
+          console.error('[AccountSettings] Profile API failed:', profileRes.status);
         }
 
         // Load settings from server
@@ -213,6 +248,14 @@ export function AccountSettings() {
             privacy: settingsData.privacy,
           });
         }
+
+        // Load sovereignty/consent data
+        const summary = await getConsentSummary();
+        setConsentSummary(summary);
+
+        // Get sync status
+        const counts = await getSyncStatus(memberId);
+        setSyncCounts(counts);
       } catch (err) {
         console.error('[AccountSettings] Load error:', err);
         setError('Failed to load settings');
@@ -222,6 +265,14 @@ export function AccountSettings() {
     };
 
     loadData();
+  }, []);
+
+  // Subscribe to sync state
+  useEffect(() => {
+    const unsubscribe = subscribeSyncState((state) => {
+      setSyncState(state);
+    });
+    return unsubscribe;
   }, []);
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -459,6 +510,30 @@ export function AccountSettings() {
       setSaving(false);
     }
   }, [userId, editBirthDate, editBirthTime, selectedLocation, showSaveIndicator]);
+
+  // Sovereignty handlers
+  const updateStorageMode = useCallback(async (mode: StorageMode) => {
+    if ('vibrate' in navigator) navigator.vibrate(5);
+    await setStorageMode(mode);
+    const summary = await getConsentSummary();
+    setConsentSummary(summary);
+    showSaveIndicator();
+  }, [showSaveIndicator]);
+
+  const updateAutoSync = useCallback(async (enabled: boolean) => {
+    if ('vibrate' in navigator) navigator.vibrate(5);
+    await setAutoSync(enabled);
+    const summary = await getConsentSummary();
+    setConsentSummary(summary);
+    showSaveIndicator();
+  }, [showSaveIndicator]);
+
+  const handleManualSync = useCallback(async () => {
+    if (!userId || syncState.isSyncing) return;
+    await triggerSync(userId);
+    const counts = await getSyncStatus(userId);
+    setSyncCounts(counts);
+  }, [userId, syncState.isSyncing]);
 
   const exportData = useCallback(async () => {
     if (!userId) return;
@@ -1078,6 +1153,171 @@ export function AccountSettings() {
     </div>
   );
 
+  const renderSovereignty = () => {
+    const currentMode = consentSummary?.mode || 'local_only';
+
+    const STORAGE_MODES: { id: StorageMode; label: string; desc: string; icon: typeof HardDrive }[] = [
+      {
+        id: 'local_only',
+        label: 'Device Only',
+        desc: 'Data stays on this device. No server sync.',
+        icon: HardDrive,
+      },
+      {
+        id: 'both',
+        label: 'Device + Cloud',
+        desc: 'Local backup + military-grade encrypted cloud. Only MAIA can read it.',
+        icon: Database,
+      },
+      {
+        id: 'server_only',
+        label: 'Cloud Only',
+        desc: 'Military-grade encrypted. Not even Soullab can read it.',
+        icon: Cloud,
+      },
+    ];
+
+    return (
+      <div className="space-y-6">
+        <p className="text-sm text-white/50 mb-4">
+          You decide what MAIA remembers. Control where your data lives.
+        </p>
+
+        {/* Storage Mode */}
+        <div>
+          <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+            <Database size={16} />
+            Storage Location
+          </label>
+          <div className="space-y-2">
+            {STORAGE_MODES.map(({ id, label, desc, icon: Icon }) => (
+              <motion.button
+                key={id}
+                onClick={() => updateStorageMode(id)}
+                className={`w-full text-left p-4 rounded-xl border transition-all ${
+                  currentMode === id
+                    ? 'border-amber-500/50 bg-amber-500/15'
+                    : 'border-white/10 bg-black/20 hover:bg-white/5'
+                }`}
+                whileTap={{ scale: 0.98 }}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon size={20} className={currentMode === id ? 'text-amber-400' : 'text-white/40'} />
+                  <div>
+                    <div className="text-sm font-medium text-white/90">{label}</div>
+                    <div className="text-xs text-white/50">{desc}</div>
+                  </div>
+                  {currentMode === id && (
+                    <Check size={18} className="ml-auto text-amber-400" />
+                  )}
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+
+        {/* Auto Sync Toggle */}
+        {(currentMode === 'both' || currentMode === 'server_only') && (
+          <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-white/5 text-amber-400">
+                <RefreshCw size={18} />
+              </div>
+              <div>
+                <div className="text-sm font-medium text-white/90">Auto Sync</div>
+                <div className="text-xs text-white/50">
+                  Automatically sync changes in the background
+                </div>
+              </div>
+            </div>
+            {renderToggle(
+              consentSummary?.autoSync ?? true,
+              () => updateAutoSync(!consentSummary?.autoSync)
+            )}
+          </div>
+        )}
+
+        {/* Sync Status */}
+        {(currentMode === 'both' || currentMode === 'server_only') && (
+          <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-sm font-medium text-white/80">Sync Status</span>
+              <motion.button
+                onClick={handleManualSync}
+                disabled={syncState.isSyncing}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 rounded-lg text-amber-300 text-xs font-medium transition-colors disabled:opacity-50"
+                whileTap={{ scale: 0.95 }}
+              >
+                <RefreshCw size={12} className={syncState.isSyncing ? 'animate-spin' : ''} />
+                {syncState.isSyncing ? 'Syncing...' : 'Sync Now'}
+              </motion.button>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="p-2 bg-white/5 rounded-lg">
+                <div className="text-lg font-medium text-white/90">{syncCounts.local}</div>
+                <div className="text-xs text-white/50">Local</div>
+              </div>
+              <div className="p-2 bg-white/5 rounded-lg">
+                <div className="text-lg font-medium text-white/90">{syncCounts.server}</div>
+                <div className="text-xs text-white/50">Server</div>
+              </div>
+              <div className="p-2 bg-white/5 rounded-lg">
+                <div className="text-lg font-medium text-amber-400">{syncCounts.pending}</div>
+                <div className="text-xs text-white/50">Pending</div>
+              </div>
+            </div>
+            {syncState.lastSyncAt && (
+              <div className="mt-3 text-xs text-white/40 text-center">
+                Last synced: {syncState.lastSyncAt.toLocaleString()}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Data Types */}
+        {consentSummary?.dataTypes && (
+          <div>
+            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+              What MAIA Stores
+            </label>
+            <div className="space-y-2">
+              {Object.entries(consentSummary.dataTypes).map(([type, enabled]) => (
+                <div key={type} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                  <span className="text-sm text-white/80 capitalize">{type.replace(/_/g, ' ')}</span>
+                  <span className={`text-xs ${enabled ? 'text-emerald-400' : 'text-white/40'}`}>
+                    {enabled ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Forgetting Ritual */}
+        <div className="pt-4 border-t border-white/10">
+          <motion.button
+            onClick={() => setShowForgettingRitual(true)}
+            className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-violet-500/10 to-purple-500/10 hover:from-violet-500/15 hover:to-purple-500/15 border border-violet-500/20 rounded-xl transition-colors"
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-violet-500/20 text-violet-300">
+                <TrashIcon size={18} />
+              </div>
+              <div className="text-left">
+                <div className="text-sm font-medium text-violet-200">Forgetting Ritual</div>
+                <div className="text-xs text-white/50">
+                  Consciously release what no longer serves you
+                </div>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-violet-300/50" />
+          </motion.button>
+        </div>
+      </div>
+    );
+  };
+
   const renderConnections = () => (
     <div className="space-y-6">
       <p className="text-sm text-white/50 mb-6">
@@ -1247,6 +1487,7 @@ export function AccountSettings() {
             {activeSection === 'account' && renderAccount()}
             {activeSection === 'astrology' && renderAstrology()}
             {activeSection === 'maia' && renderMaiaSettings()}
+            {activeSection === 'sovereignty' && renderSovereignty()}
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}
             {activeSection === 'membership' && renderMembership()}
@@ -1255,6 +1496,22 @@ export function AccountSettings() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Forgetting Ritual Modal */}
+      <ForgettingRitual
+        isOpen={showForgettingRitual}
+        onClose={() => setShowForgettingRitual(false)}
+        onComplete={async () => {
+          setShowForgettingRitual(false);
+          // Refresh consent summary after deletion
+          const summary = await getConsentSummary();
+          setConsentSummary(summary);
+          if (userId) {
+            const counts = await getSyncStatus(userId);
+            setSyncCounts(counts);
+          }
+        }}
+      />
     </div>
   );
 }
