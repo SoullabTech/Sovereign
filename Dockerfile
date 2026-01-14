@@ -16,6 +16,7 @@ RUN npm ci --ignore-scripts --legacy-peer-deps
 
 # --- builder: prisma generate + next build (creates .next/standalone) ---
 FROM base AS builder
+ARG GIT_COMMIT=unknown
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
 # Build-time placeholders for Next.js static generation
@@ -39,10 +40,14 @@ RUN npm run build
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
+# Re-declare ARG in runner stage (ARGs don't cross stages)
+ARG GIT_COMMIT=unknown
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
+ENV GIT_COMMIT=${GIT_COMMIT}
 
 # Install psql for migrations + curl for worker preflight health checks
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \
