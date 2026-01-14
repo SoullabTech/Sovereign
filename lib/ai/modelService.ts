@@ -78,7 +78,21 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
         userInput: req.userInput,
         meta: req.meta,
       });
-    } catch (error) {
+    } catch (error: any) {
+      // 🚨 BILLING/AUTH ERRORS: Do NOT fallback - fail fast with clear error
+      if (error?.noFallback || error?.code === 'ANTHROPIC_BILLING_ERROR') {
+        console.error('🚨 Anthropic billing/auth error - NOT falling back to local');
+        throw error;
+      }
+
+      // 🧪 SMOKE MODE: Deterministic tests - never fallback, never hang
+      if (process.env.SMOKE_NO_FALLBACK === '1') {
+        const msg = error instanceof Error ? error.message : String(error);
+        const smokeError = new Error(`SMOKE_NO_FALLBACK: Claude unavailable - ${msg}`);
+        (smokeError as any).code = 'SMOKE_NO_FALLBACK';
+        throw smokeError;
+      }
+
       console.warn('Claude unavailable, falling back to local:', error);
       // Fall through to local
     }
