@@ -54,22 +54,24 @@ export async function POST(request: NextRequest) {
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PAID FEATURE GATE: Server audio storage requires paid membership
-    // Free users can save audio locally; server sync is a paid upgrade.
+    // PAID FEATURE GATE + CONSENT GATE (single query)
+    // circle_tier determines paid status; storage_consent holds consent flags
+    // Both live in member_settings table.
     // Database tiers: 'explorer' (free), 'sustainer'/'guardian'/'elder'/'pioneer' (paid)
     // ─────────────────────────────────────────────────────────────────────────
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const memberRes: any = await query(
-      `SELECT m.circle_tier
-       FROM members m
-       WHERE m.id = $1
+    const settingsRes: any = await query(
+      `SELECT circle_tier, storage_consent
+       FROM member_settings
+       WHERE member_id = $1
        LIMIT 1`,
       [userId]
     );
     // Support both pg-style { rows } and raw array returns
-    const row = Array.isArray(memberRes) ? memberRes[0] : memberRes?.rows?.[0];
-    const tier = (row?.circle_tier as string) || 'explorer';
+    const settingsRow = Array.isArray(settingsRes) ? settingsRes[0] : settingsRes?.rows?.[0];
+    const tier = (settingsRow?.circle_tier as string) || 'explorer';
     const isPaid = tier !== 'explorer';
+    const storageConsent = (settingsRow?.storage_consent as Record<string, boolean>) || {};
 
     if (!isPaid) {
       console.log(`🔒 [VoiceJournal] Server audio blocked for free user: ${userId} (tier: ${tier})`);
@@ -82,22 +84,6 @@ export async function POST(request: NextRequest) {
         { status: 402 }
       );
     }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // CONSENT GATE: Respect user's privacy settings (SERVER-AUTHORITATIVE)
-    // Read consent from member_settings.storage_consent, not from client form.
-    // TODO: Once auth is implemented, verify userId from session, not form.
-    // ─────────────────────────────────────────────────────────────────────────
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const consentRes: any = await query(
-      `SELECT storage_consent
-       FROM member_settings
-       WHERE member_id = $1
-       LIMIT 1`,
-      [userId]
-    );
-    const consentRow = Array.isArray(consentRes) ? consentRes[0] : consentRes?.rows?.[0];
-    const storageConsent = (consentRow?.storage_consent as Record<string, boolean>) || {};
 
     // Default deny: block unless audioServer is explicitly true
     // Matches "audio privacy (default off)" truth claim
