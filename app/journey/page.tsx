@@ -165,55 +165,116 @@ export default function AstrologyPage() {
     };
     clearDemoData();
 
-    // Load saved birth data - check user profile FIRST (more persistent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let birthDataToLoad: any = null;
+    // Load saved birth data - prioritize database, then localStorage
+    const loadBirthData = async () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let birthDataToLoad: any = null;
 
-    // Priority 1: Check user profile
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        const userData = JSON.parse(betaUser);
-        if (userData.birthData) {
-          birthDataToLoad = userData.birthData;
-          console.log('✅ Loaded birth data from user profile');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading from user profile:', error);
-    }
-
-    // Priority 2: Fallback to birthChartData if no profile data
-    if (!birthDataToLoad) {
-      const savedBirthData = localStorage.getItem('birthChartData');
-      if (savedBirthData) {
-        try {
-          birthDataToLoad = JSON.parse(savedBirthData);
-          console.log('✅ Loaded birth data from localStorage');
-        } catch (error) {
-          console.error('Error parsing birthChartData:', error);
-        }
-      }
-    }
-
-    // Only auto-load if this is intentionally a user's saved data
-    // Don't auto-load if it's example/demo data
-    if (birthDataToLoad && !birthDataToLoad.isExample) {
+      // Priority 1: Fetch from profile API (database - most persistent)
       try {
-        // Ensure house system is set (default to Porphyry if not present)
-        if (!birthDataToLoad.houseSystem) {
-          birthDataToLoad.houseSystem = 'porphyry';
-          console.log('Using default Porphyry house system');
+        const betaUser = localStorage.getItem('beta_user');
+        if (betaUser) {
+          const userData = JSON.parse(betaUser);
+          const memberId = userData.id || userData.passkey;
+
+          if (memberId) {
+            console.log('[Journey] Fetching birth data from profile API for:', memberId);
+            const profileRes = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
+            if (profileRes.ok) {
+              const profile = await profileRes.json();
+              console.log('[Journey] Profile response:', profile);
+
+              if (profile.birthData?.date) {
+                // Normalize time format (strip seconds if present)
+                const timeStr = profile.birthData.time
+                  ? profile.birthData.time.substring(0, 5)
+                  : '12:00';
+
+                birthDataToLoad = {
+                  date: profile.birthData.date,
+                  time: timeStr,
+                  location: profile.birthData.location || {
+                    lat: 30.4515,
+                    lng: -91.1871,
+                    name: 'Unknown',
+                    timezone: 'America/Chicago',
+                  },
+                  houseSystem: 'porphyry',
+                };
+                console.log('✅ Loaded birth data from profile API:', birthDataToLoad);
+              }
+            }
+          }
         }
-        calculateChart(birthDataToLoad);
       } catch (error) {
-        console.error('Failed to calculate chart:', error);
+        console.error('[Journey] Error fetching from profile API:', error);
+      }
+
+      // Priority 2: Check localStorage beta_user.birthData
+      if (!birthDataToLoad) {
+        try {
+          const betaUser = localStorage.getItem('beta_user');
+          if (betaUser) {
+            const userData = JSON.parse(betaUser);
+            if (userData.birthData?.date) {
+              const timeStr = userData.birthData.time
+                ? userData.birthData.time.substring(0, 5)
+                : '12:00';
+              birthDataToLoad = {
+                date: userData.birthData.date,
+                time: timeStr,
+                location: userData.birthData.location || {
+                  lat: 30.4515,
+                  lng: -91.1871,
+                  name: 'Unknown',
+                  timezone: 'America/Chicago',
+                },
+                houseSystem: 'porphyry',
+              };
+              console.log('✅ Loaded birth data from localStorage beta_user');
+            }
+          }
+        } catch (error) {
+          console.error('Error loading from localStorage:', error);
+        }
+      }
+
+      // Priority 3: Fallback to birthChartData localStorage
+      if (!birthDataToLoad) {
+        const savedBirthData = localStorage.getItem('birthChartData');
+        if (savedBirthData) {
+          try {
+            birthDataToLoad = JSON.parse(savedBirthData);
+            // Normalize time format
+            if (birthDataToLoad.time && birthDataToLoad.time.length > 5) {
+              birthDataToLoad.time = birthDataToLoad.time.substring(0, 5);
+            }
+            console.log('✅ Loaded birth data from birthChartData localStorage');
+          } catch (error) {
+            console.error('Error parsing birthChartData:', error);
+          }
+        }
+      }
+
+      // Calculate chart if we have valid data
+      if (birthDataToLoad && !birthDataToLoad.isExample) {
+        try {
+          if (!birthDataToLoad.houseSystem) {
+            birthDataToLoad.houseSystem = 'porphyry';
+          }
+          console.log('[Journey] Calculating chart with:', birthDataToLoad);
+          calculateChart(birthDataToLoad);
+        } catch (error) {
+          console.error('Failed to calculate chart:', error);
+          setLoading(false);
+        }
+      } else {
+        console.log('ℹ️ No saved birth data found - showing input form');
         setLoading(false);
       }
-    } else {
-      console.log('ℹ️ No saved birth data found - showing input form');
-      setLoading(false);
-    }
+    };
+
+    loadBirthData();
   }, []);
 
 
