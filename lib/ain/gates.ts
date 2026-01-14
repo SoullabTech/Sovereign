@@ -218,7 +218,7 @@ export function buildGateContext(
     emotionalIntensity: estimateEmotionalIntensity(question),
     topicSensitivity: estimateTopicSensitivity(question),
     domainCount: countDomains(question),
-    hasContradictions: /but|however|although|on the other hand|versus|vs\.?/i.test(question),
+    hasContradictions: /but|however|although|on the other hand|versus|vs\.?|trade-?offs?/i.test(question),
     memberAskedForAnalysis: detectAnalysisRequest(question),
     memberAskedForOptions: /options|alternatives|different ways|other approaches/i.test(question),
     memberExpressingUncertainty: /not sure|don't know|confused|uncertain|unclear/i.test(question),
