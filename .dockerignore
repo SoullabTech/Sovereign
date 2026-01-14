@@ -107,3 +107,9 @@ data/qdrant/
 data/ain/
 tmp/
 .DS_Store
+
+# WIP: AIN Committee (not yet ready for production)
+packages/
+app/api/_backend/src/ain/services/committee/
+app/api/ain/committee/
+app/dashboard/ain-committee/
