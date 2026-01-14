@@ -65,8 +65,11 @@ export async function GET(request: NextRequest) {
         joinedAt: member.circle_joined_at,
       },
       // Birth data for astrology
+      // Format date as YYYY-MM-DD for HTML date input compatibility
       birthData: member.birth_date ? {
-        date: member.birth_date,
+        date: typeof member.birth_date === 'string'
+          ? member.birth_date.split('T')[0]
+          : new Date(member.birth_date).toISOString().split('T')[0],
         time: member.birth_time,
         location: member.birth_location_lat && member.birth_location_lng ? {
           lat: parseFloat(member.birth_location_lat),
