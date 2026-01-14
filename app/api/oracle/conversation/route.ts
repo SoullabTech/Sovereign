@@ -41,10 +41,6 @@ import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/service
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 
-/** AIN v2 (soft consultation) */
-import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
-import { consult } from '@/lib/ain/consultation';
-
 // Skip during static export (Capacitor builds)
 
 /**
@@ -1137,62 +1133,12 @@ async function generateSpiralogicResponseWithLLM(
     ? 250  // ~60-100 words for building trust
     : 400; // ~80-150 words for deep relationship
 
-  // ------------------------------------------------------------
-  // AIN v2: Soft consultation (capability, not choreography)
-  // ------------------------------------------------------------
-  const gateContext = buildGateContext(
-    message,
-    conversationDepth,
-    trustLevel,
-    spiralogicCell?.element ?? 'unknown'
-  );
-
-  const decision = recommendConsultation(gateContext);
-
-  let councilInsights = '';
-  if (decision?.wantsCouncil && decision?.council) {
-    try {
-      const result = await consult({
-        council: decision.council,
-        question: message,
-        context: {
-          memberSpiral: spiralogicCell,
-          conversationHistory,
-          element: spiralogicCell?.element,
-        },
-      });
-
-      // Keep it structured and clearly "advisory"
-      councilInsights = [
-        `\n\n[AIN Council Consultation: ${decision.council}]`,
-        `Insights:`,
-        ...(result?.insights ?? []).map((x: string) => `- ${x}`),
-        result?.tensions?.length ? `Tensions: ${result.tensions.join(' | ')}` : '',
-        result?.risks?.length ? `Risks: ${result.risks.join(' | ')}` : '',
-        result?.recommendation ? `Recommendation: ${result.recommendation}` : '',
-        typeof result?.emergenceRating !== 'undefined'
-          ? `Emergence rating: ${result.emergenceRating}`
-          : '',
-        `[End Council Consultation]\n`,
-      ]
-        .filter(Boolean)
-        .join('\n');
-
-      console.log(`[AIN v2] Council consulted: ${decision.council}, insights: ${result?.insights?.length ?? 0}`);
-    } catch (ainError) {
-      console.warn('[AIN v2] Consultation failed (non-critical):', ainError);
-      // Non-blocking - MAIA proceeds without council
-    }
-  }
-
-  const finalSystemPrompt = councilInsights ? systemPrompt + councilInsights : systemPrompt;
-
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
   let usedFallback = false;
   try {
     const llmResponse = await llmProvider.generate({
-      systemPrompt: finalSystemPrompt,
+      systemPrompt,
       userInput: fullUserInput,
       level: consciousnessLevel as any // Use computed level (DEEP -> 5 -> Opus 4.5)
       // Claude is now primary by default
