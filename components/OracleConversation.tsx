@@ -53,7 +53,8 @@ import { voiceLock } from '@/lib/services/VoiceLock';
 import { trackEvent } from '@/lib/analytics/track';
 import { saveConversationMemory, getOracleAgentId } from '@/lib/services/memoryService';
 import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
-import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
+// REMOVED: Supabase persistence - now using sovereign PostgreSQL via /api/conversation/turns
+// import { saveMessages as saveMessagesToSupabase, getMessagesBySession } from '@/lib/services/conversationStorageService';
 import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from '@/lib/services/greetingService';
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
@@ -338,6 +339,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMuted, setIsMuted] = useState(false);
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
+
+  // Voice settings from account preferences (applies to TTS)
+  const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95 });
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
@@ -722,7 +726,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (!text || typeof window === 'undefined') return;
 
     try {
-      console.log('🎵 Speaking with OpenAI Alloy:', text.substring(0, 100));
+      console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, text.substring(0, 100));
 
       // 🌊 LIQUID AI - Track MAIA response for rhythm turn-taking latency
       rhythmTrackerRef.current?.onMAIAResponse();
@@ -731,14 +735,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // 🔥 DON'T set isAudioPlaying here! It should only be true when audio ACTUALLY plays
       // setIsAudioPlaying is now set in audio.onplay callback below
 
-      // Call OpenAI TTS with selected voice (defaults to 'alloy')
+      // Call OpenAI TTS with voice settings from account preferences
       const response = await fetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
-          voice: voice || 'alloy',  // Use the voice prop from parent
-          speed: voiceSpeed,
+          voice: voiceSettings.voice,
+          speed: voiceSettings.speed,
           model: voiceModel
         })
       });
@@ -854,7 +858,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setIsResponding(false);
       setIsAudioPlaying(false);
     }
-  }, [startAudioAnalysis, stopAudioAnalysis]);
+  }, [startAudioAnalysis, stopAudioAnalysis, voiceSettings]);
 
   const maiaReady = true; // OpenAI TTS is always ready
 
@@ -887,13 +891,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
   const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
 
-  // Voice settings from account preferences (applies to new voice sessions)
-  const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95 });
-
   // Load voice settings from account preferences on mount and listen for changes
   useEffect(() => {
     const loadVoiceSettings = () => {
       const settings = getAccountSettings();
+      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice);
       setVoiceSettings({
         voice: settings.voice.openaiVoice,
         speed: settings.voice.speed
@@ -903,7 +905,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     loadVoiceSettings();
 
     // Listen for settings changes (from MAIA Settings panel)
-    const handleSettingsChange = () => loadVoiceSettings();
+    const handleSettingsChange = () => {
+      console.log('🔊 [VoiceSettings] Received settings change event');
+      loadVoiceSettings();
+    };
     window.addEventListener('maia-account-settings-changed', handleSettingsChange);
     window.addEventListener('maia-settings-changed', handleSettingsChange);
 
@@ -1074,7 +1079,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 💾 HYBRID CONVERSATION PERSISTENCE: Restore from localStorage + Supabase
+  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Restore from localStorage + PostgreSQL
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId) return;
 
@@ -1083,12 +1088,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Step 1: Try localStorage first (instant restore for same device)
       const localStored = localStorage.getItem(storageKey);
+      let localMessageCount = 0;
       if (localStored) {
         try {
           const parsedMessages = JSON.parse(localStored);
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
             console.log(`💾 [localStorage] Restored ${parsedMessages.length} messages instantly`);
             setMessages(parsedMessages);
+            localMessageCount = parsedMessages.length;
           }
         } catch (error) {
           console.error('💾 [localStorage] Failed to parse stored messages:', error);
@@ -1096,38 +1103,43 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
       }
 
-      // Step 2: Check Supabase for cross-device sync (async, non-blocking)
-      // Skip if Supabase mock mode is enabled (prefer PostgreSQL)
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true';
-      if (!isMockMode) {
-        try {
-          const { success, messages: supabaseMessages } = await getMessagesBySession(sessionId, 100);
+      // Step 2: Check PostgreSQL for sovereign cross-device sync
+      try {
+        const response = await fetch(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.messages && data.messages.length > 0) {
+            // Convert PostgreSQL format to conversation message format
+            const pgMessages = data.messages.map((m: any) => ({
+              id: m.id || `pg-${Date.now()}-${Math.random()}`,
+              role: m.role === 'assistant' ? 'oracle' : m.role,
+              text: m.content,
+              timestamp: new Date(m.createdAt),
+              source: 'restored'
+            }));
 
-          if (success && supabaseMessages.length > 0) {
-            // Only use Supabase messages if:
-            // 1. localStorage was empty, OR
-            // 2. Supabase has MORE messages than localStorage
-            if (!localStored || supabaseMessages.length > (JSON.parse(localStored || '[]').length)) {
-              console.log(`💾 [Supabase] Restored ${supabaseMessages.length} messages (cross-device sync)`);
-              setMessages(supabaseMessages);
-
-              // Update localStorage with Supabase data for faster next load
-              localStorage.setItem(storageKey, JSON.stringify(supabaseMessages.slice(-50)));
+            // Only use PostgreSQL messages if more than localStorage
+            if (pgMessages.length > localMessageCount) {
+              console.log(`💾 [PostgreSQL] Restored ${pgMessages.length} messages (cross-device sync)`);
+              setMessages(pgMessages);
+              // Update localStorage with PostgreSQL data for faster next load
+              localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
             }
           }
-        } catch (error) {
-          console.error('💾 [Supabase] Failed to retrieve messages:', error);
-          // Don't block - localStorage restore already happened if available
         }
-      } else {
-        console.log('💾 [Storage] Using localStorage only (Supabase disabled, PostgreSQL preferred)');
+      } catch (error) {
+        console.error('💾 [PostgreSQL] Failed to retrieve messages:', error);
+        // Don't block - localStorage restore already happened if available
       }
     };
 
     restoreConversation();
   }, [sessionId, userId]);
 
-  // 💾 HYBRID PERSISTENCE: Save to localStorage (instant) + Supabase (async sync)
+  // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
+  // Track last synced message count to avoid duplicate saves
+  const lastSyncedCountRef = useRef(0);
+
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId || messages.length === 0) return;
 
@@ -1160,28 +1172,47 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
 
-    // STEP 2: Save to Supabase asynchronously (for cross-device sync)
-    // Debounce: only save to Supabase every 5 messages or 10 seconds
+    // STEP 2: Save to PostgreSQL asynchronously (for sovereign cross-device sync)
+    // Save when we have new messages (check if count increased by at least 2 = one exchange)
     const messageCount = messages.length;
-    // Check if Supabase mock mode is enabled (prefer PostgreSQL)
-    const isMockMode = process.env.NEXT_PUBLIC_MOCK_SUPABASE === 'true';
-    const shouldSyncToSupabase = !isMockMode && messageCount % 5 === 0; // Every 5 messages
+    const shouldSyncToPostgres = messageCount >= lastSyncedCountRef.current + 2;
 
-    if (shouldSyncToSupabase) {
-      // Use setTimeout to make this truly async (non-blocking)
-      const syncTimer = setTimeout(async () => {
-        try {
-          const { success, count } = await saveMessagesToSupabase(sessionId, userId, messagesToStore);
-          if (success) {
-            console.log(`💾 [Supabase] Synced ${count} messages (cross-device backup)`);
-          }
-        } catch (error) {
-          console.error('💾 [Supabase] Sync failed (non-blocking):', error);
-          // Don't block - localStorage save already succeeded
+    if (shouldSyncToPostgres) {
+      // Find the new messages since last sync
+      const newMessages = messages.slice(lastSyncedCountRef.current);
+
+      // Look for user-oracle pairs to save
+      for (let i = 0; i < newMessages.length - 1; i++) {
+        const msg = newMessages[i];
+        const nextMsg = newMessages[i + 1];
+
+        // Save user + oracle exchange pairs
+        if (msg.role === 'user' && (nextMsg.role === 'oracle' || nextMsg.role === 'assistant')) {
+          // Non-blocking async save
+          fetch('/api/conversation/turns', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              userMessage: msg.text,
+              assistantMessage: nextMsg.text,
+              userId,
+              sessionId,
+              isSanctuary: false, // TODO: Check sanctuary mode
+            }),
+          })
+            .then(res => res.json())
+            .then(data => {
+              if (data.success) {
+                console.log(`💾 [PostgreSQL] Synced exchange to sovereign database`);
+              }
+            })
+            .catch(err => console.error('💾 [PostgreSQL] Sync failed (non-blocking):', err));
+
+          i++; // Skip the oracle message we just paired
         }
-      }, 100); // Small delay to avoid blocking UI
+      }
 
-      return () => clearTimeout(syncTimer);
+      lastSyncedCountRef.current = messageCount;
     }
   }, [messages, sessionId, userId]);
 
@@ -1877,12 +1908,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     if (!userId) {
       toast.error('Please sign in to save journal entries');
       console.error('❌ [Journal] No userId provided');
+      setShowJournalSuggestion(false);
+      setJournalSuggestionDismissed(true);
       return;
     }
 
     if (messages.length < 2) {
       toast.error('Have a conversation first before journaling');
       console.error('❌ [Journal] Not enough messages:', messages.length);
+      setShowJournalSuggestion(false);
+      setJournalSuggestionDismissed(true);
       return;
     }
 
@@ -3444,16 +3479,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Clean text for voice
       const cleanText = cleanMessageForVoice(text);
 
-      console.log('🎵 Speaking with OpenAI Alloy:', cleanText.substring(0, 100));
+      console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, cleanText.substring(0, 100));
 
-      // Call OpenAI TTS with Alloy voice
+      // Call OpenAI TTS with voice settings from account preferences
       const response = await fetch('/api/voice/openai-tts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: cleanText,
-          voice: agentConfig.voice || voice || 'alloy',
-          speed: voiceSpeed,
+          voice: voiceSettings.voice,
+          speed: voiceSettings.speed,
           model: voiceModel
         })
       });

@@ -68,6 +68,8 @@ export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
   const { message, userId, sessionId, element, voice, speed, conversationHistory } = body;
 
+  console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed });
+
   if (!message?.trim()) {
     return new Response('Missing message', { status: 400 });
   }

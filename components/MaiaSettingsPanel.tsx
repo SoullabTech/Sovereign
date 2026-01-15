@@ -9,6 +9,7 @@ import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
 import { useMaiaPresence } from '@/lib/contexts/MaiaPresenceContext';
 import { useUpdate } from '@/components/providers/UpdateProvider';
+import { getAccountSettings, saveAccountSettings } from '@/lib/settings/accountSettings';
 
 interface MaiaSettings {
   // Voice Settings
@@ -54,7 +55,7 @@ interface MaiaSettings {
 const DEFAULT_SETTINGS: MaiaSettings = {
   voice: {
     provider: 'openai',
-    openaiVoice: 'shimmer',
+    openaiVoice: 'alloy',
     speed: 0.95,
     pitch: 1.0,
     stability: 0.8
@@ -84,9 +85,9 @@ const DEFAULT_SETTINGS: MaiaSettings = {
 };
 
 const VOICE_OPTIONS = [
-  { id: 'shimmer', name: 'Shimmer', description: 'Soft, gentle, nurturing', recommended: true },
+  { id: 'alloy', name: 'Alloy', description: 'Neutral, balanced', recommended: true },
+  { id: 'shimmer', name: 'Shimmer', description: 'Soft, gentle, nurturing' },
   { id: 'fable', name: 'Fable', description: 'Warm, expressive, storytelling' },
-  { id: 'alloy', name: 'Alloy', description: 'Neutral, balanced' },
   { id: 'nova', name: 'Nova', description: 'Lively, energetic' },
   { id: 'echo', name: 'Echo', description: 'Male - calm, steady' },
   { id: 'onyx', name: 'Onyx', description: 'Male - deep, authoritative' }
@@ -125,13 +126,36 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
 
   const loadSettings = () => {
     const saved = localStorage.getItem('maia_settings');
+    let loadedSettings = { ...DEFAULT_SETTINGS };
+
     if (saved) {
       const parsed = JSON.parse(saved);
-      setSettings(parsed);
-      setOriginalSettings(parsed);
-    } else {
-      setOriginalSettings(DEFAULT_SETTINGS);
+      loadedSettings = {
+        ...DEFAULT_SETTINGS,
+        ...parsed,
+        voice: { ...DEFAULT_SETTINGS.voice, ...parsed.voice },
+        memory: { ...DEFAULT_SETTINGS.memory, ...parsed.memory },
+        personality: { ...DEFAULT_SETTINGS.personality, ...parsed.personality },
+        elemental: { ...DEFAULT_SETTINGS.elemental, ...parsed.elemental },
+        technical: { ...DEFAULT_SETTINGS.technical, ...parsed.technical },
+      };
     }
+
+    // Also sync voice settings from AccountSettings (source of truth for TTS)
+    const accountSettings = getAccountSettings();
+    console.log('🔊 [MaiaSettings] Loading voice from AccountSettings:', accountSettings.voice);
+    loadedSettings = {
+      ...loadedSettings,
+      voice: {
+        ...loadedSettings.voice,
+        openaiVoice: accountSettings.voice.openaiVoice,
+        speed: accountSettings.voice.speed,
+      }
+    };
+    console.log('🔊 [MaiaSettings] Final loaded voice:', loadedSettings.voice.openaiVoice);
+
+    setSettings(loadedSettings);
+    setOriginalSettings(loadedSettings);
   };
 
   const saveSettings = async () => {
@@ -142,6 +166,12 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
 
       // Also save voice selection to the key OracleConversation uses
       localStorage.setItem('selected_voice', settings.voice.openaiVoice);
+
+      // Sync voice settings to AccountSettings (used by OracleConversation TTS)
+      const accountSettings = getAccountSettings();
+      accountSettings.voice.openaiVoice = settings.voice.openaiVoice as any;
+      accountSettings.voice.speed = settings.voice.speed;
+      saveAccountSettings(accountSettings);
 
       // Trigger a custom event for components to react to settings changes
       window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: settings }));
@@ -291,20 +321,23 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
                 <label className="block text-sm font-medium text-amber-200 mb-3">Voice Selection</label>
                 <div className="grid grid-cols-2 gap-3">
                   {VOICE_OPTIONS.map(voice => {
-                    const isSelected = settings.voice.openaiVoice === voice.id;
+                    const isSelected = settings.voice?.openaiVoice === voice.id;
+                    if (voice.id === 'shimmer') {
+                      console.log('[Voice Debug] current voice:', settings.voice?.openaiVoice, 'checking shimmer, isSelected:', isSelected);
+                    }
                     return (
                       <button
                         key={voice.id}
                         onClick={() => updateSetting('voice.openaiVoice', voice.id)}
-                        className={`p-3 rounded-lg border transition-all text-left relative active:scale-95 ${
+                        className={`p-3 rounded-lg border-2 transition-all text-left relative active:scale-95 ${
                           isSelected
-                            ? 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                            ? 'border-amber-400 bg-amber-500/30 ring-2 ring-amber-400/50 shadow-[0_0_12px_rgba(251,191,36,0.4)]'
                             : 'border-white/10 bg-black/20 hover:border-white/20 active:bg-white/10 active:border-white/30'
                         }`}
                       >
                         {isSelected && (
                           <div className="absolute top-2 right-2 text-amber-300">
-                            <Check size={14} />
+                            <Check size={16} strokeWidth={3} />
                           </div>
                         )}
                         <div className="flex items-start justify-between">
