@@ -43,15 +43,15 @@ send_alert() {
     local message="$2"
     local details="${3:-}"
 
-    # Get BASE_URL from env file (quote-safe parsing), allow env override
+    # Get BASE_URL from env file (quote-safe, whitespace-trimmed), allow env override
     local base_url
-    base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
+    base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2); gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2}' .env.production 2>/dev/null | tail -n 1)
     base_url="${BASE_URL:-${base_url:-https://soullab.life}}"
     base_url="${base_url%/}"  # Strip trailing slash
 
-    # Get alert token from env file (quote-safe parsing), allow env override
+    # Get alert token from env file (quote-safe, whitespace-trimmed), allow env override
     local alert_token
-    alert_token=$(awk -F= '/^INTERNAL_ALERT_TOKEN=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
+    alert_token=$(awk -F= '/^INTERNAL_ALERT_TOKEN=/{gsub(/^"|"$/,"",$2); gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2}' .env.production 2>/dev/null | tail -n 1)
     alert_token="${INTERNAL_ALERT_TOKEN:-$alert_token}"
 
     # Build JSON payload safely using jq if available
@@ -104,9 +104,9 @@ send_alert() {
 run_smoke_tests() {
     log_info "Running post-deployment smoke tests..."
 
-    # Quote-safe BASE_URL parsing, allow env override
+    # Quote-safe, whitespace-trimmed BASE_URL parsing, allow env override
     local base_url
-    base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
+    base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2); gsub(/^[ \t]+|[ \t]+$/,"",$2); print $2}' .env.production 2>/dev/null | tail -n 1)
     base_url="${BASE_URL:-${base_url:-https://soullab.life}}"
     base_url="${base_url%/}"  # Strip trailing slash
 
@@ -118,13 +118,13 @@ run_smoke_tests() {
     log_info "  Waiting for services to stabilize..."
     sleep 8
 
-    # Helper: retry a curl check up to N times with backoff
+    # Helper: retry a curl check up to N times with backoff (explicit timeouts)
     retry_curl() {
         local url="$1"
         local max_attempts="${2:-3}"
         local attempt=1
         while [ $attempt -le $max_attempts ]; do
-            if curl -sf "$url" > /dev/null 2>&1; then
+            if curl -sf --connect-timeout 3 --max-time 8 "$url" > /dev/null 2>&1; then
                 return 0
             fi
             sleep 2
@@ -160,7 +160,7 @@ run_smoke_tests() {
     # Test 3: Ready endpoint (checks dependencies)
     log_info "  Testing /api/ready..."
     local ready_response
-    ready_response=$(curl -sf "${base_url}/api/ready" 2>/dev/null || echo '{"ready":false}')
+    ready_response=$(curl -sf --connect-timeout 3 --max-time 8 "${base_url}/api/ready" 2>/dev/null || echo '{"ready":false}')
     if echo "$ready_response" | grep -q '"ready":true'; then
         log_success "  /api/ready OK"
         add_result "PASS  /api/ready"
@@ -181,7 +181,7 @@ run_smoke_tests() {
 
     # Test 4: Main page loads
     log_info "  Testing main page..."
-    if curl -sf "${base_url}/" > /dev/null 2>&1; then
+    if curl -sf --connect-timeout 3 --max-time 10 "${base_url}/" > /dev/null 2>&1; then
         log_success "  Main page OK"
         add_result "PASS  Main page"
     else
@@ -199,9 +199,9 @@ run_smoke_tests() {
         local code
         while [ $attempt -le $max_attempts ]; do
             if [ "$method" = "POST" ]; then
-                code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "$url" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
+                code=$(curl -sS --connect-timeout 3 --max-time 8 -o /dev/null -w "%{http_code}" -X POST "$url" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
             else
-                code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+                code=$(curl -sS --connect-timeout 3 --max-time 8 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
             fi
             # If we got a real response (not warmup noise), return it
             # 000 = curl couldn't connect, 500/502/504 = gateway errors during boot
