@@ -17,12 +17,11 @@ export type AuthAction =
 
 export interface AuthAuditEntry {
   action: AuthAction;
-  memberId?: string | null;
+  memberId?: string | null;      // UUID - stored in resource_id
   resourceType?: string;
-  resourceId?: string | null;
+  identifier?: string | null;    // Non-UUID string identifier (passcode, username) - stored in session_id
   result: 'success' | 'failure';
   errorMessage?: string;
-  metadata?: Record<string, unknown>;
 }
 
 function extractRequestInfo(request: NextRequest): { ip: string; userAgent: string } {
@@ -69,7 +68,7 @@ export async function logAuthEvent(
       [
         entry.action,
         entry.resourceType || 'member',
-        entry.memberId || null,
+        entry.resourceId || entry.memberId || null,
         ip === 'unknown' ? null : ip,
         userAgent,
         entry.result,

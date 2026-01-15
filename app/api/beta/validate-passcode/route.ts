@@ -104,15 +104,13 @@ export async function POST(request: NextRequest) {
     const isValid = VALID_PASSCODES.includes(passcode);
 
     if (isValid) {
-      // Log successful validation (for analytics)
-      console.log('✨ Valid passcode used:', passcode);
-
       // Audit trail for successful beta access (writes to audit_logs table)
+      // Note: passcode stored in errorMessage since resource_id is UUID type
       await logAuthEvent({
         action: 'passcode_valid',
         resourceType: 'beta_passcode',
-        resourceId: passcode,
         result: 'success',
+        errorMessage: `passcode:${passcode}`,
       }, request);
 
       return NextResponse.json({
@@ -121,16 +119,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Log invalid attempts (for monitoring)
-    console.log('⚠️  Invalid passcode attempt:', passcode);
-
     // Audit trail for failed beta access (writes to audit_logs table)
     await logAuthEvent({
       action: 'passcode_invalid',
       resourceType: 'beta_passcode',
-      resourceId: passcode || 'missing',
       result: 'failure',
-      errorMessage: 'invalid_passcode',
+      errorMessage: `passcode:${passcode || 'missing'}`,
     }, request);
 
     return NextResponse.json(
