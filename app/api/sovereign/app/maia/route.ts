@@ -34,6 +34,36 @@ const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 //  🔒 Soft timeout for sovereign processing (increased for DEEP path with Opus consultation)
 const SOVEREIGN_TIMEOUT_MS = 25000; // FAST: ~2s, CORE: ~4s, DEEP: ~15-20s (full consciousness + Opus)
 
+// Step tracer for debugging hangs
+function msSince(t0: number) {
+  return Date.now() - t0;
+}
+
+async function withTimeoutLabeled<T>(
+  label: string,
+  promise: Promise<T>,
+  ms: number,
+  t0: number
+): Promise<T> {
+  let timeoutId: NodeJS.Timeout | undefined;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      const err = new Error(`[MAIA timeout] ${label} exceeded ${ms}ms`);
+      (err as any).code = 'SOVEREIGN_TIMEOUT';
+      reject(err);
+    }, ms);
+  });
+
+  try {
+    const result = await Promise.race([promise, timeout]);
+    console.log(`[MAIA step] ${label} ok in ${msSince(t0)}ms`);
+    return result as T;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
 function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -73,9 +103,12 @@ export async function POST(req: NextRequest) {
   const start = Date.now();
   const requestId = randomUUID();
 
+  console.log(`[MAIA] start rid=${requestId}`);
+  console.log(`[MAIA] env DATABASE_URL=${process.env.DATABASE_URL ? 'set' : 'unset'}`);
+
   // 🛡️ SCHEMA GATE: Fail fast if required migrations are missing
   try {
-    await ensureSchemaReady();
+    await withTimeoutLabeled('ensureSchemaReady', ensureSchemaReady(), 5000, start);
   } catch (schemaErr: any) {
     console.error('❌ [SchemaGate] DB schema behind code:', schemaErr.message);
     return NextResponse.json(
@@ -89,7 +122,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
     const { sessionId, message, includeAudio, voiceProfile, userId, ...meta } = body as {
       sessionId?: string;
       message?: string;
@@ -98,6 +131,8 @@ export async function POST(req: NextRequest) {
       userId?: string;
       [key: string]: unknown;
     };
+
+    console.log(`[MAIA step] body parsed rid=${requestId} dt=${msSince(start)}ms`);
 
     if (DEMO_MODE) {
       const duration = Date.now() - start;
@@ -121,9 +156,9 @@ export async function POST(req: NextRequest) {
     }
 
     // Initialize database tables if needed
-    await initializeSessionTable();
+    await withTimeoutLabeled('initializeSessionTable', initializeSessionTable(), 5000, start);
 
-    const session = await ensureSession(sessionId);
+    const session = await withTimeoutLabeled('ensureSession', ensureSession(sessionId), 5000, start);
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for field/symbolic work
     let cognitiveProfile = null;
@@ -131,7 +166,7 @@ export async function POST(req: NextRequest) {
 
     if (userId || session.id) {
       try {
-        cognitiveProfile = await getCognitiveProfile(userId || session.id);
+        cognitiveProfile = await withTimeoutLabeled('getCognitiveProfile', getCognitiveProfile(userId || session.id), 5000, start);
 
         if (cognitiveProfile) {
           fieldSafety = enforceFieldSafety({
@@ -225,19 +260,23 @@ export async function POST(req: NextRequest) {
       console.log('🛡️ [Route/MemoryBundle] Skipped - Anonymous session (no cross-session)');
     } else if (memoryMode !== 'ephemeral') {
       try {
-        const memoryBundleStart = Date.now();
-        memoryBundle = await MemoryBundleService.build({
-          userId: effectiveUserId,
-          currentInput: message,
-          sessionId: session.id,
-          traceId,  // For memory usage audit trail
-          scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
-          maxBullets: 5,
-        });
+        memoryBundle = await withTimeoutLabeled(
+          'MemoryBundleService.build',
+          MemoryBundleService.build({
+            userId: effectiveUserId,
+            currentInput: message,
+            sessionId: session.id,
+            traceId,  // For memory usage audit trail
+            scope: memoryMode === 'continuity' ? 'cross_session' : 'all',
+            maxBullets: 5,
+          }),
+          5000,
+          start
+        );
 
         if (memoryBundle) {
           memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
-          console.log(`📦 [Route/MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets (${Date.now() - memoryBundleStart}ms)`);
+          console.log(`📦 [Route/MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
         }
       } catch (memErr) {
         console.warn('⚠️ [Route/MemoryBundle] Build failed (non-blocking):', memErr);
@@ -245,7 +284,8 @@ export async function POST(req: NextRequest) {
     }
 
     // 🎯 Use new three-tier processing system with voice integration
-    orchestratorResult = await withTimeout(
+    orchestratorResult = await withTimeoutLabeled(
+      'getMaiaResponse',
       getMaiaResponse({
         sessionId: session.id,
         input: message,
@@ -267,6 +307,7 @@ export async function POST(req: NextRequest) {
         },
       }),
       SOVEREIGN_TIMEOUT_MS,
+      start,
     );
 
     const duration = Date.now() - start;
