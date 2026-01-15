@@ -315,7 +315,9 @@ async function sendPasskeyReminders() {
         : `${contentSource.name} — your MAIA beta passkey`;
 
       // Extract domain for deliverability tracking (not full email = less PII)
-      const recipientDomain = recipient.split('@')[1] || 'unknown';
+      // Sanitize: Resend tags only allow ASCII letters, numbers, underscores, dashes
+      const rawDomain = recipient.split('@')[1] || 'unknown';
+      const recipientDomain = rawDomain.replace(/\./g, '_');  // gmail.com → gmail_com
 
       const result = await getResend().emails.send({
         from: 'Kelly @ Soullab <kelly@soullab.life>',
@@ -330,8 +332,19 @@ async function sendPasskeyReminders() {
         ]
       });
 
-      // Log success with Resend message ID (never log passkey or email content)
-      const messageId = result?.data?.id || 'unknown';
+      // Check for Resend error response (doesn't always throw)
+      const maybeError = (result as any)?.error;
+      if (maybeError) {
+        throw new Error(typeof maybeError === 'string' ? maybeError : JSON.stringify(maybeError));
+      }
+
+      // Robust messageId extraction (Resend SDK response shapes vary)
+      const messageId =
+        (result as any)?.id ||
+        (result as any)?.data?.id ||
+        (result as any)?.data?.messageId ||
+        'unknown';
+
       console.log(`✅ Sent to ${recipient} — id: ${messageId}`);
       sent++;
 
