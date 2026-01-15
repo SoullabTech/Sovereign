@@ -36,6 +36,121 @@ log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ALERT - Send alert to developer via /api/build/alert
+# ═══════════════════════════════════════════════════════════════════════════════
+send_alert() {
+    local severity="$1"
+    local message="$2"
+    local details="${3:-}"
+
+    # Get BASE_URL from env file
+    local base_url
+    base_url=$(grep "^BASE_URL=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "https://soullab.life")
+    base_url="${base_url:-https://soullab.life}"
+
+    # Get alert token from env file
+    local alert_token
+    alert_token=$(grep "^INTERNAL_ALERT_TOKEN=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "")
+
+    local json_payload
+    if [ -n "$details" ]; then
+        json_payload="{\"severity\": \"$severity\", \"message\": \"$message\", \"commit\": \"${GIT_COMMIT:-unknown}\", \"source\": \"deploy-script\", \"details\": $details}"
+    else
+        json_payload="{\"severity\": \"$severity\", \"message\": \"$message\", \"commit\": \"${GIT_COMMIT:-unknown}\", \"source\": \"deploy-script\"}"
+    fi
+
+    curl -sf -X POST "${base_url}/api/build/alert" \
+        -H "Content-Type: application/json" \
+        -H "x-internal-token: ${alert_token}" \
+        -d "$json_payload" > /dev/null 2>&1 || log_warn "Alert send failed (non-critical)"
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SMOKE TESTS - Run post-deployment health checks
+# ═══════════════════════════════════════════════════════════════════════════════
+run_smoke_tests() {
+    log_info "Running post-deployment smoke tests..."
+
+    local base_url
+    base_url=$(grep "^BASE_URL=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "https://soullab.life")
+    base_url="${base_url:-https://soullab.life}"
+
+    local all_passed=true
+
+    # Wait for services to stabilize
+    sleep 5
+
+    # Test 1: Health endpoint
+    log_info "  Testing /api/health..."
+    if curl -sf "${base_url}/api/health" > /dev/null 2>&1; then
+        log_success "  /api/health OK"
+    else
+        log_error "  /api/health FAILED"
+        send_alert "critical" "Health endpoint failed after deployment"
+        all_passed=false
+    fi
+
+    # Test 2: Version endpoint
+    log_info "  Testing /api/version..."
+    if curl -sf "${base_url}/api/version" > /dev/null 2>&1; then
+        log_success "  /api/version OK"
+    else
+        log_error "  /api/version FAILED"
+        send_alert "critical" "Version endpoint failed after deployment"
+        all_passed=false
+    fi
+
+    # Test 3: Ready endpoint (checks dependencies)
+    log_info "  Testing /api/ready..."
+    local ready_response
+    ready_response=$(curl -sf "${base_url}/api/ready" 2>/dev/null || echo '{"ready":false}')
+    if echo "$ready_response" | grep -q '"ready":true'; then
+        log_success "  /api/ready OK"
+    else
+        log_warn "  /api/ready shows degraded dependencies"
+        send_alert "warning" "Dependencies degraded after deployment" "{\"response\": $(echo "$ready_response" | head -c 500)}"
+    fi
+
+    # Test 4: Main page loads
+    log_info "  Testing main page..."
+    if curl -sf "${base_url}/" > /dev/null 2>&1; then
+        log_success "  Main page OK"
+    else
+        log_warn "  Main page may be slow to respond"
+    fi
+
+    # Test 5: Auth endpoints are locked (prove they reject without credentials)
+    log_info "  Testing auth lock on /api/build/status..."
+    local status_code
+    status_code=$(curl -sS -o /dev/null -w "%{http_code}" "${base_url}/api/build/status" 2>/dev/null)
+    if [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
+        log_success "  /api/build/status locked ($status_code)"
+    else
+        log_error "  /api/build/status NOT LOCKED (got $status_code, expected 401/403/503)"
+        send_alert "critical" "Build status endpoint is not protected!" "{\"http_code\": \"$status_code\"}"
+        all_passed=false
+    fi
+
+    log_info "  Testing auth lock on /api/build/alert..."
+    status_code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "${base_url}/api/build/alert" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
+    if [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
+        log_success "  /api/build/alert locked ($status_code)"
+    else
+        log_error "  /api/build/alert NOT LOCKED (got $status_code, expected 401/403/503)"
+        send_alert "critical" "Build alert endpoint is not protected!" "{\"http_code\": \"$status_code\"}"
+        all_passed=false
+    fi
+
+    if $all_passed; then
+        log_success "All smoke tests passed!"
+        send_alert "info" "Deployment successful - all smoke tests passed"
+    else
+        log_error "Some smoke tests failed!"
+        return 1
+    fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # SETUP - First-time initialization
 # ═══════════════════════════════════════════════════════════════════════════════
 cmd_setup() {
@@ -132,6 +247,10 @@ cmd_deploy() {
     log_success "Deployment complete!"
     echo ""
     cmd_status
+
+    # Run smoke tests and send alerts
+    echo ""
+    run_smoke_tests || log_warn "Some post-deploy checks failed"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -156,6 +275,10 @@ cmd_update() {
 
     log_success "Update complete!"
     cmd_status
+
+    # Run smoke tests and send alerts
+    echo ""
+    run_smoke_tests || log_warn "Some post-deploy checks failed"
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -253,6 +376,15 @@ cmd_restore() {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# SMOKE - Run smoke tests manually
+# ═══════════════════════════════════════════════════════════════════════════════
+cmd_smoke() {
+    log_info "Running smoke tests against production..."
+    cd "$PROJECT_DIR"
+    run_smoke_tests
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 case "${1:-help}" in
@@ -283,6 +415,9 @@ case "${1:-help}" in
     restore)
         cmd_restore "$2"
         ;;
+    smoke)
+        cmd_smoke
+        ;;
     *)
         echo "MAIA Sovereign - Production Deployment"
         echo ""
@@ -298,5 +433,6 @@ case "${1:-help}" in
         echo "  stop      - Stop all containers"
         echo "  backup    - Backup database"
         echo "  restore   - Restore database from backup"
+        echo "  smoke     - Run smoke tests against production"
         ;;
 esac
