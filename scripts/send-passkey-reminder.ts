@@ -4,8 +4,9 @@
  *
  * Options:
  *   --dry-run           Preview without sending emails
- *   --to <email>        Send to specific email only (for testing)
- *   --single            Send to first tester only (DEPRECATED: use --to instead)
+ *   --to <email>        Send test email to any address (uses first tester's content as template)
+ *   --confirm-send      Required flag to actually send batch emails (safety interlock)
+ *   --single            DEPRECATED: use --to instead
  */
 
 import { config } from 'dotenv';
@@ -228,6 +229,7 @@ async function sendPasskeyReminders() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const singleMode = args.includes('--single');
+  const confirmSend = args.includes('--confirm-send');
 
   // Parse --to <email> for targeted test sends
   const toIndex = args.indexOf('--to');
@@ -260,41 +262,58 @@ async function sendPasskeyReminders() {
     return;
   }
 
-  // Determine who to email
-  let testersToEmail: UnregisteredTester[];
+  // Determine who to email and what content to use
+  let testersToEmail: { recipient: string; contentSource: UnregisteredTester }[];
+  let isBatchSend = false;
 
   if (targetEmail) {
-    // --to <email>: find specific tester by email
+    // --to <email>: Send to ANY email address
+    // If email matches a tester, use their content; otherwise use testers[0] as template
     const found = testers.find(t => t.email.toLowerCase() === targetEmail);
-    if (!found) {
-      console.error(`❌ No unregistered tester found with email: ${targetEmail}\n`);
-      console.log('Tip: Use --dry-run first to see the list of unregistered testers.\n');
-      process.exit(1);
+    if (found) {
+      // Target is an actual tester - send their real email
+      testersToEmail = [{ recipient: found.email, contentSource: found }];
+      console.log(`🎯 Targeted send: ${found.name} (${found.email})\n`);
+    } else {
+      // Target is external (e.g., kelly@soullab.life) - use testers[0] as template
+      const templateTester = testers[0];
+      testersToEmail = [{ recipient: targetEmail, contentSource: templateTester }];
+      console.log(`🧪 Test send to: ${targetEmail}`);
+      console.log(`   Using template from: ${templateTester.name} (${redactPasskey(templateTester.passkey)})\n`);
     }
-    testersToEmail = [found];
-    console.log(`🎯 Targeted send: ${found.name} (${found.email})\n`);
   } else if (singleMode) {
     // --single: first alphabetically (DEPRECATED)
-    testersToEmail = [testers[0]];
+    const first = testers[0];
+    testersToEmail = [{ recipient: first.email, contentSource: first }];
     console.log(`⚠️  --single is deprecated. Use --to <email> for safer testing.\n`);
-    console.log(`🎯 Single mode: Only sending to ${testersToEmail[0].name}\n`);
+    console.log(`🎯 Single mode: Only sending to ${first.name}\n`);
   } else {
-    // All testers
-    testersToEmail = testers;
-    console.log(`📤 Sending to all ${testersToEmail.length} testers...\n`);
+    // Batch send to all testers - requires --confirm-send
+    isBatchSend = true;
+    testersToEmail = testers.map(t => ({ recipient: t.email, contentSource: t }));
+
+    if (!confirmSend) {
+      console.log(`🛑 BATCH SEND BLOCKED - Safety interlock\n`);
+      console.log(`   You're about to send ${testersToEmail.length} emails.`);
+      console.log(`   To proceed, add --confirm-send to the command:\n`);
+      console.log(`   npx tsx scripts/send-passkey-reminder.ts --confirm-send\n`);
+      process.exit(1);
+    }
+
+    console.log(`📤 Sending to all ${testersToEmail.length} testers (--confirm-send acknowledged)...\n`);
   }
 
   let sent = 0;
   let failed = 0;
 
-  for (const tester of testersToEmail) {
+  for (const { recipient, contentSource } of testersToEmail) {
     try {
       const result = await getResend().emails.send({
         from: 'Kelly @ Soullab <kelly@soullab.life>',
-        to: tester.email,
-        subject: `${tester.name} — your MAIA beta passkey`,
-        html: generateEmailHtml(tester.name, tester.passkey),
-        text: generateEmailText(tester.name, tester.passkey),
+        to: recipient,
+        subject: `${contentSource.name} — your MAIA beta passkey`,
+        html: generateEmailHtml(contentSource.name, contentSource.passkey),
+        text: generateEmailText(contentSource.name, contentSource.passkey),
         tags: [
           { name: 'campaign', value: 'passkey-reminder' },
           { name: 'type', value: 'onboarding' }
@@ -303,14 +322,15 @@ async function sendPasskeyReminders() {
 
       // Log success with Resend message ID (never log passkey or email content)
       const messageId = result?.data?.id || 'unknown';
-      console.log(`✅ Sent to ${tester.name} (${tester.email}) — id: ${messageId}`);
+      console.log(`✅ Sent to ${recipient} — id: ${messageId}`);
       sent++;
 
-      // Rate limit: wait 500ms between emails
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Rate limit: 500-900ms with jitter to avoid provider throttling
+      const delay = 500 + Math.random() * 400;
+      await new Promise(resolve => setTimeout(resolve, delay));
 
     } catch (error: any) {
-      console.error(`❌ Failed for ${tester.name}: ${error.message}`);
+      console.error(`❌ Failed for ${recipient}: ${error.message}`);
       failed++;
     }
   }
