@@ -77,12 +77,28 @@ run_smoke_tests() {
 
     local all_passed=true
 
-    # Wait for services to stabilize
-    sleep 5
+    # Wait for Next.js cold start (standalone server needs time)
+    log_info "  Waiting for services to stabilize..."
+    sleep 8
 
-    # Test 1: Health endpoint
+    # Helper: retry a curl check up to N times with backoff
+    retry_curl() {
+        local url="$1"
+        local max_attempts="${2:-3}"
+        local attempt=1
+        while [ $attempt -le $max_attempts ]; do
+            if curl -sf "$url" > /dev/null 2>&1; then
+                return 0
+            fi
+            sleep 2
+            attempt=$((attempt + 1))
+        done
+        return 1
+    }
+
+    # Test 1: Health endpoint (with retry for cold start)
     log_info "  Testing /api/health..."
-    if curl -sf "${base_url}/api/health" > /dev/null 2>&1; then
+    if retry_curl "${base_url}/api/health" 3; then
         log_success "  /api/health OK"
     else
         log_error "  /api/health FAILED"
@@ -90,9 +106,9 @@ run_smoke_tests() {
         all_passed=false
     fi
 
-    # Test 2: Version endpoint
+    # Test 2: Version endpoint (with retry for cold start)
     log_info "  Testing /api/version..."
-    if curl -sf "${base_url}/api/version" > /dev/null 2>&1; then
+    if retry_curl "${base_url}/api/version" 3; then
         log_success "  /api/version OK"
     else
         log_error "  /api/version FAILED"
@@ -119,10 +135,34 @@ run_smoke_tests() {
         log_warn "  Main page may be slow to respond"
     fi
 
-    # Test 5: Auth endpoints are locked (prove they reject without credentials)
+    # Test 5: Auth endpoints are locked (with retry for cold start)
+    # Helper for status code checks with retry
+    get_status_code_with_retry() {
+        local url="$1"
+        local method="${2:-GET}"
+        local max_attempts=3
+        local attempt=1
+        local code
+        while [ $attempt -le $max_attempts ]; do
+            if [ "$method" = "POST" ]; then
+                code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "$url" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
+            else
+                code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+            fi
+            # If we got a real response (not 500 during warmup), return it
+            if [ "$code" != "500" ] && [ "$code" != "502" ] && [ "$code" != "504" ]; then
+                echo "$code"
+                return 0
+            fi
+            sleep 2
+            attempt=$((attempt + 1))
+        done
+        echo "$code"  # Return last code even if it's 500
+    }
+
     log_info "  Testing auth lock on /api/build/status..."
     local status_code
-    status_code=$(curl -sS -o /dev/null -w "%{http_code}" "${base_url}/api/build/status" 2>/dev/null)
+    status_code=$(get_status_code_with_retry "${base_url}/api/build/status" "GET")
     if [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/status locked ($status_code)"
     else
@@ -132,7 +172,7 @@ run_smoke_tests() {
     fi
 
     log_info "  Testing auth lock on /api/build/alert..."
-    status_code=$(curl -sS -o /dev/null -w "%{http_code}" -X POST "${base_url}/api/build/alert" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
+    status_code=$(get_status_code_with_retry "${base_url}/api/build/alert" "POST")
     if [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/alert locked ($status_code)"
     else
