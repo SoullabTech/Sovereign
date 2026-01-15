@@ -993,7 +993,7 @@ export function AccountSettings() {
             <div>
               <span className="text-stone-500">Server Build:</span>
               <p className="text-stone-300 font-mono">
-                v{currentVersion?.version || '...'} ({currentVersion?.commit?.slice(0, 8) || '...'})
+                v{lastCheckResult?.serverVersion || currentVersion?.version || '...'} ({(lastCheckResult?.serverCommit || currentVersion?.commit)?.slice(0, 8) || '...'})
               </p>
             </div>
           </div>
