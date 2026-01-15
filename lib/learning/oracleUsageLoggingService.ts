@@ -17,6 +17,10 @@ export type OracleUsageEvent = {
   promptTokens?: number;
   completionTokens?: number;
   totalTokens?: number;
+
+  // TRUTHFUL PROVIDER INFO - which LLM provider actually handled the request
+  provider?: 'anthropic' | 'ollama' | 'fallback';
+  usedProviderFallback?: boolean;
 };
 
 /**

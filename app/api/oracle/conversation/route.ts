@@ -881,7 +881,13 @@ export async function POST(request: NextRequest) {
         notes: axiomSummary.notes
       },
       context: {
-        model: 'maia-hybrid-claude-sovereign',
+        // TRUTHFUL PROVIDER INFO - never lie about which model handled the request
+        providerUsed: maiaResponse.providerMetadata.providerUsed,
+        modelUsed: maiaResponse.providerMetadata.modelUsed,
+        usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
+        generationTimeMs: maiaResponse.providerMetadata.generationTimeMs,
+        // Legacy field for backwards compatibility (but now truthful)
+        model: maiaResponse.providerMetadata.modelUsed,
         architecture: 'MAIA-PAI best practices + MAIA-SOVEREIGN intelligence',
         archetypalActivation: symbolPatterns.length > 0,
         parsifal: parsifal,
@@ -891,7 +897,7 @@ export async function POST(request: NextRequest) {
         conversationDepth: conversationDepth,
         trustLevel: trustLevel,
         status: 'hybrid_sacred_attending',
-        usedFallback: usedFallback,
+        socraticValidatorUsedFallback: usedFallback, // Renamed: this is for Socratic regeneration only
         socraticValidator: validationResult ? serializeValidationResult(validationResult) : null
       },
       fieldEvent: {
@@ -911,7 +917,9 @@ export async function POST(request: NextRequest) {
         requestId,
         durationMs,
         level: ORACLE_LEVEL,
-        model: 'maia-hybrid-claude-sovereign',
+        provider: maiaResponse.providerMetadata.providerUsed,
+        model: maiaResponse.providerMetadata.modelUsed,
+        usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
         ok: true,
       })
     );
@@ -923,7 +931,9 @@ export async function POST(request: NextRequest) {
       sessionId,
       ip,
       level: ORACLE_LEVEL,
-      model: 'maia-hybrid-claude-sovereign',
+      provider: maiaResponse.providerMetadata.providerUsed,
+      model: maiaResponse.providerMetadata.modelUsed,
+      usedFallback: maiaResponse.providerMetadata.usedProviderFallback,
       status: 'ok',
       durationMs,
       promptTokens: undefined,
@@ -983,6 +993,7 @@ export async function POST(request: NextRequest) {
     })();
 
     // 🛡️ CANON v1.1: Provenance headers for all assistant text responses
+    // TRUTHFUL: Include actual provider/model info so observability never lies
     const canonHeaders = makeCanonHeaders({
       requestId,
       pipeline: 'oracle.conversation',
@@ -990,6 +1001,9 @@ export async function POST(request: NextRequest) {
       mode: 'STANDARD',
       validation: validationResult,
       repaired: regenerationAttempt > 0,
+      provider: maiaResponse.providerMetadata.providerUsed,
+      model: maiaResponse.providerMetadata.modelUsed,
+      usedProviderFallback: maiaResponse.providerMetadata.usedProviderFallback,
     });
 
     const jsonResponse = NextResponse.json(response);
@@ -1002,14 +1016,20 @@ export async function POST(request: NextRequest) {
     // Calculate duration for error logging
     const durationMs = Date.now() - startedAt;
 
+    // Check if this is a SERVICE_UNAVAILABLE error from STRICT_503 mode
+    const isServiceUnavailable = (error as any)?.code === 'SERVICE_UNAVAILABLE';
+    const failedProvider = (error as any)?.provider;
+
     // Structured error logging
     console.error(
       JSON.stringify({
-        tag: 'oracle.error',
+        tag: isServiceUnavailable ? 'oracle.service_unavailable' : 'oracle.error',
         requestId,
         durationMs,
         error: error instanceof Error ? error.message : String(error),
         stack: error instanceof Error ? error.stack : undefined,
+        strict503: isServiceUnavailable,
+        failedProvider,
       })
     );
 
@@ -1023,6 +1043,42 @@ export async function POST(request: NextRequest) {
       status: 'error',
       durationMs,
     }).catch(err => console.warn('[oracle] logging failed:', err));
+
+    // STRICT 503 MODE: Return 503 Service Unavailable when primary provider fails
+    if (isServiceUnavailable) {
+      // Include canon headers even on 503 for consistent tracing
+      const strict503Headers = makeCanonHeaders({
+        requestId,
+        pipeline: 'oracle.conversation',
+        source: 'pfi_full',
+        mode: 'STANDARD',
+        provider: 'anthropic',  // The provider we TRIED to use
+        model: 'claude-opus-4-5-20251101',  // The model we TRIED to use
+        usedProviderFallback: false,  // We did NOT fallback (strict mode blocked it)
+      });
+
+      const errorResponse = NextResponse.json(
+        {
+          success: false,
+          error: 'Service temporarily unavailable',
+          providerStatus: {
+            anthropic: { ok: false, error: 'Provider unavailable' },
+            ollama: { ok: true, error: null, disabledByStrictMode: true },
+          },
+          strict503: true,
+          message: 'MAIA is running in strict mode. Claude (primary provider) is unavailable. Fallback to Ollama is disabled.',
+        },
+        { status: 503 }
+      );
+
+      // Set canon headers on 503 response
+      Object.entries(strict503Headers).forEach(([key, value]) => {
+        errorResponse.headers.set(key, value);
+      });
+      errorResponse.headers.set('X-MAIA-Strict-Mode', '1');
+
+      return errorResponse;
+    }
 
     return NextResponse.json(
       {
@@ -1097,6 +1153,12 @@ async function generateSpiralogicResponseWithLLM(
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
   elementalGuidance: string;
+  providerMetadata: {
+    providerUsed: 'anthropic' | 'ollama' | 'fallback';
+    modelUsed: string;
+    usedProviderFallback: boolean;  // true when Claude failed and Ollama took over
+    generationTimeMs?: number;
+  };
 }> {
   const llmProvider = new MultiLLMProvider();
   const canonicalQuestion = selectCanonicalQuestion(spiralogicCell);
@@ -1189,7 +1251,11 @@ async function generateSpiralogicResponseWithLLM(
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
-  let usedFallback = false;
+  let providerUsed: 'anthropic' | 'ollama' | 'fallback' = 'fallback';
+  let modelUsed = 'none';
+  let usedProviderFallback = false;  // true when Claude failed and Ollama took over
+  let generationTimeMs: number | undefined;
+
   try {
     const llmResponse = await llmProvider.generate({
       systemPrompt: finalSystemPrompt,
@@ -1199,6 +1265,12 @@ async function generateSpiralogicResponseWithLLM(
     });
     coreMessage = llmResponse.text;
 
+    // TRUTHFUL PROVIDER TRACKING: Capture actual provider used
+    providerUsed = llmResponse.provider as 'anthropic' | 'ollama';
+    modelUsed = llmResponse.model || 'unknown';
+    generationTimeMs = llmResponse.metadata?.generationTime;
+    usedProviderFallback = llmResponse.provider !== 'anthropic'; // true when Ollama took over
+
     console.log('🌀 [MAIA Hybrid LLM Response]', {
       provider: llmResponse.provider,
       model: llmResponse.model,
@@ -1207,11 +1279,14 @@ async function generateSpiralogicResponseWithLLM(
       frameworks: activeFrameworks,
       conversationDepth,
       trustLevel: `${(trustLevel * 100).toFixed(0)}%`,
-      targetMaxTokens: maxTokens
+      targetMaxTokens: maxTokens,
+      usedProviderFallback
     });
   } catch (error) {
     console.error('❌ [MAIA] LLM generation failed, using fallback:', error);
-    usedFallback = true;
+    usedProviderFallback = true;
+    providerUsed = 'fallback';
+    modelUsed = 'opus-safe-fallback';
 
     // Fallback to a simple, present response (Opus-safe: no identity claims)
     coreMessage = OPUS_SAFE_FALLBACKS.oracleLLMFailure;
@@ -1252,7 +1327,13 @@ async function generateSpiralogicResponseWithLLM(
   return {
     coreMessage,
     suggestedActions,
-    elementalGuidance
+    elementalGuidance,
+    providerMetadata: {
+      providerUsed,
+      modelUsed,
+      usedProviderFallback,
+      generationTimeMs
+    }
   };
 }
 

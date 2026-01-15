@@ -12,6 +12,14 @@
  * - X-MAIA-Pipeline: sovereign.getMaiaResponse|orchestrator|direct (source pipeline)
  * - X-MAIA-Source: pfi_full|pfi_legacy|fallback|direct (PFI source)
  * - X-MAIA-Request-Id: <uuid> (correlation ID)
+ *
+ * TRUTHFUL PROVIDER INFO (v1.1.1):
+ * - X-MAIA-Provider: anthropic|ollama|fallback (which LLM provider actually handled it)
+ * - X-MAIA-Model: <model-name> (actual model that generated the response)
+ * - X-MAIA-Fallback: 0|1 (whether primary provider failed and fallback was used)
+ *
+ * MANDATE: Observability must never lie. These headers MUST reflect the actual
+ * provider/model used, even when graceful degradation occurs.
  */
 
 import type { SocraticValidationResult } from '@/lib/validation/socraticValidator';
@@ -39,6 +47,12 @@ export interface CanonHeadersInput {
   validation?: SocraticValidationResult | null;
   /** Whether regeneration occurred */
   repaired?: boolean;
+  /** TRUTHFUL PROVIDER INFO - which LLM provider actually handled the request */
+  provider?: 'anthropic' | 'ollama' | 'fallback';
+  /** TRUTHFUL MODEL INFO - which model actually generated the response */
+  model?: string;
+  /** Whether a fallback provider was used (anthropic failed, ollama took over) */
+  usedProviderFallback?: boolean;
 }
 
 /**
@@ -54,6 +68,9 @@ export function makeCanonHeaders(input: CanonHeadersInput): Record<string, strin
     mode = 'STANDARD',
     validation,
     repaired = false,
+    provider,
+    model,
+    usedProviderFallback,
   } = input;
 
   return {
@@ -64,6 +81,10 @@ export function makeCanonHeaders(input: CanonHeadersInput): Record<string, strin
     'X-MAIA-Pipeline': pipeline,
     'X-MAIA-Source': source,
     'X-MAIA-Request-Id': requestId,
+    // TRUTHFUL PROVIDER INFO - never lie about which model handled the request
+    ...(provider && { 'X-MAIA-Provider': provider }),
+    ...(model && { 'X-MAIA-Model': model }),
+    ...(typeof usedProviderFallback === 'boolean' && { 'X-MAIA-Fallback': usedProviderFallback ? '1' : '0' }),
     // Validation status (for observability)
     ...(validation && {
       'X-MAIA-Validation-Decision': validation.decision,
