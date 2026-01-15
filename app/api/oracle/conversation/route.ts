@@ -771,15 +771,23 @@ export async function POST(request: NextRequest) {
       const spiralLevel = userBreakthrough.spiralLevel || maiaBreakthrough.spiralLevel;
 
       // Guard: Only contribute to collective field if we have valid spiralogic context
-      // Never pollute the field with 'unknown/aether' - it dilutes matching
+      // Never pollute the field with invalid element/phase - it dilutes matching
       // Use explicit valid sets to prevent drift
       const validElements = new Set(['fire', 'water', 'earth', 'air', 'aether']);
-      const validPhases = new Set(['cardinal', 'fixed', 'mutable']);
+
       const element = spiralogicCell?.element?.toLowerCase();
-      const phase = typeof spiralogicCell?.phase === 'number'
-        ? (spiralogicCell.phase <= 1 ? 'cardinal' : spiralogicCell.phase <= 2 ? 'fixed' : 'mutable')
+
+      // Phase is a strict union: 1 | 2 | 3
+      const phase =
+        spiralogicCell?.phase === 1 ? 'cardinal'
+        : spiralogicCell?.phase === 2 ? 'fixed'
+        : spiralogicCell?.phase === 3 ? 'mutable'
         : null;
-      const hasValidContext = !!element && validElements.has(element) && !!phase && validPhases.has(phase);
+
+      const hasValidContext =
+        !!element &&
+        validElements.has(element) &&
+        !!phase;
 
       if (isBreakthrough && breakthroughDepth >= 2 && hasValidContext) {
         // Determine breakthrough type based on markers
