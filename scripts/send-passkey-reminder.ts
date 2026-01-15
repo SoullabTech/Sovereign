@@ -160,6 +160,11 @@ function generateEmailHtml(name: string, passkey: string): string {
     Voice mode is available — you can speak with MAIA like you're talking to a friend.
   </p>
 
+  <p style="text-align: center; font-size: 14px; color: #666; margin-top: 20px;">
+    <strong>iPhone/iPad/Mac?</strong> You can also use your TestFlight invite if you have one.<br>
+    <span style="color: #888;">Android coming soon.</span>
+  </p>
+
   <p class="ignore-line">
     Already installed or signed in? You can ignore this email.
   </p>
@@ -189,6 +194,9 @@ Start here: https://soullab.life/begin
 1) Click "Begin Journey"
 2) Enter your passkey
 3) Create your username + password
+
+iPhone/iPad/Mac? You can also use your TestFlight invite if you have one.
+Android coming soon.
 
 If you already installed / signed in, you can ignore this message.
 
