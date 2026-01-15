@@ -14,6 +14,7 @@ interface StreamingVoiceOptions {
   onComplete?: (fullResponse: string) => void;
   onError?: (error: string) => void;
   voice?: string;
+  speed?: number;
   element?: string;
 }
 
@@ -34,7 +35,7 @@ interface AudioQueueItem {
 }
 
 export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
-  const { onTextChunk, onComplete, onError, voice = 'maya', element } = options;
+  const { onTextChunk, onComplete, onError, voice = 'maya', speed = 1.0, element } = options;
 
   const [state, setState] = useState<StreamingVoiceState>({
     isStreaming: false,
@@ -153,6 +154,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         body: JSON.stringify({
           message,
           voice,
+          speed,
           element,
           conversationHistory,
           sessionId: `stream-${Date.now()}`

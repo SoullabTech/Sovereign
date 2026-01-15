@@ -46,6 +46,7 @@ import type { Element } from '@/lib/voice';
 // import { useMAIASDK } from '@/hooks/useMAIASDK-simple'; // Fallback option (if needed)
 // import { useMAIAHybrid as useMAIASDK } from '@/hooks/useMAIAHybrid'; // Hybrid (removed - we want full dynamics always)
 import { cleanMessage, cleanMessageForVoice, formatMessageForDisplay } from '@/lib/cleanMessage';
+import { getAccountSettings } from '@/lib/settings/accountSettings';
 import { getAgentConfig, AgentConfig } from '@/lib/agent-config';
 import { toast } from 'react-hot-toast';
 import { voiceLock } from '@/lib/services/VoiceLock';
@@ -885,6 +886,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
   const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
+
+  // Voice settings from account preferences (applies to new voice sessions)
+  const [voiceSettings, setVoiceSettings] = useState({ voice: 'shimmer', speed: 0.95 });
+
+  // Load voice settings from account preferences on mount and listen for changes
+  useEffect(() => {
+    const loadVoiceSettings = () => {
+      const settings = getAccountSettings();
+      setVoiceSettings({
+        voice: settings.voice.openaiVoice,
+        speed: settings.voice.speed
+      });
+    };
+
+    loadVoiceSettings();
+
+    // Listen for settings changes (from MAIA Settings panel)
+    const handleSettingsChange = () => loadVoiceSettings();
+    window.addEventListener('maia-account-settings-changed', handleSettingsChange);
+    window.addEventListener('maia-settings-changed', handleSettingsChange);
+
+    return () => {
+      window.removeEventListener('maia-account-settings-changed', handleSettingsChange);
+      window.removeEventListener('maia-settings-changed', handleSettingsChange);
+    };
+  }, []);
+
   const {
     isStreaming: isStreamingVoice,
     isPlaying: isStreamingPlaying,
@@ -894,7 +922,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     stop: stopStreamingVoice,
     error: streamingVoiceError
   } = useStreamingVoice({
-    voice: 'maya',
+    voice: voiceSettings.voice,
+    speed: voiceSettings.speed,
     element: undefined, // Will be set dynamically per message
     onTextChunk: (text, index) => {
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');

@@ -30,6 +30,7 @@ interface StreamRequest {
   sessionId?: string;
   element?: string;
   voice?: string;
+  speed?: number;
   conversationHistory?: Array<{ role: string; content: string }>;
 }
 
@@ -39,17 +40,19 @@ interface StreamRequest {
  */
 async function synthesizeSentence(
   text: string,
-  voice: string = 'nova'
+  voice: string = 'nova',
+  speed: number = 1.0
 ): Promise<{ audio: string; format: string } | null> {
   try {
     // Map voice parameter to OpenAI voices (nova is warm and natural)
+    // If voice is 'maya' (legacy), use nova; otherwise use the specified OpenAI voice
     const openaiVoice = voice === 'maya' ? 'nova' : (voice || 'nova');
 
     const response = await synthesizeSpeech({
       text,
       voice: openaiVoice,
       format: 'mp3',
-      speed: 1.0
+      speed: speed
     });
 
     const buffer = Buffer.from(await response.arrayBuffer());
@@ -63,7 +66,7 @@ async function synthesizeSentence(
 
 export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
-  const { message, userId, sessionId, element, voice, conversationHistory } = body;
+  const { message, userId, sessionId, element, voice, speed, conversationHistory } = body;
 
   if (!message?.trim()) {
     return new Response('Missing message', { status: 400 });
@@ -115,7 +118,7 @@ export async function POST(req: NextRequest) {
             sentenceCount = chunk.index + 1;
 
             // Generate TTS for this sentence (collect promise to await later)
-            const ttsPromise = synthesizeSentence(chunk.text, voice).then(audioResult => {
+            const ttsPromise = synthesizeSentence(chunk.text, voice, speed).then(audioResult => {
               if (audioResult) {
                 emit('audio', {
                   index: chunk.index,
