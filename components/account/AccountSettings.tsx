@@ -431,7 +431,29 @@ export function AccountSettings() {
     setMaiaSettings(updated);
     saveAccountSettings(updated);
     showSaveIndicator();
-  }, [maiaSettings, showSaveIndicator]);
+
+    // Also sync nested settings to server if we have userId
+    if (userId) {
+      // Map nested paths to server API keys
+      const serverKeyMap: Record<string, string> = {
+        'voice.openaiVoice': 'voiceModel',
+        'voice.speed': 'voiceSpeed',
+        'memory.depth': 'memoryDepth',
+      };
+
+      const serverKey = serverKeyMap[path];
+      if (serverKey) {
+        fetch('/api/members/settings', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            memberId: userId,
+            [serverKey]: value,
+          }),
+        }).catch(console.error);
+      }
+    }
+  }, [maiaSettings, userId, showSaveIndicator]);
 
   const updateNotification = useCallback(async (key: string, value: boolean) => {
     if (!userId || !memberSettings) return;
