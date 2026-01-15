@@ -10,6 +10,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { createHash } from 'crypto';
+import { logAuthEvent } from '@/lib/security/authAudit';
 
 // Simple password hashing (must match register)
 function hashPassword(password: string): string {
@@ -35,6 +36,12 @@ export async function POST(request: NextRequest) {
     );
 
     if (result.rows.length === 0) {
+      await logAuthEvent({
+        action: 'signin_failed',
+        memberId: null,
+        result: 'failure',
+        errorMessage: 'user_not_found',
+      }, request);
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
@@ -46,6 +53,12 @@ export async function POST(request: NextRequest) {
     // Verify password
     const passwordHash = hashPassword(password);
     if (passwordHash !== member.password_hash) {
+      await logAuthEvent({
+        action: 'signin_failed',
+        memberId: member.id,
+        result: 'failure',
+        errorMessage: 'wrong_password',
+      }, request);
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
@@ -57,6 +70,12 @@ export async function POST(request: NextRequest) {
       'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
       [member.id]
     );
+
+    await logAuthEvent({
+      action: 'signin_success',
+      memberId: member.id,
+      result: 'success',
+    }, request);
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,6 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
+import { logAuthEvent } from '@/lib/security/authAudit';
 
 // Note: No dynamic export needed - Capacitor apps call remote API server
 
@@ -106,10 +105,15 @@ export async function POST(request: NextRequest) {
 
     if (isValid) {
       // Log successful validation (for analytics)
-      console.log('✨ Valid passcode used:', passcode, {
-        timestamp: new Date().toISOString(),
-        userAgent: request.headers.get('user-agent')
-      });
+      console.log('✨ Valid passcode used:', passcode);
+
+      // Audit trail for successful beta access (writes to audit_logs table)
+      await logAuthEvent({
+        action: 'passcode_valid',
+        resourceType: 'beta_passcode',
+        resourceId: passcode,
+        result: 'success',
+      }, request);
 
       return NextResponse.json({
         valid: true,
@@ -118,11 +122,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Log invalid attempts (for monitoring)
-    console.log('⚠️  Invalid passcode attempt:', passcode, {
-      timestamp: new Date().toISOString(),
-      userAgent: request.headers.get('user-agent'),
-      ip: request.headers.get('x-forwarded-for') || 'unknown'
-    });
+    console.log('⚠️  Invalid passcode attempt:', passcode);
+
+    // Audit trail for failed beta access (writes to audit_logs table)
+    await logAuthEvent({
+      action: 'passcode_invalid',
+      resourceType: 'beta_passcode',
+      resourceId: passcode || 'missing',
+      result: 'failure',
+      errorMessage: 'invalid_passcode',
+    }, request);
 
     return NextResponse.json(
       { valid: false, message: 'Invalid invitation code' },
