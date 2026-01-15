@@ -802,31 +802,41 @@ export function AccountSettings() {
           Default Memory Mode
         </label>
         <div className="grid grid-cols-2 gap-3">
-          {(['continuity', 'sanctuary'] as const).map((mode) => (
-            <motion.button
-              key={mode}
-              onClick={() => updateMaiaSetting('defaultMemoryMode', mode)}
-              className={`p-4 rounded-xl border text-left transition-all active:scale-95 ${
-                maiaSettings.defaultMemoryMode === mode
-                  ? mode === 'sanctuary'
-                    ? 'border-emerald-500/50 bg-emerald-500/15 active:bg-emerald-500/30'
-                    : 'border-amber-500/50 bg-amber-500/15 active:bg-amber-500/30'
-                  : 'border-white/10 bg-black/20 active:bg-white/10 active:border-white/30'
-              }`}
-              whileTap={{ scale: 0.98 }}
-            >
-              <div className={`text-sm font-medium ${
-                mode === 'sanctuary' ? 'text-emerald-300' : 'text-white/90'
-              }`}>
-                {mode === 'continuity' ? 'Continuity' : 'Sanctuary'}
-              </div>
-              <div className="text-xs text-white/50 mt-1">
-                {mode === 'continuity'
-                  ? 'MAIA remembers what helps growth.'
-                  : "Sessions aren't saved. Speak freely."}
-              </div>
-            </motion.button>
-          ))}
+          {(['continuity', 'sanctuary'] as const).map((mode) => {
+            const isSelected = maiaSettings.defaultMemoryMode === mode;
+            return (
+              <motion.button
+                key={mode}
+                onClick={() => updateMaiaSetting('defaultMemoryMode', mode)}
+                className={`p-4 rounded-xl border text-left transition-all active:scale-95 relative ${
+                  isSelected
+                    ? mode === 'sanctuary'
+                      ? 'border-emerald-400/70 bg-emerald-500/20 ring-2 ring-emerald-400/40 active:bg-emerald-500/30'
+                      : 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                    : 'border-white/10 bg-black/20 active:bg-white/10 active:border-white/30'
+                }`}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isSelected && (
+                  <div className={`absolute top-2 right-2 ${mode === 'sanctuary' ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    <Check size={16} />
+                  </div>
+                )}
+                <div className={`text-sm font-medium ${
+                  isSelected
+                    ? mode === 'sanctuary' ? 'text-emerald-200' : 'text-amber-200'
+                    : mode === 'sanctuary' ? 'text-emerald-300' : 'text-white/90'
+                }`}>
+                  {mode === 'continuity' ? 'Continuity' : 'Sanctuary'}
+                </div>
+                <div className="text-xs text-white/50 mt-1">
+                  {mode === 'continuity'
+                    ? 'MAIA remembers what helps growth.'
+                    : "Sessions aren't saved. Speak freely."}
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -837,21 +847,29 @@ export function AccountSettings() {
           Voice Model
         </label>
         <div className="grid grid-cols-3 gap-2">
-          {VOICE_OPTIONS.map((voice) => (
-            <motion.button
-              key={voice.id}
-              onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
-              className={`py-3 px-3 rounded-xl border transition-all active:scale-95 ${
-                maiaSettings.voice.openaiVoice === voice.id
-                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30'
-                  : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
-              }`}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="text-lg mb-1">{voice.emoji}</div>
-              <div className="text-xs font-medium">{voice.name}</div>
-            </motion.button>
-          ))}
+          {VOICE_OPTIONS.map((voice) => {
+            const isSelected = maiaSettings.voice.openaiVoice === voice.id;
+            return (
+              <motion.button
+                key={voice.id}
+                onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
+                className={`py-3 px-3 rounded-xl border transition-all active:scale-95 relative ${
+                  isSelected
+                    ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                    : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
+                }`}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isSelected && (
+                  <div className="absolute top-1 right-1 text-amber-300">
+                    <Check size={12} />
+                  </div>
+                )}
+                <div className="text-lg mb-1">{voice.emoji}</div>
+                <div className="text-xs font-medium">{voice.name}</div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -878,20 +896,28 @@ export function AccountSettings() {
           Memory Depth
         </label>
         <div className="grid grid-cols-3 gap-2">
-          {(['minimal', 'moderate', 'deep'] as const).map((depth) => (
-            <motion.button
-              key={depth}
-              onClick={() => updateNestedMaiaSetting('memory.depth', depth)}
-              className={`py-3 rounded-xl border transition-all active:scale-95 ${
-                maiaSettings.memory.depth === depth
-                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30'
-                  : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
-              }`}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="text-xs capitalize">{depth}</div>
-            </motion.button>
-          ))}
+          {(['minimal', 'moderate', 'deep'] as const).map((depth) => {
+            const isSelected = maiaSettings.memory.depth === depth;
+            return (
+              <motion.button
+                key={depth}
+                onClick={() => updateNestedMaiaSetting('memory.depth', depth)}
+                className={`py-3 rounded-xl border transition-all active:scale-95 relative ${
+                  isSelected
+                    ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                    : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
+                }`}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isSelected && (
+                  <div className="absolute top-1 right-1 text-amber-300">
+                    <Check size={12} />
+                  </div>
+                )}
+                <div className="text-xs capitalize">{depth}</div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -902,23 +928,31 @@ export function AccountSettings() {
           MAIA's Presence
         </label>
         <div className="grid grid-cols-3 gap-2">
-          {ARCHETYPE_OPTIONS.map((arch) => (
-            <motion.button
-              key={arch.id}
-              onClick={() => updateMaiaSetting('archetype', arch.id)}
-              className={`py-3 px-2 rounded-xl border transition-all active:scale-95 ${
-                maiaSettings.archetype === arch.id
-                  ? arch.id === 'AUTO'
-                    ? 'border-purple-500/50 bg-purple-500/15 text-purple-300 active:bg-purple-500/30'
-                    : 'border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30'
-                  : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
-              }`}
-              whileTap={{ scale: 0.95 }}
-            >
-              <div className="text-lg mb-1">{arch.emoji}</div>
-              <div className="text-xs">{arch.name}</div>
-            </motion.button>
-          ))}
+          {ARCHETYPE_OPTIONS.map((arch) => {
+            const isSelected = maiaSettings.archetype === arch.id;
+            return (
+              <motion.button
+                key={arch.id}
+                onClick={() => updateMaiaSetting('archetype', arch.id)}
+                className={`py-3 px-2 rounded-xl border transition-all active:scale-95 relative ${
+                  isSelected
+                    ? arch.id === 'AUTO'
+                      ? 'border-purple-400/70 bg-purple-500/20 text-purple-200 ring-2 ring-purple-400/40 active:bg-purple-500/30'
+                      : 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                    : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
+                }`}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isSelected && (
+                  <div className={`absolute top-1 right-1 ${arch.id === 'AUTO' ? 'text-purple-300' : 'text-amber-300'}`}>
+                    <Check size={12} />
+                  </div>
+                )}
+                <div className="text-lg mb-1">{arch.emoji}</div>
+                <div className="text-xs">{arch.name}</div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
@@ -931,21 +965,27 @@ export function AccountSettings() {
         <div className="space-y-2">
           {(['her', 'classic', 'adaptive'] as ConversationMode[]).map((mode) => {
             const desc = CONVERSATION_STYLE_DESCRIPTIONS[mode];
+            const isSelected = maiaSettings.conversationMode === mode;
             return (
               <motion.button
                 key={mode}
                 onClick={() => updateMaiaSetting('conversationMode', mode)}
-                className={`w-full text-left p-3 rounded-xl border transition-all active:scale-[0.98] ${
-                  maiaSettings.conversationMode === mode
-                    ? 'border-amber-500/50 bg-amber-500/15 active:bg-amber-500/30'
+                className={`w-full text-left p-3 rounded-xl border transition-all active:scale-[0.98] relative ${
+                  isSelected
+                    ? 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
                     : 'border-white/10 bg-black/20 active:bg-white/10 active:border-white/30'
                 }`}
                 whileTap={{ scale: 0.98 }}
               >
+                {isSelected && (
+                  <div className="absolute top-3 right-3 text-amber-300">
+                    <Check size={16} />
+                  </div>
+                )}
                 <div className="flex items-center gap-2">
                   <span className="text-lg">{desc.icon}</span>
                   <div>
-                    <span className="text-sm font-medium text-white/90">{desc.title}</span>
+                    <span className={`text-sm font-medium ${isSelected ? 'text-amber-200' : 'text-white/90'}`}>{desc.title}</span>
                     <p className="text-xs text-white/50">{desc.description}</p>
                   </div>
                 </div>
