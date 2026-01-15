@@ -118,6 +118,10 @@ function applyTestSpiralogicOverrides(
   cell: any,
   requestId?: string
 ) {
+  // Safety: never allow in production
+  const allowedEnvs = new Set(['development', 'test']);
+  if (!allowedEnvs.has(process.env.NODE_ENV || '')) return cell;
+
   if (process.env.MAIA_TEST_SPIRALOGIC_OVERRIDES !== '1') return cell;
 
   const overridesRaw = process.env.MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON;
@@ -134,6 +138,7 @@ function applyTestSpiralogicOverrides(
       requestId,
       element: next.element,
       phase: next.phase,
+      context: next.context,
     });
 
     return next;
