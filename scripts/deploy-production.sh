@@ -215,6 +215,12 @@ run_smoke_tests() {
         echo "$code"  # Return last code even if it's 500
     }
 
+    # Only accept HTTP→HTTPS redirects when testing localhost (prevents masking real security issues)
+    local allow_redirect_as_pass=false
+    if echo "$base_url" | grep -qE '^http://(localhost|127\.0\.0\.1)(:|/|$)'; then
+        allow_redirect_as_pass=true
+    fi
+
     log_info "  Testing auth lock on /api/build/status..."
     local status_code
     status_code=$(get_status_code_with_retry "${base_url}/api/build/status" "GET")
@@ -222,9 +228,9 @@ run_smoke_tests() {
         log_error "  /api/build/status unreachable (000) — check routing/DNS/caddy"
         add_result "FAIL  /api/build/status (000 - routing issue)"
         all_passed=false
-    elif [ "$status_code" = "301" ] || [ "$status_code" = "308" ]; then
-        # HTTP→HTTPS redirect is acceptable for local smoke tests
-        log_success "  /api/build/status redirects to HTTPS ($status_code) — use https:// for full test"
+    elif $allow_redirect_as_pass && { [ "$status_code" = "301" ] || [ "$status_code" = "308" ]; }; then
+        # HTTP→HTTPS redirect is acceptable for localhost smoke tests only
+        log_success "  /api/build/status redirects to HTTPS ($status_code) — acceptable for localhost"
         add_result "PASS  /api/build/status (redirect: $status_code)"
     elif [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/status locked ($status_code)"
@@ -242,9 +248,9 @@ run_smoke_tests() {
         log_error "  /api/build/alert unreachable (000) — check routing/DNS/caddy"
         add_result "FAIL  /api/build/alert (000 - routing issue)"
         all_passed=false
-    elif [ "$status_code" = "301" ] || [ "$status_code" = "308" ]; then
-        # HTTP→HTTPS redirect is acceptable for local smoke tests
-        log_success "  /api/build/alert redirects to HTTPS ($status_code) — use https:// for full test"
+    elif $allow_redirect_as_pass && { [ "$status_code" = "301" ] || [ "$status_code" = "308" ]; }; then
+        # HTTP→HTTPS redirect is acceptable for localhost smoke tests only
+        log_success "  /api/build/alert redirects to HTTPS ($status_code) — acceptable for localhost"
         add_result "PASS  /api/build/alert (redirect: $status_code)"
     elif [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/alert locked ($status_code)"
