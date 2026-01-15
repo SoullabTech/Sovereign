@@ -612,9 +612,9 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
                       </p>
                     </div>
                     <div>
-                      <span className="text-stone-500">Server Version:</span>
+                      <span className="text-stone-500">Server Build:</span>
                       <p className="text-stone-300 font-mono">
-                        v{currentVersion?.version || '...'} ({currentVersion?.commit?.slice(0, 7) || '...'})
+                        v{currentVersion?.version || '...'} ({currentVersion?.commit?.slice(0, 8) || '...'})
                       </p>
                     </div>
                   </div>

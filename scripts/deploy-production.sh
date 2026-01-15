@@ -110,6 +110,8 @@ run_smoke_tests() {
     base_url="${BASE_URL:-${base_url:-https://soullab.life}}"
     base_url="${base_url%/}"  # Strip trailing slash
 
+    log_info "  Target: $base_url"
+
     local all_passed=true
     local report=""
     add_result() { report="${report}\n  $1"; }
@@ -552,6 +554,10 @@ case "${1:-help}" in
     smoke)
         cmd_smoke
         ;;
+    smoke-prod)
+        log_info "Running smoke tests against production (soullab.life)..."
+        BASE_URL="https://soullab.life" run_smoke_tests
+        ;;
     *)
         echo "MAIA Sovereign - Production Deployment"
         echo ""
@@ -567,6 +573,7 @@ case "${1:-help}" in
         echo "  stop      - Stop all containers"
         echo "  backup    - Backup database"
         echo "  restore   - Restore database from backup"
-        echo "  smoke     - Run smoke tests against production"
+        echo "  smoke     - Run smoke tests (uses BASE_URL from .env.production)"
+        echo "  smoke-prod - Run smoke tests against soullab.life (always)"
         ;;
 esac
