@@ -23,6 +23,16 @@ export {
   getFramingsForFunction,
 } from './framingAffinities';
 
+// Default soul posture ("We stabilize first, then strategize")
+export {
+  defaultSoulPosture,
+  readinessSignals,
+  detectReadiness,
+  determineLeadFunction,
+  getReadinessAdjustedPriors,
+  agencyPreservingInvitation,
+} from './defaultSoulPosture';
+
 // Charter loading
 import { readFileSync } from 'fs';
 import { join } from 'path';
