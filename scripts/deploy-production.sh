@@ -199,9 +199,9 @@ run_smoke_tests() {
         local code
         while [ $attempt -le $max_attempts ]; do
             if [ "$method" = "POST" ]; then
-                code=$(curl -sS --connect-timeout 3 --max-time 8 -o /dev/null -w "%{http_code}" -X POST "$url" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
+                code=$(curl -sS -L --connect-timeout 3 --max-time 8 -o /dev/null -w "%{http_code}" -X POST "$url" -H "Content-Type: application/json" -d '{}' 2>/dev/null)
             else
-                code=$(curl -sS --connect-timeout 3 --max-time 8 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
+                code=$(curl -sS -L --connect-timeout 3 --max-time 8 -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
             fi
             # If we got a real response (not warmup noise), return it
             # 000 = curl couldn't connect, 500/502/504 = gateway errors during boot
