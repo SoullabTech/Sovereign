@@ -829,7 +829,7 @@ export async function POST(request: NextRequest) {
         validElements.has(element) &&
         !!phase;
 
-      if (isBreakthrough && breakthroughDepth >= 2 && hasValidContext) {
+      if (isBreakthrough && breakthroughDepth >= 0.5 && hasValidContext) {
         // Determine breakthrough type based on markers
         let breakthroughType: 'shadow-integration' | 'vision-ignition' | 'emotional-release' | 'mental-clarity' | 'unity-experience' = 'mental-clarity';
         if (combinedMarkers.includes('shadow') || combinedMarkers.includes('integration')) {
