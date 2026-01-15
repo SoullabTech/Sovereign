@@ -3258,7 +3258,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           timestamp: new Date(),
           source: 'voice'
         };
-        setMessages(prev => appendMessageCapped(prev, userMessage));
+        // Build once, use for both UI state and API payload (avoids stale closure)
+        const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+        setMessages(nextMessagesForApi);
 
         // Set processing states
         setIsProcessing(true);
@@ -3272,8 +3274,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
 
         // Send via streaming voice system (truncated for performance)
-        // Build local array that includes the new user message (state update is async)
-        const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
         const conversationHistory = truncateHistoryForAPI(nextMessagesForApi);
         await sendStreamingMessage(cleanedText, conversationHistory);
 
