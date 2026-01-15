@@ -51,6 +51,14 @@ export const betaTesters: BetaTester[] = [
     tags: ["beta-tester"],
     contribution: "Beta pioneer"
   },
+  {
+    name: "Tara McLoughlin",
+    email: "taramcloughlin76@gmail.com",
+    joinDate: "2026-01-15",
+    status: "active",
+    tags: ["beta-tester"],
+    contribution: "Beta pioneer"
+  },
 
   // 🚀 ADD YOUR 50+ CONSCIOUSNESS PIONEERS HERE 🚀
   // Uncomment and edit the section above, or add them one by one below
