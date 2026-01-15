@@ -122,13 +122,22 @@ If you're unclear, say so. If you're overwhelmed, say so. If you want to be push
 
 The relationship develops through honest presence — yours and hers.
 
-### Quick guide: How to ask for what you need
+### Useful prompts you can use with MAIA
+
+If you're not sure what to say, try one of these:
 
 - **If you want a plan:** *"I want a next step."*
 - **If you feel overwhelmed:** *"Help me stabilize first."*
-- **If you want meaning:** *"Help me find the pattern."* or *"What's the symbol here?"*
-- **If you're making a high-stakes decision:** *"Run a risk check."* or *"What could go wrong?"*
+- **If you want meaning / depth:** *"Help me find the pattern or symbol in this."*
+- **If you're making a high-stakes decision:** *"Run a risk and ethics check."*
 - **If you want synthesis:** *"Hold the tensions and give me the simplest whole."*
+
+### Optional: Tell MAIA your pace
+
+- *"Go gently."*
+- *"Be direct."*
+- *"Ask me one question at a time."*
+- *"Give me options, not one answer."*
 
 You can always say exactly what you need. MAIA will follow your lead.
 
