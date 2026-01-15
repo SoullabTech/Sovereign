@@ -364,12 +364,17 @@ export async function consult(
 
   // 4.5. Apply Sinkhorn normalization (if enabled)
   // This balances framing weights so no single perspective dominates synthesis
-  let framingWeights: number[] | undefined;
+  let framingWeightsById: Record<string, number> | undefined;
 
   if (isSinkhornEnabled() && responses.length > 1) {
     const scoreMatrix = buildBaseScoreMatrix(responses);
     const sinkhornResult = sinkhornNormalize(scoreMatrix);
-    framingWeights = aggregateFramingWeights(sinkhornResult.weights);
+    const framingWeights = aggregateFramingWeights(sinkhornResult.weights);
+
+    // Build lookup for sorting and result
+    framingWeightsById = Object.fromEntries(
+      responses.map((r, i) => [r.framingId, framingWeights[i]])
+    );
 
     // Debug logging when AIN_DEBUG=1
     if (process.env.AIN_DEBUG === '1') {
@@ -382,13 +387,21 @@ export async function consult(
       console.log('[AIN:Sinkhorn] Max weight after:', sinkhornResult.diagnostics.maxWeightAfter.toFixed(3));
       console.log('[AIN:Sinkhorn] Framing weights:', responses.map((r, i) => ({
         framing: r.framingId,
-        weight: framingWeights![i].toFixed(3),
+        weight: framingWeights[i].toFixed(3),
       })));
     }
   }
 
+  // 4.6. Order responses by weight (if available)
+  // LLMs are order-sensitive; higher-weight framings first improves synthesis coherence
+  const responsesForSynthesis = framingWeightsById
+    ? [...responses].sort(
+        (a, b) => (framingWeightsById[b.framingId] ?? 0) - (framingWeightsById[a.framingId] ?? 0)
+      )
+    : responses;
+
   // 5. Synthesize
-  const synthesis = await synthesize(request.question, responses);
+  const synthesis = await synthesize(request.question, responsesForSynthesis);
 
   // 6. Build result
   const result: ConsultationResult = {
@@ -402,12 +415,8 @@ export async function consult(
     rawResponses: Object.fromEntries(
       responses.map(r => [r.framingId, r.response])
     ),
-    // Include Sinkhorn weights when enabled (for visibility/future weighted synthesis)
-    ...(framingWeights && {
-      framingWeights: Object.fromEntries(
-        responses.map((r, i) => [r.framingId, framingWeights![i]])
-      ),
-    }),
+    // Include Sinkhorn weights when enabled (for visibility/analysis)
+    ...(framingWeightsById && { framingWeights: framingWeightsById }),
   };
 
   console.log(`[AIN] Consultation complete: ${result.insights.length} insights, ${result.tensions.length} tensions`);
