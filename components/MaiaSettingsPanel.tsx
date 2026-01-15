@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, RotateCcw, Play, Globe, Brain, RefreshCw } from 'lucide-react';
+import { Save, RotateCcw, Play, Globe, Brain, RefreshCw, Check } from 'lucide-react';
 import { ClaudeCodeSettingsToggle } from '@/components/ui/ClaudeCodeIndicator';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
@@ -290,27 +290,35 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
               <div>
                 <label className="block text-sm font-medium text-amber-200 mb-3">Voice Selection</label>
                 <div className="grid grid-cols-2 gap-3">
-                  {VOICE_OPTIONS.map(voice => (
-                    <button
-                      key={voice.id}
-                      onClick={() => updateSetting('voice.openaiVoice', voice.id)}
-                      className={`p-3 rounded-lg border transition-all text-left ${
-                        settings.voice.openaiVoice === voice.id
-                          ? 'border-amber-500/50 bg-amber-500/10'
-                          : 'border-white/10 bg-black/20 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <div className="font-medium text-white">{voice.name}</div>
-                          <div className="text-xs text-white/60">{voice.description}</div>
-                        </div>
-                        {voice.recommended && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">★</span>
+                  {VOICE_OPTIONS.map(voice => {
+                    const isSelected = settings.voice.openaiVoice === voice.id;
+                    return (
+                      <button
+                        key={voice.id}
+                        onClick={() => updateSetting('voice.openaiVoice', voice.id)}
+                        className={`p-3 rounded-lg border transition-all text-left relative active:scale-95 ${
+                          isSelected
+                            ? 'border-amber-400/70 bg-amber-500/20 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                            : 'border-white/10 bg-black/20 hover:border-white/20 active:bg-white/10 active:border-white/30'
+                        }`}
+                      >
+                        {isSelected && (
+                          <div className="absolute top-2 right-2 text-amber-300">
+                            <Check size={14} />
+                          </div>
                         )}
-                      </div>
-                    </button>
-                  ))}
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <div className={`font-medium ${isSelected ? 'text-amber-200' : 'text-white'}`}>{voice.name}</div>
+                            <div className="text-xs text-white/60">{voice.description}</div>
+                          </div>
+                          {voice.recommended && !isSelected && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400">★</span>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -366,19 +374,27 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
               <div>
                 <label className="block text-sm font-medium text-amber-200 mb-2">Memory Depth</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {(['minimal', 'moderate', 'deep'] as const).map(depth => (
-                    <button
-                      key={depth}
-                      onClick={() => updateSetting('memory.depth', depth)}
-                      className={`py-2 px-3 rounded-lg border transition-all ${
-                        settings.memory.depth === depth
-                          ? 'border-amber-500/50 bg-amber-500/10 text-amber-400'
-                          : 'border-white/10 bg-black/20 text-white/60 hover:border-white/20'
-                      }`}
-                    >
-                      {depth.charAt(0).toUpperCase() + depth.slice(1)}
-                    </button>
-                  ))}
+                  {(['minimal', 'moderate', 'deep'] as const).map(depth => {
+                    const isSelected = settings.memory.depth === depth;
+                    return (
+                      <button
+                        key={depth}
+                        onClick={() => updateSetting('memory.depth', depth)}
+                        className={`py-2 px-3 rounded-lg border transition-all relative active:scale-95 ${
+                          isSelected
+                            ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                            : 'border-white/10 bg-black/20 text-white/60 hover:border-white/20 active:bg-white/10'
+                        }`}
+                      >
+                        {isSelected && (
+                          <span className="absolute top-1 right-1 text-amber-300">
+                            <Check size={10} />
+                          </span>
+                        )}
+                        {depth.charAt(0).toUpperCase() + depth.slice(1)}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 

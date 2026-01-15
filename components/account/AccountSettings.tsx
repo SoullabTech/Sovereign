@@ -848,7 +848,7 @@ export function AccountSettings() {
         </label>
         <div className="grid grid-cols-3 gap-2">
           {VOICE_OPTIONS.map((voice) => {
-            const isSelected = maiaSettings.voice.openaiVoice === voice.id;
+            const isSelected = maiaSettings.voice?.openaiVoice === voice.id;
             return (
               <motion.button
                 key={voice.id}
