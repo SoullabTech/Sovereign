@@ -40,14 +40,18 @@ RUN npm run build
 FROM node:20-bookworm-slim AS runner
 WORKDIR /app
 
-# Re-declare ARG in runner stage (ARGs don't cross stages)
+# Re-declare ARGs in runner stage (ARGs don't cross stages)
 ARG GIT_COMMIT=unknown
+ARG APP_VERSION=1.0.0
+ARG BUILD_DATE=unknown
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 ENV GIT_COMMIT=${GIT_COMMIT}
+ENV APP_VERSION=${APP_VERSION}
+ENV BUILD_DATE=${BUILD_DATE}
 
 # Install psql for migrations + curl for worker preflight health checks
 RUN apt-get update && apt-get install -y --no-install-recommends postgresql-client curl \

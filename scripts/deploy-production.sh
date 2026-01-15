@@ -231,8 +231,13 @@ cmd_deploy() {
     # Build and start
     log_info "Building Docker images..."
     export GIT_COMMIT="$(git rev-parse --short HEAD)"
-    log_info "Deploying commit: $GIT_COMMIT"
-    docker compose -f "$COMPOSE_FILE" build --build-arg GIT_COMMIT="$GIT_COMMIT"
+    export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
+    export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
+    docker compose -f "$COMPOSE_FILE" build \
+        --build-arg GIT_COMMIT="$GIT_COMMIT" \
+        --build-arg APP_VERSION="$APP_VERSION" \
+        --build-arg BUILD_DATE="$BUILD_DATE"
 
     log_info "Starting containers..."
     docker compose -f "$COMPOSE_FILE" up -d
@@ -266,8 +271,13 @@ cmd_update() {
 
     log_info "Rebuilding and redeploying..."
     export GIT_COMMIT="$(git rev-parse --short HEAD)"
-    log_info "Deploying commit: $GIT_COMMIT"
-    docker compose -f "$COMPOSE_FILE" build --build-arg GIT_COMMIT="$GIT_COMMIT"
+    export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
+    export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+    log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
+    docker compose -f "$COMPOSE_FILE" build \
+        --build-arg GIT_COMMIT="$GIT_COMMIT" \
+        --build-arg APP_VERSION="$APP_VERSION" \
+        --build-arg BUILD_DATE="$BUILD_DATE"
     docker compose -f "$COMPOSE_FILE" up -d
 
     log_info "Running migrations..."
