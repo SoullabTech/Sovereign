@@ -1012,8 +1012,10 @@ export function AccountSettings() {
             <motion.button
               onClick={() => checkForUpdate()}
               disabled={isChecking}
-              className="flex items-center gap-2 px-4 py-2 text-sm bg-stone-700/50 hover:bg-stone-700
-                       text-stone-300 rounded-lg transition-colors disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-stone-700/50 hover:bg-stone-600
+                       active:bg-amber-600/70 active:text-amber-100
+                       text-stone-300 rounded-lg transition-all duration-150 disabled:opacity-50
+                       border border-transparent active:border-amber-500/50"
               whileTap={{ scale: 0.95 }}
             >
               <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
