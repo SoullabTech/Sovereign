@@ -678,8 +678,9 @@ export function AccountSettings() {
   const renderToggle = (enabled: boolean, onToggle: () => void) => (
     <button
       onClick={onToggle}
-      className={`w-11 h-6 rounded-full p-0.5 transition-colors ${
-        enabled ? 'bg-amber-500' : 'bg-white/20'
+      className={`w-11 h-6 rounded-full p-0.5 transition-all duration-150
+        active:scale-95 active:ring-2 active:ring-amber-400/50 ${
+        enabled ? 'bg-amber-500 active:bg-amber-400' : 'bg-white/20 active:bg-white/30'
       }`}
     >
       <motion.div
@@ -805,12 +806,12 @@ export function AccountSettings() {
             <motion.button
               key={mode}
               onClick={() => updateMaiaSetting('defaultMemoryMode', mode)}
-              className={`p-4 rounded-xl border text-left transition-all ${
+              className={`p-4 rounded-xl border text-left transition-all active:scale-95 ${
                 maiaSettings.defaultMemoryMode === mode
                   ? mode === 'sanctuary'
-                    ? 'border-emerald-500/50 bg-emerald-500/15'
-                    : 'border-amber-500/50 bg-amber-500/15'
-                  : 'border-white/10 bg-black/20'
+                    ? 'border-emerald-500/50 bg-emerald-500/15 active:bg-emerald-500/30'
+                    : 'border-amber-500/50 bg-amber-500/15 active:bg-amber-500/30'
+                  : 'border-white/10 bg-black/20 active:bg-white/10 active:border-white/30'
               }`}
               whileTap={{ scale: 0.98 }}
             >
@@ -840,10 +841,10 @@ export function AccountSettings() {
             <motion.button
               key={voice.id}
               onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
-              className={`py-3 px-3 rounded-xl border transition-all ${
+              className={`py-3 px-3 rounded-xl border transition-all active:scale-95 ${
                 maiaSettings.voice.openaiVoice === voice.id
-                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-400'
-                  : 'border-white/10 bg-black/20 text-white/60'
+                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30'
+                  : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
               }`}
               whileTap={{ scale: 0.95 }}
             >
@@ -881,10 +882,10 @@ export function AccountSettings() {
             <motion.button
               key={depth}
               onClick={() => updateNestedMaiaSetting('memory.depth', depth)}
-              className={`py-3 rounded-xl border transition-all ${
+              className={`py-3 rounded-xl border transition-all active:scale-95 ${
                 maiaSettings.memory.depth === depth
-                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-400'
-                  : 'border-white/10 bg-black/20 text-white/60'
+                  ? 'border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30'
+                  : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
               }`}
               whileTap={{ scale: 0.95 }}
             >
@@ -905,12 +906,12 @@ export function AccountSettings() {
             <motion.button
               key={arch.id}
               onClick={() => updateMaiaSetting('archetype', arch.id)}
-              className={`py-3 px-2 rounded-xl border transition-all ${
+              className={`py-3 px-2 rounded-xl border transition-all active:scale-95 ${
                 maiaSettings.archetype === arch.id
                   ? arch.id === 'AUTO'
-                    ? 'border-purple-500/50 bg-purple-500/15 text-purple-300'
-                    : 'border-amber-500/50 bg-amber-500/15 text-amber-400'
-                  : 'border-white/10 bg-black/20 text-white/60'
+                    ? 'border-purple-500/50 bg-purple-500/15 text-purple-300 active:bg-purple-500/30'
+                    : 'border-amber-500/50 bg-amber-500/15 text-amber-400 active:bg-amber-500/30'
+                  : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
               }`}
               whileTap={{ scale: 0.95 }}
             >
@@ -934,10 +935,10 @@ export function AccountSettings() {
               <motion.button
                 key={mode}
                 onClick={() => updateMaiaSetting('conversationMode', mode)}
-                className={`w-full text-left p-3 rounded-xl border transition-all ${
+                className={`w-full text-left p-3 rounded-xl border transition-all active:scale-[0.98] ${
                   maiaSettings.conversationMode === mode
-                    ? 'border-amber-500/50 bg-amber-500/15'
-                    : 'border-white/10 bg-black/20'
+                    ? 'border-amber-500/50 bg-amber-500/15 active:bg-amber-500/30'
+                    : 'border-white/10 bg-black/20 active:bg-white/10 active:border-white/30'
                 }`}
                 whileTap={{ scale: 0.98 }}
               >
