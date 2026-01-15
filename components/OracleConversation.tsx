@@ -2262,6 +2262,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('🧠 [Identity] Explorer ID generated on-the-fly:', effectiveExplorerId);
       }
 
+      // Build local array that includes the new user message (state update is async)
+      const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+
       // MAIA speaks through sovereign API - working consciousness system
       const response = await fetch(apiEndpoint, {
         method: 'POST',
@@ -2301,7 +2304,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             depth: 0.7,
             quality: 'present'
           },
-          conversationHistory: truncateHistoryForAPI(messages),
+          conversationHistory: truncateHistoryForAPI(nextMessagesForApi),
           sessionTimeContext: sessionTimer?.getTimeContext(), // ⏰ Temporal awareness for MAIA
           teenSupportContext: teenSystemPrompt ? {
             isTeenUser,
@@ -3269,7 +3272,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
 
         // Send via streaming voice system (truncated for performance)
-        const conversationHistory = truncateHistoryForAPI(messages);
+        // Build local array that includes the new user message (state update is async)
+        const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
+        const conversationHistory = truncateHistoryForAPI(nextMessagesForApi);
         await sendStreamingMessage(cleanedText, conversationHistory);
 
         setIsProcessing(false);
