@@ -34,6 +34,8 @@ import { Database, HardDrive, Cloud, RefreshCw } from 'lucide-react';
 import ForgettingRitual from '@/components/sovereignty/ForgettingRitual';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
 import { ConversationMode, CONVERSATION_STYLE_DESCRIPTIONS } from '@/lib/types/conversation-style';
+import { useUpdate } from '@/components/providers/UpdateProvider';
+import { Settings } from 'lucide-react';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Types
@@ -183,6 +185,12 @@ export function AccountSettings() {
   const [syncCounts, setSyncCounts] = useState({ local: 0, server: 0, pending: 0 });
   const [showForgettingRitual, setShowForgettingRitual] = useState(false);
 
+  // App update service
+  const { currentVersion, checkForUpdate, isChecking, lastCheckResult } = useUpdate();
+
+  // Native app build info
+  const [nativeBuildInfo, setNativeBuildInfo] = useState<{ version: string; build: string } | null>(null);
+
   // ─────────────────────────────────────────────────────────────────────────
   // Data Loading
   // ─────────────────────────────────────────────────────────────────────────
@@ -326,6 +334,22 @@ export function AccountSettings() {
     };
 
     loadData();
+  }, []);
+
+  // Detect native app build info (Capacitor)
+  useEffect(() => {
+    const checkNativeBuild = async () => {
+      if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
+        try {
+          const { App } = await import('@capacitor/app');
+          const info = await App.getInfo();
+          setNativeBuildInfo({ version: info.version, build: info.build });
+        } catch (e) {
+          console.log('[AccountSettings] Not running in native app');
+        }
+      }
+    };
+    checkNativeBuild();
   }, []);
 
   // Subscribe to sync state
@@ -947,6 +971,68 @@ export function AccountSettings() {
           maiaSettings.display?.vocabularyTooltips ?? true,
           () => updateNestedMaiaSetting('display.vocabularyTooltips', !(maiaSettings.display?.vocabularyTooltips ?? true))
         )}
+      </div>
+
+      {/* Build Info */}
+      <div className="mt-6 pt-6 border-t border-white/10">
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+          <Settings size={16} />
+          Build Info
+        </label>
+        <div className="p-4 bg-stone-800/50 border border-stone-700/50 rounded-lg space-y-4">
+          {/* Native App Info */}
+          <div className="grid grid-cols-2 gap-4 text-xs">
+            <div>
+              <span className="text-stone-500">Native App Build:</span>
+              <p className="text-stone-300 font-mono">
+                {nativeBuildInfo
+                  ? `v${nativeBuildInfo.version} (${nativeBuildInfo.build})`
+                  : 'Web / Not native'}
+              </p>
+            </div>
+            <div>
+              <span className="text-stone-500">Server Build:</span>
+              <p className="text-stone-300 font-mono">
+                v{currentVersion?.version || '...'} ({currentVersion?.commit?.slice(0, 8) || '...'})
+              </p>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-stone-700/30" />
+
+          {/* Update Check */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="text-sm font-medium text-stone-200">Check for Updates</h4>
+              <p className="text-xs text-stone-500 mt-0.5">
+                Last checked: {lastCheckResult ? new Date().toLocaleTimeString() : 'Never'}
+              </p>
+            </div>
+            <motion.button
+              onClick={() => checkForUpdate()}
+              disabled={isChecking}
+              className="flex items-center gap-2 px-4 py-2 text-sm bg-stone-700/50 hover:bg-stone-700
+                       text-stone-300 rounded-lg transition-colors disabled:opacity-50"
+              whileTap={{ scale: 0.95 }}
+            >
+              <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+              {isChecking ? 'Checking...' : 'Check'}
+            </motion.button>
+          </div>
+
+          {lastCheckResult && (
+            <div className="pt-3 border-t border-stone-700/30">
+              {lastCheckResult.updateAvailable ? (
+                <p className="text-xs text-amber-400">
+                  Update available: v{lastCheckResult.serverVersion}
+                </p>
+              ) : (
+                <p className="text-xs text-green-400">You&apos;re on the latest version</p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
