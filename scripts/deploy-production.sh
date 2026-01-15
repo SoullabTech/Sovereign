@@ -43,20 +43,42 @@ send_alert() {
     local message="$2"
     local details="${3:-}"
 
-    # Get BASE_URL from env file
+    # Get BASE_URL from env file (quote-safe parsing)
     local base_url
-    base_url=$(grep "^BASE_URL=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "https://soullab.life")
+    base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
     base_url="${base_url:-https://soullab.life}"
+    base_url="${base_url%/}"  # Strip trailing slash
 
-    # Get alert token from env file
+    # Get alert token from env file (quote-safe parsing)
     local alert_token
-    alert_token=$(grep "^INTERNAL_ALERT_TOKEN=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "")
+    alert_token=$(awk -F= '/^INTERNAL_ALERT_TOKEN=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
 
+    # Build JSON payload safely using jq if available
     local json_payload
-    if [ -n "$details" ]; then
-        json_payload="{\"severity\": \"$severity\", \"message\": \"$message\", \"commit\": \"${GIT_COMMIT:-unknown}\", \"source\": \"deploy-script\", \"details\": $details}"
+    if command -v jq >/dev/null 2>&1; then
+        if [ -n "$details" ]; then
+            json_payload=$(jq -n \
+                --arg sev "$severity" \
+                --arg msg "$message" \
+                --arg commit "${GIT_COMMIT:-unknown}" \
+                --argjson details "$details" \
+                '{severity:$sev, message:$msg, commit:$commit, source:"deploy-script", details:$details}')
+        else
+            json_payload=$(jq -n \
+                --arg sev "$severity" \
+                --arg msg "$message" \
+                --arg commit "${GIT_COMMIT:-unknown}" \
+                '{severity:$sev, message:$msg, commit:$commit, source:"deploy-script"}')
+        fi
     else
-        json_payload="{\"severity\": \"$severity\", \"message\": \"$message\", \"commit\": \"${GIT_COMMIT:-unknown}\", \"source\": \"deploy-script\"}"
+        # Fallback: escape quotes in message
+        local escaped_msg
+        escaped_msg=$(echo "$message" | sed 's/\\/\\\\/g; s/"/\\"/g')
+        if [ -n "$details" ]; then
+            json_payload="{\"severity\": \"$severity\", \"message\": \"$escaped_msg\", \"commit\": \"${GIT_COMMIT:-unknown}\", \"source\": \"deploy-script\", \"details\": $details}"
+        else
+            json_payload="{\"severity\": \"$severity\", \"message\": \"$escaped_msg\", \"commit\": \"${GIT_COMMIT:-unknown}\", \"source\": \"deploy-script\"}"
+        fi
     fi
 
     curl -sf -X POST "${base_url}/api/build/alert" \
@@ -71,11 +93,15 @@ send_alert() {
 run_smoke_tests() {
     log_info "Running post-deployment smoke tests..."
 
+    # Quote-safe BASE_URL parsing
     local base_url
-    base_url=$(grep "^BASE_URL=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "https://soullab.life")
+    base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
     base_url="${base_url:-https://soullab.life}"
+    base_url="${base_url%/}"  # Strip trailing slash
 
     local all_passed=true
+    local report=""
+    add_result() { report="${report}\n  $1"; }
 
     # Wait for Next.js cold start (standalone server needs time)
     log_info "  Waiting for services to stabilize..."
@@ -100,8 +126,10 @@ run_smoke_tests() {
     log_info "  Testing /api/health..."
     if retry_curl "${base_url}/api/health" 3; then
         log_success "  /api/health OK"
+        add_result "PASS  /api/health"
     else
         log_error "  /api/health FAILED"
+        add_result "FAIL  /api/health (unreachable after retries)"
         send_alert "critical" "Health endpoint failed after deployment"
         all_passed=false
     fi
@@ -110,8 +138,10 @@ run_smoke_tests() {
     log_info "  Testing /api/version..."
     if retry_curl "${base_url}/api/version" 3; then
         log_success "  /api/version OK"
+        add_result "PASS  /api/version"
     else
         log_error "  /api/version FAILED"
+        add_result "FAIL  /api/version (unreachable after retries)"
         send_alert "critical" "Version endpoint failed after deployment"
         all_passed=false
     fi
@@ -122,17 +152,30 @@ run_smoke_tests() {
     ready_response=$(curl -sf "${base_url}/api/ready" 2>/dev/null || echo '{"ready":false}')
     if echo "$ready_response" | grep -q '"ready":true'; then
         log_success "  /api/ready OK"
+        add_result "PASS  /api/ready"
     else
         log_warn "  /api/ready shows degraded dependencies"
-        send_alert "warning" "Dependencies degraded after deployment" "{\"response\": $(echo "$ready_response" | head -c 500)}"
+        add_result "WARN  /api/ready (degraded dependencies)"
+        # Build safe JSON payload for alert
+        local ready_snip
+        ready_snip="$(echo "$ready_response" | head -c 500)"
+        local payload
+        if command -v jq >/dev/null 2>&1; then
+            payload="$(jq -n --arg response "$ready_snip" '{response:$response}')"
+        else
+            payload="{\"response\":\"$(echo "$ready_snip" | sed 's/\\/\\\\/g; s/"/\\"/g')\"}"
+        fi
+        send_alert "warning" "Dependencies degraded after deployment" "$payload"
     fi
 
     # Test 4: Main page loads
     log_info "  Testing main page..."
     if curl -sf "${base_url}/" > /dev/null 2>&1; then
         log_success "  Main page OK"
+        add_result "PASS  Main page"
     else
         log_warn "  Main page may be slow to respond"
+        add_result "WARN  Main page (slow or unreachable)"
     fi
 
     # Test 5: Auth endpoints are locked (with retry for cold start)
@@ -164,23 +207,38 @@ run_smoke_tests() {
     log_info "  Testing auth lock on /api/build/status..."
     local status_code
     status_code=$(get_status_code_with_retry "${base_url}/api/build/status" "GET")
-    if [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
+    if [ "$status_code" = "000" ]; then
+        log_error "  /api/build/status unreachable (000) — check routing/DNS/caddy"
+        add_result "FAIL  /api/build/status (000 - routing issue)"
+        all_passed=false
+    elif [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/status locked ($status_code)"
+        add_result "PASS  /api/build/status (locked: $status_code)"
     else
         log_error "  /api/build/status NOT LOCKED (got $status_code, expected 401/403/503)"
+        add_result "FAIL  /api/build/status (got $status_code, not locked)"
         send_alert "critical" "Build status endpoint is not protected!" "{\"http_code\": \"$status_code\"}"
         all_passed=false
     fi
 
     log_info "  Testing auth lock on /api/build/alert..."
     status_code=$(get_status_code_with_retry "${base_url}/api/build/alert" "POST")
-    if [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
+    if [ "$status_code" = "000" ]; then
+        log_error "  /api/build/alert unreachable (000) — check routing/DNS/caddy"
+        add_result "FAIL  /api/build/alert (000 - routing issue)"
+        all_passed=false
+    elif [ "$status_code" = "401" ] || [ "$status_code" = "403" ] || [ "$status_code" = "503" ]; then
         log_success "  /api/build/alert locked ($status_code)"
+        add_result "PASS  /api/build/alert (locked: $status_code)"
     else
         log_error "  /api/build/alert NOT LOCKED (got $status_code, expected 401/403/503)"
+        add_result "FAIL  /api/build/alert (got $status_code, not locked)"
         send_alert "critical" "Build alert endpoint is not protected!" "{\"http_code\": \"$status_code\"}"
         all_passed=false
     fi
+
+    # Print summary report
+    echo -e "\n${CYAN}═══ Smoke Test Report ═══${NC}${report}\n"
 
     if $all_passed; then
         log_success "All smoke tests passed!"
