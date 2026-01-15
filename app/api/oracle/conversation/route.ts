@@ -870,9 +870,9 @@ export async function POST(request: NextRequest) {
             consciousnessLevel: trustLevel / 10,
           }
         ).then(() => {
-          console.log(`🕸️ [AIN] Breakthrough contributed to collective field: ${breakthroughType} (depth ${breakthroughDepth})`);
+          console.log(`🕸️ [AIN] Breakthrough contributed to collective field: ${breakthroughType} (depth ${breakthroughDepth}) [${requestId}]`);
         }).catch(err => {
-          console.error('⚠️ [AIN] Failed to contribute breakthrough (non-critical):', err);
+          console.error(`⚠️ [AIN] Failed to contribute breakthrough (non-critical) [${requestId}]:`, err);
         });
       }
     } catch (ainError) {
