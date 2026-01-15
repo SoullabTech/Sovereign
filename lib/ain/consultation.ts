@@ -20,6 +20,12 @@ import type {
   EmergenceRating,
 } from './types';
 import { MultiLLMProvider } from '@/lib/consciousness/LLMProvider';
+import {
+  isSinkhornEnabled,
+  sinkhornNormalize,
+  buildBaseScoreMatrix,
+  aggregateFramingWeights,
+} from './utils/sinkhorn';
 
 // Path to framing library
 const FRAMINGS_PATH = join(process.cwd(), 'lib/ain/framings');
@@ -356,6 +362,31 @@ export async function consult(
   // 4. Run deliberation
   const responses = await deliberate(request.question, framings);
 
+  // 4.5. Apply Sinkhorn normalization (if enabled)
+  // This balances framing weights so no single perspective dominates synthesis
+  let framingWeights: number[] | undefined;
+
+  if (isSinkhornEnabled() && responses.length > 1) {
+    const scoreMatrix = buildBaseScoreMatrix(responses);
+    const sinkhornResult = sinkhornNormalize(scoreMatrix);
+    framingWeights = aggregateFramingWeights(sinkhornResult.weights);
+
+    // Debug logging when AIN_DEBUG=1
+    if (process.env.AIN_DEBUG === '1') {
+      console.log('[AIN:Sinkhorn] Normalization applied');
+      console.log('[AIN:Sinkhorn] Iterations:', sinkhornResult.iterations);
+      console.log('[AIN:Sinkhorn] Converged:', sinkhornResult.converged);
+      console.log('[AIN:Sinkhorn] Entropy before:', sinkhornResult.diagnostics.entropyBefore.toFixed(3));
+      console.log('[AIN:Sinkhorn] Entropy after:', sinkhornResult.diagnostics.entropyAfter.toFixed(3));
+      console.log('[AIN:Sinkhorn] Max weight before:', sinkhornResult.diagnostics.maxWeightBefore.toFixed(3));
+      console.log('[AIN:Sinkhorn] Max weight after:', sinkhornResult.diagnostics.maxWeightAfter.toFixed(3));
+      console.log('[AIN:Sinkhorn] Framing weights:', responses.map((r, i) => ({
+        framing: r.framingId,
+        weight: framingWeights![i].toFixed(3),
+      })));
+    }
+  }
+
   // 5. Synthesize
   const synthesis = await synthesize(request.question, responses);
 
@@ -371,6 +402,12 @@ export async function consult(
     rawResponses: Object.fromEntries(
       responses.map(r => [r.framingId, r.response])
     ),
+    // Include Sinkhorn weights when enabled (for visibility/future weighted synthesis)
+    ...(framingWeights && {
+      framingWeights: Object.fromEntries(
+        responses.map((r, i) => [r.framingId, framingWeights![i]])
+      ),
+    }),
   };
 
   console.log(`[AIN] Consultation complete: ${result.insights.length} insights, ${result.tensions.length} tensions`);

@@ -93,6 +93,9 @@ export interface ConsultationResult {
   // For MAIA's use
   rawResponses?: Record<string, string>;  // Per-framing responses if needed
   synthesisNotes?: string;        // Notes from synthesis process
+
+  // Sinkhorn weights (when AIN_SINKHORN_ROUTING=1)
+  framingWeights?: Record<string, number>;  // Per-framing normalized weights
 }
 
 /**
