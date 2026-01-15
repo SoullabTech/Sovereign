@@ -8,6 +8,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { useStreamingVoice } from '@/hooks/useStreamingVoice';
+import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
 import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/ConversationalRhythm';
@@ -342,6 +343,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Voice settings from account preferences (applies to TTS)
   const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95 });
+
+  // Member's preferred name for MAIA (bonding affordance)
+  const assistantName = useAssistantName();
   const [audioEnabled, setAudioEnabled] = useState(true); // AUTO-START FIX: Start as true to enable immediate voice
   const [audioUnlocked, setAudioUnlocked] = useState(false); // Enhanced Safari audio unlock status
   const [showAudioUnlockUI, setShowAudioUnlockUI] = useState(false); // Show Safari unlock UI
@@ -2002,12 +2006,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     const timestamp = new Date().toISOString().split('T')[0];
     const content = messages.map(msg => {
-      const speaker = msg.role === 'user' ? (userName || 'You') : 'MAIA';
+      const speaker = msg.role === 'user' ? (userName || 'You') : assistantName;
       const text = (msg.text ?? msg.content ?? '').replace(/\*[^*]*\*/g, '').trim();
       return `${speaker}:\n${text}\n`;
     }).join('\n---\n\n');
 
-    const header = `MAIA Conversation - ${timestamp}\n${'='.repeat(40)}\n\n`;
+    const header = `${assistantName} Conversation - ${timestamp}\n${'='.repeat(40)}\n\n`;
     const blob = new Blob([header + content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -4661,7 +4665,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
                     >
                       <div className="flex justify-between items-start mb-2">
                         <div className="text-xs" style={{ color: '#D4A574', opacity: 0.8, fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
-                          {message.role === 'user' ? (userName || 'You') : 'MAIA'}
+                          {message.role === 'user' ? (userName || 'You') : assistantName}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-amber-400
                                       opacity-100 sm:opacity-0 sm:group-hover:opacity-100

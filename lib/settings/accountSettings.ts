@@ -38,6 +38,9 @@ export interface AccountSettings {
     /** Show vocabulary tooltips for soul vocabulary terms */
     vocabularyTooltips: boolean;
   };
+
+  /** Member's preferred name for MAIA (she remains MAIA internally) */
+  preferredAssistantName: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,6 +61,7 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   display: {
     vocabularyTooltips: true, // Default on for newcomers learning soul vocabulary
   },
+  preferredAssistantName: 'MAIA', // Default name, member can customize
 };
 
 const STORAGE_KEY = 'maia_account_settings';

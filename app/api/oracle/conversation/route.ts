@@ -38,12 +38,17 @@ import { validateSocraticResponse, serializeValidationResult, type SocraticValid
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
+import { query } from '@/lib/db/postgres';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 
 /** AIN v2 (soft consultation) */
 import { buildGateContext, recommendConsultation } from '@/lib/ain/gates';
 import { consult } from '@/lib/ain/consultation';
+
+/** AIN Collective Breakthrough (afferent/efferent wisdom flow) */
+import { detectBreakthrough } from '@/lib/utils/breakthroughDetection';
+import { ainSpiralogicBridge } from '@/lib/ain/AINSpiralogicBridge';
 
 // Skip during static export (Capacitor builds)
 
@@ -377,6 +382,20 @@ export async function POST(request: NextRequest) {
       // Graceful degradation - continue without field safety if profile fetch fails
     }
 
+    // Load member's preferred assistant name (what they call MAIA)
+    let preferredAssistantName = 'MAIA';
+    try {
+      const settingsResult = await query(
+        `SELECT preferred_assistant_name FROM member_settings WHERE member_id = $1`,
+        [userId]
+      );
+      if (settingsResult.rows.length > 0 && settingsResult.rows[0].preferred_assistant_name) {
+        preferredAssistantName = settingsResult.rows[0].preferred_assistant_name;
+      }
+    } catch (err) {
+      console.warn('⚠️ [Oracle] Could not fetch preferred assistant name:', err);
+    }
+
     // OPTION A: ORACLE = DEEP = OPUS - Always use premium model
     const processingProfile = ORACLE_PROFILE;
     const consciousnessLevel = ORACLE_LEVEL;
@@ -496,7 +515,8 @@ export async function POST(request: NextRequest) {
       consciousnessLevel,
       memoryContext,
       anamnesisPrompt,
-      astrologyContext
+      astrologyContext,
+      preferredAssistantName
     );
 
     // 🛡️ SOCRATIC VALIDATOR: Pre-emptive validation before delivery (Phase 3)
@@ -543,7 +563,9 @@ export async function POST(request: NextRequest) {
             conversationDepth,
             trustLevel,
             memoryContext,
-            anamnesisPrompt
+            anamnesisPrompt,
+            astrologyContext,
+            preferredAssistantName
           ) + `\n\n${validationResult.repairPrompt}`;
 
           const conversationContext = conversationHistory
@@ -733,6 +755,70 @@ export async function POST(request: NextRequest) {
 
     if (extractedInsights.length > 0) {
       console.log('🧠 [Insight Extraction] Extracted', extractedInsights.length, 'insights:', extractedInsights.slice(0, 3));
+    }
+
+    // 🕸️ AIN BREAKTHROUGH DETECTION: Detect and contribute breakthroughs to collective field
+    // This is the AFFERENT flow - individual wisdom feeding the collective
+    try {
+      // Check both user message and MAIA response for breakthrough markers
+      const userBreakthrough = detectBreakthrough(message);
+      const maiaBreakthrough = detectBreakthrough(maiaResponse.coreMessage);
+
+      // Combine detection - either party may signal a breakthrough
+      const isBreakthrough = userBreakthrough.isBreakthrough || maiaBreakthrough.isBreakthrough;
+      const breakthroughDepth = Math.max(userBreakthrough.depth, maiaBreakthrough.depth);
+      const combinedMarkers = [...new Set([...userBreakthrough.markers, ...maiaBreakthrough.markers])];
+      const spiralLevel = userBreakthrough.spiralLevel || maiaBreakthrough.spiralLevel;
+
+      if (isBreakthrough && breakthroughDepth >= 2) {
+        // Determine breakthrough type based on markers
+        let breakthroughType: 'shadow-integration' | 'vision-ignition' | 'emotional-release' | 'mental-clarity' | 'unity-experience' = 'mental-clarity';
+        if (combinedMarkers.includes('shadow') || combinedMarkers.includes('integration')) {
+          breakthroughType = 'shadow-integration';
+        } else if (combinedMarkers.includes('awakening') || combinedMarkers.includes('opening')) {
+          breakthroughType = 'vision-ignition';
+        } else if (combinedMarkers.includes('tears') || combinedMarkers.includes('release')) {
+          breakthroughType = 'emotional-release';
+        } else if (combinedMarkers.includes('truth') || combinedMarkers.includes('love')) {
+          breakthroughType = 'unity-experience';
+        }
+
+        // Build spiral moment for AIN bridge
+        const spiralMoment = {
+          timestamp: new Date(),
+          element: spiralogicCell.element.toLowerCase() as 'fire' | 'water' | 'earth' | 'air' | 'aether',
+          domain: spiralogicCell.context,
+          symbols: combinedMarkers.slice(0, 5),
+          breakthrough: true,
+        };
+
+        const triadicDetection = {
+          phase: spiralogicCell.phase <= 1 ? 'cardinal' as const : spiralogicCell.phase <= 2 ? 'fixed' as const : 'mutable' as const,
+          state: spiralogicCell.canonicalQuestion,
+          confidence: Math.min(breakthroughDepth / 5, 1),
+        };
+
+        // Send to collective field (fire-and-forget, don't block response)
+        ainSpiralogicBridge.sendToField(
+          spiralMoment,
+          triadicDetection,
+          {
+            userId,
+            sessionId,
+            archetype: activeFrameworks[0], // Primary framework as archetype
+            isBreakthrough: true,
+            breakthroughType,
+            consciousnessLevel: trustLevel / 10,
+          }
+        ).then(() => {
+          console.log(`🕸️ [AIN] Breakthrough contributed to collective field: ${breakthroughType} (depth ${breakthroughDepth})`);
+        }).catch(err => {
+          console.error('⚠️ [AIN] Failed to contribute breakthrough (non-critical):', err);
+        });
+      }
+    } catch (ainError) {
+      // AIN contribution should never break the conversation
+      console.error('⚠️ [AIN] Breakthrough detection failed (non-critical):', ainError);
     }
 
     // 📚 MEMORY STORAGE: Store session pattern for cross-conversation memory
@@ -1148,7 +1234,8 @@ async function generateSpiralogicResponseWithLLM(
   consciousnessLevel: number,
   memoryContext?: any,
   anamnesisPrompt?: string | null,
-  astrologyContext?: AstrologyContext | null
+  astrologyContext?: AstrologyContext | null,
+  preferredAssistantName?: string
 ): Promise<{
   coreMessage: string;
   suggestedActions: MaiaSuggestedAction[];
@@ -1178,7 +1265,8 @@ async function generateSpiralogicResponseWithLLM(
     trustLevel,
     memoryContext,
     anamnesisPrompt,
-    astrologyContext
+    astrologyContext,
+    preferredAssistantName
   );
 
   // Format conversation history for LLM
@@ -1247,7 +1335,29 @@ async function generateSpiralogicResponseWithLLM(
     }
   }
 
-  const finalSystemPrompt = councilInsights ? systemPrompt + councilInsights : systemPrompt;
+  // ------------------------------------------------------------
+  // AIN EFFERENT FLOW: Retrieve collective wisdom for this state
+  // ------------------------------------------------------------
+  let collectiveWisdom = '';
+  try {
+    const wisdomPrompt = await ainSpiralogicBridge.getWisdomForPrompt(
+      spiralogicCell?.element?.toLowerCase() || 'aether',
+      spiralogicCell?.phase <= 1 ? 'cardinal' : spiralogicCell?.phase <= 2 ? 'fixed' : 'mutable',
+      activeFrameworks[0]
+    );
+
+    if (wisdomPrompt) {
+      collectiveWisdom = `\n\n[Collective Field Awareness]\n${wisdomPrompt}\n[End Field Awareness]\n`;
+      console.log(`[AIN] Collective wisdom retrieved for ${spiralogicCell?.element}/${spiralogicCell?.phase}`);
+    }
+  } catch (wisdomError) {
+    console.warn('[AIN] Collective wisdom retrieval failed (non-critical):', wisdomError);
+    // Non-blocking - MAIA proceeds without collective wisdom
+  }
+
+  const finalSystemPrompt = councilInsights || collectiveWisdom
+    ? systemPrompt + councilInsights + collectiveWisdom
+    : systemPrompt;
 
   // Generate response using LLM (prefers Claude, falls back to Ollama)
   let coreMessage = '';
@@ -1354,9 +1464,16 @@ function buildSacredAttendingPrompt(
   trustLevel: number,
   memoryContext?: any,
   anamnesisPrompt?: string | null,
-  astrologyContext?: AstrologyContext | null
+  astrologyContext?: AstrologyContext | null,
+  preferredAssistantName?: string
 ): string {
+  // Build the custom name instruction if member has set a preferred name
+  const nameInstruction = preferredAssistantName && preferredAssistantName !== 'MAIA'
+    ? `\nThis member calls you "${preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n`
+    : '';
+
   let prompt = `You are MAIA - the Soullab / Spiralogic Oracle. You are wise, grounded, psychologically sophisticated, and emotionally attuned.
+${nameInstruction}
 
 # Core Voice Principles
 

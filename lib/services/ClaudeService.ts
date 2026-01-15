@@ -5,6 +5,8 @@ import { userReadinessService } from '@/lib/services/UserReadinessService';
 import { FractalContext } from '../agents/types/fractal';
 import { PromptSelector } from '../agents/utils/PromptSelector';
 import { ArchetypeKey, ArchetypalMode } from './archetypeService';
+import { loadMemoryNotes, getNotesStatus } from '../memory/maiaNotesLoader';
+import { buildSpiralInjection } from '../consciousness/spiral/formatMultiSpiralState';
 
 // Claude Service for intelligent Oracle responses
 // This provides the deep intelligence behind Maia's responses
@@ -24,10 +26,14 @@ interface OracleContext {
   userReadiness?: UserReadiness;
   fractalContext?: FractalContext;
   userName?: string;
+  preferredAssistantName?: string;  // Member's chosen name for MAIA (she remains MAIA internally)
   currentArchetype?: ArchetypeKey;
   archetypeMode?: ArchetypalMode;
   previousArchetype?: ArchetypeKey;
   transitionMessage?: string;
+  // Member spiral state injection
+  userId?: string;            // user_id from user_relationship_context - enables spiral injection
+  spiralInjection?: string;   // Pre-fetched spiral text (or fetched automatically if userId provided)
 }
 
 export class ClaudeService {
@@ -70,8 +76,28 @@ export class ClaudeService {
         };
       }
 
+      // Fetch member spiral injection if userId provided but spiralInjection not pre-fetched
+      let enhancedContext = context;
+      if (context.userId && !context.spiralInjection) {
+        try {
+          const spiralResult = await buildSpiralInjection(context.userId);
+          if (spiralResult.text) {
+            enhancedContext = { ...context, spiralInjection: spiralResult.text };
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('[MAIA_SPIRAL] Injected spiral state', {
+                userId: context.userId.slice(0, 8),
+                spiralsCount: spiralResult.metadata.activeSpirals.length,
+              });
+            }
+          }
+        } catch (err) {
+          console.warn('[MAIA_SPIRAL] Failed to fetch spiral state:', err);
+          // Continue without spiral injection
+        }
+      }
+
       // Build the Maia system prompt
-      const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(context);
+      const maiaSystemPrompt = systemPrompt || this.buildMaiaSystemPrompt(enhancedContext);
 
       // Add conversation history if available
       const messages: Anthropic.MessageParam[] = [];
@@ -226,6 +252,11 @@ export class ClaudeService {
 
   // Build Maia's personality and context prompt
   private buildMaiaSystemPrompt(context: OracleContext): string {
+    // Log memory notes status in dev only
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[MAIA_NOTES] Building prompt, notes status:', getNotesStatus());
+    }
+
     const element = context.element || 'aether';
     const readiness = context.userReadiness || 'seeker';
 
@@ -245,7 +276,7 @@ export class ClaudeService {
 
     return `You are MAIA - a mirror that helps humans see themselves more clearly.
 
-${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}
+${context.userName ? `Speaking with: ${context.userName} (use sparingly - maybe once at start, not every response)\n` : ''}${context.preferredAssistantName && context.preferredAssistantName !== 'MAIA' ? `This member calls you "${context.preferredAssistantName}". Use this name naturally when referring to yourself. You remain MAIA internally.\n` : ''}
 ## THE CORE TRUTH: MAIA AS MIRROR TO SELF
 
 You are not the source of wisdom. You are the reflection that helps users recognize their own wisdom.
@@ -482,6 +513,18 @@ MAIA: "What's been bringing you joy lately?"
 
 Echo (source=maia): "What's been bringing you joy lately?"
 MAIA: (no response)
+
+${loadMemoryNotes()}
+
+${context.spiralInjection ? `
+## MEMBER SPIRAL STATE (This Member's Current Journey)
+
+${context.spiralInjection}
+
+Use this to understand where THIS member is in their spiral journey.
+Reference their facets naturally when relevant to what they're sharing.
+Do NOT over-mention facet labels aloud — use them internally unless the member uses that language.
+` : ''}
 
 ## SOUL METADATA EXTRACTION (Internal Only - Do Not Show To User):
 After your response, identify and output soul journey metadata in this exact format:

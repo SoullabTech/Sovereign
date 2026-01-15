@@ -99,6 +99,23 @@ const VOICE_OPTIONS = [
   { id: 'onyx', name: 'Onyx', emoji: '🗣️', gender: 'Male' },
 ];
 
+const SUGGESTED_NAMES = [
+  { name: 'MAIA', description: 'Original name (default)' },
+  { name: 'Maya', description: 'Softer, more intimate' },
+  { name: 'Aria', description: 'Musical, flowing' },
+  { name: 'Sophia', description: 'Wisdom' },
+  { name: 'Sage', description: 'Guide, counsel' },
+  { name: 'Oracle', description: 'Visionary presence' },
+  { name: 'Nova', description: 'New light' },
+];
+
+// Patterns for names that warrant a gentle confirmation
+const SENSITIVE_NAME_PATTERNS = [
+  /^(mom|mother|dad|father|mama|papa|mum|mummy|daddy|mommy)$/i,
+  /^(god|jesus|allah|buddha|christ|lord|savior|messiah)$/i,
+  /^(doctor|dr\.?|therapist|counselor|psychiatrist)$/i,
+];
+
 const ARCHETYPE_OPTIONS = [
   { id: 'TRUSTED_FRIEND' as ArchetypeId, name: 'Friend', emoji: '☕' },
   { id: 'GUIDE' as ArchetypeId, name: 'Guide', emoji: '🧭' },
@@ -190,6 +207,11 @@ export function AccountSettings() {
 
   // Native app build info
   const [nativeBuildInfo, setNativeBuildInfo] = useState<{ version: string; build: string } | null>(null);
+
+  // Custom assistant name state
+  const [customNameInput, setCustomNameInput] = useState('');
+  const [showCustomNameInput, setShowCustomNameInput] = useState(false);
+  const [sensitiveNameWarning, setSensitiveNameWarning] = useState(false);
 
   // ─────────────────────────────────────────────────────────────────────────
   // Data Loading
@@ -793,8 +815,164 @@ export function AccountSettings() {
     </div>
   );
 
+  // Helper to check if name is sensitive
+  const isSensitiveName = (name: string) => {
+    return SENSITIVE_NAME_PATTERNS.some(pattern => pattern.test(name.trim()));
+  };
+
+  // Handler for setting assistant name
+  const handleSetAssistantName = (name: string) => {
+    if (isSensitiveName(name)) {
+      setSensitiveNameWarning(true);
+      setCustomNameInput(name);
+    } else {
+      updateMaiaSetting('preferredAssistantName', name);
+      setShowCustomNameInput(false);
+      setCustomNameInput('');
+      setSensitiveNameWarning(false);
+    }
+  };
+
+  // Handler for confirming sensitive name
+  const confirmSensitiveName = () => {
+    updateMaiaSetting('preferredAssistantName', customNameInput);
+    setShowCustomNameInput(false);
+    setCustomNameInput('');
+    setSensitiveNameWarning(false);
+  };
+
   const renderMaiaSettings = () => (
     <div className="space-y-6">
+      {/* Assistant Name */}
+      <div>
+        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-2">
+          <User size={16} />
+          What should MAIA call herself?
+        </label>
+        <p className="text-xs text-white/50 mb-3">
+          Choose a name that feels companionable, symbolic, or relational.
+          MAIA is not a replacement for a person, authority, or loved one.
+        </p>
+
+        {/* Suggested Names */}
+        <div className="grid grid-cols-4 gap-2 mb-3">
+          {SUGGESTED_NAMES.map((suggestion) => {
+            const isSelected = maiaSettings.preferredAssistantName === suggestion.name;
+            return (
+              <motion.button
+                key={suggestion.name}
+                onClick={() => handleSetAssistantName(suggestion.name)}
+                className={`py-2.5 px-2 rounded-xl border transition-all active:scale-95 relative ${
+                  isSelected
+                    ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
+                    : 'border-white/10 bg-black/20 text-white/60 hover:bg-white/5'
+                }`}
+                whileTap={{ scale: 0.95 }}
+                title={suggestion.description}
+              >
+                {isSelected && (
+                  <div className="absolute top-1 right-1 text-amber-300">
+                    <Check size={10} />
+                  </div>
+                )}
+                <div className="text-xs font-medium">{suggestion.name}</div>
+              </motion.button>
+            );
+          })}
+        </div>
+
+        {/* Custom Name Option */}
+        {!showCustomNameInput ? (
+          <motion.button
+            onClick={() => setShowCustomNameInput(true)}
+            className="w-full py-2 text-xs text-white/40 hover:text-white/60 transition-colors"
+            whileTap={{ scale: 0.98 }}
+          >
+            Or choose a custom name...
+          </motion.button>
+        ) : (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={customNameInput}
+                onChange={(e) => {
+                  setCustomNameInput(e.target.value);
+                  setSensitiveNameWarning(false);
+                }}
+                placeholder="Enter a name..."
+                maxLength={30}
+                className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-sm placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
+                autoFocus
+              />
+              <motion.button
+                onClick={() => customNameInput.trim() && handleSetAssistantName(customNameInput.trim())}
+                disabled={!customNameInput.trim()}
+                className="px-4 py-2 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded-lg text-amber-300 text-sm font-medium transition-colors disabled:opacity-30"
+                whileTap={{ scale: 0.95 }}
+              >
+                Set
+              </motion.button>
+              <motion.button
+                onClick={() => {
+                  setShowCustomNameInput(false);
+                  setCustomNameInput('');
+                  setSensitiveNameWarning(false);
+                }}
+                className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white/60 text-sm transition-colors hover:bg-white/10"
+                whileTap={{ scale: 0.95 }}
+              >
+                Cancel
+              </motion.button>
+            </div>
+
+            {/* Sensitive Name Warning */}
+            <AnimatePresence>
+              {sensitiveNameWarning && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg"
+                >
+                  <p className="text-xs text-amber-200/90 mb-2">
+                    This name carries personal meaning. MAIA will remain a guide and companion,
+                    not a substitute for human relationships. Continue with this name?
+                  </p>
+                  <div className="flex gap-2">
+                    <motion.button
+                      onClick={confirmSensitiveName}
+                      className="px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/30 rounded text-amber-300 text-xs font-medium transition-colors"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Yes, use this name
+                    </motion.button>
+                    <motion.button
+                      onClick={() => {
+                        setCustomNameInput('');
+                        setSensitiveNameWarning(false);
+                      }}
+                      className="px-3 py-1.5 bg-white/5 border border-white/10 rounded text-white/60 text-xs transition-colors hover:bg-white/10"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Choose different name
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Current Name Display */}
+        {maiaSettings.preferredAssistantName && maiaSettings.preferredAssistantName !== 'MAIA' && (
+          <div className="mt-3 p-2 bg-white/5 rounded-lg text-center">
+            <span className="text-xs text-white/50">Currently: </span>
+            <span className="text-xs text-amber-300 font-medium">{maiaSettings.preferredAssistantName}</span>
+          </div>
+        )}
+      </div>
+
       {/* Memory Mode */}
       <div>
         <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">

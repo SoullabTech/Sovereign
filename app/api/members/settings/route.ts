@@ -48,6 +48,7 @@ export async function GET(request: NextRequest) {
         memoryDepth: settings.memory_depth,
         archetype: settings.archetype,
         conversationMode: settings.conversation_mode,
+        preferredAssistantName: settings.preferred_assistant_name || 'MAIA',
       },
       // Notifications
       notifications: {
@@ -124,6 +125,10 @@ export async function PUT(request: NextRequest) {
     if (updates.conversationMode !== undefined) {
       setClauses.push(`conversation_mode = $${paramIndex++}`);
       values.push(updates.conversationMode);
+    }
+    if (updates.preferredAssistantName !== undefined) {
+      setClauses.push(`preferred_assistant_name = $${paramIndex++}`);
+      values.push(updates.preferredAssistantName);
     }
 
     // Notification settings
