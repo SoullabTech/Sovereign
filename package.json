@@ -7,7 +7,8 @@
   "homepage": "./",
   "scripts": {
     "dev": "PORT=3000 env -u DATABASE_URL next dev",
-    "dev:clean": "lsof -ti:3000 | xargs kill -9 2>/dev/null || true; PORT=3000 env -u DATABASE_URL next dev",
+    "dev:clean": "rm -rf .next && lsof -ti:3000 | xargs kill -9 2>/dev/null || true; PORT=3000 env -u DATABASE_URL next dev",
+    "clean": "rm -rf .next && echo '✓ .next cache cleared'",
     "dev:voice": "bash start-voice.sh",
     "dev:https": "node server.mjs",
     "worker": "env -u DATABASE_URL AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
