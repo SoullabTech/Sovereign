@@ -3,11 +3,12 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Save, RotateCcw, Play, Globe, Brain } from 'lucide-react';
+import { Save, RotateCcw, Play, Globe, Brain, RefreshCw } from 'lucide-react';
 import { ClaudeCodeSettingsToggle } from '@/components/ui/ClaudeCodeIndicator';
 import { LanguageSelector } from './LanguageSelector';
 import { useLanguage } from '@/lib/services/languageService';
 import { useMaiaPresence } from '@/lib/contexts/MaiaPresenceContext';
+import { useUpdate } from '@/components/providers/UpdateProvider';
 
 interface MaiaSettings {
   // Voice Settings
@@ -93,15 +94,29 @@ const VOICE_OPTIONS = [
 
 export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
   const { ambientMode, witnessMode, toggleAmbientMode, toggleWitnessMode } = useMaiaPresence();
+  const { currentVersion, checkForUpdate, applyUpdate, isChecking, lastCheckResult } = useUpdate();
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [originalSettings, setOriginalSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [testingVoice, setTestingVoice] = useState(false);
   const [activeTab, setActiveTab] = useState<'language' | 'voice' | 'memory' | 'personality' | 'brain' | 'advanced'>('language');
+  const [nativeBuildInfo, setNativeBuildInfo] = useState<{ version: string; build: string } | null>(null);
 
   useEffect(() => {
     loadSettings();
+    // Fetch native app build info from Capacitor
+    (async () => {
+      try {
+        if (typeof window !== 'undefined' && (window as any).Capacitor?.isNativePlatform?.()) {
+          const { App } = await import('@capacitor/app');
+          const info = await App.getInfo();
+          setNativeBuildInfo({ version: info.version, build: info.build });
+        }
+      } catch (e) {
+        console.log('Not in native context or App plugin unavailable');
+      }
+    })();
   }, []);
 
   useEffect(() => {
@@ -580,6 +595,72 @@ export function MaiaSettingsPanel({ onClose }: { onClose?: () => void }) {
                   onChange={(e) => updateSetting('technical.responseTimeout', parseInt(e.target.value))}
                   className="w-full"
                 />
+              </div>
+
+              {/* Build Info & Updates */}
+              <div className="mt-6 pt-6 border-t border-white/10">
+                <h3 className="text-sm font-medium text-amber-200 mb-3">Build Info</h3>
+                <div className="p-4 bg-stone-800/50 border border-stone-700/50 rounded-lg space-y-4">
+                  {/* Native App Info */}
+                  <div className="grid grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <span className="text-stone-500">Native App Build:</span>
+                      <p className="text-stone-300 font-mono">
+                        {nativeBuildInfo
+                          ? `v${nativeBuildInfo.version} (${nativeBuildInfo.build})`
+                          : 'Web / Not native'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-stone-500">Server Version:</span>
+                      <p className="text-stone-300 font-mono">
+                        v{currentVersion?.version || '...'} ({currentVersion?.commit?.slice(0, 7) || '...'})
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="border-t border-stone-700/30" />
+
+                  {/* Update Check */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-sm font-medium text-stone-200">Check for Updates</h4>
+                      <p className="text-xs text-stone-500 mt-0.5">
+                        Last checked: {lastCheckResult ? new Date().toLocaleTimeString() : 'Never'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => checkForUpdate()}
+                      disabled={isChecking}
+                      className="flex items-center gap-2 px-4 py-2 text-sm bg-stone-700/50 hover:bg-stone-700
+                               text-stone-300 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${isChecking ? 'animate-spin' : ''}`} />
+                      {isChecking ? 'Checking...' : 'Check'}
+                    </button>
+                  </div>
+
+                  {lastCheckResult && (
+                    <div className="pt-3 border-t border-stone-700/30">
+                      {lastCheckResult.updateAvailable ? (
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-amber-400">
+                            Update available: v{lastCheckResult.serverVersion}
+                          </p>
+                          <button
+                            onClick={() => applyUpdate(lastCheckResult.forcedUpdate)}
+                            className="text-xs text-amber-400 hover:text-amber-300 font-medium"
+                          >
+                            Update Now
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-xs text-green-400">You&apos;re on the latest version</p>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}

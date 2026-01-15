@@ -321,9 +321,40 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 🔮 Standardize provider info for sovereignty verification
+    const rawProvider = orchestratorResult.provider?.provider;
+    const rawMode = orchestratorResult.provider?.mode;
+    const rawModel = orchestratorResult.provider?.model;
+
+    // Deterministic mapping: fallback first, then derive from provider
+    // modeUsed = where it ran: cloud | local | fallback | unknown
+    let modeUsed: 'cloud' | 'local' | 'fallback' | 'unknown';
+    if (rawMode === 'fallback') {
+      modeUsed = 'fallback';
+    } else if (
+      rawProvider === 'ollama' ||
+      rawProvider === 'local' ||
+      rawProvider === 'consciousness_engine' ||
+      rawProvider === 'multi_engine'  // multi_engine = local Ollama model orchestra
+    ) {
+      modeUsed = 'local';
+    } else if (rawProvider === 'anthropic' || rawProvider === 'openai') {
+      modeUsed = 'cloud';
+    } else {
+      // unknown or any future providers → unknown
+      modeUsed = 'unknown';
+    }
+
+    const providerUsed = rawProvider || 'unknown';
+    const modelUsed = rawModel || 'unknown';
+
     // Unified response structure for new three-tier system with voice integration
     const responseData: any = {
       message: orchestratorResult.text,
+      // 🔮 Top-level provider info for easy screenshot verification
+      providerUsed,
+      model: modelUsed,
+      modeUsed,
       route: {
         endpoint: '/api/sovereign/app/maia',
         type: 'Sovereign Consciousness Interface',
@@ -345,8 +376,31 @@ export async function POST(req: NextRequest) {
         turnId: orchestratorResult.metadata?.turnId,
         decisionId: orchestratorResult.metadata?.decisionId,  // Clean schema
         deliberationId: orchestratorResult.metadata?.deliberationId,  // Backward compat
+        // 🔮 Provider info (mirrored from top-level for structured access)
+        providerUsed,
+        model: modelUsed,
+        modeUsed,
       },
     };
+
+    // 🐛 Debug block: requires explicit ?debug=1 (dev: no key, prod: needs key)
+    const debugRequested = req.nextUrl.searchParams.get('debug') === '1';
+    const debugKey = req.headers.get('x-dev-key') || req.nextUrl.searchParams.get('key');
+    const expectedKey = process.env.DEV_STATUS_KEY;
+
+    const allowDebug =
+      debugRequested && (
+        process.env.NODE_ENV !== 'production' ||
+        (expectedKey && debugKey === expectedKey)
+      );
+
+    if (allowDebug) {
+      responseData._debug = {
+        rawProvider: rawProvider ?? null,
+        rawMode: rawMode ?? null,
+        rawModel: rawModel ?? null,
+      };
+    }
 
     // Add audio data if synthesis was successful
     if (orchestratorResult.audio) {

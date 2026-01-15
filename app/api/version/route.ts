@@ -46,9 +46,17 @@ function getCommit(): string {
 }
 
 export async function GET() {
+  const version = process.env.APP_VERSION || "1.0.0";
+  const [major, minor, patch] = version.split(".").map(Number);
+
   return NextResponse.json({
+    version,
+    major,
+    minor: minor || 0,
+    patch: patch || 0,
     commit: getCommit(),
     timestamp: new Date().toISOString(),
     env: process.env.NODE_ENV ?? "unknown",
+    buildDate: process.env.BUILD_DATE || null,
   });
 }
