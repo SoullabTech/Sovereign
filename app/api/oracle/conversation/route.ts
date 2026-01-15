@@ -110,6 +110,40 @@ function rateLimitOrThrow(ip: string) {
 }
 
 /**
+ * 🧪 TEST HOOK: Override spiralogic cell for guard testing
+ * Only active when MAIA_TEST_SPIRALOGIC_OVERRIDES=1
+ * Usage: MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON='{"phase":4}' to test invalid phase rejection
+ */
+function applyTestSpiralogicOverrides(
+  cell: any,
+  requestId?: string
+) {
+  if (process.env.MAIA_TEST_SPIRALOGIC_OVERRIDES !== '1') return cell;
+
+  const overridesRaw = process.env.MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON;
+  if (!overridesRaw) return cell;
+
+  try {
+    const overrides = JSON.parse(overridesRaw);
+    const next = { ...cell };
+
+    if (typeof overrides.element === 'string') next.element = overrides.element;
+    if (typeof overrides.phase === 'number') next.phase = overrides.phase;
+
+    console.warn('[test-hook] applied spiralogic overrides', {
+      requestId,
+      element: next.element,
+      phase: next.phase,
+    });
+
+    return next;
+  } catch (e) {
+    console.warn('[test-hook] invalid MAIA_TEST_SPIRALOGIC_OVERRIDES_JSON', { requestId });
+    return cell;
+  }
+}
+
+/**
  * 🧠 INSIGHT EXTRACTION: Extract meaningful insights from conversation exchange
  * Feeds into learning pipeline and memory system
  */
@@ -426,7 +460,8 @@ export async function POST(request: NextRequest) {
     console.info(`[MAIA Oracle] profile=${processingProfile} -> level=${consciousnessLevel} (Opus routing)`);
 
     // SPIRALOGIC INTELLIGENCE: Detect element/phase/context
-    const spiralogicCell = await inferSpiralogicCell(message, userId);
+    let spiralogicCell = await inferSpiralogicCell(message, userId);
+    spiralogicCell = applyTestSpiralogicOverrides(spiralogicCell, requestId);
 
     // MANY-ARMED INTELLIGENCE: Choose appropriate frameworks
     const activeFrameworks = chooseFrameworksForCell(spiralogicCell);
