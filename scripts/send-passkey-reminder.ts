@@ -308,15 +308,25 @@ async function sendPasskeyReminders() {
 
   for (const { recipient, contentSource } of testersToEmail) {
     try {
+      // Use neutral subject for external test sends (recipient ≠ contentSource)
+      const isExternalTest = recipient.toLowerCase() !== contentSource.email.toLowerCase();
+      const subject = isExternalTest
+        ? 'MAIA beta passkey (test email)'
+        : `${contentSource.name} — your MAIA beta passkey`;
+
+      // Extract domain for deliverability tracking (not full email = less PII)
+      const recipientDomain = recipient.split('@')[1] || 'unknown';
+
       const result = await getResend().emails.send({
         from: 'Kelly @ Soullab <kelly@soullab.life>',
         to: recipient,
-        subject: `${contentSource.name} — your MAIA beta passkey`,
+        subject,
         html: generateEmailHtml(contentSource.name, contentSource.passkey),
         text: generateEmailText(contentSource.name, contentSource.passkey),
         tags: [
           { name: 'campaign', value: 'passkey-reminder' },
-          { name: 'type', value: 'onboarding' }
+          { name: 'type', value: 'onboarding' },
+          { name: 'domain', value: recipientDomain }
         ]
       });
 
