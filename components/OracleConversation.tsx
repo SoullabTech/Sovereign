@@ -134,6 +134,28 @@ function setCanonWrapEnabled(enabled: boolean) {
   window.localStorage.setItem(CANON_WRAP_KEY, enabled ? '1' : '0');
 }
 
+// Performance: Cap conversation history to prevent UI lag and API bloat
+const MAX_DISPLAY_MESSAGES = 100; // Keep last 100 messages in UI state
+const MAX_API_HISTORY = 30; // Send last 30 messages (15 exchanges) to API
+
+// Helper to cap messages array when adding new messages
+function appendMessageCapped<T>(prev: T[], newMsg: T, maxMessages: number = MAX_DISPLAY_MESSAGES): T[] {
+  const updated = [...prev, newMsg];
+  if (updated.length > maxMessages) {
+    return updated.slice(-maxMessages);
+  }
+  return updated;
+}
+
+// Helper to truncate conversation history for API calls
+function truncateHistoryForAPI(messages: ConversationMessage[], maxMessages: number = MAX_API_HISTORY): Array<{ role: string; content: string }> {
+  const recent = messages.slice(-maxMessages);
+  return recent.map(msg => ({
+    role: msg.role === 'oracle' ? 'assistant' : 'user',
+    content: msg.text || msg.content || ''
+  }));
+}
+
 interface OracleConversationProps {
   userId?: string;
   userName?: string;
@@ -871,7 +893,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         timestamp: new Date(),
         source: 'stream'
       };
-      setMessages(prev => [...prev, oracleMessage]);
+      setMessages(prev => appendMessageCapped(prev, oracleMessage));
       setMaiaResponseText('');
       // Mark that text stream is complete - mic will resume when audio finishes
       setStreamingResponseComplete(true);
@@ -1417,7 +1439,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         sender: 'maia'
       };
 
-      setMessages(prev => [...prev, acknowledgmentMessage]);
+      setMessages(prev => appendMessageCapped(prev, acknowledgmentMessage));
       onMessageAddedRef.current?.(acknowledgmentMessage);
 
       // Optionally speak the acknowledgment if voice is enabled
@@ -1565,7 +1587,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             motionState: 'idle',
             source: 'system'
           };
-          setMessages(prev => [...prev, errorMessage]);
+          setMessages(prev => appendMessageCapped(prev, errorMessage));
           onMessageAddedRef.current?.(errorMessage);
 
           resetAllStates();
@@ -2021,7 +2043,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       timestamp: new Date(),
       source: 'user'
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => appendMessageCapped(prev, userMessage));
     onMessageAddedRef.current?.(userMessage);
 
     // Process message for Field Protocol if recording
@@ -2099,7 +2121,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           timestamp: new Date(),
           source: 'system'
         };
-        setMessages(prev => [...prev, blockingMessage]);
+        setMessages(prev => appendMessageCapped(prev, blockingMessage));
         onMessageAddedRef.current?.(blockingMessage);
 
         // Alert team about abuse
@@ -2279,10 +2301,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             depth: 0.7,
             quality: 'present'
           },
-          conversationHistory: messages.map(msg => ({
-            role: msg.role === 'oracle' ? 'assistant' : 'user',
-            content: msg.text
-          })),
+          conversationHistory: truncateHistoryForAPI(messages),
           sessionTimeContext: sessionTimer?.getTimeContext(), // ⏰ Temporal awareness for MAIA
           teenSupportContext: teenSystemPrompt ? {
             isTeenUser,
@@ -2757,7 +2776,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       if (!isInVoiceMode) {
         // Chat mode - show text immediately
-        setMessages(prev => [...prev, oracleMessage]);
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
         onMessageAddedRef.current?.(oracleMessage);
 
         // Process Oracle message for Field Protocol if recording
@@ -2803,7 +2822,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // If we used streaming audio, add message to history now (will show if "Show Text" is enabled)
       if (usedStreamingAudio && isInVoiceMode) {
-        setMessages(prev => [...prev, oracleMessage]);
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
         onMessageAddedRef.current?.(oracleMessage);
         console.log('📝 [STREAM] Added message to history (voice mode with streaming audio)');
       }
@@ -2857,7 +2876,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
           // In Voice mode, show text after speaking completes
           if (isInVoiceMode && showVoiceText) {
-            setMessages(prev => [...prev, oracleMessage]);
+            setMessages(prev => appendMessageCapped(prev, oracleMessage));
             onMessageAddedRef.current?.(oracleMessage);
 
             // Save voice response to long-term memory (dual-save to memories + Akashic Records)
@@ -2881,7 +2900,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           console.error('❌ Speech error or timeout:', error);
           // Show text even if speech fails in Voice mode
           if (isInVoiceMode) {
-            setMessages(prev => [...prev, oracleMessage]);
+            setMessages(prev => appendMessageCapped(prev, oracleMessage));
             onMessageAddedRef.current?.(oracleMessage);
           }
         } finally {
@@ -2989,7 +3008,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         motionState: 'idle',
         source: 'system'
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
     } finally {
       // 🔥 CRITICAL FIX: Only reset isResponding for TEXT mode
@@ -3236,7 +3255,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           timestamp: new Date(),
           source: 'voice'
         };
-        setMessages(prev => [...prev, userMessage]);
+        setMessages(prev => appendMessageCapped(prev, userMessage));
 
         // Set processing states
         setIsProcessing(true);
@@ -3249,11 +3268,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           voiceMicRef.current.stopListening();
         }
 
-        // Send via streaming voice system
-        const conversationHistory = messages.map(msg => ({
-          role: msg.role === 'oracle' ? 'assistant' : 'user',
-          content: msg.text
-        }));
+        // Send via streaming voice system (truncated for performance)
+        const conversationHistory = truncateHistoryForAPI(messages);
         await sendStreamingMessage(cleanedText, conversationHistory);
 
         setIsProcessing(false);
@@ -3283,7 +3299,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         motionState: 'idle',
         source: 'system'
       };
-      setMessages(prev => [...prev, errorMessage]);
+      setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
 
       // Reset states on error
