@@ -1478,13 +1478,16 @@ function MAIAPageContent() {
                         <button
                           key={v}
                           onClick={() => setSelectedVoice(v)}
-                          className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                          className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
                             selectedVoice === v
-                              ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                              ? 'bg-amber-500/30 text-amber-200 border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
                               : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
                           }`}
                         >
                           {v.charAt(0).toUpperCase() + v.slice(1)}
+                          {selectedVoice === v && (
+                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
+                          )}
                         </button>
                       ))}
                     </div>
@@ -1529,23 +1532,29 @@ function MAIAPageContent() {
                     <div className="flex gap-2">
                       <button
                         onClick={() => setVoiceModel('tts-1')}
-                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
                           voiceModel === 'tts-1'
-                            ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                            ? 'bg-amber-500/30 text-amber-200 border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
                             : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
                         }`}
                       >
                         Standard
+                        {voiceModel === 'tts-1' && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
+                        )}
                       </button>
                       <button
                         onClick={() => setVoiceModel('tts-1-hd')}
-                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
                           voiceModel === 'tts-1-hd'
-                            ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50'
+                            ? 'bg-amber-500/30 text-amber-200 border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
                             : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
                         }`}
                       >
                         HD ✨
+                        {voiceModel === 'tts-1-hd' && (
+                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
+                        )}
                       </button>
                     </div>
                   </div>

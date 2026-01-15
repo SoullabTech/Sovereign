@@ -1830,7 +1830,7 @@ export function AccountSettings() {
   const renderSovereignty = () => {
     const currentMode = consentSummary?.mode || 'local_only';
 
-    const STORAGE_MODES: { id: StorageMode; label: string; desc: string; icon: typeof HardDrive }[] = [
+    const STORAGE_MODES: { id: StorageMode; label: string; desc: string; icon: typeof HardDrive; comingSoon?: boolean }[] = [
       {
         id: 'local_only',
         label: 'Device Only',
@@ -1840,14 +1840,16 @@ export function AccountSettings() {
       {
         id: 'both',
         label: 'Device + Cloud',
-        desc: 'Local backup + military-grade encrypted cloud. Only MAIA can read it.',
+        desc: 'Local backup + encrypted cloud sync.',
         icon: Database,
+        comingSoon: true,
       },
       {
         id: 'server_only',
         label: 'Cloud Only',
-        desc: 'Military-grade encrypted. Not even Soullab can read it.',
+        desc: 'Encrypted cloud storage.',
         icon: Cloud,
+        comingSoon: true,
       },
     ];
 
@@ -1864,30 +1866,43 @@ export function AccountSettings() {
             Storage Location
           </label>
           <div className="space-y-2">
-            {STORAGE_MODES.map(({ id, label, desc, icon: Icon }) => (
+            {STORAGE_MODES.map(({ id, label, desc, icon: Icon, comingSoon }) => (
               <motion.button
                 key={id}
-                onClick={() => updateStorageMode(id)}
+                onClick={() => !comingSoon && updateStorageMode(id)}
+                disabled={comingSoon}
                 className={`w-full text-left p-4 rounded-xl border transition-all ${
-                  currentMode === id
-                    ? 'border-amber-500/50 bg-amber-500/15'
-                    : 'border-white/10 bg-black/20 hover:bg-white/5'
+                  comingSoon
+                    ? 'border-white/5 bg-black/10 cursor-not-allowed opacity-60'
+                    : currentMode === id
+                      ? 'border-amber-500/50 bg-amber-500/15'
+                      : 'border-white/10 bg-black/20 hover:bg-white/5'
                 }`}
-                whileTap={{ scale: 0.98 }}
+                whileTap={comingSoon ? {} : { scale: 0.98 }}
               >
                 <div className="flex items-center gap-3">
-                  <Icon size={20} className={currentMode === id ? 'text-amber-400' : 'text-white/40'} />
-                  <div>
-                    <div className="text-sm font-medium text-white/90">{label}</div>
-                    <div className="text-xs text-white/50">{desc}</div>
+                  <Icon size={20} className={currentMode === id && !comingSoon ? 'text-amber-400' : 'text-white/30'} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-medium ${comingSoon ? 'text-white/50' : 'text-white/90'}`}>{label}</span>
+                      {comingSoon && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-purple-500/20 text-purple-300 rounded">
+                          Coming Soon
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-white/40">{desc}</div>
                   </div>
-                  {currentMode === id && (
+                  {currentMode === id && !comingSoon && (
                     <Check size={18} className="ml-auto text-amber-400" />
                   )}
                 </div>
               </motion.button>
             ))}
           </div>
+          <p className="text-[10px] text-white/30 mt-2 text-center">
+            Currently all data is stored locally on your device.
+          </p>
         </div>
 
         {/* Auto Sync Toggle */}
