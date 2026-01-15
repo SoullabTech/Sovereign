@@ -3,8 +3,9 @@
  * Run with: npx tsx scripts/send-passkey-reminder.ts
  *
  * Options:
- *   --dry-run    Preview without sending emails
- *   --single     Send to one tester only (for testing)
+ *   --dry-run           Preview without sending emails
+ *   --to <email>        Send to specific email only (for testing)
+ *   --single            Send to first tester only (DEPRECATED: use --to instead)
  */
 
 import { config } from 'dotenv';
@@ -213,10 +214,24 @@ async function getUnregisteredTesters(): Promise<UnregisteredTester[]> {
   return result.rows;
 }
 
+// Helper to redact passkey for logging (show prefix only)
+function redactPasskey(passkey: string): string {
+  // SOULLAB-NAME → SOULLAB-N***
+  const parts = passkey.split('-');
+  if (parts.length >= 2) {
+    return `${parts[0]}-${parts[1].charAt(0)}***`;
+  }
+  return passkey.substring(0, 8) + '***';
+}
+
 async function sendPasskeyReminders() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
   const singleMode = args.includes('--single');
+
+  // Parse --to <email> for targeted test sends
+  const toIndex = args.indexOf('--to');
+  const targetEmail = toIndex !== -1 && args[toIndex + 1] ? args[toIndex + 1].toLowerCase() : null;
 
   console.log('\n📧 Passkey Reminder Email Script\n');
 
@@ -234,7 +249,8 @@ async function sendPasskeyReminders() {
   console.log(`Found ${testers.length} unregistered testers:\n`);
 
   for (const tester of testers) {
-    console.log(`  • ${tester.name} (${tester.email}) - ${tester.passkey}`);
+    // Redact passkey in logs - never print full passkey to stdout
+    console.log(`  • ${tester.name} (${tester.email}) - ${redactPasskey(tester.passkey)}`);
   }
 
   console.log('');
@@ -244,10 +260,28 @@ async function sendPasskeyReminders() {
     return;
   }
 
-  const testersToEmail = singleMode ? [testers[0]] : testers;
+  // Determine who to email
+  let testersToEmail: UnregisteredTester[];
 
-  if (singleMode) {
+  if (targetEmail) {
+    // --to <email>: find specific tester by email
+    const found = testers.find(t => t.email.toLowerCase() === targetEmail);
+    if (!found) {
+      console.error(`❌ No unregistered tester found with email: ${targetEmail}\n`);
+      console.log('Tip: Use --dry-run first to see the list of unregistered testers.\n');
+      process.exit(1);
+    }
+    testersToEmail = [found];
+    console.log(`🎯 Targeted send: ${found.name} (${found.email})\n`);
+  } else if (singleMode) {
+    // --single: first alphabetically (DEPRECATED)
+    testersToEmail = [testers[0]];
+    console.log(`⚠️  --single is deprecated. Use --to <email> for safer testing.\n`);
     console.log(`🎯 Single mode: Only sending to ${testersToEmail[0].name}\n`);
+  } else {
+    // All testers
+    testersToEmail = testers;
+    console.log(`📤 Sending to all ${testersToEmail.length} testers...\n`);
   }
 
   let sent = 0;
@@ -267,7 +301,9 @@ async function sendPasskeyReminders() {
         ]
       });
 
-      console.log(`✅ Sent to ${tester.name} (${tester.email})`);
+      // Log success with Resend message ID (never log passkey or email content)
+      const messageId = result?.data?.id || 'unknown';
+      console.log(`✅ Sent to ${tester.name} (${tester.email}) — id: ${messageId}`);
       sent++;
 
       // Rate limit: wait 500ms between emails
