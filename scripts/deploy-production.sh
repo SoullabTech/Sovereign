@@ -43,26 +43,37 @@ send_alert() {
     local message="$2"
     local details="${3:-}"
 
-    # Get BASE_URL from env file (quote-safe parsing)
+    # Get BASE_URL from env file (quote-safe parsing), allow env override
     local base_url
     base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
-    base_url="${base_url:-https://soullab.life}"
+    base_url="${BASE_URL:-${base_url:-https://soullab.life}}"
     base_url="${base_url%/}"  # Strip trailing slash
 
-    # Get alert token from env file (quote-safe parsing)
+    # Get alert token from env file (quote-safe parsing), allow env override
     local alert_token
     alert_token=$(awk -F= '/^INTERNAL_ALERT_TOKEN=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
+    alert_token="${INTERNAL_ALERT_TOKEN:-$alert_token}"
 
     # Build JSON payload safely using jq if available
     local json_payload
     if command -v jq >/dev/null 2>&1; then
         if [ -n "$details" ]; then
-            json_payload=$(jq -n \
-                --arg sev "$severity" \
-                --arg msg "$message" \
-                --arg commit "${GIT_COMMIT:-unknown}" \
-                --argjson details "$details" \
-                '{severity:$sev, message:$msg, commit:$commit, source:"deploy-script", details:$details}')
+            # Validate details is valid JSON, otherwise treat as string
+            if echo "$details" | jq -e . >/dev/null 2>&1; then
+                json_payload=$(jq -n \
+                    --arg sev "$severity" \
+                    --arg msg "$message" \
+                    --arg commit "${GIT_COMMIT:-unknown}" \
+                    --argjson details "$details" \
+                    '{severity:$sev, message:$msg, commit:$commit, source:"deploy-script", details:$details}')
+            else
+                json_payload=$(jq -n \
+                    --arg sev "$severity" \
+                    --arg msg "$message" \
+                    --arg commit "${GIT_COMMIT:-unknown}" \
+                    --arg details "$details" \
+                    '{severity:$sev, message:$msg, commit:$commit, source:"deploy-script", details:$details}')
+            fi
         else
             json_payload=$(jq -n \
                 --arg sev "$severity" \
@@ -93,10 +104,10 @@ send_alert() {
 run_smoke_tests() {
     log_info "Running post-deployment smoke tests..."
 
-    # Quote-safe BASE_URL parsing
+    # Quote-safe BASE_URL parsing, allow env override
     local base_url
     base_url=$(awk -F= '/^BASE_URL=/{gsub(/^"|"$/,"",$2);print $2}' .env.production 2>/dev/null | tail -n 1)
-    base_url="${base_url:-https://soullab.life}"
+    base_url="${BASE_URL:-${base_url:-https://soullab.life}}"
     base_url="${base_url%/}"  # Strip trailing slash
 
     local all_passed=true
