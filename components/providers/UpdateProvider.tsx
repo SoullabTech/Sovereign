@@ -23,12 +23,26 @@ interface UpdateContextValue {
 
 const UpdateContext = createContext<UpdateContextValue | null>(null);
 
+// Safe defaults for SSG/SSR when no provider is available
+const defaultContextValue: UpdateContextValue = {
+  currentVersion: null,
+  checkForUpdate: async () => ({
+    updateAvailable: false,
+    forcedUpdate: false,
+    currentVersion: 'unknown',
+    currentCommit: 'unknown',
+    serverVersion: 'unknown',
+    serverCommit: 'unknown',
+  }),
+  applyUpdate: () => {},
+  isChecking: false,
+  lastCheckResult: null,
+};
+
 export function useUpdate() {
   const context = useContext(UpdateContext);
-  if (!context) {
-    throw new Error("useUpdate must be used within UpdateProvider");
-  }
-  return context;
+  // Return safe defaults for SSG/SSR instead of throwing
+  return context ?? defaultContextValue;
 }
 
 interface UpdateProviderProps {
