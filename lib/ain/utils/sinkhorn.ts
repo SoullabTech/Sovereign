@@ -319,16 +319,22 @@ export function aggregateFramingWeights(mat: number[][]): number[] {
  * Creates an initial N×M matrix based on available signals.
  * This is the input to Sinkhorn normalization.
  *
+ * When governance priors are enabled, the matrix reflects
+ * "qualified authority" — some framings start with earned weight
+ * based on their domain expertise and the question context.
+ *
  * @param responses - Framing responses with optional confidence
  * @param roles - Role definitions (column headers)
+ * @param question - The original question (for context-based priors)
  * @returns Base score matrix ready for Sinkhorn
  */
 export function buildBaseScoreMatrix(
   responses: Array<{ framingId: string; response: string; confidence?: number }>,
-  roles: string[] = ['direct', 'critical', 'integrative']
+  roles: string[] = ['direct', 'critical', 'integrative'],
+  question?: string
 ): number[][] {
-  // For now, use simple heuristics since we don't have per-role scores yet
-  // This can be refined as we learn what works
+  // Lazy import to avoid circular deps
+  const { computeContextPrior } = require('./framingGovernance');
 
   return responses.map(r => {
     // Base confidence (0.5 if not provided)
@@ -339,11 +345,16 @@ export function buildBaseScoreMatrix(
     const notError = !r.response.includes('[Error');
     const qualityBonus = hasSubstance && notError ? 0.2 : 0;
 
-    // Base score per role (can be refined)
-    const base = confidence + qualityBonus;
+    // Get governance prior (context-adjusted if question provided)
+    const prior = question
+      ? computeContextPrior(r.framingId, question)
+      : 0.5;
+
+    // Combine confidence, quality, and prior
+    // Prior acts as a multiplier on the base score
+    const base = (confidence + qualityBonus) * prior;
 
     // Slight variation by role to create meaningful matrix structure
-    // These can be tuned based on what we learn
     return roles.map((role, i) => {
       // Small noise to break symmetry
       const roleVariation = 1 + (i * 0.05);

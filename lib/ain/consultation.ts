@@ -26,6 +26,10 @@ import {
   buildBaseScoreMatrix,
   aggregateFramingWeights,
 } from './utils/sinkhorn';
+import {
+  applyGovernanceBounds,
+  getFramingGovernance,
+} from './utils/framingGovernance';
 
 // Path to framing library
 const FRAMINGS_PATH = join(process.cwd(), 'lib/ain/framings');
@@ -362,33 +366,39 @@ export async function consult(
   // 4. Run deliberation
   const responses = await deliberate(request.question, framings);
 
-  // 4.5. Apply Sinkhorn normalization (if enabled)
-  // This balances framing weights so no single perspective dominates synthesis
+  // 4.5. Apply Sinkhorn normalization with governance bounds (if enabled)
+  // This balances framing weights while respecting archetypal authority
   let framingWeightsById: Record<string, number> | undefined;
 
   if (isSinkhornEnabled() && responses.length > 1) {
-    const scoreMatrix = buildBaseScoreMatrix(responses);
+    // Build score matrix with context-aware priors (qualified authority)
+    const scoreMatrix = buildBaseScoreMatrix(responses, ['direct', 'critical', 'integrative'], request.question);
     const sinkhornResult = sinkhornNormalize(scoreMatrix);
-    const framingWeights = aggregateFramingWeights(sinkhornResult.weights);
+    const rawWeights = aggregateFramingWeights(sinkhornResult.weights);
 
-    // Build lookup for sorting and result
-    framingWeightsById = Object.fromEntries(
-      responses.map((r, i) => [r.framingId, framingWeights[i]])
+    // Build lookup before bounds
+    const rawWeightsById = Object.fromEntries(
+      responses.map((r, i) => [r.framingId, rawWeights[i]])
     );
+
+    // Apply governance bounds (min/max per role) and renormalize
+    // This ensures no voice is silenced and no voice monopolizes
+    framingWeightsById = applyGovernanceBounds(rawWeightsById);
 
     // Debug logging when AIN_DEBUG=1
     if (process.env.AIN_DEBUG === '1') {
-      console.log('[AIN:Sinkhorn] Normalization applied');
+      console.log('[AIN:Sinkhorn] Normalization with governance applied');
       console.log('[AIN:Sinkhorn] Iterations:', sinkhornResult.iterations);
       console.log('[AIN:Sinkhorn] Converged:', sinkhornResult.converged);
       console.log('[AIN:Sinkhorn] Entropy before:', sinkhornResult.diagnostics.entropyBefore.toFixed(3));
       console.log('[AIN:Sinkhorn] Entropy after:', sinkhornResult.diagnostics.entropyAfter.toFixed(3));
-      console.log('[AIN:Sinkhorn] Max weight before:', sinkhornResult.diagnostics.maxWeightBefore.toFixed(3));
-      console.log('[AIN:Sinkhorn] Max weight after:', sinkhornResult.diagnostics.maxWeightAfter.toFixed(3));
-      console.log('[AIN:Sinkhorn] Framing weights:', responses.map((r, i) => ({
-        framing: r.framingId,
-        weight: framingWeights[i].toFixed(3),
-      })));
+      console.log('[AIN:Sinkhorn] Weights with governance:');
+      responses.forEach(r => {
+        const gov = getFramingGovernance(r.framingId);
+        const raw = rawWeightsById[r.framingId] ?? 0;
+        const bounded = framingWeightsById![r.framingId] ?? 0;
+        console.log(`  ${r.framingId} (${gov.role}): raw=${raw.toFixed(3)} → bounded=${bounded.toFixed(3)} [min=${gov.minShare}, max=${gov.maxShare}]`);
+      });
     }
   }
 
