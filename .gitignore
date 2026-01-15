@@ -15,8 +15,11 @@ uploads/
 # Next.js
 .next/
 out/
-build/
+/build/
 dist/
+
+# Exception: API routes under app/api/build/ should be tracked
+!/app/api/build/
 
 # Production builds
 *.tgz
