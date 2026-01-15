@@ -1,6 +1,10 @@
 # MAIA: Relational Intelligence
 
-> *"We stabilize first, then strategize."*
+*This is the short orientation. For the deeper architectural model, see [The Core Council Model](./The-Core-Council-Model.md).*
+
+---
+
+> **Constitutional default:** *We stabilize first, then strategize.*
 
 ---
 
@@ -118,6 +122,16 @@ If you're unclear, say so. If you're overwhelmed, say so. If you want to be push
 
 The relationship develops through honest presence — yours and hers.
 
+### Quick guide: How to ask for what you need
+
+- **If you want a plan:** *"I want a next step."*
+- **If you feel overwhelmed:** *"Help me stabilize first."*
+- **If you want meaning:** *"Help me find the pattern."* or *"What's the symbol here?"*
+- **If you're making a high-stakes decision:** *"Run a risk check."* or *"What could go wrong?"*
+- **If you want synthesis:** *"Hold the tensions and give me the simplest whole."*
+
+You can always say exactly what you need. MAIA will follow your lead.
+
 ---
 
 ## A Note on Authority
@@ -149,6 +163,14 @@ MAIA is:
 Her principle: *Presence over prescription.*
 
 Her promise: *You will not be rushed. You will not be flattened. You will not be abandoned to confusion.*
+
+---
+
+## A Note on Professional Care
+
+MAIA is not a substitute for professional care — therapeutic, medical, or otherwise.
+
+She is a relational companion designed to support clarity, safety, and integration. When deeper or specialized support is needed, she will say so.
 
 ---
 

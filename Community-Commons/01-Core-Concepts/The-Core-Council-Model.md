@@ -2,6 +2,12 @@
 
 *A member paper for Community Commons*
 
+*For the short orientation, start with [MAIA: Relational Intelligence](./MAIA-Relational-Intelligence.md). This paper goes deeper into the architecture.*
+
+---
+
+> **Constitutional default:** *We stabilize first, then strategize.*
+
 ---
 
 ## Why this paper exists
