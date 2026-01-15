@@ -1,6 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { logAuthEvent } from '@/lib/security/authAudit';
+import { logAuthEvent, hashCredential, redactPasscode } from '@/lib/security/authAudit';
 
 // Note: No dynamic export needed - Capacitor apps call remote API server
 
@@ -105,12 +105,15 @@ export async function POST(request: NextRequest) {
 
     if (isValid) {
       // Audit trail for successful beta access (writes to audit_logs table)
-      // Note: passcode stored in errorMessage since resource_id is UUID type
+      // SECURITY: Hash passcode, don't store plaintext
       await logAuthEvent({
         action: 'passcode_valid',
         resourceType: 'beta_passcode',
         result: 'success',
-        errorMessage: `passcode:${passcode}`,
+        metadata: {
+          passcode_hash: hashCredential(passcode),
+          passcode_hint: redactPasscode(passcode),
+        },
       }, request);
 
       return NextResponse.json({
@@ -120,11 +123,16 @@ export async function POST(request: NextRequest) {
     }
 
     // Audit trail for failed beta access (writes to audit_logs table)
+    // SECURITY: Hash passcode, don't store plaintext
     await logAuthEvent({
       action: 'passcode_invalid',
       resourceType: 'beta_passcode',
       result: 'failure',
-      errorMessage: `passcode:${passcode || 'missing'}`,
+      errorMessage: 'invalid_passcode',
+      metadata: {
+        passcode_hash: hashCredential(passcode || 'missing'),
+        passcode_hint: redactPasscode(passcode || ''),
+      },
     }, request);
 
     return NextResponse.json(
