@@ -888,7 +888,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
 
   // Voice settings from account preferences (applies to new voice sessions)
-  const [voiceSettings, setVoiceSettings] = useState({ voice: 'shimmer', speed: 0.95 });
+  const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95 });
 
   // Load voice settings from account preferences on mount and listen for changes
   useEffect(() => {

@@ -47,7 +47,7 @@ export interface AccountSettings {
 export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   defaultMemoryMode: 'continuity', // Most users want memory; Sanctuary is opt-in
   voice: {
-    openaiVoice: 'shimmer',
+    openaiVoice: 'alloy',
     speed: 0.95,
   },
   memory: {
