@@ -139,12 +139,29 @@ const MAX_DISPLAY_MESSAGES = 100; // Keep last 100 messages in UI state
 const MAX_API_HISTORY = 30; // Send last 30 messages (15 exchanges) to API
 
 // Helper to cap messages array when adding new messages
-function appendMessageCapped<T>(prev: T[], newMsg: T, maxMessages: number = MAX_DISPLAY_MESSAGES): T[] {
-  const updated = [...prev, newMsg];
-  if (updated.length > maxMessages) {
-    return updated.slice(-maxMessages);
+// Includes dedupe to prevent retry/resume double-inclusion
+type MsgWithId = { id?: string | null; role?: string; text?: string; content?: string };
+
+function appendMessageCapped<T extends MsgWithId>(
+  prev: T[],
+  newMsg: T,
+  maxMessages: number = MAX_DISPLAY_MESSAGES
+): T[] {
+  // Dedupe by id (prevents retry with same id)
+  if (newMsg?.id && prev.some(m => m?.id === newMsg.id)) {
+    return prev;
   }
-  return updated;
+
+  // Fallback: prevent immediate duplicate (same role + text/content)
+  const last = prev[prev.length - 1];
+  const newText = newMsg?.text || newMsg?.content;
+  const lastText = last?.text || last?.content;
+  if (last && last.role === newMsg?.role && lastText === newText && newText) {
+    return prev;
+  }
+
+  const updated = [...prev, newMsg];
+  return updated.length > maxMessages ? updated.slice(-maxMessages) : updated;
 }
 
 // Helper to truncate conversation history for API calls
