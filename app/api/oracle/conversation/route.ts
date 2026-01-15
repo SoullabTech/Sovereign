@@ -770,7 +770,18 @@ export async function POST(request: NextRequest) {
       const combinedMarkers = [...new Set([...userBreakthrough.markers, ...maiaBreakthrough.markers])];
       const spiralLevel = userBreakthrough.spiralLevel || maiaBreakthrough.spiralLevel;
 
-      if (isBreakthrough && breakthroughDepth >= 2) {
+      // Guard: Only contribute to collective field if we have valid spiralogic context
+      // Never pollute the field with 'unknown/aether' - it dilutes matching
+      // Use explicit valid sets to prevent drift
+      const validElements = new Set(['fire', 'water', 'earth', 'air', 'aether']);
+      const validPhases = new Set(['cardinal', 'fixed', 'mutable']);
+      const element = spiralogicCell?.element?.toLowerCase();
+      const phase = typeof spiralogicCell?.phase === 'number'
+        ? (spiralogicCell.phase <= 1 ? 'cardinal' : spiralogicCell.phase <= 2 ? 'fixed' : 'mutable')
+        : null;
+      const hasValidContext = !!element && validElements.has(element) && !!phase && validPhases.has(phase);
+
+      if (isBreakthrough && breakthroughDepth >= 2 && hasValidContext) {
         // Determine breakthrough type based on markers
         let breakthroughType: 'shadow-integration' | 'vision-ignition' | 'emotional-release' | 'mental-clarity' | 'unity-experience' = 'mental-clarity';
         if (combinedMarkers.includes('shadow') || combinedMarkers.includes('integration')) {
@@ -783,17 +794,17 @@ export async function POST(request: NextRequest) {
           breakthroughType = 'unity-experience';
         }
 
-        // Build spiral moment for AIN bridge
+        // Build spiral moment for AIN bridge (use pre-validated element/phase)
         const spiralMoment = {
           timestamp: new Date(),
-          element: spiralogicCell.element.toLowerCase() as 'fire' | 'water' | 'earth' | 'air' | 'aether',
+          element: element as 'fire' | 'water' | 'earth' | 'air' | 'aether',
           domain: spiralogicCell.context,
           symbols: combinedMarkers.slice(0, 5),
           breakthrough: true,
         };
 
         const triadicDetection = {
-          phase: spiralogicCell.phase <= 1 ? 'cardinal' as const : spiralogicCell.phase <= 2 ? 'fixed' as const : 'mutable' as const,
+          phase: phase as 'cardinal' | 'fixed' | 'mutable',
           state: spiralogicCell.canonicalQuestion,
           confidence: Math.min(breakthroughDepth / 5, 1),
         };
