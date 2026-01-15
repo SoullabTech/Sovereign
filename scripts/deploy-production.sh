@@ -149,8 +149,9 @@ run_smoke_tests() {
             else
                 code=$(curl -sS -o /dev/null -w "%{http_code}" "$url" 2>/dev/null)
             fi
-            # If we got a real response (not 500 during warmup), return it
-            if [ "$code" != "500" ] && [ "$code" != "502" ] && [ "$code" != "504" ]; then
+            # If we got a real response (not warmup noise), return it
+            # 000 = curl couldn't connect, 500/502/504 = gateway errors during boot
+            if [ "$code" != "000" ] && [ "$code" != "500" ] && [ "$code" != "502" ] && [ "$code" != "504" ]; then
                 echo "$code"
                 return 0
             fi
