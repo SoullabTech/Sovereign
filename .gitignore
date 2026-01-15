@@ -20,6 +20,7 @@ dist/
 
 # Exception: API routes under app/api/build/ should be tracked
 !/app/api/build/
+!/app/api/build/**
 
 # Production builds
 *.tgz
