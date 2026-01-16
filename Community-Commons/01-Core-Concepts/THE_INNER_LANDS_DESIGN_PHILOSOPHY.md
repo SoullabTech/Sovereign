@@ -36,6 +36,9 @@ Inner Lands takes a different position:
 
 These are not the same thing.
 
+> **Elemental Alchemy is the refinement of recognition.**
+> Inner work isn't completed; it becomes more legible. Over time, the learner gets better at noticing what process is moving through them, what stage it's in, how it feels (affect), and what it produces (effect). This is how people shift from less coherent, less helpful states toward more integrated ones — not through performance, but through increased fidelity of perception.
+
 Drop-off doesn't happen because there's no progress bar. It happens when the nervous system can't detect movement:
 - *"Did anything change?"*
 - *"Am I different than when I started?"*
