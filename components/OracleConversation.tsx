@@ -1746,11 +1746,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       console.log('🗺️ [InnerLands→MAIA] Received:', content);
 
-      // Format as a natural opening for MAIA
+      // Format as a natural opening for MAIA - neutral, no false claims
       // The content is like: "I'm in The Watchtower, facing "The Mirror". The prompt: What moment?"
       const text = `[Inner Lands] ${content}
 
-Something stirred when I read this.`;
+Not sure what I'm supposed to notice here.`;
 
       // 1) Fill the composer immediately
       setComposerDraft(text);
