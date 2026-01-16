@@ -94,12 +94,50 @@ The foundation is just the start. Expand Stellium with modules that match your p
 - Resource library (your PDFs, recordings, videos)
 - Course/program modules
 
-### Business Tools
-- Booking integration (Calendly, Acuity, etc.)
-- Payment processing
-- Package management (single sessions, bundles)
-- Gift certificates
-- Email sequences in your voice
+### Payments & Commerce (Stripe Integration)
+- **Stripe Connect** — your own merchant account, funds go directly to you
+- One-time payments (single readings, chart reports)
+- Recurring subscriptions (monthly client portals, membership tiers)
+- Package bundles (3-session, 6-session, annual packages)
+- Sliding scale / scholarship pricing options
+- Gift certificates and gift subscriptions
+- Automatic invoicing and receipts
+- Refund management
+- Revenue analytics dashboard
+
+### Booking & Scheduling
+- **Calendly** integration — sync with your existing calendar
+- **Acuity Scheduling** integration
+- **Google Calendar** direct sync
+- Custom booking forms with your intake questions
+- Buffer time between sessions
+- Timezone detection for international clients
+- Appointment reminders (email + SMS)
+- Rescheduling and cancellation policies
+- Waitlist management
+
+### Client Management (CRM)
+- Client profiles with chart data, session history, notes
+- Tags and segments (new clients, active, VIP, etc.)
+- Communication history log
+- Birthday and transit alerts for client outreach
+- Bulk email capabilities
+- Client portal access management
+
+### Marketing & Growth
+- Email sequences in your voice (welcome series, nurture, re-engagement)
+- Landing pages for offerings
+- Lead capture forms
+- Referral tracking
+- Testimonial collection
+- Social proof widgets
+
+### Professional Support
+- **Onboarding concierge** — we help you set up everything
+- **Technical support** — you focus on clients, we handle the tech
+- **Content migration** — bring your existing materials into Stellium
+- **Training sessions** — learn to use every feature
+- **Priority response** — Sovereign tier gets same-day support
 
 ---
 
@@ -169,8 +207,16 @@ From those sessions, we extract:
 
 | Tier | Monthly | What's Included |
 |------|---------|-----------------|
-| **Professional** | $297-497 | Full astrology system, Stellium AI, 100 clients, custom styling, booking |
-| **Sovereign** | $797-997 | Everything + white-label, custom domain, 500 clients, unlimited modules |
+| **Professional** | $297-497 | Full astrology system, Stellium AI, Stripe payments, Calendly booking, 100 clients, custom styling, email support |
+| **Sovereign** | $797-997 | Everything + white-label, custom domain, 500 clients, unlimited modules, CRM, marketing tools, priority support, onboarding concierge |
+
+**What's always included:**
+- Full `/astrology` system (charts, synastry, transits, cross-system wisdom)
+- Stellium AI trained on your voice
+- Stripe Connect (payments go directly to you)
+- Booking integration
+- Client portal
+- SSL, hosting, backups, updates — all handled
 
 *Traditional astrology app development: $30k-80k+ upfront, ongoing maintenance headaches.*
 *Stellium: One subscription. Complete system. Grows with you.*
