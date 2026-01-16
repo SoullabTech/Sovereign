@@ -8,8 +8,18 @@
  * Short. Direct. No self-help language. Game-world feel.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  getTraceStore,
+  hasTrace,
+  hasMaiaContact,
+  recordLandEntry,
+  recordEncounterOpen,
+  recordMaiaContact,
+  slugify,
+  type InnerLandsTraceStore
+} from '@/lib/academy/innerLandsTrace';
 import {
   X,
   ChevronRight,
@@ -306,22 +316,90 @@ This is where knowing turns into doing. Doesn't have to be big. Just has to be r
   }
 ];
 
+// The Mark component - hollow ring with land-colored glow
+function TraceMark({ color }: { color: string }) {
+  // Map land colors to glow colors (muted versions)
+  const glowColor = {
+    'text-sky-400': 'shadow-sky-500/30',
+    'text-orange-400': 'shadow-orange-500/30',
+    'text-violet-400': 'shadow-violet-500/30',
+    'text-cyan-400': 'shadow-cyan-500/30',
+    'text-emerald-400': 'shadow-emerald-500/30',
+    'text-amber-400': 'shadow-amber-500/30',
+  }[color] || 'shadow-white/20';
+
+  const ringColor = {
+    'text-sky-400': 'border-sky-400/40',
+    'text-orange-400': 'border-orange-400/40',
+    'text-violet-400': 'border-violet-400/40',
+    'text-cyan-400': 'border-cyan-400/40',
+    'text-emerald-400': 'border-emerald-400/40',
+    'text-amber-400': 'border-amber-400/40',
+  }[color] || 'border-white/30';
+
+  return (
+    <div
+      className={`w-2 h-2 rounded-full border ${ringColor} ${glowColor} shadow-sm`}
+      style={{ boxShadow: 'inset 0 0 2px currentColor' }}
+    />
+  );
+}
+
 export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerProps) {
   const [currentView, setCurrentView] = useState<LandId>('map');
   const [selectedEncounter, setSelectedEncounter] = useState<number | null>(null);
+  const [traceStore, setTraceStore] = useState<InnerLandsTraceStore>({ version: 1, entries: {} });
 
   const currentLand = LANDS.find(l => l.id === currentView);
+
+  // Load trace store on mount
+  useEffect(() => {
+    setTraceStore(getTraceStore());
+  }, []);
+
+  // Record land entry when navigating to a land
+  useEffect(() => {
+    if (currentView !== 'map') {
+      recordLandEntry(currentView);
+      setTraceStore(getTraceStore()); // Refresh store
+    }
+  }, [currentView]);
+
+  // Record encounter open when selecting an encounter
+  useEffect(() => {
+    if (currentView !== 'map' && selectedEncounter !== null && currentLand) {
+      const encounter = currentLand.encounters[selectedEncounter];
+      const encounterId = slugify(encounter.title);
+      recordEncounterOpen(currentView, encounterId);
+      setTraceStore(getTraceStore()); // Refresh store
+    }
+  }, [currentView, selectedEncounter, currentLand]);
 
   const handleEncounterSelect = (index: number) => {
     setSelectedEncounter(index);
   };
 
   const handleAskMaia = (prompt: string) => {
-    if (onAskMaia) {
+    if (onAskMaia && currentLand && selectedEncounter !== null) {
+      const encounter = currentLand.encounters[selectedEncounter];
+      const encounterId = slugify(encounter.title);
+      recordMaiaContact(currentView, encounterId);
+      setTraceStore(getTraceStore()); // Refresh store
       onAskMaia(prompt);
       onClose();
     }
   };
+
+  // Helper to check if a land has been touched
+  const landHasTrace = (landId: string) => hasTrace(traceStore, `land:${landId}`);
+
+  // Helper to check if an encounter has been touched
+  const encounterHasTrace = (landId: string, encounterTitle: string) =>
+    hasTrace(traceStore, `encounter:${landId}:${slugify(encounterTitle)}`);
+
+  // Helper to check if MAIA has been contacted from a place
+  const maiaHasTrace = (landId: string, encounterTitle: string) =>
+    hasMaiaContact(traceStore, landId, slugify(encounterTitle));
 
   return (
     <motion.div
@@ -361,17 +439,21 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
             <div className="grid grid-cols-2 gap-3 max-w-lg mx-auto">
               {LANDS.map((land) => {
                 const Icon = land.icon;
+                const touched = landHasTrace(land.id);
                 return (
                   <motion.button
                     key={land.id}
                     onClick={() => setCurrentView(land.id)}
                     className={`p-4 rounded-xl bg-gradient-to-br ${land.bgGradient} border border-white/10
-                             hover:border-white/20 transition-all text-left`}
+                             hover:border-white/20 transition-all text-left relative`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                   >
                     <Icon className={`w-6 h-6 ${land.color} mb-2`} />
-                    <div className="text-white font-medium text-sm">{land.name}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-white font-medium text-sm">{land.name}</span>
+                      {touched && <TraceMark color={land.color} />}
+                    </div>
                     <div className="text-stone-400 text-xs mt-0.5">{land.tagline}</div>
                   </motion.button>
                 );
@@ -441,19 +523,25 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
             <div className="px-6 pb-8">
               <h2 className="text-stone-500 text-xs uppercase tracking-wider mb-2">Encounters</h2>
               <div className="space-y-2">
-                {currentLand.encounters.map((encounter, index) => (
-                  <motion.button
-                    key={index}
-                    onClick={() => handleEncounterSelect(index)}
-                    className="w-full p-3 rounded-lg bg-white/5 border border-white/10
-                             hover:bg-white/10 hover:border-white/20 transition-all
-                             flex items-center justify-between text-left"
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <span className="text-white text-sm">{encounter.title}</span>
-                    <ChevronRight className="w-4 h-4 text-stone-500" />
-                  </motion.button>
-                ))}
+                {currentLand.encounters.map((encounter, index) => {
+                  const touched = encounterHasTrace(currentLand.id, encounter.title);
+                  return (
+                    <motion.button
+                      key={index}
+                      onClick={() => handleEncounterSelect(index)}
+                      className="w-full p-3 rounded-lg bg-white/5 border border-white/10
+                               hover:bg-white/10 hover:border-white/20 transition-all
+                               flex items-center justify-between text-left"
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-white text-sm">{encounter.title}</span>
+                        {touched && <TraceMark color={currentLand.color} />}
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-stone-500" />
+                    </motion.button>
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -520,17 +608,25 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
           {/* Actions - MAIA is the primary path */}
           <div className="p-4 border-t border-white/10">
             {onAskMaia && (
-              <motion.button
-                onClick={() => handleAskMaia(
-                  `I'm in ${currentLand.name}, facing "${currentLand.encounters[selectedEncounter].title}". The prompt: ${currentLand.encounters[selectedEncounter].prompt}`
+              <div className="flex items-center gap-2">
+                <motion.button
+                  onClick={() => handleAskMaia(
+                    `I'm in ${currentLand.name}, facing "${currentLand.encounters[selectedEncounter].title}". The prompt: ${currentLand.encounters[selectedEncounter].prompt}`
+                  )}
+                  className="flex-1 py-4 rounded-xl bg-amber-500/20 border border-amber-500/40
+                           text-amber-200 font-medium transition-all hover:bg-amber-500/30
+                           hover:border-amber-400/60"
+                  whileTap={{ scale: 0.98 }}
+                >
+                  Talk to MAIA
+                </motion.button>
+                {/* The Mark - shows if MAIA has been contacted from this place */}
+                {maiaHasTrace(currentLand.id, currentLand.encounters[selectedEncounter].title) && (
+                  <div className="flex-shrink-0">
+                    <TraceMark color="text-amber-400" />
+                  </div>
                 )}
-                className="w-full py-4 rounded-xl bg-amber-500/20 border border-amber-500/40
-                         text-amber-200 font-medium transition-all hover:bg-amber-500/30
-                         hover:border-amber-400/60"
-                whileTap={{ scale: 0.98 }}
-              >
-                Talk to MAIA
-              </motion.button>
+              </div>
             )}
             <button
               onClick={() => setSelectedEncounter(null)}
