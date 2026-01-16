@@ -246,6 +246,121 @@ Once present, it simply **remains**.
 
 ---
 
+## The Mark — Non-Negotiables
+
+**Purpose**
+The Mark exists to signal **recognition, not progress**.
+It says only: *"You were here."*
+
+It must never imply:
+- completion
+- evaluation
+- improvement
+- advancement
+
+---
+
+### 1. Meaning (Immutable)
+
+- The Mark indicates **prior contact**, nothing more.
+- It does **not** measure time, depth, quality, or outcome.
+- Presence is binary: **absent → present**.
+- Once present, it **remains**.
+
+If it starts communicating *anything else*, it has failed.
+
+---
+
+### 2. Symbol (Fixed)
+
+- Hollow ring (not filled)
+- Thin stroke (1px)
+- Slightly irregular / organic edge
+- Subtle **inner** glow (never outer)
+- Glow color derived from the land, always muted
+- Never animated by default
+
+Semantic rules:
+- Checkmark = completion ❌
+- Dot = location ❌
+- Ring = returnability ✅
+
+---
+
+### 3. Behavior (Strict)
+
+The Mark appears **only after first contact**.
+
+Contact is defined as exactly one of:
+- entering a land
+- opening an encounter
+- speaking to MAIA from that place
+
+The Mark:
+- never appears on hover
+- never previews future states
+- never appears before the moment has passed
+
+The Mark is **retrospective**, never anticipatory.
+
+---
+
+### 4. Placement (Consistent)
+
+The Mark may appear only in these three surfaces:
+
+1. **Land Map**
+   Appears near land name or edge
+   Meaning: *"I've been here before."*
+
+2. **Encounter View**
+   Appears quietly near encounter title
+   Meaning: *"This has been touched."*
+
+3. **"Talk to MAIA" Action**
+   Appears adjacent to the button (never on it)
+   Meaning: *"We've spoken here."*
+
+It must never appear elsewhere.
+
+---
+
+### 5. Prohibitions (Absolute)
+
+The Mark must never:
+- count
+- stack
+- level
+- upgrade
+- decay
+- reset
+- animate to demand attention
+- be explained in the UI
+- be framed as an achievement
+
+If any of the above are proposed, the answer is **no**.
+
+---
+
+### 6. Design Test (Final Authority)
+
+Before shipping any change involving The Mark, ask:
+
+> *Does this make the user feel measured — or recognized?*
+
+- If **recognized** → proceed
+- If **measured** → stop
+
+---
+
+### 7. Guiding Sentence (Use Verbatim)
+
+> **Every place that has held attention leaves a trace.
+> Traces never ask for anything.
+> They only wait.**
+
+---
+
 ## The Learning Theory Foundation
 
 This design isn't aesthetic preference. It aligns with established learning science.
