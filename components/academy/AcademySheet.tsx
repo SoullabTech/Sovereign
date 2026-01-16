@@ -18,6 +18,7 @@ import {
   GraduationCap,
   ChevronRight,
   ChevronDown,
+  ChevronLeft,
   Compass,
   Eye,
   Heart,
@@ -93,21 +94,14 @@ export function AcademySheet({
   const [showDomains, setShowDomains] = useState(false);
   const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
   const [showInnerLands, setShowInnerLands] = useState(false);
+  const [showStartHere, setShowStartHere] = useState(false);
 
   // Mock progress data - would come from user's actual progress
   const hasStarted = false; // Would check localStorage/API
   const currentSequence = null; // Would show current prompt sequence
 
   const handleStartHere = () => {
-    // Route to START HERE in Academy
-    if (onSelectPrompt) {
-      onSelectPrompt('start-here', 'foundation');
-    }
-    // For now, just close and could dispatch event for MAIA to handle
-    window.dispatchEvent(new CustomEvent('academyNavigate', {
-      detail: { destination: 'start-here' }
-    }));
-    onClose();
+    setShowStartHere(true);
   };
 
   const handleDomainSelect = (domainId: string) => {
@@ -312,6 +306,120 @@ export function AcademySheet({
               }));
             }}
           />
+        )}
+      </AnimatePresence>
+
+      {/* START HERE - Full screen overlay */}
+      <AnimatePresence>
+        {showStartHere && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-black"
+          >
+            <div className="h-full flex flex-col bg-gradient-to-b from-amber-950/30 via-stone-900 to-black">
+              {/* Header */}
+              <div className="flex items-center justify-between p-4 border-b border-amber-500/20">
+                <button
+                  onClick={() => setShowStartHere(false)}
+                  className="flex items-center gap-2 text-stone-400 hover:text-white transition-colors"
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                  <span className="text-sm">Back</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStartHere(false);
+                    onClose();
+                  }}
+                  className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-stone-400" />
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto px-6 py-8">
+                <div className="max-w-md mx-auto">
+                  <Compass className="w-10 h-10 text-amber-400 mb-4" />
+                  <h1 className="text-2xl font-medium text-white mb-2">How to Walk This Terrain</h1>
+                  <p className="text-amber-400/70 text-sm mb-8">Before you explore</p>
+
+                  <div className="space-y-6 text-stone-300 text-sm leading-relaxed">
+                    <p>
+                      This isn't a course. There's no curriculum. No grades. No right way to do it.
+                    </p>
+
+                    <p>
+                      The Academy is a collection of <span className="text-amber-300">prompts</span> — questions
+                      that invite you to look at something you might not usually look at.
+                    </p>
+
+                    <p>
+                      You can explore on your own. Pick a domain, pick a prompt, sit with it.
+                      Or ask MAIA to guide you based on where you are right now.
+                    </p>
+
+                    <div className="p-4 rounded-lg bg-stone-800/50 border border-stone-700/50">
+                      <p className="text-stone-400 text-xs mb-2">The only rule:</p>
+                      <p className="text-white">
+                        Be honest with yourself. Not performatively honest. Actually honest.
+                      </p>
+                    </div>
+
+                    <p>
+                      Some prompts will land. Some won't. That's fine. Skip what doesn't fit.
+                      Return to what does.
+                    </p>
+
+                    <p className="text-stone-500">
+                      There's no finish line. Just clearer seeing.
+                    </p>
+                  </div>
+
+                  {/* Entry points */}
+                  <div className="mt-10 space-y-3">
+                    <p className="text-stone-500 text-xs uppercase tracking-wider mb-3">Where to begin</p>
+
+                    <motion.button
+                      onClick={() => {
+                        setShowStartHere(false);
+                        setShowInnerLands(true);
+                      }}
+                      className="w-full p-4 rounded-xl bg-slate-800/50 border border-slate-600/40
+                               hover:border-slate-500/60 flex items-center gap-3 text-left transition-all"
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Map className="w-5 h-5 text-slate-300" />
+                      <div className="flex-1">
+                        <div className="text-white text-sm font-medium">The Inner Lands</div>
+                        <div className="text-slate-400 text-xs">Six places to explore</div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-500" />
+                    </motion.button>
+
+                    <motion.button
+                      onClick={() => {
+                        setShowStartHere(false);
+                        setShowDomains(true);
+                      }}
+                      className="w-full p-4 rounded-xl bg-stone-800/50 border border-stone-700/40
+                               hover:border-stone-600/60 flex items-center gap-3 text-left transition-all"
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <BookOpen className="w-5 h-5 text-stone-400" />
+                      <div className="flex-1">
+                        <div className="text-white text-sm font-medium">Browse Domains</div>
+                        <div className="text-stone-500 text-xs">Six territories of inner work</div>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-stone-500" />
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </AnimatePresence>
