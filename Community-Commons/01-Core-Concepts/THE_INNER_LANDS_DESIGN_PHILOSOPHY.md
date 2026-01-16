@@ -36,7 +36,7 @@ Inner Lands takes a different position:
 
 These are not the same thing.
 
-Drop-off happens not because there's no progress bar, but because the nervous system asks:
+Drop-off doesn't happen because there's no progress bar. It happens when the nervous system can't detect movement:
 - *"Did anything change?"*
 - *"Am I different than when I started?"*
 - *"Is this going somewhere, or am I just hovering?"*
@@ -65,6 +65,15 @@ Progress bars motivate effort.
 Traces motivate return.
 
 Inner Lands is not about effort. It's about *returning with more of yourself present.*
+
+---
+
+## Why There Is No Completion
+
+Inner Lands is not designed to be finished. Not because learning never ends, but because inner territories don't resolve into endpoints. They deepen through return.
+
+Completion implies extraction: "I got what I needed and moved on."
+Inner Lands is built for inhabitation: "I return because this place still speaks."
 
 ---
 
