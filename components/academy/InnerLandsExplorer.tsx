@@ -316,31 +316,29 @@ This is where knowing turns into doing. Doesn't have to be big. Just has to be r
   }
 ];
 
-// The Mark component - hollow ring with land-colored glow
+// The Mark component - hollow ring with land-colored inner glow
+// 8x8 px for mobile visibility, 1px border, subtle inner glow
 function TraceMark({ color }: { color: string }) {
-  // Map land colors to glow colors (muted versions)
-  const glowColor = {
-    'text-sky-400': 'shadow-sky-500/30',
-    'text-orange-400': 'shadow-orange-500/30',
-    'text-violet-400': 'shadow-violet-500/30',
-    'text-cyan-400': 'shadow-cyan-500/30',
-    'text-emerald-400': 'shadow-emerald-500/30',
-    'text-amber-400': 'shadow-amber-500/30',
-  }[color] || 'shadow-white/20';
+  // Map land colors to ring and glow colors (muted)
+  const colors: Record<string, { ring: string; glow: string }> = {
+    'text-sky-400': { ring: 'border-sky-400/50', glow: 'rgba(56, 189, 248, 0.2)' },
+    'text-orange-400': { ring: 'border-orange-400/50', glow: 'rgba(251, 146, 60, 0.2)' },
+    'text-violet-400': { ring: 'border-violet-400/50', glow: 'rgba(167, 139, 250, 0.2)' },
+    'text-cyan-400': { ring: 'border-cyan-400/50', glow: 'rgba(34, 211, 238, 0.2)' },
+    'text-emerald-400': { ring: 'border-emerald-400/50', glow: 'rgba(52, 211, 153, 0.2)' },
+    'text-amber-400': { ring: 'border-amber-400/50', glow: 'rgba(251, 191, 36, 0.2)' },
+  };
 
-  const ringColor = {
-    'text-sky-400': 'border-sky-400/40',
-    'text-orange-400': 'border-orange-400/40',
-    'text-violet-400': 'border-violet-400/40',
-    'text-cyan-400': 'border-cyan-400/40',
-    'text-emerald-400': 'border-emerald-400/40',
-    'text-amber-400': 'border-amber-400/40',
-  }[color] || 'border-white/30';
+  const { ring, glow } = colors[color] || { ring: 'border-white/40', glow: 'rgba(255,255,255,0.15)' };
 
   return (
     <div
-      className={`w-2 h-2 rounded-full border ${ringColor} ${glowColor} shadow-sm`}
-      style={{ boxShadow: 'inset 0 0 2px currentColor' }}
+      className={`w-2 h-2 rounded-full border ${ring}`}
+      style={{
+        width: '8px',
+        height: '8px',
+        boxShadow: `inset 0 0 3px ${glow}`,
+      }}
     />
   );
 }
@@ -451,8 +449,8 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
                   >
                     <Icon className={`w-6 h-6 ${land.color} mb-2`} />
                     <div className="flex items-center gap-1.5">
-                      <span className="text-white font-medium text-sm">{land.name}</span>
                       {touched && <TraceMark color={land.color} />}
+                      <span className="text-white font-medium text-sm">{land.name}</span>
                     </div>
                     <div className="text-stone-400 text-xs mt-0.5">{land.tagline}</div>
                   </motion.button>
@@ -535,8 +533,8 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="flex items-center gap-2">
-                        <span className="text-white text-sm">{encounter.title}</span>
                         {touched && <TraceMark color={currentLand.color} />}
+                        <span className="text-white text-sm">{encounter.title}</span>
                       </div>
                       <ChevronRight className="w-4 h-4 text-stone-500" />
                     </motion.button>
@@ -609,6 +607,12 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
           <div className="p-4 border-t border-white/10">
             {onAskMaia && (
               <div className="flex items-center gap-2">
+                {/* The Mark - shows if MAIA has been contacted from this place */}
+                {maiaHasTrace(currentLand.id, currentLand.encounters[selectedEncounter].title) && (
+                  <div className="flex-shrink-0">
+                    <TraceMark color="text-amber-400" />
+                  </div>
+                )}
                 <motion.button
                   onClick={() => handleAskMaia(
                     `I'm in ${currentLand.name}, facing "${currentLand.encounters[selectedEncounter].title}". The prompt: ${currentLand.encounters[selectedEncounter].prompt}`
@@ -620,12 +624,6 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
                 >
                   Talk to MAIA
                 </motion.button>
-                {/* The Mark - shows if MAIA has been contacted from this place */}
-                {maiaHasTrace(currentLand.id, currentLand.encounters[selectedEncounter].title) && (
-                  <div className="flex-shrink-0">
-                    <TraceMark color="text-amber-400" />
-                  </div>
-                )}
               </div>
             )}
             <button
