@@ -27,11 +27,12 @@ import { SacredLabDrawer } from '@/components/ui/SacredLabDrawer';
 import { QuickJournalSheet } from '@/components/journal/QuickJournalSheet';
 import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/help';
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
+import { AcademySheet } from '@/components/academy/AcademySheet';
 import FeedbackSheet from '@/components/feedback/FeedbackSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
-import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon } from 'lucide-react';
+import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, FlaskConical, BookOpen, Lock, User, Settings, Mic, Heart, Gift, Flame, MessageCircle, HelpCircle, Moon, GraduationCap } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
@@ -275,6 +276,7 @@ function MAIAPageContent() {
   const [showSevaOptions, setShowSevaOptions] = useState(false);
   const [showJournalSheet, setShowJournalSheet] = useState(false);
   const [showShadowWork, setShowShadowWork] = useState(false);
+  const [showAcademySheet, setShowAcademySheet] = useState(false);
   const [showHelpHub, setShowHelpHub] = useState(false);
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
   const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
@@ -722,6 +724,19 @@ function MAIAPageContent() {
                   <span className="text-xs">Journal</span>
                 </motion.button>
 
+                {/* Academy Button - Mobile */}
+                <motion.button
+                  onClick={() => setShowAcademySheet(true)}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                  title="Academy"
+                >
+                  <GraduationCap className="w-3 h-3" />
+                  <span className="text-xs">Academy</span>
+                </motion.button>
+
                 {/* Guide Button - Mobile */}
                 <motion.button
                   onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
@@ -962,6 +977,21 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-4 h-4" />
                   <span className="hidden sm:inline">Journal</span>
+                </motion.button>
+
+                {/* Academy Button - Desktop */}
+                <motion.button
+                  onClick={() => setShowAcademySheet(true)}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                           bg-amber-500/10 hover:bg-amber-500/20
+                           border border-amber-500/20 hover:border-amber-500/40
+                           text-amber-400 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  title="Academy"
+                >
+                  <GraduationCap className="w-4 h-4" />
+                  <span className="hidden sm:inline">Academy</span>
                 </motion.button>
 
                 {/* Feedback Button - Desktop */}
@@ -1246,6 +1276,16 @@ function MAIAPageContent() {
           userId={explorerId}
           onComplete={(responses) => {
             console.log('🌙 [MAIA] Shadow work completed:', Object.keys(responses).length, 'responses');
+          }}
+        />
+
+        {/* Academy Sheet */}
+        <AcademySheet
+          isOpen={showAcademySheet}
+          onClose={() => setShowAcademySheet(false)}
+          userId={explorerId}
+          onSelectPrompt={(promptId, domain) => {
+            console.log('📚 [MAIA] Academy prompt selected:', promptId, 'in', domain);
           }}
         />
 
