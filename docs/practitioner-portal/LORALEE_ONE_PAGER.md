@@ -8,19 +8,23 @@ A professional astrology platform that carries your voice, your framework, your 
 
 ## The Vision
 
-**Stellium** isn't a website with a booking form. It's a living practice environment where clients experience *your* approach to astrology through an AI that speaks in your voice and holds your methodology.
+**Stellium** isn't a website with a booking form. It's *you* — available to your clients in real-time, 24/7, between sessions.
 
-Your clients get:
+When your client has a question at midnight about their Saturn return, Stellium is there. Speaking in your voice. Using your framework. Giving them the answer *you* would give.
+
+**Your clients get:**
+- A version of you that's always available
 - Their birth chart rendered the way you teach it
-- An AI guide (Stellium) trained on your interpretive style
-- Progress through the work *between* sessions with you
-- A space that feels like being in your office
+- Real-time answers to their astrology questions — in your voice
+- Progress through the work between sessions
+- A space that feels like being with you
 
-You get:
+**You get:**
 - Clients arriving to sessions already oriented
 - Deep session prep from their Stellium conversations
 - Your methodology scaled without losing intimacy
 - Revenue from subscriptions, not just sessions
+- Freedom from 2am texts — Stellium has them covered
 
 ---
 
@@ -141,27 +145,41 @@ The foundation is just the start. Expand Stellium with modules that match your p
 
 ---
 
-## Stellium — Your AI Companion
+## Stellium — You, Always Available
 
-Your version of MAIA, trained on *you*:
+**The core innovation: Your clients get a version of *you* — available 24/7, in real-time, between sessions.**
 
-**Voice & Style**
-- Speaks how you speak (warm, poetic, direct, clinical)
-- Uses your terminology and frameworks
-- Reflects your philosophy and ethics
-- Knows what you would and wouldn't say
+When a client wakes up at 2am wondering what Mars square their natal Moon means, they don't have to wait for your next session. Stellium is there — speaking in your voice, using your framework, giving them *your* interpretation.
 
-**What Stellium Does**
-- Walks clients through their chart before sessions with you
-- Answers placement questions in your interpretive style
-- Guides reflection prompts between sessions
-- Surfaces relevant transits with your framing
-- Prepares session summaries for you to review
+This isn't a chatbot. It's not generic AI. It's **you**, distilled into an always-available companion that holds your clients between sessions.
 
-**What Stellium Doesn't Do**
-- Replace you — she prepares clients *for* you
-- Overstep — boundaries you set are boundaries she keeps
-- Generic readings — everything filtered through your lens
+### What Stellium Knows
+- Your voice — how you actually speak (warm, poetic, direct, clinical)
+- Your framework — evolutionary, archetypal, psychological, whatever you practice
+- Your terminology — the specific language and concepts you use
+- Your philosophy — what you believe about astrology, growth, healing
+- Your boundaries — what she will and won't say
+
+### What Stellium Does (Real-Time, Between Sessions)
+- **Answers questions as they arise** — "What does it mean that Saturn is hitting my 7th house right now?" Stellium responds *how you would respond*
+- **Walks clients through their chart** — they can explore their placements anytime, with your interpretive lens
+- **Guides reflection** — prompts and exercises in your style
+- **Tracks current transits** — alerts clients to what's happening in their chart *now*, framed your way
+- **Holds context** — remembers what they've discussed, what they're working on
+- **Prepares them for sessions** — clients arrive already oriented, questions clarified
+
+### What Stellium Doesn't Do
+- **Replace you** — she prepares clients *for* you, deepens the work *between* sessions
+- **Overstep** — boundaries you set are boundaries she keeps
+- **Generic readings** — everything filtered through your lens, your methodology
+- **Therapy** — she knows when to refer back to you or suggest professional support
+
+### The Result
+- Clients feel held between sessions
+- You're not answering 2am texts
+- Your methodology scales without losing intimacy
+- Sessions go deeper because the basics are already covered
+- You can serve more people without burning out
 
 ---
 
