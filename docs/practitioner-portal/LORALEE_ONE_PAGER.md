@@ -160,6 +160,36 @@ This isn't a chatbot. It's not generic AI. It's **you**, distilled into an alway
 - Your philosophy — what you believe about astrology, growth, healing
 - Your boundaries — what she will and won't say
 
+### Train Stellium on Your Materials
+
+Upload your content and Stellium learns it — then speaks from it as naturally as you would:
+
+**Your Own Work**
+- Your books, manuscripts, articles
+- Session transcripts and case studies (anonymized)
+- Lecture recordings and workshop notes
+- Your blog posts, newsletters, social content
+- Handouts and client guides you've created
+
+**Books & Authors You Draw From**
+- Astrology texts you reference (Steven Forrest, Liz Greene, Richard Tarnas, etc.)
+- Psychology books that inform your work (Jung, Hillman, Moore, etc.)
+- Spiritual traditions you incorporate
+- Any texts central to your methodology
+
+**How It Works**
+- Upload PDFs, docs, audio, video — we process it all
+- Stellium indexes and learns the material
+- When clients ask questions, Stellium draws from *your* knowledge base
+- She cites sources when relevant ("As Steven Forrest describes...")
+- Your interpretation layer sits on top — she doesn't just parrot, she synthesizes through your lens
+
+**The Result**
+- Clients get answers grounded in the authors and traditions you trust
+- Your years of study become accessible to clients in real-time
+- Stellium can recommend specific chapters or resources
+- Your expertise compounds — everything you've learned, always available
+
 ### What Stellium Does (Real-Time, Between Sessions)
 - **Answers questions as they arise** — "What does it mean that Saturn is hitting my 7th house right now?" Stellium responds *how you would respond*
 - **Walks clients through their chart** — they can explore their placements anytime, with your interpretive lens
