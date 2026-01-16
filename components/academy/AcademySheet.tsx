@@ -255,7 +255,7 @@ export function AcademySheet({
                   <GraduationCap className="w-5 h-5 text-amber-400" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-medium text-white">Academy</h2>
+                  <h2 className="text-lg font-medium text-white">Soullab</h2>
                   <p className="text-xs text-stone-400">Inner literacy, one prompt at a time</p>
                 </div>
               </div>
@@ -455,7 +455,7 @@ export function AcademySheet({
 
                   <div className="space-y-6 text-stone-300 text-sm leading-relaxed">
                     <p>
-                      The Academy is a collection of <span className="text-amber-300">prompts</span> — questions
+                      This is a collection of <span className="text-amber-300">prompts</span> — questions
                       designed to help you look at something you might not usually look at.
                     </p>
 
