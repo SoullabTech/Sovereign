@@ -348,28 +348,24 @@ export function AcademySheet({
 
                   <div className="space-y-6 text-stone-300 text-sm leading-relaxed">
                     <p>
-                      This isn't a course. There's no curriculum. No grades. No right way to do it.
-                    </p>
-
-                    <p>
                       The Academy is a collection of <span className="text-amber-300">prompts</span> — questions
-                      that invite you to look at something you might not usually look at.
+                      designed to help you look at something you might not usually look at.
                     </p>
 
                     <p>
-                      You can explore on your own. Pick a domain, pick a prompt, sit with it.
+                      Explore at your own pace. Pick a domain, pick a prompt, sit with it.
                       Or ask MAIA to guide you based on where you are right now.
                     </p>
 
                     <div className="p-4 rounded-lg bg-stone-800/50 border border-stone-700/50">
-                      <p className="text-stone-400 text-xs mb-2">The only rule:</p>
+                      <p className="text-stone-400 text-xs mb-2">What helps most:</p>
                       <p className="text-white">
                         Be honest with yourself. Not performatively honest. Actually honest.
                       </p>
                     </div>
 
                     <p>
-                      Some prompts will land. Some won't. That's fine. Skip what doesn't fit.
+                      Some prompts will land. Some won't. Skip what doesn't fit.
                       Return to what does.
                     </p>
 
