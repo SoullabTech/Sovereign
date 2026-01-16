@@ -1746,11 +1746,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       console.log('🗺️ [InnerLands→MAIA] Received:', content);
 
-      // Format as a natural opening for MAIA - neutral, no false claims
-      // The content is like: "I'm in The Watchtower, facing "The Mirror". The prompt: What moment?"
-      const text = `[Inner Lands] ${content}
+      // Parse the structured context from Inner Lands
+      let text: string;
+      try {
+        const ctx = JSON.parse(content);
+        const { land, encounter } = ctx;
+
+        // Format as a rich primer that gives MAIA full context
+        text = `[Inner Lands: ${land.name}]
+
+I'm at "${encounter.title}" — ${land.tagline.toLowerCase()}.
+
+The setup: "${encounter.setup}"
+
+The question it asks: "${encounter.prompt}"
+
+---
+
+MAIA, you said about this place: "${land.maiaQuote}"
+
+I'm not sure what I'm noticing yet.`;
+      } catch {
+        // Fallback for old string format
+        text = `[Inner Lands] ${content}
 
 Not sure what I'm supposed to notice here.`;
+      }
 
       // 1) Fill the composer immediately
       setComposerDraft(text);
@@ -1767,6 +1788,37 @@ Not sure what I'm supposed to notice here.`;
 
     window.addEventListener('innerLandsAskMaia', handleInnerLandsAskMaia as EventListener);
     return () => window.removeEventListener('innerLandsAskMaia', handleInnerLandsAskMaia as EventListener);
+  }, []);
+
+  // Handle domain prompt MAIA contact events
+  useEffect(() => {
+    const handleDomainAskMaia = (event: CustomEvent<{ content: string }>) => {
+      const { content } = event.detail;
+
+      // Build the context message for MAIA
+      const text = `[Academy Domain]
+
+${content}
+
+---
+
+I'm not sure what I'm feeling yet.`;
+
+      // 1) Fill the composer immediately
+      setComposerDraft(text);
+
+      // 2) Show chat interface
+      setShowChatInterface(true);
+
+      // 3) Auto-send after UI settles
+      setTimeout(() => {
+        handleTextMessage(text);
+        setComposerDraft('');
+      }, 150);
+    };
+
+    window.addEventListener('domainAskMaia', handleDomainAskMaia as EventListener);
+    return () => window.removeEventListener('domainAskMaia', handleDomainAskMaia as EventListener);
   }, []);
 
   // Update motion state based on voice activity
