@@ -1737,6 +1737,38 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('journalAskMaia', handleJournalAskMaia as EventListener);
   }, []);
 
+  // Listen for Inner Lands "Talk to MAIA" events
+  useEffect(() => {
+    const handleInnerLandsAskMaia = (e: Event) => {
+      const ce = e as CustomEvent<{ content: string }>;
+      const content = ce.detail?.content || '';
+      if (!content) return;
+
+      console.log('🗺️ [InnerLands→MAIA] Received:', content);
+
+      // Format as a natural opening for MAIA
+      // The content is like: "I'm in The Watchtower, facing "The Mirror". The prompt: What moment?"
+      const text = `[Inner Lands] ${content}
+
+Something stirred when I read this.`;
+
+      // 1) Fill the composer immediately
+      setComposerDraft(text);
+
+      // 2) Show chat interface
+      setShowChatInterface(true);
+
+      // 3) Auto-send after UI settles
+      setTimeout(() => {
+        handleTextMessage(text);
+        setComposerDraft('');
+      }, 150);
+    };
+
+    window.addEventListener('innerLandsAskMaia', handleInnerLandsAskMaia as EventListener);
+    return () => window.removeEventListener('innerLandsAskMaia', handleInnerLandsAskMaia as EventListener);
+  }, []);
+
   // Update motion state based on voice activity
   // NOTE: isListening is controlled by handleRecordingStateChange (from ContinuousConversation)
   // and the holoflower click handler. DO NOT set isListening here based on userVoiceState
