@@ -490,30 +490,36 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
               {currentLand.encounters[selectedEncounter].setup}
             </p>
 
-            <div className="p-4 rounded-lg bg-white/5 border border-white/20">
+            <div className="p-4 rounded-lg bg-white/5 border border-white/20 mb-4">
               <p className={`${currentLand.color} text-base`}>
                 {currentLand.encounters[selectedEncounter].prompt}
               </p>
             </div>
+
+            {/* Orientation - the gentle invitation */}
+            <p className="text-stone-500 text-xs text-center">
+              If anything stirs — even a memory, image, or feeling — MAIA is here.
+            </p>
           </div>
 
-          {/* Actions */}
-          <div className="p-4 border-t border-white/10 space-y-2">
+          {/* Actions - MAIA is the primary path */}
+          <div className="p-4 border-t border-white/10">
             {onAskMaia && (
               <motion.button
                 onClick={() => handleAskMaia(
                   `I'm in ${currentLand.name}, facing "${currentLand.encounters[selectedEncounter].title}". The prompt: ${currentLand.encounters[selectedEncounter].prompt}`
                 )}
-                className="w-full py-3 rounded-lg bg-amber-500/20 border border-amber-500/40
-                         text-amber-300 text-sm font-medium transition-all hover:bg-amber-500/30"
+                className="w-full py-4 rounded-xl bg-amber-500/20 border border-amber-500/40
+                         text-amber-200 font-medium transition-all hover:bg-amber-500/30
+                         hover:border-amber-400/60"
                 whileTap={{ scale: 0.98 }}
               >
-                Talk to MAIA about this
+                Talk to MAIA
               </motion.button>
             )}
             <button
               onClick={() => setSelectedEncounter(null)}
-              className="w-full py-2 text-stone-500 text-sm transition-all hover:text-stone-300"
+              className="w-full py-3 mt-2 text-stone-600 text-xs transition-all hover:text-stone-400"
             >
               Different encounter
             </button>
