@@ -11,7 +11,7 @@
  * - The Inner Lands (immersive exploration)
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X,
@@ -29,7 +29,9 @@ import {
   Play,
   BookOpen,
   Map,
-  MessageCircle
+  MessageCircle,
+  Send,
+  Loader2
 } from 'lucide-react';
 import { InnerLandsExplorer } from './InnerLandsExplorer';
 import { DOMAINS as DOMAIN_DATA, getDomainById, type Domain, type DomainPrompt } from '@/lib/academy/domainPrompts';
@@ -152,6 +154,14 @@ export function AcademySheet({
   const [showStartHere, setShowStartHere] = useState(false);
   const [traceStore, setTraceStore] = useState<DomainTraceStore>({ version: 1, entries: {} });
 
+  // Inline chat state
+  type ChatMessage = { role: 'user' | 'maia'; content: string; timestamp: string };
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const [sessionId] = useState(() => `soullab-${Date.now()}`);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
   // Mock progress data - would come from user's actual progress
   const hasStarted = false; // Would check localStorage/API
   const currentSequence = null; // Would show current prompt sequence
@@ -176,6 +186,87 @@ export function AcademySheet({
       setTraceStore(getDomainTraceStore());
     }
   }, [selectedDomain, selectedPrompt]);
+
+  // Clear chat when prompt changes
+  useEffect(() => {
+    setChatMessages([]);
+    setChatInput('');
+  }, [selectedPrompt?.id]);
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  // Send message to MAIA inline
+  const sendChatMessage = async () => {
+    if (!chatInput.trim() || !selectedDomain || !selectedPrompt || chatLoading) return;
+
+    const userMessage = chatInput.trim();
+    setChatInput('');
+    setChatLoading(true);
+
+    // Add user message
+    setChatMessages(prev => [...prev, {
+      role: 'user',
+      content: userMessage,
+      timestamp: new Date().toISOString()
+    }]);
+
+    // Record MAIA contact
+    recordDomainMaiaContact(selectedDomain.id, selectedPrompt.id);
+
+    try {
+      // Build context with prompt
+      const contextMessage = chatMessages.length === 0
+        ? `[Soullab - ${selectedDomain.name}]\n\nI'm reflecting on this prompt:\n"${selectedPrompt.prompt}"\n\nMy response: ${userMessage}`
+        : userMessage;
+
+      const res = await fetch('/api/sovereign/app/maia', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: contextMessage,
+          sessionId,
+          userId,
+          conversationHistory: chatMessages.map(m => ({
+            role: m.role === 'maia' ? 'assistant' : 'user',
+            content: m.content
+          })),
+          consciousnessContext: {
+            source: 'soullab',
+            domain: selectedDomain.name,
+            promptId: selectedPrompt.id,
+            timestamp: new Date().toISOString()
+          }
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setChatMessages(prev => [...prev, {
+          role: 'maia',
+          content: data.message || "I'm here with you.",
+          timestamp: new Date().toISOString()
+        }]);
+      } else {
+        setChatMessages(prev => [...prev, {
+          role: 'maia',
+          content: "I'm here, though the connection feels distant. Take your time.",
+          timestamp: new Date().toISOString()
+        }]);
+      }
+    } catch (err) {
+      console.error('Chat error:', err);
+      setChatMessages(prev => [...prev, {
+        role: 'maia',
+        content: "I'm here, though the connection feels distant. Take your time.",
+        timestamp: new Date().toISOString()
+      }]);
+    } finally {
+      setChatLoading(false);
+    }
+  };
 
   const handleStartHere = () => {
     setShowStartHere(true);
@@ -604,7 +695,7 @@ export function AcademySheet({
         })()}
       </AnimatePresence>
 
-      {/* Single Prompt View - Full screen overlay */}
+      {/* Single Prompt View - Full screen overlay with inline chat */}
       <AnimatePresence>
         {selectedDomain && selectedPrompt && (() => {
           const colors = DOMAIN_COLORS[selectedDomain.color] || DOMAIN_COLORS.amber;
@@ -637,37 +728,81 @@ export function AcademySheet({
                   </button>
                 </div>
 
-                {/* Prompt Content */}
-                <div className="flex-1 overflow-y-auto px-6 py-8">
-                  <div className="max-w-md mx-auto">
+                {/* Scrollable content area */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="max-w-md mx-auto px-6 py-6">
+                    {/* Prompt Card - Compact */}
                     <div className={`${colors.textMuted} text-xs uppercase tracking-wider mb-2`}>
                       {selectedDomain.name}
                     </div>
-                    <h1 className="text-2xl font-medium text-white mb-6">{selectedPrompt.title}</h1>
+                    <h1 className="text-xl font-medium text-white mb-4">{selectedPrompt.title}</h1>
 
-                    <div className="p-6 rounded-xl bg-stone-800/50 border border-stone-700/40">
-                      <p className="text-white text-lg leading-relaxed">
+                    <div className="p-4 rounded-xl bg-stone-800/50 border border-stone-700/40 mb-6">
+                      <p className="text-white text-base leading-relaxed">
                         {selectedPrompt.prompt}
                       </p>
                     </div>
 
-                    <p className="text-stone-500 text-sm mt-6 text-center">
-                      Sit with it. No rush.
-                    </p>
+                    {/* Chat Messages */}
+                    {chatMessages.length === 0 ? (
+                      <p className="text-stone-500 text-sm text-center mb-4">
+                        Sit with it. When you're ready, share what comes up.
+                      </p>
+                    ) : (
+                      <div className="space-y-4 mb-4">
+                        {chatMessages.map((msg, i) => (
+                          <div
+                            key={i}
+                            className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-[85%] p-3 rounded-xl text-sm ${
+                                msg.role === 'user'
+                                  ? `${colors.bgButton} border ${colors.borderButton} text-white`
+                                  : 'bg-stone-800/70 border border-stone-700/50 text-stone-200'
+                              }`}
+                            >
+                              {msg.content}
+                            </div>
+                          </div>
+                        ))}
+                        {chatLoading && (
+                          <div className="flex justify-start">
+                            <div className="p-3 rounded-xl bg-stone-800/70 border border-stone-700/50">
+                              <Loader2 className="w-4 h-4 text-stone-400 animate-spin" />
+                            </div>
+                          </div>
+                        )}
+                        <div ref={chatEndRef} />
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                {/* Talk to MAIA Button */}
+                {/* Chat Input */}
                 <div className="p-4 border-t border-white/10">
-                  <motion.button
-                    onClick={handleAskMaia}
-                    className={`w-full p-4 rounded-xl ${colors.bgButton} border ${colors.borderButton}
-                             ${colors.borderButtonHover} flex items-center justify-center gap-2 transition-all`}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <MessageCircle className={`w-5 h-5 ${colors.icon}`} />
-                    <span className={`${colors.text} font-medium`}>Talk to MAIA</span>
-                  </motion.button>
+                  <div className="max-w-md mx-auto flex gap-2">
+                    <input
+                      type="text"
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && sendChatMessage()}
+                      placeholder="Share what comes up..."
+                      className="flex-1 px-4 py-3 rounded-xl bg-stone-800/50 border border-stone-700/40
+                               text-white placeholder-stone-500 text-sm focus:outline-none
+                               focus:border-stone-600 transition-colors"
+                      disabled={chatLoading}
+                    />
+                    <motion.button
+                      onClick={sendChatMessage}
+                      disabled={!chatInput.trim() || chatLoading}
+                      className={`p-3 rounded-xl ${colors.bgButton} border ${colors.borderButton}
+                               disabled:opacity-40 transition-all`}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Send className={`w-5 h-5 ${colors.icon}`} />
+                    </motion.button>
+                  </div>
                 </div>
               </div>
             </motion.div>
