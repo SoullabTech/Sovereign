@@ -724,17 +724,17 @@ function MAIAPageContent() {
                   <span className="text-xs">Journal</span>
                 </motion.button>
 
-                {/* Academy Button - Mobile */}
+                {/* Soullab Button - Mobile */}
                 <motion.button
                   onClick={() => setShowAcademySheet(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
                            bg-amber-500/10 hover:bg-amber-500/20
                            border border-amber-500/20 hover:border-amber-500/40
                            text-amber-400 text-xs font-light transition-all flex-shrink-0"
-                  title="Academy"
+                  title="Soullab"
                 >
                   <GraduationCap className="w-3 h-3" />
-                  <span className="text-xs">Academy</span>
+                  <span className="text-xs">Soullab</span>
                 </motion.button>
 
                 {/* Guide Button - Mobile */}
@@ -979,7 +979,7 @@ function MAIAPageContent() {
                   <span className="hidden sm:inline">Journal</span>
                 </motion.button>
 
-                {/* Academy Button - Desktop */}
+                {/* Soullab Button - Desktop */}
                 <motion.button
                   onClick={() => setShowAcademySheet(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
@@ -988,10 +988,10 @@ function MAIAPageContent() {
                            text-amber-400 text-xs font-light transition-all"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  title="Academy"
+                  title="Soullab"
                 >
                   <GraduationCap className="w-4 h-4" />
-                  <span className="hidden sm:inline">Academy</span>
+                  <span className="hidden sm:inline">Soullab</span>
                 </motion.button>
 
                 {/* Feedback Button - Desktop */}
