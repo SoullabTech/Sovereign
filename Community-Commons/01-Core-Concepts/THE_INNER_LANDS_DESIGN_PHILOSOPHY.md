@@ -39,6 +39,10 @@ These are not the same thing.
 > **Elemental Alchemy is the refinement of recognition.**
 > Inner work isn't completed; it becomes more legible. Over time, the learner gets better at noticing what process is moving through them, what stage it's in, how it feels (affect), and what it produces (effect). This is how people shift from less coherent, less helpful states toward more integrated ones — not through performance, but through increased fidelity of perception.
 
+**Spiralogic turns inner chaos into legible process.** Instead of asking "How far have I gotten?", it asks "What element am I in — and what phase am I moving through?" Each territory reflects an elemental field (Fire, Water, Earth, Air, Aether), and each field has a natural arc: **Enters → Explores → Integrates**. When a young person can recognize the element, the phase, and the felt effects (affect) and lived results (effect), the experience stops feeling like random turbulence and starts feeling like a process with **coherent options**. Inner Lands doesn't track progress; it trains recognition — so the next step becomes obvious without becoming performative.
+
+The Watchtower leans Air (clarity and seeing), the Furnace Fire (heat and transformation), the Undercroft Water (depth and the buried), the Forge Earth (manifestation), with the Crossroads and Well bridging elements where relationship and meaning require synthesis.
+
 Drop-off doesn't happen because there's no progress bar. It happens when the nervous system can't detect movement:
 - *"Did anything change?"*
 - *"Am I different than when I started?"*
