@@ -288,7 +288,7 @@ This is where knowing turns into doing. Doesn't have to be big. Just has to be r
         prompt: "Where is it? What would close it?"
       },
       {
-        title: 'The Thing You Haven't Started',
+        title: "The Thing You Haven't Started",
         setup: "Something you want to make, start, or become. You've been putting it off. Excuses. Not yet.",
         prompt: "What if you started now?"
       },
