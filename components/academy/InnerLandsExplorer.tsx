@@ -472,6 +472,21 @@ export function InnerLandsExplorer({ onClose, onAskMaia }: InnerLandsExplorerPro
               <ChevronLeft className="w-5 h-5" />
               <span className="text-sm">Back</span>
             </button>
+
+            {/* Phase indicator - three states: arrive, hold, speak */}
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-white/30" />
+              <div className={`w-1.5 h-1.5 rounded-full ${
+                currentLand.id === 'watchtower' ? 'bg-sky-400' :
+                currentLand.id === 'furnace' ? 'bg-orange-400' :
+                currentLand.id === 'undercroft' ? 'bg-violet-400' :
+                currentLand.id === 'well' ? 'bg-cyan-400' :
+                currentLand.id === 'crossroads' ? 'bg-emerald-400' :
+                'bg-amber-400'
+              }`} />
+              <div className="w-1.5 h-1.5 rounded-full bg-white/20" />
+            </div>
+
             <button
               onClick={onClose}
               className="p-2 hover:bg-white/5 rounded-lg transition-colors"
