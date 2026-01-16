@@ -462,8 +462,14 @@ export function AcademySheet({
                     <p>
                       Explore at your own pace. Pick a domain, pick a prompt, sit with it.
                       Or ask MAIA to guide you based on where you are right now.
-                      The only prerequisite is honesty with yourself.
                     </p>
+
+                    <div className="p-4 rounded-lg bg-stone-800/50 border border-stone-700/50">
+                      <p className="text-stone-400 text-xs mb-2">At the heart of this:</p>
+                      <p className="text-white">
+                        Honesty with yourself. Not the performative kind — the quiet, private kind.
+                      </p>
+                    </div>
 
                     <p>
                       Some prompts will land. Some won't. Skip what doesn't fit.
