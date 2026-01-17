@@ -825,7 +825,43 @@ NOW APPROPRIATE: "Yeah, you've circled back to it three times. What's there?"`;
     night: 'Hi'
   }[timeOfDay];
 
-  const timeAwareness = `\n\n🕐 CURRENT TIME CONTEXT:
+  // 📅 TEMPORAL GROUNDING: Full date/time context with user's timezone
+  const timezone = (meta as any)?.timezone as string | undefined;
+  const tz = timezone || 'UTC';
+  console.log(`📅 [FAST] Temporal grounding: timezone=${tz} (from meta: ${timezone ?? 'undefined'})`);
+  const now = new Date();
+  let temporalGrounding = '';
+  try {
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: tz
+    });
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: tz
+    });
+    temporalGrounding = `\n\n📅 TEMPORAL GROUNDING:
+Today is ${dateStr}.
+Current local time: ${timeStr}.
+User's timezone: ${tz} (IANA format).
+
+IMPORTANT: You DO have access to the user's timezone. If they ask "what timezone am I in?" or "what time is it?", tell them directly: their timezone is ${tz} and the current local time is ${timeStr}.
+When discussing current astrological transits, planetary positions, or "what's happening right now", use TODAY'S date (${dateStr}).`;
+  } catch {
+    temporalGrounding = `\n\n📅 TEMPORAL GROUNDING:
+Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+Current time: ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}.
+Timezone: UTC (default - user's timezone unavailable).`;
+  }
+
+  const timeAwareness = `${temporalGrounding}
+
+🕐 GREETING CONTEXT:
 It is currently ${timeOfDay} for the user. Use "${timeGreeting}" when greeting them.
 Do NOT use greetings for other times of day.`;
 
