@@ -285,11 +285,25 @@ CREATE TABLE IF NOT EXISTS practitioner_clients (
   UNIQUE(practitioner_id, email)
 );
 
-CREATE INDEX idx_clients_practitioner ON practitioner_clients(practitioner_id);
-CREATE INDEX idx_clients_email ON practitioner_clients(email);
-CREATE INDEX idx_clients_status ON practitioner_clients(practitioner_id, status);
-CREATE INDEX idx_clients_tier ON practitioner_clients(practitioner_id, tier);
-CREATE INDEX idx_clients_stripe ON practitioner_clients(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
+-- Add columns if they don't exist (for idempotent migrations)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'tier') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN tier VARCHAR(50) NOT NULL DEFAULT 'free' CHECK (tier IN ('free', 'subscriber', 'vip'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'status') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN status VARCHAR(50) NOT NULL DEFAULT 'invited' CHECK (status IN ('invited', 'active', 'paused', 'archived'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'tags') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN tags JSONB NOT NULL DEFAULT '[]'::jsonb;
+  END IF;
+END $$;
+
+CREATE INDEX IF NOT EXISTS idx_clients_practitioner ON practitioner_clients(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_clients_email ON practitioner_clients(email);
+CREATE INDEX IF NOT EXISTS idx_clients_status ON practitioner_clients(practitioner_id, status);
+CREATE INDEX IF NOT EXISTS idx_clients_tier ON practitioner_clients(practitioner_id, tier);
+CREATE INDEX IF NOT EXISTS idx_clients_stripe ON practitioner_clients(stripe_customer_id) WHERE stripe_customer_id IS NOT NULL;
 
 -- ============== REVENUE RECORDS ==============
 
