@@ -33,31 +33,31 @@ export default function ForgettingRitual({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-md p-6 bg-[#0d1025] border border-indigo-900/50 rounded-2xl shadow-2xl shadow-black/60"
+          className="relative w-full max-w-md p-6 bg-maia-navy-850 border border-maia-navy-700/50 rounded-2xl shadow-maia-panel-hover"
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-4 p-2 rounded-lg hover:bg-maia-navy-800 transition-colors"
           >
-            <X size={20} className="text-white/50" />
+            <X size={20} className="text-maia-ink-40" />
           </button>
 
           {/* Icon */}
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-violet-600/30 to-purple-700/20 border border-violet-500/30 flex items-center justify-center">
-            <Trash2 size={28} className="text-violet-400" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-br from-maia-danger/30 to-maia-danger/10 border border-maia-danger/30 flex items-center justify-center">
+            <Trash2 size={28} className="text-maia-danger" />
           </div>
 
           {/* Content */}
-          <h3 className="text-xl font-semibold text-white text-center mb-3">Data Deletion</h3>
-          <p className="text-white/50 text-center mb-6">
+          <h3 className="text-xl font-semibold text-maia-ink-100 text-center mb-3">Data Deletion</h3>
+          <p className="text-maia-ink-60 text-center mb-6">
             This feature is coming soon. Contact support to request data deletion.
           </p>
 
           {/* Button */}
           <button
             onClick={onClose}
-            className="w-full px-4 py-3 bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl text-white font-medium transition-all"
+            className="w-full px-4 py-3 bg-maia-navy-800 hover:bg-maia-navy-700 border border-maia-navy-700/50 rounded-xl text-maia-ink-100 font-medium transition-all"
           >
             Close
           </button>
