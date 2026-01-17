@@ -96,7 +96,10 @@ function getTemporalContext(timezone?: string): string {
 
     return `📅 TEMPORAL GROUNDING:
 Today is ${dateStr}.
-Current time: ${timeStr} (${tz}).
+Current local time: ${timeStr}.
+User's timezone: ${tz} (IANA format).
+
+IMPORTANT: You DO have access to the user's timezone. If they ask "what timezone am I in?" or "what time is it?", tell them directly: their timezone is ${tz} and the current local time is ${timeStr}.
 
 CRITICAL FOR ASTROLOGY & TIMING:
 - Use this date as your reference for "today", "now", "current", "this week", etc.
@@ -120,7 +123,10 @@ CRITICAL FOR ASTROLOGY & TIMING:
 
     return `📅 TEMPORAL GROUNDING:
 Today is ${dateStr}.
-Current time: ${timeStr} (UTC).
+Current local time: ${timeStr}.
+User's timezone: UTC (fallback).
+
+IMPORTANT: You DO have access to the user's timezone. If they ask "what timezone am I in?" or "what time is it?", tell them directly: their timezone is UTC and the current local time is ${timeStr}.
 
 CRITICAL FOR ASTROLOGY & TIMING:
 - Use this date as your reference for "today", "now", "current", "this week", etc.
