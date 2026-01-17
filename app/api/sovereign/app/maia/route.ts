@@ -17,6 +17,7 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundle';
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
+import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
@@ -159,6 +160,19 @@ export async function POST(req: NextRequest) {
     await withTimeoutLabeled('initializeSessionTable', initializeSessionTable(), 5000, start);
 
     const session = await withTimeoutLabeled('ensureSession', ensureSession(sessionId), 5000, start);
+
+    // 🎯 NAME CHANGE DETECTION: Detect "call me X" patterns and update preferred name
+    let nameChangeResult = null;
+    if (userId && typeof userId === 'string' && !userId.startsWith('anon:')) {
+      try {
+        nameChangeResult = await processNameChangeIfDetected(message, userId);
+        if (nameChangeResult.detected && nameChangeResult.updated) {
+          console.log(`✨ [NAME_CHANGE] User asked to be called "${nameChangeResult.newName}" - updated`);
+        }
+      } catch (err) {
+        console.warn('⚠️ [NAME_CHANGE] Detection failed (non-blocking):', err);
+      }
+    }
 
     // 🛡️ FIELD SAFETY GATE: Check if user is safe for field/symbolic work
     let cognitiveProfile = null;
@@ -380,6 +394,11 @@ export async function POST(req: NextRequest) {
         providerUsed,
         model: modelUsed,
         modeUsed,
+        // ✨ Name change detection result (if user said "call me X")
+        nameChange: nameChangeResult?.detected ? {
+          newName: nameChangeResult.newName,
+          updated: nameChangeResult.updated,
+        } : undefined,
       },
     };
 

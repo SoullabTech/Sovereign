@@ -173,6 +173,7 @@ export function AccountSettings() {
 
   // Profile edit state
   const [editName, setEditName] = useState('');
+  const [editPreferredName, setEditPreferredName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [editBio, setEditBio] = useState('');
 
@@ -246,6 +247,7 @@ export function AccountSettings() {
           console.log('[AccountSettings] Birth data in profile:', profileData.birthData);
           setProfile(profileData);
           setEditName(profileData.name || '');
+          setEditPreferredName(profileData.preferredName || '');
           setEditEmail(profileData.email || '');
           setEditBio(profileData.bio || '');
 
@@ -524,6 +526,7 @@ export function AccountSettings() {
         body: JSON.stringify({
           memberId: userId,
           name: editName,
+          preferredName: editPreferredName,
           email: editEmail,
           bio: editBio,
         }),
@@ -539,7 +542,12 @@ export function AccountSettings() {
           try {
             const user = JSON.parse(storedUser);
             user.name = editName;
+            user.preferredName = editPreferredName;
             localStorage.setItem('beta_user', JSON.stringify(user));
+            // Also update the explorerPreferredName key that greetingService reads
+            if (editPreferredName) {
+              localStorage.setItem('explorerPreferredName', editPreferredName);
+            }
           } catch (e) {
             console.error('[AccountSettings] Failed to update localStorage:', e);
           }
@@ -552,7 +560,7 @@ export function AccountSettings() {
     } finally {
       setSaving(false);
     }
-  }, [userId, editName, editEmail, editBio, showSaveIndicator]);
+  }, [userId, editName, editPreferredName, editEmail, editBio, showSaveIndicator]);
 
   // Search for birth location
   const searchLocation = useCallback(async (query: string) => {
@@ -760,6 +768,17 @@ export function AccountSettings() {
           placeholder="Your name"
           className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
         />
+      </div>
+      <div>
+        <label className="text-sm text-white/60 mb-2 block">What should MAIA call you?</label>
+        <input
+          type="text"
+          value={editPreferredName}
+          onChange={(e) => setEditPreferredName(e.target.value)}
+          placeholder={editName || 'Your preferred name'}
+          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
+        />
+        <p className="text-xs text-white/40 mt-2">Used in greetings and voice conversations</p>
       </div>
       <div>
         <label className="text-sm text-white/60 mb-2 block">Email</label>

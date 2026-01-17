@@ -853,3 +853,39 @@ function getTimeOfDay(): 'morning' | 'afternoon' | 'evening' | 'night' {
   if (hour >= 17 && hour < 21) return 'evening';
   return 'night';
 }
+
+/**
+ * Handle name change from MAIA API response
+ * Updates localStorage so greetings use the new name immediately
+ * Call this after receiving any MAIA response that might contain a name change
+ */
+export function handleNameChangeResponse(metadata: { nameChange?: { newName: string; updated: boolean } } | null | undefined): boolean {
+  if (!metadata?.nameChange?.updated || !metadata.nameChange.newName) {
+    return false;
+  }
+
+  const newName = metadata.nameChange.newName;
+
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  try {
+    // Update the primary localStorage key used by resolveDisplayName
+    localStorage.setItem('explorerPreferredName', newName);
+
+    // Also update beta_user if it exists
+    const storedUser = localStorage.getItem('beta_user');
+    if (storedUser) {
+      const user = JSON.parse(storedUser);
+      user.preferredName = newName;
+      localStorage.setItem('beta_user', JSON.stringify(user));
+    }
+
+    console.log(`✨ [greetingService] Updated preferred name to "${newName}" in localStorage`);
+    return true;
+  } catch (e) {
+    console.error('[greetingService] Failed to update localStorage for name change:', e);
+    return false;
+  }
+}

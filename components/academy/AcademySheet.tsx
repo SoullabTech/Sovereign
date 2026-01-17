@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import { InnerLandsExplorer } from './InnerLandsExplorer';
 import { DOMAINS as DOMAIN_DATA, getDomainById, type Domain, type DomainPrompt } from '@/lib/academy/domainPrompts';
+import { handleNameChangeResponse } from '@/lib/services/greetingService';
 import {
   getDomainTraceStore,
   hasDomainTrace,
@@ -244,6 +245,10 @@ export function AcademySheet({
 
       if (res.ok) {
         const data = await res.json();
+
+        // Handle name change if user said "call me X"
+        handleNameChangeResponse(data.metadata);
+
         setChatMessages(prev => [...prev, {
           role: 'maia',
           content: data.message || "I'm here with you.",

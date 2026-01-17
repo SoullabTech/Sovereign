@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const result = await query(
       `SELECT
-        m.id, m.username, m.name, m.email, m.passkey,
+        m.id, m.username, m.name, m.preferred_name, m.email, m.passkey,
         m.avatar_url, m.bio, m.timezone,
         m.onboarded, m.created_at, m.last_sign_in,
         m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
@@ -51,6 +51,7 @@ export async function GET(request: NextRequest) {
       id: member.id,
       username: member.username,
       name: member.name,
+      preferredName: member.preferred_name,
       email: member.email,
       passkey: maskedPasskey,
       avatarUrl: member.avatar_url,
@@ -95,7 +96,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { memberId, name, email, bio, timezone, birthData } = body;
+    const { memberId, name, preferredName, email, bio, timezone, birthData } = body;
 
     if (!memberId) {
       return NextResponse.json(
@@ -112,6 +113,10 @@ export async function PUT(request: NextRequest) {
     if (name !== undefined) {
       setClauses.push(`name = $${paramIndex++}`);
       values.push(name);
+    }
+    if (preferredName !== undefined) {
+      setClauses.push(`preferred_name = $${paramIndex++}`);
+      values.push(preferredName);
     }
     if (email !== undefined) {
       setClauses.push(`email = $${paramIndex++}`);
@@ -177,7 +182,7 @@ export async function PUT(request: NextRequest) {
       `UPDATE members
        SET ${setClauses.join(', ')}
        WHERE id = $1
-       RETURNING id, username, name, email, bio, timezone,
+       RETURNING id, username, name, preferred_name, email, bio, timezone,
                  birth_date, birth_time, birth_location_lat, birth_location_lng,
                  birth_location_name, birth_timezone`,
       values
