@@ -663,7 +663,7 @@ function MAIAPageContent() {
                     {maiaMode === 'session' && (
                       <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
                     )}
-                    <span className="text-xs">Note</span>
+                    <span className="text-xs">Scribe</span>
                     {currentScribeLens !== 'auto' ? (
                       <span className="text-[10px] opacity-70">{REFLECTION_LENSES[currentScribeLens]?.icon}</span>
                     ) : (
