@@ -516,7 +516,7 @@ function MAIAPageContent() {
 
         {/* DREAM-WEAVER SYSTEM - Combined Header & Banner - Always visible */}
         <div
-          className="header-navigation safari-nav-fix flex-shrink-0 relative overflow-hidden bg-gradient-to-r from-black/20 via-amber-950/5 to-black/20 border-b border-amber-900/3 backdrop-blur-sm z-60"
+          className="header-navigation safari-nav-fix flex-shrink-0 relative overflow-hidden bg-[#1b1410]/70 backdrop-blur-xl border-b border-[#3a2a1f]/40 z-60"
         >
           {/* Spice particle effect - very subtle movement */}
           <div className="absolute inset-0 opacity-5 pointer-events-none">
@@ -562,28 +562,25 @@ function MAIAPageContent() {
                 {/* Voice/Text Toggle - Mobile optimized */}
                 <button
                   onClick={() => setShowChatInterface(!showChatInterface)}
-                  className="carousel-item px-2 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+                  className="carousel-item px-2 py-1 rounded-md bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
                 >
-                  <span className="text-xs text-amber-300/90 font-light">
+                  <span className="text-xs text-maia-ink-80 font-light">
                     {showChatInterface ? '💬' : '🎤'}
                   </span>
                 </button>
 
                 {/* Mode Selector + Session Button - Mobile optimized */}
-                <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5 carousel-item">
+                <div className="flex items-center gap-1 bg-maia-navy-900/60 rounded-lg p-0.5 carousel-item">
                   <motion.button
                     onClick={() => setMaiaMode('normal')}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
-                    style={{
-                      border: maiaMode === 'normal' ? '1px solid #f59e0b' : undefined,
-                      fontWeight: maiaMode === 'normal' ? 'bold' : 'normal'
-                    }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0 ${
+                      maiaMode === 'normal'
+                        ? 'bg-maia-navy-800/80 border border-maia-spice-500/50 text-maia-ink-100 font-medium'
+                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                    }`}
                   >
                     {maiaMode === 'normal' && (
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#fbbf24' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-maia-spice-400" />
                     )}
                     <span className="text-xs">Talk</span>
                   </motion.button>
@@ -608,18 +605,15 @@ function MAIAPageContent() {
                       setFrameworkSelectorMode('counsel');
                       setShowFrameworkSelector(true);
                     }}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
-                    style={{
-                      border: maiaMode === 'patient' ? '1px solid #14b8a6' : undefined,
-                      fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
-                    }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0 ${
+                      maiaMode === 'patient'
+                        ? 'bg-maia-navy-800/80 border border-maia-sage-500/50 text-maia-ink-100 font-medium'
+                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                    }`}
                     title="Tap to switch • Double-tap for framework options"
                   >
                     {maiaMode === 'patient' && (
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#5eead4' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-maia-sage-400" />
                     )}
                     <span className="text-xs">Care</span>
                     {currentCounselFramework !== 'auto' ? (
@@ -650,18 +644,15 @@ function MAIAPageContent() {
                       setFrameworkSelectorMode('scribe');
                       setShowFrameworkSelector(true);
                     }}
-                    className="flex items-center gap-1 px-2 py-1 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
-                    style={{
-                      border: maiaMode === 'session' ? '1px solid #3b82f6' : undefined,
-                      fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
-                    }}
+                    className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-light transition-all flex-shrink-0 ${
+                      maiaMode === 'session'
+                        ? 'bg-maia-navy-800/80 border border-blue-500/50 text-maia-ink-100 font-medium'
+                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                    }`}
                     title="Tap to switch • Double-tap for lens options"
                   >
                     {maiaMode === 'session' && (
-                      <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
                     )}
                     <span className="text-xs">Scribe</span>
                     {currentScribeLens !== 'auto' ? (
@@ -676,9 +667,9 @@ function MAIAPageContent() {
                     <motion.button
                       onClick={() => setShowSessionSelector(true)}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg
-                               bg-green-500/10 hover:bg-green-500/20
-                               border border-green-500/20 hover:border-green-500/40
-                               text-green-400 text-xs font-light transition-all flex-shrink-0"
+                               bg-maia-navy-800/40 hover:bg-maia-navy-800
+                               border border-maia-success/30 hover:border-maia-success/50
+                               text-maia-success text-xs font-light transition-all flex-shrink-0"
                       title="Start Session"
                     >
                       <Clock className="w-3 h-3" />
@@ -688,9 +679,9 @@ function MAIAPageContent() {
                     <motion.button
                       onClick={() => setHasActiveSession(false)}
                       className="flex items-center gap-1 px-2 py-1 rounded-lg
-                               bg-red-500/10 hover:bg-red-500/20
-                               border border-red-500/20 hover:border-red-500/40
-                               text-red-400 text-xs font-light transition-all flex-shrink-0"
+                               bg-maia-navy-800/40 hover:bg-maia-navy-800
+                               border border-maia-danger/30 hover:border-maia-danger/50
+                               text-maia-danger text-xs font-light transition-all flex-shrink-0"
                       title="End Session"
                     >
                       <Clock className="w-3 h-3" />
@@ -702,9 +693,9 @@ function MAIAPageContent() {
                   <motion.button
                     onClick={() => setShowHelpHub(true)}
                     className="flex items-center justify-center w-6 h-6 rounded-full
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-navy-700/40 hover:border-maia-navy-700
+                             text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                     title="Help"
                   >
                     <HelpCircle className="w-3.5 h-3.5" />
@@ -715,9 +706,9 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowJournalSheet(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-indigo-500/10 hover:bg-indigo-500/20
-                           border border-indigo-500/20 hover:border-indigo-500/40
-                           text-indigo-400 text-xs font-light transition-all flex-shrink-0"
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                   title="Quick Journal"
                 >
                   <BookOpen className="w-3 h-3" />
@@ -728,9 +719,9 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowAcademySheet(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-amber-500/10 hover:bg-amber-500/20
-                           border border-amber-500/20 hover:border-amber-500/40
-                           text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                   title="Soullab"
                 >
                   <GraduationCap className="w-3 h-3" />
@@ -741,9 +732,9 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-purple-500/10 hover:bg-purple-500/20
-                           border border-purple-500/20 hover:border-purple-500/40
-                           text-purple-400 text-xs font-light transition-all flex-shrink-0"
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                   title="Guide"
                 >
                   <Sparkles className="w-3 h-3" />
@@ -754,9 +745,9 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowShadowWork(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-violet-500/10 hover:bg-violet-500/20
-                           border border-violet-500/20 hover:border-violet-500/40
-                           text-violet-400 text-xs font-light transition-all flex-shrink-0"
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                   title="Shadow Work"
                 >
                   <Moon className="w-3 h-3" />
@@ -767,9 +758,9 @@ function MAIAPageContent() {
                 <button
                   onClick={() => setShowFeedbackSheet(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-green-500/10 hover:bg-green-500/20
-                           border border-green-500/20 hover:border-green-500/40
-                           text-green-400 text-xs font-light transition-all flex-shrink-0"
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                   title="Send Feedback"
                 >
                   <MessageCircle className="w-3 h-3" />
@@ -779,9 +770,9 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowAccountMenu(true)}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-amber-500/10 hover:bg-amber-500/20
-                           border border-amber-500/20 hover:border-amber-500/40
-                           text-amber-400 text-xs font-light transition-all flex-shrink-0"
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
                   title="Account Menu"
                 >
                   <User className="w-3 h-3" />
@@ -797,30 +788,27 @@ function MAIAPageContent() {
                 {/* Voice/Text Toggle */}
                 <button
                   onClick={() => setShowChatInterface(!showChatInterface)}
-                  className="px-3 py-1 rounded-md bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-maia-navy-800/60 hover:bg-maia-navy-800 border border-maia-navy-700/50 transition-all"
                 >
-                  <span className="text-xs text-amber-300/90 font-light">
+                  <span className="text-xs text-maia-ink-80 font-light">
                     {showChatInterface ? '💬 Text' : '🎤 Voice'}
                   </span>
                 </button>
 
                 {/* Mode Selector */}
-                <div className="flex items-center gap-1 bg-black/20 rounded-lg p-0.5">
+                <div className="flex items-center gap-1 bg-maia-navy-900/60 rounded-lg p-0.5">
                   <motion.button
                     onClick={() => setMaiaMode('normal')}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      border: maiaMode === 'normal' ? '2px solid #f59e0b' : undefined,
-                      fontWeight: maiaMode === 'normal' ? 'bold' : 'normal'
-                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                      maiaMode === 'normal'
+                        ? 'bg-maia-navy-800/80 border border-maia-spice-500/50 text-maia-ink-100 font-medium'
+                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     {maiaMode === 'normal' && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#fbbf24' }} />
+                      <div className="w-2 h-2 rounded-full bg-maia-spice-400" />
                     )}
                     Talk
                   </motion.button>
@@ -845,20 +833,17 @@ function MAIAPageContent() {
                       setFrameworkSelectorMode('counsel');
                       setShowFrameworkSelector(true);
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      border: maiaMode === 'patient' ? '2px solid #14b8a6' : undefined,
-                      fontWeight: maiaMode === 'patient' ? 'bold' : 'normal'
-                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                      maiaMode === 'patient'
+                        ? 'bg-maia-navy-800/80 border border-maia-sage-500/50 text-maia-ink-100 font-medium'
+                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     title="Click to switch • Double-click for framework options (Jungian, Somatic, IFS, etc.)"
                   >
                     {maiaMode === 'patient' && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#5eead4' }} />
+                      <div className="w-2 h-2 rounded-full bg-maia-sage-400" />
                     )}
                     Care
                     {currentCounselFramework !== 'auto' ? (
@@ -888,20 +873,17 @@ function MAIAPageContent() {
                       setFrameworkSelectorMode('scribe');
                       setShowFrameworkSelector(true);
                     }}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-amber-500/10 hover:bg-amber-500/20
-                             border border-amber-500/20 hover:border-amber-500/40
-                             text-amber-400 text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      border: maiaMode === 'session' ? '2px solid #3b82f6' : undefined,
-                      fontWeight: maiaMode === 'session' ? 'bold' : 'normal'
-                    }}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-light transition-all ${
+                      maiaMode === 'session'
+                        ? 'bg-maia-navy-800/80 border border-blue-500/50 text-maia-ink-100 font-medium'
+                        : 'bg-maia-navy-800/40 hover:bg-maia-navy-800 border border-maia-navy-700/40 text-maia-ink-60 hover:text-maia-ink-100'
+                    }`}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     title="Click to switch • Double-click for lens options (Jungian, Somatic, Archetypal, etc.)"
                   >
                     {maiaMode === 'session' && (
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#93c5fd' }} />
+                      <div className="w-2 h-2 rounded-full bg-blue-400" />
                     )}
                     Scribe
                     {currentScribeLens !== 'auto' ? (
@@ -918,19 +900,19 @@ function MAIAPageContent() {
                   <motion.button
                     onClick={() => setShowSessionSelector(true)}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-[#D4B896]/10 hover:bg-[#D4B896]/20
-                             border border-[#D4B896]/20 hover:border-[#D4B896]/40
-                             text-[#D4B896] text-xs font-light transition-all"
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                             bg-maia-navy-800/40 hover:bg-maia-navy-800
+                             border border-maia-success/30 hover:border-maia-success/50
+                             text-maia-success text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
                     <Clock className="w-4 h-4" />
                     <span className="hidden sm:inline">Start Session</span>
                   </motion.button>
                 ) : (
                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                               bg-green-500/10 border border-green-500/30 text-green-400 text-xs">
-                    <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+                               bg-maia-navy-800/60 border border-maia-success/40 text-maia-success text-xs">
+                    <div className="w-2 h-2 rounded-full bg-maia-success animate-pulse" />
                     <span className="hidden sm:inline">Session Active</span>
                   </div>
                 )}
@@ -939,11 +921,11 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-purple-500/10 hover:bg-purple-500/20
-                           border border-purple-500/20 hover:border-purple-500/40
-                           text-purple-400 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="Demo Guide"
                 >
                   <Sparkles className="w-4 h-4" />
@@ -954,11 +936,11 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowHelpHub(true)}
                   className="flex items-center justify-center w-8 h-8 rounded-full
-                           bg-amber-500/10 hover:bg-amber-500/20
-                           border border-amber-500/20 hover:border-amber-500/40
-                           text-amber-400 transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="Help"
                 >
                   <HelpCircle className="w-4 h-4" />
@@ -968,11 +950,11 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowJournalSheet(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-indigo-500/10 hover:bg-indigo-500/20
-                           border border-indigo-500/20 hover:border-indigo-500/40
-                           text-indigo-400 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="Quick Journal"
                 >
                   <BookOpen className="w-4 h-4" />
@@ -983,11 +965,11 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowAcademySheet(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-amber-500/10 hover:bg-amber-500/20
-                           border border-amber-500/20 hover:border-amber-500/40
-                           text-amber-400 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="Soullab"
                 >
                   <GraduationCap className="w-4 h-4" />
@@ -998,11 +980,11 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowFeedbackSheet(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-green-500/10 hover:bg-green-500/20
-                           border border-green-500/20 hover:border-green-500/40
-                           text-green-400 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="Send Feedback"
                 >
                   <MessageCircle className="w-4 h-4" />
@@ -1012,11 +994,11 @@ function MAIAPageContent() {
                 <motion.button
                   onClick={() => setShowAccountMenu(true)}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-amber-500/10 hover:bg-amber-500/20
-                           border border-amber-500/20 hover:border-amber-500/40
-                           text-amber-400 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                           bg-maia-navy-800/40 hover:bg-maia-navy-800
+                           border border-maia-navy-700/40 hover:border-maia-navy-700
+                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   title="Account Menu"
                 >
                   <User className="w-4 h-4" />

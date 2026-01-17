@@ -745,13 +745,50 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return true;
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
+      // 🔍 Log available audio input devices BEFORE requesting mic
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter(d => d.kind === 'audioinput');
+        console.log('[voice] audioinput devices:', audioInputs.map(d => ({
+          label: d.label || '(no label - permission not yet granted)',
+          deviceId: d.deviceId?.slice(0, 8) + '...',
+          groupId: d.groupId?.slice(0, 8) + '...'
+        })));
+        if (audioInputs.length === 0) {
+          console.warn('[voice] ⚠️ No audio input devices found! Check OS privacy settings.');
+        }
+      } catch (enumErr) {
+        console.warn('[voice] enumerateDevices failed:', enumErr);
+      }
+
+      // Try with standard constraints first
+      let stream: MediaStream | null = null;
+      const standardConstraints = {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true
+          // IMPORTANT: do NOT set deviceId here (no exact/ideal)
         }
-      });
+      };
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia(standardConstraints);
+      } catch (firstErr: any) {
+        console.error('[voice] getUserMedia failed first attempt:', firstErr?.name, firstErr?.message);
+
+        // HARD FALLBACK: request default mic with simplest constraints
+        if (firstErr?.name === 'NotFoundError' || firstErr?.name === 'OverconstrainedError') {
+          console.warn('[voice] 🔄 Retrying with { audio: true } fallback...');
+          stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        } else {
+          throw firstErr;
+        }
+      }
+
+      if (!stream) {
+        throw new Error('MICROPHONE_UNAVAILABLE');
+      }
 
       micStreamRef.current = stream;
 
@@ -1135,19 +1172,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // 🌐 Web Speech API fallback for browsers
       console.log('🌐 [ContinuousConversation] Using WEB speech recognition');
 
-      // Check platform capabilities first
-      if (!platformInfo) {
-        const info = await getPlatformInfo();
-        setPlatformInfo(info);
+      // Check platform capabilities - ALWAYS get fresh info (don't use cached value)
+      // This ensures voice works even if earlier check failed before user gesture
+      const info = await getPlatformInfo();
+      setPlatformInfo(info);
+      console.log('[voice] Platform info:', info);
 
-        if (!info.hasVoiceSupport) {
-          const errorMsg = getVoiceUnavailableMessage(info);
-          console.warn('⚠️ [ContinuousConversation] Voice not supported:', errorMsg);
-          setVoiceError(errorMsg);
-          throw new Error('VOICE_UNAVAILABLE');
-        }
-      } else if (!platformInfo.hasVoiceSupport) {
-        const errorMsg = getVoiceUnavailableMessage(platformInfo);
+      if (!info.hasVoiceSupport) {
+        const errorMsg = getVoiceUnavailableMessage(info);
+        console.warn('⚠️ [ContinuousConversation] Voice not supported:', errorMsg);
         setVoiceError(errorMsg);
         throw new Error('VOICE_UNAVAILABLE');
       }

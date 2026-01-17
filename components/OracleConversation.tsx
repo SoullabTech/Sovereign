@@ -337,7 +337,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isIOSAudioEnabled, setIsIOSAudioEnabled] = useState(false);
   const [needsIOSAudioPermission, setNeedsIOSAudioPermission] = useState(false);
   const [isMicrophonePaused, setIsMicrophonePaused] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
@@ -566,7 +566,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const lastUserMessageRef = useRef<string>('');
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
-  const welcomeInputRef = useRef<HTMLTextAreaElement>(null); // Separate ref for welcome screen input
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioAnalyserRef = useRef<AnalyserNode | null>(null);
@@ -2120,9 +2119,9 @@ I'm not sure what I'm feeling yet.`;
       duration: 2000,
       position: 'bottom-center',
       style: {
-        background: '#1a1f2e',
-        color: '#d4b896',
-        border: '1px solid rgba(212, 184, 150, 0.2)',
+        background: 'rgb(18, 24, 51)', // maia-navy-850
+        color: 'rgb(245, 158, 11)', // maia-spice-500
+        border: '1px solid rgba(245, 158, 11, 0.2)', // maia-spice-500/20
       },
     });
   }, [messages, userName]);
@@ -3910,7 +3909,7 @@ I'm not sure what I'm feeling yet.`;
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="fixed inset-0 z-40 flex flex-col items-center justify-center pointer-events-none"
           >
-            <div className="flex flex-col items-center gap-8 px-4 w-full max-w-2xl pointer-events-auto">
+            <div className="flex flex-col items-center gap-5 px-4 w-full max-w-2xl pointer-events-auto">
               {/* Holoflower Icon + Greeting */}
               <div className="flex items-center gap-4">
                 <motion.div
@@ -3926,22 +3925,21 @@ I'm not sure what I'm feeling yet.`;
                   <img
                     src="/holoflower-amber.png"
                     alt="MAIA"
-                    className="w-10 h-10 md:w-12 md:h-12 object-contain drop-shadow-[0_0_20px_rgba(251,146,60,0.5)]"
+                    className="w-14 h-14 md:w-16 md:h-16 object-contain drop-shadow-[0_0_24px_rgba(251,146,60,0.6)]"
                     style={{
                       filter: 'brightness(1.2)',
                     }}
                   />
                 </motion.div>
 
-                {/* Greeting Text - Inline with icon */}
+                {/* Greeting Text - Quieter confidence, not hero announcement */}
                 <motion.h1
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.2, duration: 0.5 }}
-                  className="text-3xl sm:text-4xl md:text-5xl font-light"
+                  className="text-3xl sm:text-4xl md:text-5xl font-light text-maia-spice-500"
                   style={{
                     fontFamily: 'Spectral, Georgia, serif',
-                    color: '#C9956C',
                     textShadow: '0 2px 20px rgba(0,0,0,0.5)',
                     letterSpacing: '-0.02em',
                   }}
@@ -3950,65 +3948,19 @@ I'm not sure what I'm feeling yet.`;
                 </motion.h1>
               </div>
 
-              {/* Welcome Input Field - Claude-like centered input */}
+              {/* Welcome Invitation - atmospheric text, not interactive */}
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.4 }}
-                className="w-full"
+                className="w-full text-center"
               >
-                <div className="flex items-end gap-3 bg-[#2a2a3e]/80 backdrop-blur-xl rounded-2xl border border-white/10 shadow-2xl px-4 py-3">
-                  <textarea
-                    ref={welcomeInputRef}
-                    placeholder="How can I help you today?"
-                    className="flex-1 bg-transparent text-[#E8D5B7] placeholder-white/40
-                             resize-none outline-none text-base md:text-lg"
-                    style={{
-                      fontFamily: 'Spectral, Georgia, serif',
-                      minHeight: '40px',
-                      maxHeight: '200px',
-                    }}
-                    rows={1}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        const text = (e.target as HTMLTextAreaElement).value.trim();
-                        if (text) {
-                          setShowChatInterface(true); // Switch to chat mode after first message
-                          handleTextMessage(text);
-                          (e.target as HTMLTextAreaElement).value = '';
-                        }
-                      }
-                    }}
-                    onInput={(e) => {
-                      const target = e.target as HTMLTextAreaElement;
-                      target.style.height = 'auto';
-                      target.style.height = Math.min(target.scrollHeight, 200) + 'px';
-                    }}
-                  />
-                  {/* Send button - right side */}
-                  <button
-                    onClick={() => {
-                      const textarea = welcomeInputRef.current;
-                      if (textarea) {
-                        const text = textarea.value.trim();
-                        if (text) {
-                          setShowChatInterface(true); // Switch to chat mode after first message
-                          handleTextMessage(text);
-                          textarea.value = '';
-                          textarea.style.height = 'auto';
-                        }
-                      }
-                    }}
-                    className="flex-shrink-0 p-2.5 rounded-xl transition-all active:scale-95"
-                    style={{ backgroundColor: '#F59E0B' }}
-                    title="Send message"
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M12 19V5M12 5L5 12M12 5L19 12" stroke="#1A1513" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
-                </div>
+                <p
+                  className="text-maia-ink-60 text-lg md:text-xl"
+                  style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                >
+                  I'm here when you're ready
+                </p>
               </motion.div>
             </div>
           </motion.div>
@@ -4148,7 +4100,7 @@ I'm not sure what I'm feeling yet.`;
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('🌸 Holoflower clicked!');
+              console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted });
 
               // Enable audio context first
               await enableAudio();
@@ -4163,36 +4115,53 @@ I'm not sure what I'm feeling yet.`;
                     return;
                   }
                   // Start listening
-                  console.log('🎤 Starting voice via holoflower...');
+                  console.log('[voice] startListening called', {
+                    isMuted,
+                    isListening,
+                    showChatInterface,
+                    hasVoiceMicRef: !!voiceMicRef.current,
+                    hasStartListening: !!voiceMicRef.current?.startListening,
+                  });
                   toast('🎤 Starting voice...', { duration: 2000 });
                   setIsMuted(false);
                   setIsListening(true); // Immediately show visual indicator
+
+                  // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
                   try {
                     await voiceMicRef.current.startListening();
-                    console.log('✅ Voice started successfully');
+                    console.log('[voice] startListening resolved OK');
                     toast.success('✅ Voice started!');
                   } catch (error: any) {
-                    console.error('❌ Failed to start microphone:', error);
-                    toast.error(`❌ Mic error: ${error?.message || error}`);
-                    setIsMuted(true); // Reset on error
+                    const name = error?.name || 'UnknownError';
+                    const msg = error?.message || String(error);
+                    console.error('[voice] startListening FAILED', name, msg, error);
 
-                    // Show specific error messages for different scenarios
-                    if (error.message === 'VOICE_UNAVAILABLE') {
-                      // Check if in simulator
-                      const isSimulator = window.navigator.userAgent.toLowerCase().includes('simulator') ||
-                                         window.navigator.userAgent.toLowerCase().includes('x86_64');
-                      if (isSimulator) {
-                        toast.error('Voice unavailable in simulator. Use text input or test on physical device.', { duration: 5000 });
-                      } else {
-                        toast.error('Voice not supported in iOS app. Use text input below.', { duration: 5000 });
-                      }
-                      // Show text input as fallback
-                      setShowChatInterface(true);
-                    } else if (error.message === 'MICROPHONE_UNAVAILABLE') {
-                      toast.error('Microphone not available. Please check permissions in your browser settings.');
-                    } else {
-                      toast.error('Unable to access microphone. Please try again.');
+                    // IMPORTANT: do NOT switch to text automatically.
+                    // Keep the user in voice mode and show what to do.
+                    setIsListening(false);
+                    setIsMuted(true);
+
+                    if (name === 'NotAllowedError' || name === 'PermissionDeniedError') {
+                      toast.error('🎤 Microphone blocked. Click lock icon → Site settings → Microphone: Allow, then refresh.', { duration: 8000 });
+                      return;
                     }
+
+                    if (name === 'NotFoundError') {
+                      toast.error('🎤 No mic detected. Chrome may be set to a disconnected device. Check chrome://settings/content/microphone', { duration: 8000 });
+                      return;
+                    }
+
+                    if (msg === 'VOICE_UNAVAILABLE') {
+                      toast.error('🎤 Voice unavailable. Check browser compatibility (Chrome/Safari recommended).', { duration: 5000 });
+                      return;
+                    }
+
+                    if (msg === 'MICROPHONE_UNAVAILABLE') {
+                      toast.error('🎤 No mic devices found. Check macOS System Settings → Privacy → Microphone → Chrome ON', { duration: 8000 });
+                      return;
+                    }
+
+                    toast.error(`🎤 Voice failed: ${name} - ${msg}`, { duration: 5000 });
                   }
                 } else {
                   // Stop listening
@@ -4274,6 +4243,110 @@ I'm not sure what I'm feeling yet.`;
                 }}
               />
             </div>
+
+            {/* 💜 ULTRAVIOLET GLOW - When ready/listening (responds to user voice amplitude) */}
+            <AnimatePresence>
+              {!isResponding && !isAudioPlaying && !isProcessing && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-8"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Outer ultraviolet ring - voice reactive */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '320px',
+                      height: '320px',
+                      background: 'radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(139, 92, 246, 0.25) 40%, rgba(167, 139, 250, 0.1) 70%, transparent 100%)',
+                      filter: 'blur(20px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.4})`,
+                      opacity: 0.5 + voiceAmplitude * 0.5,
+                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                    }}
+                    animate={{
+                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.08, 1],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.6, 0.9, 0.6],
+                    }}
+                    transition={{
+                      duration: 1.5,
+                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Inner ultraviolet glow - more reactive to voice */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '200px',
+                      height: '200px',
+                      background: 'radial-gradient(circle, rgba(167, 139, 250, 0.6) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)',
+                      filter: 'blur(15px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.6})`,
+                      opacity: 0.6 + voiceAmplitude * 0.4,
+                      transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
+                    }}
+                    animate={{
+                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.12, 1],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.7, 1, 0.7],
+                    }}
+                    transition={{
+                      duration: 1.2,
+                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* 🩵 AETHEREAL TEAL GLOW - When MAIA is speaking */}
+            <AnimatePresence>
+              {(isResponding || isAudioPlaying) && (
+                <motion.div
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-8"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {/* Outer aethereal ring */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '320px',
+                      height: '320px',
+                      background: 'radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, rgba(94, 234, 212, 0.25) 40%, rgba(45, 212, 191, 0.1) 70%, transparent 100%)',
+                      filter: 'blur(20px)',
+                    }}
+                    animate={{
+                      scale: [1, 1.06, 1],
+                      opacity: [0.5, 0.8, 0.5],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
+                  {/* Inner aethereal glow - reactive to voice amplitude */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '200px',
+                      height: '200px',
+                      background: 'radial-gradient(circle, rgba(94, 234, 212, 0.6) 0%, rgba(20, 184, 166, 0.35) 50%, transparent 70%)',
+                      filter: 'blur(15px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.3})`,
+                      opacity: 0.6 + voiceAmplitude * 0.4,
+                      transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Mode-colored persistent light field - always visible with mode colors */}
             {true && (
@@ -4639,14 +4712,18 @@ I'm not sure what I'm feeling yet.`;
                       )}
                     </div>
                   )}
-                  {!isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {/* Tap to speak hint - shows only when voice is inactive (muted) */}
+                  {isMuted && !isResponding && !isAudioPlaying && !isProcessing && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
+                      animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}
                       exit={{ opacity: 0, y: 10 }}
-                      className="text-amber-300/95 text-sm font-medium drop-shadow-[0_0_8px_rgba(252,211,77,0.5)]"
+                      transition={{
+                        opacity: { duration: 2.5, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      className="text-violet-300/80 text-sm font-light drop-shadow-[0_0_8px_rgba(139,92,246,0.4)]"
                     >
-                      Click to activate
+                      Tap holoflower to speak
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -4719,8 +4796,9 @@ I'm not sure what I'm feeling yet.`;
             <AnimatePresence>
               {messages.length > 0 && (
                 <div className="space-y-3 pb-52 md:pb-32">
-                {/* Show all messages with proper scrolling */}
+                {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
+                  .filter(m => !m.id.startsWith('greeting-'))
                   .map((message, index) => {
                     const handleCopyMessage = async () => {
                       const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
@@ -4730,9 +4808,9 @@ I'm not sure what I'm feeling yet.`;
                           duration: 2000,
                           position: 'bottom-center',
                           style: {
-                            background: '#1a1f2e',
-                            color: '#d4b896',
-                            border: '1px solid rgba(212, 184, 150, 0.2)',
+                            background: 'rgb(18, 24, 51)', // maia-navy-850
+                            color: 'rgb(245, 158, 11)', // maia-spice-500
+                            border: '1px solid rgba(245, 158, 11, 0.2)', // maia-spice-500/20
                           },
                         });
                       } catch {
@@ -4758,18 +4836,18 @@ I'm not sure what I'm feeling yet.`;
                       style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9), 0 0 20px rgba(0,0,0,0.5)' }}
                     >
                       <div className="flex justify-between items-start mb-2">
-                        <div className="text-xs" style={{ color: '#D4A574', opacity: 0.8, fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
+                        <div className="text-xs text-dune-sand opacity-80" style={{ fontFamily: 'Spectral, Georgia, serif', letterSpacing: '0.05em' }}>
                           {message.role === 'user' ? (userName || 'You') : assistantName}
                         </div>
-                        <div className="flex items-center gap-1 text-xs text-amber-400
+                        <div className="flex items-center gap-1 text-xs text-maia-spice-400
                                       opacity-100 sm:opacity-0 sm:group-hover:opacity-100
                                       touch-manipulation transition-opacity">
-                          <Copy className="w-3 h-3 text-amber-400" />
-                          <span className="hidden sm:inline text-amber-400">Click to copy</span>
-                          <span className="sm:hidden text-amber-400">Tap to copy</span>
+                          <Copy className="w-3 h-3 text-maia-spice-400" />
+                          <span className="hidden sm:inline text-maia-spice-400">Click to copy</span>
+                          <span className="sm:hidden text-maia-spice-400">Tap to copy</span>
                         </div>
                       </div>
-                      <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words" style={{ color: '#E8C99B', fontFamily: 'Spectral, Georgia, serif' }}>
+                      <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
                         {message.role === 'oracle' ? (
                           <FormattedMessage
                             text={message.text}
@@ -4943,20 +5021,6 @@ I'm not sure what I'm feeling yet.`;
             </>
           ) : null}
 
-          {/* Mic Hint Message - Bottom placement above menu bar */}
-          {!showChatInterface && isMuted && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="fixed left-1/2 transform -translate-x-1/2 z-below-nav"
-              style={{ bottom: 'calc(6rem + env(safe-area-inset-bottom))' }}
-            >
-              <div className="bg-black/70 backdrop-blur-md rounded-lg px-4 py-2 border border-amber-400/40">
-                <p className="text-amber-200/90 text-sm">Click the holoflower to activate voice</p>
-              </div>
-            </motion.div>
-          )}
 
           {/* Journal Suggestion - Appears when breakthrough is detected */}
           <AnimatePresence mode="wait">
@@ -5058,15 +5122,15 @@ I'm not sure what I'm feeling yet.`;
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 50, scale: 0.95 }}
             transition={{ duration: 0.2 }}
-            className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-[#1a1a2e]/98 to-[#16213e]/98 backdrop-blur-xl border border-[#D4B896]/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
+            className="modal-content fixed bottom-24 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md bg-gradient-to-b from-maia-navy-850/98 to-maia-navy-900/98 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl shadow-2xl shadow-black/50 overflow-hidden"
           >
             <div className="p-4">
-              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-[#D4B896]/20">
-                <svg className="w-5 h-5 text-[#D4B896]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center gap-3 mb-4 pb-3 border-b border-maia-spice-500/20">
+                <svg className="w-5 h-5 text-maia-spice-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                         d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
-                <h3 className="text-base font-semibold text-[#D4B896]">Choose MAIA's Voice</h3>
+                <h3 className="text-base font-semibold text-maia-spice-500">Choose MAIA's Voice</h3>
               </div>
               <div className="space-y-2 max-h-[60vh] overflow-y-auto">
                 {[
@@ -5087,8 +5151,8 @@ I'm not sure what I'm feeling yet.`;
                     }}
                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
                       voice === voiceOption.id
-                        ? 'bg-[#D4B896]/20 border border-[#D4B896]/50 text-[#D4B896]'
-                        : 'bg-black/20 border border-white/5 text-white/70 hover:bg-[#D4B896]/10 hover:border-[#D4B896]/30'
+                        ? 'bg-maia-spice-500/20 border border-maia-spice-500/50 text-maia-spice-500'
+                        : 'bg-maia-navy-800/50 border border-maia-navy-700/30 text-maia-ink-80 hover:bg-maia-spice-500/10 hover:border-maia-spice-500/30'
                     }`}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
@@ -5102,7 +5166,7 @@ I'm not sure what I'm feeling yet.`;
                       <motion.div
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="w-2.5 h-2.5 rounded-full bg-[#D4B896] shadow-lg shadow-[#D4B896]/50"
+                        className="w-2.5 h-2.5 rounded-full bg-maia-spice-500 shadow-maia-spice-glow"
                       />
                     )}
                   </motion.button>

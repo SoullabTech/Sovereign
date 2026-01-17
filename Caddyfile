@@ -5,6 +5,36 @@
 # Replace {$DOMAIN} with your actual domain, or set DOMAIN env var
 # ═══════════════════════════════════════════════════════════════════════════════
 
+# Local development - no TLS
+:80 {
+    @streaming {
+        path /api/voice/stream-conversation
+        path /api/*/stream*
+    }
+    handle @streaming {
+        reverse_proxy maia:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+            flush_interval -1
+        }
+    }
+
+    reverse_proxy maia:3000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    header {
+        X-MAIA-Origin "caddy-sovereign"
+    }
+
+    encode gzip zstd
+}
+
 soullab.life, www.soullab.life {
     # SSE/Streaming endpoints - disable compression and buffering
     @streaming {

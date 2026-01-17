@@ -228,11 +228,26 @@ export function createAINThresholdState(returnReason?: AINReturnToThresholdReaso
 export function detectMAIAThresholdTrigger(input: string): MAIAThresholdTrigger | null {
   const lowered = input.toLowerCase();
 
-  // Felt sense patterns
-  if (/something('s| is) (happening|shifting|moving|stirring)/i.test(input) ||
-      /i (feel|sense|notice) (something|a)/i.test(input) ||
-      /there('s| is) (this|a) (feeling|sensation|sense)/i.test(input) ||
-      /i don't (know|have) (the )?words/i.test(input)) {
+  // Felt sense patterns - expanded for more natural language
+  if (
+    // Something happening/shifting/moving
+    /something('s| is) (happening|shifting|moving|stirring|there)/i.test(input) ||
+    // I feel/sense/notice something
+    /i (feel|sense|notice) (something|a )/i.test(input) ||
+    // There's a feeling/sensation
+    /there('s| is) (this|a|something)/i.test(input) ||
+    // Can't find/name/put into words
+    /i (don't|can't|cannot) (know|have|find|name|put|get)( the| it| this| into)? words/i.test(input) ||
+    /can't (name|describe|explain|articulate) (it|this|what)/i.test(input) ||
+    // "I don't know what this is" - common felt-sense opening
+    /i don't know what (this|it|that) (is|means|feels)/i.test(input) ||
+    // Fuzzy/unclear/hard to describe
+    /(feels?|it's|this is) (fuzzy|unclear|vague|hard to)/i.test(input) ||
+    // Overwhelmed/too much
+    /i('m| am) (overwhelmed|flooded|swamped)/i.test(input) ||
+    // Just here/present
+    /just\.{0,3} here/i.test(input)
+  ) {
     return 'felt_sense';
   }
 

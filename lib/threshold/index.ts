@@ -6,7 +6,15 @@
  * when a simple, present response is appropriate.
  *
  * Key principle: Threshold responses should feel like presence, not processing.
+ *
+ * ARCHITECTURE (Tiered):
+ * - Tier 1: Ultra-fast regex patterns for minimal inputs (hmm, ..., idk)
+ * - Tier 2: Crowder/McGilchrist felt-sense detection (via maia-threshold.ts)
+ * If Tier 1 doesn't trigger, Tier 2 is checked before passing to LLM.
  */
+
+import { routeThreshold } from './maia-threshold';
+import { createMAIAThresholdState } from './schemas';
 
 export type ThresholdResponseType =
   | 'THRESHOLD_HOLD'    // Pure presence - minimal sound/phrase
@@ -255,6 +263,29 @@ export function processThreshold(input: ThresholdInput): ThresholdResult {
         skipLLM: true,
       };
     }
+  }
+
+  // ============ TIER 2: Crowder/McGilchrist felt-sense detection ============
+  // Tier 1 didn't trigger - check for richer felt-sense patterns
+  // This catches inputs like "I don't know what this is. Something is there."
+  const tier2Result = routeThreshold(trimmedText, null);
+
+  if (tier2Result.useThreshold && tier2Result.response) {
+    // Map MAIAThresholdResponse to legacy ThresholdResult format
+    const responseType: ThresholdResponseType =
+      tier2Result.response.type === 'HOLD' ? 'THRESHOLD_HOLD' :
+      tier2Result.response.type === 'INVITE' ? 'THRESHOLD_INVITE' :
+      'THRESHOLD_PASS';
+
+    newState.consecutiveMinimal++;
+    return {
+      response: {
+        type: responseType,
+        content: tier2Result.response.text,
+      },
+      state: newState,
+      skipLLM: true,
+    };
   }
 
   // Reset consecutive counter and pass to LLM
