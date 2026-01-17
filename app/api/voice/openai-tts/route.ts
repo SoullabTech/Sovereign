@@ -14,7 +14,7 @@ import { synthesizeSpeechMacOS } from '@/lib/tts/macosTts';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { text, voice, format, speed } = body;
+    const { text, voice, format, speed, model } = body;
 
     if (!text) {
       return NextResponse.json(
@@ -42,7 +42,8 @@ export async function POST(request: NextRequest) {
         text,
         voice: voice || 'alloy',
         format: format || 'mp3',
-        speed: speed || 1.0
+        speed: speed || 1.0,
+        model: model || 'tts-1'
       });
       buffer = Buffer.from(await audioResponse.arrayBuffer());
       contentType = 'audio/mpeg';

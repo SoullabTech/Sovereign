@@ -20,6 +20,7 @@ export interface AccountSettings {
   voice: {
     openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
     speed: number;
+    model: 'tts-1' | 'tts-1-hd'; // Standard (faster) vs HD (richer)
   };
 
   /** Memory depth when in continuity mode */
@@ -52,6 +53,7 @@ export const DEFAULT_ACCOUNT_SETTINGS: AccountSettings = {
   voice: {
     openaiVoice: 'alloy',
     speed: 0.95,
+    model: 'tts-1', // Standard by default (faster response)
   },
   memory: {
     depth: 'moderate',

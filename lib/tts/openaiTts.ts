@@ -2,8 +2,7 @@
 
 import OpenAI from 'openai';
 
-const OPENAI_TTS_MODEL =
-  process.env.OPENAI_TTS_MODEL || 'tts-1'; // or your chosen TTS model
+const DEFAULT_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'tts-1';
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -18,11 +17,12 @@ export async function synthesizeSpeech(params: {
   voice?: string;
   format?: 'mp3' | 'wav' | 'opus';
   speed?: number;
+  model?: 'tts-1' | 'tts-1-hd';
 }) {
-  const { text, voice = 'alloy', format = 'mp3', speed = 1.0 } = params;
+  const { text, voice = 'alloy', format = 'mp3', speed = 1.0, model } = params;
 
   const response = await openai.audio.speech.create({
-    model: OPENAI_TTS_MODEL,
+    model: model || DEFAULT_TTS_MODEL,
     input: text,
     voice: voice as any,
     response_format: format,

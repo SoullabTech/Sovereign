@@ -1099,6 +1099,41 @@ export function AccountSettings() {
         />
       </div>
 
+      {/* Voice Quality */}
+      <div>
+        <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+          Voice Quality
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {([
+            { id: 'tts-1', name: 'Standard', desc: 'Faster response' },
+            { id: 'tts-1-hd', name: 'HD', desc: 'Richer, more natural' }
+          ] as const).map((quality) => {
+            const isSelected = maiaSettings.voice.model === quality.id;
+            return (
+              <motion.button
+                key={quality.id}
+                onClick={() => updateNestedMaiaSetting('voice.model', quality.id)}
+                className={`py-3 px-2 rounded-xl border transition-all active:scale-95 relative ${
+                  isSelected
+                    ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
+                    : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10'
+                }`}
+                whileTap={{ scale: 0.95 }}
+              >
+                {isSelected && (
+                  <div className="absolute top-1 right-1 text-amber-300">
+                    <Check size={12} />
+                  </div>
+                )}
+                <div className="text-sm font-medium">{quality.name}</div>
+                <div className="text-xs text-white/40">{quality.desc}</div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Memory Depth */}
       <div>
         <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">

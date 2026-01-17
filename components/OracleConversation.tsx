@@ -342,7 +342,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
   // Voice settings from account preferences (applies to TTS)
-  const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95 });
+  const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95, model: 'tts-1' as 'tts-1' | 'tts-1-hd' });
 
   // Member's preferred name for MAIA (bonding affordance)
   const assistantName = useAssistantName();
@@ -747,7 +747,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           text: text,
           voice: voiceSettings.voice,
           speed: voiceSettings.speed,
-          model: voiceModel
+          model: voiceSettings.model
         })
       });
 
@@ -902,7 +902,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('🔊 [VoiceSettings] Loading from account:', settings.voice);
       setVoiceSettings({
         voice: settings.voice.openaiVoice,
-        speed: settings.voice.speed
+        speed: settings.voice.speed,
+        model: settings.voice.model || 'tts-1'
       });
     };
 
@@ -1494,11 +1495,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setAgentConfig(newConfig);
       console.log('🎭 Conversation style updated:', newConfig.voice);
 
-      // Also reload voice settings from account settings (voice + speed)
+      // Also reload voice settings from account settings (voice + speed + model)
       const settings = getAccountSettings();
       setVoiceSettings({
         voice: settings.voice.openaiVoice,
-        speed: settings.voice.speed
+        speed: settings.voice.speed,
+        model: settings.voice.model || 'tts-1'
       });
       console.log('🔊 Voice settings reloaded:', settings.voice);
     };
@@ -3585,7 +3587,7 @@ I'm not sure what I'm feeling yet.`;
           text: cleanText,
           voice: voiceSettings.voice,
           speed: voiceSettings.speed,
-          model: voiceModel
+          model: voiceSettings.model
         })
       });
 
