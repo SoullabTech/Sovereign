@@ -90,6 +90,28 @@ The foundation is just the start. Expand Stellium with modules that match your p
 - Mundane astrology (world events)
 - Fixed star interpretations
 
+### Vedic/Jyotish Forecasting (Full System)
+Complete Vedic astrology tradition for practitioners who work in both systems:
+
+**Already Built:**
+- Sidereal birth chart with multiple ayanamsa (Lahiri, True Chitra, KP)
+- All 27 nakshatras with pada, ruling deity, and Spiralogic integration
+- Vimshottari Dasha — 120-year planetary period system
+- Mahadasha + Antardasha timeline visualization
+- Planetary dignities (exalted, debilitated, moolatrikona)
+- Combustion calculations
+
+**Available Modules:**
+- **Gochara** — Transit analysis from Moon sign (the Vedic way)
+- **Ashtakavarga** — 8-point strength system for transit effects
+- **Pratyantardasha** — Sub-sub periods (3rd level dashas)
+- **Varshaphal** — Vedic solar return / annual horoscope
+- **Yogini Dasha** — Alternative 36-year dasha system
+- **Muhurta** — Electional astrology (choosing auspicious dates)
+- **Prashna** — Horary astrology (question charts)
+
+*Stellium can speak to both Western and Vedic traditions — clients get the synthesis that matches your practice.*
+
 ### Practice Tools
 - Client intake questionnaires (your questions)
 - Session notes with chart snapshots

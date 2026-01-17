@@ -30,8 +30,10 @@ import NakshatraCard from '@/components/astrology/NakshatraCard';
 import DashaTimeline from '@/components/astrology/DashaTimeline';
 import type { CompleteVedicProfile, RashiInfo, GrahaPosition, GrahaName } from '@/lib/astrology/types/vedic';
 import { GRAHAS } from '@/lib/astrology/types/vedic';
+import type { GocharaProfile } from '@/lib/astrology/gocharaTransits';
+import type { AshtakavargaProfile } from '@/lib/astrology/ashtakavarga';
 
-type ViewMode = 'profile' | 'dasha' | 'chart';
+type ViewMode = 'profile' | 'dasha' | 'chart' | 'gochara' | 'ashtakavarga';
 
 export default function VedicAstrologyPage() {
   // State
@@ -45,6 +47,12 @@ export default function VedicAstrologyPage() {
   const [activeView, setActiveView] = useState<ViewMode>('profile');
   const [showSettings, setShowSettings] = useState(false);
   const didAutoLoad = useRef(false);
+
+  // Vedic forecasting state
+  const [gocharaProfile, setGocharaProfile] = useState<GocharaProfile | null>(null);
+  const [gocharaLoading, setGocharaLoading] = useState(false);
+  const [ashtakavargaProfile, setAshtakavargaProfile] = useState<AshtakavargaProfile | null>(null);
+  const [ashtakavargaLoading, setAshtakavargaLoading] = useState(false);
 
   // Load saved data from localStorage
   useEffect(() => {
@@ -115,6 +123,71 @@ export default function VedicAstrologyPage() {
       setLoading(false);
     }
   };
+
+  // Calculate Gochara (Vedic Transits)
+  const calculateGochara = async () => {
+    if (!profile) return;
+
+    setGocharaLoading(true);
+    try {
+      const response = await fetch('/api/astrology/vedic/gochara', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          natalMoonRashi: profile.moonSign.name,
+          ayanamsa,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setGocharaProfile(result.data.profile);
+      }
+    } catch (err) {
+      console.error('Gochara calculation error:', err);
+    } finally {
+      setGocharaLoading(false);
+    }
+  };
+
+  // Calculate Ashtakavarga (Transit Strength)
+  const calculateAshtakavarga = async () => {
+    if (!birthDate) return;
+
+    setAshtakavargaLoading(true);
+    try {
+      const response = await fetch('/api/astrology/vedic/ashtakavarga', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          date: birthDate,
+          time: birthTime || '12:00',
+          location: location || { lat: 0, lng: 0, timezone: 'UTC' },
+          ayanamsa,
+          includeCurrentTransits: true,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setAshtakavargaProfile(result.data.profile);
+      }
+    } catch (err) {
+      console.error('Ashtakavarga calculation error:', err);
+    } finally {
+      setAshtakavargaLoading(false);
+    }
+  };
+
+  // Auto-load forecasting data when switching views
+  useEffect(() => {
+    if (activeView === 'gochara' && profile && !gocharaProfile && !gocharaLoading) {
+      calculateGochara();
+    }
+    if (activeView === 'ashtakavarga' && birthDate && !ashtakavargaProfile && !ashtakavargaLoading) {
+      calculateAshtakavarga();
+    }
+  }, [activeView, profile, birthDate]);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -295,11 +368,13 @@ export default function VedicAstrologyPage() {
           <>
             {/* View Toggle */}
             <div className="flex items-center justify-between mb-6">
-              <div className="flex bg-stone-900/60 rounded-lg p-1 border border-stone-800/50">
+              <div className="flex flex-wrap bg-stone-900/60 rounded-lg p-1 border border-stone-800/50">
                 {[
                   { id: 'profile', label: 'Profile', icon: Star },
-                  { id: 'dasha', label: 'Dasha Timeline', icon: Clock },
+                  { id: 'dasha', label: 'Dasha', icon: Clock },
                   { id: 'chart', label: 'Planets', icon: Sun },
+                  { id: 'gochara', label: 'Transits', icon: Moon },
+                  { id: 'ashtakavarga', label: 'Strength', icon: Sparkles },
                 ].map(({ id, label, icon: Icon }) => (
                   <button
                     key={id}
@@ -459,6 +534,168 @@ export default function VedicAstrologyPage() {
                   </div>
                 </motion.div>
               )}
+
+              {/* Gochara View */}
+              {activeView === 'gochara' && (
+                <motion.div
+                  key="gochara"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-indigo-200 flex items-center gap-2">
+                      <Moon className="w-5 h-5 text-indigo-400" />
+                      Gochara — Current Transits from Moon
+                    </h3>
+                    <button
+                      onClick={calculateGochara}
+                      disabled={gocharaLoading}
+                      className="text-sm text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+                    >
+                      {gocharaLoading ? 'Updating...' : 'Refresh'}
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-indigo-400/60">
+                    Vedic transits are read from your Moon sign ({profile.moonSign.name}), not the Sun.
+                    This shows how current planetary positions affect you.
+                  </p>
+
+                  {gocharaLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Sparkles className="w-6 h-6 text-indigo-400" />
+                      </motion.div>
+                    </div>
+                  ) : gocharaProfile ? (
+                    <div className="space-y-4">
+                      {/* Overall Tone */}
+                      <div className={`
+                        p-4 rounded-xl border
+                        ${gocharaProfile.overallTone === 'favorable'
+                          ? 'bg-emerald-900/20 border-emerald-700/30'
+                          : gocharaProfile.overallTone === 'challenging'
+                          ? 'bg-amber-900/20 border-amber-700/30'
+                          : 'bg-indigo-900/20 border-indigo-700/30'
+                        }
+                      `}>
+                        <div className="text-sm font-medium text-indigo-200 mb-1">
+                          Overall Transit Period: {gocharaProfile.overallTone.charAt(0).toUpperCase() + gocharaProfile.overallTone.slice(1)}
+                        </div>
+                        <div className="text-sm text-indigo-400/70">
+                          {gocharaProfile.summary}
+                        </div>
+                      </div>
+
+                      {/* Transit Cards */}
+                      <div className="grid md:grid-cols-2 gap-4">
+                        {gocharaProfile.transits.map((transit, idx) => (
+                          <GocharaCard key={idx} transit={transit} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-indigo-400/60">
+                      Loading transit data...
+                    </div>
+                  )}
+                </motion.div>
+              )}
+
+              {/* Ashtakavarga View */}
+              {activeView === 'ashtakavarga' && (
+                <motion.div
+                  key="ashtakavarga"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="space-y-6"
+                >
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-semibold text-indigo-200 flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-indigo-400" />
+                      Ashtakavarga — Transit Strength
+                    </h3>
+                    <button
+                      onClick={calculateAshtakavarga}
+                      disabled={ashtakavargaLoading}
+                      className="text-sm text-indigo-400 hover:text-indigo-300 disabled:opacity-50"
+                    >
+                      {ashtakavargaLoading ? 'Updating...' : 'Refresh'}
+                    </button>
+                  </div>
+
+                  <p className="text-sm text-indigo-400/60">
+                    The 8-point strength system reveals which transits carry power.
+                    Higher bindu counts indicate stronger, more favorable transit effects.
+                  </p>
+
+                  {ashtakavargaLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'linear' }}
+                      >
+                        <Sparkles className="w-6 h-6 text-indigo-400" />
+                      </motion.div>
+                    </div>
+                  ) : ashtakavargaProfile ? (
+                    <div className="space-y-6">
+                      {/* SAV Summary */}
+                      <div className="bg-indigo-900/20 border border-indigo-700/30 rounded-xl p-4">
+                        <div className="text-sm font-medium text-indigo-200 mb-2">
+                          Sarva Ashtakavarga — Combined Chart Strength
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="text-3xl font-bold text-indigo-100">
+                            {ashtakavargaProfile.sarvaAshtakavarga.totalBindus}
+                          </div>
+                          <div className="text-sm text-indigo-400/70">
+                            Total bindus across all houses
+                            <br />
+                            <span className="text-xs">
+                              Strong houses: {ashtakavargaProfile.sarvaAshtakavarga.strongHouses.join(', ') || 'None'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Transit Strength Cards */}
+                      <div>
+                        <h4 className="text-sm font-medium text-indigo-300 mb-3">
+                          Current Transit Strengths
+                        </h4>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          {ashtakavargaProfile.transitStrengths.map((transit, idx) => (
+                            <AshtakavargaCard key={idx} transit={transit} />
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Bindu Scale Legend */}
+                      <div className="text-xs text-indigo-400/50 border-t border-indigo-800/30 pt-4">
+                        <div className="font-medium mb-1">Bindu Scale:</div>
+                        <div className="flex flex-wrap gap-3">
+                          <span><span className="text-emerald-400">6-8</span> Excellent</span>
+                          <span><span className="text-green-400">5</span> Good</span>
+                          <span><span className="text-indigo-400">4</span> Average</span>
+                          <span><span className="text-amber-400">3</span> Weak</span>
+                          <span><span className="text-red-400">0-2</span> Poor</span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-indigo-400/60">
+                      Loading strength data...
+                    </div>
+                  )}
+                </motion.div>
+              )}
             </AnimatePresence>
 
             {/* Talk to MAIA CTA */}
@@ -600,6 +837,122 @@ function GrahaCard({ position }: { position: GrahaPosition }) {
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Sub-component for Gochara transit display
+function GocharaCard({ transit }: { transit: GocharaProfile['transits'][0] }) {
+  const effectColors: Record<string, string> = {
+    benefic: 'from-emerald-900/40 to-green-900/40 border-emerald-500/30',
+    malefic: 'from-amber-900/40 to-orange-900/40 border-amber-500/30',
+    neutral: 'from-stone-900/40 to-indigo-950/40 border-indigo-500/30',
+  };
+
+  const colors = effectColors[transit.effect] || effectColors.neutral;
+
+  return (
+    <div className={`bg-gradient-to-br ${colors} border rounded-xl p-4`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <div>
+            <div className="text-sm font-semibold text-indigo-200">
+              {transit.graha}
+            </div>
+            <div className="text-xs text-indigo-400/60">
+              House {transit.houseFromMoon} from Moon
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          {transit.vedhaBlocked && (
+            <span className="px-2 py-0.5 bg-red-500/20 text-red-300 text-xs rounded border border-red-500/30">
+              Blocked
+            </span>
+          )}
+          <span className={`
+            px-2 py-0.5 text-xs rounded
+            ${transit.effect === 'benefic'
+              ? 'bg-emerald-500/20 text-emerald-300'
+              : transit.effect === 'malefic'
+              ? 'bg-amber-500/20 text-amber-300'
+              : 'bg-indigo-500/20 text-indigo-300'
+            }
+          `}>
+            {transit.effect}
+          </span>
+        </div>
+      </div>
+
+      <div className="text-sm text-indigo-300/70 mb-2">
+        {transit.interpretation}
+      </div>
+
+      {transit.keywords && transit.keywords.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {transit.keywords.map((keyword, i) => (
+            <span
+              key={i}
+              className="px-2 py-0.5 bg-indigo-900/40 text-xs text-indigo-400 rounded"
+            >
+              {keyword}
+            </span>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Sub-component for Ashtakavarga transit strength display
+function AshtakavargaCard({
+  transit,
+}: {
+  transit: AshtakavargaProfile['transitStrengths'][0];
+}) {
+  const strengthColors: Record<string, string> = {
+    excellent: 'from-emerald-900/40 to-green-900/40 border-emerald-500/30',
+    good: 'from-green-900/40 to-emerald-900/40 border-green-500/30',
+    average: 'from-indigo-900/40 to-purple-900/40 border-indigo-500/30',
+    weak: 'from-amber-900/40 to-orange-900/40 border-amber-500/30',
+    poor: 'from-red-900/40 to-orange-900/40 border-red-500/30',
+  };
+
+  const colors = strengthColors[transit.strength] || strengthColors.average;
+
+  return (
+    <div className={`bg-gradient-to-br ${colors} border rounded-xl p-4`}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="text-sm font-semibold text-indigo-200">
+          {transit.planet}
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-lg font-bold text-indigo-100">
+            {transit.bindus}
+          </span>
+          <span className="text-xs text-indigo-400/60">bindus</span>
+        </div>
+      </div>
+
+      <div className="text-xs text-indigo-400/60 mb-2">
+        House {transit.house} • {transit.strength.charAt(0).toUpperCase() + transit.strength.slice(1)} strength
+      </div>
+
+      <div className="text-sm text-indigo-300/70">
+        {transit.interpretation}
+      </div>
+
+      {/* Show remedies for weak transits */}
+      {'remedies' in transit && (transit as { remedies?: string[] }).remedies && (transit as { remedies: string[] }).remedies.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-indigo-700/30">
+          <div className="text-xs text-amber-400 mb-1">Remedial Measures:</div>
+          <ul className="text-xs text-indigo-400/70 space-y-0.5">
+            {(transit as { remedies: string[] }).remedies.slice(0, 2).map((remedy, i) => (
+              <li key={i}>• {remedy}</li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }
