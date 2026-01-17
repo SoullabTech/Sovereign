@@ -2177,7 +2177,7 @@ export function AccountSettings() {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ArrowLeft size={22} className="text-maia-ink-80" />
+            <ArrowLeft size={22} className="text-white/80" />
           </motion.button>
           <div>
             <h1 className="text-3xl font-semibold text-maia-ink-100 tracking-tight">
