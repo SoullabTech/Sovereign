@@ -49,11 +49,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [debugLog, setDebugLog] = useState<string[]>([]); // On-screen debug for iOS
+  const [showDebugPanel, setShowDebugPanel] = useState(true); // Always show debug on native for TestFlight debugging
 
   // Helper to add debug messages (visible on screen for iOS debugging)
   const addDebug = useCallback((msg: string) => {
-    console.log(msg);
-    setDebugLog(prev => [...prev.slice(-4), msg]); // Keep last 5 messages
+    const timestamp = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const fullMsg = `[${timestamp}] ${msg}`;
+    console.log('🐛 [DEBUG]', msg);
+    setDebugLog(prev => [...prev.slice(-14), fullMsg]); // Keep last 15 messages for better diagnosis
   }, []);
 
   const recognitionRef = useRef<any>(null);
@@ -979,10 +982,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         }
 
         // Set up listener for partial results
+        addDebug('📡 Setting up partialResults listener...');
         nativeListenerRef.current = await NativeSpeechRecognition.addListener('partialResults', (data: { matches: string[] }) => {
           if (data.matches && data.matches.length > 0) {
             const transcript = data.matches[0];
             console.log('📝 [Native] Partial:', transcript);
+            addDebug(`🗣️ HEARD: "${transcript.slice(0, 40)}${transcript.length > 40 ? '...' : ''}"`);
             lastSpeechTime.current = Date.now();
             setIsRecording(true);
             isRecordingRef.current = true;
@@ -995,8 +1000,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // Accumulate transcript
             accumulatedTranscript.current = transcript;
+          } else {
+            addDebug('⚠️ partialResults fired but no matches');
           }
         });
+        addDebug('✅ partialResults listener ready');
 
         // 🎚️ Listen for audio levels from native plugin to drive UV visualizer
         // Note: 'audioLevel' is a custom event we added to the patched plugin
@@ -1065,8 +1073,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         });
 
         // Handle when speech ends - store listener reference for cleanup
+        addDebug('📡 Setting up listeningState listener...');
         nativeStateListenerRef.current = await NativeSpeechRecognition.addListener('listeningState', async (state: { status: string }) => {
           console.log('🔊 [Native] State:', state.status);
+          addDebug(`📻 listeningState: ${state.status}`);
           // 🔑 Update single source of truth for native status
           nativeStatusRef.current = state.status === 'started' ? 'started' : 'stopped';
           setIsRecording(nativeStatusRef.current === 'started');
@@ -1127,21 +1137,29 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
         // Start native speech recognition
         console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');
-        addDebug('🎙️ Calling start()...');
+        addDebug('🎙️ Calling SR.start(popup:false)...');
         try {
-          await NativeSpeechRecognition.start({
+          const startOptions = {
             language: 'en-US',
             maxResults: 3,
             prompt: 'Speak to MAIA',
             partialResults: true,
             popup: false  // Set to true if iOS requires the popup UI
-          });
+          };
+          addDebug(`📝 Options: ${JSON.stringify(startOptions)}`);
+          await NativeSpeechRecognition.start(startOptions);
           console.log('✅ [ContinuousConversation] NativeSpeechRecognition.start() succeeded!');
-          addDebug('✅ start() succeeded!');
+          addDebug('✅ SR.start() SUCCESS! Mic should be active');
+          addDebug('🎤 Speak now - watching for partialResults...');
         } catch (startError: any) {
+          const errName = startError?.name || 'UnknownError';
+          const errMsg = startError?.message || String(startError);
+          const errCode = startError?.code || 'no-code';
           console.error('❌ [ContinuousConversation] NativeSpeechRecognition.start() FAILED:', startError);
           console.error('❌ [ContinuousConversation] Error details:', JSON.stringify(startError, null, 2));
-          addDebug(`❌ start() failed: ${startError?.message || startError}`);
+          addDebug(`❌ start() FAILED: ${errName}`);
+          addDebug(`   msg: ${errMsg}`);
+          addDebug(`   code: ${errCode}`);
 
           // Try with popup: true as fallback (iOS may require it)
           console.log('🔄 [ContinuousConversation] Retrying with popup: true...');
@@ -1464,16 +1482,63 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isActive = isListening && !isSpeaking && !isProcessing;
   const showLoader = isTranscribing || isProcessing;
 
+  // 🐛 Show diagnostic info on mount for native platforms
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const platform = Capacitor.getPlatform();
+      addDebug(`🚀 Mount: platform=${platform}, isNative=${Capacitor.isNativePlatform()}`);
+      addDebug(`📱 UserAgent: ${navigator.userAgent.slice(0, 60)}...`);
+
+      // Check speech recognition availability immediately
+      (async () => {
+        try {
+          const avail = await NativeSpeechRecognition.available();
+          addDebug(`🎤 SR available: ${avail?.available}`);
+          const perms = await NativeSpeechRecognition.checkPermissions();
+          addDebug(`🔐 SR permission: ${perms?.speechRecognition}`);
+        } catch (e: any) {
+          addDebug(`❌ SR check error: ${e?.message || e}`);
+        }
+      })();
+    }
+  }, [addDebug]);
+
   return (
     <>
       {/* 🐛 DEBUG PANEL - On-screen debug for iOS TestFlight (Safari Inspector doesn't work with remote URLs) */}
-      {debugLog.length > 0 && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-black/90 p-2 text-xs font-mono">
-          <div className="text-yellow-400 mb-1">🐛 iOS Debug:</div>
-          {debugLog.map((msg, i) => (
-            <div key={i} className="text-green-400 truncate">{msg}</div>
-          ))}
+      {Capacitor.isNativePlatform() && showDebugPanel && (
+        <div className="fixed top-0 left-0 right-0 z-[9999] bg-black/95 p-2 text-xs font-mono border-b-2 border-yellow-500">
+          <div className="flex justify-between items-center mb-1">
+            <div className="text-yellow-400 font-bold">🐛 Voice Debug (TestFlight)</div>
+            <button
+              onClick={() => setShowDebugPanel(false)}
+              className="text-red-400 px-2 py-0.5 bg-red-900/50 rounded"
+            >
+              Hide
+            </button>
+          </div>
+          <div className="text-amber-300 text-[10px] mb-1">
+            isListening: {isListening ? '✅' : '❌'} | isRecording: {isRecording ? '✅' : '❌'} | isSpeaking: {isSpeaking ? '✅' : '❌'}
+          </div>
+          <div className="max-h-32 overflow-y-auto">
+            {debugLog.length === 0 ? (
+              <div className="text-gray-500">Waiting for voice activity...</div>
+            ) : (
+              debugLog.map((msg, i) => (
+                <div key={i} className="text-green-400 text-[10px] leading-tight">{msg}</div>
+              ))
+            )}
+          </div>
         </div>
+      )}
+      {/* Toggle to show debug panel again */}
+      {Capacitor.isNativePlatform() && !showDebugPanel && (
+        <button
+          onClick={() => setShowDebugPanel(true)}
+          className="fixed top-2 right-2 z-[9999] bg-yellow-500/80 text-black text-xs px-2 py-1 rounded font-bold"
+        >
+          🐛
+        </button>
       )}
 
     <div className="flex items-center gap-3">
