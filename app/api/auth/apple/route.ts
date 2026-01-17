@@ -58,8 +58,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build Apple OAuth URL
-    const baseUrl = new URL(request.url).origin;
+    // Build Apple OAuth URL - use NEXTAUTH_URL for production
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(request.url).origin;
     const redirectUri = `${baseUrl}/api/auth/signin/apple/callback`;
 
     const params = new URLSearchParams({

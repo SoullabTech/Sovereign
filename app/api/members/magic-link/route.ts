@@ -221,12 +221,15 @@ The Soullab Team
  * This is what the email link points to
  */
 export async function GET(request: NextRequest) {
+  // Use NEXTAUTH_URL for redirects to avoid Docker internal URLs
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(request.url).origin;
+
   try {
     const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
       // No token - redirect to signin with error
-      return NextResponse.redirect(new URL('/signin?error=no_token', request.url));
+      return NextResponse.redirect(new URL('/signin?error=no_token', baseUrl));
     }
 
     // Find valid token
@@ -242,7 +245,7 @@ export async function GET(request: NextRequest) {
 
     if (tokenResult.error || tokenResult.rows.length === 0) {
       console.log(`[MAGIC-LINK] Invalid/expired token: ${token.substring(0, 8)}...`);
-      return NextResponse.redirect(new URL('/signin?error=invalid_token', request.url));
+      return NextResponse.redirect(new URL('/signin?error=invalid_token', baseUrl));
     }
 
     const record = tokenResult.rows[0];
@@ -263,7 +266,7 @@ export async function GET(request: NextRequest) {
 
       // Redirect to magic-link-success page which will set localStorage and redirect
       const destination = isOnboarded ? '/maia' : `/${record.onboarding_step || 'test-elemental'}`;
-      const successUrl = new URL('/magic-link-success', request.url);
+      const successUrl = new URL('/magic-link-success', baseUrl);
       successUrl.searchParams.set('member_id', memberId as string);
       successUrl.searchParams.set('username', record.username as string || '');
       successUrl.searchParams.set('name', record.name as string || '');
@@ -274,7 +277,7 @@ export async function GET(request: NextRequest) {
     } else {
       // New user - redirect to signup with email prefilled
       console.log(`[MAGIC-LINK] Verified new user email: ${record.email}`);
-      const beginUrl = new URL('/begin', request.url);
+      const beginUrl = new URL('/begin', baseUrl);
       beginUrl.searchParams.set('email', record.email as string);
       beginUrl.searchParams.set('verified', 'true');
 
@@ -282,6 +285,6 @@ export async function GET(request: NextRequest) {
     }
   } catch (error) {
     console.error('[MAGIC-LINK] Verify error:', error);
-    return NextResponse.redirect(new URL('/signin?error=verification_failed', request.url));
+    return NextResponse.redirect(new URL('/signin?error=verification_failed', baseUrl));
   }
 }

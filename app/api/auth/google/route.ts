@@ -57,8 +57,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build Google OAuth URL - use signin-specific callback to avoid conflict with calendar integration
-    const baseUrl = new URL(request.url).origin;
+    // Build Google OAuth URL - use NEXTAUTH_URL for production
+    const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(request.url).origin;
     const redirectUri = `${baseUrl}/api/auth/signin/google/callback`;
 
     const params = new URLSearchParams({
