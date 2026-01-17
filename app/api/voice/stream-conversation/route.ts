@@ -6,12 +6,12 @@
  * channeling responses through MAIA's essence, personality, and wisdom.
  * The system prompt establishes MAIA's identity - Claude never speaks as itself.
  *
- * Flow: User message → MAIA (via Claude streaming) → TTS (per sentence) → Audio SSE
+ * Flow: User message → Threshold check → (fast-path OR Claude streaming) → TTS → Audio SSE
  *
- * This creates natural conversational flow by:
- * 1. Streaming MAIA's response sentence-by-sentence
- * 2. Immediately sending each sentence to TTS
- * 3. Streaming audio chunks back as they're ready
+ * Latency optimization:
+ * 1. Threshold fast-path bypasses LLM for minimal/fragile inputs
+ * 2. Audio emits immediately as each chunk completes
+ * 3. Clause-level chunking for faster first audio
  *
  * The user hears MAIA begin speaking while she's still thinking.
  */
@@ -19,6 +19,13 @@
 import { NextRequest } from 'next/server';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
+import {
+  processThreshold,
+  createInitialThresholdState,
+  createVoiceTimer,
+  DEFAULT_MAIA_THRESHOLD_CONFIG,
+  type ThresholdState,
+} from '@/lib/threshold';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,6 +39,7 @@ interface StreamRequest {
   voice?: string;
   speed?: number;
   conversationHistory?: Array<{ role: string; content: string }>;
+  thresholdState?: ThresholdState;  // Persisted threshold state across turns
 }
 
 /**
@@ -66,7 +74,11 @@ async function synthesizeSentence(
 
 export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
-  const { message, userId, sessionId, element, voice, speed, conversationHistory } = body;
+  const { message, userId, sessionId, element, voice, speed, conversationHistory, thresholdState } = body;
+
+  // Initialize timing instrumentation
+  const timer = createVoiceTimer();
+  timer.mark('request_received');
 
   console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed });
 
@@ -75,7 +87,6 @@ export async function POST(req: NextRequest) {
   }
 
   const encoder = new TextEncoder();
-  const claudeService = getClaudeService();
 
   const stream = new ReadableStream({
     async start(controller) {
@@ -92,6 +103,68 @@ export async function POST(req: NextRequest) {
       emit('connected', { sessionId: sessionId || 'default', timestamp: Date.now() });
 
       try {
+        // ============ THRESHOLD FAST-PATH ============
+        // Check if this input can be handled without LLM
+        const currentThresholdState = thresholdState || createInitialThresholdState();
+        const thresholdResult = processThreshold({
+          text: message,
+          state: currentThresholdState,
+          config: DEFAULT_MAIA_THRESHOLD_CONFIG,
+        });
+
+        timer.mark('threshold_checked');
+
+        // If Threshold matched, skip LLM entirely for faster response
+        if (thresholdResult.skipLLM && thresholdResult.response) {
+          const text = thresholdResult.response.content;
+
+          // Emit text immediately
+          emit('text', {
+            index: 0,
+            text,
+            timestamp: Date.now(),
+            mode: 'threshold',
+            responseType: thresholdResult.response.type,
+          });
+
+          timer.mark('text_0_emitted');
+
+          // Generate TTS and emit audio immediately
+          const audioResult = await synthesizeSentence(text, voice, speed);
+          timer.mark('tts_0_done');
+
+          if (audioResult) {
+            emit('audio', {
+              index: 0,
+              audio: audioResult.audio,
+              format: audioResult.format,
+              text,
+              timestamp: Date.now(),
+              mode: 'threshold',
+            });
+            timer.mark('audio_0_emitted');
+          }
+
+          // Complete with updated threshold state
+          emit('complete', {
+            fullResponse: text,
+            sentenceCount: 1,
+            audioChunksEmitted: audioResult ? 1 : 0,
+            timestamp: Date.now(),
+            mode: 'threshold',
+            thresholdState: thresholdResult.state,
+            timing: timer.summary(),
+          });
+
+          console.log(`[voice] THRESHOLD fast-path: ${timer.summary()}`);
+          controller.close();
+          return;
+        }
+
+        // ============ FULL LLM PATH ============
+        const claudeService = getClaudeService();
+        timer.mark('llm_starting');
+
         const context = {
           element,
           conversationHistory,
@@ -101,6 +174,8 @@ export async function POST(req: NextRequest) {
         let fullResponse = '';
         let audioChunksEmitted = 0;
         let sentenceCount = 0;
+        let firstTextEmitted = false;
+        let firstAudioEmitted = false;
         const ttsPromises: Promise<void>[] = [];
 
         // Stream sentences from Claude
@@ -109,6 +184,12 @@ export async function POST(req: NextRequest) {
           context
         )) {
           if (chunk.type === 'sentence') {
+            // Mark first token timing
+            if (!firstTextEmitted) {
+              timer.mark('llm_first_chunk');
+              firstTextEmitted = true;
+            }
+
             // Emit text immediately so UI can show it
             emit('text', {
               index: chunk.index,
@@ -116,19 +197,36 @@ export async function POST(req: NextRequest) {
               timestamp: Date.now()
             });
 
+            if (chunk.index === 0) {
+              timer.mark('text_0_emitted');
+            }
+
             fullResponse += chunk.text + ' ';
             sentenceCount = chunk.index + 1;
 
-            // Generate TTS for this sentence (collect promise to await later)
-            const ttsPromise = synthesizeSentence(chunk.text, voice, speed).then(audioResult => {
+            // Generate TTS for this sentence - emit audio as soon as it's ready
+            const chunkIndex = chunk.index;
+            const chunkText = chunk.text;
+            const ttsPromise = synthesizeSentence(chunkText, voice, speed).then(audioResult => {
               if (audioResult) {
+                // Mark timing for first audio
+                if (!firstAudioEmitted) {
+                  timer.mark('tts_0_done');
+                  firstAudioEmitted = true;
+                }
+
                 emit('audio', {
-                  index: chunk.index,
+                  index: chunkIndex,
                   audio: audioResult.audio,
                   format: audioResult.format,
-                  text: chunk.text,
+                  text: chunkText,
                   timestamp: Date.now()
                 });
+
+                if (chunkIndex === 0) {
+                  timer.mark('audio_0_emitted');
+                }
+
                 audioChunksEmitted++;
               }
             }).catch(e => {
@@ -137,15 +235,22 @@ export async function POST(req: NextRequest) {
             ttsPromises.push(ttsPromise);
 
           } else if (chunk.type === 'done') {
+            timer.mark('llm_done');
+
             // Wait for all TTS to complete before closing stream
             await Promise.all(ttsPromises);
+            timer.mark('all_tts_done');
 
             emit('complete', {
               fullResponse: fullResponse.trim(),
               sentenceCount,
               audioChunksEmitted,
-              timestamp: Date.now()
+              timestamp: Date.now(),
+              thresholdState: thresholdResult.state,
+              timing: timer.summary(),
             });
+
+            console.log(`[voice] LLM path: ${timer.summary()}`);
           }
         }
 
