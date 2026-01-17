@@ -437,7 +437,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     ease: [0.25, 0.46, 0.45, 0.94],
                     delay: 0.8
                   }}
-                  className="rounded-2xl p-8 max-w-md w-full text-center mb-16 border shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
+                  className="rounded-2xl p-8 max-w-md w-full mx-auto text-center mb-16 border shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
                   style={{
                     background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
                     backdropFilter: 'blur(12px)',
@@ -533,26 +533,29 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       disabled={!soulKey.trim() || isRecognizing}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 rounded-xl font-semibold shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#0f766e', color: '#ffffff' }}
                     >
                       {isRecognizing ? 'Recognizing...' : 'Enter'}
                     </motion.button>
                   </form>
 
                   {/* Secondary links - quiet and consistent */}
-                  <div className="mt-6 pt-4 border-t border-teal-200/30 space-y-2 text-center">
+                  <div className="mt-6 pt-4 space-y-2 text-center" style={{ borderTop: '1px solid rgba(255,255,255,0.2)' }}>
                     <button
                       type="button"
                       onClick={() => setPhase('recovery')}
-                      className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                      className="text-sm font-medium transition"
+                      style={{ color: 'rgba(255,255,255,0.7)' }}
                     >
                       Forgot passkey?
                     </button>
-                    <span className="text-teal-600/40 mx-2">·</span>
+                    <span style={{ color: 'rgba(255,255,255,0.4)', margin: '0 8px' }}>·</span>
                     <button
                       type="button"
                       onClick={() => router.push('/signin')}
-                      className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                      className="text-sm font-medium transition"
+                      style={{ color: 'rgba(255,255,255,0.7)' }}
                     >
                       Sign in
                     </button>
@@ -632,7 +635,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           placeholder="Nickname or name"
                           className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
-                        <p className="text-teal-600/70 text-xs mt-1">
+                        <p className="text-white/60 text-xs mt-1">
                           You can change this anytime
                         </p>
                       </div>
@@ -652,7 +655,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                       <div>
                         <label className="block text-sm font-medium text-teal-800 mb-2">
-                          Email <span className="text-teal-600/60 text-xs font-normal">(optional, for recovery)</span>
+                          Email <span className="text-white/60 text-xs font-normal">(optional, for recovery)</span>
                         </label>
                         <input
                           type="email"
@@ -678,7 +681,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600/60 hover:text-teal-700 transition"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 transition"
                           >
                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -706,11 +709,11 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     </form>
 
                     {/* Secondary link */}
-                    <div className="text-center mt-4 pt-4 border-t border-teal-200/30">
+                    <div className="text-center mt-4 pt-4 border-t border-white/20">
                       <button
                         type="button"
                         onClick={() => router.push('/signin')}
-                        className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                        className="text-sm font-medium text-white/70 hover:text-white transition"
                       >
                         Already have an account? Sign in
                       </button>
@@ -784,7 +787,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           placeholder="Nickname or name"
                           className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                         />
-                        <p className="text-teal-600/70 text-xs mt-1">
+                        <p className="text-white/60 text-xs mt-1">
                           You can change this anytime
                         </p>
                       </div>
@@ -804,7 +807,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
 
                       <div>
                         <label className="block text-sm font-medium text-teal-800 mb-2">
-                          Email <span className="text-teal-600/60 text-xs font-normal">(optional, for recovery)</span>
+                          Email <span className="text-white/60 text-xs font-normal">(optional, for recovery)</span>
                         </label>
                         <input
                           type="email"
@@ -830,7 +833,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600/60 hover:text-teal-700 transition"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 transition"
                           >
                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -852,7 +855,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-teal-600/60 hover:text-teal-700 transition"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white/70 transition"
                           >
                             {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
@@ -873,18 +876,18 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         type="submit"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Create Account
                       </motion.button>
                     </form>
 
                     {/* Secondary link */}
-                    <div className="text-center mt-4 pt-4 border-t border-teal-200/30">
+                    <div className="text-center mt-4 pt-4 border-t border-white/20">
                       <button
                         type="button"
                         onClick={() => router.push('/signin')}
-                        className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
+                        className="text-sm font-medium text-white/70 hover:text-white transition"
                       >
                         Already have an account? Sign in
                       </button>
@@ -1050,13 +1053,13 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     className="text-3xl font-light text-white mb-6 tracking-wider"
                     style={{
                       fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
-                      textShadow: '0 0 20px rgba(212,175,55,0.3)',
+                      textShadow: '0 0 20px rgba(255,255,255,0.3)',
                     }}
                   >
                     Soul Sanctuary Complete
                   </h2>
                   <p
-                    className="text-[#d4af37]/90 text-lg font-light"
+                    className="text-white/80 text-lg font-light"
                     style={{
                       fontFamily: '"Cormorant Garamond", "EB Garamond", "Crimson Text", Georgia, serif',
                     }}
