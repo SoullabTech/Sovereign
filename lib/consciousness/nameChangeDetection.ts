@@ -17,12 +17,29 @@ const NAME_CHANGE_PATTERNS = [
 ];
 
 // Words that shouldn't be treated as names
+// Expanded to catch common false positives from "I'm X" pattern
 const EXCLUDED_WORDS = new Set([
-  'back', 'later', 'tomorrow', 'soon', 'now', 'here', 'there',
-  'crazy', 'silly', 'stupid', 'weird', 'anxious', 'sad', 'happy',
-  'doctor', 'maia', 'friend', 'buddy', 'pal',
-  'if', 'when', 'maybe', 'probably', 'definitely',
-  'anything', 'something', 'nothing', 'everything',
+  // Temporal/spatial
+  'back', 'later', 'tomorrow', 'soon', 'now', 'here', 'there', 'today', 'tonight',
+  // Emotional states
+  'crazy', 'silly', 'stupid', 'weird', 'anxious', 'sad', 'happy', 'tired', 'exhausted',
+  'worried', 'stressed', 'depressed', 'angry', 'upset', 'confused', 'lost', 'stuck',
+  'fine', 'good', 'great', 'okay', 'ok', 'alright', 'better', 'worse',
+  // Titles/roles
+  'doctor', 'maia', 'friend', 'buddy', 'pal', 'dude', 'man', 'bro',
+  // Conditionals/uncertainty
+  'if', 'when', 'maybe', 'probably', 'definitely', 'sure', 'certain', 'unsure',
+  // Pronouns/determiners
+  'anything', 'something', 'nothing', 'everything', 'someone', 'anyone', 'no-one',
+  // Common prepositions/articles that "I'm X" might capture (CRITICAL - fixes "I'm in" bug)
+  'in', 'on', 'at', 'to', 'for', 'of', 'with', 'about', 'from', 'into',
+  'the', 'a', 'an', 'my', 'your', 'his', 'her', 'their', 'our', 'its',
+  // Common verbs that might follow "I'm"
+  'going', 'trying', 'looking', 'thinking', 'feeling', 'doing', 'having', 'getting',
+  'working', 'waiting', 'hoping', 'wondering', 'starting', 'beginning',
+  // Other common false positives
+  'not', 'just', 'also', 'still', 'already', 'really', 'very', 'so', 'too',
+  'new', 'old', 'young', 'sorry', 'afraid', 'ready', 'done', 'finished',
 ]);
 
 export interface NameChangeResult {
