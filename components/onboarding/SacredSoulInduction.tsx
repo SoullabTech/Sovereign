@@ -493,7 +493,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         Don't have a passkey? Request one at{' '}
                         <a
                           href="mailto:support@soullab.life"
-                          className="text-amber-600 hover:text-amber-700 underline underline-offset-2"
+                          className="text-gray-500 hover:text-gray-700 underline underline-offset-2"
                         >
                           support@soullab.life
                         </a>
@@ -516,9 +516,28 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                             <button
                               type="button"
                               onClick={() => router.push('/signin')}
-                              className="text-amber-700 hover:text-amber-800 font-medium underline underline-offset-2"
+                              className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2"
                             >
                               Sign in to your account
+                            </button>
+                          </div>
+                        )}
+                        {(error.toLowerCase().includes('isn\'t recognized') || error.toLowerCase().includes('failed')) && (
+                          <div className="mt-3 pt-2 border-t border-red-200/50 space-y-2">
+                            <p className="text-xs text-red-500/80">Having trouble? Try one of these:</p>
+                            <button
+                              type="button"
+                              onClick={() => router.push('/signin?magic=true')}
+                              className="text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-2 block mx-auto"
+                            >
+                              Email me a sign-in link
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => router.push('/signin')}
+                              className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 block mx-auto"
+                            >
+                              Sign in with password
                             </button>
                           </div>
                         )}
@@ -618,7 +637,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     <button
                       type="button"
                       onClick={() => router.push('/signin')}
-                      className="text-amber-600 hover:text-amber-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                      className="text-gray-500 hover:text-gray-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                     >
                       Already have an account? Sign in
                     </button>
@@ -807,7 +826,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                               <button
                                 type="button"
                                 onClick={() => router.push('/signin')}
-                                className="text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2"
+                                className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2"
                               >
                                 Sign in to your account
                               </button>
@@ -862,7 +881,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       <button
                         type="button"
                         onClick={() => router.push('/signin')}
-                        className="text-amber-700 hover:text-amber-800 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                        className="text-gray-500 hover:text-gray-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                       >
                         Already signed up? Sign in
                       </button>
@@ -1068,7 +1087,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                               <button
                                 type="button"
                                 onClick={() => router.push('/signin')}
-                                className="text-amber-400 hover:text-amber-300 font-medium underline underline-offset-2"
+                                className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2"
                               >
                                 Sign in to your account
                               </button>
@@ -1123,7 +1142,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       <button
                         type="button"
                         onClick={() => router.push('/signin')}
-                        className="text-amber-700 hover:text-amber-800 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                        className="text-gray-500 hover:text-gray-700 text-sm font-medium tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                       >
                         Already signed up? Sign in
                       </button>
@@ -1202,7 +1221,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           setRecoveryStatus('idle');
                           setRecoveryEmail('');
                         }}
-                        className="text-amber-700/80 hover:text-amber-800 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                        className="text-gray-500 hover:text-gray-700 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                       >
                         Back to passkey entry
                       </button>
@@ -1255,7 +1274,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                           setError('');
                           setRecoveryEmail('');
                         }}
-                        className="text-amber-700/80 hover:text-amber-800 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
+                        className="text-gray-500 hover:text-gray-700 text-sm font-light tracking-[0.05em] underline underline-offset-2 transition-colors duration-300"
                       >
                         Back to passkey entry
                       </button>

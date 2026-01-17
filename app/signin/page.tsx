@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, ArrowRightLeft } from 'lucide-react';
+import { Mail, ArrowRightLeft, Sparkles } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 
@@ -15,6 +15,7 @@ interface MigrationPreview {
 
 export default function SigninPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -23,11 +24,35 @@ export default function SigninPage() {
   const [recoveryEmail, setRecoveryEmail] = useState('');
   const [recoveryStatus, setRecoveryStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
 
+  // Magic link state
+  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [magicLinkEmail, setMagicLinkEmail] = useState('');
+  const [magicLinkStatus, setMagicLinkStatus] = useState<'idle' | 'sending' | 'sent'>('idle');
+
   // Migration state
   const [showMigration, setShowMigration] = useState(false);
   const [migrationPreview, setMigrationPreview] = useState<MigrationPreview | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'migrating' | 'done' | 'error'>('idle');
   const [pendingUser, setPendingUser] = useState<{ id: string; onboarded: boolean } | null>(null);
+
+  // Check for magic link errors and auto-open magic link modal
+  useEffect(() => {
+    const errorParam = searchParams.get('error');
+    const magicParam = searchParams.get('magic');
+
+    if (errorParam === 'invalid_token') {
+      setError('Your sign-in link has expired or is invalid. Try requesting a new one.');
+    } else if (errorParam === 'no_token') {
+      setError('Invalid sign-in link. Try requesting a new one.');
+    } else if (errorParam === 'verification_failed') {
+      setError('Something went wrong verifying your link. Try again or use password.');
+    }
+
+    // Auto-open magic link modal if requested
+    if (magicParam === 'true') {
+      setShowMagicLink(true);
+    }
+  }, [searchParams]);
 
   // Check if already authenticated
   useEffect(() => {
@@ -197,6 +222,33 @@ export default function SigninPage() {
     }
   };
 
+  const handleMagicLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setMagicLinkStatus('sending');
+
+    try {
+      const response = await fetch('/api/members/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: magicLinkEmail.toLowerCase() }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setMagicLinkStatus('sent');
+      } else {
+        setError(data.error || 'Failed to send magic link. Please try again.');
+        setMagicLinkStatus('idle');
+      }
+    } catch (err) {
+      console.error('Magic link error:', err);
+      setError('Unable to send magic link. Please try again.');
+      setMagicLinkStatus('idle');
+    }
+  };
+
   const handleMigration = async (migrate: boolean) => {
     if (!pendingUser || !migrationPreview) return;
 
@@ -312,12 +364,22 @@ export default function SigninPage() {
           {error && (
             <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
               {error}
-              {error.toLowerCase().includes('invalid') && (
-                <div className="mt-2 pt-2 border-t border-red-200/30">
+              {(error.toLowerCase().includes('invalid') || error.toLowerCase().includes('expired')) && (
+                <div className="mt-2 pt-2 border-t border-red-200/30 space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError('');
+                      setShowMagicLink(true);
+                    }}
+                    className="text-emerald-600 hover:text-emerald-700 font-medium underline underline-offset-2 transition-colors block"
+                  >
+                    Try a magic link instead
+                  </button>
                   <button
                     type="button"
                     onClick={() => router.push('/reset-password')}
-                    className="text-amber-700 hover:text-amber-600 font-medium underline underline-offset-2 transition-colors"
+                    className="text-gray-500 hover:text-gray-700 font-medium underline underline-offset-2 transition-colors block"
                   >
                     Reset your password
                   </button>
@@ -347,6 +409,17 @@ export default function SigninPage() {
         <div className="mt-4 text-center">
           <button
             type="button"
+            onClick={() => setShowMagicLink(true)}
+            className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md bg-emerald-50/80 text-emerald-700 shadow-sm border border-emerald-200/50 flex items-center justify-center gap-2 w-full"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>Email me a sign-in link</span>
+          </button>
+        </div>
+
+        <div className="mt-3 text-center">
+          <button
+            type="button"
             onClick={() => setShowRecovery(true)}
             className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md bg-white/60 text-slate-500 shadow-sm"
           >
@@ -354,7 +427,7 @@ export default function SigninPage() {
           </button>
         </div>
 
-        <div className="mt-4 text-center">
+        <div className="mt-3 text-center">
           <button
             onClick={() => router.push('/begin')}
             className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md bg-white/60 text-slate-500 shadow-sm"
@@ -415,7 +488,7 @@ export default function SigninPage() {
                 setShowRecovery(false);
                 router.push('/reset-password');
               }}
-              className="w-full mb-4 py-2 text-amber-700/80 text-sm font-medium hover:text-amber-600 transition-colors duration-300 underline underline-offset-2"
+              className="w-full mb-4 py-2 text-gray-500 text-sm font-medium hover:text-gray-700 transition-colors duration-300 underline underline-offset-2"
             >
               Need to reset your password instead?
             </button>
@@ -490,6 +563,125 @@ export default function SigninPage() {
                   className="w-full py-2 text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
                 >
                   Cancel
+                </button>
+              </form>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Magic Link Modal */}
+      {showMagicLink && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+          onClick={() => {
+            if (magicLinkStatus !== 'sending') {
+              setShowMagicLink(false);
+              setMagicLinkEmail('');
+              setMagicLinkStatus('idle');
+              setError('');
+            }
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="rounded-2xl p-8 max-w-md w-full shadow-2xl border"
+            style={{
+              background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9))',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+            }}
+          >
+            <div className="flex justify-center mb-6">
+              <Sparkles className="w-12 h-12 text-emerald-600/80" />
+            </div>
+
+            <h2 className="text-xl font-light text-teal-900 text-center mb-4 tracking-wide">
+              Sign In with Magic Link
+            </h2>
+
+            <p className="text-teal-800/70 text-sm text-center mb-6">
+              Enter your email and we'll send you a link to sign in instantly — no password needed.
+            </p>
+
+            {magicLinkStatus === 'sent' ? (
+              <div className="space-y-4">
+                <div className="bg-emerald-100/60 border border-emerald-300/40 rounded-xl p-6 text-center">
+                  <p className="text-emerald-800 text-lg font-light">
+                    Check your email
+                  </p>
+                  <p className="text-emerald-700/80 text-sm mt-2">
+                    We've sent a magic link to <strong>{magicLinkEmail}</strong>. Click the link to sign in.
+                  </p>
+                  <p className="text-emerald-600/60 text-xs mt-3">
+                    Link expires in 15 minutes.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMagicLink(false);
+                    setMagicLinkStatus('idle');
+                    setMagicLinkEmail('');
+                  }}
+                  className="w-full py-3 rounded-xl font-medium text-teal-900 transition-all duration-300"
+                  style={{
+                    background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
+                    border: '1px solid rgba(110, 231, 183, 0.4)',
+                  }}
+                >
+                  Back to Sign In
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleMagicLink} className="space-y-4">
+                <div>
+                  <label htmlFor="magic-link-email" className="block text-sm font-light text-teal-800 mb-2">
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    id="magic-link-email"
+                    value={magicLinkEmail}
+                    onChange={(e) => setMagicLinkEmail(e.target.value)}
+                    className="w-full px-4 py-3 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-emerald-400/50"
+                    placeholder="your@email.com"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {error && (
+                  <div className="text-red-700/80 text-sm bg-red-100/30 rounded-lg p-3 border border-red-200/40">
+                    {error}
+                  </div>
+                )}
+
+                <motion.button
+                  type="submit"
+                  disabled={magicLinkStatus === 'sending' || !magicLinkEmail.trim()}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full py-3 rounded-xl font-medium bg-emerald-500/80 hover:bg-emerald-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {magicLinkStatus === 'sending' ? 'Sending...' : 'Send Magic Link'}
+                </motion.button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMagicLink(false);
+                    setMagicLinkEmail('');
+                    setError('');
+                  }}
+                  className="w-full py-2 text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+                >
+                  Use password instead
                 </button>
               </form>
             )}
