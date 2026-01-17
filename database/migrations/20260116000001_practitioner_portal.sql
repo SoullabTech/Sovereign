@@ -27,6 +27,17 @@ CREATE TABLE IF NOT EXISTS practitioners (
     CHECK (revenue_share_percent >= 0 AND revenue_share_percent <= 100)
 );
 
+-- Add columns if they don't exist (for idempotent migrations)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioners' AND column_name = 'stripe_account_id') THEN
+    ALTER TABLE practitioners ADD COLUMN stripe_account_id VARCHAR(255);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioners' AND column_name = 'revenue_share_percent') THEN
+    ALTER TABLE practitioners ADD COLUMN revenue_share_percent NUMERIC(5,2) NOT NULL DEFAULT 12 CHECK (revenue_share_percent >= 0 AND revenue_share_percent <= 100);
+  END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_practitioners_slug ON practitioners(slug);
 CREATE INDEX IF NOT EXISTS idx_practitioners_status ON practitioners(status);
 CREATE INDEX IF NOT EXISTS idx_practitioners_stripe ON practitioners(stripe_account_id) WHERE stripe_account_id IS NOT NULL;
