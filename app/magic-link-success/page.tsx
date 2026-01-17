@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Holoflower } from '@/components/ui/Holoflower';
 
 /**
- * Magic Link Success Page
- *
- * This page is redirected to after a magic link is verified.
- * It sets up the localStorage session and redirects to the appropriate destination.
+ * Inner component that uses useSearchParams
+ * Must be wrapped in Suspense for Next.js static rendering
  */
-export default function MagicLinkSuccessPage() {
+function MagicLinkSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -66,6 +64,57 @@ export default function MagicLinkSuccessPage() {
   }, [searchParams, router]);
 
   return (
+    <>
+      {status === 'loading' && (
+        <>
+          <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
+          <p className="text-teal-900 font-light tracking-wide">{message}</p>
+        </>
+      )}
+
+      {status === 'success' && (
+        <>
+          <div className="w-12 h-12 bg-emerald-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-emerald-600 text-2xl">✓</span>
+          </div>
+          <p className="text-teal-900 font-light tracking-wide text-lg">{message}</p>
+          <p className="text-teal-700/60 text-sm mt-2">Redirecting...</p>
+        </>
+      )}
+
+      {status === 'error' && (
+        <>
+          <div className="w-12 h-12 bg-red-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
+            <span className="text-red-600 text-2xl">!</span>
+          </div>
+          <p className="text-red-800 font-light">{message}</p>
+          <p className="text-teal-700/60 text-sm mt-2">Redirecting to sign in...</p>
+        </>
+      )}
+    </>
+  );
+}
+
+/**
+ * Loading fallback for Suspense
+ */
+function LoadingFallback() {
+  return (
+    <>
+      <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
+      <p className="text-teal-900 font-light tracking-wide">Signing you in...</p>
+    </>
+  );
+}
+
+/**
+ * Magic Link Success Page
+ *
+ * This page is redirected to after a magic link is verified.
+ * It sets up the localStorage session and redirects to the appropriate destination.
+ */
+export default function MagicLinkSuccessPage() {
+  return (
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
       {/* Sacred Holoflower */}
       <div className="mb-8 z-10 relative">
@@ -86,32 +135,9 @@ export default function MagicLinkSuccessPage() {
           boxShadow: '0 0 60px rgba(251, 191, 36, 0.3), 0 0 100px rgba(245, 158, 11, 0.2)',
         }}
       >
-        {status === 'loading' && (
-          <>
-            <div className="animate-spin w-8 h-8 border-2 border-teal-600 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-teal-900 font-light tracking-wide">{message}</p>
-          </>
-        )}
-
-        {status === 'success' && (
-          <>
-            <div className="w-12 h-12 bg-emerald-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-emerald-600 text-2xl">✓</span>
-            </div>
-            <p className="text-teal-900 font-light tracking-wide text-lg">{message}</p>
-            <p className="text-teal-700/60 text-sm mt-2">Redirecting...</p>
-          </>
-        )}
-
-        {status === 'error' && (
-          <>
-            <div className="w-12 h-12 bg-red-100/60 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-red-600 text-2xl">!</span>
-            </div>
-            <p className="text-red-800 font-light">{message}</p>
-            <p className="text-teal-700/60 text-sm mt-2">Redirecting to sign in...</p>
-          </>
-        )}
+        <Suspense fallback={<LoadingFallback />}>
+          <MagicLinkSuccessContent />
+        </Suspense>
       </motion.div>
     </div>
   );

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Mail, ArrowRightLeft, Sparkles } from 'lucide-react';
@@ -13,7 +13,11 @@ interface MigrationPreview {
   tables: { table: string; count: number }[];
 }
 
-export default function SigninPage() {
+/**
+ * Inner component that uses useSearchParams
+ * Must be wrapped in Suspense for Next.js static rendering
+ */
+function SigninContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [username, setUsername] = useState('');
@@ -302,8 +306,7 @@ export default function SigninPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
-
+    <>
       {/* Sacred Holoflower */}
       <div className="mb-4 z-10 relative w-full flex justify-center">
         <div className="w-40 h-40 flex items-center justify-center">
@@ -323,13 +326,13 @@ export default function SigninPage() {
           border: '1px solid rgba(255, 255, 255, 0.25)',
         }}
       >
-        <h1 className="text-2xl font-extralight text-teal-900 mb-6 text-center tracking-[0.2em]">
+        <h1 className="text-2xl font-semibold text-teal-900 mb-6 text-center tracking-tight">
           Sign In
         </h1>
 
         <form onSubmit={handleSignIn} className="space-y-4">
           <div>
-            <label htmlFor="username" className="block text-sm font-light text-teal-800 mb-2">
+            <label htmlFor="username" className="block text-sm font-medium text-teal-800 mb-2">
               Username
             </label>
             <input
@@ -337,7 +340,7 @@ export default function SigninPage() {
               id="username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/40 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
               placeholder="Enter your username"
               required
               autoComplete="username"
@@ -345,7 +348,7 @@ export default function SigninPage() {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-light text-teal-800 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-teal-800 mb-2">
               Password
             </label>
             <input
@@ -353,7 +356,7 @@ export default function SigninPage() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/40 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
               placeholder="Enter your password"
               required
               autoComplete="current-password"
@@ -392,16 +395,9 @@ export default function SigninPage() {
             disabled={isLoading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
-              border: '1px solid rgba(110, 231, 183, 0.4)',
-              backdropFilter: 'blur(4px)',
-            }}
+            className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="text-teal-900">
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </span>
+            {isLoading ? 'Signing in...' : 'Sign In'}
           </motion.button>
         </form>
 
@@ -463,12 +459,12 @@ export default function SigninPage() {
           </button>
         </div>
 
-        <div className="mt-3 text-center">
+        <div className="mt-4 pt-4 border-t border-teal-200/30 text-center">
           <button
             onClick={() => router.push('/begin')}
-            className="text-sm font-medium px-4 py-2 rounded-lg transition-all duration-300 hover:shadow-md bg-white/60 text-slate-500 shadow-sm"
+            className="text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
           >
-            <span className="text-slate-500">New to Soullab? Begin Journey</span>
+            New to Soullab? Begin Journey
           </button>
         </div>
       </motion.div>
@@ -819,6 +815,51 @@ export default function SigninPage() {
           </motion.div>
         </motion.div>
       )}
+    </>
+  );
+}
+
+/**
+ * Loading fallback for Suspense
+ */
+function LoadingFallback() {
+  return (
+    <>
+      {/* Sacred Holoflower */}
+      <div className="mb-4 z-10 relative w-full flex justify-center">
+        <div className="w-40 h-40 flex items-center justify-center">
+          <Holoflower size="xl" glowIntensity="low" animate={true} />
+        </div>
+      </div>
+
+      {/* Loading Card */}
+      <div
+        className="rounded-2xl p-8 border max-w-md w-full shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
+        style={{
+          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
+        }}
+      >
+        <div className="animate-pulse">
+          <div className="h-8 bg-teal-200/30 rounded w-32 mx-auto mb-6" />
+          <div className="space-y-4">
+            <div className="h-12 bg-teal-200/20 rounded" />
+            <div className="h-12 bg-teal-200/20 rounded" />
+            <div className="h-12 bg-teal-200/30 rounded" />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default function SigninPage() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4">
+      <Suspense fallback={<LoadingFallback />}>
+        <SigninContent />
+      </Suspense>
     </div>
   );
 }
