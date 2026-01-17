@@ -46,8 +46,9 @@ function getDashaInfo(ruler: DashaRuler): MahadashaInfo {
   return MAHADASHA_SEQUENCE.find(m => m.ruler === ruler)!;
 }
 
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('en-US', {
+function formatDate(date: Date | string): string {
+  const d = typeof date === 'string' ? new Date(date) : date;
+  return d.toLocaleDateString('en-US', {
     month: 'short',
     year: 'numeric',
   });
