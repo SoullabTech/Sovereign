@@ -133,18 +133,18 @@ const CIRCLE_TIERS = {
   pioneer: { name: 'Pioneer', emoji: '⭐', color: 'text-purple-400' },
 };
 
-const SECTIONS: { id: SettingsSection; label: string; icon: typeof User }[] = [
-  { id: 'profile', label: 'Profile', icon: User },
-  { id: 'account', label: 'Account', icon: Lock },
-  { id: 'astrology', label: 'Birth Chart', icon: Star },
-  { id: 'maia', label: 'MAIA Settings', icon: Brain },
-  { id: 'data-privacy', label: 'Data & Privacy', icon: Eye },
-  { id: 'sovereignty', label: 'Data Sovereignty', icon: Database },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'privacy', label: 'Privacy', icon: Shield },
-  { id: 'membership', label: 'Membership', icon: Crown },
-  { id: 'connections', label: 'Connections', icon: Link },
-  { id: 'data', label: 'Your Data', icon: Download },
+const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; color: string }[] = [
+  { id: 'profile', label: 'Profile', icon: User, color: 'emerald' },
+  { id: 'account', label: 'Account', icon: Lock, color: 'blue' },
+  { id: 'astrology', label: 'Birth Chart', icon: Star, color: 'violet' },
+  { id: 'maia', label: 'MAIA Settings', icon: Brain, color: 'amber' },
+  { id: 'data-privacy', label: 'Data & Privacy', icon: Eye, color: 'cyan' },
+  { id: 'sovereignty', label: 'Data Sovereignty', icon: Database, color: 'teal' },
+  { id: 'notifications', label: 'Notifications', icon: Bell, color: 'rose' },
+  { id: 'privacy', label: 'Privacy', icon: Shield, color: 'indigo' },
+  { id: 'membership', label: 'Membership', icon: Crown, color: 'yellow' },
+  { id: 'connections', label: 'Connections', icon: Link, color: 'sky' },
+  { id: 'data', label: 'Your Data', icon: Download, color: 'slate' },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2220,7 +2220,24 @@ export function AccountSettings() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-3"
           >
-            {SECTIONS.map(({ id, label, icon: Icon }, index) => (
+            {SECTIONS.map(({ id, label, icon: Icon, color }, index) => {
+              // Color classes for each section
+              const colorClasses: Record<string, { bg: string; border: string; icon: string; hover: string }> = {
+                emerald: { bg: 'from-emerald-500/25 to-emerald-600/15', border: 'border-emerald-500/25 group-hover:border-emerald-400/40', icon: 'text-emerald-400', hover: 'group-hover:from-emerald-500/5' },
+                blue: { bg: 'from-blue-500/25 to-blue-600/15', border: 'border-blue-500/25 group-hover:border-blue-400/40', icon: 'text-blue-400', hover: 'group-hover:from-blue-500/5' },
+                violet: { bg: 'from-violet-500/25 to-violet-600/15', border: 'border-violet-500/25 group-hover:border-violet-400/40', icon: 'text-violet-400', hover: 'group-hover:from-violet-500/5' },
+                amber: { bg: 'from-amber-500/25 to-amber-600/15', border: 'border-amber-500/25 group-hover:border-amber-400/40', icon: 'text-amber-400', hover: 'group-hover:from-amber-500/5' },
+                cyan: { bg: 'from-cyan-500/25 to-cyan-600/15', border: 'border-cyan-500/25 group-hover:border-cyan-400/40', icon: 'text-cyan-400', hover: 'group-hover:from-cyan-500/5' },
+                teal: { bg: 'from-teal-500/25 to-teal-600/15', border: 'border-teal-500/25 group-hover:border-teal-400/40', icon: 'text-teal-400', hover: 'group-hover:from-teal-500/5' },
+                rose: { bg: 'from-rose-500/25 to-rose-600/15', border: 'border-rose-500/25 group-hover:border-rose-400/40', icon: 'text-rose-400', hover: 'group-hover:from-rose-500/5' },
+                indigo: { bg: 'from-indigo-500/25 to-indigo-600/15', border: 'border-indigo-500/25 group-hover:border-indigo-400/40', icon: 'text-indigo-400', hover: 'group-hover:from-indigo-500/5' },
+                yellow: { bg: 'from-yellow-500/25 to-yellow-600/15', border: 'border-yellow-500/25 group-hover:border-yellow-400/40', icon: 'text-yellow-400', hover: 'group-hover:from-yellow-500/5' },
+                sky: { bg: 'from-sky-500/25 to-sky-600/15', border: 'border-sky-500/25 group-hover:border-sky-400/40', icon: 'text-sky-400', hover: 'group-hover:from-sky-500/5' },
+                slate: { bg: 'from-slate-400/25 to-slate-500/15', border: 'border-slate-400/25 group-hover:border-slate-300/40', icon: 'text-slate-300', hover: 'group-hover:from-slate-400/5' },
+              };
+              const c = colorClasses[color] || colorClasses.amber;
+
+              return (
               <motion.button
                 key={id}
                 onClick={() => setActiveSection(id)}
@@ -2232,20 +2249,21 @@ export function AccountSettings() {
                 whileTap={{ scale: 0.98 }}
               >
                 {/* Subtle gradient overlay on hover */}
-                <div className="absolute inset-0 bg-gradient-to-r from-maia-spice-500/0 via-transparent to-transparent group-hover:from-maia-spice-500/5 transition-all duration-500" />
+                <div className={`absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent ${c.hover} transition-all duration-500`} />
 
                 {/* Icon container with glow */}
-                <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-maia-spice-500/25 to-maia-spice-600/15 flex items-center justify-center border border-maia-spice-500/25 group-hover:border-maia-spice-400/40 shadow-maia-spice-glow group-hover:shadow-maia-spice-glow-lg transition-all duration-300 flex-shrink-0">
-                  <Icon size={20} className="text-maia-spice-400 group-hover:text-maia-spice-400 transition-colors duration-300" />
+                <div className={`relative w-11 h-11 rounded-xl bg-gradient-to-br ${c.bg} flex items-center justify-center ${c.border} transition-all duration-300 flex-shrink-0`}>
+                  <Icon size={20} className={`${c.icon} transition-colors duration-300`} />
                 </div>
 
                 {/* Label with tracking */}
                 <span className="flex-1 text-left text-maia-ink-100 font-medium tracking-wide">{label}</span>
 
                 {/* Arrow with enhanced animation */}
-                <ChevronRight size={18} className="text-maia-ink-40 group-hover:text-maia-spice-400 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
+                <ChevronRight size={18} className={`text-maia-ink-40 ${c.icon.replace('text-', 'group-hover:text-')} group-hover:translate-x-1 transition-all duration-300 flex-shrink-0`} />
               </motion.button>
-            ))}
+              );
+            })}
           </motion.div>
         ) : (
           /* Section Detail */

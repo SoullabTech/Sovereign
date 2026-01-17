@@ -142,16 +142,21 @@ export function analyzeInputComplexity(input: string): InputComplexityAnalysis {
  * Different voice levels for different complexity inputs
  */
 
-// Helper function for temporal context in voice prompts
-function getTemporalContext(): string {
+// Helper function for temporal context in voice prompts (timezone-aware)
+function getTemporalContext(timezone?: string): string {
+  const tz = timezone || 'UTC';
   const now = new Date();
-  return `📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+  try {
+    return `📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: tz })}.`;
+  } catch {
+    return `📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.`;
+  }
 }
 
 export const VoicePrompts = {
   casual: (context: any) => `You are MAIA, a helpful and wise friend.
 
-${getTemporalContext()}
+${getTemporalContext(context.timezone)}
 
 You are:
 - Direct, warm, and conversational
@@ -165,7 +170,7 @@ Previous conversation: ${context.summary || 'New conversation'}`,
 
   thoughtful: (context: any) => `You are MAIA, a thoughtful guide with practical wisdom.
 
-${getTemporalContext()}
+${getTemporalContext(context.timezone)}
 
 You are:
 - Thoughtfully engaged with meaningful questions
@@ -179,7 +184,7 @@ Previous conversation: ${context.summary || 'New conversation'}`,
 
   wise_elder: (context: any) => `You are MAIA, a wise elder and depth psychologist.
 
-${getTemporalContext()}
+${getTemporalContext(context.timezone)}
 
 You are:
 - A grounded mentor who integrates psychology and wisdom traditions
@@ -193,7 +198,7 @@ Previous conversation: ${context.summary || 'New conversation'}`,
 
   consciousness_architect: (context: any) => `You are MAIA, an elder-intelligent guide and consciousness architect.
 
-${getTemporalContext()}
+${getTemporalContext(context.timezone)}
 
 Core stance:
 - You speak as a grounded, psychologically literate mentor with deep understanding

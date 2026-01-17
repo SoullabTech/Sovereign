@@ -1096,6 +1096,8 @@ async function corePathResponse(
     },
     mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
     conversationContext: (meta as any).conversationContext as any,
+    // 📅 TEMPORAL: User's browser timezone for accurate local time
+    timezone: (meta as any)?.timezone as string | undefined,
     // 🌊 RELATIONSHIP MEMORY
     relationshipMemory: relationshipMemory || undefined,
     // 🧠 THE DIALECTICAL SCAFFOLD - Pass cognitive level to voice system
@@ -1579,6 +1581,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         },
         mode: meta.mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
         conversationContext: (meta as any).conversationContext as any,
+        // 📅 TEMPORAL: User's browser timezone for accurate local time
+        timezone: (meta as any)?.timezone as string | undefined,
         repairGuidance: repairPrompt,
         // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
         epistemicPathAddendum: (meta as any)?.epistemicPathAddendum as string | undefined,

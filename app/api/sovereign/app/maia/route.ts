@@ -32,6 +32,20 @@ export const maxDuration = 60; // seconds
 const DEMO_MODE = process.env.MAIA_SOVEREIGN_DEMO_MODE === 'true';
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 
+/**
+ * Validate IANA timezone string
+ * Returns true for valid timezones like "America/New_York", "Europe/London", "UTC"
+ */
+function isValidTimeZone(tz: string): boolean {
+  if (!tz || typeof tz !== 'string') return false;
+  try {
+    Intl.DateTimeFormat(undefined, { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 //  🔒 Soft timeout for sovereign processing (increased for DEEP path with Opus consultation)
 const SOVEREIGN_TIMEOUT_MS = 25000; // FAST: ~2s, CORE: ~4s, DEEP: ~15-20s (full consciousness + Opus)
 
@@ -124,14 +138,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await withTimeoutLabeled('req.json', req.json().catch(() => ({})), 2000, start);
-    const { sessionId, message, includeAudio, voiceProfile, userId, ...meta } = body as {
+    const { sessionId, message, includeAudio, voiceProfile, userId, timezone: rawTimezone, ...meta } = body as {
       sessionId?: string;
       message?: string;
       includeAudio?: boolean;
       voiceProfile?: 'default' | 'intimate' | 'wise' | 'grounded';
       userId?: string;
+      timezone?: string;
       [key: string]: unknown;
     };
+
+    // Validate and sanitize timezone (default to UTC if invalid)
+    const timezone = (rawTimezone && isValidTimeZone(rawTimezone)) ? rawTimezone : 'UTC';
 
     console.log(`[MAIA step] body parsed rid=${requestId} dt=${msSince(start)}ms`);
 
@@ -317,6 +335,7 @@ export async function POST(req: NextRequest) {
           cognitiveProfile, // 🧠 Pass cognitive profile for downstream use
           fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
           fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
+          timezone, // 📅 User's browser timezone for temporal grounding
           ...meta,
         },
       }),

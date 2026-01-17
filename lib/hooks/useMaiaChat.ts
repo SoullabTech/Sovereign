@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useMaiaState } from "@/lib/hooks/useMaiaState";
 import { timingService, useConversationTiming } from "@/lib/services/timingMiddleware";
+import { getBrowserTimezone } from "@/lib/utils/getBrowserTimezone";
 
 type ChatMessage = {
   id: string;
@@ -132,6 +133,7 @@ export function useMaiaChat() {
           message: content,  // Changed from 'content' to 'message' for sovereign API
           sessionId,
           userId: 'anonymous',  // Add required userId field
+          timezone: getBrowserTimezone(),  // User's browser timezone for temporal grounding
           conversationHistory: messages.map(m => ({ role: m.role, content: m.content })),  // Add conversation history
           consciousnessContext: {
             coherenceLevel,

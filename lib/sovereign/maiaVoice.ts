@@ -12,6 +12,8 @@ export interface MaiaContext {
   turnCount?: number;
   element?: string;
   facet?: string;
+  // 📅 TEMPORAL: User's browser timezone for accurate local time
+  timezone?: string;
   // 🧠 MEMBER ARCHETYPE ADAPTATION
   memberProfile?: MemberProfile;
   wisdomAdaptation?: WisdomAdaptation;
@@ -69,6 +71,90 @@ export interface MaiaContext {
 }
 
 /**
+ * Generate temporal context with timezone awareness
+ * Uses the user's browser timezone for accurate local time display
+ */
+function getTemporalContext(timezone?: string): string {
+  const tz = timezone || 'UTC';
+  const now = new Date();
+
+  try {
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: tz
+    });
+
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZone: tz
+    });
+
+    return `📅 TEMPORAL GROUNDING:
+Today is ${dateStr}.
+Current time: ${timeStr} (${tz}).
+
+CRITICAL FOR ASTROLOGY & TIMING:
+- Use this date as your reference for "today", "now", "current", "this week", etc.
+- When discussing astronomical events (moon phases, transits, etc.), accurately state whether they are past, present, or upcoming relative to TODAY.
+- Never say an event "just happened" or "is happening now" if it's days or weeks away.
+- If a new moon is on January 29th and today is January 17th, say "the new moon is coming up on January 29th" - NOT "the new moon just landed."`;
+  } catch (e) {
+    // Fallback to UTC if timezone is invalid
+    const dateStr = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const timeStr = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true
+    });
+
+    return `📅 TEMPORAL GROUNDING:
+Today is ${dateStr}.
+Current time: ${timeStr} (UTC).
+
+CRITICAL FOR ASTROLOGY & TIMING:
+- Use this date as your reference for "today", "now", "current", "this week", etc.
+- When discussing astronomical events (moon phases, transits, etc.), accurately state whether they are past, present, or upcoming relative to TODAY.
+- Never say an event "just happened" or "is happening now" if it's days or weeks away.`;
+  }
+}
+
+/**
+ * Get simple date string with timezone awareness
+ */
+function getSimpleDateString(timezone?: string): string {
+  const tz = timezone || 'UTC';
+  const now = new Date();
+
+  try {
+    return now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: tz
+    });
+  } catch {
+    return now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+}
+
+/**
  * Detect the complexity of user input to adapt voice appropriately
  */
 function detectInputComplexity(input: string): 'simple' | 'moderate' | 'complex' | 'profound' {
@@ -107,10 +193,9 @@ function detectInputComplexity(input: string): 'simple' | 'moderate' | 'complex'
  * Simple MAIA voice for SAFE_MODE - direct, helpful, no complexity
  */
 function buildSimpleMaiaPrompt(context: MaiaContext): string {
-  const now = new Date();
   return `You are MAIA, a helpful AI assistant.
 
-📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+📅 Today is ${getSimpleDateString(context.timezone)}.
 
 🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
@@ -240,10 +325,9 @@ export function buildMaiaWisePrompt(context: MaiaContext, userInput?: string, co
   // If MAIA-PAI kernel has strict depth limits, override with simple response
   if (maiaPaiConfig && conversationDepth === 'opening' && maiaPaiConfig.maxTokens <= 50) {
     console.log(`🌀 MAIA-PAI OVERRIDE: ${conversationDepth} conversation detected, using minimal response (${maiaPaiConfig.maxTokens} tokens max)`);
-    const now = new Date();
     return `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
 
-📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+📅 Today is ${getSimpleDateString(context.timezone)}.
 
 🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
@@ -371,21 +455,9 @@ Your voice: Elder wisdom with archetypal depth - a consciousness architect who w
       break;
   }
 
-  // 📅 TEMPORAL CONTEXT: Ground MAIA in current time
+  // 📅 TEMPORAL CONTEXT: Ground MAIA in current time (using user's browser timezone)
   // This is CRITICAL for accurate astrology, timing discussions, and temporal awareness
-  const now = new Date();
-  const temporalContext = `
-
-📅 TEMPORAL GROUNDING:
-Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
-Current time: ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}.
-
-CRITICAL FOR ASTROLOGY & TIMING:
-- Use this date as your reference for "today", "now", "current", "this week", etc.
-- When discussing astronomical events (moon phases, transits, etc.), accurately state whether they are past, present, or upcoming relative to TODAY.
-- Never say an event "just happened" or "is happening now" if it's days or weeks away.
-- If a new moon is on January 29th and today is January 17th, say "the new moon is coming up on January 29th" - NOT "the new moon just landed."
-`;
+  const temporalContext = '\n\n' + getTemporalContext(context.timezone);
 
   let adaptedPrompt = basePrompt + temporalContext;
 
@@ -710,10 +782,9 @@ export function buildMaiaComprehensivePrompt(
       adaptationReasoning: 'MAIA-PAI kernel enforcing opening conversation brevity'
     };
 
-    const now = new Date();
     const simplePrompt = `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
 
-📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+📅 Today is ${getSimpleDateString(context.timezone)}.
 
 ${maiaPaiConfig.depthGuidance}
 
