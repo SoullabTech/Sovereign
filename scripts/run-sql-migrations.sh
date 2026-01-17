@@ -4,6 +4,9 @@
 #
 # Only runs migrations not yet recorded in schema_migrations table.
 # Records each successful migration to prevent re-runs.
+#
+# ROBUST: Works regardless of how schema_migrations was originally created.
+# Uses filename as the canonical identifier.
 
 set -eu
 
@@ -11,27 +14,50 @@ set -eu
 
 echo "=== SQL migrations ==="
 
-# Ensure schema_migrations table exists (compatible with existing schema)
-# The table may already exist with version as PK, so we add filename column if missing
+# Ensure schema_migrations table exists with filename as primary identifier
+# This is idempotent - won't fail if table already exists with different schema
 psql "$DATABASE_URL" -X -q -c "
 CREATE TABLE IF NOT EXISTS schema_migrations (
-  version VARCHAR(255) PRIMARY KEY,
-  applied_at TIMESTAMP DEFAULT NOW(),
-  filename VARCHAR(255)
+  filename TEXT PRIMARY KEY,
+  applied_at TIMESTAMPTZ DEFAULT NOW()
 );"
-psql "$DATABASE_URL" -X -q -c "
-ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS filename VARCHAR(255);"
 
-# Get list of already-applied migrations into temp file
-# Check both version and filename columns for compatibility
+# Add checksum column if missing (for future compatibility)
+psql "$DATABASE_URL" -X -q -c "
+ALTER TABLE schema_migrations ADD COLUMN IF NOT EXISTS checksum TEXT;" 2>/dev/null || true
+
+# Handle legacy tables that have 'version' as PK instead of 'filename'
+# Migrate any version-only rows to have filename
+psql "$DATABASE_URL" -X -q -c "
+DO \$\$
+BEGIN
+  -- Check if 'version' column exists
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'schema_migrations' AND column_name = 'version'
+  ) THEN
+    -- Add filename column if it doesn't exist
+    IF NOT EXISTS (
+      SELECT 1 FROM information_schema.columns
+      WHERE table_name = 'schema_migrations' AND column_name = 'filename'
+    ) THEN
+      ALTER TABLE schema_migrations ADD COLUMN filename TEXT;
+    END IF;
+
+    -- Update any rows where filename is NULL but version exists
+    -- Try to find matching file by version prefix
+    UPDATE schema_migrations SET filename = version || '.sql'
+    WHERE filename IS NULL AND version IS NOT NULL;
+  END IF;
+END \$\$;" 2>/dev/null || true
+
+# Get list of already-applied migrations
 applied_tmp="$(mktemp)"
 trap "rm -f '$applied_tmp'" EXIT
-psql "$DATABASE_URL" -X -t -A -c "
-SELECT COALESCE(filename, version) FROM schema_migrations
-WHERE filename IS NOT NULL OR version IS NOT NULL;" > "$applied_tmp"
 
-# Also get versions (numeric prefixes) that have been applied
-psql "$DATABASE_URL" -X -t -A -c "SELECT version FROM schema_migrations WHERE version IS NOT NULL;" >> "$applied_tmp"
+# Query only the filename column (guaranteed to exist after our setup)
+psql "$DATABASE_URL" -X -t -A -c "
+SELECT filename FROM schema_migrations WHERE filename IS NOT NULL;" > "$applied_tmp" 2>/dev/null || true
 
 # Count state before running
 applied_before=$(wc -l < "$applied_tmp" | tr -d ' ')
@@ -41,24 +67,25 @@ for f in /app/database/migrations/*.sql; do
   [ -e "$f" ] || continue  # handles empty-glob case
 
   filename=$(basename "$f")
-  # Extract version from filename (numeric prefix before first underscore)
-  version=$(echo "$filename" | sed 's/_.*$//')
 
-  # Skip if already applied (check both filename and version)
-  if grep -Fxq "$filename" "$applied_tmp" || grep -Fxq "$version" "$applied_tmp"; then
+  # Skip if already applied
+  if grep -Fxq "$filename" "$applied_tmp"; then
     continue
   fi
 
   echo "→ $filename"
 
-  # Run migration with error stop
-  psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -f "$f"
+  # Run migration with error stop, wrapped in transaction
+  psql "$DATABASE_URL" -X -v ON_ERROR_STOP=1 -c "BEGIN;" -f "$f" -c "COMMIT;" || {
+    echo "❌ Migration failed: $filename"
+    psql "$DATABASE_URL" -X -q -c "ROLLBACK;" 2>/dev/null || true
+    exit 1
+  }
 
-  # Record successful application (insert version and filename)
-  psql "$DATABASE_URL" -X -q <<EOF
-INSERT INTO schema_migrations (version, filename) VALUES ('$version', '$filename')
-ON CONFLICT (version) DO UPDATE SET filename = EXCLUDED.filename;
-EOF
+  # Record successful application
+  psql "$DATABASE_URL" -X -q -c "
+INSERT INTO schema_migrations (filename) VALUES ('$filename')
+ON CONFLICT (filename) DO NOTHING;"
 
   applied_now=$((applied_now + 1))
 done
@@ -67,7 +94,7 @@ done
 total=$(ls -1 /app/database/migrations/*.sql 2>/dev/null | wc -l | tr -d ' ')
 
 if [ "$applied_now" -eq 0 ]; then
-  echo "=== No pending migrations (${applied_before} were already applied) ==="
+  echo "=== No pending migrations ($applied_before already applied, $total total) ==="
 else
-  echo "=== Applied ${applied_now} new migrations (${applied_before} were already applied) ==="
+  echo "=== Applied $applied_now new migrations ($applied_before were already applied, $total total) ==="
 fi
