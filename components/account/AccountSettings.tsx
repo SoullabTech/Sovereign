@@ -432,6 +432,16 @@ export function AccountSettings() {
     saveAccountSettings(updated);
     showSaveIndicator();
 
+    // Sync voice settings to legacy localStorage keys used by OracleConversation
+    // This ensures both event paths are triggered for maximum compatibility
+    if (path === 'voice.openaiVoice') {
+      localStorage.setItem('selected_voice', value as string);
+    }
+    if (path.startsWith('voice.')) {
+      // Force reload of voice settings in OracleConversation
+      window.dispatchEvent(new Event('conversationStyleChanged'));
+    }
+
     // Also sync nested settings to server if we have userId
     if (userId) {
       // Map nested paths to server API keys

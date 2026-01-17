@@ -1493,6 +1493,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const newConfig = getAgentConfig(savedVoice || undefined);
       setAgentConfig(newConfig);
       console.log('🎭 Conversation style updated:', newConfig.voice);
+
+      // Also reload voice settings from account settings (voice + speed)
+      const settings = getAccountSettings();
+      setVoiceSettings({
+        voice: settings.voice.openaiVoice,
+        speed: settings.voice.speed
+      });
+      console.log('🔊 Voice settings reloaded:', settings.voice);
     };
 
     // Listen for storage events (from other tabs) and custom events (same tab)
