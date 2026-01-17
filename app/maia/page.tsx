@@ -822,7 +822,7 @@ function MAIAPageContent() {
                     {maiaMode === 'normal' && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#fbbf24' }} />
                     )}
-                    Dialogue
+                    Talk
                   </motion.button>
                   <motion.button
                     onClick={() => setMaiaMode('patient')}
@@ -860,7 +860,7 @@ function MAIAPageContent() {
                     {maiaMode === 'patient' && (
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#5eead4' }} />
                     )}
-                    Counsel
+                    Care
                     {currentCounselFramework !== 'auto' ? (
                       <span className="text-[10px] opacity-70">{THERAPEUTIC_FRAMEWORKS[currentCounselFramework]?.icon}</span>
                     ) : (
