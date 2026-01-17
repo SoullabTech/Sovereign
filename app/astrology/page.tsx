@@ -13,7 +13,7 @@
  * - Circadian color rhythm (day/night transitions)
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2, ChevronDown, ChevronUp, Info } from 'lucide-react';
@@ -30,6 +30,8 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { getTooltip, CARD_COPY } from '@/lib/content/CrossSystemConvergenceCopy';
 import { useUserAuth } from '@/lib/hooks/useUserAuth';
 import { mapAudienceMode } from '@/lib/content/audienceMode';
+import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components/astrology/ZodiacToggle';
+import { calculateAyanamsa, tropicalToSidereal } from '@/lib/astrology/ayanamsaCalculator';
 
 // Elemental colors for planet insights
 const elementalColors = {
@@ -38,6 +40,26 @@ const elementalColors = {
   earth: { color: '#A8C69F', glow: 'rgba(168, 198, 159, 0.3)' },
   air: { color: '#F5D565', glow: 'rgba(245, 213, 101, 0.3)' },
 };
+
+// Zodiac signs in order (0-360 degrees, 30 degrees each)
+const ZODIAC_SIGNS = [
+  'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
+  'Libra', 'Scorpio', 'Sagittarius', 'Capricorn', 'Aquarius', 'Pisces'
+];
+
+// Convert tropical sign + degree to sidereal sign + degree
+function getTropicalLongitude(sign: string, degree: number): number {
+  const signIndex = ZODIAC_SIGNS.findIndex(s => s.toLowerCase() === sign.toLowerCase());
+  if (signIndex === -1) return 0;
+  return signIndex * 30 + degree;
+}
+
+function longitudeToSign(longitude: number): { sign: string; degree: number } {
+  const normalizedLong = ((longitude % 360) + 360) % 360;
+  const signIndex = Math.floor(normalizedLong / 30);
+  const degree = normalizedLong % 30;
+  return { sign: ZODIAC_SIGNS[signIndex], degree };
+}
 
 interface PlanetPosition {
   sign: string;
@@ -173,6 +195,11 @@ export default function AstrologyPage() {
   // House system guide toggle
   const [showHouseGuide, setShowHouseGuide] = useState(false);
 
+  // Zodiac system toggle (tropical/sidereal)
+  const [zodiacMode, setZodiacMode] = useState<ZodiacSystem>('tropical');
+  const [ayanamsa, setAyanamsa] = useState<AyanamsaType>('lahiri');
+  const [birthDate, setBirthDate] = useState<Date | null>(null);
+
   // Audience mode for convergence copy (profile-adaptive)
   const { oracleAgent, preferences } = useUserAuth();
   const audienceMode = mapAudienceMode({
@@ -202,6 +229,61 @@ export default function AstrologyPage() {
     };
     return [...savedSynastry].sort((a, b) => ts(b.savedAt) - ts(a.savedAt));
   }, [savedSynastry]);
+
+  // Calculate current ayanamsa value (memoized)
+  const ayanamsaValue = useMemo(() => {
+    const date = birthDate || new Date();
+    return calculateAyanamsa(date, ayanamsa);
+  }, [birthDate, ayanamsa]);
+
+  // Hydration-safe zodiac state initialization
+  useEffect(() => {
+    // Read from URL first, then localStorage
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlZodiac = urlParams.get('zodiac');
+    if (urlZodiac === 'sidereal') {
+      setZodiacMode('sidereal');
+    } else {
+      const storedMode = localStorage.getItem('astro_zodiac_mode');
+      if (storedMode === 'sidereal') {
+        setZodiacMode('sidereal');
+      }
+    }
+
+    // Load ayanamsa preference
+    const storedAyanamsa = localStorage.getItem('astro_ayanamsa');
+    if (storedAyanamsa === 'lahiri' || storedAyanamsa === 'true_chitra' || storedAyanamsa === 'krishnamurti') {
+      setAyanamsa(storedAyanamsa);
+    }
+  }, []);
+
+  // Persist zodiac mode changes
+  const setZodiacModeAndPersist = useCallback((mode: ZodiacSystem) => {
+    setZodiacMode(mode);
+    localStorage.setItem('astro_zodiac_mode', mode);
+    // Update URL without full navigation
+    const url = new URL(window.location.href);
+    if (mode === 'sidereal') {
+      url.searchParams.set('zodiac', 'sidereal');
+    } else {
+      url.searchParams.delete('zodiac');
+    }
+    window.history.replaceState({}, '', url.toString());
+  }, []);
+
+  // Persist ayanamsa changes
+  const setAyanamsaAndPersist = useCallback((value: AyanamsaType) => {
+    setAyanamsa(value);
+    localStorage.setItem('astro_ayanamsa', value);
+  }, []);
+
+  // Helper to get sidereal position for a planet
+  const getSiderealPosition = useCallback((data: PlanetPosition | undefined) => {
+    if (!data?.sign) return null;
+    const tropicalLong = getTropicalLongitude(data.sign, data.degree);
+    const siderealLong = tropicalToSidereal(tropicalLong, ayanamsaValue);
+    return longitudeToSign(siderealLong);
+  }, [ayanamsaValue]);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -641,6 +723,24 @@ export default function AstrologyPage() {
           <div className="text-center mb-12">
             <h1 className="text-4xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint</h1>
             <p className="text-dune-spice-sand">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
+
+            {/* Zodiac System Toggle */}
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <ZodiacToggle
+                value={zodiacMode}
+                onChange={setZodiacModeAndPersist}
+                ayanamsa={ayanamsa}
+                onAyanamsaChange={setAyanamsaAndPersist}
+              />
+              {zodiacMode === 'sidereal' && (
+                <p className="text-xs text-dune-spice-sand/60 mt-1">
+                  Showing sidereal positions in Planetary Positions.{' '}
+                  <Link href="/astrology/vedic" className="text-dune-amber hover:text-dune-spice-glow underline">
+                    Full Vedic Dashboard →
+                  </Link>
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Archetypal Profile */}
@@ -864,7 +964,12 @@ export default function AstrologyPage() {
 
             {/* Planetary Positions - Clickable with Insights */}
             <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/30 rounded-lg p-6 shadow-xl">
-              <h3 className="text-dune-amber font-semibold mb-4">Planetary Positions</h3>
+              <h3 className="text-dune-amber font-semibold mb-4">
+                Planetary Positions
+                {zodiacMode === 'sidereal' && (
+                  <span className="text-indigo-400 text-sm font-normal ml-2">(Sidereal)</span>
+                )}
+              </h3>
               <p className="text-dune-spice-sand/50 text-xs mb-4 italic">Click a planet to reveal archetypal insights</p>
               <div className="space-y-1 text-sm max-h-[500px] overflow-y-auto">
                 {[
@@ -888,7 +993,13 @@ export default function AstrologyPage() {
                   { name: 'Vesta', icon: '⚶', data: chartData.vesta },
                 ].filter(p => p.data?.sign).map(({ name, icon, data }) => {
                   const isExpanded = expandedPlanet === name;
-                  const zodiacArchetype = data?.sign ? getZodiacArchetype(data.sign) : null;
+
+                  // Calculate display position (sidereal or tropical)
+                  const siderealPos = zodiacMode === 'sidereal' ? getSiderealPosition(data) : null;
+                  const displaySign = siderealPos?.sign || data?.sign;
+                  const displayDegree = siderealPos?.degree ?? data?.degree;
+
+                  const zodiacArchetype = displaySign ? getZodiacArchetype(displaySign) : null;
                   const planetArchetype = getPlanetaryArchetype(name);
                   const houseData = data?.house ? getSpiralogicHouseData(data.house) : null;
                   const element = zodiacArchetype?.element || 'fire';
@@ -914,8 +1025,8 @@ export default function AstrologyPage() {
                           {(data as PlanetPosition)?.retrograde && <span className="text-red-400 text-xs">℞</span>}
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="text-dune-amber">
-                            {data?.sign} {data?.degree?.toFixed(1)}°
+                          <span className={zodiacMode === 'sidereal' ? 'text-indigo-300' : 'text-dune-amber'}>
+                            {displaySign} {displayDegree?.toFixed(1)}°
                             <span className="text-dune-spice-sand/50 ml-2">H{(data as PlanetPosition)?.house}</span>
                           </span>
                           {isExpanded ? (
