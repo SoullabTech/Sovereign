@@ -128,12 +128,12 @@ function ResetPasswordContent() {
       return (
         <div className="space-y-6">
           <div className="flex justify-center">
-            <AlertCircle className="w-12 h-12 text-amber-600" />
+            <AlertCircle className="w-10 h-10 text-amber-500" />
           </div>
-          <h2 className="text-xl font-light text-teal-900 text-center">
+          <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
             Link Expired
           </h2>
-          <p className="text-teal-800/70 text-center">
+          <p className="text-teal-700/80 text-sm text-center">
             {error}
           </p>
           <button
@@ -141,11 +141,7 @@ function ResetPasswordContent() {
               setError('');
               setMode('request');
             }}
-            className="w-full py-3 rounded-xl font-medium text-teal-900 transition-all duration-300"
-            style={{
-              background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
-              border: '1px solid rgba(110, 231, 183, 0.4)',
-            }}
+            className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
           >
             Request New Reset Link
           </button>
@@ -157,23 +153,19 @@ function ResetPasswordContent() {
       return (
         <div className="space-y-6">
           <div className="flex justify-center">
-            <CheckCircle className="w-12 h-12 text-emerald-600" />
+            <CheckCircle className="w-10 h-10 text-emerald-500" />
           </div>
-          <h2 className="text-xl font-light text-teal-900 text-center">
+          <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
             {token ? 'Password Reset Complete' : 'Check Your Email'}
           </h2>
-          <p className="text-teal-800/70 text-center">
+          <p className="text-teal-700/80 text-sm text-center">
             {token
-              ? 'Your password has been updated. You can now sign in with your new password.'
-              : 'If an account exists with this email, we\'ve sent a password reset link.'}
+              ? 'Your password has been updated. You can now sign in.'
+              : 'If an account exists with this email, we\'ve sent a reset link.'}
           </p>
           <button
             onClick={() => router.push('/signin')}
-            className="w-full py-3 rounded-xl font-medium text-teal-900 transition-all duration-300"
-            style={{
-              background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
-              border: '1px solid rgba(110, 231, 183, 0.4)',
-            }}
+            className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
           >
             Go to Sign In
           </button>
@@ -185,18 +177,18 @@ function ResetPasswordContent() {
       return (
         <div className="space-y-6">
           <div className="flex justify-center">
-            <Mail className="w-12 h-12 text-amber-600/80" />
+            <Mail className="w-10 h-10 text-amber-500" />
           </div>
-          <h2 className="text-xl font-light text-teal-900 text-center tracking-wide">
+          <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
             Reset Your Password
           </h2>
-          <p className="text-teal-800/70 text-sm text-center">
-            Enter your email address and we'll send you a link to reset your password.
+          <p className="text-teal-700/80 text-sm text-center">
+            Enter your email and we'll send you a reset link.
           </p>
 
           <form onSubmit={handleRequestReset} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-light text-teal-800 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-teal-800 mb-2">
                 Email Address
               </label>
               <input
@@ -204,7 +196,7 @@ function ResetPasswordContent() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg bg-white/40 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
                 placeholder="your@email.com"
                 required
               />
@@ -221,7 +213,7 @@ function ResetPasswordContent() {
               disabled={isSubmitting || !email.trim()}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              className="w-full py-3 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? 'Sending...' : 'Send Reset Link'}
             </motion.button>
@@ -229,7 +221,7 @@ function ResetPasswordContent() {
             <button
               type="button"
               onClick={() => router.push('/signin')}
-              className="w-full py-2 text-teal-700/70 text-sm font-light hover:text-teal-600 transition-colors duration-300"
+              className="w-full text-sm font-medium text-teal-700/70 hover:text-teal-800 transition"
             >
               Back to Sign In
             </button>
@@ -242,20 +234,20 @@ function ResetPasswordContent() {
     return (
       <div className="space-y-6">
         <div className="flex justify-center">
-          <Lock className="w-12 h-12 text-emerald-600/80" />
+          <Lock className="w-10 h-10 text-emerald-600" />
         </div>
-        <h2 className="text-xl font-light text-teal-900 text-center tracking-wide">
+        <h2 className="text-xl font-semibold text-teal-900 text-center tracking-tight">
           Set New Password
         </h2>
         {memberName && (
-          <p className="text-teal-800/70 text-sm text-center">
+          <p className="text-teal-700/80 text-sm text-center">
             Welcome back, {memberName}
           </p>
         )}
 
         <form onSubmit={handleResetPassword} className="space-y-4">
           <div>
-            <label htmlFor="password" className="block text-sm font-light text-teal-800 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-teal-800 mb-2">
               New Password
             </label>
             <input
@@ -263,7 +255,7 @@ function ResetPasswordContent() {
               id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/40 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
               placeholder="At least 6 characters"
               required
               minLength={6}
@@ -271,7 +263,7 @@ function ResetPasswordContent() {
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-light text-teal-800 mb-2">
+            <label htmlFor="confirmPassword" className="block text-sm font-medium text-teal-800 mb-2">
               Confirm Password
             </label>
             <input
@@ -279,7 +271,7 @@ function ResetPasswordContent() {
               id="confirmPassword"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg bg-white/40 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
+              className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-teal-900 placeholder:text-teal-600/50 focus:border-white/50 focus:ring-2 focus:ring-teal-400/25 outline-none transition"
               placeholder="Confirm your password"
               required
             />
@@ -296,15 +288,9 @@ function ResetPasswordContent() {
             disabled={isSubmitting || !password || !confirmPassword}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 rounded-xl font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{
-              background: 'linear-gradient(to right, rgba(110, 231, 183, 0.3), rgba(127, 181, 179, 0.4))',
-              border: '1px solid rgba(110, 231, 183, 0.4)',
-            }}
+            className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <span className="text-teal-900">
-              {isSubmitting ? 'Resetting...' : 'Reset Password'}
-            </span>
+            {isSubmitting ? 'Resetting...' : 'Reset Password'}
           </motion.button>
         </form>
       </div>
@@ -325,12 +311,11 @@ function ResetPasswordContent() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-        className="rounded-2xl p-8 shadow-2xl border max-w-md w-full"
+        className="rounded-2xl p-8 border max-w-md w-full shadow-[0_24px_60px_rgba(0,0,0,0.16),0_10px_20px_rgba(0,0,0,0.10)]"
         style={{
-          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(110, 231, 183, 0.05), rgba(255, 255, 255, 0.15))',
-          backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255, 255, 255, 0.2)',
-          boxShadow: '0 0 60px rgba(251, 191, 36, 0.3), 0 0 100px rgba(245, 158, 11, 0.2), 0 0 140px rgba(217, 119, 6, 0.1), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.25)',
         }}
       >
         {renderContent()}
