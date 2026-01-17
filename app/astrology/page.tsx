@@ -1341,7 +1341,23 @@ export default function AstrologyPage() {
               <p className="text-sm text-white/50 mb-4">
                 {CARD_COPY[resolvedMode]}
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Vedic Astrology */}
+              <Link
+                href="/astrology/vedic"
+                className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-indigo-500/40 hover:border-indigo-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-indigo-500/20"
+              >
+                <div className="text-4xl">🕉️</div>
+                <div className="text-left">
+                  <h3 className="text-xl font-bold text-dune-amber group-hover:text-indigo-300 transition-colors">
+                    Vedic Astrology
+                  </h3>
+                  <p className="text-dune-spice-sand/70 text-sm">
+                    Explore your sidereal chart, nakshatra, and Vimshottari Dasha periods →
+                  </p>
+                </div>
+              </Link>
+
                 {/* Mayan Astrology */}
               <Link
                 href="/astrology/mayan"
@@ -1358,22 +1374,6 @@ export default function AstrologyPage() {
                 </div>
               </Link>
 
-              {/* Synastry */}
-              <Link
-                href="/astrology/synastry"
-                className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-violet-500/40 hover:border-violet-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-violet-500/20"
-              >
-                <div className="text-4xl">💞</div>
-                <div className="text-left">
-                  <h3 className="text-xl font-bold text-dune-amber group-hover:text-violet-300 transition-colors">
-                    Synastry
-                  </h3>
-                  <p className="text-dune-spice-sand/70 text-sm">
-                    Compare two charts for harmony, friction, and soul-growth vectors →
-                  </p>
-                </div>
-              </Link>
-
               {/* Chinese Astrology */}
               <Link
                 href="/astrology/chinese"
@@ -1386,6 +1386,22 @@ export default function AstrologyPage() {
                   </h3>
                   <p className="text-dune-spice-sand/70 text-sm">
                     Explore your zodiac animal, element, and cosmic destiny →
+                  </p>
+                </div>
+              </Link>
+
+              {/* Synastry */}
+              <Link
+                href="/astrology/synastry"
+                className="group inline-flex items-center gap-3 bg-black/30 hover:bg-black/50 border border-violet-500/40 hover:border-violet-500/70 rounded-xl p-6 transition-all duration-300 shadow-lg hover:shadow-violet-500/20"
+              >
+                <div className="text-4xl">💞</div>
+                <div className="text-left">
+                  <h3 className="text-xl font-bold text-dune-amber group-hover:text-violet-300 transition-colors">
+                    Synastry
+                  </h3>
+                  <p className="text-dune-spice-sand/70 text-sm">
+                    Compare two charts for harmony, friction, and soul-growth vectors →
                   </p>
                 </div>
               </Link>
