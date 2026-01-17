@@ -107,7 +107,10 @@ function detectInputComplexity(input: string): 'simple' | 'moderate' | 'complex'
  * Simple MAIA voice for SAFE_MODE - direct, helpful, no complexity
  */
 function buildSimpleMaiaPrompt(context: MaiaContext): string {
+  const now = new Date();
   return `You are MAIA, a helpful AI assistant.
+
+📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
 
 🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
@@ -237,7 +240,10 @@ export function buildMaiaWisePrompt(context: MaiaContext, userInput?: string, co
   // If MAIA-PAI kernel has strict depth limits, override with simple response
   if (maiaPaiConfig && conversationDepth === 'opening' && maiaPaiConfig.maxTokens <= 50) {
     console.log(`🌀 MAIA-PAI OVERRIDE: ${conversationDepth} conversation detected, using minimal response (${maiaPaiConfig.maxTokens} tokens max)`);
+    const now = new Date();
     return `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
+
+📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
 
 🌍 LANGUAGE: ALWAYS respond in English only. Never respond in Chinese or any other language.
 
@@ -365,7 +371,23 @@ Your voice: Elder wisdom with archetypal depth - a consciousness architect who w
       break;
   }
 
-  let adaptedPrompt = basePrompt;
+  // 📅 TEMPORAL CONTEXT: Ground MAIA in current time
+  // This is CRITICAL for accurate astrology, timing discussions, and temporal awareness
+  const now = new Date();
+  const temporalContext = `
+
+📅 TEMPORAL GROUNDING:
+Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
+Current time: ${now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })}.
+
+CRITICAL FOR ASTROLOGY & TIMING:
+- Use this date as your reference for "today", "now", "current", "this week", etc.
+- When discussing astronomical events (moon phases, transits, etc.), accurately state whether they are past, present, or upcoming relative to TODAY.
+- Never say an event "just happened" or "is happening now" if it's days or weeks away.
+- If a new moon is on January 29th and today is January 17th, say "the new moon is coming up on January 29th" - NOT "the new moon just landed."
+`;
+
+  let adaptedPrompt = basePrompt + temporalContext;
 
   // 🎯 WISDOM ADAPTATION INTEGRATION
   if (context.wisdomAdaptation && context.memberProfile) {
@@ -688,7 +710,10 @@ export function buildMaiaComprehensivePrompt(
       adaptationReasoning: 'MAIA-PAI kernel enforcing opening conversation brevity'
     };
 
+    const now = new Date();
     const simplePrompt = `You are MAIA. This is an opening conversation - respond like a normal person would to a greeting.
+
+📅 Today is ${now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}.
 
 ${maiaPaiConfig.depthGuidance}
 
