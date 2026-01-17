@@ -2147,26 +2147,27 @@ export function AccountSettings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
+    <div className="max-w-2xl mx-auto px-5 py-10" style={{ paddingTop: 'max(env(safe-area-inset-top), 2.5rem)' }}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between mb-10">
+        <div className="flex items-center gap-4">
           {/* Back button - to /maia when on main list, to list when in subsection */}
           <motion.button
             onClick={() => activeSection ? setActiveSection(null) : window.location.href = '/maia'}
-            className="p-2 -ml-2 rounded-lg hover:bg-white/5 transition-colors"
+            className="p-2.5 -ml-2 rounded-xl bg-gradient-to-br from-white/8 to-white/4 border border-white/10 hover:border-white/20 hover:from-white/12 hover:to-white/8 transition-all duration-300 shadow-lg shadow-black/20"
+            whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
           >
-            <ArrowLeft size={20} className="text-white/60" />
+            <ArrowLeft size={22} className="text-white/80" />
           </motion.button>
           <div>
-            <h1 className="text-2xl font-light text-amber-50">
+            <h1 className="text-3xl font-semibold text-white tracking-tight">
               {activeSection
                 ? SECTIONS.find(s => s.id === activeSection)?.label
                 : 'Settings'}
             </h1>
             {!activeSection && (
-              <p className="text-sm text-white/50 mt-1">
+              <p className="text-sm text-white/40 mt-1.5 tracking-wide">
                 Manage your account and preferences
               </p>
             )}
@@ -2198,20 +2199,32 @@ export function AccountSettings() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="space-y-2"
+            className="space-y-3"
           >
-            {SECTIONS.map(({ id, label, icon: Icon }) => (
+            {SECTIONS.map(({ id, label, icon: Icon }, index) => (
               <motion.button
                 key={id}
                 onClick={() => setActiveSection(id)}
-                className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.03 }}
+                className="group relative w-full flex items-center gap-4 p-4 bg-gradient-to-r from-[#0f1329]/90 to-[#0d1025]/90 hover:from-[#161d3a] hover:to-[#121833] border border-indigo-800/30 hover:border-indigo-600/40 rounded-2xl transition-all duration-300 shadow-[0_4px_20px_rgba(0,0,0,0.4)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.5)] backdrop-blur-sm overflow-hidden"
+                whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <div className="flex items-center gap-3">
-                  <Icon size={20} className="text-amber-400" />
-                  <span className="text-white/90">{label}</span>
+                {/* Subtle gradient overlay on hover */}
+                <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 via-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 group-hover:via-transparent group-hover:to-transparent transition-all duration-500" />
+
+                {/* Icon container with glow */}
+                <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-amber-500/25 to-orange-600/15 flex items-center justify-center border border-amber-500/25 group-hover:border-amber-400/40 shadow-[0_0_15px_rgba(245,158,11,0.15)] group-hover:shadow-[0_0_20px_rgba(245,158,11,0.25)] transition-all duration-300 flex-shrink-0">
+                  <Icon size={20} className="text-amber-400 group-hover:text-amber-300 transition-colors duration-300" />
                 </div>
-                <ChevronRight size={18} className="text-white/40" />
+
+                {/* Label with tracking */}
+                <span className="flex-1 text-left text-white/95 font-medium tracking-wide">{label}</span>
+
+                {/* Arrow with enhanced animation */}
+                <ChevronRight size={18} className="text-white/30 group-hover:text-amber-400/70 group-hover:translate-x-1 transition-all duration-300 flex-shrink-0" />
               </motion.button>
             ))}
           </motion.div>
