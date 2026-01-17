@@ -533,7 +533,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                       disabled={!soulKey.trim() || isRecognizing}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {isRecognizing ? 'Recognizing...' : 'Enter'}
                     </motion.button>
@@ -699,7 +699,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         type="submit"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
                       >
                         Continue
                       </motion.button>
@@ -873,7 +873,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         type="submit"
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition"
                       >
                         Create Account
                       </motion.button>
@@ -911,7 +911,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
               >
                 {/* Mail icon */}
                 <div className="w-16 h-16 mx-auto">
-                  <Mail className="w-full h-full text-amber-500" />
+                  <Mail className="w-full h-full text-teal-600" />
                 </div>
 
                 <div
@@ -987,7 +987,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                         disabled={!recoveryEmail.trim() || recoveryStatus === 'sending'}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
                       </motion.button>

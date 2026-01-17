@@ -395,7 +395,7 @@ function SigninContent() {
             disabled={isLoading}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            className="w-full py-3 rounded-xl font-semibold text-amber-950 bg-amber-400 hover:bg-amber-300 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </motion.button>
@@ -503,7 +503,7 @@ function SigninContent() {
             }}
           >
             <div className="flex justify-center mb-6">
-              <Mail className="w-12 h-12 text-amber-600/80" />
+              <Mail className="w-12 h-12 text-teal-600" />
             </div>
 
             <h2 className="text-xl font-light text-teal-900 text-center mb-4 tracking-wide">
@@ -563,7 +563,7 @@ function SigninContent() {
                     id="recovery-email"
                     value={recoveryEmail}
                     onChange={(e) => setRecoveryEmail(e.target.value)}
-                    className="w-full px-4 py-3 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50"
+                    className="w-full px-4 py-3 rounded-lg bg-white/60 border border-teal-200/50 text-teal-900 placeholder-teal-600/40 focus:outline-none focus:ring-2 focus:ring-teal-400/50"
                     placeholder="your@email.com"
                     required
                   />
@@ -580,7 +580,7 @@ function SigninContent() {
                   disabled={recoveryStatus === 'sending' || !recoveryEmail.trim()}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 rounded-xl font-medium bg-teal-600 hover:bg-teal-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
                 </motion.button>
@@ -738,7 +738,7 @@ function SigninContent() {
             }}
           >
             <div className="flex justify-center mb-6">
-              <ArrowRightLeft className="w-12 h-12 text-amber-600/80" />
+              <ArrowRightLeft className="w-12 h-12 text-teal-600" />
             </div>
 
             <h2 className="text-xl font-light text-teal-900 text-center mb-4 tracking-wide">
@@ -752,9 +752,9 @@ function SigninContent() {
                   your previous sessions on this device. Would you like to link them to your account?
                 </p>
 
-                <div className="bg-amber-50/60 rounded-lg p-4 mb-6 border border-amber-200/40">
-                  <p className="text-amber-800/80 text-xs font-medium mb-2">Data to link:</p>
-                  <ul className="text-amber-700/70 text-xs space-y-1">
+                <div className="bg-teal-50/60 rounded-lg p-4 mb-6 border border-teal-200/40">
+                  <p className="text-teal-800/80 text-xs font-medium mb-2">Data to link:</p>
+                  <ul className="text-teal-700/70 text-xs space-y-1">
                     {migrationPreview.tables.slice(0, 5).map((t) => (
                       <li key={t.table}>• {t.table.replace(/_/g, ' ')}: {t.count} items</li>
                     ))}
@@ -769,7 +769,7 @@ function SigninContent() {
                     onClick={() => handleMigration(true)}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="w-full py-3 rounded-xl font-medium bg-amber-500/80 hover:bg-amber-500 text-white transition-all duration-300"
+                    className="w-full py-3 rounded-xl font-medium bg-teal-600 hover:bg-teal-500 text-white transition-all duration-300"
                   >
                     Yes, Link My History
                   </motion.button>
@@ -786,7 +786,7 @@ function SigninContent() {
 
             {migrationStatus === 'migrating' && (
               <div className="text-center py-8">
-                <div className="animate-spin w-8 h-8 border-2 border-amber-500 border-t-transparent rounded-full mx-auto mb-4" />
+                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
                 <p className="text-teal-800/70">Linking your history...</p>
               </div>
             )}
