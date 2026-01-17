@@ -1,4 +1,4 @@
-# Stellium by Loralee
+# [PRACTITIONER_NAME] by [NAME]
 
 ## Your Astrology Practice as a Living App
 
@@ -8,9 +8,9 @@ A professional astrology platform that carries your voice, your framework, your 
 
 ## The Vision
 
-**Stellium** isn't a website with a booking form. It's *you* — available to your clients in real-time, 24/7, between sessions.
+**[AI_NAME]** isn't a website with a booking form. It's *you* — available to your clients in real-time, 24/7, between sessions.
 
-When your client has a question at midnight about their Saturn return, Stellium is there. Speaking in your voice. Using your framework. Giving them the answer *you* would give.
+When your client has a question at midnight about their Saturn return, [AI_NAME] is there. Speaking in your voice. Using your framework. Giving them the answer *you* would give.
 
 **Your clients get:**
 - A version of you that's always available
@@ -21,16 +21,16 @@ When your client has a question at midnight about their Saturn return, Stellium 
 
 **You get:**
 - Clients arriving to sessions already oriented
-- Deep session prep from their Stellium conversations
+- Deep session prep from their [AI_NAME] conversations
 - Your methodology scaled without losing intimacy
 - Revenue from subscriptions, not just sessions
-- Freedom from 2am texts — Stellium has them covered
+- Freedom from 2am texts — [AI_NAME] has them covered
 
 ---
 
 ## What You Get: The Full Astrology System
 
-You start with Soullab's complete `/astrology` engine — the same system powering MAIA — re-skinned and voiced as *yours*.
+You start with Soullab's complete astrology engine — re-skinned and voiced as *yours*.
 
 ### The Foundation (Included)
 
@@ -65,7 +65,7 @@ You start with Soullab's complete `/astrology` engine — the same system poweri
 
 ## What You Can Add
 
-The foundation is just the start. Expand Stellium with modules that match your practice:
+The foundation is just the start. Expand with modules that match your practice:
 
 ### Additional Chart Systems
 - Progressed charts
@@ -89,6 +89,7 @@ The foundation is just the start. Expand Stellium with modules that match your p
 - Horary astrology question charts
 - Mundane astrology (world events)
 - Fixed star interpretations
+- [PRACTITIONER_SPECIALTIES]
 
 ### Practice Tools
 - Client intake questionnaires (your questions)
@@ -139,30 +140,30 @@ The foundation is just the start. Expand Stellium with modules that match your p
 ### Professional Support
 - **Onboarding concierge** — we help you set up everything
 - **Technical support** — you focus on clients, we handle the tech
-- **Content migration** — bring your existing materials into Stellium
+- **Content migration** — bring your existing materials into [AI_NAME]
 - **Training sessions** — learn to use every feature
-- **Priority response** — Sovereign tier gets same-day support
+- **Priority response** — Priority tier gets same-day support
 
 ---
 
-## Stellium — You, Always Available
+## [AI_NAME] — You, Always Available
 
 **The core innovation: Your clients get a version of *you* — available 24/7, in real-time, between sessions.**
 
-When a client wakes up at 2am wondering what Mars square their natal Moon means, they don't have to wait for your next session. Stellium is there — speaking in your voice, using your framework, giving them *your* interpretation.
+When a client wakes up at 2am wondering what Mars square their natal Moon means, they don't have to wait for your next session. [AI_NAME] is there — speaking in your voice, using your framework, giving them *your* interpretation.
 
 This isn't a chatbot. It's not generic AI. It's **you**, distilled into an always-available companion that holds your clients between sessions.
 
-### What Stellium Knows
-- Your voice — how you actually speak (warm, poetic, direct, clinical)
-- Your framework — evolutionary, archetypal, psychological, whatever you practice
+### What [AI_NAME] Knows
+- Your voice — how you actually speak ([VOICE_STYLE])
+- Your framework — [FRAMEWORKS]
 - Your terminology — the specific language and concepts you use
 - Your philosophy — what you believe about astrology, growth, healing
-- Your boundaries — what she will and won't say
+- Your boundaries — what [AI_NAME] will and won't say
 
-### Train Stellium on Your Materials
+### Train [AI_NAME] on Your Materials
 
-Upload your content and Stellium learns it — then speaks from it as naturally as you would:
+Upload your content and [AI_NAME] learns it — then speaks from it as naturally as you would:
 
 **Your Own Work**
 - Your books, manuscripts, articles
@@ -172,37 +173,35 @@ Upload your content and Stellium learns it — then speaks from it as naturally 
 - Handouts and client guides you've created
 
 **Books & Authors You Draw From**
-- Astrology texts you reference (Steven Forrest, Liz Greene, Richard Tarnas, etc.)
-- Psychology books that inform your work (Jung, Hillman, Moore, etc.)
-- Spiritual traditions you incorporate
+- [REFERENCE_AUTHORS]
 - Any texts central to your methodology
 
 **How It Works**
 - Upload PDFs, docs, audio, video — we process it all
-- Stellium indexes and learns the material
-- When clients ask questions, Stellium draws from *your* knowledge base
-- She cites sources when relevant ("As Steven Forrest describes...")
-- Your interpretation layer sits on top — she doesn't just parrot, she synthesizes through your lens
+- [AI_NAME] indexes and learns the material
+- When clients ask questions, [AI_NAME] draws from *your* knowledge base
+- Cites sources when relevant
+- Your interpretation layer sits on top — synthesizes through your lens
 
 **The Result**
 - Clients get answers grounded in the authors and traditions you trust
 - Your years of study become accessible to clients in real-time
-- Stellium can recommend specific chapters or resources
+- [AI_NAME] can recommend specific chapters or resources
 - Your expertise compounds — everything you've learned, always available
 
-### What Stellium Does (Real-Time, Between Sessions)
-- **Answers questions as they arise** — "What does it mean that Saturn is hitting my 7th house right now?" Stellium responds *how you would respond*
+### What [AI_NAME] Does (Real-Time, Between Sessions)
+- **Answers questions as they arise** — responds *how you would respond*
 - **Walks clients through their chart** — they can explore their placements anytime, with your interpretive lens
 - **Guides reflection** — prompts and exercises in your style
 - **Tracks current transits** — alerts clients to what's happening in their chart *now*, framed your way
 - **Holds context** — remembers what they've discussed, what they're working on
 - **Prepares them for sessions** — clients arrive already oriented, questions clarified
 
-### What Stellium Doesn't Do
-- **Replace you** — she prepares clients *for* you, deepens the work *between* sessions
-- **Overstep** — boundaries you set are boundaries she keeps
+### What [AI_NAME] Doesn't Do
+- **Replace you** — prepares clients *for* you, deepens the work *between* sessions
+- **Overstep** — boundaries you set are boundaries kept
 - **Generic readings** — everything filtered through your lens, your methodology
-- **Therapy** — she knows when to refer back to you or suggest professional support
+- **Therapy** — knows when to refer back to you or suggest professional support
 
 ### The Result
 - Clients feel held between sessions
@@ -215,11 +214,11 @@ Upload your content and Stellium learns it — then speaks from it as naturally 
 
 ## What Makes This Different
 
-| Traditional Website | Stellium |
+| Traditional Website | [AI_NAME] |
 |---------------------|----------|
 | Static about page | AI that knows your philosophy |
 | Generic booking form | Intake that prepares clients for *your* work |
-| No client space between sessions | Ongoing relationship with Stellium |
+| No client space between sessions | Ongoing relationship with [AI_NAME] |
 | Your methodology lives in your head | Your methodology scales through the app |
 | Clients wait for you | Clients grow between sessions |
 | You build from scratch | You start with a complete astrology system |
@@ -229,22 +228,22 @@ Upload your content and Stellium learns it — then speaks from it as naturally 
 ## How It Gets Built
 
 ### Phase 1: Your Spiral Sessions
-3-5 deep sessions where MAIA learns:
+3-5 deep sessions where we learn:
 - How you describe chart placements
 - Your interpretive philosophy
 - Your client relationship style
 - Your aesthetic sensibility
 - Your boundaries and ethics
 
-### Phase 2: Stellium Takes Shape
+### Phase 2: [AI_NAME] Takes Shape
 From those sessions, we extract:
-- Voice patterns for Stellium's responses
+- Voice patterns for [AI_NAME]'s responses
 - Your framework hierarchy (which systems matter most)
 - Your visual preferences (colors, typography, feel)
 - Content from your existing materials
 
 ### Phase 3: Launch + Expand
-- Custom domain (stelliumbyloralee.com or loralee.soullab.life)
+- Custom domain ([DOMAIN])
 - Invite your first clients
 - Iterate based on real usage
 - Add modules as your practice evolves
@@ -255,11 +254,11 @@ From those sessions, we extract:
 
 ### The Model: We Succeed When You Succeed
 
-**$0 upfront. 12% of what you earn through Stellium.**
+**$0 upfront. 12% of what you earn through [AI_NAME].**
 
 That's it. No monthly fees. No setup costs. No risk.
 
-- You make $2,000/month through Stellium → we get $240
+- You make $2,000/month through [AI_NAME] → we get $240
 - You make $10,000/month → we get $1,200
 - You make nothing → we get nothing
 
@@ -270,8 +269,8 @@ That's it. No monthly fees. No setup costs. No risk.
 - You keep 88% of everything you earn
 
 **What's included at 12%:**
-- Full `/astrology` system (charts, synastry, transits, cross-system wisdom)
-- Stellium AI trained on your voice and materials
+- Full astrology system (charts, synastry, transits, cross-system wisdom)
+- [AI_NAME] trained on your voice and materials
 - Stripe Connect (payments go directly to you, minus Stripe's ~3%)
 - Booking integration
 - Client portal
@@ -288,7 +287,7 @@ Want to skip the line and get dedicated build attention?
 - Priority support forever
 
 *Traditional astrology app development: $30k-80k+ upfront, plus ongoing maintenance.*
-*Stellium: Zero upfront. You only pay when you earn.*
+*This: Zero upfront. You only pay when you earn.*
 
 ---
 
@@ -296,10 +295,25 @@ Want to skip the line and get dedicated build attention?
 
 When you're ready, we begin with you and MAIA spiraling together — not filling out forms, but having the conversations that reveal how *you* think about this work.
 
-From those conversations, Stellium emerges.
+From those conversations, [AI_NAME] emerges.
 
 Your practice, amplified.
 
 ---
 
 *Soullab — Where transformation meets technology*
+
+---
+
+## Template Variables (For Soullab Use)
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `[PRACTITIONER_NAME]` | Name of the portal/app | Stellium |
+| `[NAME]` | Practitioner's name | Loralee |
+| `[AI_NAME]` | Name of their AI companion | Stellium |
+| `[VOICE_STYLE]` | How they speak | warm, poetic, grounded |
+| `[FRAMEWORKS]` | Their methodologies | evolutionary, archetypal, psychological |
+| `[PRACTITIONER_SPECIALTIES]` | Unique offerings | Past-life readings, soul-purpose work |
+| `[REFERENCE_AUTHORS]` | Authors they cite | Steven Forrest, Liz Greene, Richard Tarnas |
+| `[DOMAIN]` | Their custom domain | stelliumbyloralee.com |
