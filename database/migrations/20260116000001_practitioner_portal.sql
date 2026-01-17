@@ -27,9 +27,9 @@ CREATE TABLE IF NOT EXISTS practitioners (
     CHECK (revenue_share_percent >= 0 AND revenue_share_percent <= 100)
 );
 
-CREATE INDEX idx_practitioners_slug ON practitioners(slug);
-CREATE INDEX idx_practitioners_status ON practitioners(status);
-CREATE INDEX idx_practitioners_stripe ON practitioners(stripe_account_id) WHERE stripe_account_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_practitioners_slug ON practitioners(slug);
+CREATE INDEX IF NOT EXISTS idx_practitioners_status ON practitioners(status);
+CREATE INDEX IF NOT EXISTS idx_practitioners_stripe ON practitioners(stripe_account_id) WHERE stripe_account_id IS NOT NULL;
 
 -- ============== AI COMPANION CONFIG ==============
 
