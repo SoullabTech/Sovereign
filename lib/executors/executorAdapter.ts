@@ -25,6 +25,7 @@ const providers: Record<ExecutorProvider, ExecutorFunction | null> = {
   local_shell: null,  // Future: direct shell execution
   mcp_tool: null,     // Future: MCP tool invocation
   a2a_agent: null,    // Future: A2A protocol
+  test: null,         // Internal test executor (handled separately)
 };
 
 // ─── Main Execute Function ─────────────────────────────────────────────────────

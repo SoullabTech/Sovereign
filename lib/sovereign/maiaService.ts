@@ -88,7 +88,7 @@ function getTimeOfDayFromHour(hour: number | undefined): 'morning' | 'afternoon'
 
 // Helper: Map retrieved turns to audit candidates (type-safe)
 function mapTurnsToRetrievedCandidates(
-  turns: Array<{ id?: string | number | null }>,
+  turns: Array<{ id?: string | number | null; [key: string]: unknown }>,
   traceId: string
 ) {
   return turns.map((t, i) => ({
@@ -377,6 +377,7 @@ export type MaiaResponse = {
   metadata?: {
     patterns?: PatternMeta[];
     turnId?: number;          // 🔄 For feedback linkage
+    decisionId?: string;      // 🔄 Clean schema decision ID
     deliberationId?: string;  // 🔄 For agent evolution analysis
   };
 };
@@ -2600,7 +2601,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
             maiaResponse: {
               text,
               processingProfile,
-              provider,
+              provider: provider?.provider,
             },
             wisdomPatterns: wisdomRouting?.activated ? {
               pattern: wisdomRouting.meta?.patternType,
@@ -2705,7 +2706,7 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     text = text.replaceAll(SELFLET_MARKER, '');
 
     // 🔄 Build metadata with feedback linkage IDs
-    const responseMetadata: MaiaResponse['metadata'] = {
+    const responseMetadata = {
       ...(responsePatterns.length > 0 ? { patterns: responsePatterns } : {}),
       turnId: (meta as any).turnId as number | undefined,
       decisionId: (meta as any).decisionId as string | undefined,  // Clean schema

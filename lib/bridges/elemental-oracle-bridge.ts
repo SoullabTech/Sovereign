@@ -61,7 +61,7 @@ export interface ElementalResponse {
         resonance: number;
         pattern: string;
       }>;
-      integrationMethod: 'harmonic_weaving' | 'dominant_voice' | 'parallel_blend';
+      integrationMethod: 'harmonic_weaving' | 'dominant_voice' | 'parallel_blend' | 'fast_pattern_match';
       latencyMs: number;
     };
     totalLatencyMs: number;

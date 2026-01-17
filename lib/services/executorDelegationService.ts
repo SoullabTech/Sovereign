@@ -303,8 +303,8 @@ export async function delegateToExecutor(
     await logExecutorRun({
       deliberationId: meta.deliberation_id,
       taskId: testTaskId,
-      provider: 'test' as ExecutorProvider,
-      taskType: 'test' as any,
+      provider: 'test',
+      taskType: 'test',
       risk: 'low',
       ok: true,
       summary: 'One-shot delegation test: hook fired and executor run logged successfully.',

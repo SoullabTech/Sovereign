@@ -19,6 +19,7 @@ export type ExecutionTaskType =
   | 'code_analysis'     // Static analysis, linting, type checking
   | 'test_execution'    // Run test suites
   | 'deployment'        // Deploy, build, release operations
+  | 'test'              // Internal test executor (dev-only)
   | 'other';            // Fallback for uncategorized tasks
 
 // ─── Risk Levels (Sovereignty Controls) ────────────────────────────────────────
@@ -165,7 +166,8 @@ export type ExecutorProvider =
   | 'agent_zero'    // Agent Zero HTTP bridge
   | 'local_shell'   // Direct local shell execution (future)
   | 'mcp_tool'      // MCP tool invocation (future)
-  | 'a2a_agent';    // A2A protocol agent (future)
+  | 'a2a_agent'     // A2A protocol agent (future)
+  | 'test';         // Internal test executor (dev-only)
 
 // ─── Delegation Decision Types ─────────────────────────────────────────────────
 
