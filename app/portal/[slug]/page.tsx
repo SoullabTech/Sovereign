@@ -3,14 +3,14 @@
 /**
  * Practitioner Portal Home Page
  *
- * Warm, earthy, feminine landing page for holistic practitioners
+ * Elegant cosmic aesthetic - sophisticated, high-end design
  */
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { Moon, Star, Calendar, Gift, ArrowRight, Quote } from 'lucide-react';
+import { Star, Calendar, Gift, ArrowRight, Quote, Sparkles, Clock } from 'lucide-react';
 
 interface Service {
   id: string;
@@ -68,14 +68,19 @@ export default function PortalHomePage() {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Earthy color palette
+  // Elegant cosmic palette
   const colors = {
-    cream: '#FAF6F0',
-    sand: '#F5EDE4',
-    terracotta: '#C67B5C',
-    text: '#4A3728',
-    sage: '#9CAF88',
-    gold: '#C9A962',
+    void: '#0D0B14',
+    cosmos: '#1A1625',
+    nebula: '#251F33',
+    stardust: '#2D2640',
+    cardBg: 'rgba(45, 38, 64, 0.6)',
+    gold: '#E5C158',
+    violet: '#B8A5D9',
+    starlight: '#FFFFFF',
+    muted: '#D0C5E8',
+    dim: '#A99DC4',
+    border: '#4A3D5C',
   };
 
   useEffect(() => {
@@ -111,7 +116,7 @@ export default function PortalHomePage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Moon className="w-8 h-8" style={{ color: colors.terracotta }} />
+          <Sparkles className="w-8 h-8" style={{ color: colors.gold }} />
         </motion.div>
       </div>
     );
@@ -121,8 +126,8 @@ export default function PortalHomePage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center text-center">
         <div>
-          <Moon className="w-12 h-12 mx-auto mb-4" style={{ color: colors.terracotta }} />
-          <p style={{ color: colors.text }}>Unable to load portal data.</p>
+          <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: colors.gold }} />
+          <p style={{ color: colors.starlight }}>Unable to load portal data.</p>
         </div>
       </div>
     );
@@ -131,9 +136,9 @@ export default function PortalHomePage() {
   const { profile, services, testimonials, lead_magnet } = data;
 
   return (
-    <div className="space-y-20">
+    <div className="space-y-24">
       {/* Hero Section */}
-      <section className="text-center py-12">
+      <section className="text-center py-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -141,23 +146,23 @@ export default function PortalHomePage() {
         >
           {/* Decorative Element */}
           <div className="flex items-center justify-center space-x-4 mb-8">
-            <div className="h-px w-16" style={{ backgroundColor: colors.sage }} />
-            <Moon className="w-6 h-6" style={{ color: colors.terracotta }} />
-            <div className="h-px w-16" style={{ backgroundColor: colors.sage }} />
+            <div className="h-px w-16" style={{ backgroundColor: colors.border }} />
+            <Star className="w-5 h-5" style={{ color: colors.gold }} />
+            <div className="h-px w-16" style={{ backgroundColor: colors.border }} />
           </div>
 
           {/* Welcome Text */}
           <h1
-            className="text-4xl md:text-5xl lg:text-6xl font-heading font-light mb-6 leading-tight"
-            style={{ color: colors.text }}
+            className="font-display text-4xl md:text-5xl lg:text-6xl tracking-wide mb-6 leading-tight"
+            style={{ color: colors.starlight }}
           >
             Welcome to<br />
-            <span className="font-medium">{profile.brand.name}</span>
+            <span className="font-semibold">{profile.brand.name}</span>
           </h1>
 
           <p
-            className="text-lg md:text-xl max-w-2xl mx-auto mb-10 leading-relaxed"
-            style={{ color: `${colors.text}90` }}
+            className="text-lg md:text-xl max-w-2xl mx-auto mb-12 leading-relaxed font-medium"
+            style={{ color: colors.muted }}
           >
             {profile.tagline}
           </p>
@@ -166,26 +171,27 @@ export default function PortalHomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               href={`/portal/${slug}/book`}
-              className="px-8 py-4 rounded-full font-medium transition-all hover:scale-105 flex items-center space-x-2"
+              className="px-8 py-4 rounded-full font-semibold transition-all hover:scale-105 flex items-center space-x-2"
               style={{
-                backgroundColor: colors.terracotta,
-                color: colors.cream,
+                backgroundColor: colors.gold,
+                color: colors.void,
+                boxShadow: `0 4px 20px ${colors.gold}40`,
               }}
             >
               <Calendar className="w-5 h-5" />
-              <span>Book a Reading</span>
+              <span>Book a Session</span>
             </Link>
             <Link
               href={`/portal/${slug}/free`}
-              className="px-8 py-4 rounded-full font-medium transition-all hover:scale-105 flex items-center space-x-2"
+              className="px-8 py-4 rounded-full font-semibold transition-all hover:scale-105 flex items-center space-x-2 backdrop-blur-xl"
               style={{
-                backgroundColor: `${colors.sage}30`,
-                color: colors.text,
-                border: `2px solid ${colors.sage}`,
+                background: colors.cardBg,
+                color: colors.starlight,
+                border: `1px solid ${colors.border}`,
               }}
             >
               <Gift className="w-5 h-5" />
-              <span>Get Free Guide</span>
+              <span>Free Resource</span>
             </Link>
           </div>
         </motion.div>
@@ -198,10 +204,13 @@ export default function PortalHomePage() {
         viewport={{ once: true }}
         className="grid md:grid-cols-2 gap-12 items-center"
       >
-        {/* Photo Placeholder */}
+        {/* Photo */}
         <div
-          className="aspect-[4/5] rounded-3xl flex items-center justify-center"
-          style={{ backgroundColor: colors.sand }}
+          className="aspect-[4/5] rounded-3xl flex items-center justify-center backdrop-blur-xl"
+          style={{
+            background: `linear-gradient(135deg, ${colors.cardBg}, rgba(184, 165, 217, 0.15))`,
+            border: `1px solid ${colors.border}`,
+          }}
         >
           {profile.photo_url ? (
             <img
@@ -211,8 +220,8 @@ export default function PortalHomePage() {
             />
           ) : (
             <div className="text-center p-8">
-              <Moon className="w-16 h-16 mx-auto mb-4" style={{ color: colors.terracotta }} />
-              <p className="font-heading text-xl" style={{ color: `${colors.text}60` }}>
+              <Star className="w-16 h-16 mx-auto mb-4" style={{ color: colors.gold }} />
+              <p className="font-display text-xl font-semibold" style={{ color: colors.starlight }}>
                 {profile.name}
               </p>
             </div>
@@ -222,20 +231,20 @@ export default function PortalHomePage() {
         {/* Bio */}
         <div>
           <p
-            className="text-sm uppercase tracking-widest mb-3"
-            style={{ color: colors.terracotta }}
+            className="text-xs uppercase tracking-widest mb-3 font-semibold"
+            style={{ color: colors.gold }}
           >
             Your Guide
           </p>
           <h2
-            className="text-3xl md:text-4xl font-heading font-medium mb-6"
-            style={{ color: colors.text }}
+            className="font-display text-3xl md:text-4xl tracking-wide mb-6"
+            style={{ color: colors.starlight }}
           >
             Meet {profile.name}
           </h2>
           <p
-            className="leading-relaxed mb-6"
-            style={{ color: `${colors.text}90` }}
+            className="leading-relaxed mb-6 font-medium"
+            style={{ color: colors.muted }}
           >
             {profile.bio}
           </p>
@@ -246,10 +255,11 @@ export default function PortalHomePage() {
               {profile.specialties.slice(0, 4).map((specialty, i) => (
                 <span
                   key={i}
-                  className="px-3 py-1 rounded-full text-sm"
+                  className="px-4 py-2 rounded-full text-sm font-medium backdrop-blur-xl"
                   style={{
-                    backgroundColor: `${colors.sage}20`,
-                    color: colors.text,
+                    background: colors.cardBg,
+                    color: colors.starlight,
+                    border: `1px solid ${colors.border}`,
                   }}
                 >
                   {specialty}
@@ -260,10 +270,10 @@ export default function PortalHomePage() {
 
           <Link
             href={`/portal/${slug}/about`}
-            className="inline-flex items-center space-x-2 font-medium transition-colors"
-            style={{ color: colors.terracotta }}
+            className="inline-flex items-center space-x-2 font-semibold transition-colors hover:opacity-80"
+            style={{ color: colors.gold }}
           >
-            <span>Learn more about my approach</span>
+            <span>Learn more</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -278,14 +288,14 @@ export default function PortalHomePage() {
         >
           <div className="text-center mb-12">
             <p
-              className="text-sm uppercase tracking-widest mb-3"
-              style={{ color: colors.terracotta }}
+              className="text-xs uppercase tracking-widest mb-3 font-semibold"
+              style={{ color: colors.gold }}
             >
               Offerings
             </p>
             <h2
-              className="text-3xl md:text-4xl font-heading font-medium"
-              style={{ color: colors.text }}
+              className="font-display text-3xl md:text-4xl tracking-wide"
+              style={{ color: colors.starlight }}
             >
               Ways We Can Work Together
             </h2>
@@ -299,40 +309,43 @@ export default function PortalHomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-6 transition-all hover:shadow-lg"
+                className="rounded-2xl p-6 transition-all hover:scale-[1.02] backdrop-blur-xl"
                 style={{
-                  backgroundColor: colors.sand,
-                  border: service.featured ? `2px solid ${colors.terracotta}` : 'none',
+                  background: service.featured
+                    ? `linear-gradient(135deg, rgba(229, 193, 88, 0.15), ${colors.cardBg})`
+                    : `linear-gradient(135deg, ${colors.cardBg}, rgba(184, 165, 217, 0.1))`,
+                  border: service.featured ? `2px solid ${colors.gold}` : `1px solid ${colors.border}`,
                 }}
               >
                 {service.featured && (
                   <div
-                    className="text-xs uppercase tracking-wider mb-3 flex items-center space-x-1"
-                    style={{ color: colors.terracotta }}
+                    className="text-xs uppercase tracking-widest mb-3 flex items-center space-x-1 font-semibold"
+                    style={{ color: colors.gold }}
                   >
                     <Star className="w-3 h-3" />
-                    <span>Most Popular</span>
+                    <span>Popular</span>
                   </div>
                 )}
                 <h3
-                  className="text-xl font-heading font-medium mb-2"
-                  style={{ color: colors.text }}
+                  className="font-display text-xl font-semibold tracking-wide mb-2"
+                  style={{ color: colors.starlight }}
                 >
                   {service.name}
                 </h3>
                 <p
                   className="text-sm mb-4 leading-relaxed"
-                  style={{ color: `${colors.text}80` }}
+                  style={{ color: colors.muted }}
                 >
                   {service.description}
                 </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm" style={{ color: `${colors.text}60` }}>
+                <div className="flex items-center justify-between pt-4" style={{ borderTop: `1px solid ${colors.border}` }}>
+                  <span className="text-sm flex items-center gap-1 font-medium" style={{ color: colors.dim }}>
+                    <Clock className="w-4 h-4" />
                     {service.duration_minutes} min
                   </span>
                   <span
-                    className="font-heading text-xl font-medium"
-                    style={{ color: colors.terracotta }}
+                    className="font-display text-xl font-semibold"
+                    style={{ color: colors.gold }}
                   >
                     {formatPrice(service.price_cents)}
                   </span>
@@ -344,13 +357,14 @@ export default function PortalHomePage() {
           <div className="text-center mt-10">
             <Link
               href={`/portal/${slug}/services`}
-              className="inline-flex items-center space-x-2 px-6 py-3 rounded-full transition-colors"
+              className="inline-flex items-center space-x-2 px-6 py-3 rounded-full transition-all hover:scale-105 backdrop-blur-xl font-semibold"
               style={{
-                backgroundColor: `${colors.terracotta}10`,
-                color: colors.terracotta,
+                background: colors.cardBg,
+                color: colors.starlight,
+                border: `1px solid ${colors.border}`,
               }}
             >
-              <span>View All Services</span>
+              <span>View All Offerings</span>
               <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
@@ -363,60 +377,65 @@ export default function PortalHomePage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="rounded-3xl p-8 md:p-12"
-          style={{ backgroundColor: colors.sand }}
+          className="rounded-3xl p-8 md:p-12 backdrop-blur-xl"
+          style={{
+            background: `linear-gradient(135deg, rgba(229, 193, 88, 0.08), ${colors.cardBg})`,
+            border: `1px solid ${colors.border}`,
+          }}
         >
           <div className="text-center mb-10">
             <p
-              className="text-sm uppercase tracking-widest mb-3"
-              style={{ color: colors.terracotta }}
+              className="text-xs uppercase tracking-widest mb-3 font-semibold"
+              style={{ color: colors.gold }}
             >
-              Kind Words
+              Testimonials
             </p>
             <h2
-              className="text-3xl md:text-4xl font-heading font-medium"
-              style={{ color: colors.text }}
+              className="font-display text-3xl md:text-4xl tracking-wide"
+              style={{ color: colors.starlight }}
             >
-              What Clients Say
+              Client Experiences
             </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
-            {testimonials.map((testimonial, i) => (
+            {testimonials.slice(0, 4).map((testimonial, i) => (
               <motion.div
                 key={testimonial.id}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="rounded-2xl p-6"
-                style={{ backgroundColor: colors.cream }}
+                className="rounded-2xl p-6 backdrop-blur-xl"
+                style={{
+                  background: `linear-gradient(135deg, ${colors.stardust}, rgba(184, 165, 217, 0.1))`,
+                  border: `1px solid ${colors.border}`,
+                }}
               >
                 <Quote
                   className="w-8 h-8 mb-4"
-                  style={{ color: `${colors.sage}60` }}
+                  style={{ color: colors.violet }}
                 />
+                <div className="flex mb-3">
+                  {Array.from({ length: testimonial.rating }).map((_, j) => (
+                    <Star
+                      key={j}
+                      className="w-4 h-4"
+                      style={{ color: colors.gold }}
+                      fill={colors.gold}
+                    />
+                  ))}
+                </div>
                 <p
                   className="leading-relaxed mb-4 italic"
-                  style={{ color: `${colors.text}90` }}
+                  style={{ color: colors.muted }}
                 >
                   "{testimonial.content}"
                 </p>
                 <div className="flex items-center justify-between">
-                  <span className="font-medium" style={{ color: colors.text }}>
+                  <span className="font-semibold" style={{ color: colors.starlight }}>
                     — {testimonial.client_name}
                   </span>
-                  {testimonial.service_name && (
-                    <span
-                      className="text-xs px-2 py-1 rounded-full"
-                      style={{
-                        backgroundColor: `${colors.sage}20`,
-                        color: `${colors.text}70`,
-                      }}
-                    >
-                      {testimonial.service_name}
-                    </span>
-                  )}
                 </div>
               </motion.div>
             ))}
@@ -430,36 +449,38 @@ export default function PortalHomePage() {
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center rounded-3xl p-10 md:p-16"
+          className="text-center rounded-3xl p-10 md:p-16 backdrop-blur-xl"
           style={{
-            background: `linear-gradient(135deg, ${colors.sage}30, ${colors.terracotta}20)`,
+            background: `linear-gradient(135deg, ${colors.cardBg}, rgba(229, 193, 88, 0.1))`,
+            border: `1px solid ${colors.border}`,
           }}
         >
           <Gift
             className="w-12 h-12 mx-auto mb-6"
-            style={{ color: colors.terracotta }}
+            style={{ color: colors.gold }}
           />
           <h2
-            className="text-3xl md:text-4xl font-heading font-medium mb-4"
-            style={{ color: colors.text }}
+            className="font-display text-3xl md:text-4xl tracking-wide mb-4"
+            style={{ color: colors.starlight }}
           >
             {lead_magnet.name}
           </h2>
           <p
-            className="max-w-xl mx-auto mb-8 leading-relaxed"
-            style={{ color: `${colors.text}90` }}
+            className="max-w-xl mx-auto mb-8 leading-relaxed font-medium"
+            style={{ color: colors.muted }}
           >
             {lead_magnet.description}
           </p>
           <Link
             href={`/portal/${slug}/free`}
-            className="inline-flex items-center space-x-2 px-8 py-4 rounded-full font-medium transition-all hover:scale-105"
+            className="inline-flex items-center space-x-2 px-8 py-4 rounded-full font-semibold transition-all hover:scale-105"
             style={{
-              backgroundColor: colors.terracotta,
-              color: colors.cream,
+              backgroundColor: colors.gold,
+              color: colors.void,
+              boxShadow: `0 4px 20px ${colors.gold}40`,
             }}
           >
-            <span>Get Your Free Guide</span>
+            <span>Get Free Access</span>
             <ArrowRight className="w-5 h-5" />
           </Link>
         </motion.section>
@@ -473,28 +494,29 @@ export default function PortalHomePage() {
         className="text-center py-12"
       >
         <div className="flex items-center justify-center space-x-4 mb-8">
-          <div className="h-px w-16" style={{ backgroundColor: colors.sage }} />
+          <div className="h-px w-16" style={{ backgroundColor: colors.border }} />
           <Star className="w-5 h-5" style={{ color: colors.gold }} />
-          <div className="h-px w-16" style={{ backgroundColor: colors.sage }} />
+          <div className="h-px w-16" style={{ backgroundColor: colors.border }} />
         </div>
 
         <h2
-          className="text-2xl md:text-3xl font-heading font-medium mb-6"
-          style={{ color: colors.text }}
+          className="font-display text-2xl md:text-3xl tracking-wide mb-6"
+          style={{ color: colors.starlight }}
         >
-          Ready to explore your cosmic blueprint?
+          Ready to Begin?
         </h2>
 
         <Link
           href={`/portal/${slug}/book`}
-          className="inline-flex items-center space-x-2 px-10 py-5 rounded-full font-medium text-lg transition-all hover:scale-105"
+          className="inline-flex items-center space-x-2 px-10 py-5 rounded-full font-semibold text-lg transition-all hover:scale-105"
           style={{
-            backgroundColor: colors.terracotta,
-            color: colors.cream,
+            backgroundColor: colors.gold,
+            color: colors.void,
+            boxShadow: `0 4px 20px ${colors.gold}40`,
           }}
         >
           <Calendar className="w-5 h-5" />
-          <span>Book Your Reading</span>
+          <span>Book a Session</span>
         </Link>
       </motion.section>
     </div>

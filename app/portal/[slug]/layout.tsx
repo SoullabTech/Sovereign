@@ -411,35 +411,44 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </footer>
 
-        {/* Chat Button - Stellium AI */}
-        <motion.button
-          onClick={() => setChatOpen(!chatOpen)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-full shadow-2xl"
+        {/* Chat Button - Stellium AI - Fixed to bottom right */}
+        <div
           style={{
-            background: `linear-gradient(135deg, ${colors.violet} 0%, ${colors.gold} 100%)`,
-            color: colors.void,
-            boxShadow: `0 8px 32px rgba(184, 165, 217, 0.4), 0 0 60px rgba(229, 193, 88, 0.2)`,
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 9999,
           }}
-          whileHover={{ scale: 1.05, boxShadow: `0 12px 40px rgba(184, 165, 217, 0.5), 0 0 80px rgba(229, 193, 88, 0.3)` }}
-          whileTap={{ scale: 0.95 }}
-          animate={{
-            boxShadow: [
-              `0 8px 32px rgba(184, 165, 217, 0.4), 0 0 60px rgba(229, 193, 88, 0.2)`,
-              `0 8px 40px rgba(184, 165, 217, 0.5), 0 0 80px rgba(229, 193, 88, 0.3)`,
-              `0 8px 32px rgba(184, 165, 217, 0.4), 0 0 60px rgba(229, 193, 88, 0.2)`,
-            ],
-          }}
-          transition={{ duration: 3, repeat: Infinity }}
         >
-          {chatOpen ? (
-            <X className="w-5 h-5" />
-          ) : (
-            <>
-              <Sparkles className="w-5 h-5" />
-              <span className="font-display text-sm font-semibold tracking-wide">Ask Stellium</span>
-            </>
-          )}
-        </motion.button>
+          <button
+            onClick={() => setChatOpen(!chatOpen)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              padding: '16px 24px',
+              borderRadius: '9999px',
+              backgroundColor: '#E5C158',
+              color: '#FFFFFF',
+              boxShadow: '0 8px 32px rgba(229, 193, 88, 0.5), 0 0 40px rgba(229, 193, 88, 0.3)',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'Cinzel, serif',
+              fontSize: '14px',
+              fontWeight: 700,
+              letterSpacing: '0.05em',
+            }}
+          >
+            {chatOpen ? (
+              <X style={{ width: '24px', height: '24px', color: '#FFFFFF' }} />
+            ) : (
+              <>
+                <Sparkles style={{ width: '24px', height: '24px', color: '#FFFFFF' }} />
+                <span>Ask Stellium</span>
+              </>
+            )}
+          </button>
+        </div>
 
         {/* Chat Window - Virtual Stellium */}
         <AnimatePresence>
@@ -448,11 +457,18 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="fixed bottom-24 right-6 z-50 w-[420px] max-w-[calc(100vw-3rem)] rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl"
               style={{
-                backgroundColor: `${colors.cosmos}F5`,
-                border: `1px solid ${colors.stardust}`,
-                boxShadow: `0 25px 80px rgba(0,0,0,0.5), 0 0 100px rgba(184, 165, 217, 0.15)`,
+                position: 'fixed',
+                bottom: '100px',
+                right: '24px',
+                zIndex: 9998,
+                width: '420px',
+                maxWidth: 'calc(100vw - 3rem)',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                backgroundColor: '#1A1625F5',
+                border: '1px solid #2D2640',
+                boxShadow: '0 25px 80px rgba(0,0,0,0.5), 0 0 100px rgba(184, 165, 217, 0.15)',
               }}
             >
               {/* Header */}
