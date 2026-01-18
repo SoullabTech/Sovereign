@@ -57,7 +57,7 @@ export function PractitionerAuthProvider({ slug, children }: PractitionerAuthPro
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/practitioner/${slug}/auth`);
+      const response = await fetch(`/api/portal/${slug}/auth`);
 
       if (!response.ok) {
         if (response.status === 401) {

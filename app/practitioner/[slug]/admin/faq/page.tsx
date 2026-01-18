@@ -191,7 +191,7 @@ export default function FAQManagementPage() {
   const fetchFAQs = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/practitioner/${slug}/faq`);
+      const response = await fetch(`/api/portal/${slug}/faq`);
       if (!response.ok) throw new Error('Failed to fetch FAQs');
       const data = await response.json();
       setFaqs(data.faqs || []);
@@ -207,8 +207,8 @@ export default function FAQManagementPage() {
     try {
       setSaving(true);
       const url = editingFaq
-        ? `/api/practitioner/${slug}/faq/${editingFaq.id}`
-        : `/api/practitioner/${slug}/faq`;
+        ? `/api/portal/${slug}/faq/${editingFaq.id}`
+        : `/api/portal/${slug}/faq`;
       const method = editingFaq ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -235,7 +235,7 @@ export default function FAQManagementPage() {
     if (!confirm('Are you sure you want to delete this FAQ?')) return;
 
     try {
-      const response = await fetch(`/api/practitioner/${slug}/faq/${id}`, {
+      const response = await fetch(`/api/portal/${slug}/faq/${id}`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ practitionerId }),
@@ -250,7 +250,7 @@ export default function FAQManagementPage() {
 
   const togglePublish = async (faq: PractitionerFAQ) => {
     try {
-      const response = await fetch(`/api/practitioner/${slug}/faq/${faq.id}`, {
+      const response = await fetch(`/api/portal/${slug}/faq/${faq.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -277,7 +277,7 @@ export default function FAQManagementPage() {
 
     // Save to server
     try {
-      await fetch(`/api/practitioner/${slug}/faq/reorder`, {
+      await fetch(`/api/portal/${slug}/faq/reorder`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

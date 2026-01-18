@@ -127,7 +127,7 @@ export default function PortalFAQPage() {
   const fetchFAQs = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/practitioner/${slug}/faq?published=true`);
+      const response = await fetch(`/api/portal/${slug}/faq?published=true`);
       if (!response.ok) throw new Error('Failed to fetch FAQs');
       const data = await response.json();
       setFaqs(data.faqs || []);
