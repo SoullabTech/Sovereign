@@ -54,12 +54,14 @@ interface AdminSidebarProps {
   practitioner: Practitioner;
   isOpen: boolean;
   onToggle: () => void;
+  basePath?: string;
 }
 
-export function AdminSidebar({ slug, practitioner, isOpen, onToggle }: AdminSidebarProps) {
+export function AdminSidebar({ slug, practitioner, isOpen, onToggle, basePath: basePathProp }: AdminSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const basePath = `/practitioner/${slug}/admin`;
+  // Use provided basePath or default to portal path for subdomain routing
+  const basePath = basePathProp || `/portal/${slug}/admin`;
 
   const isActive = (path: string) => {
     const fullPath = `${basePath}${path}`;

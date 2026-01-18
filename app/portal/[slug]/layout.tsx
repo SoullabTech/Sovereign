@@ -44,6 +44,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   const slug = params.slug as string;
 
+  // Admin routes have their own layout - pass through without portal chrome
+  const isAdminRoute = pathname?.includes('/admin');
+
   const [config, setConfig] = useState<PortalConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -134,6 +137,12 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
       ? pathname === `/portal/${slug}` || pathname === `/portal/${slug}/`
       : pathname?.startsWith(fullPath);
   };
+
+  // Admin routes bypass the public portal layout entirely
+  // They have their own admin layout with sidebar navigation
+  if (isAdminRoute) {
+    return <>{children}</>;
+  }
 
   if (loading) {
     return (
