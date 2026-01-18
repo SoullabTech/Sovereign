@@ -226,6 +226,36 @@ loralee.soullab.life {
     }
 }
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Demo Plaster - White-Label Demo Site
+# ═══════════════════════════════════════════════════════════════════════════════
+demo.soullab.life {
+    # Reverse proxy to Demo Plaster container
+    reverse_proxy demo:4322 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # Security headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "SAMEORIGIN"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/demo-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
 # Health check endpoint for load balancers
 :8080 {
     respond /health 200

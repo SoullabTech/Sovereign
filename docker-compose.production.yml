@@ -338,6 +338,40 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Demo Plaster - White-Label Demo Site
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Demo/model home version of Old Head Plaster for prospective clients
+  # Uses same Dockerfile with different BRAND_PRESET
+  # Deploy: docker compose -f docker-compose.production.yml up -d demo
+  demo:
+    build:
+      context: ./services/oldhead
+      dockerfile: Dockerfile
+    image: demo-plaster:prod
+    container_name: demo-plaster
+    restart: unless-stopped
+    logging: *default_logging
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      HOST: "0.0.0.0"
+      PORT: "4322"
+      BRAND_PRESET: demo
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4322/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # Ollama - Local LLM (Optional)
   # ═════════════════════════════════════════════════════════════════════════════
   # Uncomment to run Ollama in a container
