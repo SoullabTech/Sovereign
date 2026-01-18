@@ -6,6 +6,7 @@ import VoiceFeedbackPrevention from "@/lib/voice/voice-feedback-prevention";
 import { getPlatformInfo, getVoiceUnavailableMessage, type PlatformInfo } from "@/lib/utils/platformDetection";
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
+import { VoiceController } from '@/lib/voice/AudioSessionManager';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 export interface ContinuousConversationProps {
@@ -498,6 +499,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
         if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
+            // 🔊 CRITICAL: Re-prepare audio session after TTS finished
+            // TTS leaves session in .playback mode, need to switch back to .playAndRecord
+            if (VoiceController.isNativeIOS()) {
+              console.log('🔊 [Native] Re-preparing audio session for listening...');
+              const prepared = await VoiceController.prepareForListening();
+              if (!prepared) {
+                console.error('❌ [Native] Failed to re-prepare audio session');
+                return;
+              }
+            }
             console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
             await NativeSpeechRecognition.start({
               language: 'en-US',
@@ -1100,6 +1111,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 // Double-check conditions before restart
                 if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
                   try {
+                    // 🔊 Re-prepare audio session before restart
+                    if (VoiceController.isNativeIOS()) {
+                      await VoiceController.prepareForListening();
+                    }
                     console.log('🎙️ [Native] Restarting speech recognition...');
                     await NativeSpeechRecognition.start({
                       language: 'en-US',
@@ -1114,6 +1129,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                     setTimeout(async () => {
                       if (isListeningRef.current && !isSpeakingRef.current) {
                         try {
+                          // 🔊 Re-prepare audio session before retry
+                          if (VoiceController.isNativeIOS()) {
+                            await VoiceController.prepareForListening();
+                          }
                           await NativeSpeechRecognition.start({
                             language: 'en-US',
                             maxResults: 3,
@@ -1134,6 +1153,25 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             }
           }
         });
+
+        // 🔊 CRITICAL: Prepare audio session BEFORE starting speech recognition
+        // This ensures iOS audio session is properly configured for recording/listening mode
+        if (VoiceController.isNativeIOS()) {
+          console.log('🔊 [ContinuousConversation] Preparing audio session for listening...');
+          addDebug('🔊 Calling prepareForListening...');
+          const prepared = await VoiceController.prepareForListening();
+          if (!prepared) {
+            console.error('❌ [ContinuousConversation] Failed to prepare audio session');
+            addDebug('❌ prepareForListening FAILED');
+            setVoiceError('Failed to prepare audio session');
+            setIsListening(false);
+            isListeningRef.current = false;
+            isStartingRef.current = false;
+            onRecordingStateChange?.(false);
+            return;
+          }
+          addDebug('✅ Audio session prepared');
+        }
 
         // Start native speech recognition
         console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');

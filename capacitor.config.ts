@@ -69,7 +69,7 @@ const config: CapacitorConfig = {
       maxResults: 5,
       prompt: 'Speak to MAIA',
       partialResults: true,
-      popup: true
+      popup: false
     }
   }
 };
