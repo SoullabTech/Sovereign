@@ -94,11 +94,16 @@ soullab.life, www.soullab.life {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Old Head Plaster - Static Site
+# Old Head Plaster - Astro SSR with Virtual Daragh
 # ═══════════════════════════════════════════════════════════════════════════════
 oldhead.soullab.life {
-    root * /srv/oldhead
-    file_server
+    # Reverse proxy to OldHead Astro container
+    reverse_proxy oldhead:4321 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
 
     # Security headers
     header {
@@ -109,6 +114,13 @@ oldhead.soullab.life {
     }
 
     encode gzip zstd
+
+    log {
+        output file /var/log/caddy/oldhead-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════

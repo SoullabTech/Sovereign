@@ -47,7 +47,6 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
-      - ./static-sites/oldhead:/srv/oldhead:ro
     env_file:
       - .env.production
     environment:
@@ -301,6 +300,39 @@ services:
       timeout: 10s
       retries: 3
       start_period: 10s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Old Head Plaster - Astro SSR Site with Virtual Daragh
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Decorative plaster website with AI chat assistant
+  # Build: docker compose -f docker-compose.production.yml build oldhead
+  # Deploy: docker compose -f docker-compose.production.yml up -d oldhead
+  oldhead:
+    build:
+      context: ./services/oldhead
+      dockerfile: Dockerfile
+    image: oldhead-plaster:prod
+    container_name: oldhead-plaster
+    restart: unless-stopped
+    logging: *default_logging
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      HOST: "0.0.0.0"
+      PORT: "4321"
+
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:4321/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
     networks:
       - maia-network
