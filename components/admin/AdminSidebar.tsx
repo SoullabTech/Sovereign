@@ -177,7 +177,7 @@ export function AdminSidebar({ slug, practitioner, isOpen, onToggle, basePath: b
           <div className="flex items-center space-x-2">
             <Sparkles className="w-4 h-4" style={{ color: colors.gold }} />
             <p className="text-xs" style={{ color: colors.dim }}>
-              Stellium by Soullab
+              Powered by Soullab
             </p>
           </div>
         ) : (
