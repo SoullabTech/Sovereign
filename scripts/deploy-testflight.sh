@@ -254,6 +254,15 @@ add_to_beta_group_no_notify() {
 build_and_upload() {
     cd "$(dirname "$0")/.."
 
+    log_info "Building web content for Capacitor..."
+    CAPACITOR_BUILD=1 MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
+
+    if [ ! -d "out" ]; then
+        log_error "Web build failed - out/ directory not created!"
+        exit 1
+    fi
+    log_success "Web content built"
+
     log_info "Syncing Capacitor (beta mode)..."
     CAPACITOR_BUILD=1 npx cap sync ios
     log_success "Capacitor synced"
