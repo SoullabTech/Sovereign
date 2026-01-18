@@ -15,8 +15,31 @@ import {
   buildTenantHeaders,
 } from './lib/practitioner/multiTenantMiddleware';
 
+// Known application routes that should NOT be treated as passkeys
+const KNOWN_ROUTES = [
+  '/maia',
+  '/signin',
+  '/test-elemental',
+  '/begin',
+  '/api',
+  '/portal',
+  '/faq',
+  '/onboarding',
+  '/account',
+  '/patrons',
+  '/intro-maia',
+  '/intro-daimon',
+  '/_next',
+];
+
 // Check if a path looks like a passkey (SOULLAB-NAME, MAIA-NAME, etc.)
 function isPasskeyPath(pathname: string): boolean {
+  // First, check if this is a known application route (exact match or prefix)
+  const lowerPath = pathname.toLowerCase();
+  if (KNOWN_ROUTES.some(route => lowerPath === route || lowerPath.startsWith(route + '/'))) {
+    return false;
+  }
+
   const path = pathname.slice(1).toUpperCase(); // Remove leading slash
   // Match passkey patterns: SOULLAB-NAME, MAIA-NAME, PIONEER-NAME, FOUNDING-NAME
   // Also match universal keys like CONSCIOUSNESS2025, DAIMON, ORACLE, etc.
@@ -28,7 +51,9 @@ function isPasskeyPath(pathname: string): boolean {
     /^SOUL-PIONEER-\d+$/,
     /^CONSCIOUSNESS\d+$/,
   ];
-  const universalKeys = ['DAIMON', 'ORACLE', 'SOULLAB', 'MAIA'];
+  // NOTE: 'MAIA' removed from universalKeys - it conflicts with the /maia route
+  // If MAIA is needed as a passkey, use MAIA-UNIVERSAL or similar
+  const universalKeys = ['DAIMON', 'ORACLE', 'SOULLAB'];
 
   return passkeyPatterns.some(pattern => pattern.test(path)) || universalKeys.includes(path);
 }
