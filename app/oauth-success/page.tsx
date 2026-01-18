@@ -33,10 +33,12 @@ function OAuthSuccessContent() {
 
     // Store session in localStorage
     try {
+      const displayName = name || username || 'Friend';
       const sessionData = {
         id: memberId,
-        username: username || undefined,
-        name: name || undefined,
+        username: username || '',
+        name: displayName,
+        preferredName: displayName,
         onboarded,
         onboardingStep,
         provider,
@@ -44,8 +46,16 @@ function OAuthSuccessContent() {
         createdAt: new Date().toISOString(),
       };
 
-      // Use betaSession to store
-      betaSession.createSession(sessionData);
+      // Store session using betaSession.setUser and additional localStorage keys
+      betaSession.setUser(sessionData);
+
+      // Also set the keys that other parts of the app check
+      localStorage.setItem('explorerId', memberId);
+      localStorage.setItem('explorerName', displayName);
+      localStorage.setItem('explorerPreferredName', displayName);
+      localStorage.setItem('betaOnboardingComplete', onboarded ? 'true' : 'false');
+      localStorage.setItem('maia_session_version', '2');
+      localStorage.setItem('signup_completed', 'true');
 
       setStatus('success');
 

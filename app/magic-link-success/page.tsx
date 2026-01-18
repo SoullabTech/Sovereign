@@ -47,6 +47,7 @@ function MagicLinkSuccessContent() {
       localStorage.setItem('explorerPreferredName', displayName);
       localStorage.setItem('betaOnboardingComplete', onboarded ? 'true' : 'false');
       localStorage.setItem('maia_session_version', '2');
+      localStorage.setItem('signup_completed', 'true');
 
       setStatus('success');
       setMessage(`Welcome back${name ? `, ${name}` : ''}!`);
