@@ -57,7 +57,23 @@ export function PractitionerAuthProvider({ slug, children }: PractitionerAuthPro
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch(`/api/portal/${slug}/auth`);
+      // Get member_id from localStorage (set during signin)
+      let memberId: string | null = null;
+      if (typeof window !== 'undefined') {
+        const betaUser = localStorage.getItem('beta_user');
+        if (betaUser) {
+          try {
+            const user = JSON.parse(betaUser);
+            memberId = user.id;
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+      }
+
+      const response = await fetch(`/api/portal/${slug}/auth`, {
+        headers: memberId ? { 'x-member-id': memberId } : {},
+      });
 
       if (!response.ok) {
         if (response.status === 401) {

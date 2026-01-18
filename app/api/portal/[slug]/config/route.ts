@@ -18,6 +18,7 @@ export async function GET(
     const result = await db.query(
       `SELECT
         p.id as practitioner_id,
+        p.member_id as practitioner_member_id,
         p.name as practitioner_name,
         p.slug,
         p.business_name,
@@ -50,6 +51,7 @@ export async function GET(
 
     const config = {
       practitioner_id: practitioner.practitioner_id,
+      practitioner_member_id: practitioner.practitioner_member_id,
       practitioner_name: practitioner.practitioner_name,
       slug: practitioner.slug,
       brand: {

@@ -11,10 +11,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sparkles, Send, Star, Moon } from 'lucide-react';
+import { Menu, X, Sparkles, Send, Star, Moon, Settings } from 'lucide-react';
 
 interface PortalConfig {
   practitioner_id: string;
+  practitioner_member_id?: string;
   practitioner_name: string;
   slug: string;
   brand: {
@@ -54,7 +55,23 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
   const [chatLoading, setChatLoading] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+
+  // Check if current user is the practitioner owner
+  useEffect(() => {
+    if (config?.practitioner_member_id && typeof window !== 'undefined') {
+      const betaUser = localStorage.getItem('beta_user');
+      if (betaUser) {
+        try {
+          const user = JSON.parse(betaUser);
+          setIsOwner(user.id === config.practitioner_member_id);
+        } catch (e) {
+          setIsOwner(false);
+        }
+      }
+    }
+  }, [config]);
 
   // Cosmic celestial palette - high contrast for readability
   const colors = {
@@ -282,6 +299,21 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     {item.label}
                   </Link>
                 ))}
+                {/* Admin link for practitioner owner */}
+                {isOwner && (
+                  <Link
+                    href={`/portal/${slug}/admin`}
+                    className="flex items-center space-x-1.5 text-sm tracking-wider transition-all duration-300 hover:text-white px-3 py-1.5 rounded-lg"
+                    style={{
+                      color: colors.gold,
+                      backgroundColor: `${colors.gold}15`,
+                      border: `1px solid ${colors.gold}30`,
+                    }}
+                  >
+                    <Settings className="w-4 h-4" />
+                    <span>Admin</span>
+                  </Link>
+                )}
               </nav>
 
               {/* Mobile Menu */}
@@ -314,6 +346,17 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         {item.label}
                       </Link>
                     ))}
+                    {/* Admin link for practitioner owner */}
+                    {isOwner && (
+                      <Link
+                        href={`/portal/${slug}/admin`}
+                        className="flex items-center space-x-2 text-lg tracking-wide mt-4 pt-4"
+                        style={{ color: colors.gold, borderTop: `1px solid ${colors.stardust}` }}
+                      >
+                        <Settings className="w-5 h-5" />
+                        <span>Admin Portal</span>
+                      </Link>
+                    )}
                   </div>
                 </motion.nav>
               )}
