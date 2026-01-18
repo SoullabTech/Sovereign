@@ -195,8 +195,10 @@ elementalalchemy.soullab.life {
 # Loralee Starweaver - Stellium Astrology Portal
 # ═══════════════════════════════════════════════════════════════════════════════
 loralee.soullab.life {
-    # Rewrite root to portal page
-    rewrite / /portal/loralee
+    # Rewrite all paths to portal namespace
+    # loralee.soullab.life/admin → /portal/loralee/admin
+    # loralee.soullab.life/services → /portal/loralee/services
+    rewrite * /portal/loralee{uri}
 
     # Reverse proxy to MAIA container
     reverse_proxy maia:3000 {
