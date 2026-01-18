@@ -190,8 +190,9 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
     setError('');
     setIsRecognizing(true);
 
-    // Sacred pause for soul recognition
-    await new Promise(resolve => setTimeout(resolve, 1200));
+    // Sacred pause for soul recognition (shorter if auto-submitting from URL)
+    const pauseDuration = initialPasskey ? 400 : 1200;
+    await new Promise(resolve => setTimeout(resolve, pauseDuration));
 
     // First check server-side if this passkey exists
     try {
@@ -210,7 +211,11 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
           // Fully onboarded - show message and go to sign in
           setError(`Welcome back${checkData.name ? `, ${checkData.name}` : ''}! Redirecting you to sign in...`);
           setTimeout(() => {
-            router.replace('/signin');
+            // Pass username to signin if available so they don't have to remember it
+            const signinUrl = checkData.username
+              ? `/signin?username=${encodeURIComponent(checkData.username)}`
+              : '/signin';
+            router.replace(signinUrl);
           }, 1500);
           return;
         } else {
@@ -757,7 +762,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                 transition={{ duration: 0.8 }}
                 className="space-y-6"
               >
-                <div className="w-20 h-20 mx-auto">
+                <div className="w-20 h-20 mx-auto mb-6">
                   <Holoflower size="xl" glowIntensity="medium" animate={true} />
                 </div>
 

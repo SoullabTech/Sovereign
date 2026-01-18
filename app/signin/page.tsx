@@ -39,10 +39,11 @@ function SigninContent() {
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'migrating' | 'done' | 'error'>('idle');
   const [pendingUser, setPendingUser] = useState<{ id: string; onboarded: boolean } | null>(null);
 
-  // Check for magic link errors and auto-open magic link modal
+  // Check for magic link errors, username prefill, and auto-open magic link modal
   useEffect(() => {
     const errorParam = searchParams.get('error');
     const magicParam = searchParams.get('magic');
+    const usernameParam = searchParams.get('username');
 
     if (errorParam === 'invalid_token') {
       setError('Your sign-in link has expired or is invalid. Try requesting a new one.');
@@ -50,6 +51,11 @@ function SigninContent() {
       setError('Invalid sign-in link. Try requesting a new one.');
     } else if (errorParam === 'verification_failed') {
       setError('Something went wrong verifying your link. Try again or use password.');
+    }
+
+    // Pre-fill username if passed from passkey redirect
+    if (usernameParam) {
+      setUsername(usernameParam);
     }
 
     // Auto-open magic link modal if requested
