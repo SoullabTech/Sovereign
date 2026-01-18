@@ -60,6 +60,17 @@ model User {
   // Premium storage settings
   premiumStorage          PremiumMemberStorage?
 
+  // Creativity Section - Mathematics of Creativity
+  creativeAttempts        CreativeAttempt[]
+  buildingBlocks          BuildingBlock[]
+  creativePracticeLogs    CreativePracticeLog[]
+  creativeSessions        CreativeSession[]
+  skillDomains            SkillDomain[]
+  practiceStreak          PracticeStreak?
+  chaosProfile            ChaosProfile?
+  creativityJourney       CreativityJourney?
+  memberAchievements      MemberAchievement[]
+
   @@index([username])
   @@index([lastActiveAt])
 }
@@ -1330,4 +1341,224 @@ model EnhancedConversationAnalysis {
   @@index([sessionId])
   @@index([conversationId])
   @@index([analyzedAt])
+}
+
+// ============================================================================
+// CREATIVITY SECTION - MATHEMATICS OF CREATIVITY
+// ============================================================================
+// Based on: Law of Large Numbers, Zipf's Law, Combinatorial Creativity,
+// Exponential Growth, and Edge of Chaos frameworks
+
+model CreativeAttempt {
+  id        String   @id @default(cuid())
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Attempt type and content
+  type            String  // idea, draft, experiment, prototype
+  contentText     String? @db.Text
+  contentVoiceUrl String?
+  contentImageUrl String?
+
+  // Status tracking
+  status        String  @default("raw") // raw, developed, shipped, archived
+  qualityRating Int?    // 1-5, self-rated (optional, prompted after 24hrs)
+
+  // Outlier detection (Zipf's Law)
+  outlierScore   Int      @default(0)
+  isOutlier      Boolean  @default(false)
+  outlierReasons String[] // high_self_rating, unusual_engagement, etc.
+
+  // Engagement metrics (passive tracking)
+  viewCount       Int   @default(0)
+  editCount       Int   @default(0)
+  totalTimeSpent  Int   @default(0) // seconds
+  engagementScore Float @default(0)
+
+  // Relations
+  user           User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events         CreativeAttemptEvent[]
+  buildingBlocks BuildingBlock[]         @relation("BlockSourceAttempt")
+  parentLineage  AttemptLineage[]        @relation("LineageChild")
+  childLineage   AttemptLineage[]        @relation("LineageParent")
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+  @@index([isOutlier])
+  @@index([type])
+}
+
+model CreativeAttemptEvent {
+  id        String   @id @default(cuid())
+  attemptId String
+  userId    String
+  eventType String   // view, edit, time_spent, share, export
+  valueInt  Int?     // e.g., seconds for time_spent
+  createdAt DateTime @default(now())
+
+  // Relations
+  attempt CreativeAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+
+  @@index([attemptId])
+  @@index([createdAt])
+  @@index([eventType])
+}
+
+model BuildingBlock {
+  id              String   @id @default(cuid())
+  userId          String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Block content
+  contentText     String   @db.Text
+  sourceAttemptId String?  // Where this block was extracted from
+  domain          String?  // technology, philosophy, design, etc.
+  tags            String[] @default([])
+
+  // Usage tracking
+  usageCount Int       @default(0)
+  lastUsedAt DateTime?
+
+  // Relations
+  user          User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  sourceAttempt CreativeAttempt? @relation("BlockSourceAttempt", fields: [sourceAttemptId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, contentText])
+  @@index([userId])
+  @@index([domain])
+  @@index([usageCount])
+}
+
+model AttemptLineage {
+  parentAttemptId String
+  childAttemptId  String
+  relationType    String   // remix, evolution, fusion
+  createdAt       DateTime @default(now())
+
+  // Relations
+  parent CreativeAttempt @relation("LineageParent", fields: [parentAttemptId], references: [id], onDelete: Cascade)
+  child  CreativeAttempt @relation("LineageChild", fields: [childAttemptId], references: [id], onDelete: Cascade)
+
+  @@id([parentAttemptId, childAttemptId])
+  @@index([parentAttemptId])
+  @@index([childAttemptId])
+}
+
+model CreativePracticeLog {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime @db.Date
+  skillDomain     String   // writing, code, design, music, etc.
+  durationMinutes Int
+  activityType    String   // learning, creating, refining
+  notes           String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+  @@index([skillDomain])
+}
+
+model CreativeSession {
+  id             String    @id @default(cuid())
+  userId         String
+  createdAt      DateTime  @default(now())
+  endedAt        DateTime?
+
+  // Session configuration
+  mode           String    // diverge, converge, edge
+  structureLevel Int       @default(50) // 0-100 (chaos to order)
+
+  // Session metrics
+  durationMinutes    Int?
+  outputCount        Int      @default(0)
+  qualitySelfRating  Int?     // 1-5
+
+  // Notes
+  notes String? @db.Text
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([mode])
+}
+
+model SkillDomain {
+  id           String   @id @default(cuid())
+  userId       String?  // NULL for system defaults
+  name         String
+  icon         String?  // emoji or icon name
+  color        String?  // hex color
+  isActive     Boolean  @default(true)
+  displayOrder Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  // Relations
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([isActive])
+}
+
+model PracticeStreak {
+  userId               String   @id
+  currentStreak        Int      @default(0)
+  longestStreak        Int      @default(0)
+  lastPracticeDate     DateTime? @db.Date
+  streakMinimumMinutes Int      @default(15)
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ChaosProfile {
+  userId                String   @id
+  optimalStructureLevel Int      @default(50) // 0-100
+  optimalRangeMin       Int      @default(35)
+  optimalRangeMax       Int      @default(65)
+  bestHourForChaos      Int?     // 0-23
+  bestHourForStructure  Int?     // 0-23
+  bestDayForCreative    Int?     // 0-6 (Sunday-Saturday)
+  confidence            Float    @default(0) // 0-1
+  updatedAt             DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model CreativityJourney {
+  userId           String   @id
+  currentStage     Int      @default(1) // 1-7
+  completedStages  Int[]    @default([1])
+  unlockedFeatures String[] @default(["capture", "attempt_count"])
+  lastStageChange  DateTime @default(now())
+  createdAt        DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MemberAchievement {
+  id              String   @id @default(cuid())
+  userId          String
+  achievementType String   // attempt_count, streak
+  achievementKey  String   // attempts_100, streak_30
+  earnedAt        DateTime @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementKey])
+  @@index([userId])
+  @@index([achievementType])
 }
