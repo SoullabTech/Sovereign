@@ -3,13 +3,12 @@
 /**
  * BOOKING PAGE
  *
- * Session booking interface for practitioners
+ * Warm, earthy, holistic session booking interface
  */
 
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Card, CardContent } from '@/components/ui/card';
 import {
   Calendar,
   Clock,
@@ -20,6 +19,8 @@ import {
   User,
   Mail,
   MessageSquare,
+  Moon,
+  Star,
 } from 'lucide-react';
 
 interface Service {
@@ -38,9 +39,6 @@ interface TimeSlot {
 
 interface PortalConfig {
   practitioner_name: string;
-  brand: {
-    accent_color: string;
-  };
 }
 
 export default function BookingPage() {
@@ -72,6 +70,18 @@ export default function BookingPage() {
 
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [bookingComplete, setBookingComplete] = useState(false);
+
+  // Warm, earthy palette
+  const colors = {
+    ivory: '#FFFEF9',
+    linen: '#F8F4EF',
+    sand: '#E8E0D5',
+    warmGray: '#9A938A',
+    terracotta: '#B87351',
+    forest: '#4A5D4A',
+    text: '#3D3532',
+    textLight: '#6B6460',
+  };
 
   useEffect(() => {
     fetchData();
@@ -163,7 +173,13 @@ export default function BookingPage() {
     }
   };
 
-  const accentColor = config?.brand?.accent_color || '#D4AF37';
+  const formatPrice = (cents: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+    }).format(cents / 100);
+  };
 
   // Calendar helpers
   const getDaysInMonth = (date: Date) => {
@@ -200,8 +216,13 @@ export default function BookingPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="w-8 h-8 border-2 border-sacred-gold/30 border-t-sacred-gold rounded-full animate-spin" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+        >
+          <Moon className="w-8 h-8" style={{ color: colors.terracotta }} />
+        </motion.div>
       </div>
     );
   }
@@ -212,89 +233,95 @@ export default function BookingPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
+          className="rounded-3xl p-10 text-center"
+          style={{ backgroundColor: colors.linen }}
         >
-          <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-            <CardContent className="p-8 text-center">
-              <div
-                className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                style={{ backgroundColor: `${accentColor}20` }}
-              >
-                <CheckCircle2 className="w-10 h-10" style={{ color: accentColor }} />
-              </div>
-              <h2 className="text-2xl text-gray-100 font-light mb-4">
-                Booking Confirmed!
-              </h2>
-              <p className="text-gray-400 mb-6">
-                A confirmation email has been sent to {formData.email}.
-                We look forward to seeing you!
-              </p>
-              <div className="p-4 bg-gray-800/50 rounded-lg text-left space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Service:</span>
-                  <span className="text-gray-200">{selectedService?.name}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Date:</span>
-                  <span className="text-gray-200">
-                    {selectedDate?.toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-500">Time:</span>
-                  <span className="text-gray-200">
-                    {selectedSlot && formatTime(selectedSlot.start)}
-                  </span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <div
+            className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
+            style={{ backgroundColor: `${colors.forest}20` }}
+          >
+            <CheckCircle2 className="w-10 h-10" style={{ color: colors.forest }} />
+          </div>
+          <h2
+            className="font-display text-3xl font-light mb-4"
+            style={{ color: colors.text }}
+          >
+            You're Booked!
+          </h2>
+          <p className="mb-8" style={{ color: colors.textLight }}>
+            A confirmation has been sent to {formData.email}.<br />
+            I look forward to our time together.
+          </p>
+          <div
+            className="rounded-2xl p-6 text-left space-y-3"
+            style={{ backgroundColor: colors.ivory }}
+          >
+            <div className="flex justify-between text-sm">
+              <span style={{ color: colors.warmGray }}>Service</span>
+              <span style={{ color: colors.text }}>{selectedService?.name}</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: colors.warmGray }}>Date</span>
+              <span style={{ color: colors.text }}>
+                {selectedDate?.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: colors.warmGray }}>Time</span>
+              <span style={{ color: colors.text }}>
+                {selectedSlot && formatTime(selectedSlot.start)}
+              </span>
+            </div>
+          </div>
         </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-10">
       {/* Header */}
       <div className="text-center">
-        <motion.h1
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-3xl md:text-4xl font-light text-gray-100 mb-4"
         >
-          Book a Session
-        </motion.h1>
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="text-gray-400"
-        >
-          {config?.practitioner_name && `Schedule your session with ${config.practitioner_name}`}
-        </motion.p>
+          <div className="flex items-center justify-center space-x-4 mb-6">
+            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
+            <Calendar className="w-5 h-5" style={{ color: colors.terracotta }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
+          </div>
+
+          <h1
+            className="font-display text-4xl md:text-5xl font-light mb-4"
+            style={{ color: colors.text }}
+          >
+            Book a Reading
+          </h1>
+          <p style={{ color: colors.textLight }}>
+            {config?.practitioner_name && `Schedule your session with ${config.practitioner_name}`}
+          </p>
+        </motion.div>
       </div>
 
       {/* Progress Steps */}
-      <div className="flex items-center justify-center space-x-4">
+      <div className="flex items-center justify-center space-x-3">
         {['service', 'datetime', 'details', 'confirm'].map((s, i) => (
           <React.Fragment key={s}>
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm ${
-                step === s
-                  ? 'text-gray-900'
-                  : ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i
-                  ? 'bg-gray-700 text-gray-300'
-                  : 'bg-gray-800 text-gray-500'
-              }`}
-              style={step === s ? { backgroundColor: accentColor } : undefined}
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all"
+              style={{
+                backgroundColor: step === s ? colors.terracotta : ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i ? colors.forest : colors.sand,
+                color: step === s || ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i ? colors.ivory : colors.warmGray,
+              }}
             >
               {i + 1}
             </div>
-            {i < 3 && <div className="w-8 h-px bg-gray-700" />}
+            {i < 3 && <div className="w-8 h-px" style={{ backgroundColor: colors.sand }} />}
           </React.Fragment>
         ))}
       </div>
@@ -304,42 +331,50 @@ export default function BookingPage() {
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          className="space-y-4"
+          className="space-y-6"
         >
-          <h2 className="text-lg text-gray-200 text-center">Select a Service</h2>
+          <h2
+            className="font-display text-2xl text-center"
+            style={{ color: colors.text }}
+          >
+            Choose Your Experience
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {services.map(service => (
-              <Card
+              <div
                 key={service.id}
-                className={`cursor-pointer transition-all ${
-                  selectedService?.id === service.id
-                    ? 'border-2'
-                    : 'bg-gray-900/50 border-gray-700/20 hover:border-gray-600/50'
-                }`}
-                style={
-                  selectedService?.id === service.id
-                    ? { borderColor: accentColor }
-                    : undefined
-                }
+                className="cursor-pointer rounded-2xl p-6 transition-all hover:shadow-lg"
+                style={{
+                  backgroundColor: selectedService?.id === service.id ? `${colors.terracotta}10` : colors.linen,
+                  border: `2px solid ${selectedService?.id === service.id ? colors.terracotta : 'transparent'}`,
+                }}
                 onClick={() => {
                   setSelectedService(service);
                   setStep('datetime');
                 }}
               >
-                <CardContent className="p-4">
-                  <h3 className="text-gray-200 font-medium mb-1">{service.name}</h3>
-                  <p className="text-sm text-gray-400 mb-3">{service.description}</p>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center space-x-1 text-gray-500">
-                      <Clock className="w-4 h-4" />
-                      <span>{service.duration_minutes} min</span>
-                    </div>
-                    <span style={{ color: accentColor }}>
-                      ${(service.price_cents / 100).toFixed(0)}
-                    </span>
+                <h3
+                  className="font-display text-xl font-medium mb-2"
+                  style={{ color: colors.text }}
+                >
+                  {service.name}
+                </h3>
+                <p className="text-sm mb-4" style={{ color: colors.textLight }}>
+                  {service.description}
+                </p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2 text-sm" style={{ color: colors.warmGray }}>
+                    <Clock className="w-4 h-4" />
+                    <span>{service.duration_minutes} min</span>
                   </div>
-                </CardContent>
-              </Card>
+                  <span
+                    className="font-display text-xl font-medium"
+                    style={{ color: colors.terracotta }}
+                  >
+                    {formatPrice(service.price_cents)}
+                  </span>
+                </div>
+              </div>
             ))}
           </div>
         </motion.div>
@@ -355,127 +390,130 @@ export default function BookingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setStep('service')}
-              className="flex items-center text-gray-400 hover:text-gray-200"
+              className="flex items-center transition-colors"
+              style={{ color: colors.textLight }}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h2 className="text-lg text-gray-200">Select Date & Time</h2>
+            <h2 className="font-display text-xl" style={{ color: colors.text }}>
+              Select Date & Time
+            </h2>
             <div className="w-16" />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Calendar */}
-            <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <button
-                    onClick={() =>
-                      setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
-                    }
-                    className="p-2 text-gray-400 hover:text-gray-200"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div className="text-gray-200 font-medium">
-                    {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                  </div>
-                  <button
-                    onClick={() =>
-                      setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
-                    }
-                    className="p-2 text-gray-400 hover:text-gray-200"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
+            <div className="rounded-2xl p-6" style={{ backgroundColor: colors.linen }}>
+              <div className="flex items-center justify-between mb-6">
+                <button
+                  onClick={() =>
+                    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
+                  }
+                  className="p-2 rounded-full transition-colors"
+                  style={{ color: colors.text }}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <div className="font-display text-lg" style={{ color: colors.text }}>
+                  {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </div>
+                <button
+                  onClick={() =>
+                    setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
+                  }
+                  className="p-2 rounded-full transition-colors"
+                  style={{ color: colors.text }}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
 
-                <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
-                  {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                    <div key={day} className="py-2">{day}</div>
-                  ))}
+              <div
+                className="grid grid-cols-7 gap-1 text-center text-xs mb-3"
+                style={{ color: colors.warmGray }}
+              >
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+                  <div key={day} className="py-2">{day}</div>
+                ))}
+              </div>
+
+              <div className="grid grid-cols-7 gap-1">
+                {getDaysInMonth(currentMonth).map((day, i) => (
+                  <button
+                    key={i}
+                    disabled={!day || isDateDisabled(day)}
+                    onClick={() => day && setSelectedDate(day)}
+                    className="py-2.5 rounded-lg text-sm transition-all"
+                    style={{
+                      backgroundColor: day && selectedDate?.toDateString() === day.toDateString()
+                        ? colors.terracotta
+                        : 'transparent',
+                      color: !day
+                        ? 'transparent'
+                        : isDateDisabled(day)
+                        ? colors.sand
+                        : selectedDate?.toDateString() === day?.toDateString()
+                        ? colors.ivory
+                        : colors.text,
+                      cursor: day && !isDateDisabled(day) ? 'pointer' : 'default',
+                    }}
+                  >
+                    {day?.getDate()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Time Slots */}
+            <div className="rounded-2xl p-6" style={{ backgroundColor: colors.linen }}>
+              <h3 className="font-display text-lg mb-4" style={{ color: colors.text }}>
+                {selectedDate
+                  ? selectedDate.toLocaleDateString('en-US', {
+                      weekday: 'long',
+                      month: 'long',
+                      day: 'numeric',
+                    })
+                  : 'Select a date'}
+              </h3>
+
+              {!selectedDate ? (
+                <p className="text-center py-12" style={{ color: colors.warmGray }}>
+                  Please select a date to see available times
+                </p>
+              ) : slotsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-6 h-6 animate-spin" style={{ color: colors.warmGray }} />
                 </div>
-
-                <div className="grid grid-cols-7 gap-1">
-                  {getDaysInMonth(currentMonth).map((day, i) => (
+              ) : availableSlots.length === 0 ? (
+                <p className="text-center py-12" style={{ color: colors.warmGray }}>
+                  No available times for this date
+                </p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {availableSlots.map(slot => (
                     <button
-                      key={i}
-                      disabled={!day || isDateDisabled(day)}
-                      onClick={() => day && setSelectedDate(day)}
-                      className={`py-2 rounded-lg text-sm transition-colors ${
-                        !day
-                          ? ''
-                          : isDateDisabled(day)
-                          ? 'text-gray-700 cursor-not-allowed'
-                          : selectedDate?.toDateString() === day.toDateString()
-                          ? 'text-gray-900'
-                          : 'text-gray-300 hover:bg-gray-800'
-                      }`}
-                      style={
-                        day && selectedDate?.toDateString() === day.toDateString()
-                          ? { backgroundColor: accentColor }
-                          : undefined
-                      }
+                      key={slot.start}
+                      onClick={() => {
+                        setSelectedSlot(slot);
+                        setStep('details');
+                      }}
+                      className="py-2.5 px-3 rounded-lg text-sm transition-all"
+                      style={{
+                        backgroundColor: selectedSlot?.start === slot.start
+                          ? colors.terracotta
+                          : colors.ivory,
+                        color: selectedSlot?.start === slot.start
+                          ? colors.ivory
+                          : colors.text,
+                      }}
                     >
-                      {day?.getDate()}
+                      {formatTime(slot.start)}
                     </button>
                   ))}
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Time Slots */}
-            <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-              <CardContent className="p-4">
-                <h3 className="text-gray-200 font-medium mb-4">
-                  {selectedDate
-                    ? selectedDate.toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                      })
-                    : 'Select a date'}
-                </h3>
-
-                {!selectedDate ? (
-                  <p className="text-gray-500 text-center py-8">
-                    Please select a date to see available times
-                  </p>
-                ) : slotsLoading ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 text-gray-500 animate-spin" />
-                  </div>
-                ) : availableSlots.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">
-                    No available times for this date
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-3 gap-2">
-                    {availableSlots.map(slot => (
-                      <button
-                        key={slot.start}
-                        onClick={() => {
-                          setSelectedSlot(slot);
-                          setStep('details');
-                        }}
-                        className={`py-2 px-3 rounded-lg text-sm transition-colors ${
-                          selectedSlot?.start === slot.start
-                            ? 'text-gray-900'
-                            : 'text-gray-300 bg-gray-800 hover:bg-gray-700'
-                        }`}
-                        style={
-                          selectedSlot?.start === slot.start
-                            ? { backgroundColor: accentColor }
-                            : undefined
-                        }
-                      >
-                        {formatTime(slot.start)}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </div>
           </div>
         </motion.div>
       )}
@@ -490,73 +528,102 @@ export default function BookingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setStep('datetime')}
-              className="flex items-center text-gray-400 hover:text-gray-200"
+              className="flex items-center transition-colors"
+              style={{ color: colors.textLight }}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h2 className="text-lg text-gray-200">Your Details</h2>
+            <h2 className="font-display text-xl" style={{ color: colors.text }}>
+              Your Details
+            </h2>
             <div className="w-16" />
           </div>
 
-          <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-            <CardContent className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Name *</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-sacred-gold/50 focus:outline-none"
-                    placeholder="Your full name"
-                    required
-                  />
-                </div>
+          <div className="rounded-2xl p-8 space-y-5" style={{ backgroundColor: colors.linen }}>
+            <div>
+              <label className="block text-sm mb-2" style={{ color: colors.warmGray }}>
+                Name *
+              </label>
+              <div className="relative">
+                <User
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: colors.warmGray }}
+                />
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={e => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all"
+                  style={{
+                    backgroundColor: colors.ivory,
+                    border: `1px solid ${colors.sand}`,
+                    color: colors.text,
+                  }}
+                  placeholder="Your full name"
+                  required
+                />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Email *</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={e => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-sacred-gold/50 focus:outline-none"
-                    placeholder="your@email.com"
-                    required
-                  />
-                </div>
+            <div>
+              <label className="block text-sm mb-2" style={{ color: colors.warmGray }}>
+                Email *
+              </label>
+              <div className="relative">
+                <Mail
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
+                  style={{ color: colors.warmGray }}
+                />
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all"
+                  style={{
+                    backgroundColor: colors.ivory,
+                    border: `1px solid ${colors.sand}`,
+                    color: colors.text,
+                  }}
+                  placeholder="your@email.com"
+                  required
+                />
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">
-                  Notes (optional)
-                </label>
-                <div className="relative">
-                  <MessageSquare className="absolute left-3 top-3 w-5 h-5 text-gray-500" />
-                  <textarea
-                    value={formData.notes}
-                    onChange={e => setFormData({ ...formData, notes: e.target.value })}
-                    rows={3}
-                    className="w-full pl-10 pr-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 placeholder-gray-500 focus:border-sacred-gold/50 focus:outline-none resize-none"
-                    placeholder="Anything you'd like me to know..."
-                  />
-                </div>
+            <div>
+              <label className="block text-sm mb-2" style={{ color: colors.warmGray }}>
+                Anything you'd like to share (optional)
+              </label>
+              <div className="relative">
+                <MessageSquare
+                  className="absolute left-4 top-4 w-5 h-5"
+                  style={{ color: colors.warmGray }}
+                />
+                <textarea
+                  value={formData.notes}
+                  onChange={e => setFormData({ ...formData, notes: e.target.value })}
+                  rows={3}
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all resize-none"
+                  style={{
+                    backgroundColor: colors.ivory,
+                    border: `1px solid ${colors.sand}`,
+                    color: colors.text,
+                  }}
+                  placeholder="Questions, intentions, or anything that feels important..."
+                />
               </div>
+            </div>
 
-              <button
-                onClick={() => setStep('confirm')}
-                disabled={!formData.name || !formData.email}
-                className="w-full py-3 rounded-lg text-gray-900 font-medium transition-all disabled:opacity-50"
-                style={{ backgroundColor: accentColor }}
-              >
-                Review Booking
-              </button>
-            </CardContent>
-          </Card>
+            <button
+              onClick={() => setStep('confirm')}
+              disabled={!formData.name || !formData.email}
+              className="w-full py-4 rounded-xl font-medium transition-all disabled:opacity-50"
+              style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+            >
+              Review Booking
+            </button>
+          </div>
         </motion.div>
       )}
 
@@ -570,77 +637,95 @@ export default function BookingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setStep('details')}
-              className="flex items-center text-gray-400 hover:text-gray-200"
+              className="flex items-center transition-colors"
+              style={{ color: colors.textLight }}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h2 className="text-lg text-gray-200">Confirm Booking</h2>
+            <h2 className="font-display text-xl" style={{ color: colors.text }}>
+              Confirm Booking
+            </h2>
             <div className="w-16" />
           </div>
 
-          <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-            <CardContent className="p-6 space-y-4">
-              <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-500">Service</span>
-                  <span className="text-gray-200">{selectedService?.name}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-500">Date</span>
-                  <span className="text-gray-200">
-                    {selectedDate?.toLocaleDateString('en-US', {
-                      weekday: 'long',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-500">Time</span>
-                  <span className="text-gray-200">
-                    {selectedSlot && formatTime(selectedSlot.start)}
-                  </span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-800">
-                  <span className="text-gray-500">Duration</span>
-                  <span className="text-gray-200">{selectedService?.duration_minutes} minutes</span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-500">Total</span>
-                  <span className="text-xl" style={{ color: accentColor }}>
-                    ${selectedService && (selectedService.price_cents / 100).toFixed(0)}
-                  </span>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-gray-800">
-                <div className="text-sm text-gray-500 mb-1">Booking for</div>
-                <div className="text-gray-200">{formData.name}</div>
-                <div className="text-sm text-gray-400">{formData.email}</div>
-              </div>
-
-              <button
-                onClick={handleBooking}
-                disabled={submitting}
-                className="w-full flex items-center justify-center space-x-2 py-3 rounded-lg text-gray-900 font-medium transition-all disabled:opacity-50"
-                style={{ backgroundColor: accentColor }}
+          <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: colors.linen }}>
+            <div className="space-y-4">
+              <div
+                className="flex justify-between py-3 border-b"
+                style={{ borderColor: colors.sand }}
               >
-                {submitting ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <>
-                    <Calendar className="w-5 h-5" />
-                    <span>Confirm Booking</span>
-                  </>
-                )}
-              </button>
+                <span style={{ color: colors.warmGray }}>Service</span>
+                <span style={{ color: colors.text }}>{selectedService?.name}</span>
+              </div>
+              <div
+                className="flex justify-between py-3 border-b"
+                style={{ borderColor: colors.sand }}
+              >
+                <span style={{ color: colors.warmGray }}>Date</span>
+                <span style={{ color: colors.text }}>
+                  {selectedDate?.toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    month: 'long',
+                    day: 'numeric',
+                  })}
+                </span>
+              </div>
+              <div
+                className="flex justify-between py-3 border-b"
+                style={{ borderColor: colors.sand }}
+              >
+                <span style={{ color: colors.warmGray }}>Time</span>
+                <span style={{ color: colors.text }}>
+                  {selectedSlot && formatTime(selectedSlot.start)}
+                </span>
+              </div>
+              <div
+                className="flex justify-between py-3 border-b"
+                style={{ borderColor: colors.sand }}
+              >
+                <span style={{ color: colors.warmGray }}>Duration</span>
+                <span style={{ color: colors.text }}>{selectedService?.duration_minutes} minutes</span>
+              </div>
+              <div className="flex justify-between py-3">
+                <span style={{ color: colors.warmGray }}>Investment</span>
+                <span
+                  className="font-display text-2xl font-medium"
+                  style={{ color: colors.terracotta }}
+                >
+                  {selectedService && formatPrice(selectedService.price_cents)}
+                </span>
+              </div>
+            </div>
 
-              <p className="text-xs text-gray-500 text-center">
-                You'll receive a confirmation email with all the details
-              </p>
-            </CardContent>
-          </Card>
+            <div className="pt-4 border-t" style={{ borderColor: colors.sand }}>
+              <div className="text-sm mb-1" style={{ color: colors.warmGray }}>
+                Booking for
+              </div>
+              <div style={{ color: colors.text }}>{formData.name}</div>
+              <div className="text-sm" style={{ color: colors.textLight }}>{formData.email}</div>
+            </div>
+
+            <button
+              onClick={handleBooking}
+              disabled={submitting}
+              className="w-full flex items-center justify-center space-x-2 py-4 rounded-xl font-medium transition-all disabled:opacity-50"
+              style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+            >
+              {submitting ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <>
+                  <Star className="w-5 h-5" />
+                  <span>Confirm Booking</span>
+                </>
+              )}
+            </button>
+
+            <p className="text-xs text-center" style={{ color: colors.warmGray }}>
+              You'll receive a confirmation email with all the details
+            </p>
+          </div>
         </motion.div>
       )}
     </div>
