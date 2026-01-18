@@ -465,19 +465,24 @@ export function getDignityStrength(dignity: PlanetaryDignity): number {
 // EXPORTS
 // =============================================================================
 
-export {
+// Re-export types (isolatedModules requires explicit type exports)
+export type {
   AyanamsaType,
-  AYANAMSA_CONFIGS,
   GrahaName,
-  GRAHAS,
   NakshatraInfo,
-  NAKSHATRAS,
   RashiInfo,
   RashiName,
-  RASHIS,
   SiderealPosition,
   GrahaPosition,
   PlanetaryDignity,
   VedicChart,
   CompleteVedicProfile,
+} from './types/vedic';
+
+// Re-export values
+export {
+  AYANAMSA_CONFIGS,
+  GRAHAS,
+  NAKSHATRAS,
+  RASHIS,
 } from './types/vedic';

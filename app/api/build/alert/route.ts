@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  // 2. Send SMS for critical alerts only
+  // 2. Send SMS for critical alerts only (Twilio optional)
   if (
     payload.severity === "critical" &&
     process.env.TWILIO_ACCOUNT_SID &&
@@ -76,16 +76,20 @@ export async function POST(req: NextRequest) {
     process.env.DEV_PHONE
   ) {
     try {
-      const twilio = require("twilio")(
-        process.env.TWILIO_ACCOUNT_SID,
-        process.env.TWILIO_AUTH_TOKEN
-      );
-      await twilio.messages.create({
-        body: `MAIA CRITICAL: ${payload.message}`,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: process.env.DEV_PHONE,
-      });
-      results.sms = true;
+      // Dynamic import to avoid build failures when twilio isn't installed
+      const twilioModule = await import("twilio").catch(() => null);
+      if (twilioModule) {
+        const twilio = twilioModule.default(
+          process.env.TWILIO_ACCOUNT_SID,
+          process.env.TWILIO_AUTH_TOKEN
+        );
+        await twilio.messages.create({
+          body: `MAIA CRITICAL: ${payload.message}`,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: process.env.DEV_PHONE,
+        });
+        results.sms = true;
+      }
     } catch (error) {
       console.error("[BuildAlert] SMS failed:", error);
       results.sms = false;

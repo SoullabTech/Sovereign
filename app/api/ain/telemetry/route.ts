@@ -6,9 +6,24 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { query } from '@/lib/db/postgres';
 
 export async function GET(req: NextRequest) {
+  // Return stub data during static export (Capacitor builds)
+  if (process.env.CAPACITOR_BUILD === '1') {
+    return NextResponse.json({
+      success: true,
+      entries: [],
+      stats: {},
+      hourly: [],
+      byRoute: [],
+      pagination: { limit: 100, offset: 0, hours: 24 },
+      message: 'Static export - use runtime API'
+    });
+  }
+
+  // Dynamic import to avoid build-time DB connection
+  const { query } = await import('@/lib/db/postgres');
+
   const searchParams = req.nextUrl.searchParams;
   const limit = Math.min(parseInt(searchParams.get('limit') || '100'), 500);
   const offset = parseInt(searchParams.get('offset') || '0');
