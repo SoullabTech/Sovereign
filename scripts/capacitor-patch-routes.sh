@@ -1,7 +1,9 @@
 #!/bin/bash
 
 # Capacitor Route Patcher
-# Temporarily patches 'force-dynamic' routes to 'force-static' for static export builds
+# Temporarily patches routes for static export builds:
+# 1. 'force-dynamic' routes → 'force-static'
+# 2. Dynamic routes [param] → adds generateStaticParams()
 #
 # Usage:
 #   ./scripts/capacitor-patch-routes.sh patch    # Before build
@@ -12,6 +14,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 BACKUP_FILE="$PROJECT_ROOT/.capacitor-route-patches.json"
+DYNAMIC_BACKUP_FILE="$PROJECT_ROOT/.capacitor-dynamic-routes.txt"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -74,7 +77,84 @@ patch_routes() {
     echo "]" >> "$BACKUP_FILE"
 
     local count=$(grep -c '"file"' "$BACKUP_FILE" 2>/dev/null || echo "0")
-    log_info "Patched $count routes for static export"
+    log_info "Patched $count force-dynamic routes"
+}
+
+patch_dynamic_routes() {
+    log_info "Patching dynamic API routes with generateStaticParams..."
+
+    # Find all route.ts files in paths with [param] segments
+    local dynamic_routes=$(find "$PROJECT_ROOT/app/api" -path "*\[*\]*" -name "route.ts" 2>/dev/null || true)
+
+    if [ -z "$dynamic_routes" ]; then
+        log_info "No dynamic routes found to patch"
+        echo "" > "$DYNAMIC_BACKUP_FILE"
+        return 0
+    fi
+
+    # Clear backup file
+    echo "" > "$DYNAMIC_BACKUP_FILE"
+    local patched_count=0
+
+    for file in $dynamic_routes; do
+        # Skip if already has generateStaticParams
+        if grep -q "generateStaticParams" "$file"; then
+            continue
+        fi
+
+        local rel_path="${file#$PROJECT_ROOT/}"
+        log_info "  Adding generateStaticParams: $rel_path"
+
+        # Record this file for revert
+        echo "$file" >> "$DYNAMIC_BACKUP_FILE"
+
+        # Create temp file with the new content prepended
+        local temp_file=$(mktemp)
+        echo "// Added by capacitor-patch-routes.sh for static export" > "$temp_file"
+        echo "export function generateStaticParams() { return []; }" >> "$temp_file"
+        echo "" >> "$temp_file"
+        cat "$file" >> "$temp_file"
+        mv "$temp_file" "$file"
+
+        patched_count=$((patched_count + 1))
+    done
+
+    log_info "Patched $patched_count dynamic routes with generateStaticParams"
+}
+
+revert_dynamic_routes() {
+    log_info "Reverting generateStaticParams patches..."
+
+    if [ ! -f "$DYNAMIC_BACKUP_FILE" ]; then
+        log_info "No dynamic route backup file found"
+        return 0
+    fi
+
+    local files=$(cat "$DYNAMIC_BACKUP_FILE" | grep -v "^$" || true)
+
+    if [ -z "$files" ]; then
+        log_info "No dynamic routes to revert"
+        rm -f "$DYNAMIC_BACKUP_FILE"
+        return 0
+    fi
+
+    for file in $files; do
+        if [ -f "$file" ]; then
+            local rel_path="${file#$PROJECT_ROOT/}"
+            log_info "  Reverting: $rel_path"
+
+            # Remove the first 3 lines (comment, export, blank line)
+            # This is reliable because we know exactly what we prepended
+            local temp_file=$(mktemp)
+            tail -n +4 "$file" > "$temp_file"
+            mv "$temp_file" "$file"
+        else
+            log_warn "  File not found: $file"
+        fi
+    done
+
+    rm -f "$DYNAMIC_BACKUP_FILE"
+    log_info "Dynamic route patches reverted"
 }
 
 revert_routes() {
@@ -118,16 +198,20 @@ revert_routes() {
 case "${1:-}" in
     patch)
         patch_routes
+        patch_dynamic_routes
         ;;
     revert)
         revert_routes
+        revert_dynamic_routes
         ;;
     *)
         echo "Usage: $0 {patch|revert}"
         echo ""
         echo "Commands:"
-        echo "  patch   - Replace force-dynamic with force-static for Capacitor builds"
-        echo "  revert  - Restore original force-dynamic values after build"
+        echo "  patch   - Patch routes for Capacitor static export builds"
+        echo "           • Replace force-dynamic with force-static"
+        echo "           • Add generateStaticParams to dynamic [param] routes"
+        echo "  revert  - Restore original route configurations after build"
         exit 1
         ;;
 esac

@@ -377,3 +377,7 @@ __pycache__/
 # Generated audiobook outputs
 audiobook-output/
 public/audiobook/
+
+# Capacitor build patch files (temporary during iOS builds)
+.capacitor-route-patches.json
+.capacitor-dynamic-routes.txt
