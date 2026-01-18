@@ -281,12 +281,20 @@ export async function queryOne<T extends QueryResultRow = any>(
 export { pool };
 
 // Aliases for backward compatibility
-export const getOne = findOne;
-export const getMany = findMany;
+// getOne/getMany expect (sql, params) unlike findOne/findMany which expect (table, column, value)
+export const getOne = queryOne;
+export async function getMany<T extends QueryResultRow = any>(
+  sql: string,
+  params: any[] = []
+): Promise<T[]> {
+  const result = await query<T>(sql, params);
+  return result.rows;
+}
 
 // Default export
 export default {
   query,
+  queryOne,
   transaction,
   testConnection,
   getPoolStats,
@@ -296,7 +304,7 @@ export default {
   softDelete,
   findOne,
   findMany,
-  getOne: findOne,
-  getMany: findMany,
+  getOne,
+  getMany,
   pool,
 };
