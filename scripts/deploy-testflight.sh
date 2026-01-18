@@ -254,6 +254,13 @@ add_to_beta_group_no_notify() {
 build_and_upload() {
     cd "$(dirname "$0")/.."
 
+    # Patch force-dynamic routes for static export
+    log_info "Patching routes for static export..."
+    ./scripts/capacitor-patch-routes.sh patch
+
+    # Ensure routes are reverted even if build fails
+    trap './scripts/capacitor-patch-routes.sh revert' EXIT
+
     log_info "Building web content for Capacitor..."
     CAPACITOR_BUILD=1 MAIA_AUDIT_FINGERPRINT_SECRET=build-placeholder npm run build
 
@@ -262,6 +269,10 @@ build_and_upload() {
         exit 1
     fi
     log_success "Web content built"
+
+    # Revert patches after successful build (trap will handle failure case)
+    ./scripts/capacitor-patch-routes.sh revert
+    trap - EXIT
 
     log_info "Syncing Capacitor (beta mode)..."
     CAPACITOR_BUILD=1 npx cap sync ios

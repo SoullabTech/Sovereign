@@ -19,6 +19,13 @@ fi
 
 echo "📱 Building iOS app (${CONFIGURATION} mode)..."
 
+# Patch force-dynamic routes for static export
+echo "🔧 Patching routes for static export..."
+./scripts/capacitor-patch-routes.sh patch
+
+# Ensure routes are reverted even if build fails
+trap './scripts/capacitor-patch-routes.sh revert' EXIT
+
 # Build web content first (required for Capacitor)
 echo "🌐 Building Next.js web content..."
 CAPACITOR_BUILD=1 npm run build
@@ -28,6 +35,10 @@ if [ ! -d "out" ]; then
     echo "❌ Web build failed - out/ directory not created!"
     exit 1
 fi
+
+# Revert patches after successful build
+./scripts/capacitor-patch-routes.sh revert
+trap - EXIT
 
 # Sync Capacitor
 echo "🔄 Syncing Capacitor to iOS..."
