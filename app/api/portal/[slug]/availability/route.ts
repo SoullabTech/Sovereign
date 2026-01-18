@@ -5,7 +5,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db/postgres';
+import db from '@/lib/db/postgres';
 
 interface TimeSlot {
   start: string;
