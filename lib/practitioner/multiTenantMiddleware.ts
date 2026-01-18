@@ -115,6 +115,11 @@ export function shouldHandleAsPortal(pathname: string): boolean {
     return false;
   }
 
+  // Already at /portal/ - Caddy already rewrote, don't double-rewrite
+  if (pathname.startsWith('/portal/')) {
+    return false;
+  }
+
   // Favicon and common static files
   if (pathname === '/favicon.ico' || pathname.endsWith('.png') || pathname.endsWith('.jpg') || pathname.endsWith('.svg')) {
     return false;
