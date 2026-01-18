@@ -1,13 +1,9 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 // Build mode detection
-// - CAPACITOR_BUILD=1 during npm run build triggers beta mode
-// - CAPACITOR_MODE can override (dev/beta/prod)
-const BUILD_MODE = (
-  process.env.CAPACITOR_BUILD === '1'
-    ? (process.env.CAPACITOR_MODE || 'beta')
-    : (process.env.CAPACITOR_MODE || 'dev')
-) as 'dev' | 'beta' | 'prod';
+// - CAPACITOR_MODE=dev for local dev server (must be explicit)
+// - Default to beta/prod (soullab.life) for TestFlight builds
+const BUILD_MODE = (process.env.CAPACITOR_MODE || 'beta') as 'dev' | 'beta' | 'prod';
 
 const isProdLike = BUILD_MODE === 'beta' || BUILD_MODE === 'prod';
 
@@ -33,6 +29,22 @@ const config: CapacitorConfig = {
   ios: {
     webContentsDebuggingEnabled: true,
   },
+  // Custom iOS plugins that need explicit registration
+  // AudioSessionManager is our custom plugin for managing iOS audio session state
+  packageClassList: [
+    'BluetoothLe',
+    'SpeechRecognition',
+    'AudioSessionManager',
+    'AppPlugin',
+    'ClipboardPlugin',
+    'FilesystemPlugin',
+    'HapticsPlugin',
+    'LocalNotificationsPlugin',
+    'SharePlugin',
+    'SplashScreenPlugin',
+    'StatusBarPlugin',
+    'CapacitorVoiceRecorder'
+  ],
   plugins: {
     SplashScreen: {
       launchShowDuration: 3000,
