@@ -35,7 +35,7 @@
     encode gzip zstd
 }
 
-soullab.life, www.soullab.life, soullab.ai, www.soullab.ai {
+soullab.life, www.soullab.life {
     # SSE/Streaming endpoints - disable compression and buffering
     @streaming {
         path /api/voice/stream-conversation
