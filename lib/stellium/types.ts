@@ -2,12 +2,23 @@
  * STELLIUM TYPES
  *
  * Type definitions for the practitioner layer
- * Clients, sessions, personas, resources
+ * Clients, sessions, personas, resources, FAQs
  */
 
 // ============================================
-// CLIENT TYPES
+// CLIENT TYPES (Astrology-Enhanced)
 // ============================================
+
+export type BirthTimeAccuracy = 'exact' | 'approximate' | 'rectified' | 'unknown';
+
+export interface KeyPlacements {
+  sun_sign?: string;
+  moon_sign?: string;
+  rising_sign?: string;
+  saturn_sign?: string;
+  saturn_house?: number;
+  north_node_sign?: string;
+}
 
 export interface PractitionerClient {
   id: string;
@@ -27,7 +38,10 @@ export interface PractitionerClient {
   birth_latitude?: number;
   birth_longitude?: number;
   birth_timezone?: string;
+  birth_time_accuracy?: BirthTimeAccuracy;
   has_chart?: boolean;
+  chart_image_url?: string;
+  key_placements?: KeyPlacements;
 
   // Intake and notes
   intake_data?: Record<string, any>;
@@ -43,6 +57,7 @@ export interface PractitionerClient {
   last_session?: string;
   total_sessions: number;
   next_session?: string;
+  total_revenue?: number;
 
   // Timestamps
   created_at: string;
@@ -59,6 +74,7 @@ export interface CreateClientInput {
   birth_time?: string;
   birth_location?: string;
   birth_timezone?: string;
+  birth_time_accuracy?: BirthTimeAccuracy;
   intake_data?: Record<string, any>;
   private_notes?: string;
   tags?: string[];
@@ -67,6 +83,8 @@ export interface CreateClientInput {
 
 export interface UpdateClientInput extends Partial<CreateClientInput> {
   themes?: string[];
+  chart_image_url?: string;
+  key_placements?: KeyPlacements;
 }
 
 // ============================================
@@ -76,6 +94,18 @@ export interface UpdateClientInput extends Partial<CreateClientInput> {
 export type SessionStatus = 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
 export type LocationType = 'video' | 'phone' | 'in_person' | 'async';
 export type Modality = 'astrology' | 'therapy' | 'bodywork' | 'coaching' | 'shamanic' | 'other';
+
+// Astrology-specific session types
+export type AstrologySessionType =
+  | 'natal_chart'
+  | 'transit_reading'
+  | 'solar_return'
+  | 'synastry'
+  | 'composite'
+  | 'progressed_chart'
+  | 'electional'
+  | 'follow_up'
+  | 'other';
 
 export interface PractitionerSession {
   id: string;
@@ -264,6 +294,40 @@ export interface PractitionerResource {
 }
 
 // ============================================
+// FAQ TYPES
+// ============================================
+
+export type FAQCategory =
+  | 'about_sessions'
+  | 'booking_scheduling'
+  | 'astrology_questions'
+  | 'payments'
+  | 'about_practitioner'
+  | 'general';
+
+export interface PractitionerFAQ {
+  id: string;
+  practitioner_id: string;
+  question: string;
+  answer: string;
+  category: FAQCategory;
+  display_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateFAQInput {
+  question: string;
+  answer: string;
+  category: FAQCategory;
+  display_order?: number;
+  is_published?: boolean;
+}
+
+export interface UpdateFAQInput extends Partial<CreateFAQInput> {}
+
+// ============================================
 // CLIENT PORTAL TYPES
 // ============================================
 
@@ -298,6 +362,8 @@ export interface PractitionerDashboard {
   sessions_this_week: number;
   sessions_this_month: number;
   revenue_this_month?: number;
+  clients_needing_follow_up: PractitionerClient[];
+  draft_sessions: PractitionerSession[];
 }
 
 export interface ClientTimeline {
@@ -305,4 +371,39 @@ export interface ClientTimeline {
   sessions: PractitionerSession[];
   themes_over_time: { date: string; themes: string[] }[];
   maia_insights?: string[];
+}
+
+// ============================================
+// ADMIN NAVIGATION
+// ============================================
+
+export interface AdminNavItem {
+  path: string;
+  label: string;
+  icon: string;
+  badge?: string;
+  children?: AdminNavItem[];
+}
+
+// ============================================
+// PRACTITIONER TYPES
+// ============================================
+
+export interface Practitioner {
+  id: string;
+  member_id?: string;
+  slug: string;
+  name: string;
+  email: string;
+  modality: Modality;
+  brand?: {
+    name: string;
+    tagline?: string;
+    logo_url?: string;
+    primary_color?: string;
+    secondary_color?: string;
+  };
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }

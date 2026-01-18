@@ -23,6 +23,8 @@ const KNOWN_ROUTES = [
   '/begin',
   '/api',
   '/portal',
+  '/practitioner',
+  '/stellium',
   '/faq',
   '/onboarding',
   '/account',

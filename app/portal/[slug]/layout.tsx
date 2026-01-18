@@ -171,6 +171,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const navigation = config.navigation?.length > 0 ? config.navigation : [
     { label: 'Home', path: '/' },
+    { label: 'Learn', path: '/learn' },
     { label: 'Offerings', path: '/services' },
     { label: 'Free Gift', path: '/free' },
     { label: 'Book', path: '/book' },
@@ -411,7 +412,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </footer>
 
-        {/* Chat Button - Stellium AI - Fixed to bottom right */}
+        {/* Chat Button - Virtual Loralee - Fixed to bottom right */}
         <div
           style={{
             position: 'fixed',
@@ -444,13 +445,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             ) : (
               <>
                 <Sparkles style={{ width: '24px', height: '24px', color: '#FFFFFF' }} />
-                <span>Ask Stellium</span>
+                <span>Ask Loralee</span>
               </>
             )}
           </button>
         </div>
 
-        {/* Chat Window - Virtual Stellium */}
+        {/* Chat Window - Virtual Loralee */}
         <AnimatePresence>
           {chatOpen && (
             <motion.div
@@ -503,10 +504,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   </div>
                   <div>
                     <h3 className="font-display text-xl font-semibold tracking-wide" style={{ color: colors.light }}>
-                      Stellium
+                      Virtual Loralee
                     </h3>
                     <p className="text-sm font-medium" style={{ color: colors.muted }}>
-                      Your celestial guide • Available 24/7
+                      Your celestial guide • Always here for you
                     </p>
                   </div>
                 </div>
@@ -528,10 +529,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     }}
                   >
                     <p className="text-base leading-relaxed font-medium" style={{ color: colors.light }}>
-                      Hello, beautiful soul
+                      Hello, beautiful soul ✨
                     </p>
                     <p className="text-sm leading-relaxed mt-3" style={{ color: colors.muted }}>
-                      I'm Stellium, {config.practitioner_name.split(' ')[0]}'s AI companion. I hold her wisdom and voice to support you between sessions.
+                      I'm Virtual Loralee — an AI trained in Loralee's wisdom and voice, here to support you between sessions.
                     </p>
                     <p className="text-sm leading-relaxed mt-2" style={{ color: colors.muted }}>
                       Ask me about your birth chart, current transits, relationship dynamics, or any cosmic question on your heart.
