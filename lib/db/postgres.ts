@@ -280,6 +280,10 @@ export async function queryOne<T extends QueryResultRow = any>(
 // Export pool for advanced usage
 export { pool };
 
+// Aliases for backward compatibility
+export const getOne = findOne;
+export const getMany = findMany;
+
 // Default export
 export default {
   query,
@@ -292,5 +296,7 @@ export default {
   softDelete,
   findOne,
   findMany,
+  getOne: findOne,
+  getMany: findMany,
   pool,
 };
