@@ -1,14 +1,23 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { ElementalOrientation } from '@/components/beta/ElementalOrientation';
 import SacredSoulInduction from '@/components/onboarding/SacredSoulInduction';
 
-export default function TestElementalPage() {
+function TestElementalContent() {
+  const searchParams = useSearchParams();
   const [explorerName, setExplorerName] = useState('Explorer');
   const [hasCompletedSignup, setHasCompletedSignup] = useState(false);
+  const [initialPasskey, setInitialPasskey] = useState('');
 
   useEffect(() => {
+    // Check for passkey in URL params (from redirect)
+    const urlPasskey = searchParams.get('passkey');
+    if (urlPasskey) {
+      setInitialPasskey(urlPasskey.toUpperCase());
+    }
+
     // Check if user has already completed signup in this session
     try {
       const betaUser = localStorage.getItem('beta_user');
@@ -26,7 +35,7 @@ export default function TestElementalPage() {
       // Use default name if parsing fails
       setExplorerName('Explorer');
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSignupComplete = (userData: { name: string; username: string; password: string; memberId?: string }) => {
     // Use server-assigned member ID, fallback to timestamp for offline mode
@@ -54,9 +63,29 @@ export default function TestElementalPage() {
 
   // If user hasn't completed signup, show SacredSoulInduction first
   if (!hasCompletedSignup) {
-    return <SacredSoulInduction onComplete={handleSignupComplete} />;
+    return <SacredSoulInduction onComplete={handleSignupComplete} initialPasskey={initialPasskey} />;
   }
 
   // After signup completion, show ElementalOrientation
   return <ElementalOrientation explorerName={explorerName} />;
+}
+
+// Loading component for Suspense fallback
+function TestElementalLoading() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center">
+      <div className="text-center text-white">
+        <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
+        <p className="text-lg font-light">Loading...</p>
+      </div>
+    </div>
+  );
+}
+
+export default function TestElementalPage() {
+  return (
+    <Suspense fallback={<TestElementalLoading />}>
+      <TestElementalContent />
+    </Suspense>
+  );
 }

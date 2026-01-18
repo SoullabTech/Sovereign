@@ -15,6 +15,24 @@ import {
   buildTenantHeaders,
 } from './lib/practitioner/multiTenantMiddleware';
 
+// Check if a path looks like a passkey (SOULLAB-NAME, MAIA-NAME, etc.)
+function isPasskeyPath(pathname: string): boolean {
+  const path = pathname.slice(1).toUpperCase(); // Remove leading slash
+  // Match passkey patterns: SOULLAB-NAME, MAIA-NAME, PIONEER-NAME, FOUNDING-NAME
+  // Also match universal keys like CONSCIOUSNESS2025, DAIMON, ORACLE, etc.
+  const passkeyPatterns = [
+    /^SOULLAB-[A-Z0-9-]+$/,
+    /^MAIA-[A-Z0-9-]+$/,
+    /^PIONEER-[A-Z0-9-]+$/,
+    /^FOUNDING-[A-Z0-9-]+$/,
+    /^SOUL-PIONEER-\d+$/,
+    /^CONSCIOUSNESS\d+$/,
+  ];
+  const universalKeys = ['DAIMON', 'ORACLE', 'SOULLAB', 'MAIA'];
+
+  return passkeyPatterns.some(pattern => pattern.test(path)) || universalKeys.includes(path);
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') || '';
   const { pathname } = request.nextUrl;
@@ -24,6 +42,14 @@ export async function middleware(request: NextRequest) {
 
   // If no subdomain or custom domain, this is the main Soullab app
   if (!subdomain && !customDomain) {
+    // Check if the path looks like a passkey and redirect to test-elemental
+    if (pathname !== '/' && isPasskeyPath(pathname)) {
+      const passkey = pathname.slice(1).toUpperCase();
+      const url = request.nextUrl.clone();
+      url.pathname = '/test-elemental';
+      url.searchParams.set('passkey', passkey);
+      return NextResponse.redirect(url);
+    }
     return NextResponse.next();
   }
 

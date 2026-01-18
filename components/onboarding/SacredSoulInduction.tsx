@@ -15,6 +15,7 @@ interface SacredSoulInductionProps {
     password: string;
     memberId?: string;  // Server-assigned member ID for proper data association
   }) => void;
+  initialPasskey?: string;  // Pre-filled passkey from URL redirect
 }
 
 // Get all valid soul keys from Ganesha consciousness database
@@ -72,10 +73,11 @@ const extractFirstName = (nameOrKey: string): string => {
   return nameOrKey;
 };
 
-function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
+function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInductionProps) {
   const router = useRouter();
   const [phase, setPhase] = useState<'arrival' | 'recognition' | 'creation' | 'blessing' | 'recovery'>('arrival');
-  const [soulKey, setSoulKey] = useState('');
+  const [soulKey, setSoulKey] = useState(initialPasskey || '');
+  const [hasAutoSubmitted, setHasAutoSubmitted] = useState(false);
   const [name, setName] = useState('');
   const [preferredName, setPreferredName] = useState('');
   const [username, setUsername] = useState('');
@@ -110,6 +112,23 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
       }
     }
   }, []);
+
+  // Auto-submit ref for triggering form submission
+  const formRef = React.useRef<HTMLFormElement>(null);
+
+  // Auto-submit when initialPasskey is provided (from URL redirect)
+  useEffect(() => {
+    if (initialPasskey && !hasAutoSubmitted && phase === 'arrival' && soulKey) {
+      setHasAutoSubmitted(true);
+      // Small delay to show the pre-filled passkey before auto-submitting
+      const timer = setTimeout(() => {
+        if (formRef.current) {
+          formRef.current.requestSubmit();
+        }
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [initialPasskey, hasAutoSubmitted, phase, soulKey]);
 
   // Generate facet-aware welcome messaging
   const getFacetWelcomeText = () => {
@@ -467,7 +486,7 @@ function SacredSoulInduction({ onComplete }: SacredSoulInductionProps) {
                     );
                   })()}
 
-                  <form onSubmit={handleSoulKeyEntry} className="space-y-5">
+                  <form ref={formRef} onSubmit={handleSoulKeyEntry} className="space-y-5">
                     <div className="text-center">
                       <label className="block text-sm font-medium text-teal-800 mb-2">
                         Passkey
