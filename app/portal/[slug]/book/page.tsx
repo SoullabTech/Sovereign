@@ -1,9 +1,10 @@
 "use client";
 
 /**
- * BOOKING PAGE
+ * BOOKING PAGE - STARLIGHT MUSE THEME
  *
- * Warm, earthy, holistic session booking interface
+ * Cosmic, celestial booking interface with glassmorphism cards
+ * Inspired by dididaze.com aesthetic
  */
 
 import React, { useState, useEffect } from 'react';
@@ -19,7 +20,7 @@ import {
   User,
   Mail,
   MessageSquare,
-  Moon,
+  Sparkles,
   Star,
 } from 'lucide-react';
 
@@ -71,16 +72,37 @@ export default function BookingPage() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [bookingComplete, setBookingComplete] = useState(false);
 
-  // Warm, earthy palette
+  // Cosmic Starlight Muse palette - high contrast for readability
   const colors = {
-    ivory: '#FFFEF9',
-    linen: '#F8F4EF',
-    sand: '#E8E0D5',
-    warmGray: '#9A938A',
-    terracotta: '#B87351',
-    forest: '#4A5D4A',
-    text: '#3D3532',
-    textLight: '#6B6460',
+    // Backgrounds
+    void: '#0D0B14',
+    cosmos: '#1A1625',
+    nebula: '#251F33',
+    stardust: '#2D2640',
+
+    // Card backgrounds (glassmorphism)
+    cardBg: 'rgba(45, 38, 64, 0.6)',
+    cardBgHover: 'rgba(55, 48, 74, 0.7)',
+    cardBgSelected: 'rgba(229, 193, 88, 0.2)',
+
+    // Accents - brighter for visibility
+    gold: '#E5C158',
+    violet: '#B8A5D9',
+    rose: '#E8B4CB',
+
+    // Text - high contrast colors for readability
+    starlight: '#FFFFFF',
+    muted: '#D0C5E8',
+    dim: '#A99DC4',
+
+    // Borders
+    border: '#4A3D5C',
+    borderLight: '#3A3050',
+    borderGold: 'rgba(229, 193, 88, 0.5)',
+
+    // States
+    success: '#8FB89A',
+    error: '#D48B8B',
   };
 
   useEffect(() => {
@@ -221,7 +243,7 @@ export default function BookingPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Moon className="w-8 h-8" style={{ color: colors.terracotta }} />
+          <Sparkles className="w-8 h-8" style={{ color: colors.gold }} />
         </motion.div>
       </div>
     );
@@ -233,36 +255,43 @@ export default function BookingPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="rounded-3xl p-10 text-center"
-          style={{ backgroundColor: colors.linen }}
+          className="rounded-3xl p-10 text-center backdrop-blur-xl"
+          style={{
+            background: `linear-gradient(135deg, ${colors.cardBg}, rgba(157, 142, 199, 0.2))`,
+            border: `1px solid ${colors.borderGold}`,
+            boxShadow: `0 8px 32px rgba(157, 142, 199, 0.2)`,
+          }}
         >
           <div
             className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-            style={{ backgroundColor: `${colors.forest}20` }}
+            style={{ backgroundColor: `${colors.success}30` }}
           >
-            <CheckCircle2 className="w-10 h-10" style={{ color: colors.forest }} />
+            <CheckCircle2 className="w-10 h-10" style={{ color: colors.success }} />
           </div>
           <h2
             className="font-display text-3xl font-light mb-4"
-            style={{ color: colors.text }}
+            style={{ color: colors.starlight }}
           >
             You're Booked!
           </h2>
-          <p className="mb-8" style={{ color: colors.textLight }}>
+          <p className="mb-8" style={{ color: colors.muted }}>
             A confirmation has been sent to {formData.email}.<br />
             I look forward to our time together.
           </p>
           <div
             className="rounded-2xl p-6 text-left space-y-3"
-            style={{ backgroundColor: colors.ivory }}
+            style={{
+              backgroundColor: 'rgba(13, 11, 20, 0.5)',
+              border: `1px solid ${colors.border}`,
+            }}
           >
             <div className="flex justify-between text-sm">
-              <span style={{ color: colors.warmGray }}>Service</span>
-              <span style={{ color: colors.text }}>{selectedService?.name}</span>
+              <span style={{ color: colors.dim }}>Service</span>
+              <span style={{ color: colors.starlight }}>{selectedService?.name}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span style={{ color: colors.warmGray }}>Date</span>
-              <span style={{ color: colors.text }}>
+              <span style={{ color: colors.dim }}>Date</span>
+              <span style={{ color: colors.starlight }}>
                 {selectedDate?.toLocaleDateString('en-US', {
                   weekday: 'long',
                   month: 'long',
@@ -271,8 +300,8 @@ export default function BookingPage() {
               </span>
             </div>
             <div className="flex justify-between text-sm">
-              <span style={{ color: colors.warmGray }}>Time</span>
-              <span style={{ color: colors.text }}>
+              <span style={{ color: colors.dim }}>Time</span>
+              <span style={{ color: colors.starlight }}>
                 {selectedSlot && formatTime(selectedSlot.start)}
               </span>
             </div>
@@ -291,18 +320,18 @@ export default function BookingPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
-            <Calendar className="w-5 h-5" style={{ color: colors.terracotta }} />
-            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.border }} />
+            <Calendar className="w-5 h-5" style={{ color: colors.gold }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.border }} />
           </div>
 
           <h1
-            className="font-display text-4xl md:text-5xl font-light mb-4"
-            style={{ color: colors.text }}
+            className="font-display text-4xl md:text-5xl font-light mb-4 tracking-wide"
+            style={{ color: colors.starlight }}
           >
             Book a Reading
           </h1>
-          <p style={{ color: colors.textLight }}>
+          <p style={{ color: colors.muted }}>
             {config?.practitioner_name && `Schedule your session with ${config.practitioner_name}`}
           </p>
         </motion.div>
@@ -315,13 +344,14 @@ export default function BookingPage() {
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all"
               style={{
-                backgroundColor: step === s ? colors.terracotta : ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i ? colors.forest : colors.sand,
-                color: step === s || ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i ? colors.ivory : colors.warmGray,
+                backgroundColor: step === s ? colors.gold : ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i ? colors.violet : colors.stardust,
+                color: step === s ? colors.void : ['service', 'datetime', 'details', 'confirm'].indexOf(step) > i ? colors.starlight : colors.dim,
+                boxShadow: step === s ? `0 0 20px ${colors.gold}40` : 'none',
               }}
             >
               {i + 1}
             </div>
-            {i < 3 && <div className="w-8 h-px" style={{ backgroundColor: colors.sand }} />}
+            {i < 3 && <div className="w-8 h-px" style={{ backgroundColor: colors.border }} />}
           </React.Fragment>
         ))}
       </div>
@@ -334,19 +364,26 @@ export default function BookingPage() {
           className="space-y-6"
         >
           <h2
-            className="font-display text-2xl text-center"
-            style={{ color: colors.text }}
+            className="font-display text-2xl text-center tracking-wide"
+            style={{ color: colors.muted }}
           >
             Choose Your Experience
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {services.map(service => (
-              <div
+              <motion.div
                 key={service.id}
-                className="cursor-pointer rounded-2xl p-6 transition-all hover:shadow-lg"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.98 }}
+                className="cursor-pointer rounded-2xl p-6 transition-all backdrop-blur-xl"
                 style={{
-                  backgroundColor: selectedService?.id === service.id ? `${colors.terracotta}10` : colors.linen,
-                  border: `2px solid ${selectedService?.id === service.id ? colors.terracotta : 'transparent'}`,
+                  background: selectedService?.id === service.id
+                    ? `linear-gradient(135deg, ${colors.cardBgSelected}, rgba(157, 142, 199, 0.25))`
+                    : `linear-gradient(135deg, ${colors.cardBg}, rgba(157, 142, 199, 0.1))`,
+                  border: `1px solid ${selectedService?.id === service.id ? colors.gold : colors.border}`,
+                  boxShadow: selectedService?.id === service.id
+                    ? `0 8px 32px rgba(212, 175, 55, 0.15)`
+                    : `0 4px 20px rgba(157, 142, 199, 0.1)`,
                 }}
                 onClick={() => {
                   setSelectedService(service);
@@ -354,27 +391,27 @@ export default function BookingPage() {
                 }}
               >
                 <h3
-                  className="font-display text-xl font-medium mb-2"
-                  style={{ color: colors.text }}
+                  className="font-display text-xl font-medium mb-2 tracking-wide"
+                  style={{ color: colors.starlight }}
                 >
                   {service.name}
                 </h3>
-                <p className="text-sm mb-4" style={{ color: colors.textLight }}>
+                <p className="text-sm mb-4" style={{ color: colors.muted }}>
                   {service.description}
                 </p>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 text-sm" style={{ color: colors.warmGray }}>
+                  <div className="flex items-center space-x-2 text-sm" style={{ color: colors.dim }}>
                     <Clock className="w-4 h-4" />
                     <span>{service.duration_minutes} min</span>
                   </div>
                   <span
                     className="font-display text-xl font-medium"
-                    style={{ color: colors.terracotta }}
+                    style={{ color: colors.gold }}
                   >
                     {formatPrice(service.price_cents)}
                   </span>
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </motion.div>
@@ -390,13 +427,13 @@ export default function BookingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setStep('service')}
-              className="flex items-center transition-colors"
-              style={{ color: colors.textLight }}
+              className="flex items-center transition-colors hover:opacity-80"
+              style={{ color: colors.muted }}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h2 className="font-display text-xl" style={{ color: colors.text }}>
+            <h2 className="font-display text-xl tracking-wide" style={{ color: colors.starlight }}>
               Select Date & Time
             </h2>
             <div className="w-16" />
@@ -404,26 +441,32 @@ export default function BookingPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Calendar */}
-            <div className="rounded-2xl p-6" style={{ backgroundColor: colors.linen }}>
+            <div
+              className="rounded-2xl p-6 backdrop-blur-xl"
+              style={{
+                background: `linear-gradient(135deg, ${colors.cardBg}, rgba(157, 142, 199, 0.15))`,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
               <div className="flex items-center justify-between mb-6">
                 <button
                   onClick={() =>
                     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))
                   }
-                  className="p-2 rounded-full transition-colors"
-                  style={{ color: colors.text }}
+                  className="p-2 rounded-full transition-colors hover:opacity-80"
+                  style={{ color: colors.starlight }}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <div className="font-display text-lg" style={{ color: colors.text }}>
+                <div className="font-display text-lg tracking-wide" style={{ color: colors.starlight }}>
                   {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                 </div>
                 <button
                   onClick={() =>
                     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))
                   }
-                  className="p-2 rounded-full transition-colors"
-                  style={{ color: colors.text }}
+                  className="p-2 rounded-full transition-colors hover:opacity-80"
+                  style={{ color: colors.starlight }}
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
@@ -431,7 +474,7 @@ export default function BookingPage() {
 
               <div
                 className="grid grid-cols-7 gap-1 text-center text-xs mb-3"
-                style={{ color: colors.warmGray }}
+                style={{ color: colors.dim }}
               >
                 {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
                   <div key={day} className="py-2">{day}</div>
@@ -447,16 +490,19 @@ export default function BookingPage() {
                     className="py-2.5 rounded-lg text-sm transition-all"
                     style={{
                       backgroundColor: day && selectedDate?.toDateString() === day.toDateString()
-                        ? colors.terracotta
+                        ? colors.gold
                         : 'transparent',
                       color: !day
                         ? 'transparent'
                         : isDateDisabled(day)
-                        ? colors.sand
+                        ? colors.stardust
                         : selectedDate?.toDateString() === day?.toDateString()
-                        ? colors.ivory
-                        : colors.text,
+                        ? colors.void
+                        : colors.starlight,
                       cursor: day && !isDateDisabled(day) ? 'pointer' : 'default',
+                      boxShadow: day && selectedDate?.toDateString() === day.toDateString()
+                        ? `0 0 15px ${colors.gold}50`
+                        : 'none',
                     }}
                   >
                     {day?.getDate()}
@@ -466,8 +512,14 @@ export default function BookingPage() {
             </div>
 
             {/* Time Slots */}
-            <div className="rounded-2xl p-6" style={{ backgroundColor: colors.linen }}>
-              <h3 className="font-display text-lg mb-4" style={{ color: colors.text }}>
+            <div
+              className="rounded-2xl p-6 backdrop-blur-xl"
+              style={{
+                background: `linear-gradient(135deg, ${colors.cardBg}, rgba(157, 142, 199, 0.15))`,
+                border: `1px solid ${colors.border}`,
+              }}
+            >
+              <h3 className="font-display text-lg mb-4 tracking-wide" style={{ color: colors.starlight }}>
                 {selectedDate
                   ? selectedDate.toLocaleDateString('en-US', {
                       weekday: 'long',
@@ -478,15 +530,15 @@ export default function BookingPage() {
               </h3>
 
               {!selectedDate ? (
-                <p className="text-center py-12" style={{ color: colors.warmGray }}>
+                <p className="text-center py-12" style={{ color: colors.dim }}>
                   Please select a date to see available times
                 </p>
               ) : slotsLoading ? (
                 <div className="flex items-center justify-center py-12">
-                  <Loader2 className="w-6 h-6 animate-spin" style={{ color: colors.warmGray }} />
+                  <Loader2 className="w-6 h-6 animate-spin" style={{ color: colors.violet }} />
                 </div>
               ) : availableSlots.length === 0 ? (
-                <p className="text-center py-12" style={{ color: colors.warmGray }}>
+                <p className="text-center py-12" style={{ color: colors.dim }}>
                   No available times for this date
                 </p>
               ) : (
@@ -501,11 +553,14 @@ export default function BookingPage() {
                       className="py-2.5 px-3 rounded-lg text-sm transition-all"
                       style={{
                         backgroundColor: selectedSlot?.start === slot.start
-                          ? colors.terracotta
-                          : colors.ivory,
+                          ? colors.gold
+                          : colors.stardust,
                         color: selectedSlot?.start === slot.start
-                          ? colors.ivory
-                          : colors.text,
+                          ? colors.void
+                          : colors.starlight,
+                        boxShadow: selectedSlot?.start === slot.start
+                          ? `0 0 15px ${colors.gold}50`
+                          : 'none',
                       }}
                     >
                       {formatTime(slot.start)}
@@ -528,37 +583,43 @@ export default function BookingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setStep('datetime')}
-              className="flex items-center transition-colors"
-              style={{ color: colors.textLight }}
+              className="flex items-center transition-colors hover:opacity-80"
+              style={{ color: colors.muted }}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h2 className="font-display text-xl" style={{ color: colors.text }}>
+            <h2 className="font-display text-xl tracking-wide" style={{ color: colors.starlight }}>
               Your Details
             </h2>
             <div className="w-16" />
           </div>
 
-          <div className="rounded-2xl p-8 space-y-5" style={{ backgroundColor: colors.linen }}>
+          <div
+            className="rounded-2xl p-8 space-y-5 backdrop-blur-xl"
+            style={{
+              background: `linear-gradient(135deg, ${colors.cardBg}, rgba(157, 142, 199, 0.15))`,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
             <div>
-              <label className="block text-sm mb-2" style={{ color: colors.warmGray }}>
+              <label className="block text-sm mb-2" style={{ color: colors.dim }}>
                 Name *
               </label>
               <div className="relative">
                 <User
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
-                  style={{ color: colors.warmGray }}
+                  style={{ color: colors.dim }}
                 />
                 <input
                   type="text"
                   value={formData.name}
                   onChange={e => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all focus:ring-2"
                   style={{
-                    backgroundColor: colors.ivory,
-                    border: `1px solid ${colors.sand}`,
-                    color: colors.text,
+                    backgroundColor: colors.void,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.starlight,
                   }}
                   placeholder="Your full name"
                   required
@@ -567,23 +628,23 @@ export default function BookingPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: colors.warmGray }}>
+              <label className="block text-sm mb-2" style={{ color: colors.dim }}>
                 Email *
               </label>
               <div className="relative">
                 <Mail
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5"
-                  style={{ color: colors.warmGray }}
+                  style={{ color: colors.dim }}
                 />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all focus:ring-2"
                   style={{
-                    backgroundColor: colors.ivory,
-                    border: `1px solid ${colors.sand}`,
-                    color: colors.text,
+                    backgroundColor: colors.void,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.starlight,
                   }}
                   placeholder="your@email.com"
                   required
@@ -592,23 +653,23 @@ export default function BookingPage() {
             </div>
 
             <div>
-              <label className="block text-sm mb-2" style={{ color: colors.warmGray }}>
+              <label className="block text-sm mb-2" style={{ color: colors.dim }}>
                 Anything you'd like to share (optional)
               </label>
               <div className="relative">
                 <MessageSquare
                   className="absolute left-4 top-4 w-5 h-5"
-                  style={{ color: colors.warmGray }}
+                  style={{ color: colors.dim }}
                 />
                 <textarea
                   value={formData.notes}
                   onChange={e => setFormData({ ...formData, notes: e.target.value })}
                   rows={3}
-                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all resize-none"
+                  className="w-full pl-12 pr-4 py-3 rounded-xl text-base outline-none transition-all resize-none focus:ring-2"
                   style={{
-                    backgroundColor: colors.ivory,
-                    border: `1px solid ${colors.sand}`,
-                    color: colors.text,
+                    backgroundColor: colors.void,
+                    border: `1px solid ${colors.border}`,
+                    color: colors.starlight,
                   }}
                   placeholder="Questions, intentions, or anything that feels important..."
                 />
@@ -618,8 +679,12 @@ export default function BookingPage() {
             <button
               onClick={() => setStep('confirm')}
               disabled={!formData.name || !formData.email}
-              className="w-full py-4 rounded-xl font-medium transition-all disabled:opacity-50"
-              style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+              className="w-full py-4 rounded-xl font-medium transition-all disabled:opacity-50 hover:scale-[1.02]"
+              style={{
+                backgroundColor: colors.gold,
+                color: colors.void,
+                boxShadow: `0 4px 20px ${colors.gold}40`,
+              }}
             >
               Review Booking
             </button>
@@ -637,33 +702,39 @@ export default function BookingPage() {
           <div className="flex items-center justify-between">
             <button
               onClick={() => setStep('details')}
-              className="flex items-center transition-colors"
-              style={{ color: colors.textLight }}
+              className="flex items-center transition-colors hover:opacity-80"
+              style={{ color: colors.muted }}
             >
               <ChevronLeft className="w-5 h-5" />
               <span>Back</span>
             </button>
-            <h2 className="font-display text-xl" style={{ color: colors.text }}>
+            <h2 className="font-display text-xl tracking-wide" style={{ color: colors.starlight }}>
               Confirm Booking
             </h2>
             <div className="w-16" />
           </div>
 
-          <div className="rounded-2xl p-8 space-y-6" style={{ backgroundColor: colors.linen }}>
+          <div
+            className="rounded-2xl p-8 space-y-6 backdrop-blur-xl"
+            style={{
+              background: `linear-gradient(135deg, ${colors.cardBg}, rgba(157, 142, 199, 0.15))`,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
             <div className="space-y-4">
               <div
                 className="flex justify-between py-3 border-b"
-                style={{ borderColor: colors.sand }}
+                style={{ borderColor: colors.border }}
               >
-                <span style={{ color: colors.warmGray }}>Service</span>
-                <span style={{ color: colors.text }}>{selectedService?.name}</span>
+                <span style={{ color: colors.dim }}>Service</span>
+                <span style={{ color: colors.starlight }}>{selectedService?.name}</span>
               </div>
               <div
                 className="flex justify-between py-3 border-b"
-                style={{ borderColor: colors.sand }}
+                style={{ borderColor: colors.border }}
               >
-                <span style={{ color: colors.warmGray }}>Date</span>
-                <span style={{ color: colors.text }}>
+                <span style={{ color: colors.dim }}>Date</span>
+                <span style={{ color: colors.starlight }}>
                   {selectedDate?.toLocaleDateString('en-US', {
                     weekday: 'long',
                     month: 'long',
@@ -673,44 +744,48 @@ export default function BookingPage() {
               </div>
               <div
                 className="flex justify-between py-3 border-b"
-                style={{ borderColor: colors.sand }}
+                style={{ borderColor: colors.border }}
               >
-                <span style={{ color: colors.warmGray }}>Time</span>
-                <span style={{ color: colors.text }}>
+                <span style={{ color: colors.dim }}>Time</span>
+                <span style={{ color: colors.starlight }}>
                   {selectedSlot && formatTime(selectedSlot.start)}
                 </span>
               </div>
               <div
                 className="flex justify-between py-3 border-b"
-                style={{ borderColor: colors.sand }}
+                style={{ borderColor: colors.border }}
               >
-                <span style={{ color: colors.warmGray }}>Duration</span>
-                <span style={{ color: colors.text }}>{selectedService?.duration_minutes} minutes</span>
+                <span style={{ color: colors.dim }}>Duration</span>
+                <span style={{ color: colors.starlight }}>{selectedService?.duration_minutes} minutes</span>
               </div>
               <div className="flex justify-between py-3">
-                <span style={{ color: colors.warmGray }}>Investment</span>
+                <span style={{ color: colors.dim }}>Investment</span>
                 <span
                   className="font-display text-2xl font-medium"
-                  style={{ color: colors.terracotta }}
+                  style={{ color: colors.gold }}
                 >
                   {selectedService && formatPrice(selectedService.price_cents)}
                 </span>
               </div>
             </div>
 
-            <div className="pt-4 border-t" style={{ borderColor: colors.sand }}>
-              <div className="text-sm mb-1" style={{ color: colors.warmGray }}>
+            <div className="pt-4 border-t" style={{ borderColor: colors.border }}>
+              <div className="text-sm mb-1" style={{ color: colors.dim }}>
                 Booking for
               </div>
-              <div style={{ color: colors.text }}>{formData.name}</div>
-              <div className="text-sm" style={{ color: colors.textLight }}>{formData.email}</div>
+              <div style={{ color: colors.starlight }}>{formData.name}</div>
+              <div className="text-sm" style={{ color: colors.muted }}>{formData.email}</div>
             </div>
 
             <button
               onClick={handleBooking}
               disabled={submitting}
-              className="w-full flex items-center justify-center space-x-2 py-4 rounded-xl font-medium transition-all disabled:opacity-50"
-              style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+              className="w-full flex items-center justify-center space-x-2 py-4 rounded-xl font-medium transition-all disabled:opacity-50 hover:scale-[1.02]"
+              style={{
+                backgroundColor: colors.gold,
+                color: colors.void,
+                boxShadow: `0 4px 20px ${colors.gold}40`,
+              }}
             >
               {submitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -722,7 +797,7 @@ export default function BookingPage() {
               )}
             </button>
 
-            <p className="text-xs text-center" style={{ color: colors.warmGray }}>
+            <p className="text-xs text-center" style={{ color: colors.dim }}>
               You'll receive a confirmation email with all the details
             </p>
           </div>

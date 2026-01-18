@@ -3,7 +3,7 @@
 /**
  * FREE RESOURCES / LEAD MAGNET PAGE
  *
- * Warm, earthy, holistic lead capture experience
+ * Cosmic, celestial aesthetic - Starlight Muse theme
  */
 
 import React, { useState, useEffect } from 'react';
@@ -20,7 +20,6 @@ import {
   Video,
   Headphones,
   BookOpen,
-  Moon,
   Star,
 } from 'lucide-react';
 
@@ -56,16 +55,20 @@ export default function FreeResourcesPage() {
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
 
-  // Warm, earthy palette
+  // Cosmic Starlight Muse palette - high contrast
   const colors = {
-    ivory: '#FFFEF9',
-    linen: '#F8F4EF',
-    sand: '#E8E0D5',
-    warmGray: '#9A938A',
-    terracotta: '#B87351',
-    forest: '#4A5D4A',
-    text: '#3D3532',
-    textLight: '#6B6460',
+    void: '#0D0B14',
+    cosmos: '#1A1625',
+    nebula: '#251F33',
+    stardust: '#2D2640',
+    cardBg: 'rgba(45, 38, 64, 0.6)',
+    gold: '#E5C158',
+    violet: '#B8A5D9',
+    starlight: '#FFFFFF',
+    muted: '#D0C5E8',
+    dim: '#A99DC4',
+    border: '#4A3D5C',
+    success: '#8FB89A',
   };
 
   useEffect(() => {
@@ -116,7 +119,7 @@ export default function FreeResourcesPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Moon className="w-8 h-8" style={{ color: colors.terracotta }} />
+          <Sparkles className="w-8 h-8" style={{ color: colors.gold }} />
         </motion.div>
       </div>
     );
@@ -131,22 +134,22 @@ export default function FreeResourcesPage() {
           animate={{ opacity: 1, y: 0 }}
         >
           <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
-            <Gift className="w-6 h-6" style={{ color: colors.terracotta }} />
-            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.border }} />
+            <Gift className="w-6 h-6" style={{ color: colors.gold }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.border }} />
           </div>
 
           <h1
-            className="font-display text-4xl md:text-5xl font-light mb-4"
-            style={{ color: colors.text }}
+            className="font-display text-4xl md:text-5xl tracking-wide mb-4"
+            style={{ color: colors.starlight }}
           >
             Free Gift
           </h1>
           <p
             className="text-lg max-w-2xl mx-auto leading-relaxed"
-            style={{ color: colors.textLight }}
+            style={{ color: colors.muted }}
           >
-            Begin your journey with this complimentary offering, crafted with love
+            Begin your cosmic journey with this complimentary offering, crafted with starlight
           </p>
         </motion.div>
       </div>
@@ -160,10 +163,12 @@ export default function FreeResourcesPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + index * 0.1 }}
-              className="rounded-3xl overflow-hidden"
+              className="rounded-3xl overflow-hidden backdrop-blur-xl"
               style={{
-                backgroundColor: colors.linen,
-                border: magnet.featured ? `2px solid ${colors.terracotta}` : `1px solid ${colors.sand}`,
+                background: magnet.featured
+                  ? `linear-gradient(135deg, rgba(229, 193, 88, 0.15), ${colors.cardBg})`
+                  : `linear-gradient(135deg, ${colors.cardBg}, rgba(184, 165, 217, 0.1))`,
+                border: magnet.featured ? `2px solid ${colors.gold}` : `1px solid ${colors.border}`,
               }}
             >
               <div className="flex flex-col lg:flex-row">
@@ -172,24 +177,24 @@ export default function FreeResourcesPage() {
                   <div className="flex items-start space-x-4">
                     <div
                       className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `${colors.terracotta}15`, color: colors.terracotta }}
+                      style={{ backgroundColor: `${colors.gold}20`, color: colors.gold }}
                     >
                       {typeIcons[magnet.type] || <Gift className="w-6 h-6" />}
                     </div>
                     <div>
                       <div
-                        className="text-xs font-medium uppercase tracking-widest mb-2"
-                        style={{ color: colors.terracotta }}
+                        className="text-xs font-semibold uppercase tracking-widest mb-2"
+                        style={{ color: colors.gold }}
                       >
                         Free {magnet.type}
                       </div>
                       <h2
-                        className="font-display text-2xl md:text-3xl font-medium mb-3"
-                        style={{ color: colors.text }}
+                        className="font-display text-2xl md:text-3xl font-semibold tracking-wide mb-3"
+                        style={{ color: colors.starlight }}
                       >
                         {magnet.name}
                       </h2>
-                      <p className="leading-relaxed" style={{ color: colors.textLight }}>
+                      <p className="leading-relaxed" style={{ color: colors.muted }}>
                         {magnet.long_description || magnet.description}
                       </p>
                     </div>
@@ -199,8 +204,8 @@ export default function FreeResourcesPage() {
                   {magnet.benefits && magnet.benefits.length > 0 && (
                     <div className="mt-8">
                       <div
-                        className="text-xs uppercase tracking-widest mb-4"
-                        style={{ color: colors.warmGray }}
+                        className="text-xs uppercase tracking-widest mb-4 font-semibold"
+                        style={{ color: colors.dim }}
                       >
                         What You'll Discover
                       </div>
@@ -209,9 +214,9 @@ export default function FreeResourcesPage() {
                           <div key={i} className="flex items-start space-x-3">
                             <CheckCircle2
                               className="w-5 h-5 mt-0.5 flex-shrink-0"
-                              style={{ color: colors.forest }}
+                              style={{ color: colors.success }}
                             />
-                            <span style={{ color: colors.text }}>{benefit}</span>
+                            <span className="font-medium" style={{ color: colors.starlight }}>{benefit}</span>
                           </div>
                         ))}
                       </div>
@@ -222,42 +227,44 @@ export default function FreeResourcesPage() {
                 {/* Form */}
                 <div
                   className="lg:w-96 p-8 lg:p-10"
-                  style={{ backgroundColor: colors.sand }}
+                  style={{
+                    background: `linear-gradient(135deg, ${colors.stardust}, ${colors.nebula})`,
+                  }}
                 >
                   {success === magnet.id ? (
                     <div className="text-center py-8">
                       <div
                         className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6"
-                        style={{ backgroundColor: `${colors.forest}20` }}
+                        style={{ backgroundColor: `${colors.success}25` }}
                       >
                         <CheckCircle2
                           className="w-10 h-10"
-                          style={{ color: colors.forest }}
+                          style={{ color: colors.success }}
                         />
                       </div>
                       <h3
-                        className="font-display text-2xl font-light mb-3"
-                        style={{ color: colors.text }}
+                        className="font-display text-2xl tracking-wide mb-3"
+                        style={{ color: colors.starlight }}
                       >
                         Check Your Inbox
                       </h3>
-                      <p style={{ color: colors.textLight }}>
+                      <p style={{ color: colors.muted }}>
                         {magnet.delivery_type === 'download'
                           ? 'Your download link is on its way.'
-                          : 'Access instructions have been sent with love.'}
+                          : 'Access instructions have been sent with cosmic love.'}
                       </p>
                     </div>
                   ) : (
                     <div className="space-y-5">
                       <div className="text-center mb-6">
-                        <Star className="w-8 h-8 mx-auto mb-3" style={{ color: colors.terracotta }} />
+                        <Star className="w-8 h-8 mx-auto mb-3" style={{ color: colors.gold }} />
                         <div
-                          className="font-display text-xl mb-1"
-                          style={{ color: colors.text }}
+                          className="font-display text-xl mb-1 font-semibold"
+                          style={{ color: colors.starlight }}
                         >
                           Get Instant Access
                         </div>
-                        <div className="text-sm" style={{ color: colors.textLight }}>
+                        <div className="text-sm font-medium" style={{ color: colors.muted }}>
                           {magnet.delivery_type === 'download'
                             ? 'Download link sent to your email'
                             : 'Delivered directly to your inbox'}
@@ -270,11 +277,11 @@ export default function FreeResourcesPage() {
                           value={name}
                           onChange={e => setName(e.target.value)}
                           placeholder="Your name"
-                          className="w-full px-5 py-3.5 rounded-xl text-base outline-none transition-all"
+                          className="w-full px-5 py-3.5 rounded-xl text-base outline-none transition-all font-medium"
                           style={{
-                            backgroundColor: colors.ivory,
-                            border: `1px solid ${colors.sand}`,
-                            color: colors.text,
+                            backgroundColor: colors.void,
+                            border: `1px solid ${colors.border}`,
+                            color: colors.starlight,
                           }}
                         />
                       </div>
@@ -286,11 +293,11 @@ export default function FreeResourcesPage() {
                           onChange={e => setEmail(e.target.value)}
                           placeholder="Your email"
                           required
-                          className="w-full px-5 py-3.5 rounded-xl text-base outline-none transition-all"
+                          className="w-full px-5 py-3.5 rounded-xl text-base outline-none transition-all font-medium"
                           style={{
-                            backgroundColor: colors.ivory,
-                            border: `1px solid ${colors.sand}`,
-                            color: colors.text,
+                            backgroundColor: colors.void,
+                            border: `1px solid ${colors.border}`,
+                            color: colors.starlight,
                           }}
                         />
                       </div>
@@ -298,8 +305,12 @@ export default function FreeResourcesPage() {
                       <button
                         onClick={() => handleSubmit(magnet.id)}
                         disabled={!email || submitting === magnet.id}
-                        className="w-full flex items-center justify-center space-x-2 px-6 py-4 rounded-xl font-medium transition-all hover:scale-[1.02] disabled:opacity-50"
-                        style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+                        className="w-full flex items-center justify-center space-x-2 px-6 py-4 rounded-xl font-semibold transition-all hover:scale-[1.02] disabled:opacity-50"
+                        style={{
+                          backgroundColor: colors.gold,
+                          color: colors.void,
+                          boxShadow: `0 4px 20px ${colors.gold}40`,
+                        }}
                       >
                         {submitting === magnet.id ? (
                           <Loader2 className="w-5 h-5 animate-spin" />
@@ -315,7 +326,7 @@ export default function FreeResourcesPage() {
                         )}
                       </button>
 
-                      <p className="text-xs text-center" style={{ color: colors.warmGray }}>
+                      <p className="text-xs text-center font-medium" style={{ color: colors.dim }}>
                         Your privacy is sacred. No spam, ever.
                       </p>
                     </div>
@@ -327,17 +338,20 @@ export default function FreeResourcesPage() {
         </div>
       ) : (
         <div
-          className="rounded-3xl p-16 text-center"
-          style={{ backgroundColor: colors.linen }}
+          className="rounded-3xl p-16 text-center backdrop-blur-xl"
+          style={{
+            background: `linear-gradient(135deg, ${colors.cardBg}, rgba(184, 165, 217, 0.1))`,
+            border: `1px solid ${colors.border}`,
+          }}
         >
-          <Gift className="w-16 h-16 mx-auto mb-6" style={{ color: colors.warmGray }} />
+          <Gift className="w-16 h-16 mx-auto mb-6" style={{ color: colors.violet }} />
           <h3
-            className="font-display text-2xl font-light mb-3"
-            style={{ color: colors.text }}
+            className="font-display text-2xl tracking-wide mb-3"
+            style={{ color: colors.starlight }}
           >
-            Something Special is Coming
+            Something Cosmic is Coming
           </h3>
-          <p style={{ color: colors.textLight }}>
+          <p style={{ color: colors.muted }}>
             Free offerings are being lovingly prepared. Check back soon.
           </p>
         </div>
@@ -351,11 +365,11 @@ export default function FreeResourcesPage() {
         className="text-center py-8"
       >
         <div className="flex items-center justify-center space-x-4 mb-6">
-          <div className="h-px w-16" style={{ backgroundColor: colors.sand }} />
-          <Sparkles className="w-5 h-5" style={{ color: colors.terracotta }} />
-          <div className="h-px w-16" style={{ backgroundColor: colors.sand }} />
+          <div className="h-px w-16" style={{ backgroundColor: colors.border }} />
+          <Sparkles className="w-5 h-5" style={{ color: colors.gold }} />
+          <div className="h-px w-16" style={{ backgroundColor: colors.border }} />
         </div>
-        <p className="italic" style={{ color: colors.textLight }}>
+        <p className="italic font-medium" style={{ color: colors.muted }}>
           "The cosmos speaks to those who listen with an open heart."
         </p>
       </motion.div>

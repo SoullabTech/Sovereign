@@ -3,14 +3,14 @@
 /**
  * PRACTITIONER SERVICES PAGE
  *
- * Warm, earthy, holistic aesthetic for service offerings
+ * Cosmic, celestial aesthetic - Starlight Muse theme
  */
 
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Clock, Calendar, Star, CheckCircle2, ArrowRight, Moon } from 'lucide-react';
+import { Clock, Calendar, Star, CheckCircle2, ArrowRight, Sparkles } from 'lucide-react';
 
 interface Service {
   id: string;
@@ -32,16 +32,20 @@ export default function ServicesPage() {
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
-  // Warm, earthy palette
+  // Cosmic Starlight Muse palette - high contrast
   const colors = {
-    ivory: '#FFFEF9',
-    linen: '#F8F4EF',
-    sand: '#E8E0D5',
-    warmGray: '#9A938A',
-    terracotta: '#B87351',
-    forest: '#4A5D4A',
-    text: '#3D3532',
-    textLight: '#6B6460',
+    void: '#0D0B14',
+    cosmos: '#1A1625',
+    nebula: '#251F33',
+    stardust: '#2D2640',
+    cardBg: 'rgba(45, 38, 64, 0.6)',
+    gold: '#E5C158',
+    violet: '#B8A5D9',
+    starlight: '#FFFFFF',
+    muted: '#D0C5E8',
+    dim: '#A99DC4',
+    border: '#4A3D5C',
+    success: '#8FB89A',
   };
 
   useEffect(() => {
@@ -83,7 +87,7 @@ export default function ServicesPage() {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Moon className="w-8 h-8" style={{ color: colors.terracotta }} />
+          <Sparkles className="w-8 h-8" style={{ color: colors.gold }} />
         </motion.div>
       </div>
     );
@@ -99,22 +103,22 @@ export default function ServicesPage() {
         >
           {/* Decorative Element */}
           <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
-            <Star className="w-5 h-5" style={{ color: colors.terracotta }} />
-            <div className="h-px w-12" style={{ backgroundColor: colors.sand }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.border }} />
+            <Star className="w-5 h-5" style={{ color: colors.gold }} />
+            <div className="h-px w-12" style={{ backgroundColor: colors.border }} />
           </div>
 
           <h1
-            className="font-display text-4xl md:text-5xl font-light mb-4"
-            style={{ color: colors.text }}
+            className="font-display text-4xl md:text-5xl tracking-wide mb-4"
+            style={{ color: colors.starlight }}
           >
             Offerings
           </h1>
           <p
             className="text-lg max-w-2xl mx-auto leading-relaxed"
-            style={{ color: colors.textLight }}
+            style={{ color: colors.muted }}
           >
-            Choose the experience that resonates with where you are on your journey
+            Choose the experience that resonates with where you are on your cosmic journey
           </p>
         </motion.div>
       </div>
@@ -131,11 +135,12 @@ export default function ServicesPage() {
             <button
               key={category}
               onClick={() => setSelectedCategory(category)}
-              className="px-5 py-2 rounded-full text-sm capitalize transition-all"
+              className="px-5 py-2 rounded-full text-sm capitalize transition-all font-medium"
               style={{
-                backgroundColor: selectedCategory === category ? colors.terracotta : colors.linen,
-                color: selectedCategory === category ? colors.ivory : colors.text,
-                border: `1px solid ${selectedCategory === category ? colors.terracotta : colors.sand}`,
+                backgroundColor: selectedCategory === category ? colors.gold : colors.stardust,
+                color: selectedCategory === category ? colors.void : colors.starlight,
+                border: `1px solid ${selectedCategory === category ? colors.gold : colors.border}`,
+                boxShadow: selectedCategory === category ? `0 0 20px ${colors.gold}40` : 'none',
               }}
             >
               {category}
@@ -145,17 +150,23 @@ export default function ServicesPage() {
       )}
 
       {/* Services Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredServices.map((service, index) => (
           <motion.div
             key={service.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + index * 0.1 }}
-            className="rounded-2xl p-8 transition-all hover:shadow-lg"
+            whileHover={{ y: -4 }}
+            className="rounded-2xl p-8 transition-all backdrop-blur-xl"
             style={{
-              backgroundColor: colors.linen,
-              border: service.featured ? `2px solid ${colors.terracotta}` : `1px solid ${colors.sand}`,
+              background: service.featured
+                ? `linear-gradient(135deg, rgba(229, 193, 88, 0.15), ${colors.cardBg})`
+                : `linear-gradient(135deg, ${colors.cardBg}, rgba(184, 165, 217, 0.1))`,
+              border: service.featured ? `2px solid ${colors.gold}` : `1px solid ${colors.border}`,
+              boxShadow: service.featured
+                ? `0 8px 32px rgba(229, 193, 88, 0.15)`
+                : `0 4px 20px rgba(184, 165, 217, 0.1)`,
             }}
           >
             {/* Header */}
@@ -163,23 +174,23 @@ export default function ServicesPage() {
               <div>
                 {service.featured && (
                   <div
-                    className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs uppercase tracking-wider mb-3"
-                    style={{ backgroundColor: `${colors.terracotta}20`, color: colors.terracotta }}
+                    className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs uppercase tracking-wider mb-3 font-semibold"
+                    style={{ backgroundColor: `${colors.gold}25`, color: colors.gold }}
                   >
                     <Star className="w-3 h-3" />
                     <span>Most Popular</span>
                   </div>
                 )}
                 <h3
-                  className="font-display text-2xl font-medium mb-1"
-                  style={{ color: colors.text }}
+                  className="font-display text-2xl font-semibold tracking-wide mb-1"
+                  style={{ color: colors.starlight }}
                 >
                   {service.name}
                 </h3>
                 {service.category && (
                   <span
-                    className="text-xs uppercase tracking-widest"
-                    style={{ color: colors.warmGray }}
+                    className="text-xs uppercase tracking-widest font-medium"
+                    style={{ color: colors.dim }}
                   >
                     {service.category}
                   </span>
@@ -190,7 +201,7 @@ export default function ServicesPage() {
             {/* Description */}
             <p
               className="leading-relaxed mb-6"
-              style={{ color: colors.textLight }}
+              style={{ color: colors.muted }}
             >
               {service.long_description || service.description}
             </p>
@@ -199,8 +210,8 @@ export default function ServicesPage() {
             {service.includes && service.includes.length > 0 && (
               <div className="mb-6">
                 <div
-                  className="text-xs uppercase tracking-widest mb-3"
-                  style={{ color: colors.warmGray }}
+                  className="text-xs uppercase tracking-widest mb-3 font-semibold"
+                  style={{ color: colors.dim }}
                 >
                   What's Included
                 </div>
@@ -209,11 +220,11 @@ export default function ServicesPage() {
                     <li
                       key={i}
                       className="flex items-start space-x-3 text-sm"
-                      style={{ color: colors.textLight }}
+                      style={{ color: colors.muted }}
                     >
                       <CheckCircle2
                         className="w-4 h-4 mt-0.5 flex-shrink-0"
-                        style={{ color: colors.forest }}
+                        style={{ color: colors.success }}
                       />
                       <span>{item}</span>
                     </li>
@@ -225,24 +236,28 @@ export default function ServicesPage() {
             {/* Footer */}
             <div
               className="pt-6 border-t flex items-center justify-between"
-              style={{ borderColor: colors.sand }}
+              style={{ borderColor: colors.border }}
             >
               <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2 text-sm" style={{ color: colors.warmGray }}>
+                <div className="flex items-center space-x-2 text-sm font-medium" style={{ color: colors.dim }}>
                   <Clock className="w-4 h-4" />
                   <span>{service.duration_minutes} min</span>
                 </div>
                 <div
-                  className="font-display text-2xl font-medium"
-                  style={{ color: colors.terracotta }}
+                  className="font-display text-2xl font-semibold"
+                  style={{ color: colors.gold }}
                 >
                   {formatPrice(service.price_cents)}
                 </div>
               </div>
               <Link
                 href={`/portal/${slug}/book?service=${service.id}`}
-                className="flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-medium transition-all hover:scale-105"
-                style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+                className="flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105"
+                style={{
+                  backgroundColor: colors.gold,
+                  color: colors.void,
+                  boxShadow: `0 4px 15px ${colors.gold}40`,
+                }}
               >
                 <Calendar className="w-4 h-4" />
                 <span>Book Now</span>
@@ -255,14 +270,17 @@ export default function ServicesPage() {
       {/* Empty State */}
       {filteredServices.length === 0 && (
         <div
-          className="rounded-2xl p-12 text-center"
-          style={{ backgroundColor: colors.linen }}
+          className="rounded-2xl p-12 text-center backdrop-blur-xl"
+          style={{
+            background: `linear-gradient(135deg, ${colors.cardBg}, rgba(184, 165, 217, 0.1))`,
+            border: `1px solid ${colors.border}`,
+          }}
         >
-          <Moon className="w-12 h-12 mx-auto mb-4" style={{ color: colors.warmGray }} />
-          <p style={{ color: colors.textLight }}>
+          <Sparkles className="w-12 h-12 mx-auto mb-4" style={{ color: colors.violet }} />
+          <p style={{ color: colors.muted }}>
             {selectedCategory === 'all'
-              ? 'Services are being prepared for you'
-              : `No services in ${selectedCategory} category`}
+              ? 'Offerings are being prepared for you'
+              : `No offerings in ${selectedCategory} category`}
           </p>
         </div>
       )}
@@ -274,13 +292,13 @@ export default function ServicesPage() {
         transition={{ delay: 0.4 }}
         className="text-center py-8"
       >
-        <p className="mb-4" style={{ color: colors.textLight }}>
-          Not sure which offering is right for you?
+        <p className="mb-4" style={{ color: colors.muted }}>
+          Not sure which offering resonates with your journey?
         </p>
         <Link
           href={`/portal/${slug}/about`}
-          className="inline-flex items-center space-x-2 text-sm font-medium transition-colors hover:opacity-80"
-          style={{ color: colors.terracotta }}
+          className="inline-flex items-center space-x-2 text-sm font-semibold transition-colors hover:opacity-80"
+          style={{ color: colors.gold }}
         >
           <span>Learn more about my approach</span>
           <ArrowRight className="w-4 h-4" />

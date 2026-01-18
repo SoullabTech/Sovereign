@@ -376,6 +376,74 @@ export const midnightAlchemy: PortalTheme = {
   },
 };
 
+/**
+ * THEME 6: STARLIGHT MUSE
+ *
+ * Cosmic, celestial, ethereal - inspired by dididaze.com
+ * Deep space purples with golden stardust and mystical violet
+ * Best for: Astrologers, cosmic musicians, celestial healers
+ *
+ * Recommended for: Loralee Geil (Musician, Healer, Astrologer)
+ */
+export const starlightMuse: PortalTheme = {
+  id: 'starlight-muse',
+  name: 'Starlight Muse',
+  description: 'Where cosmic wisdom meets creative soul. Celestial, inspiring, transcendent.',
+  preview: 'Cosmic & Celestial',
+
+  colors: {
+    // Deep space backgrounds
+    background: '#0D0B14', // Void - deepest space
+    surface: '#1A1625', // Cosmos - purple-tinged black
+    surfaceAlt: '#251F33', // Nebula - lighter purple
+
+    // Celestial accents
+    primary: '#D4AF37', // Celestial gold
+    secondary: '#9D8EC7', // Muted violet
+    accent: '#E8B4CB', // Cosmic rose
+
+    // Text hierarchy
+    text: '#F5F0FF', // Starlight - near white with purple tint
+    textMuted: '#A89FC4', // Muted lavender
+    textLight: '#6B6280', // Dim purple-gray
+
+    // UI elements
+    border: '#3A3347', // Purple-gray border
+    borderLight: '#2D2640', // Darker border
+
+    success: '#7B9B8A', // Teal success
+    error: '#C47B7B', // Soft red
+  },
+
+  typography: {
+    displayFont: "'Cinzel', serif", // Elegant, cosmic feel
+    bodyFont: "'Quicksand', sans-serif", // Modern, approachable
+    displayWeight: '400',
+    headingStyle: 'normal',
+    letterSpacing: '0.03em',
+  },
+
+  borderRadius: {
+    small: '0.5rem',
+    medium: '1rem',
+    large: '1.5rem',
+    full: '9999px',
+  },
+
+  shadows: {
+    soft: '0 2px 12px rgba(157, 142, 199, 0.15)',
+    medium: '0 4px 20px rgba(157, 142, 199, 0.2)',
+    elevated: '0 8px 40px rgba(157, 142, 199, 0.25)',
+  },
+
+  characteristics: {
+    glassmorphism: true,
+    gradients: true,
+    decorativeElements: 'rich', // Stars, constellations
+    imageStyle: 'rounded',
+  },
+};
+
 // All themes
 export const portalThemes: PortalTheme[] = [
   terraNova,

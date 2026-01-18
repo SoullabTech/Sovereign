@@ -26,7 +26,7 @@ INSERT INTO practitioners (
 ) VALUES (
   'a0000001-0001-0001-0001-000000000001',
   'loralee',
-  'Loralee Starweaver',
+  'Loralee Geil',
   'loralee@stellium.demo',
   'Stellium Astrology',
   'Evolutionary Astrology for Soul Growth',

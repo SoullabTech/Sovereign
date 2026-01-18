@@ -3,15 +3,15 @@
 /**
  * PRACTITIONER PORTAL LAYOUT
  *
- * High-end, natural, artistic aesthetic for holistic practitioners
- * Loralee: Musician, Healer, Astrologer - where cosmic wisdom meets earthly grace
+ * Cosmic, celestial aesthetic for Loralee
+ * Musician, Healer, Astrologer - where starlight meets soul
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Sparkles, Send } from 'lucide-react';
+import { Menu, X, Sparkles, Send, Star, Moon } from 'lucide-react';
 
 interface PortalConfig {
   practitioner_id: string;
@@ -53,17 +53,24 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   const [chatLoading, setChatLoading] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
-  // High-end natural palette
+  // Cosmic celestial palette - high contrast for readability
   const colors = {
-    ivory: '#FFFEF9',
-    linen: '#F8F4EF',
-    sand: '#E8E0D5',
-    warmGray: '#9A938A',
-    clay: '#C4A77D',
-    terracotta: '#B87351',
-    forest: '#4A5D4A',
-    text: '#3D3532',
-    textLight: '#6B6460',
+    // Backgrounds
+    void: '#0D0B14', // Deep space
+    cosmos: '#1A1625', // Purple-black
+    nebula: '#251F33', // Lighter purple
+    stardust: '#2D2640', // Card backgrounds
+
+    // Accents
+    starlight: '#FFFFFF', // Pure white for maximum readability
+    violet: '#B8A5D9', // Brighter violet
+    gold: '#E5C158', // Brighter gold
+    rose: '#D4B0C5', // Brighter rose
+
+    // Text - high contrast colors
+    light: '#FFFFFF', // Pure white for main text
+    muted: '#C8BDE0', // Brighter lavender - still readable
+    dim: '#9A8FB8', // Brighter dim text
   };
 
   useEffect(() => {
@@ -130,14 +137,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.ivory }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: `linear-gradient(180deg, ${colors.void} 0%, ${colors.cosmos} 100%)` }}>
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center"
         >
-          <div className="w-12 h-12 mx-auto mb-4 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: colors.terracotta, borderTopColor: 'transparent' }} />
-          <p className="text-sm tracking-widest uppercase" style={{ color: colors.warmGray }}>Loading</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+            className="w-16 h-16 mx-auto mb-4"
+          >
+            <Star className="w-full h-full" style={{ color: colors.gold }} />
+          </motion.div>
+          <p className="text-sm tracking-[0.3em] uppercase" style={{ color: colors.muted }}>Loading</p>
         </motion.div>
       </div>
     );
@@ -145,10 +158,11 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   if (!config) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: colors.ivory }}>
+      <div className="min-h-screen flex items-center justify-center" style={{ background: `linear-gradient(180deg, ${colors.void} 0%, ${colors.cosmos} 100%)` }}>
         <div className="text-center px-6">
-          <p className="text-lg" style={{ color: colors.text, fontFamily: 'Cormorant Garamond, serif' }}>
-            This sanctuary is still being prepared.
+          <Moon className="w-12 h-12 mx-auto mb-4" style={{ color: colors.violet }} />
+          <p className="text-lg" style={{ color: colors.light, fontFamily: 'var(--font-display)' }}>
+            This portal is still aligning with the stars.
           </p>
         </div>
       </div>
@@ -166,25 +180,79 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Jost:wght@300;400;500&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Quicksand:wght@400;500;600;700&display=swap');
 
-        .font-display { font-family: 'Cormorant Garamond', serif; }
-        .font-body { font-family: 'Jost', sans-serif; }
+        :root {
+          --font-display: 'Cinzel', serif;
+          --font-body: 'Quicksand', sans-serif;
+        }
+
+        .font-display {
+          font-family: var(--font-display);
+          font-weight: 600;
+        }
+        .font-body {
+          font-family: var(--font-body);
+          font-weight: 500;
+        }
+
+        /* Ensure all text has good weight for readability */
+        body {
+          font-weight: 500;
+        }
+
+        /* Subtle star animation */
+        @keyframes twinkle {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
       `}</style>
 
-      <div className="min-h-screen font-body" style={{ backgroundColor: colors.ivory, color: colors.text }}>
-        {/* Elegant Header */}
-        <header className="sticky top-0 z-50" style={{ backgroundColor: `${colors.ivory}F8`, backdropFilter: 'blur(12px)' }}>
+      <div
+        className="min-h-screen font-body"
+        style={{
+          background: `linear-gradient(180deg, ${colors.void} 0%, ${colors.cosmos} 50%, ${colors.nebula} 100%)`,
+          color: colors.light,
+        }}
+      >
+        {/* Starfield Background Effect */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          {[...Array(50)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-1 h-1 rounded-full"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                backgroundColor: colors.starlight,
+                opacity: Math.random() * 0.5 + 0.2,
+                animation: `twinkle ${Math.random() * 3 + 2}s ease-in-out infinite`,
+                animationDelay: `${Math.random() * 2}s`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Header */}
+        <header
+          className="sticky top-0 z-50 backdrop-blur-xl"
+          style={{ backgroundColor: `${colors.void}E6`, borderBottom: `1px solid ${colors.stardust}` }}
+        >
           <div className="max-w-6xl mx-auto px-6 lg:px-8">
-            {/* Top Bar */}
-            <div className="flex items-center justify-between py-5 border-b" style={{ borderColor: `${colors.sand}80` }}>
+            <div className="flex items-center justify-between py-5">
               {/* Logo */}
               <Link href={`/portal/${slug}`} className="group">
-                <h1 className="font-display text-2xl md:text-3xl font-light tracking-wide" style={{ color: colors.text }}>
+                <h1
+                  className="font-display text-xl md:text-2xl tracking-wider"
+                  style={{ color: colors.light }}
+                >
                   {config.brand.name}
                 </h1>
                 {config.brand.tagline && (
-                  <p className="text-xs tracking-[0.2em] uppercase mt-0.5 opacity-60" style={{ color: colors.textLight }}>
+                  <p
+                    className="text-xs tracking-[0.2em] uppercase mt-0.5"
+                    style={{ color: colors.muted }}
+                  >
                     {config.brand.tagline}
                   </p>
                 )}
@@ -196,10 +264,9 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                   <Link
                     key={item.path}
                     href={item.external ? item.path : `/portal/${slug}${item.path === '/' ? '' : item.path}`}
-                    className="text-sm tracking-wider transition-colors duration-200"
+                    className="text-sm tracking-wider transition-all duration-300 hover:text-white"
                     style={{
-                      color: isActive(item.path) ? colors.terracotta : colors.textLight,
-                      fontWeight: isActive(item.path) ? 500 : 400,
+                      color: isActive(item.path) ? colors.gold : colors.muted,
                     }}
                   >
                     {item.label}
@@ -211,7 +278,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 -mr-2"
-                style={{ color: colors.text }}
+                style={{ color: colors.light }}
               >
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
@@ -232,7 +299,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                         key={item.path}
                         href={item.external ? item.path : `/portal/${slug}${item.path === '/' ? '' : item.path}`}
                         className="block text-lg tracking-wide"
-                        style={{ color: isActive(item.path) ? colors.terracotta : colors.text }}
+                        style={{ color: isActive(item.path) ? colors.gold : colors.light }}
                       >
                         {item.label}
                       </Link>
@@ -245,24 +312,34 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
         </header>
 
         {/* Main Content */}
-        <main className="max-w-6xl mx-auto px-6 lg:px-8 py-16">{children}</main>
+        <main className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8 py-16">
+          {children}
+        </main>
 
-        {/* Elegant Footer */}
-        <footer style={{ backgroundColor: colors.linen }}>
-          <div className="max-w-6xl mx-auto px-6 lg:px-8 py-20">
+        {/* Footer */}
+        <footer style={{ backgroundColor: colors.void, borderTop: `1px solid ${colors.stardust}` }}>
+          <div className="max-w-6xl mx-auto px-6 lg:px-8 py-16">
             <div className="grid md:grid-cols-3 gap-12 md:gap-8">
               {/* Brand */}
               <div>
-                <h3 className="font-display text-2xl font-light mb-4" style={{ color: colors.text }}>
+                <h3
+                  className="font-display text-xl tracking-wider mb-4"
+                  style={{ color: colors.light }}
+                >
                   {config.brand.name}
                 </h3>
-                <p className="text-sm leading-relaxed mb-6" style={{ color: colors.textLight }}>
+                <p className="text-sm leading-relaxed mb-6" style={{ color: colors.muted }}>
                   {config.brand.tagline}
                 </p>
                 <div className="flex space-x-4">
                   {config.social?.instagram && (
-                    <a href={config.social.instagram} target="_blank" rel="noopener noreferrer"
-                      className="text-sm tracking-wide transition-colors" style={{ color: colors.textLight }}>
+                    <a
+                      href={config.social.instagram}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm tracking-wide transition-colors hover:text-white"
+                      style={{ color: colors.muted }}
+                    >
                       Instagram
                     </a>
                   )}
@@ -271,7 +348,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
               {/* Navigation */}
               <div>
-                <h4 className="text-xs tracking-[0.2em] uppercase mb-6" style={{ color: colors.warmGray }}>
+                <h4
+                  className="text-xs tracking-[0.2em] uppercase mb-6"
+                  style={{ color: colors.dim }}
+                >
                   Explore
                 </h4>
                 <div className="space-y-3">
@@ -279,8 +359,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     <Link
                       key={item.path}
                       href={item.external ? item.path : `/portal/${slug}${item.path === '/' ? '' : item.path}`}
-                      className="block text-sm transition-colors"
-                      style={{ color: colors.textLight }}
+                      className="block text-sm transition-colors hover:text-white"
+                      style={{ color: colors.muted }}
                     >
                       {item.label}
                     </Link>
@@ -288,18 +368,21 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                 </div>
               </div>
 
-              {/* Contact */}
+              {/* Connect */}
               <div>
-                <h4 className="text-xs tracking-[0.2em] uppercase mb-6" style={{ color: colors.warmGray }}>
+                <h4
+                  className="text-xs tracking-[0.2em] uppercase mb-6"
+                  style={{ color: colors.dim }}
+                >
                   Connect
                 </h4>
-                <p className="text-sm leading-relaxed" style={{ color: colors.textLight }}>
+                <p className="text-sm leading-relaxed" style={{ color: colors.muted }}>
                   Ready to explore your cosmic blueprint?
                 </p>
                 <Link
                   href={`/portal/${slug}/book`}
-                  className="inline-block mt-4 text-sm tracking-wide border-b transition-colors"
-                  style={{ color: colors.terracotta, borderColor: colors.terracotta }}
+                  className="inline-block mt-4 text-sm tracking-wide border-b transition-colors hover:border-white"
+                  style={{ color: colors.gold, borderColor: colors.gold }}
                 >
                   Book a Reading
                 </Link>
@@ -307,13 +390,20 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </div>
 
             {/* Bottom */}
-            <div className="mt-16 pt-8 border-t flex flex-col md:flex-row items-center justify-between text-xs"
-              style={{ borderColor: colors.sand, color: colors.warmGray }}>
-              <p>© {new Date().getFullYear()} {config.brand.name}</p>
+            <div
+              className="mt-16 pt-8 border-t flex flex-col md:flex-row items-center justify-between text-xs"
+              style={{ borderColor: colors.stardust, color: colors.dim }}
+            >
+              <p>&copy; {new Date().getFullYear()} {config.brand.name}</p>
               <p className="mt-2 md:mt-0">
-                Crafted with care by{' '}
-                <a href="https://soullab.life" target="_blank" rel="noopener noreferrer"
-                  className="underline hover:no-underline" style={{ color: colors.terracotta }}>
+                Crafted with starlight by{' '}
+                <a
+                  href="https://soullab.life"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline hover:no-underline"
+                  style={{ color: colors.violet }}
+                >
                   Soullab
                 </a>
               </p>
@@ -321,82 +411,157 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
           </div>
         </footer>
 
-        {/* Chat Button */}
+        {/* Chat Button - Stellium AI */}
         <motion.button
           onClick={() => setChatOpen(!chatOpen)}
-          className="fixed bottom-6 right-6 z-50 w-16 h-16 rounded-full shadow-lg flex items-center justify-center"
-          style={{ backgroundColor: colors.forest, color: colors.ivory }}
-          whileHover={{ scale: 1.05 }}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-full shadow-2xl"
+          style={{
+            background: `linear-gradient(135deg, ${colors.violet} 0%, ${colors.gold} 100%)`,
+            color: colors.void,
+            boxShadow: `0 8px 32px rgba(184, 165, 217, 0.4), 0 0 60px rgba(229, 193, 88, 0.2)`,
+          }}
+          whileHover={{ scale: 1.05, boxShadow: `0 12px 40px rgba(184, 165, 217, 0.5), 0 0 80px rgba(229, 193, 88, 0.3)` }}
           whileTap={{ scale: 0.95 }}
+          animate={{
+            boxShadow: [
+              `0 8px 32px rgba(184, 165, 217, 0.4), 0 0 60px rgba(229, 193, 88, 0.2)`,
+              `0 8px 40px rgba(184, 165, 217, 0.5), 0 0 80px rgba(229, 193, 88, 0.3)`,
+              `0 8px 32px rgba(184, 165, 217, 0.4), 0 0 60px rgba(229, 193, 88, 0.2)`,
+            ],
+          }}
+          transition={{ duration: 3, repeat: Infinity }}
         >
-          {chatOpen ? <X className="w-6 h-6" /> : <Sparkles className="w-6 h-6" />}
+          {chatOpen ? (
+            <X className="w-5 h-5" />
+          ) : (
+            <>
+              <Sparkles className="w-5 h-5" />
+              <span className="font-display text-sm font-semibold tracking-wide">Ask Stellium</span>
+            </>
+          )}
         </motion.button>
 
-        {/* Chat Window */}
+        {/* Chat Window - Virtual Stellium */}
         <AnimatePresence>
           {chatOpen && (
             <motion.div
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              className="fixed bottom-24 right-6 z-50 w-[400px] max-w-[calc(100vw-3rem)] rounded-2xl shadow-2xl overflow-hidden"
-              style={{ backgroundColor: colors.ivory }}
+              className="fixed bottom-24 right-6 z-50 w-[420px] max-w-[calc(100vw-3rem)] rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl"
+              style={{
+                backgroundColor: `${colors.cosmos}F5`,
+                border: `1px solid ${colors.stardust}`,
+                boxShadow: `0 25px 80px rgba(0,0,0,0.5), 0 0 100px rgba(184, 165, 217, 0.15)`,
+              }}
             >
               {/* Header */}
-              <div className="px-6 py-5" style={{ backgroundColor: colors.forest }}>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ backgroundColor: `${colors.ivory}20` }}>
-                    <Sparkles className="w-5 h-5" style={{ color: colors.ivory }} />
+              <div
+                className="px-6 py-5 relative overflow-hidden"
+                style={{ background: `linear-gradient(135deg, ${colors.nebula} 0%, ${colors.stardust} 100%)` }}
+              >
+                {/* Decorative stars */}
+                <div className="absolute inset-0 pointer-events-none">
+                  {[...Array(8)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="absolute w-1 h-1 rounded-full"
+                      style={{
+                        left: `${Math.random() * 100}%`,
+                        top: `${Math.random() * 100}%`,
+                        backgroundColor: colors.gold,
+                        opacity: Math.random() * 0.5 + 0.3,
+                      }}
+                    />
+                  ))}
+                </div>
+                <div className="flex items-center space-x-4 relative z-10">
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.violet} 0%, ${colors.gold} 100%)`,
+                      boxShadow: `0 4px 20px rgba(229, 193, 88, 0.4)`,
+                    }}
+                  >
+                    <Star className="w-6 h-6" style={{ color: colors.void }} />
                   </div>
                   <div>
-                    <h3 className="font-display text-lg" style={{ color: colors.ivory }}>
-                      Ask {config.practitioner_name.split(' ')[0]}
+                    <h3 className="font-display text-xl font-semibold tracking-wide" style={{ color: colors.light }}>
+                      Stellium
                     </h3>
-                    <p className="text-xs opacity-80" style={{ color: colors.ivory }}>
-                      Your cosmic companion
+                    <p className="text-sm font-medium" style={{ color: colors.muted }}>
+                      Your celestial guide • Available 24/7
                     </p>
                   </div>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="h-80 overflow-y-auto p-4 space-y-4" style={{ backgroundColor: colors.linen }}>
+              <div
+                className="h-96 overflow-y-auto p-5 space-y-4"
+                style={{ backgroundColor: colors.void }}
+              >
                 {chatMessages.length === 0 && (
-                  <div className="rounded-2xl rounded-tl-sm p-4" style={{ backgroundColor: colors.ivory }}>
-                    <p className="text-sm leading-relaxed" style={{ color: colors.text }}>
-                      Hello, beautiful soul ✨
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="rounded-2xl rounded-tl-sm p-5"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.stardust}, rgba(184, 165, 217, 0.15))`,
+                      border: `1px solid ${colors.nebula}`,
+                    }}
+                  >
+                    <p className="text-base leading-relaxed font-medium" style={{ color: colors.light }}>
+                      Hello, beautiful soul
                     </p>
-                    <p className="text-sm leading-relaxed mt-2" style={{ color: colors.textLight }}>
-                      I'm here to help you explore the stars. Ask me about your birth chart, current transits, or anything astrology-related.
+                    <p className="text-sm leading-relaxed mt-3" style={{ color: colors.muted }}>
+                      I'm Stellium, {config.practitioner_name.split(' ')[0]}'s AI companion. I hold her wisdom and voice to support you between sessions.
                     </p>
-                  </div>
+                    <p className="text-sm leading-relaxed mt-2" style={{ color: colors.muted }}>
+                      Ask me about your birth chart, current transits, relationship dynamics, or any cosmic question on your heart.
+                    </p>
+                  </motion.div>
                 )}
 
                 {chatMessages.map((msg, i) => (
-                  <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
                     <div
-                      className={`rounded-2xl px-4 py-3 max-w-[85%] ${msg.role === 'user' ? 'rounded-br-sm' : 'rounded-tl-sm'}`}
+                      className={`rounded-2xl px-5 py-3 max-w-[85%] ${msg.role === 'user' ? 'rounded-br-sm' : 'rounded-tl-sm'}`}
                       style={{
-                        backgroundColor: msg.role === 'user' ? colors.forest : colors.ivory,
-                        color: msg.role === 'user' ? colors.ivory : colors.text,
+                        background: msg.role === 'user'
+                          ? `linear-gradient(135deg, ${colors.violet} 0%, ${colors.gold} 100%)`
+                          : `linear-gradient(135deg, ${colors.stardust}, rgba(184, 165, 217, 0.1))`,
+                        color: msg.role === 'user' ? colors.void : colors.light,
+                        border: msg.role === 'user' ? 'none' : `1px solid ${colors.nebula}`,
                       }}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
 
                 {chatLoading && (
                   <div className="flex justify-start">
-                    <div className="rounded-2xl rounded-tl-sm px-4 py-3" style={{ backgroundColor: colors.ivory }}>
-                      <div className="flex space-x-1">
+                    <div
+                      className="rounded-2xl rounded-tl-sm px-5 py-4"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.stardust}, rgba(184, 165, 217, 0.1))`,
+                        border: `1px solid ${colors.nebula}`,
+                      }}
+                    >
+                      <div className="flex space-x-2">
                         {[0, 1, 2].map(i => (
                           <motion.div
                             key={i}
-                            className="w-2 h-2 rounded-full"
-                            style={{ backgroundColor: colors.warmGray }}
-                            animate={{ opacity: [0.3, 1, 0.3] }}
-                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
+                            className="w-2.5 h-2.5 rounded-full"
+                            style={{ backgroundColor: colors.gold }}
+                            animate={{ opacity: [0.3, 1, 0.3], scale: [0.8, 1, 0.8] }}
+                            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
                           />
                         ))}
                       </div>
@@ -408,7 +573,10 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               </div>
 
               {/* Input */}
-              <div className="p-4 border-t" style={{ borderColor: colors.sand, backgroundColor: colors.ivory }}>
+              <div
+                className="p-5 border-t"
+                style={{ borderColor: colors.stardust, backgroundColor: colors.cosmos }}
+              >
                 <div className="flex items-center space-x-3">
                   <input
                     type="text"
@@ -416,18 +584,22 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && sendChatMessage()}
                     placeholder="Ask about the stars..."
-                    className="flex-1 px-4 py-3 rounded-full text-sm outline-none transition-all"
+                    className="flex-1 px-5 py-3.5 rounded-full text-sm outline-none transition-all font-medium"
                     style={{
-                      backgroundColor: colors.linen,
-                      color: colors.text,
-                      border: `1px solid ${colors.sand}`,
+                      backgroundColor: colors.stardust,
+                      color: colors.light,
+                      border: `1px solid ${colors.nebula}`,
                     }}
                   />
                   <button
                     onClick={sendChatMessage}
                     disabled={chatLoading || !chatInput.trim()}
-                    className="p-3 rounded-full transition-all disabled:opacity-50"
-                    style={{ backgroundColor: colors.terracotta, color: colors.ivory }}
+                    className="p-3.5 rounded-full transition-all disabled:opacity-50"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.violet} 0%, ${colors.gold} 100%)`,
+                      color: colors.void,
+                      boxShadow: `0 4px 15px rgba(229, 193, 88, 0.3)`,
+                    }}
                   >
                     <Send className="w-5 h-5" />
                   </button>

@@ -152,6 +152,8 @@ function SigninContent() {
         localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
         // Set session version to prevent /maia from triggering migration redirect
         localStorage.setItem('maia_session_version', '2');
+        // Mark signup as complete to prevent /test-elemental from re-showing passkey form
+        localStorage.setItem('signup_completed', 'true');
 
         // Redirect based on onboarding status
         if (user.onboarded) {
@@ -192,6 +194,7 @@ function SigninContent() {
           localStorage.setItem('explorerName', validLocalName);
           localStorage.setItem('betaOnboardingComplete', 'true');
           localStorage.setItem('maia_session_version', '2');
+          localStorage.setItem('signup_completed', 'true');
           router.push('/maia');
           return;
         }
