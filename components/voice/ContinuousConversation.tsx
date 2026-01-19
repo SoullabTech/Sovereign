@@ -50,7 +50,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const [platformInfo, setPlatformInfo] = useState<PlatformInfo | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
   const [debugLog, setDebugLog] = useState<string[]>([]); // On-screen debug for iOS
-  const [showDebugPanel, setShowDebugPanel] = useState(true); // Always show debug on native for TestFlight debugging
+  const [showDebugPanel, setShowDebugPanel] = useState(false); // Disabled - was interfering with mic activation
 
   // Helper to add debug messages (visible on screen for iOS debugging)
   const addDebug = useCallback((msg: string) => {
@@ -974,6 +974,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setVoiceError(null);
         isProcessingRef.current = false;
         consecutiveRestartCount.current = 0;
+        // 🔥 FIX: Reset lastSpeechTime so silence detection doesn't trigger immediately
+        lastSpeechTime.current = Date.now();
 
         // 🚫 SKIP audio monitoring on native iOS - it conflicts with native speech recognition
         // The native plugin handles mic access directly; calling getUserMedia() causes crashes
@@ -1269,9 +1271,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         throw new Error('VOICE_UNAVAILABLE');
       }
 
+      // 🔥 FIX: Set isListeningRef BEFORE initializing audio monitoring
+      // This prevents the audio level loop from immediately stopping
+      isListeningRef.current = true;
+
       // Initialize audio monitoring
       const audioReady = await initializeAudioMonitoring();
       if (!audioReady) {
+        isListeningRef.current = false; // Reset on failure
         console.error('❌ [ContinuousConversation] Audio monitoring failed');
         setVoiceError('Microphone access failed. Please check permissions.');
         throw new Error('MICROPHONE_UNAVAILABLE');
@@ -1282,7 +1289,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       // NOW we can show listening state for web
       setIsListening(true);
-      isListeningRef.current = true;
       onRecordingStateChange?.(true);
       console.log('📡 [Web] Permissions OK - showing listening state');
 
@@ -1297,6 +1303,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       // Reset restart counter when user manually starts listening
       consecutiveRestartCount.current = 0;
+      // 🔥 FIX: Reset lastSpeechTime so "no recent speech" check doesn't trigger immediately
+      lastSpeechTime.current = Date.now();
 
       try {
         recognitionRef.current.start();
@@ -1597,7 +1605,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           </div>
         </div>
       )}
-      {/* Toggle to show debug panel again */}
+      {/* Toggle to show debug panel again - DISABLED for production */}
+      {/* Uncomment below for TestFlight debugging only:
       {Capacitor.isNativePlatform() && !showDebugPanel && (
         <button
           onClick={() => setShowDebugPanel(true)}
@@ -1606,6 +1615,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           🐛
         </button>
       )}
+      */}
 
     <div className="flex items-center gap-3">
       {/* Main control button */}
