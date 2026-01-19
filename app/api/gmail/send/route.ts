@@ -96,6 +96,10 @@ export async function POST(request: NextRequest) {
  * Check Gmail connection status
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const userId = request.nextUrl.searchParams.get('userId');
 
   if (!userId) {

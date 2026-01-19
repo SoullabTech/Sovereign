@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Voice Transcript Persistence API
  *
@@ -11,6 +13,10 @@ import { ensureSession, addConversationExchange } from '@/lib/sovereign/sessionM
 import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const body = await request.json();
     const {

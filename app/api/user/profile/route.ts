@@ -1,5 +1,5 @@
 // Dynamic API - needs database access at runtime
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
@@ -10,6 +10,10 @@ import { query } from '@/lib/db/postgres';
  */
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

@@ -5,7 +5,7 @@
  * all 10-year luck periods with TCM health guidance.
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateDaYun, formatDaYunPeriod, getCurrentPhasesSummary } from '@/lib/astrology/daYunCalculator';
@@ -108,6 +108,10 @@ export async function POST(request: NextRequest) {
  * GET endpoint for quick current transits info
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const searchParams = request.nextUrl.searchParams;
     const birthDate = searchParams.get('birthDate');

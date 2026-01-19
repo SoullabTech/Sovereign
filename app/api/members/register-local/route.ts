@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Register Local User API
  *
@@ -16,6 +18,10 @@ import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConf
 import crypto from 'crypto';
 
 export async function POST(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const body = await request.json();
     const { username, password, email, name, explorerId } = body;

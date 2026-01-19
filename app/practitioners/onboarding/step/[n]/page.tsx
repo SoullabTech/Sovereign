@@ -1,3 +1,6 @@
+export const dynamic = 'force-static';
+export function generateStaticParams() { return []; }
+
 import PractitionerOnboardingWizard from "@/components/onboarding/PractitionerOnboardingWizard";
 
 export default async function OnboardingStepPage({

@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Geocoding API for Birth Location Search
  *
@@ -62,6 +64,10 @@ function getTimezoneFromCoords(lat: number, lon: number): { timezone: string; ut
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const { searchParams } = new URL(request.url);
   const query = searchParams.get('q');
 

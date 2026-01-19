@@ -163,7 +163,7 @@ export function SupervisionRecorder({
   // Poll for transcript updates
   const pollTranscript = async (sid: string) => {
     try {
-      const response = await fetch(apiUrl(`/api/supervision/transcript?sessionId=${sid}&limit=50`));
+      const response = await fetch(apiUrl(`/api/supervision/transcript/list?sessionId=${sid}&limit=50`));
       const data = await response.json();
 
       if (data.success && data.transcript) {

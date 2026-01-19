@@ -84,7 +84,7 @@ export default function SessionsPage() {
         if (statusFilter) params.set('status', statusFilter);
       }
 
-      const response = await fetch(`/api/stellium/sessions?${params}`);
+      const response = await fetch(`/api/stellium/sessions/list?${params}`);
       if (!response.ok) throw new Error('Failed to fetch sessions');
 
       const data = await response.json();

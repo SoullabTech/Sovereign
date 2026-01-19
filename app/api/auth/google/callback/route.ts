@@ -7,12 +7,16 @@
 
 
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // Handle static generation gracefully
   let searchParams: URLSearchParams;
   try {

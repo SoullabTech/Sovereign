@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Data Migration API
  *
@@ -154,6 +156,10 @@ export async function POST(request: NextRequest) {
 
 // GET endpoint to preview what would be migrated
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const oldUserId = searchParams.get('oldUserId');

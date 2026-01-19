@@ -38,6 +38,10 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ patternId: string }> }
 ) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { patternId } = await params;
 

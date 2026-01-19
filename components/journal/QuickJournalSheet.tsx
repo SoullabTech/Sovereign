@@ -100,7 +100,7 @@ export function QuickJournalSheet({
       // Fetch recent entries
       if (userId) {
         setIsLoadingRecent(true);
-        fetch(`/api/journal/quick?userId=${encodeURIComponent(userId)}&limit=5`)
+        fetch(`/api/journal/quick/list?userId=${encodeURIComponent(userId)}&limit=5`)
           .then(res => res.json())
           .then(data => {
             if (data.success) {

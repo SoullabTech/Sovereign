@@ -126,7 +126,7 @@ export default function ClientProfilePage() {
 
   const fetchSessions = async () => {
     try {
-      const response = await fetch(`/api/stellium/sessions?practitionerId=${practitionerId}&clientId=${clientId}`);
+      const response = await fetch(`/api/stellium/sessions/list?practitionerId=${practitionerId}&clientId=${clientId}`);
       if (!response.ok) throw new Error('Failed to fetch sessions');
       const data = await response.json();
       setSessions(data.sessions || []);

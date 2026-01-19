@@ -1,5 +1,5 @@
 // Production requires force-dynamic for database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * Creativity Stats API
@@ -20,6 +20,10 @@ import {
 } from '@/lib/creativity/service';
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ success: true, stats: {}, streak: null, journey: {}, achievements: [] });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');

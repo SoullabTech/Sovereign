@@ -12,7 +12,7 @@ export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
 
 /**
  * Convert a relative API path to full URL for mobile apps
- * @param path - API path like "/api/journal/quick"
+ * @param path - API path like "/api/journal/quick/list"
  * @returns Full URL if API_BASE is set, otherwise the original path
  */
 export function apiUrl(path: string): string {

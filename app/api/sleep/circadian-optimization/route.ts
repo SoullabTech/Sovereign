@@ -58,6 +58,10 @@ export async function POST(request: NextRequest) {
 
 // Get circadian insights and recommendations
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const user = betaSession.getCurrentUser();
     if (!user?.id) {

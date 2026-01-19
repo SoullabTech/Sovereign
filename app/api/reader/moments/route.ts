@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-static'
 
 // GET reading moments for a member
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const memberId = request.headers.get('x-member-id')
   const segmentId = request.nextUrl.searchParams.get('segmentId')
   const chapterId = request.nextUrl.searchParams.get('chapterId')

@@ -63,7 +63,7 @@ export function InviteManager({ memberId }: InviteManagerProps) {
 
   const fetchInvites = useCallback(async () => {
     try {
-      const response = await fetch(`/api/invites?memberId=${memberId}`);
+      const response = await fetch(`/api/invites/list?memberId=${memberId}`);
       const data = await response.json();
 
       if (response.ok) {

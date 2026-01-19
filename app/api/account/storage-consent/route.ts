@@ -1,5 +1,5 @@
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const revalidate = false;
 
 /**
@@ -103,6 +103,10 @@ export async function POST(req: NextRequest) {
 
 // GET endpoint to retrieve current consent state
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const memberId = req.nextUrl.searchParams.get('memberId');
 

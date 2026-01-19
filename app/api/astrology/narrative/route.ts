@@ -13,7 +13,7 @@ import {
 } from '@/lib/story/archetypalNarrativeService';
 import { BirthChartData } from '@/lib/story/storyWeaver';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * POST /api/astrology/narrative
@@ -76,6 +76,10 @@ export async function POST(req: NextRequest) {
  * Query params: chartData as JSON string
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const chartDataStr = searchParams.get('chartData');

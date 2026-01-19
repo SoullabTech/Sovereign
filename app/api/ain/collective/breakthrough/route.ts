@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * AIN Collective Breakthrough API
  * Path: /api/ain/collective/breakthrough
@@ -114,6 +116,10 @@ export async function POST(request: NextRequest) {
  * - forPrompt: if true, returns condensed wisdom for system prompt injection
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const phase = searchParams.get('phase') || 'unknown';

@@ -1,6 +1,6 @@
 // @ts-nocheck
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;

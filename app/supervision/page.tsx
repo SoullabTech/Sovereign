@@ -234,7 +234,7 @@ export default function SupervisionDashboard() {
   const fetchInsights = useCallback(async (sessionId: string) => {
     setIsLoadingInsights(true);
     try {
-      const response = await fetch(apiUrl(`/api/supervision/insights?sessionId=${sessionId}`));
+      const response = await fetch(apiUrl(`/api/supervision/insights/list?sessionId=${sessionId}`));
       const data = await response.json();
       if (data.success) {
         setInsights(data.insights || {});

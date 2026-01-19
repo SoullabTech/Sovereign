@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Birth Chart Calculation API
  *

@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // app/api/maia/feedback/route.ts
 // API endpoint for collecting user feedback on MAIA's responses
 // Uses clean schema: maia_decision_feedback linked to maia_decisions
@@ -181,6 +181,10 @@ export async function POST(request: NextRequest) {
 
 // Get feedback analytics and insights using clean schema views
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const daysBack = parseInt(searchParams.get('days') || '7');

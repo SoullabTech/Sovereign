@@ -25,7 +25,7 @@ import {
   type InsightGenerationParams
 } from '@/lib/practice/InsightGenerator';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 export async function POST(req: NextRequest) {
   try {
@@ -116,6 +116,10 @@ export async function POST(req: NextRequest) {
 
 // GET: Retrieve existing insights for a session
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');

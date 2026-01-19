@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Vimshottari Dasha API
  *
@@ -140,6 +142,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const { searchParams } = new URL(request.url);
 
   // If no birth date provided, return info about the Dasha system

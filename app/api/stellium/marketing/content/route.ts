@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * SOCIAL CONTENT API
  *
@@ -12,6 +14,10 @@ import {
 } from '@/lib/stellium/marketing';
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const practitionerId = searchParams.get('practitionerId');

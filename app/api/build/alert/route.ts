@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Build Alert Endpoint
  *
@@ -21,6 +23,10 @@ interface AlertPayload {
 const DEV_EMAIL = process.env.DEV_EMAIL || "kelly@soullab.life";
 
 export async function POST(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ success: true, stub: true });
+  }
   const expectedToken = process.env.INTERNAL_ALERT_TOKEN;
 
   // Fail closed: require token to be configured (catches undefined AND empty string)

@@ -79,7 +79,7 @@ export default function ClientsPage() {
       if (search) params.set('search', search);
       if (statusFilter) params.set('status', statusFilter);
 
-      const response = await fetch(`/api/stellium/clients?${params}`);
+      const response = await fetch(`/api/stellium/clients/list?${params}`);
       if (!response.ok) throw new Error('Failed to fetch clients');
 
       const data = await response.json();

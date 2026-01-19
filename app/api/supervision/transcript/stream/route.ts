@@ -2,12 +2,16 @@ import { NextRequest } from 'next/server';
 import { getTranscriptSegments } from '@/lib/supervision/SupervisionStore';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 // Backoff intervals (ms): start at 1s, back off when idle
 const INTERVALS = [1000, 2000, 3000, 5000];
 
 export async function GET(req: NextRequest) {
+  // Static export: return empty response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return new Response('SSE not available in static export', { status: 200 });
+  }
   const url = new URL(req.url);
   const sessionId = url.searchParams.get('sessionId');
 

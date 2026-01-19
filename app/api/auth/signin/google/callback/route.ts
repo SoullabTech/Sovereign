@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * Google Sign-In OAuth Callback
@@ -35,6 +35,10 @@ async function safeQuery(
 }
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ message: 'OAuth callback not available in static export' });
+  }
   const baseUrl = new URL(req.url).origin;
   const params = new URL(req.url).searchParams;
   const code = params.get('code');

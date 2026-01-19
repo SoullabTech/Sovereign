@@ -84,6 +84,10 @@ export async function POST(req: NextRequest) {
 
 // Allow GET to retrieve completed session info for review
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');

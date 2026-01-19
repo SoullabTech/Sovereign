@@ -44,7 +44,7 @@ export default function CaseloadPage() {
       if (filters?.element) params.append('element', filters.element);
       if (filters?.search) params.append('search', filters.search);
 
-      const response = await fetch(`/api/caseload?${params}`);
+      const response = await fetch(`/api/caseload/list?${params}`);
       const data = await response.json();
 
       if (!response.ok) {
@@ -242,7 +242,7 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/caseload', {
+      const response = await fetch('/api/caseload/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

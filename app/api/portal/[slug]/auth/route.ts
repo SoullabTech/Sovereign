@@ -5,7 +5,8 @@
  * Returns practitioner data if authenticated
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ slug: 'default' }]; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
@@ -15,6 +16,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { slug: string } }
 ) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { slug } = params;
 

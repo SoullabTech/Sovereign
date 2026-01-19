@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Send Email Verification API
  *

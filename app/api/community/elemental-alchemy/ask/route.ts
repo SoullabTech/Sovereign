@@ -20,6 +20,10 @@ interface AskMaiaRequest {
 }
 
 export async function POST(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const body: AskMaiaRequest = await request.json();
     const { teaching, question, element, chapterNum, userId, chapterTitle, chapterContent } = body;

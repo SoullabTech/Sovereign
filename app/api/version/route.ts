@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 // backend
 // file: app/api/version/route.ts
 

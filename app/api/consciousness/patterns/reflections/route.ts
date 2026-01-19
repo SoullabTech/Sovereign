@@ -16,7 +16,7 @@ import {
   PatternType,
 } from '@/lib/consciousness/PatternReflectionService';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * GET /api/consciousness/patterns/reflections
@@ -29,6 +29,10 @@ export const dynamic = 'force-dynamic';
  * - resonant: If true, only return resonant patterns
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');

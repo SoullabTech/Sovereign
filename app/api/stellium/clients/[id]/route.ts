@@ -4,7 +4,8 @@
  * Operations on a single client
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ id: 'default' }]; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -29,6 +30,10 @@ interface RouteParams {
  * - timeline: if 'true', include full session history
  */
 export async function GET(request: NextRequest, { params }: RouteParams) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { id: clientId } = await params;
     const searchParams = request.nextUrl.searchParams;

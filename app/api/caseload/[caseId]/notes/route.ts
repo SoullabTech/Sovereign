@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 export function generateStaticParams() {
   return [{ caseId: 'default' }];
@@ -37,6 +37,10 @@ interface RouteParams {
  * - offset: Pagination offset
  */
 export async function GET(request: NextRequest, context: RouteParams) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { caseId } = await context.params;
     const { searchParams } = new URL(request.url);

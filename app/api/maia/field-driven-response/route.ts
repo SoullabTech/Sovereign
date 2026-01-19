@@ -171,6 +171,10 @@ export async function PUT(request: NextRequest) {
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get('action') || 'status';

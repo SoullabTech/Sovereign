@@ -142,7 +142,7 @@ export function HandwritingUploadSheet({
     setError(null);
 
     try {
-      const response = await fetch(apiUrl('/api/journal/quick'), {
+      const response = await fetch(apiUrl('/api/journal/quick/list'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

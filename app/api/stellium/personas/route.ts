@@ -7,7 +7,7 @@
  *  and knows when to stay quiet."
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -34,6 +34,10 @@ import { Modality } from '@/lib/stellium/types';
  * - context: if 'true', return full MAIA context with system prompt
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const searchParams = request.nextUrl.searchParams;
     const practitionerId = searchParams.get('practitionerId');

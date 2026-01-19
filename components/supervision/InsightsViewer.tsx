@@ -207,7 +207,7 @@ export default function InsightsViewer({
       try {
         const res = await fetch(
           apiUrl(
-            `/api/supervision/insights?sessionId=${encodeURIComponent(sessionId)}&afterTs=${afterTsRef.current}`
+            `/api/supervision/insights/list?sessionId=${encodeURIComponent(sessionId)}&afterTs=${afterTsRef.current}`
           ),
           { method: 'GET' }
         );

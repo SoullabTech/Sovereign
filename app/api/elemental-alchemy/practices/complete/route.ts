@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { pool } from '@/lib/db/postgres';
 
@@ -84,6 +86,10 @@ export async function POST(req: NextRequest) {
  * Get practice completion stats for a user
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');

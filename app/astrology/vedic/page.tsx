@@ -98,7 +98,7 @@ export default function VedicAstrologyPage() {
     setError(null);
 
     try {
-      const response = await fetch('/api/astrology/vedic', {
+      const response = await fetch('/api/astrology/vedic/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

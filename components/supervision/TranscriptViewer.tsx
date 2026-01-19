@@ -173,7 +173,7 @@ export function TranscriptViewer({
       setIsLoading(true);
       try {
         const res = await fetch(
-          apiUrl(`/api/supervision/transcript?sessionId=${encodeURIComponent(sessionId!)}&afterMs=-1&limit=500`),
+          apiUrl(`/api/supervision/transcript/list?sessionId=${encodeURIComponent(sessionId!)}&afterMs=-1&limit=500`),
           { cache: 'no-store' }
         );
         const data = (await res.json()) as TranscriptResponse;
@@ -247,7 +247,7 @@ export function TranscriptViewer({
 
       try {
         const res = await fetch(
-          apiUrl(`/api/supervision/transcript?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMsRef.current}&limit=200`),
+          apiUrl(`/api/supervision/transcript/list?sessionId=${encodeURIComponent(sessionId!)}&afterMs=${afterMsRef.current}&limit=200`),
           { cache: 'no-store' }
         );
         const data = (await res.json()) as TranscriptResponse;

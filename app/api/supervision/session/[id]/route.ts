@@ -7,7 +7,8 @@
  * All data from local PostgreSQL - HIPAA compliant.
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ id: 'default' }]; }
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -25,6 +26,10 @@ interface RouteContext {
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { id: sessionId } = await context.params;
     const searchParams = request.nextUrl.searchParams;

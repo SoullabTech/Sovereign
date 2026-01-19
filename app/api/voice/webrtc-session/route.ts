@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 /**
  * WebRTC unified interface endpoint for Maia Realtime API
  * Accepts SDP offer from browser, creates session with OpenAI
  */
 export async function POST(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     // Get SDP from browser
     const sdp = await req.text();

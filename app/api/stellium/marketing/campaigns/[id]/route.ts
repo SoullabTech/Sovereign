@@ -1,3 +1,6 @@
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ id: 'default' }]; }
+
 /**
  * SINGLE CAMPAIGN API
  *
@@ -12,6 +15,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { id } = await params;
     const { searchParams } = new URL(request.url);

@@ -18,6 +18,10 @@ import {
 import type { ElementKey } from '@/lib/elemental-alchemy/assessmentQuestions';
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
   const statsOnly = searchParams.get('stats') === 'true';

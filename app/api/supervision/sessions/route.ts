@@ -6,13 +6,17 @@
  * All data from local PostgreSQL - HIPAA compliant.
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { listSessions } from '@/lib/supervision/SupervisionStore';
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const searchParams = request.nextUrl.searchParams;
     const practitionerId = searchParams.get('practitionerId') || undefined;

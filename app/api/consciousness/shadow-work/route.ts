@@ -14,7 +14,7 @@ import {
   ShadowFlow,
 } from '@/lib/consciousness/shadowWorkFlows';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * GET /api/consciousness/shadow-work
@@ -27,6 +27,10 @@ export const dynamic = 'force-dynamic';
  * No params returns all available flows
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const flowId = searchParams.get('flowId');

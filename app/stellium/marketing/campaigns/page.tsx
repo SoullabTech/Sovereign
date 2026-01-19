@@ -91,7 +91,7 @@ export default function CampaignsPage() {
       if (typeFilter) params.set('type', typeFilter);
       if (statusFilter) params.set('status', statusFilter);
 
-      const response = await fetch(`/api/stellium/marketing/campaigns?${params}`);
+      const response = await fetch(`/api/stellium/marketing/campaigns/list?${params}`);
       if (!response.ok) throw new Error('Failed to fetch campaigns');
 
       const data = await response.json();

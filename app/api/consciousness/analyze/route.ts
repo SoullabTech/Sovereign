@@ -323,6 +323,10 @@ function calculateOverallConfidence(analysis: any) {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const { searchParams } = new URL(request.url);
   const healthCheck = searchParams.get('health');
 

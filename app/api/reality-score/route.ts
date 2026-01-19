@@ -97,6 +97,10 @@ export async function POST(req: Request) {
  * GET: Retrieve user's reality assessments
  */
 export async function GET(req: Request) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // TODO: Add authentication when auth system is in place
 
   try {

@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { Resend } from 'resend';
@@ -413,6 +415,10 @@ export async function PATCH(request: NextRequest) {
 
 // GET: List all gift passkeys
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const adminSecret = searchParams.get('adminSecret');

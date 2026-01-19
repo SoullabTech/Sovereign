@@ -82,7 +82,7 @@ export default function ClientsPage() {
     try {
       setLoading(true);
       setError(null);
-      const response = await fetch(`/api/stellium/clients?practitionerId=${practitionerId}`);
+      const response = await fetch(`/api/stellium/clients/list?practitionerId=${practitionerId}`);
       if (!response.ok) throw new Error('Failed to fetch clients');
       const data = await response.json();
       setClients(data.clients || []);

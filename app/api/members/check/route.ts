@@ -1,5 +1,5 @@
 // Production requires force-dynamic for database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * Check if passkey exists in database

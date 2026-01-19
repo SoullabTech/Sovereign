@@ -13,7 +13,7 @@ import { isRlmAllowed } from '@/lib/rlm/access';
 import type { RLMConfig } from '@/lib/rlm/types';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 type AskBody = {
   query?: string;

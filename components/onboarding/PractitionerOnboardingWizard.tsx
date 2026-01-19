@@ -32,7 +32,7 @@ export default function PractitionerOnboardingWizard({ initialStep, practitioner
   const [presets, setPresets] = useState<Preset[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const apiBase = "/api/practitioner/theme";
+  const apiBase = "/api/practitioner/theme/list";
 
   // TODO: In production, practitionerId should come from auth session
   // For now, we'll use a placeholder and handle the "no practitioner" case gracefully

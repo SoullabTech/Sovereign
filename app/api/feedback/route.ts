@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 // app/api/feedback/route.ts
 // API endpoint for general platform feedback (problems, challenges, strengths, features, questions)
 
@@ -79,6 +81,10 @@ export async function POST(request: NextRequest) {
 
 // Get feedback entries (for admin dashboard)
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category');

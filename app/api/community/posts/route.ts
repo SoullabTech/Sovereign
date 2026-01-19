@@ -16,6 +16,10 @@ import { query } from '@/lib/db/postgres'
 
 // GET - List/search posts
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const { searchParams } = new URL(request.url)
 
   // Pagination

@@ -81,7 +81,7 @@ export default function ContactsPage() {
       if (statusFilter) params.set('status', statusFilter);
       if (sourceFilter) params.set('source', sourceFilter);
 
-      const response = await fetch(`/api/stellium/marketing/contacts?${params}`);
+      const response = await fetch(`/api/stellium/marketing/contacts/list?${params}`);
       if (!response.ok) throw new Error('Failed to fetch contacts');
 
       const data = await response.json();

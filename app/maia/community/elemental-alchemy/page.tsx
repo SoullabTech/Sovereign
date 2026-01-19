@@ -361,7 +361,7 @@ export default function ElementalAlchemyBookPage() {
 
   const loadBookData = async () => {
     try {
-      const res = await fetch('/api/community/elemental-alchemy')
+      const res = await fetch('/api/community/elemental-alchemy/list')
       if (res.ok) {
         const data = await res.json()
         setBookData(data)

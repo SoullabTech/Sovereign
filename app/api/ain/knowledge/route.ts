@@ -1,5 +1,5 @@
 // Production requires force-dynamic for semantic search
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -23,6 +23,10 @@ import { betaSession } from '@/lib/auth/betaSession';
  *   - format: 'chunks' (default) or 'prompt' (formatted for injection)
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const user = betaSession.getCurrentUser();
     const { searchParams } = new URL(request.url);

@@ -1,3 +1,6 @@
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ slug: 'default' }]; }
+
 /**
  * PORTAL AVAILABILITY API
  *
@@ -17,6 +20,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ slug: string }> }
 ) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ slots: [] });
+  }
   try {
     const { slug } = await params;
     const { searchParams } = new URL(request.url);

@@ -1,3 +1,9 @@
+export const dynamic = 'force-static';
+
+export function generateStaticParams() {
+  return [{ analysisId: 'default' }];
+}
+
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { SynastryGrid, type SynastryCell } from '@/components/astrology/SynastryGrid';
@@ -63,6 +69,18 @@ export default async function SynastryAnalysisPage({
   params: Promise<{ analysisId: string }>;
 }) {
   const { analysisId } = await params;
+
+  // Static export: return placeholder during pre-rendering
+  if (analysisId === 'default' || process.env.CAPACITOR_BUILD) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-dune-ibad-blue via-dune-navigator-purple to-dune-deep-sand px-4 py-8">
+        <div className="mx-auto max-w-6xl text-center text-white/60 py-20">
+          Loading synastry analysis...
+        </div>
+      </main>
+    );
+  }
+
   const data = await loadSynastry(analysisId);
 
   const cells = aspectsToGridCells(data.synastry?.aspects ?? []);

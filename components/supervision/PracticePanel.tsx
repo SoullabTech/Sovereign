@@ -82,7 +82,7 @@ export default function PracticePanel({
   useEffect(() => {
     const fetchWorlds = async () => {
       try {
-        const res = await fetch(apiUrl('/api/practice/worlds'));
+        const res = await fetch(apiUrl('/api/practice/worlds/list'));
         const data = await res.json();
         if (data.success) {
           setWorlds(data.worlds);

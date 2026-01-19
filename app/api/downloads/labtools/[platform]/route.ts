@@ -93,6 +93,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: { platform: string } }
 ) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const platform = params.platform;
     const headersList = headers();

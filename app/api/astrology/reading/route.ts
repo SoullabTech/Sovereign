@@ -4,7 +4,7 @@ import { pickLenses } from "@/lib/astrology/pickLenses";
 import { composeAstrologyReading } from "@/lib/astrology/composeAstrologyReading";
 
 export const runtime = "nodejs";
-export const dynamic = "force-dynamic";
+export const dynamic = 'force-static';
 export const revalidate = 0;
 
 async function readBodyAsUnknown(req: Request): Promise<unknown> {
@@ -65,6 +65,10 @@ export async function POST(req: Request) {
 }
 
 export async function GET() {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   return NextResponse.json(
     {
       ok: true,

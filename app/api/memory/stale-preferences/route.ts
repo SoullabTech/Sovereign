@@ -20,6 +20,10 @@ import { PreferenceConfirmationStore } from '@/lib/memory/stores/PreferenceConfi
  * GET: Fetch stale preferences for the current user
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const userId = req.headers.get('x-user-id');
     if (!userId) {

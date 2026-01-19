@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ id: 'default' }]; }
 
 /**
  * Practitioner Stripe Connect API

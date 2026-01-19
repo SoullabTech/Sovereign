@@ -20,7 +20,7 @@ import {
   sanitizeToolInput,
 } from '@/lib/rlm/security';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 const RLM_SERVICE_URL = process.env.RLM_SERVICE_URL || 'http://rlm:8080';
 

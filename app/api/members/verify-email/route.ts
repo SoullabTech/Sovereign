@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Verify Email API
  *
@@ -76,6 +78,10 @@ export async function POST(request: NextRequest) {
 
 // Also support GET for direct link clicks
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const token = request.nextUrl.searchParams.get('token');
 
   if (!token) {

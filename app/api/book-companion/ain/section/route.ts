@@ -67,6 +67,10 @@ async function loadCorpus(): Promise<string> {
 }
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // Handle static generation gracefully
   let id: string | null = null;
   try {

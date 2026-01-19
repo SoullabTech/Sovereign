@@ -12,6 +12,10 @@ const prisma = new PrismaClient();
 
 // Dream Correlations API - Track patterns between dreams and consciousness states across time
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const user = betaSession.getCurrentUser();
     if (!user?.id) {

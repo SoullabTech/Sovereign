@@ -19,7 +19,7 @@ import {
   TransitAtTime,
 } from '@/lib/journal/chartIntegrationService';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * POST /api/journal/chart-integration
@@ -104,6 +104,10 @@ export async function POST(req: NextRequest) {
  * - limit: Max entries to return
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const userId = searchParams.get('userId');

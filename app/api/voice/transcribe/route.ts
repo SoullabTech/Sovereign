@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = false;
@@ -203,6 +203,10 @@ export async function POST(req: NextRequest) {
  * Retrieve a specific voice note transcription
  */
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const url = new URL(req.url);
     const pathParts = url.pathname.split('/');

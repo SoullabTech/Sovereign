@@ -6,7 +6,7 @@
 
 import { NextResponse } from 'next/server';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 const RLM_SERVICE_URL = process.env.RLM_SERVICE_URL || 'http://rlm:8080';
 

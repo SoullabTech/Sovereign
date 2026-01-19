@@ -21,6 +21,10 @@ import { resolveCaptureUserIdFromQuery, withSessionCookie } from '@/lib/capture/
 // Skip during static export (Capacitor builds)
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // Handle static generation gracefully
   let searchParams: URLSearchParams;
   try {

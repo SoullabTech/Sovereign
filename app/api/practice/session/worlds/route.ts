@@ -7,9 +7,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionWorlds, recordSessionWorld } from '@/lib/practice/WorldsStore';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const sessionId = searchParams.get('sessionId');

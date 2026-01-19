@@ -4,7 +4,8 @@
  * Update and delete individual FAQs
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
+export async function generateStaticParams() { return [{ slug: 'default', id: 'default' }]; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';

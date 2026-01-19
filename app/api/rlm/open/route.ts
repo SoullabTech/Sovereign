@@ -12,7 +12,7 @@ import path from 'node:path';
 import { isRlmAllowed } from '@/lib/rlm/access';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 const MAX_BYTES = 200_000; // 200KB hard cap for UI rendering
 

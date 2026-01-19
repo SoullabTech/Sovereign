@@ -80,7 +80,7 @@ export default function SynastryPage() {
     setError(null);
 
     try {
-      const res = await fetch('/api/astrology/synastry', {
+      const res = await fetch('/api/astrology/synastry/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

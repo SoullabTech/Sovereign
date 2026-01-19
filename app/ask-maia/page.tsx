@@ -45,7 +45,7 @@ export default function AskMaiaPage() {
       params.set('offset', offset.toString());
       params.set('limit', '20');
 
-      const response = await fetch(`/api/ask-maia/cards?${params.toString()}`);
+      const response = await fetch(`/api/ask-maia/cards/list?${params.toString()}`);
 
       if (!response.ok) {
         throw new Error('Failed to fetch cards');

@@ -1,5 +1,5 @@
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 // app/api/maia/log-turn/route.ts
 // API endpoint for logging conversation turns into MAIA's learning system
 

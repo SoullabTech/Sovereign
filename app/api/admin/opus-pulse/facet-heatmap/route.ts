@@ -9,6 +9,10 @@ import { getPool } from '@/lib/database/postgres';
 // Skip during static export (Capacitor builds)
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // Handle static generation gracefully
   let searchParams: URLSearchParams;
   try {

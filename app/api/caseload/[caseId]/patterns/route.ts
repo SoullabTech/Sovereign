@@ -24,6 +24,10 @@ interface RouteParams {
  * Recompute pattern summary from notes and return.
  */
 export async function GET(request: NextRequest, context: RouteParams) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ success: true, summary: null });
+  }
   try {
     const { caseId } = await context.params;
     const { searchParams } = new URL(request.url);

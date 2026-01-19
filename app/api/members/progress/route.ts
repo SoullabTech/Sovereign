@@ -1,5 +1,5 @@
 // Production requires force-dynamic for database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 
 /**
@@ -72,6 +72,10 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('memberId');

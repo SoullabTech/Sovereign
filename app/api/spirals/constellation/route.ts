@@ -19,6 +19,10 @@ import { getSessionUserId } from '@/lib/auth/session-utils';
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const userId = await getSessionUserId(request);
     if (!userId) {

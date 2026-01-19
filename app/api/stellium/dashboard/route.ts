@@ -5,7 +5,7 @@
  * This aggregates client stats, upcoming sessions, and actionable items
  */
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientStats } from '@/lib/stellium/clients';
@@ -25,6 +25,10 @@ import { getPersona, generatePersonaPrompt } from '@/lib/stellium/personas';
  * - upcomingDays: days to look ahead (default 7)
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const searchParams = request.nextUrl.searchParams;
     const practitionerId = searchParams.get('practitionerId');

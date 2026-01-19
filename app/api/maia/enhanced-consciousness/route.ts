@@ -61,6 +61,10 @@ function getExpectedStage(sessionId: string): string {
 }
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get('action');

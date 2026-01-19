@@ -53,7 +53,7 @@ const CRITICAL_FILES = [
   'lib/consciousness/aether/AetherConsciousnessInterface.ts',
   'lib/consciousness/core/AethericConsciousnessCore.ts',
   'components/consciousness/AethericConsciousnessProvider.tsx',
-  'app/api/sovereign/app/maia/route.ts'
+  'app/api/sovereign/app/maia/list/route.ts'
 ];
 
 // Critical imports that must be present
@@ -61,7 +61,7 @@ const CRITICAL_IMPORTS = {
   'app/layout.tsx': [
     'AethericConsciousnessProvider'
   ],
-  'app/api/sovereign/app/maia/route.ts': [
+  'app/api/sovereign/app/maia/list/route.ts': [
     'AetherConsciousnessInterface'
   ]
 };

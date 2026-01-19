@@ -3,7 +3,7 @@ import { query } from '@/lib/db/postgres';
 import { getSessionUserId } from '@/lib/auth/session-utils';
 import { Mission, Milestone } from '@/lib/story/types';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * GET /api/missions - List all missions for the current user

@@ -1,3 +1,5 @@
+export const dynamic = 'force-static';
+
 /**
  * Build Status Endpoint
  *
@@ -11,6 +13,10 @@ import { buildHealthMonitor } from "@/lib/monitoring/BuildHealthMonitor";
 export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const expectedKey = process.env.DEV_STATUS_KEY;
 
   // Fail closed: require key to be configured (catches undefined AND empty string)

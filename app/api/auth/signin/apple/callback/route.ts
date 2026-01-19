@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * Apple Sign-In OAuth Callback
@@ -269,6 +269,10 @@ export async function POST(req: NextRequest) {
 
 // Handle GET for browser redirects (shouldn't happen with form_post but just in case)
 export async function GET(req: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const baseUrl = new URL(req.url).origin;
   return NextResponse.redirect(`${baseUrl}/signin?error=oauth_method`);
 }

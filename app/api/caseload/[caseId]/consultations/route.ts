@@ -39,6 +39,10 @@ const VALID_CONSULTATION_TYPES: ConsultationType[] = [
  * - limit: Max results (default 10)
  */
 export async function GET(request: NextRequest, context: RouteParams) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   try {
     const { caseId } = await context.params;
     const { searchParams } = new URL(request.url);

@@ -111,6 +111,10 @@ export async function OPTIONS(request: NextRequest) {
  * GET: Spiral system status and user state
  */
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   const startTime = Date.now();
   const url = new URL(request.url);
   const userId = url.searchParams.get('userId');

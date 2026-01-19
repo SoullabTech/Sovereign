@@ -1,5 +1,5 @@
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 /**
  * Voice Journal Audio File Serve API
  * GET /api/journal/quick/audio-file?path=storage/audio/journals/...
@@ -27,6 +27,10 @@ function safeRelPath(p: string): string | null {
 }
 
 export async function GET(request: NextRequest) {
+  // Static export: return stub response during pre-rendering
+  if (process.env.CAPACITOR_BUILD) {
+    return NextResponse.json({ stub: true });
+  }
   // Handle static generation gracefully
   let filePath: string | null = null;
   try {
