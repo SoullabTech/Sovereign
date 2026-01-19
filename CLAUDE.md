@@ -6,11 +6,22 @@
 
 ## Deployment
 
+- **We do NOT use cloud providers.** No EC2, AWS, GCP, Azure, or any cloud VPS. Never suggest cloud hosting.
 - **We do NOT use Vercel.** Never suggest or assume Vercel deployment.
-- Infrastructure: Docker + Caddy (reverse proxy with auto-SSL)
+- **Self-hosted infrastructure**: All services run on local/owned hardware
+- **Caddy is our edge proxy** (replaces Cloudflare) — handles HTTPS, routing, security headers, multi-domain
+- Infrastructure: Docker + Caddy (reverse proxy with auto-SSL via Let's Encrypt)
 - Deployment script: `./scripts/deploy-production.sh`
 - Production compose: `docker-compose.production.yml`
 - To deploy: SSH to server, `git pull`, run `./scripts/deploy-production.sh deploy`
+
+### Why Self-Hosted
+
+True sovereignty means no third party sits between users and their data:
+- No cloud provider with physical access to hardware
+- No CDN/proxy (Cloudflare) doing MITM on traffic
+- No jurisdiction concerns — we control the location
+- Complete air-gap capability if needed
 
 ## Database & Backend
 
