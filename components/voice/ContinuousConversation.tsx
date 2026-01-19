@@ -340,6 +340,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         return;
       }
 
+      // 🔥 FIX: DON'T auto-restart on silence timeouts (prevents "blinking listening")
+      // Web Speech API times out after ~5-8 seconds of silence. If there's been no speech,
+      // don't restart - let the user tap to restart when ready.
+      const timeSinceLastSpeech = Date.now() - lastSpeechTime.current;
+      const hasRecentSpeech = timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
+      const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
+
+      if (!hasRecentSpeech && !hasAccumulatedTranscript) {
+        console.log('🔕 [onend] No recent speech detected (' + Math.round(timeSinceLastSpeech/1000) + 's since last speech) - stopping to prevent blink');
+        console.log('   (User can tap mic to restart when ready to speak)');
+        setIsListening(false);
+        isListeningRef.current = false;
+        onRecordingStateChange?.(false);
+        return;
+      }
+
       // Only restart if we're actively listening and not processing/speaking
       // CRITICAL: Use refs instead of closure state to avoid stale values
       if (isListeningRef.current && !isProcessingRef.current && !isSpeakingRef.current) {
@@ -347,17 +363,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         const currentTime = Date.now();
         const timeSinceLastRestart = currentTime - lastRestartTime.current;
 
-        if (timeSinceLastRestart < 10000) { // Less than 10 seconds since last restart
+        // Only count RAPID restarts (< 2 seconds apart) as potentially problematic
+        // Normal Web Speech API behavior stops after ~8 seconds of silence - that's fine
+        if (timeSinceLastRestart < 2000) { // Less than 2 seconds = rapid restart (potential loop)
           consecutiveRestartCount.current++;
         } else {
-          consecutiveRestartCount.current = 1; // Reset counter if enough time has passed
+          consecutiveRestartCount.current = 0; // Reset counter for normal restarts (> 2 seconds apart)
         }
 
         lastRestartTime.current = currentTime;
 
-        // Stop the infinite loop if too many consecutive restarts
-        if (consecutiveRestartCount.current >= 5) { // Allow 5 restart attempts before blocking
-          console.log('🛑 [onend] Preventing restart loop (' + consecutiveRestartCount.current + '), stopping voice recognition');
+        // Only stop if we have RAPID consecutive restarts (true infinite loop)
+        if (consecutiveRestartCount.current >= 10) { // Allow 10 rapid restart attempts before blocking
+          console.log('🛑 [onend] Preventing restart loop (' + consecutiveRestartCount.current + ' rapid restarts), stopping voice recognition');
           setIsListening(false);
           isListeningRef.current = false;
           return;
