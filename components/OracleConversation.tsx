@@ -621,6 +621,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const lastProcessedTranscriptRef = useRef<{ text: string; timestamp: number } | null>(null);
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
+  const activatingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Safety timeout for stuck activating state
 
   // 🌊 LIQUID AI - Rhythm tracker instance
   const rhythmTrackerRef = useRef<ConversationalRhythm>(
@@ -656,6 +657,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // This is the SOURCE OF TRUTH for whether mic is actually live
   const handleRecordingStateChange = useCallback((isRecording: boolean) => {
     console.log('📡 Recording state changed:', isRecording, '(this is mic truth)');
+    // Clear any pending activating timeout - mic has responded
+    if (activatingTimeoutRef.current) {
+      clearTimeout(activatingTimeoutRef.current);
+      activatingTimeoutRef.current = null;
+    }
     setIsActivating(false); // Clear activating state - we now know the truth
     setIsListening(isRecording);
     if (isRecording) {
@@ -4193,12 +4199,29 @@ I'm not sure what I'm feeling yet.`;
                   setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
                   // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
 
+                  // 🛡️ SAFETY TIMEOUT: Clear activating state if mic doesn't confirm within 5 seconds
+                  if (activatingTimeoutRef.current) {
+                    clearTimeout(activatingTimeoutRef.current);
+                  }
+                  activatingTimeoutRef.current = setTimeout(() => {
+                    console.warn('⚠️ [voice] Mic activation timeout - clearing stuck state');
+                    setIsActivating(false);
+                    setIsMuted(true);
+                    activatingTimeoutRef.current = null;
+                    toast.error('🎤 Mic failed to start. Tap again to retry.', { duration: 3000 });
+                  }, 5000);
+
                   // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
                   try {
                     await voiceMicRef.current.startListening();
                     console.log('[voice] startListening resolved OK');
                     // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
                   } catch (error: any) {
+                    // Clear safety timeout since we're handling the error
+                    if (activatingTimeoutRef.current) {
+                      clearTimeout(activatingTimeoutRef.current);
+                      activatingTimeoutRef.current = null;
+                    }
                     const name = error?.name || 'UnknownError';
                     const msg = error?.message || String(error);
                     console.error('[voice] startListening FAILED', name, msg, error);

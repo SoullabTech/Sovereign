@@ -1024,6 +1024,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             setIsRecording(true);
             isRecordingRef.current = true;
             hasSpokenRef.current = true;
+            // 🔥 FIX: Reset restart counter when user actually speaks - prevents stopping during valid conversation
+            consecutiveRestartCount.current = 0;
 
             // Send interim transcript
             if (onInterimTranscript) {
@@ -1133,10 +1135,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               isRecordingRef.current = false;
               onTranscript(finalTranscript);
             }
+
+            // 🔥 FIX: Increment restart counter and check limit to prevent blinking loop
+            consecutiveRestartCount.current++;
+            const MAX_NATIVE_RESTARTS = 3; // Only allow 3 auto-restarts before stopping
+
+            if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
+              console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
+              setIsListening(false);
+              isListeningRef.current = false;
+              onRecordingStateChange?.(false);
+              consecutiveRestartCount.current = 0;
+              return;
+            }
+
             // Auto-restart if still in listening mode
             // 🔥 CRITICAL: Longer delay (1.5s) to allow iOS audio session to fully release after TTS
             if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-              console.log('🔄 [Native] Will auto-restart in 1.5s...');
+              console.log(`🔄 [Native] Will auto-restart in 1.5s... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
               setTimeout(async () => {
                 // Double-check conditions before restart
                 if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
@@ -1153,31 +1169,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                       popup: false
                     });
                     console.log('✅ [Native] Restart successful');
+                    // Reset counter on successful restart with speech
+                    // (will be reset to 0 when user actually speaks - see partialResults handler)
                   } catch (e: any) {
                     console.warn('⚠️ [Native] Restart failed:', e?.message || e);
-                    // On failure, try one more time after another delay
-                    setTimeout(async () => {
-                      if (isListeningRef.current && !isSpeakingRef.current) {
-                        try {
-                          // 🔊 Re-prepare audio session before retry
-                          if (VoiceController.isNativeIOS()) {
-                            await VoiceController.prepareForListening();
-                          }
-                          await NativeSpeechRecognition.start({
-                            language: 'en-US',
-                            maxResults: 3,
-                            partialResults: true,
-                            popup: false
-                          });
-                          console.log('✅ [Native] Retry restart successful');
-                        } catch (e2) {
-                          console.error('❌ [Native] Retry also failed - user must tap mic');
-                        }
-                      }
-                    }, 2000);
+                    // Don't retry - let the next listeningState: stopped handle it
+                    // This prevents nested restart attempts
                   }
                 } else {
                   console.log('🚫 [Native] Conditions changed, not restarting');
+                  consecutiveRestartCount.current = 0; // Reset on intentional stop
                 }
               }, 1500); // 1.5 seconds - gives iOS audio session time to release
             }
