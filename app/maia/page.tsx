@@ -36,7 +36,7 @@ import { LogOut, Sparkles, Menu, X, Brain, Volume2, ArrowLeft, Clock, Users, Fla
 import { motion, AnimatePresence } from 'framer-motion';
 import { SwipeNavigation, DirectionalHints } from '@/components/navigation/SwipeNavigation';
 import { FrameworkSelector } from '@/components/framework/FrameworkSelector';
-import { SyncAccountPrompt } from '@/components/auth/SyncAccountPrompt';
+// SyncAccountPrompt removed - was causing unwanted popup
 import {
   getCounselFramework,
   getScribeLens,
@@ -114,6 +114,20 @@ async function getInitialUserData() {
 
   const currentUrl = window.location.hostname;
 
+  // 🛡️ EARLY CHECK: If we already have a valid preferred name, use it
+  // This prevents API failures from overwriting good data
+  const existingPreferredName = localStorage.getItem('explorerPreferredName');
+  const existingId = localStorage.getItem('explorerId');
+  if (existingPreferredName &&
+      existingPreferredName.trim() &&
+      existingPreferredName.toLowerCase() !== 'friend' &&
+      !isLikelyUUID(existingPreferredName) &&
+      existingId &&
+      isValidMemberId(existingId)) {
+    console.log('🛡️ [MAIA] Using existing preferred name from localStorage:', existingPreferredName);
+    return { id: existingId, name: existingPreferredName };
+  }
+
   // Check multiple sources for valid member ID, prioritizing authenticated data
   let storedUserId = localStorage.getItem('explorerId');
 
@@ -168,16 +182,22 @@ async function getInitialUserData() {
         console.log('✅ [MAIA] User profile fetched from API:', validName, '(preferredName:', data.user.preferredName, ')');
         console.log('🔍 [MAIA] API response:', JSON.stringify(data.user));
 
-        // Sync to localStorage
-        localStorage.setItem('explorerName', validName);
-        localStorage.setItem('explorerPreferredName', validName);
-        localStorage.setItem('explorerId', data.user.id);
-        console.log('🔍 [MAIA] Wrote to localStorage: explorerName=' + validName);
-        localStorage.setItem('betaOnboardingComplete', 'true');
-        // PERMANENT marker that NEVER gets removed, even on signout
-        localStorage.setItem('maiaPermanentUser', 'true');
+        // 🛡️ DON'T overwrite existing good data with guest/Friend data from failed API lookup
+        if (data.user.isGuest || validName === 'Friend') {
+          console.log('⚠️ [MAIA] API returned guest data - preserving existing localStorage');
+          // Don't overwrite - fall through to check beta_user
+        } else {
+          // Sync to localStorage only if we got real user data
+          localStorage.setItem('explorerName', validName);
+          localStorage.setItem('explorerPreferredName', validName);
+          localStorage.setItem('explorerId', data.user.id);
+          console.log('🔍 [MAIA] Wrote to localStorage: explorerName=' + validName);
+          localStorage.setItem('betaOnboardingComplete', 'true');
+          // PERMANENT marker that NEVER gets removed, even on signout
+          localStorage.setItem('maiaPermanentUser', 'true');
 
-        return { id: data.user.id, name: validName };
+          return { id: data.user.id, name: validName };
+        }
       }
     } catch (error) {
       console.error('❌ [MAIA] Error fetching user profile:', error);
@@ -472,9 +492,6 @@ function MAIAPageContent() {
   // Onboarding removed - direct access only
   return (
     <ErrorBoundary>
-      {/* Prompt for users with local data but no server account */}
-      <SyncAccountPrompt />
-
       <SwipeNavigation currentPage="maia">
         {/* DirectionalHints removed - keyboard shortcuts now active (arrow keys + ESC) */}
 
