@@ -436,6 +436,11 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
               disabled={disabled || enableVoiceInput || isRecording}
               autoFocus={autoFocus}
               maxLength={maxLength}
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="sentences"
+              spellCheck={false}
+              data-form-type="other"
               className={`w-full min-h-[40px] max-h-[120px] bg-transparent border-none outline-none resize-none
                        text-sm leading-relaxed placeholder:text-white/40 transition-colors pr-12
                        ${enableVoiceInput || isRecording
