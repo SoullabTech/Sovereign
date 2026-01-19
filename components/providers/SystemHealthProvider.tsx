@@ -9,6 +9,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { systemHealthMonitor, SystemHealth } from '@/lib/monitoring/system-health-monitor';
+import { healIdentity, needsHealing, type HealResult } from '@/lib/identity';
 
 interface SystemHealthContextType {
   currentHealth: SystemHealth | null;
@@ -17,6 +18,7 @@ interface SystemHealthContextType {
   startMonitoring: () => void;
   stopMonitoring: () => void;
   emergencyMode: boolean;
+  identityStatus: HealResult | null;
 }
 
 const SystemHealthContext = createContext<SystemHealthContextType | null>(null);
@@ -35,6 +37,38 @@ export const SystemHealthProvider: React.FC<SystemHealthProviderProps> = ({
   const [currentHealth, setCurrentHealth] = useState<SystemHealth | null>(null);
   const [isMonitoring, setIsMonitoring] = useState(false);
   const [emergencyMode, setEmergencyMode] = useState(false);
+  const [identityStatus, setIdentityStatus] = useState<HealResult | null>(null);
+
+  // Identity healing on app startup - sync client cache with server truth
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const runIdentityHealing = async () => {
+      // Only heal if identity looks potentially stale
+      if (needsHealing()) {
+        console.log('[SystemHealth] Identity needs healing, syncing with server...');
+        const result = await healIdentity({ timeout: 5000, retries: 1 });
+        setIdentityStatus(result);
+
+        if (result.status === 'healed') {
+          console.log('[SystemHealth] Identity healed:', result.changes);
+        } else if (result.status === 'reauth_required') {
+          console.warn('[SystemHealth] Re-authentication required');
+          // Don't redirect here - let the auth flow handle it naturally
+        } else if (result.status === 'offline') {
+          console.warn('[SystemHealth] Running in offline mode:', result.reason);
+        }
+      } else {
+        // Quick check even if not "needed" - ensures server truth on fresh loads
+        const result = await healIdentity({ timeout: 3000, retries: 0 });
+        setIdentityStatus(result);
+      }
+    };
+
+    // Run after a short delay to let initial hydration complete
+    const timer = setTimeout(runIdentityHealing, 500);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Listen for health broadcasts
   useEffect(() => {
@@ -162,7 +196,8 @@ export const SystemHealthProvider: React.FC<SystemHealthProviderProps> = ({
     healthHistory: getHealthHistory(),
     startMonitoring,
     stopMonitoring,
-    emergencyMode
+    emergencyMode,
+    identityStatus
   };
 
   return (
