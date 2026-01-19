@@ -1,46 +1,41 @@
+/**
+ * App Router 404 Not Found Page
+ * Handles 404 errors for static export (Capacitor builds)
+ */
+
 import Link from 'next/link';
+
+export const dynamic = 'force-static';
+export const revalidate = false;
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex items-center justify-center p-6">
-      <div
-        className="max-w-md w-full rounded-2xl p-8 text-center"
-        style={{
-          background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.12))',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255, 255, 255, 0.25)',
-        }}
-      >
-        <h1 className="text-2xl font-semibold text-teal-900 mb-4">
-          Page Not Found
-        </h1>
-
-        <p className="text-teal-700/80 text-base mb-6">
-          The page you&apos;re looking for doesn&apos;t exist.
-        </p>
-
-        <div className="space-y-3">
-          <Link
-            href="/signin"
-            className="block w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 transition"
-          >
-            Sign In
-          </Link>
-
-          <Link
-            href="/begin"
-            className="block w-full py-3 rounded-xl font-medium text-teal-700 bg-white/30 hover:bg-white/40 transition"
-          >
-            New? Start Here
-          </Link>
+    <div className="min-h-screen bg-gradient-to-b from-[#0D0F12] via-[#1A1D26] to-[#0D0F12] flex flex-col items-center justify-center p-4">
+      <div className="text-center space-y-6 max-w-md">
+        {/* MAIA Logo/Icon */}
+        <div className="w-20 h-20 mx-auto mb-4 opacity-60">
+          <img
+            src="/holoflower-amber.png"
+            alt="MAIA"
+            className="w-full h-full object-contain"
+          />
         </div>
 
-        <p className="text-white/60 text-xs mt-6">
-          Have a passkey? Go to{' '}
-          <Link href="/test-elemental" className="text-white/80 hover:text-white underline underline-offset-2">
-            soullab.life/test-elemental
-          </Link>
+        <h1 className="text-4xl font-light text-amber-400/90" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+          Path Not Found
+        </h1>
+
+        <p className="text-maia-ink-60 text-lg" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
+          This page doesn't exist in the current realm.
         </p>
+
+        <Link
+          href="/maia"
+          className="inline-block mt-8 px-6 py-3 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 rounded-full transition-all duration-300 border border-amber-500/30"
+          style={{ fontFamily: 'Spectral, Georgia, serif' }}
+        >
+          Return to MAIA
+        </Link>
       </div>
     </div>
   );

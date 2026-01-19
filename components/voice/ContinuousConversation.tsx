@@ -946,11 +946,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           return;
         }
 
-        // NOW we can show listening state
+        // Permissions OK - but don't tell parent yet! Wait for listeningState: started
+        // The listeningState listener is the SOURCE OF TRUTH for when mic is actually active
         setIsListening(true);
         isListeningRef.current = true;
-        onRecordingStateChange?.(true);
-        console.log('📡 [Native] Permissions OK - showing listening state');
+        // NOTE: onRecordingStateChange will be called when listeningState: started fires
+        console.log('📡 [Native] Permissions OK - waiting for mic to actually start...');
 
         setVoiceError(null);
         isProcessingRef.current = false;
@@ -1090,8 +1091,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           addDebug(`📻 listeningState: ${state.status}`);
           // 🔑 Update single source of truth for native status
           nativeStatusRef.current = state.status === 'started' ? 'started' : 'stopped';
-          setIsRecording(nativeStatusRef.current === 'started');
-          isRecordingRef.current = nativeStatusRef.current === 'started';
+          const isNowRecording = nativeStatusRef.current === 'started';
+          setIsRecording(isNowRecording);
+          isRecordingRef.current = isNowRecording;
+
+          // 🔥 CRITICAL: Notify parent of ACTUAL mic state - this is the SOURCE OF TRUTH
+          // This will clear isActivating and set isListening in OracleConversation
+          onRecordingStateChange?.(isNowRecording);
+          if (isNowRecording) {
+            console.log('✅ [Native] Mic is LIVE - orange dot should be visible');
+            addDebug('✅ MIC IS LIVE - orange dot visible!');
+          }
 
           if (state.status === 'stopped' && isListeningRef.current) {
             // Process accumulated transcript

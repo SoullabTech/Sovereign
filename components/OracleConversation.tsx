@@ -331,6 +331,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // Voice/audio state
   const [isListening, setIsListening] = useState(false);
+  const [isActivating, setIsActivating] = useState(false); // True while waiting for mic to confirm
   const [isResponding, setIsResponding] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -466,6 +467,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       window.removeEventListener('maia-streaming-voice-changed', handleStreamingVoiceChange as EventListener);
     };
   }, []);
+
+  // 🎯 DEBUG: Track greeting condition state
+  useEffect(() => {
+    const nonGreetingMessages = messages.filter(m => !m.id?.startsWith('greeting-'));
+    const shouldShowGreeting = nonGreetingMessages.length === 0 && !isProcessing && !isResponding;
+
+    console.log('🎯 [GREETING DEBUG] Condition check:', {
+      totalMessages: messages.length,
+      nonGreetingMessages: nonGreetingMessages.length,
+      isProcessing,
+      isResponding,
+      shouldShowGreeting,
+      messageIds: messages.slice(0, 3).map(m => m.id), // First 3 message IDs
+    });
+  }, [messages, isProcessing, isResponding]);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
@@ -612,9 +628,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // ==================== RECORDING STATE CALLBACK ====================
   // Sync isListening state from ContinuousConversation to parent
+  // This is the SOURCE OF TRUTH for whether mic is actually live
   const handleRecordingStateChange = useCallback((isRecording: boolean) => {
-    console.log('📡 Recording state changed:', isRecording);
+    console.log('📡 Recording state changed:', isRecording, '(this is mic truth)');
+    setIsActivating(false); // Clear activating state - we now know the truth
     setIsListening(isRecording);
+    if (isRecording) {
+      console.log('✅ Mic is LIVE - orange dot should be visible');
+    }
   }, []);
 
   // ==================== AUDIO LEVEL CALLBACK (THROTTLED) ====================
@@ -990,15 +1011,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           setIsMuted(false);
-          setIsListening(true); // Show ultraviolet field immediately
+          setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
+          // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
           voiceMicRef.current.startListening();
 
           setTimeout(() => {
             if (voiceMicRef.current?.isListening) {
               console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
+              // handleRecordingStateChange will set isListening and clear isActivating
             } else {
               console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
-              setIsListening(false); // Hide if failed
+              setIsActivating(false); // Clear activating on failure
               setTimeout(() => attemptMicRestart(attempt + 1), 300);
             }
           }, 150);
@@ -1093,11 +1116,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // Step 1: Try localStorage first (instant restore for same device)
       const localStored = localStorage.getItem(storageKey);
       let localMessageCount = 0;
+      console.log(`🎯 [GREETING DEBUG] localStorage check - storageKey: ${storageKey}, hasData: ${!!localStored}`);
       if (localStored) {
         try {
           const parsedMessages = JSON.parse(localStored);
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+            // 🎯 DEBUG: Log what's being restored that might hide greeting
+            const nonGreetingMsgs = parsedMessages.filter((m: any) => !m.id?.startsWith('greeting-'));
             console.log(`💾 [localStorage] Restored ${parsedMessages.length} messages instantly`);
+            console.log(`🎯 [GREETING DEBUG] Restoring ${nonGreetingMsgs.length} non-greeting messages - THIS WILL HIDE GREETING`);
+            console.log(`🎯 [GREETING DEBUG] First 3 restored IDs:`, parsedMessages.slice(0, 3).map((m: any) => m.id));
             setMessages(parsedMessages);
             localMessageCount = parsedMessages.length;
           }
@@ -1236,6 +1264,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // Client-side only check
   useEffect(() => {
     setIsMounted(true);
+
+    // 🎯 DEBUG: Log initial greeting state on mount
+    console.log('🎯 [GREETING DEBUG] Component MOUNTED - initial state:', {
+      messagesLength: 0, // Always starts empty before restoration
+      isProcessing: false,
+      isResponding: false,
+      note: 'Messages will be restored from localStorage next'
+    });
 
     // Initialize stable explorer ID for cross-session memory
     const stableId = getOrCreateExplorerId();
@@ -4122,15 +4158,16 @@ I'm not sure what I'm feeling yet.`;
                     hasVoiceMicRef: !!voiceMicRef.current,
                     hasStartListening: !!voiceMicRef.current?.startListening,
                   });
-                  toast('🎤 Starting voice...', { duration: 2000 });
+                  toast('🎤 Activating voice...', { duration: 2000 });
                   setIsMuted(false);
-                  setIsListening(true); // Immediately show visual indicator
+                  setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
+                  // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
 
                   // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
                   try {
                     await voiceMicRef.current.startListening();
                     console.log('[voice] startListening resolved OK');
-                    toast.success('✅ Voice started!');
+                    // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
                   } catch (error: any) {
                     const name = error?.name || 'UnknownError';
                     const msg = error?.message || String(error);
@@ -4138,6 +4175,7 @@ I'm not sure what I'm feeling yet.`;
 
                     // IMPORTANT: do NOT switch to text automatically.
                     // Keep the user in voice mode and show what to do.
+                    setIsActivating(false);
                     setIsListening(false);
                     setIsMuted(true);
 
@@ -4254,21 +4292,43 @@ I'm not sure what I'm feeling yet.`;
                   exit={{ opacity: 0, scale: 0.9 }}
                   transition={{ duration: 0.3 }}
                 >
+                  {/* Outermost diffuse ultraviolet field - ambient glow */}
+                  <motion.div
+                    className="absolute rounded-full"
+                    style={{
+                      width: '500px',
+                      height: '500px',
+                      background: 'radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, rgba(124, 58, 237, 0.3) 30%, rgba(139, 92, 246, 0.15) 60%, transparent 100%)',
+                      filter: 'blur(40px)',
+                      transform: `scale(${1 + voiceAmplitude * 0.3})`,
+                      opacity: 0.7 + voiceAmplitude * 0.3,
+                      transition: 'transform 0.06s ease-out, opacity 0.06s ease-out',
+                    }}
+                    animate={{
+                      scale: voiceAmplitude > 0.1 ? undefined : [1, 1.05, 1],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.7, 0.85, 0.7],
+                    }}
+                    transition={{
+                      duration: 2,
+                      repeat: voiceAmplitude > 0.1 ? 0 : Infinity,
+                      ease: "easeInOut"
+                    }}
+                  />
                   {/* Outer ultraviolet ring - voice reactive */}
                   <motion.div
                     className="absolute rounded-full"
                     style={{
-                      width: '320px',
-                      height: '320px',
-                      background: 'radial-gradient(circle, rgba(139, 92, 246, 0.5) 0%, rgba(139, 92, 246, 0.25) 40%, rgba(167, 139, 250, 0.1) 70%, transparent 100%)',
-                      filter: 'blur(20px)',
+                      width: '380px',
+                      height: '380px',
+                      background: 'radial-gradient(circle, rgba(139, 92, 246, 0.7) 0%, rgba(139, 92, 246, 0.5) 40%, rgba(167, 139, 250, 0.25) 70%, transparent 100%)',
+                      filter: 'blur(25px)',
                       transform: `scale(${1 + voiceAmplitude * 0.4})`,
-                      opacity: 0.5 + voiceAmplitude * 0.5,
+                      opacity: 0.75 + voiceAmplitude * 0.25,
                       transition: 'transform 0.05s ease-out, opacity 0.05s ease-out',
                     }}
                     animate={{
                       scale: voiceAmplitude > 0.1 ? undefined : [1, 1.08, 1],
-                      opacity: voiceAmplitude > 0.1 ? undefined : [0.6, 0.9, 0.6],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.75, 0.95, 0.75],
                     }}
                     transition={{
                       duration: 1.5,
@@ -4280,17 +4340,17 @@ I'm not sure what I'm feeling yet.`;
                   <motion.div
                     className="absolute rounded-full"
                     style={{
-                      width: '200px',
-                      height: '200px',
-                      background: 'radial-gradient(circle, rgba(167, 139, 250, 0.6) 0%, rgba(139, 92, 246, 0.3) 50%, transparent 70%)',
-                      filter: 'blur(15px)',
+                      width: '240px',
+                      height: '240px',
+                      background: 'radial-gradient(circle, rgba(167, 139, 250, 0.85) 0%, rgba(139, 92, 246, 0.5) 50%, transparent 70%)',
+                      filter: 'blur(18px)',
                       transform: `scale(${1 + voiceAmplitude * 0.6})`,
-                      opacity: 0.6 + voiceAmplitude * 0.4,
+                      opacity: 0.8 + voiceAmplitude * 0.2,
                       transition: 'transform 0.04s ease-out, opacity 0.04s ease-out',
                     }}
                     animate={{
                       scale: voiceAmplitude > 0.1 ? undefined : [1, 1.12, 1],
-                      opacity: voiceAmplitude > 0.1 ? undefined : [0.7, 1, 0.7],
+                      opacity: voiceAmplitude > 0.1 ? undefined : [0.8, 1, 0.8],
                     }}
                     transition={{
                       duration: 1.2,
@@ -4676,6 +4736,24 @@ I'm not sure what I'm feeling yet.`;
                        '💫 Speaking...'}
                     </motion.div>
                   )}
+                  {/* Activating state - waiting for mic confirmation */}
+                  {isActivating && !isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{
+                        opacity: [0.6, 0.9, 0.6],
+                        y: 0
+                      }}
+                      transition={{
+                        opacity: { duration: 1.0, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="text-amber-300/90 text-sm font-medium drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                    >
+                      🎤 Activating...
+                    </motion.div>
+                  )}
+                  {/* Listening state - mic is CONFIRMED live (orange dot should be visible) */}
                   {isListening && !isResponding && !isAudioPlaying && !isProcessing && (
                     <div className="flex flex-col items-center gap-2">
                       <motion.div
@@ -4712,8 +4790,8 @@ I'm not sure what I'm feeling yet.`;
                       )}
                     </div>
                   )}
-                  {/* Tap to speak hint - shows only when voice is inactive (muted) */}
-                  {isMuted && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {/* Tap to speak hint - shows only when voice is inactive (muted) and not activating */}
+                  {isMuted && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}
