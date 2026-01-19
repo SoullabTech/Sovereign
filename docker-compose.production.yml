@@ -54,6 +54,8 @@ services:
     depends_on:
       maia:
         condition: service_healthy
+      maia-api:
+        condition: service_healthy
     networks:
       - maia-network
 
@@ -105,6 +107,47 @@ services:
       timeout: 5s
       retries: 5
       start_period: 60s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
+  # MAIA API Service - Standalone Backend API
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Handles all API requests for the MAIA platform.
+  # Multi-tenant backbone for all Soullab products.
+  # AIN is a dependency called by MAIA API, never the reverse.
+  #
+  # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia-api
+  # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-api
+  maia-api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    image: maia-api:prod
+    container_name: maia-api
+    restart: unless-stopped
+    logging: *default_logging
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      PORT: "3001"
+      # CORS origins for API (comma-separated)
+      CORS_ORIGINS: "https://soullab.life,https://www.soullab.life,https://loralee.soullab.life,https://chart.soullab.life"
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
     networks:
       - maia-network

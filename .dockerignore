@@ -108,8 +108,11 @@ data/ain/
 tmp/
 .DS_Store
 
-# WIP: AIN Committee (not yet ready for production)
-packages/
+# WIP: AIN Committee routes (not yet ready for production)
 app/api/_backend/src/ain/services/committee/
 app/api/ain/committee/
 app/dashboard/ain-committee/
+
+# Ignore packages build output (but not source)
+packages/**/dist/
+packages/**/node_modules/

@@ -258,6 +258,45 @@ demo.soullab.life {
     }
 }
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# MAIA API Service - Multi-tenant Backend
+# ═══════════════════════════════════════════════════════════════════════════════
+# All API requests from frontends route here.
+# MAIA API is the backbone for all Soullab products.
+api.soullab.life {
+    # Reverse proxy to MAIA API container
+    reverse_proxy maia-api:3001 {
+        # Health checks
+        health_uri /v1/health
+        health_interval 30s
+        health_timeout 5s
+
+        # Headers
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto {scheme}
+    }
+
+    # CORS headers handled by API, but add security headers
+    header {
+        X-MAIA-Origin "caddy-sovereign-api"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Frame-Options "DENY"
+        X-Content-Type-Options "nosniff"
+        -Server
+    }
+
+    encode gzip zstd
+
+    log {
+        output file /var/log/caddy/api-access.log {
+            roll_size 10mb
+            roll_keep 5
+        }
+    }
+}
+
 # Health check endpoint for load balancers
 :8080 {
     respond /health 200

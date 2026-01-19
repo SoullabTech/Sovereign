@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { Mail, ArrowRightLeft, Sparkles } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
+import { api, ApiError } from '@/lib/api-client';
 
 interface MigrationPreview {
   oldUserId: string;
@@ -78,19 +79,25 @@ function SigninContent() {
     setIsLoading(true);
 
     try {
-      // First try server-side authentication
-      const response = await fetch('/api/members/signin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: username.toLowerCase(),
-          password,
-        }),
-      });
+      // First try server-side authentication via MAIA API
+      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean } } | null = null;
+      let apiSuccess = false;
 
-      const data = await response.json();
+      try {
+        data = await api.members.signin(username.toLowerCase(), password);
+        apiSuccess = true;
+      } catch (err) {
+        // API error - check if it's auth failure or network error
+        if (err instanceof ApiError && err.code === 'INVALID_CREDENTIALS') {
+          setError('Invalid username or password.');
+          setIsLoading(false);
+          return;
+        }
+        // For other errors, fall through to localStorage fallback
+        console.warn('[SignIn] API error, falling back to localStorage:', err);
+      }
 
-      if (response.ok && data.success) {
+      if (apiSuccess && data) {
         // Use preferredName if available, fallback to name, then capitalized username
         const preferredName = data.member.preferredName || data.member.name || '';
         const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(preferredName);
@@ -161,13 +168,6 @@ function SigninContent() {
         } else {
           router.push('/begin');
         }
-        return;
-      }
-
-      // If server says invalid credentials, show error
-      if (response.status === 401) {
-        setError('Invalid username or password.');
-        setIsLoading(false);
         return;
       }
 

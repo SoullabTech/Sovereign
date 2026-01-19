@@ -12,6 +12,7 @@ import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Sparkles, Send, Star, Moon, Settings } from 'lucide-react';
+import { api } from '@/lib/api-client';
 
 interface PortalConfig {
   practitioner_id: string;
@@ -107,11 +108,8 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const fetchPortalConfig = async () => {
     try {
-      const response = await fetch(`/api/portal/${slug}/config`);
-      if (response.ok) {
-        const data = await response.json();
-        setConfig(data.config);
-      }
+      const data = await api.portal.config(slug);
+      setConfig(data.config);
     } catch (err) {
       console.error('Failed to load portal config:', err);
     } finally {

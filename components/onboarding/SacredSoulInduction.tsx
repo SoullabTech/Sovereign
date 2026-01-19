@@ -7,6 +7,7 @@ import { Crown, Sparkles, ArrowRight, Eye, EyeOff, Mail } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { ganeshaContacts, GaneshaContact } from '@/lib/ganesha/contacts';
 import { Holoflower } from '@/components/ui/Holoflower';
+import { api, ApiError } from '@/lib/api-client';
 
 interface SacredSoulInductionProps {
   onComplete: (userData: {
@@ -196,13 +197,7 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
 
     // First check server-side if this passkey exists
     try {
-      const checkResponse = await fetch('/api/members/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passkey: soulKey.toUpperCase() }),
-      });
-
-      const checkData = await checkResponse.json();
+      const checkData = await api.members.check(soulKey.toUpperCase());
 
       if (checkData.exists) {
         // Member already registered - redirect to sign in
