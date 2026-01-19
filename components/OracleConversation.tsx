@@ -38,6 +38,7 @@ import { MotionState, CoherenceShift } from './motion/MotionOrchestrator';
 import { OracleResponse, ConversationContext as OracleConversationContext } from '@/lib/oracle-response';
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
+import { apiUrl } from '@/lib/http/apiBase';
 import { VoiceState } from '@/lib/voice/voice-capture';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
@@ -793,7 +794,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // setIsAudioPlaying is now set in audio.onplay callback below
 
       // Call OpenAI TTS with voice settings from account preferences
-      const response = await fetch('/api/voice/openai-tts', {
+      const response = await fetch(apiUrl('/api/voice/openai-tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1170,7 +1171,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Step 2: Check PostgreSQL for sovereign cross-device sync
       try {
-        const response = await fetch(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`);
+        const response = await fetch(apiUrl(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`));
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.messages && data.messages.length > 0) {
@@ -1254,7 +1255,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Save user + oracle exchange pairs
         if (msg.role === 'user' && (nextMsg.role === 'oracle' || nextMsg.role === 'assistant')) {
           // Non-blocking async save
-          fetch('/api/conversation/turns', {
+          fetch(apiUrl('/api/conversation/turns'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -2066,7 +2067,7 @@ I'm not sure what I'm feeling yet.`;
         sessionId
       });
 
-      const response = await fetch('/api/journal/save-conversation', {
+      const response = await fetch(apiUrl('/api/journal/save-conversation'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2479,7 +2480,8 @@ I'm not sure what I'm feeling yet.`;
       const nextMessagesForApi = appendMessageCapped(messages, userMessage, MAX_DISPLAY_MESSAGES);
 
       // MAIA speaks through sovereign API - working consciousness system
-      const response = await fetch(apiEndpoint, {
+      // apiUrl() wraps the endpoint for iOS/Capacitor builds to point to production server
+      const response = await fetch(apiUrl(apiEndpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3552,7 +3554,7 @@ I'm not sure what I'm feeling yet.`;
       const fullContent = header + date + sessionInfo + separator + transcript;
 
       // Save to Obsidian vault
-      const response = await fetch('/api/obsidian/save-conversation', {
+      const response = await fetch(apiUrl('/api/obsidian/save-conversation'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -3614,7 +3616,7 @@ I'm not sure what I'm feeling yet.`;
       console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, cleanText.substring(0, 100));
 
       // Call OpenAI TTS with voice settings from account preferences
-      const response = await fetch('/api/voice/openai-tts', {
+      const response = await fetch(apiUrl('/api/voice/openai-tts'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -45,6 +45,7 @@ import {
   THERAPEUTIC_FRAMEWORKS,
   REFLECTION_LENSES,
 } from '@/lib/consciousness/therapeuticFrameworks';
+import { apiUrl } from '@/lib/http/apiBase';
 
 // Migration version - increment to force re-auth for all users
 const SESSION_VERSION = 2; // Bumped to fix UUID-as-name bug (Jan 5, 2026)
@@ -170,7 +171,7 @@ async function getInitialUserData() {
       params.append('userId', storedUserId);
       params.append('domain', currentUrl);
 
-      const response = await fetch(`/api/user/profile?${params.toString()}`);
+      const response = await fetch(apiUrl(`/api/user/profile?${params.toString()}`));
       const data = await response.json();
 
       if (data.success && data.user) {

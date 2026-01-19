@@ -70,8 +70,10 @@ node scripts/validate-critical-files.js || true
 # Using tsconfig.core.json works because API routes are already moved aside
 
 # Run Next.js build
+# NEXT_PUBLIC_API_BASE_URL tells the app to call the production API server
+# Without this, relative /api/* calls fail in the static iOS export
 echo "🏗️  Building static export..."
-CAPACITOR_BUILD=1 NODE_OPTIONS=--max-old-space-size=8192 npx next build
+CAPACITOR_BUILD=1 NEXT_PUBLIC_API_BASE_URL=https://soullab.life NODE_OPTIONS=--max-old-space-size=8192 npx next build
 
 # Check if build succeeded
 if [ -d "out" ]; then
