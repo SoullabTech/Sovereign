@@ -176,7 +176,7 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="fixed top-4 left-1/2 -translate-x-1/2 z-40 max-w-md w-full px-4"
+            className="fixed top-20 left-1/2 -translate-x-1/2 z-40 max-w-md w-full px-4"
           >
             <div
               className="rounded-xl p-4 shadow-lg border flex items-center gap-3"
