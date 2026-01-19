@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { apiUrl } from '@/lib/http/apiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
@@ -239,7 +240,7 @@ export function AccountSettings() {
 
         // Load profile from server
         console.log('[AccountSettings] Fetching profile from API...');
-        const profileRes = await fetch(`/api/members/profile?id=${memberId}`);
+        const profileRes = await fetch(apiUrl(`/api/members/profile?id=${memberId}`));
         console.log('[AccountSettings] Profile API response status:', profileRes.status);
         if (profileRes.ok) {
           const profileData = await profileRes.json();
@@ -290,7 +291,7 @@ export function AccountSettings() {
         }
 
         // Load settings from server
-        const settingsRes = await fetch(`/api/members/settings?memberId=${memberId}`);
+        const settingsRes = await fetch(apiUrl(`/api/members/settings?memberId=${memberId}`));
         if (settingsRes.ok) {
           const settingsData = await settingsRes.json();
           setMemberSettings({
@@ -306,7 +307,7 @@ export function AccountSettings() {
         // Reconcile with server-authoritative consent
         // Server is the source of truth for *Server consent flags
         try {
-          const consentRes = await fetch(`/api/account/storage-consent?memberId=${memberId}`);
+          const consentRes = await fetch(apiUrl(`/api/account/storage-consent?memberId=${memberId}`));
           if (consentRes.ok) {
             const { consent: serverConsent } = await consentRes.json();
             if (serverConsent && typeof serverConsent === 'object') {
@@ -406,7 +407,7 @@ export function AccountSettings() {
 
     // Also sync to server if we have userId
     if (userId) {
-      fetch('/api/members/settings', {
+      fetch(apiUrl('/api/members/settings'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -455,7 +456,7 @@ export function AccountSettings() {
 
       const serverKey = serverKeyMap[path];
       if (serverKey) {
-        fetch('/api/members/settings', {
+        fetch(apiUrl('/api/members/settings'), {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -483,7 +484,7 @@ export function AccountSettings() {
       notifications: { ...memberSettings.notifications, [key]: value },
     });
 
-    await fetch('/api/members/settings', {
+    await fetch(apiUrl('/api/members/settings'), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
@@ -506,7 +507,7 @@ export function AccountSettings() {
       privacy: { ...memberSettings.privacy, [key]: value },
     });
 
-    await fetch('/api/members/settings', {
+    await fetch(apiUrl('/api/members/settings'), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ memberId: userId, [keyMap[key]]: value }),
@@ -520,7 +521,7 @@ export function AccountSettings() {
     setSaving(true);
 
     try {
-      const res = await fetch('/api/members/profile', {
+      const res = await fetch(apiUrl('/api/members/profile'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -571,7 +572,7 @@ export function AccountSettings() {
 
     setSearchingLocation(true);
     try {
-      const res = await fetch(`/api/astrology/geocode?q=${encodeURIComponent(query)}`);
+      const res = await fetch(apiUrl(`/api/astrology/geocode?q=${encodeURIComponent(query)}`));
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.data) {
@@ -621,7 +622,7 @@ export function AccountSettings() {
         birthDataToSend: birthData,
       });
 
-      const res = await fetch('/api/members/profile', {
+      const res = await fetch(apiUrl('/api/members/profile'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -686,7 +687,7 @@ export function AccountSettings() {
     if (!userId) return;
 
     try {
-      const res = await fetch('/api/members/export-data', {
+      const res = await fetch(apiUrl('/api/members/export-data'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ memberId: userId }),
@@ -711,7 +712,7 @@ export function AccountSettings() {
     setDeleting(true);
 
     try {
-      const res = await fetch('/api/members/delete-account', {
+      const res = await fetch(apiUrl('/api/members/delete-account'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -1360,7 +1361,7 @@ export function AccountSettings() {
     // Sync to server (server-authoritative consent)
     if (profile?.id) {
       try {
-        await fetch('/api/account/storage-consent', {
+        await fetch(apiUrl('/api/account/storage-consent'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

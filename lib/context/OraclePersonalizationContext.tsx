@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { apiUrl } from '@/lib/http/apiBase';
 
 export interface VoiceSettings {
   gender: 'feminine' | 'masculine' | 'neutral';
@@ -133,7 +134,7 @@ export const PersonalizationProvider: React.FC<PersonalizationProviderProps> = (
 
       // Try to load from API if user is authenticated
       if (userId) {
-        const response = await fetch(`/api/user/personalization`, {
+        const response = await fetch(apiUrl('/api/user/personalization'), {
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
           }
@@ -173,7 +174,7 @@ export const PersonalizationProvider: React.FC<PersonalizationProviderProps> = (
 
       // Save to API if authenticated
       if (userId) {
-        const response = await fetch(`/api/user/personalization`, {
+        const response = await fetch(apiUrl('/api/user/personalization'), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
