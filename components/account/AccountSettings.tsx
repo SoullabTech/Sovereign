@@ -2073,6 +2073,18 @@ export function AccountSettings() {
             <ChevronRight size={18} className="text-violet-300/50" />
           </motion.button>
         </div>
+
+        {/* Architectural Constraints Link */}
+        <div className="pt-6 text-center">
+          <a
+            href="https://github.com/SoullabTech/Sovereign/blob/main/docs/canon/MAIA_PROMISE_v1.0.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-white/30 hover:text-white/50 transition-colors"
+          >
+            MAIA operates under explicit architectural constraints.
+          </a>
+        </div>
       </div>
     );
   };
