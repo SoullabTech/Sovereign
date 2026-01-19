@@ -611,6 +611,34 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   </motion.div>
                 )}
 
+                {/* New Conversation Button */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.44 }}
+                >
+                  <motion.button
+                    onClick={() => {
+                      if ('vibrate' in navigator) navigator.vibrate(15);
+                      // Dispatch event to clear conversation in OracleConversation
+                      window.dispatchEvent(new CustomEvent('maia-new-conversation'));
+                      onClose();
+                    }}
+                    className="w-full py-4 bg-gradient-to-r from-rose-500/20 to-orange-500/20
+                             border border-rose-500/30 rounded-xl text-rose-300 font-medium
+                             hover:from-rose-500/30 hover:to-orange-500/30 transition-all
+                             flex items-center justify-center gap-2"
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <Sparkles size={18} />
+                    <span>New Conversation</span>
+                  </motion.button>
+                  <p className="text-xs text-white/40 text-center mt-2">
+                    Clear history and start fresh with the welcome screen
+                  </p>
+                </motion.div>
+
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}

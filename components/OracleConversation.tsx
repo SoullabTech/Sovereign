@@ -420,6 +420,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
   const [breakthroughScore, setBreakthroughScore] = useState(0);
 
+  // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower)
+  // This is separate from messages - history can be restored but greeting shows until activation
+  const [hasActivated, setHasActivated] = useState(false);
+
   // 📓 JOURNAL → MAIA: Controlled composer draft for prefilled prompts
   const [composerDraft, setComposerDraft] = useState<string>('');
 
@@ -470,18 +474,39 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🎯 DEBUG: Track greeting condition state
   useEffect(() => {
-    const nonGreetingMessages = messages.filter(m => !m.id?.startsWith('greeting-'));
-    const shouldShowGreeting = nonGreetingMessages.length === 0 && !isProcessing && !isResponding;
+    // Greeting shows when: not activated AND not processing AND not responding
+    const shouldShowGreeting = !hasActivated && !isProcessing && !isResponding;
 
     console.log('🎯 [GREETING DEBUG] Condition check:', {
-      totalMessages: messages.length,
-      nonGreetingMessages: nonGreetingMessages.length,
+      hasActivated,
       isProcessing,
       isResponding,
       shouldShowGreeting,
-      messageIds: messages.slice(0, 3).map(m => m.id), // First 3 message IDs
+      totalMessages: messages.length,
     });
-  }, [messages, isProcessing, isResponding]);
+  }, [hasActivated, messages, isProcessing, isResponding]);
+
+  // 🆕 Listen for "New Conversation" action from QuickSettingsSheet
+  useEffect(() => {
+    const handleNewConversation = () => {
+      console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
+      // Clear messages
+      setMessages([]);
+      // Reset activation state to show welcome screen
+      setHasActivated(false);
+      // Clear localStorage for current session
+      if (typeof window !== 'undefined' && sessionId) {
+        const storageKey = `maia_conversation_${sessionId}`;
+        localStorage.removeItem(storageKey);
+        console.log(`🆕 [New Conversation] Cleared localStorage: ${storageKey}`);
+      }
+    };
+
+    window.addEventListener('maia-new-conversation', handleNewConversation);
+    return () => {
+      window.removeEventListener('maia-new-conversation', handleNewConversation);
+    };
+  }, [sessionId]);
 
   // 🧭 THERAPEUTIC FRAMEWORK: Selected in Counsel mode (Jungian, Somatic, CBT, IFS, etc.)
   // Now handled by lib/consciousness/therapeuticFrameworks.ts
@@ -635,6 +660,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     setIsListening(isRecording);
     if (isRecording) {
       console.log('✅ Mic is LIVE - orange dot should be visible');
+      // 🎯 Mark as activated when user starts listening - hides welcome screen
+      setHasActivated(true);
     }
   }, []);
 
@@ -2165,6 +2192,9 @@ I'm not sure what I'm feeling yet.`;
   // Handle text messages from chat interface - MUST be defined before handleVoiceTranscript
   const handleTextMessage = useCallback(async (text: string, attachments?: File[]) => {
     console.log('📝 Text message received:', { text, isProcessing, isAudioPlaying, isResponding });
+
+    // 🎯 Mark as activated when user sends a message - hides welcome screen
+    setHasActivated(true);
 
     // Check for journal command
     if (detectJournalCommand(text)) {
@@ -3935,9 +3965,9 @@ I'm not sure what I'm feeling yet.`;
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
-      {/* Claude-like Welcome Greeting - Shows when no messages yet */}
+      {/* Claude-like Welcome Greeting - Shows until user activates (taps holoflower) */}
       <AnimatePresence>
-        {messages.filter(m => !m.id.startsWith('greeting-')).length === 0 && !isProcessing && !isResponding && (
+        {!hasActivated && !isProcessing && !isResponding && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
