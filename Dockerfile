@@ -17,8 +17,10 @@ RUN npm ci --ignore-scripts --legacy-peer-deps
 # --- builder: prisma generate + next build (creates .next/standalone) ---
 FROM base AS builder
 ARG GIT_COMMIT=unknown
+ARG SKIP_AETHERIC_CHECK=0
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
+ENV SKIP_AETHERIC_CHECK=${SKIP_AETHERIC_CHECK}
 # Build-time placeholders for Next.js static generation
 ENV OPENAI_API_KEY=dummy-build-key
 ENV ANTHROPIC_API_KEY=dummy-build-key

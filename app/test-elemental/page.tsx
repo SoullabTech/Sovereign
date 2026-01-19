@@ -30,6 +30,17 @@ function TestElementalContent() {
       if (betaUser) {
         const userData = JSON.parse(betaUser);
 
+        // CRITICAL: Check for poisoned local_* IDs and clear them
+        if (userData.id && userData.id.startsWith('local_')) {
+          console.warn('[test-elemental] Detected poisoned local_* ID, clearing auth state');
+          localStorage.removeItem('beta_user');
+          localStorage.removeItem('explorerId');
+          localStorage.removeItem('explorerName');
+          localStorage.removeItem('signup_completed');
+          setIsCheckingAuth(false);
+          return;
+        }
+
         // User is already signed in and onboarded - redirect to /maia
         if (userData.onboarded === true || betaOnboardingComplete === 'true') {
           console.log('[test-elemental] User already authenticated, redirecting to /maia');
@@ -64,8 +75,15 @@ function TestElementalContent() {
   }
 
   const handleSignupComplete = (userData: { name: string; username: string; password: string; memberId?: string }) => {
-    // Use server-assigned member ID, fallback to timestamp for offline mode
-    const memberId = userData.memberId || `local_${Date.now()}`;
+    // CRITICAL: Only proceed with valid server-assigned member ID
+    // Do NOT use local_* fallback IDs - they break all server API calls
+    if (!userData.memberId) {
+      console.error('[test-elemental] Registration failed - no server memberId received');
+      alert('Unable to complete registration. Please check your connection and try again.');
+      return;
+    }
+
+    const memberId = userData.memberId;
 
     // Store user data and mark signup as complete
     const newUser = {

@@ -14,6 +14,18 @@ export default function OnboardingPage() {
     if (betaUser) {
       try {
         const userData = JSON.parse(betaUser);
+
+        // CRITICAL: Check for poisoned local_* IDs and redirect to re-auth
+        if (userData.id && userData.id.startsWith('local_')) {
+          console.warn('[onboarding] Detected poisoned local_* ID, clearing and redirecting');
+          localStorage.removeItem('beta_user');
+          localStorage.removeItem('explorerId');
+          localStorage.removeItem('explorerName');
+          localStorage.removeItem('signup_completed');
+          router.push('/test-elemental');
+          return;
+        }
+
         if (userData.onboarded) {
           router.push('/maia');
           return;
@@ -26,19 +38,31 @@ export default function OnboardingPage() {
   }, [router]);
 
   const handleComplete = async () => {
-    // Get existing user data to preserve the server-assigned ID
+    // Get existing user data - MUST have valid server-assigned ID
     const existingUser = localStorage.getItem('beta_user');
-    let userId = `local_${Date.now()}`; // Fallback only
+    let userId: string | null = null;
     let existingUsername = userName.toLowerCase();
 
     if (existingUser) {
       try {
         const parsed = JSON.parse(existingUser);
-        if (parsed.id) userId = parsed.id;
+        // Only use valid server IDs, reject local_* fallbacks
+        if (parsed.id && !parsed.id.startsWith('local_')) {
+          userId = parsed.id;
+        }
         if (parsed.username) existingUsername = parsed.username;
       } catch (e) {
         console.error('Error parsing existing user:', e);
       }
+    }
+
+    // CRITICAL: Don't proceed without valid server ID
+    if (!userId) {
+      console.error('[onboarding] Cannot complete - no valid server ID');
+      alert('Session expired. Please sign in again.');
+      localStorage.removeItem('beta_user');
+      router.push('/test-elemental');
+      return;
     }
 
     // Mark user as having completed the full onboarding experience

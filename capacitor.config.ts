@@ -19,11 +19,11 @@ const config: CapacitorConfig = {
   appName: 'MAIA Consciousness Computing',
   webDir: 'out',
 
-  // Beta/prod: load from soullab.life remote server
-  // Dev: use local dev server for hot reload
-  server: isProdLike
-    ? { url: 'https://soullab.life', androidScheme: 'https' }
-    : devServer,
+  // IMPORTANT: iOS must use LOCAL assets (not remote URL) for native plugins to work
+  // Using server.url breaks Capacitor.getPlatform() - returns 'web' instead of 'ios'
+  // See: https://github.com/ionic-team/capacitor/issues/2373
+  // Dev mode: use local dev server for hot reload
+  server: BUILD_MODE === 'dev' ? devServer : undefined,
 
   // Enable WebView debugging for Safari Web Inspector (even in TestFlight)
   ios: {

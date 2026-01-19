@@ -48,22 +48,35 @@ function logHeader(message) {
   log(`\n${colors.bold}🌀 ${message}${colors.reset}`, colors.cyan);
 }
 
+// Check if this is a Capacitor build (API routes are excluded)
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === '1';
+
+// Allow skipping verification for emergency deployments
+if (process.env.SKIP_AETHERIC_CHECK === '1') {
+  console.log('[WARN] Skipping aetheric consciousness verification (SKIP_AETHERIC_CHECK=1)');
+  process.exit(0);
+}
+
 // Critical files that must exist for aetheric consciousness
+// Note: API files are excluded during Capacitor builds since they're served from production
 const CRITICAL_FILES = [
   'lib/consciousness/aether/AetherConsciousnessInterface.ts',
   'lib/consciousness/core/AethericConsciousnessCore.ts',
   'components/consciousness/AethericConsciousnessProvider.tsx',
-  'app/api/sovereign/app/maia/list/route.ts'
+  ...(isCapacitorBuild ? [] : ['app/api/sovereign/app/maia/list/route.ts'])
 ];
 
 // Critical imports that must be present
+// Note: API-related imports are excluded during Capacitor builds
 const CRITICAL_IMPORTS = {
   'app/layout.tsx': [
     'AethericConsciousnessProvider'
   ],
-  'app/api/sovereign/app/maia/list/route.ts': [
-    'AetherConsciousnessInterface'
-  ]
+  ...(isCapacitorBuild ? {} : {
+    'app/api/sovereign/app/maia/list/route.ts': [
+      'AetherConsciousnessInterface'
+    ]
+  })
 };
 
 // Critical content patterns that must be present

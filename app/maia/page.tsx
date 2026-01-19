@@ -60,15 +60,37 @@ function isLikelyUUID(str: string): boolean {
   return uuidPattern.test(str) || hexPattern.test(str) || userIdPattern.test(str);
 }
 
+// Check if ID is a poisoned local_* fallback that can't be used with server
+function isPoisonedLocalId(id: string | null | undefined): boolean {
+  if (!id) return false;
+  return id.startsWith('local_');
+}
+
 // Force sign-out if session is outdated or corrupted
 function checkAndMigrateSession(): boolean {
   if (typeof window === 'undefined') return false;
 
   const storedVersion = localStorage.getItem('maia_session_version');
   const currentName = localStorage.getItem('explorerName');
+  const explorerId = localStorage.getItem('explorerId');
 
-  // Force sign-out if: version mismatch OR name looks like a UUID
-  const needsMigration = storedVersion !== String(SESSION_VERSION) || isLikelyUUID(currentName || '');
+  // Also check for poisoned local_* IDs from failed onboarding
+  let betaUserId: string | null = null;
+  try {
+    const betaUser = localStorage.getItem('beta_user');
+    if (betaUser) {
+      const parsed = JSON.parse(betaUser);
+      betaUserId = parsed.id;
+    }
+  } catch { /* ignore */ }
+
+  // Force sign-out if: version mismatch OR name looks like a UUID OR has local_* ID
+  const hasLocalId = isPoisonedLocalId(explorerId) || isPoisonedLocalId(betaUserId);
+  const needsMigration = storedVersion !== String(SESSION_VERSION) || isLikelyUUID(currentName || '') || hasLocalId;
+
+  if (hasLocalId) {
+    console.warn('🚨 [MAIA] Detected poisoned local_* ID - forcing re-auth');
+  }
 
   if (needsMigration) {
     console.log('🔄 [MAIA] Session migration required - signing out user');
@@ -103,10 +125,12 @@ function getValidDisplayName(name: string | undefined | null, username: string |
   return 'Friend';
 }
 
-// Check if an ID is a valid member identifier (not a placeholder)
+// Check if an ID is a valid member identifier (not a placeholder or local_* fallback)
 function isValidMemberId(id: string | null | undefined): boolean {
   if (!id) return false;
   if (id === 'guest' || id.startsWith('guest_') || id === 'anonymous') return false;
+  // CRITICAL: Reject local_* fallback IDs that can't be used with server
+  if (id.startsWith('local_')) return false;
   return true;
 }
 
