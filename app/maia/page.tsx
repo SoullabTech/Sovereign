@@ -1041,7 +1041,7 @@ function MAIAPageContent() {
               voiceModel={voiceModel}
               initialMode={maiaMode}
               onModeChange={setMaiaMode}
-              apiEndpoint="/api/sovereign/app/maia"
+              apiEndpoint="/api/sovereign/app/maia/list"
               consciousnessType="maia"
               initialShowChatInterface={showChatInterface}
               onShowChatInterfaceChange={setShowChatInterface}

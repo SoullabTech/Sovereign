@@ -1629,46 +1629,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Initialize voice when in voice mode - AUTO-START ENABLED
-  useEffect(() => {
-    console.log('🔍 Voice auto-start check:', {
-      isMounted,
-      showChatInterface,
-      voiceEnabled,
-      isMuted,
-      audioEnabled,
-      isProcessing,
-      isResponding,
-      hasVoiceMicRef: !!voiceMicRef.current
-    });
-
-    if (isMounted && !showChatInterface && voiceEnabled && !isMuted && audioEnabled && !isAudioPlaying) {
-      // Delay to ensure component is ready
-      const timer = setTimeout(async () => {
-        // Use refs for real-time state check (state values can be stale)
-        if (voiceMicRef.current?.startListening &&
-            !isProcessingRef.current &&
-            !isRespondingRef.current &&
-            !isAudioPlayingRef.current) {
-          try {
-            await voiceMicRef.current.startListening();
-            console.log('✅ 🎤 Voice auto-started successfully');
-          } catch (err) {
-            console.error('❌ Voice auto-start failed:', err);
-          }
-        } else {
-          console.log('⏸️ Voice auto-start skipped - MAIA still active', {
-            isProcessing: isProcessingRef.current,
-            isResponding: isRespondingRef.current,
-            isAudioPlaying: isAudioPlayingRef.current
-          });
-        }
-      }, 500);
-      return () => clearTimeout(timer);
-    } else {
-      console.log('⏸️ Voice auto-start blocked - checking all conditions...');
-    }
-  }, [isMounted, showChatInterface, voiceEnabled, isMuted, isProcessing, isResponding, isAudioPlaying, audioEnabled]);
+  // 🚫 AUTO-START DISABLED - User must click holoflower to initiate voice
+  // This prevents the "blinking listening" issue and gives users control over when to speak
+  // Voice is started via handleHoloflowerClick() when user clicks the holoflower
 
   // Conversation context
   const contextRef = useRef<ConversationContext>({
@@ -5339,7 +5302,7 @@ I'm not sure what I'm feeling yet.`;
             silenceThreshold={
               listeningMode === 'session' ? 999999 : // Session mode: never auto-send (effectively infinite)
               listeningMode === 'patient' ? 10000 :   // Patient mode: 10 seconds (increased for full thoughts)
-              6000                                     // Normal mode: 6 seconds (increased from 3.5s to prevent mid-sentence cutoff)
+              4000                                     // Normal mode: 4 seconds
             }
           />
         </div>

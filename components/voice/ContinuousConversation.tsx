@@ -75,7 +75,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const audioLevelRef = useRef<number>(0); // Use ref for animation frame updates
   const lastAudioLevelUpdate = useRef<number>(0); // Throttle UI updates
   const micStreamRef = useRef<MediaStream | null>(null);
-  const lastSpeechTime = useRef<number>(Date.now());
+  const lastSpeechTime = useRef<number>(0); // 0 = no speech detected yet (NOT Date.now() which causes false positives)
   const accumulatedTranscript = useRef<string>("");
   const isProcessingRef = useRef(false);
   const isSpeakingRef = useRef(false); // Track isSpeaking via ref to avoid stale closures
@@ -343,12 +343,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // 🔥 FIX: DON'T auto-restart on silence timeouts (prevents "blinking listening")
       // Web Speech API times out after ~5-8 seconds of silence. If there's been no speech,
       // don't restart - let the user tap to restart when ready.
-      const timeSinceLastSpeech = Date.now() - lastSpeechTime.current;
-      const hasRecentSpeech = timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
+      //
+      // CRITICAL: lastSpeechTime.current === 0 means NO speech was ever detected in this session
+      // In that case, definitely don't restart - the mic timed out without any speech
+      const hasEverSpoken = lastSpeechTime.current > 0;
+      const timeSinceLastSpeech = hasEverSpoken ? Date.now() - lastSpeechTime.current : Infinity;
+      const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
       if (!hasRecentSpeech && !hasAccumulatedTranscript) {
-        console.log('🔕 [onend] No recent speech detected (' + Math.round(timeSinceLastSpeech/1000) + 's since last speech) - stopping to prevent blink');
+        console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
         console.log('   (User can tap mic to restart when ready to speak)');
         setIsListening(false);
         isListeningRef.current = false;
@@ -693,6 +697,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
     audioLoopRunningRef.current = true;
     console.log('🔊 [AudioLoop] Starting audio level monitoring loop');
+    let debugCounter = 0;
 
     const checkAudioLevel = () => {
       if (!analyserRef.current) {
@@ -707,6 +712,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Calculate average level
       const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
       const normalizedLevel = Math.min(average / 128, 1);
+
+      // DEBUG: Log audio level every 30 frames (~0.5 sec) to see if mic is picking up anything
+      debugCounter++;
+      if (debugCounter % 30 === 0) {
+        console.log(`🎚️ [MIC DEBUG] Audio level: ${normalizedLevel.toFixed(3)} (raw avg: ${average.toFixed(1)})`);
+      }
 
       // Store in ref for immediate use (no re-render)
       audioLevelRef.current = normalizedLevel;
@@ -974,8 +985,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         setVoiceError(null);
         isProcessingRef.current = false;
         consecutiveRestartCount.current = 0;
-        // 🔥 FIX: Reset lastSpeechTime so silence detection doesn't trigger immediately
-        lastSpeechTime.current = Date.now();
+        // NOTE: Do NOT reset lastSpeechTime here - it should only be set when actual speech is detected
+        // This prevents the "blinking listening" bug where mic restarts even without speech
 
         // 🚫 SKIP audio monitoring on native iOS - it conflicts with native speech recognition
         // The native plugin handles mic access directly; calling getUserMedia() causes crashes
@@ -1304,8 +1315,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
       // Reset restart counter when user manually starts listening
       consecutiveRestartCount.current = 0;
-      // 🔥 FIX: Reset lastSpeechTime so "no recent speech" check doesn't trigger immediately
-      lastSpeechTime.current = Date.now();
+      // NOTE: Do NOT reset lastSpeechTime here - it should only be set when actual speech is detected
+      // This prevents the "blinking listening" bug where mic restarts even without speech
 
       try {
         recognitionRef.current.start();

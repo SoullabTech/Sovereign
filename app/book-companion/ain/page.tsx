@@ -148,7 +148,7 @@ export default function AINCompanionPage() {
           ? `Current section: "${currentSection.title}"\n\n${currentSection.content.slice(0, 1000)}...`
           : 'Asking across the full AIN corpus';
 
-      const res = await fetch('/api/sovereign/app/maia', {
+      const res = await fetch('/api/sovereign/app/maia/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

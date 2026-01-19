@@ -223,7 +223,7 @@ export function AcademySheet({
         ? `[Soullab - ${selectedDomain.name}]\n\nI'm reflecting on this prompt:\n"${selectedPrompt.prompt}"\n\nMy response: ${userMessage}`
         : userMessage;
 
-      const res = await fetch('/api/sovereign/app/maia', {
+      const res = await fetch('/api/sovereign/app/maia/list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

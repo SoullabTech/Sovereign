@@ -126,7 +126,7 @@ export function useMaiaChat() {
     timing.startResponse(content?.substring(0, 50));
     
     try {
-      const res = await fetch("/api/sovereign/app/maia", {
+      const res = await fetch("/api/sovereign/app/maia/list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
