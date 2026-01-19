@@ -9,12 +9,19 @@
 #   setup     - First-time setup (generate secrets, prepare env)
 #   deploy    - Build and deploy the full stack
 #   update    - Pull latest code and redeploy
+#   rollback  - Rollback to previous deployment (2-command rollback)
+#   safe-mode - Toggle safe mode (on/off) for degraded operation
 #   migrate   - Run database migrations
 #   logs      - Tail container logs
 #   status    - Show container status
 #   stop      - Stop all containers
 #   backup    - Backup database to file
 #   restore   - Restore database from backup
+#
+# Stability Features:
+#   - Image tagging by git SHA for instant rollbacks
+#   - Safe mode toggle for degraded operation
+#   - Smoke tests with automatic alerts
 # ═══════════════════════════════════════════════════════════════════════════════
 
 set -e
@@ -360,10 +367,15 @@ cmd_deploy() {
     export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
+
+    # Build image first (never rebuild while down!)
     docker compose -f "$COMPOSE_FILE" build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
         --build-arg BUILD_DATE="$BUILD_DATE"
+
+    # Tag images for rollback capability BEFORE starting
+    tag_images_for_rollback "$GIT_COMMIT"
 
     log_info "Starting containers..."
     docker compose -f "$COMPOSE_FILE" up -d
@@ -400,10 +412,16 @@ cmd_update() {
     export APP_VERSION="$(node -p "require('./package.json').version" 2>/dev/null || echo '1.0.0')"
     export BUILD_DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
     log_info "Deploying commit: $GIT_COMMIT (v$APP_VERSION)"
+
+    # Build image first (never rebuild while down!)
     docker compose -f "$COMPOSE_FILE" build \
         --build-arg GIT_COMMIT="$GIT_COMMIT" \
         --build-arg APP_VERSION="$APP_VERSION" \
         --build-arg BUILD_DATE="$BUILD_DATE"
+
+    # Tag images for rollback capability BEFORE restarting
+    tag_images_for_rollback "$GIT_COMMIT"
+
     docker compose -f "$COMPOSE_FILE" up -d
 
     log_info "Running migrations..."
@@ -521,6 +539,146 @@ cmd_smoke() {
 }
 
 # ═══════════════════════════════════════════════════════════════════════════════
+# ROLLBACK - Instant rollback to previous deployment
+# ═══════════════════════════════════════════════════════════════════════════════
+# Two-command rollback: swap image tags, restart container
+# No rebuild required - just swap and go
+cmd_rollback() {
+    log_info "Rolling back to previous deployment..."
+
+    cd "$PROJECT_DIR"
+
+    # Check if previous image exists
+    if ! docker image inspect maia-sovereign:previous >/dev/null 2>&1; then
+        log_error "No previous image found. Cannot rollback."
+        log_info "Previous images are created during deploy. Run deploy at least twice."
+        exit 1
+    fi
+
+    # Get current and previous commit SHAs from labels
+    CURRENT_SHA=$(docker inspect --format='{{index .Config.Labels "git.commit"}}' maia-sovereign:current 2>/dev/null || echo "unknown")
+    PREVIOUS_SHA=$(docker inspect --format='{{index .Config.Labels "git.commit"}}' maia-sovereign:previous 2>/dev/null || echo "unknown")
+
+    log_info "Current deployment: $CURRENT_SHA"
+    log_info "Rolling back to: $PREVIOUS_SHA"
+
+    # Swap images
+    log_info "Swapping image tags..."
+    docker tag maia-sovereign:current maia-sovereign:broken 2>/dev/null || true
+    docker tag maia-sovereign:previous maia-sovereign:current
+
+    # Restart with the swapped image
+    log_info "Restarting MAIA with previous image..."
+    docker compose -f "$COMPOSE_FILE" up -d maia
+
+    # Wait for health
+    log_info "Waiting for service to be healthy..."
+    sleep 10
+
+    # Verify health
+    if docker compose -f "$COMPOSE_FILE" ps | grep -q "healthy"; then
+        log_success "Rollback complete! Now running: $PREVIOUS_SHA"
+
+        # Move broken to previous so we can roll forward if needed
+        docker tag maia-sovereign:broken maia-sovereign:previous 2>/dev/null || true
+
+        send_alert "warning" "Rollback executed" "{\"from\": \"$CURRENT_SHA\", \"to\": \"$PREVIOUS_SHA\"}"
+    else
+        log_error "Rollback may have failed. Check container health."
+        cmd_status
+    fi
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SAFE-MODE - Toggle safe mode for degraded operation
+# ═══════════════════════════════════════════════════════════════════════════════
+# When something weird happens in prod, flip one switch and the app stays usable
+cmd_safe_mode() {
+    local mode="${1:-status}"
+    cd "$PROJECT_DIR"
+
+    case "$mode" in
+        on|enable|1)
+            log_info "Enabling safe mode..."
+
+            # Set SAFE_MODE=1 in .env.production if not already set
+            if grep -q "^SAFE_MODE=" .env.production 2>/dev/null; then
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    sed -i '' 's/^SAFE_MODE=.*/SAFE_MODE=1/' .env.production
+                else
+                    sed -i 's/^SAFE_MODE=.*/SAFE_MODE=1/' .env.production
+                fi
+            else
+                echo "SAFE_MODE=1" >> .env.production
+            fi
+
+            # Restart maia to pick up the change
+            log_info "Restarting MAIA in safe mode..."
+            docker compose -f "$COMPOSE_FILE" up -d maia
+
+            log_success "Safe mode ENABLED. Non-essential features disabled."
+            log_warn "Disabled features: geocode, astrology, heavy memory, exports, advanced voice"
+            send_alert "warning" "Safe mode enabled" "{\"reason\": \"manual toggle\"}"
+            ;;
+
+        off|disable|0)
+            log_info "Disabling safe mode..."
+
+            # Set SAFE_MODE=0 in .env.production
+            if grep -q "^SAFE_MODE=" .env.production 2>/dev/null; then
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    sed -i '' 's/^SAFE_MODE=.*/SAFE_MODE=0/' .env.production
+                else
+                    sed -i 's/^SAFE_MODE=.*/SAFE_MODE=0/' .env.production
+                fi
+            else
+                echo "SAFE_MODE=0" >> .env.production
+            fi
+
+            # Restart maia to pick up the change
+            log_info "Restarting MAIA with full features..."
+            docker compose -f "$COMPOSE_FILE" up -d maia
+
+            log_success "Safe mode DISABLED. All features enabled."
+            send_alert "info" "Safe mode disabled" "{\"reason\": \"manual toggle\"}"
+            ;;
+
+        status|*)
+            # Check current status
+            local current
+            current=$(grep "^SAFE_MODE=" .env.production 2>/dev/null | cut -d'=' -f2 || echo "0")
+
+            if [ "$current" = "1" ] || [ "$current" = "true" ]; then
+                log_warn "Safe mode is currently ENABLED"
+                echo "  Disabled features: geocode, astrology, heavy memory, exports, advanced voice"
+                echo "  To disable: ./scripts/deploy-production.sh safe-mode off"
+            else
+                log_info "Safe mode is currently DISABLED (all features enabled)"
+                echo "  To enable: ./scripts/deploy-production.sh safe-mode on"
+            fi
+            ;;
+    esac
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# TAG-IMAGES - Tag current images for rollback capability
+# ═══════════════════════════════════════════════════════════════════════════════
+tag_images_for_rollback() {
+    local sha="$1"
+
+    # If there's already a :current, move it to :previous
+    if docker image inspect maia-sovereign:current >/dev/null 2>&1; then
+        log_info "Preserving current image as :previous for rollback..."
+        docker tag maia-sovereign:current maia-sovereign:previous 2>/dev/null || true
+    fi
+
+    # Tag the new build as :current and with its SHA
+    log_info "Tagging new image as :current and :$sha..."
+    docker tag maia-sovereign:prod maia-sovereign:current 2>/dev/null || true
+    docker tag maia-sovereign:prod "maia-sovereign:$sha" 2>/dev/null || true
+}
+
+# ═══════════════════════════════════════════════════════════════════════════════
 # MAIN
 # ═══════════════════════════════════════════════════════════════════════════════
 case "${1:-help}" in
@@ -558,22 +716,35 @@ case "${1:-help}" in
         log_info "Running smoke tests against production (soullab.life)..."
         BASE_URL="https://soullab.life" run_smoke_tests
         ;;
+    rollback)
+        cmd_rollback
+        ;;
+    safe-mode)
+        cmd_safe_mode "$2"
+        ;;
     *)
         echo "MAIA Sovereign - Production Deployment"
         echo ""
         echo "Usage: $0 <command>"
         echo ""
         echo "Commands:"
-        echo "  setup     - First-time setup (generate secrets)"
-        echo "  deploy    - Build and deploy the full stack"
-        echo "  update    - Pull latest code and redeploy"
-        echo "  migrate   - Run database migrations"
-        echo "  logs      - Tail container logs"
-        echo "  status    - Show container status"
-        echo "  stop      - Stop all containers"
-        echo "  backup    - Backup database"
-        echo "  restore   - Restore database from backup"
-        echo "  smoke     - Run smoke tests (uses BASE_URL from .env.production)"
+        echo "  setup      - First-time setup (generate secrets)"
+        echo "  deploy     - Build and deploy the full stack"
+        echo "  update     - Pull latest code and redeploy"
+        echo "  rollback   - Instant rollback to previous deployment"
+        echo "  safe-mode  - Toggle safe mode (on/off/status)"
+        echo "  migrate    - Run database migrations"
+        echo "  logs       - Tail container logs"
+        echo "  status     - Show container status"
+        echo "  stop       - Stop all containers"
+        echo "  backup     - Backup database"
+        echo "  restore    - Restore database from backup"
+        echo "  smoke      - Run smoke tests (uses BASE_URL from .env.production)"
         echo "  smoke-prod - Run smoke tests against soullab.life (always)"
+        echo ""
+        echo "Stability:"
+        echo "  rollback   - Swap back to previous image (no rebuild)"
+        echo "  safe-mode on  - Disable non-essential features"
+        echo "  safe-mode off - Re-enable all features"
         ;;
 esac

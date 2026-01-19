@@ -1,19 +1,65 @@
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-static';
-
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
+// UUID validation regex
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUUID(id: string): boolean {
+  return UUID_REGEX.test(id);
+}
+
+function isInvalidMemberId(id: string): { invalid: true; reason: string } | false {
+  if (id.startsWith('local_')) {
+    return { invalid: true, reason: 'Local fallback ID detected - user needs to re-authenticate' };
+  }
+  if (!isValidUUID(id)) {
+    return { invalid: true, reason: 'Invalid UUID format' };
+  }
+  return false;
+}
+
+// Generate correlation ID for request tracking
+function generateCorrelationId(): string {
+  return `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
+}
+
+// Check if error is a database connection error
+function isDbConnectionError(error: unknown): boolean {
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return (
+      msg.includes('connection') ||
+      msg.includes('econnrefused') ||
+      msg.includes('timeout') ||
+      msg.includes('socket') ||
+      msg.includes('pg_hba.conf')
+    );
+  }
+  return false;
+}
+
 /**
  * GET /api/members/profile
  * Get member profile by ID or username
+ *
+ * Never returns 500 for expected failures:
+ * - 400: Bad request (missing/invalid params)
+ * - 401: Auth required
+ * - 404: Member not found
+ * - 503: Database unavailable (with retry hint)
  */
 export async function GET(request: NextRequest) {
+  const correlationId = generateCorrelationId();
+  const headers = { 'X-Correlation-ID': correlationId };
+
   // Static export: return stub response during pre-rendering
   if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
+    return NextResponse.json({ stub: true }, { headers });
   }
+
   try {
     const searchParams = request.nextUrl.searchParams;
     const memberId = searchParams.get('id');
@@ -21,27 +67,58 @@ export async function GET(request: NextRequest) {
 
     if (!memberId && !username) {
       return NextResponse.json(
-        { error: 'Member ID or username required' },
-        { status: 400 }
+        { error: 'Member ID or username required', correlationId },
+        { status: 400, headers }
       );
     }
 
-    const result = await query(
-      `SELECT
-        m.id, m.username, m.name, m.preferred_name, m.email, m.passkey,
-        m.avatar_url, m.bio, m.timezone,
-        m.onboarded, m.created_at, m.last_sign_in,
-        m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
-        m.birth_location_name, m.birth_timezone,
-        ms.circle_tier, ms.circle_amount, ms.circle_joined_at
-      FROM members m
-      LEFT JOIN member_settings ms ON m.id = ms.member_id
-      WHERE ${memberId ? 'm.id = $1' : 'm.username = $1'}`,
-      [memberId || username]
-    );
+    // Validate memberId if provided (must be valid UUID, not local_*)
+    if (memberId) {
+      const invalidCheck = isInvalidMemberId(memberId);
+      if (invalidCheck) {
+        console.warn(`[Profile API] ${correlationId} - Invalid memberId rejected:`, memberId, invalidCheck.reason);
+        return NextResponse.json(
+          { error: 'Invalid member ID', reason: invalidCheck.reason, needsReauth: true, correlationId },
+          { status: 400, headers }
+        );
+      }
+    }
+
+    // Query database with explicit error handling
+    let result;
+    try {
+      result = await query(
+        `SELECT
+          m.id, m.username, m.name, m.preferred_name, m.email, m.passkey,
+          m.avatar_url, m.bio, m.timezone,
+          m.onboarded, m.created_at, m.last_sign_in,
+          m.birth_date, m.birth_time, m.birth_location_lat, m.birth_location_lng,
+          m.birth_location_name, m.birth_timezone,
+          ms.circle_tier, ms.circle_amount, ms.circle_joined_at
+        FROM members m
+        LEFT JOIN member_settings ms ON m.id = ms.member_id
+        WHERE ${memberId ? 'm.id = $1' : 'm.username = $1'}`,
+        [memberId || username]
+      );
+    } catch (dbError) {
+      // Database unavailable - return 503 not 500
+      console.error(`[Profile API] ${correlationId} - Database error:`, dbError);
+      const retryAfter = isDbConnectionError(dbError) ? '5' : '10';
+      return NextResponse.json(
+        {
+          error: 'Database temporarily unavailable',
+          correlationId,
+          retryAfter: parseInt(retryAfter) * 1000,
+        },
+        { status: 503, headers: { ...headers, 'Retry-After': retryAfter } }
+      );
+    }
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Member not found', correlationId },
+        { status: 404, headers }
+      );
     }
 
     const member = result.rows[0];
@@ -83,12 +160,15 @@ export async function GET(request: NextRequest) {
           timezone: member.birth_timezone,
         } : null,
       } : null,
-    });
+      correlationId,
+    }, { headers });
+
   } catch (error) {
-    console.error('[Profile API] Error:', error);
+    // This is a real unexpected error (code bug) - still include correlation ID
+    console.error(`[Profile API] ${correlationId} - Unexpected error:`, error);
     return NextResponse.json(
-      { error: 'Failed to fetch profile' },
-      { status: 500 }
+      { error: 'Internal server error', correlationId },
+      { status: 500, headers }
     );
   }
 }
@@ -96,16 +176,44 @@ export async function GET(request: NextRequest) {
 /**
  * PUT /api/members/profile
  * Update member profile
+ *
+ * Never returns 500 for expected failures:
+ * - 400: Bad request (missing/invalid params, malformed JSON)
+ * - 404: Member not found
+ * - 503: Database unavailable
  */
 export async function PUT(request: NextRequest) {
+  const correlationId = generateCorrelationId();
+  const headers = { 'X-Correlation-ID': correlationId };
+
+  // Parse body with error handling
+  let body;
   try {
-    const body = await request.json();
+    body = await request.json();
+  } catch {
+    return NextResponse.json(
+      { error: 'Invalid JSON in request body', correlationId },
+      { status: 400, headers }
+    );
+  }
+
+  try {
     const { memberId, name, preferredName, email, bio, timezone, birthData } = body;
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID required' },
-        { status: 400 }
+        { error: 'Member ID required', correlationId },
+        { status: 400, headers }
+      );
+    }
+
+    // Validate memberId (must be valid UUID, not local_*)
+    const invalidCheck = isInvalidMemberId(memberId);
+    if (invalidCheck) {
+      console.warn(`[Profile API] ${correlationId} - Invalid memberId rejected on PUT:`, memberId, invalidCheck.reason);
+      return NextResponse.json(
+        { error: 'Invalid member ID', reason: invalidCheck.reason, needsReauth: true, correlationId },
+        { status: 400, headers }
       );
     }
 
@@ -176,35 +284,54 @@ export async function PUT(request: NextRequest) {
 
     if (setClauses.length === 0) {
       return NextResponse.json(
-        { error: 'No fields to update' },
-        { status: 400 }
+        { error: 'No fields to update', correlationId },
+        { status: 400, headers }
       );
     }
 
-    // Update members table
-    const result = await query(
-      `UPDATE members
-       SET ${setClauses.join(', ')}
-       WHERE id = $1
-       RETURNING id, username, name, preferred_name, email, bio, timezone,
-                 birth_date, birth_time, birth_location_lat, birth_location_lng,
-                 birth_location_name, birth_timezone`,
-      values
-    );
+    // Update members table with explicit error handling
+    let result;
+    try {
+      result = await query(
+        `UPDATE members
+         SET ${setClauses.join(', ')}
+         WHERE id = $1
+         RETURNING id, username, name, preferred_name, email, bio, timezone,
+                   birth_date, birth_time, birth_location_lat, birth_location_lng,
+                   birth_location_name, birth_timezone`,
+        values
+      );
+    } catch (dbError) {
+      console.error(`[Profile API] ${correlationId} - Database error on update:`, dbError);
+      const retryAfter = isDbConnectionError(dbError) ? '5' : '10';
+      return NextResponse.json(
+        {
+          error: 'Database temporarily unavailable',
+          correlationId,
+          retryAfter: parseInt(retryAfter) * 1000,
+        },
+        { status: 503, headers: { ...headers, 'Retry-After': retryAfter } }
+      );
+    }
 
     if (result.rows.length === 0) {
-      return NextResponse.json({ error: 'Member not found' }, { status: 404 });
+      return NextResponse.json(
+        { error: 'Member not found', correlationId },
+        { status: 404, headers }
+      );
     }
 
     return NextResponse.json({
       success: true,
       profile: result.rows[0],
-    });
+      correlationId,
+    }, { headers });
+
   } catch (error) {
-    console.error('[Profile API] Update error:', error);
+    console.error(`[Profile API] ${correlationId} - Unexpected update error:`, error);
     return NextResponse.json(
-      { error: 'Failed to update profile' },
-      { status: 500 }
+      { error: 'Internal server error', correlationId },
+      { status: 500, headers }
     );
   }
 }
