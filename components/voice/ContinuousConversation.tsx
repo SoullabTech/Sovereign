@@ -1579,43 +1579,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   return (
     <>
-      {/* 🐛 DEBUG PANEL - On-screen debug for iOS TestFlight (Safari Inspector doesn't work with remote URLs) */}
-      {Capacitor.isNativePlatform() && showDebugPanel && (
-        <div className="fixed top-0 left-0 right-0 z-[9999] bg-black/95 p-2 text-xs font-mono border-b-2 border-yellow-500">
-          <div className="flex justify-between items-center mb-1">
-            <div className="text-yellow-400 font-bold">🐛 Voice Debug (TestFlight)</div>
-            <button
-              onClick={() => setShowDebugPanel(false)}
-              className="text-red-400 px-2 py-0.5 bg-red-900/50 rounded"
-            >
-              Hide
-            </button>
-          </div>
-          <div className="text-amber-300 text-[10px] mb-1">
-            isListening: {isListening ? '✅' : '❌'} | isRecording: {isRecording ? '✅' : '❌'} | isSpeaking: {isSpeaking ? '✅' : '❌'}
-          </div>
-          <div className="max-h-32 overflow-y-auto">
-            {debugLog.length === 0 ? (
-              <div className="text-gray-500">Waiting for voice activity...</div>
-            ) : (
-              debugLog.map((msg, i) => (
-                <div key={i} className="text-green-400 text-[10px] leading-tight">{msg}</div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-      {/* Toggle to show debug panel again - DISABLED for production */}
-      {/* Uncomment below for TestFlight debugging only:
-      {Capacitor.isNativePlatform() && !showDebugPanel && (
-        <button
-          onClick={() => setShowDebugPanel(true)}
-          className="fixed top-2 right-2 z-[9999] bg-yellow-500/80 text-black text-xs px-2 py-1 rounded font-bold"
-        >
-          🐛
-        </button>
-      )}
-      */}
+      {/* Debug panel removed - was interfering with mic activation */}
 
     <div className="flex items-center gap-3">
       {/* Main control button */}
