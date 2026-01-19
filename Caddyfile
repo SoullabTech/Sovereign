@@ -36,12 +36,83 @@
 }
 
 soullab.life, www.soullab.life {
+    # ═══════════════════════════════════════════════════════════════════════════
+    # CORS for API requests (iOS/Capacitor app support)
+    # Allows requests from capacitor://localhost, ionic://localhost, etc.
+    # ═══════════════════════════════════════════════════════════════════════════
+
+    # CORS: Capacitor/iOS origins
+    @capacitor_origin {
+        header Origin capacitor://localhost
+    }
+    @ionic_origin {
+        header Origin ionic://localhost
+    }
+    @localhost_origin {
+        header Origin http://localhost*
+    }
+
+    # Handle CORS preflight (OPTIONS) requests for API
+    @cors_preflight {
+        method OPTIONS
+        path /api/*
+    }
+    handle @cors_preflight {
+        # Capacitor origin
+        @preflight_capacitor {
+            header Origin capacitor://localhost
+        }
+        header @preflight_capacitor {
+            Access-Control-Allow-Origin "capacitor://localhost"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Max-Age "86400"
+        }
+        # Ionic origin
+        @preflight_ionic {
+            header Origin ionic://localhost
+        }
+        header @preflight_ionic {
+            Access-Control-Allow-Origin "ionic://localhost"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Max-Age "86400"
+        }
+        # Localhost origin (dev)
+        @preflight_localhost {
+            header_regexp Origin ^http://localhost
+        }
+        header @preflight_localhost {
+            Access-Control-Allow-Origin "{header.Origin}"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Max-Age "86400"
+        }
+        respond "" 204
+    }
+
     # SSE/Streaming endpoints - disable compression and buffering
     @streaming {
         path /api/voice/stream-conversation
         path /api/*/stream*
     }
     handle @streaming {
+        # CORS for Capacitor
+        @stream_capacitor {
+            header Origin capacitor://localhost
+        }
+        header @stream_capacitor Access-Control-Allow-Origin "capacitor://localhost"
+        header @stream_capacitor Access-Control-Allow-Credentials "true"
+        # CORS for Ionic
+        @stream_ionic {
+            header Origin ionic://localhost
+        }
+        header @stream_ionic Access-Control-Allow-Origin "ionic://localhost"
+        header @stream_ionic Access-Control-Allow-Credentials "true"
+
         reverse_proxy maia:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
@@ -52,7 +123,33 @@ soullab.life, www.soullab.life {
         }
     }
 
-    # Regular reverse proxy for all other requests
+    # API requests (non-streaming)
+    @api {
+        path /api/*
+    }
+    handle @api {
+        # CORS for Capacitor
+        @api_capacitor {
+            header Origin capacitor://localhost
+        }
+        header @api_capacitor Access-Control-Allow-Origin "capacitor://localhost"
+        header @api_capacitor Access-Control-Allow-Credentials "true"
+        # CORS for Ionic
+        @api_ionic {
+            header Origin ionic://localhost
+        }
+        header @api_ionic Access-Control-Allow-Origin "ionic://localhost"
+        header @api_ionic Access-Control-Allow-Credentials "true"
+
+        reverse_proxy maia:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
+
+    # Regular reverse proxy for non-API requests
     reverse_proxy maia:3000 {
         # Health checks
         health_uri /api/consciousness/health

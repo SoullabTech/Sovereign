@@ -2481,10 +2481,24 @@ I'm not sure what I'm feeling yet.`;
 
       // MAIA speaks through sovereign API - working consciousness system
       // apiUrl() wraps the endpoint for iOS/Capacitor builds to point to production server
-      const response = await fetch(apiUrl(apiEndpoint), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const fullApiUrl = apiUrl(apiEndpoint);
+
+      // [ios-debug] Hard truth logger - catch exactly what iOS is doing
+      console.log('[ios-debug] sending →', {
+        url: fullApiUrl,
+        endpoint: apiEndpoint,
+        isNative: typeof window !== 'undefined' ? (window as any).Capacitor?.isNativePlatform?.() : 'unknown',
+        origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
+      });
+
+      let response: Response;
+      try {
+        response = await fetch(fullApiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', // IMPORTANT for cookie/session based auth
+          mode: 'cors',
+          body: JSON.stringify({
           message: cleanedText,
           userId: userId || 'anonymous',
           userName: userName || 'Friend',
@@ -2548,14 +2562,21 @@ I'm not sure what I'm feeling yet.`;
         }),
         signal: controller.signal
       });
+      } catch (fetchError) {
+        // [ios-debug] Catch network-level errors (CORS, network unreachable, etc.)
+        console.error('[ios-debug] fetch threw:', fetchError);
+        alert(`iOS network error: ${String(fetchError)}`);
+        throw fetchError;
+      }
 
       clearTimeout(timeoutId);
 
-      console.log('📥 API response status:', response.status, response.statusText);
+      console.log('[ios-debug] status:', response.status, response.statusText);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ API error response:', errorText);
+        const errorText = await response.text().catch(() => '(no body)');
+        console.error('[ios-debug] non-OK response:', response.status, errorText);
+        alert(`API error ${response.status}: ${errorText.slice(0, 200)}`);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
