@@ -13,6 +13,12 @@ if [ -d "app/api" ]; then
   mv app/api /tmp/maia-api-backup-$$
 fi
 
+# Move middleware aside - it's incompatible with static export
+if [ -f "middleware.ts" ]; then
+  echo "📦 Moving middleware aside (incompatible with static export)..."
+  mv middleware.ts /tmp/maia-middleware-backup-$$
+fi
+
 # Move dynamic routes that can't be statically exported
 echo "📦 Moving dynamic routes aside (served from production server)..."
 mkdir -p /tmp/maia-dynamic-backup-$$
@@ -29,6 +35,10 @@ cleanup() {
   if [ -d "/tmp/maia-api-backup-$$" ]; then
     mv /tmp/maia-api-backup-$$ app/api
   fi
+  # Restore middleware
+  if [ -f "/tmp/maia-middleware-backup-$$" ]; then
+    mv /tmp/maia-middleware-backup-$$ middleware.ts
+  fi
   # Restore dynamic routes
   if [ -d "/tmp/maia-dynamic-backup-$$" ]; then
     for item in /tmp/maia-dynamic-backup-$$/*/; do
@@ -41,8 +51,6 @@ cleanup() {
     done
     rm -rf /tmp/maia-dynamic-backup-$$
   fi
-  # Restore tsconfig in next.config.js
-  sed -i '' "s/tsconfigPath: 'tsconfig.capacitor.json'/tsconfigPath: 'tsconfig.core.json'/" next.config.js 2>/dev/null || true
 }
 trap cleanup EXIT
 
@@ -57,16 +65,13 @@ echo "⏭️  Skipping aetheric verification (API routes not in mobile build)...
 echo "🔍 Validating critical files..."
 node scripts/validate-critical-files.js || true
 
-# Temporarily update next.config to use capacitor tsconfig
-echo "📝 Configuring for Capacitor build..."
-sed -i '' "s/tsconfigPath: 'tsconfig.core.json'/tsconfigPath: 'tsconfig.capacitor.json'/" next.config.js
+# NOTE: Do NOT change tsconfig to tsconfig.capacitor.json - it breaks static HTML export
+# The tsconfig.capacitor.json excludes too aggressively and causes Next.js to skip HTML generation
+# Using tsconfig.core.json works because API routes are already moved aside
 
 # Run Next.js build
 echo "🏗️  Building static export..."
 CAPACITOR_BUILD=1 NODE_OPTIONS=--max-old-space-size=8192 npx next build
-
-# Restore tsconfig
-sed -i '' "s/tsconfigPath: 'tsconfig.capacitor.json'/tsconfigPath: 'tsconfig.core.json'/" next.config.js
 
 # Check if build succeeded
 if [ -d "out" ]; then

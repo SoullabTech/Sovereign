@@ -521,16 +521,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
         if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
-            // 🔊 CRITICAL: Re-prepare audio session after TTS finished
-            // TTS leaves session in .playback mode, need to switch back to .playAndRecord
-            if (VoiceController.isNativeIOS()) {
-              console.log('🔊 [Native] Re-preparing audio session for listening...');
-              const prepared = await VoiceController.prepareForListening();
-              if (!prepared) {
-                console.error('❌ [Native] Failed to re-prepare audio session');
-                return;
-              }
-            }
+            // NOTE: Do NOT call VoiceController.prepareForListening() here!
+            // The speech recognition plugin reconfigures audio session from .playback
+            // to .playAndRecord/.voiceChat internally when start() is called.
+            // Calling our AudioSessionManager causes a mode conflict (.measurement vs .voiceChat).
             console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
             await NativeSpeechRecognition.start({
               language: 'en-US',
@@ -874,14 +868,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const ensureNativeSpeechReady = useCallback(async (): Promise<{ ok: boolean; reason?: string }> => {
     const platform = Capacitor.getPlatform();
     addDebug(`Platform: ${platform}`);
+    console.log('🔐 [ensureNativeSpeechReady] Platform:', platform);
 
     try {
       // Check if speech recognition is available on device
       addDebug('Checking availability...');
       const avail = await NativeSpeechRecognition.available();
       addDebug(`Available: ${JSON.stringify(avail)}`);
+      console.log('🔐 [ensureNativeSpeechReady] Available:', avail);
 
       if (!avail?.available) {
+        console.log('🔐 [ensureNativeSpeechReady] Speech NOT available!');
         return { ok: false, reason: 'Speech not available on device' };
       }
 
@@ -889,22 +886,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       addDebug('Checking permissions...');
       const perms = await NativeSpeechRecognition.checkPermissions();
       addDebug(`Perms: ${perms?.speechRecognition}`);
+      console.log('🔐 [ensureNativeSpeechReady] Current perms:', perms);
 
       if (perms?.speechRecognition !== 'granted') {
         // Request permissions (this covers both speech + mic on iOS)
         addDebug('Requesting permissions...');
+        console.log('🔐 [ensureNativeSpeechReady] Requesting permissions NOW...');
         const req = await NativeSpeechRecognition.requestPermissions();
         addDebug(`Req result: ${req?.speechRecognition}`);
+        console.log('🔐 [ensureNativeSpeechReady] Permission result:', req);
 
         if (req?.speechRecognition !== 'granted') {
+          console.log('🔐 [ensureNativeSpeechReady] Permission DENIED:', req?.speechRecognition);
           return { ok: false, reason: `Perm denied: ${req?.speechRecognition || 'unknown'}` };
         }
       }
 
       addDebug('✅ Ready!');
+      console.log('🔐 [ensureNativeSpeechReady] ✅ All permissions granted!');
       return { ok: true };
     } catch (e: any) {
       addDebug(`❌ Error: ${e?.message || e}`);
+      console.error('🔐 [ensureNativeSpeechReady] ❌ ERROR:', e);
       return { ok: false, reason: e?.message || String(e) };
     }
   }, [addDebug]);
@@ -934,7 +937,6 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isStartingRef.current = true;
 
     // 🔄 CRITICAL: Determine platform at START time
-    // With remote server URLs (beta builds), Capacitor bridge may initialize after page load
     const platform = Capacitor.getPlatform();
     // IMPORTANT: On iOS/Android, ALWAYS use native - never fall back to web speech
     const shouldUseNative = platform === 'ios' || platform === 'android';
@@ -1168,10 +1170,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 // Double-check conditions before restart
                 if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
                   try {
-                    // 🔊 Re-prepare audio session before restart
-                    if (VoiceController.isNativeIOS()) {
-                      await VoiceController.prepareForListening();
-                    }
+                    // NOTE: Do NOT call VoiceController.prepareForListening() here!
+                    // The speech recognition plugin manages its own audio session.
                     console.log('🎙️ [Native] Restarting speech recognition...');
                     await NativeSpeechRecognition.start({
                       language: 'en-US',
@@ -1196,24 +1196,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           }
         });
 
-        // 🔊 CRITICAL: Prepare audio session BEFORE starting speech recognition
-        // This ensures iOS audio session is properly configured for recording/listening mode
-        if (VoiceController.isNativeIOS()) {
-          console.log('🔊 [ContinuousConversation] Preparing audio session for listening...');
-          addDebug('🔊 Calling prepareForListening...');
-          const prepared = await VoiceController.prepareForListening();
-          if (!prepared) {
-            console.error('❌ [ContinuousConversation] Failed to prepare audio session');
-            addDebug('❌ prepareForListening FAILED');
-            setVoiceError('Failed to prepare audio session');
-            setIsListening(false);
-            isListeningRef.current = false;
-            isStartingRef.current = false;
-            onRecordingStateChange?.(false);
-            return;
-          }
-          addDebug('✅ Audio session prepared');
-        }
+        // 🔊 NOTE: Do NOT call VoiceController.prepareForListening() here!
+        // The @capacitor-community/speech-recognition plugin configures its own
+        // audio session with .voiceChat mode. Calling our AudioSessionManager first
+        // causes a conflict (we use .measurement mode) that makes recognition stop immediately.
+        // The plugin handles audio session setup internally - just call start() directly.
 
         // Start native speech recognition
         console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');
