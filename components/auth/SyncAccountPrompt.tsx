@@ -44,7 +44,12 @@ export function SyncAccountPrompt({ onAccountCreated }: SyncAccountPromptProps) 
         try {
           const userData = JSON.parse(betaUser);
           // If they have a proper member account (with username), don't show prompt
-          if (userData.username && userData.id === currentExplorerId) {
+          // Check multiple ID fields as they may be stored differently
+          const hasUsername = !!userData.username;
+          const idMatches = userData.id === currentExplorerId ||
+                           userData.memberId === currentExplorerId ||
+                           userData.id || userData.memberId; // Any valid ID means synced
+          if (hasUsername && idMatches) {
             return;
           }
         } catch (e) {
