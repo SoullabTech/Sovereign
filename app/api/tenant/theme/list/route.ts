@@ -10,4 +10,4 @@ export const dynamic = 'force-static';
  * (teams, clinics, schools - future).
  */
 
-export { GET, PUT } from "@/app/api/practitioner/theme/route";
+export { GET, PUT } from "@/app/api/practitioner/theme/list/route";

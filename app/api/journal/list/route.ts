@@ -4,9 +4,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 export const revalidate = false;
 import { z } from "zod";
-import { memoryStore } from "../_backend/src/services/memory/MemoryStore";
-import { llamaService } from "../_backend/src/services/memory/LlamaService";
-import { logger } from "../_backend/src/utils/logger";
+import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
+import { llamaService } from "../../_backend/src/services/memory/LlamaService";
+import { logger } from "../../_backend/src/utils/logger";
 
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
 
