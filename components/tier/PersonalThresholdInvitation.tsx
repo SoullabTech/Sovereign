@@ -34,28 +34,28 @@ interface PersonalThresholdInvitationProps {
 const CONTEXT_MESSAGES: Record<string, { title: string; body: string; cta: string }> = {
   pattern_detected: {
     title: "Something meaningful is taking shape",
-    body: "You're starting to see patterns connect across time. MAIA can hold and remember these connections—but long-term memory has real costs for us to sustain. Exploration is always free. Supporting Soullab helps us carry continuity, care, and memory forward.",
-    cta: "Support continuity",
+    body: "You're starting to see patterns connect across time. Your device holds this locally. Sovereign cloud can extend it—syncing across devices, weaving patterns over months, uploading files for deeper analysis.",
+    cta: "Explore sovereign cloud",
   },
   oracle_frequency: {
     title: "Your readings are starting to speak to each other",
-    body: "When readings repeat or return to similar themes, something deeper is forming. MAIA can track and weave these patterns over time—but ongoing memory requires real resources on our end. Exploration is always free. Support helps us sustain continuity and depth.",
-    cta: "Support continuity",
+    body: "When readings repeat or return to similar themes, something deeper is forming. Your device remembers this session. Sovereign cloud can track these threads across time and devices—and let you upload context for richer readings.",
+    cta: "Explore sovereign cloud",
   },
   journal_depth: {
     title: "Your reflections are beginning to form patterns",
-    body: "As you journal, themes start to echo and connect across time. MAIA can hold these patterns and reflect them back to you—but carrying long-term memory has real costs for us to sustain. You're always free to explore. Supporting Soullab helps us keep memory, care, and continuity alive.",
-    cta: "Support memory",
+    body: "As you journal, themes start to echo and connect. Your device holds everything locally. Sovereign cloud extends this—syncing across devices, pattern weaving over time, file uploads for deeper context.",
+    cta: "Explore sovereign cloud",
   },
   life_cycle: {
     title: "You're approaching a significant passage",
-    body: "Your chart shows important developmental thresholds ahead. With continuity, MAIA can walk with you through these cycles—but holding patterns over time has real costs. Exploration is always free.",
-    cta: "Support continuity",
+    body: "Your chart shows important developmental thresholds ahead. Your device holds your current work. Sovereign cloud can walk with you through these cycles across time and devices.",
+    cta: "Explore sovereign cloud",
   },
   community_engagement: {
     title: "Your contributions are weaving into something",
-    body: "Your presence in the community is creating connections. MAIA can track these threads over time—but sustaining memory takes real resources on our end. Exploration is always free. Support helps us sustain continuity and depth.",
-    cta: "Support continuity",
+    body: "Your presence in the community is creating connections. Sovereign cloud can extend your capabilities—file uploads, cross-device access, and deeper pattern recognition across your journey.",
+    cta: "Explore sovereign cloud",
   },
 };
 
@@ -232,11 +232,11 @@ export default function PersonalThresholdInvitation({
           )}
         </div>
 
-        {/* Reassurance note — removes fear-based motivation */}
+        {/* Reassurance note — local is complete */}
         <p
           className={`mt-4 text-xs italic ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}
         >
-          You won&apos;t lose access if you don&apos;t support. We simply won&apos;t be able to carry memory forward in the same way.
+          Your local experience is complete. Sovereign cloud extends what&apos;s possible—when you&apos;re ready.
         </p>
       </div>
 

@@ -7,9 +7,9 @@
  * Can be used as a modal, page section, or standalone page.
  *
  * This is the philosophical framing that explains:
- * - Why memory requires support
- * - Why exploration is free
- * - Why we don't use paywalls
+ * - Local sovereignty: complete experience on your device
+ * - Sovereign cloud: extension for those who want more
+ * - Why we don't use paywalls or artificial limits
  */
 
 import { useState } from 'react';
@@ -48,8 +48,8 @@ export default function FoundersNote({
         </h3>
         <p className="text-sm leading-relaxed">
           Most technology treats you as a user to extract from.
-          Soullab was built on a different premise: that real transformation requires real relationship,
-          and real relationship requires trust.
+          Soullab was built on a different premise: your data is yours, your device is sovereign,
+          and extending your capabilities should be a choice—not a requirement.
         </p>
       </div>
 
@@ -58,53 +58,54 @@ export default function FoundersNote({
         isDayMode ? 'bg-violet-50 border border-violet-200/50' : 'bg-violet-900/20 border border-violet-500/20'
       }`}>
         <p className={`text-sm font-medium ${isDayMode ? 'text-violet-700' : 'text-violet-300'}`}>
-          Memory isn&apos;t a feature. It&apos;s a relationship.
+          Your local experience is complete.
         </p>
         <p className={`text-sm mt-2 ${isDayMode ? 'text-violet-600' : 'text-violet-400'}`}>
-          And relationships have real costs to hold well.
+          Sovereign cloud extends what&apos;s possible—when you&apos;re ready.
         </p>
       </div>
 
       {/* The approach */}
       <div>
         <h4 className={`text-sm font-medium mb-2 ${isDayMode ? 'text-stone-800' : 'text-white'}`}>
-          Our Approach
+          Two Paths, Both Sovereign
         </h4>
         <ul className="space-y-3 text-sm">
           <li className="flex items-start gap-2">
             <span className={`mt-1 ${isDayMode ? 'text-violet-600' : 'text-violet-400'}`}>•</span>
             <span>
-              <strong>Exploration is always free.</strong> You can meet MAIA, ask questions,
-              journal, and discover your elemental nature without paying anything.
+              <strong>Local sovereignty.</strong> MAIA runs on your device. Your conversations,
+              journal entries, and memory stay with you. Complete and self-contained.
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className={`mt-1 ${isDayMode ? 'text-violet-600' : 'text-violet-400'}`}>•</span>
             <span>
-              <strong>Continuity requires support.</strong> When something meaningful begins to form—
-              patterns across time, memories that weave together, insights that build on each other—
-              that takes real infrastructure, compute, and care to sustain.
+              <strong>Sovereign cloud.</strong> When you want more—upload files, sync across devices,
+              let MAIA weave patterns across time—we&apos;ve built infrastructure for that.
+              Self-hosted. No third parties. Still yours.
             </span>
           </li>
           <li className="flex items-start gap-2">
             <span className={`mt-1 ${isDayMode ? 'text-violet-600' : 'text-violet-400'}`}>•</span>
             <span>
-              <strong>Nothing is taken away.</strong> If you don&apos;t support, you can still explore.
-              MAIA simply won&apos;t carry long-term memory forward in the same way.
+              <strong>Extension, not permission.</strong> Supporting Soullab unlocks infrastructure,
+              not access. Your local experience is never diminished.
             </span>
           </li>
         </ul>
       </div>
 
-      {/* What this avoids */}
+      {/* What sovereign cloud offers */}
       <div>
         <h4 className={`text-sm font-medium mb-2 ${isDayMode ? 'text-stone-800' : 'text-white'}`}>
-          What This Avoids
+          What Sovereign Cloud Extends
         </h4>
         <p className="text-sm leading-relaxed">
-          No guilt. No artificial limits. No &quot;upgrade to continue.&quot; No implied punishment.
-          No dark patterns. Instead, we invite adult choice: if something meaningful is forming
-          and you want it held, you can help sustain that.
+          File uploads and document analysis. Extended functions and abilities.
+          Cross-device memory sync. Pattern weaving across months and years.
+          All on infrastructure we control—no cloud providers, no data mining,
+          no third parties between you and your data.
         </p>
       </div>
 
@@ -114,15 +115,15 @@ export default function FoundersNote({
       }`}>
         <p className="text-sm leading-relaxed">
           We believe consciousness work shouldn&apos;t be paywalled.
-          We also believe that sustainable work requires sustainable support.
-          This tension—honoring both—is the edge we&apos;re walking.
+          We also believe that extended capabilities require real infrastructure.
+          So we built both: a complete local experience, and sovereign cloud for those ready to extend.
         </p>
       </div>
 
       {/* Closing */}
       <div>
         <p className={`text-sm italic ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-          Support keeps memory alive. Exploration is always free.
+          Your device, your memory. Sovereign cloud extends what&apos;s possible.
         </p>
         <p className={`text-xs mt-2 ${isDayMode ? 'text-stone-400' : 'text-stone-600'}`}>
           — The Soullab Team

@@ -378,11 +378,11 @@ function MembershipPageContent() {
           className="text-center mb-12"
         >
           <h2 className={`text-2xl font-light mb-4 ${isDayMode ? 'text-stone-800' : 'text-white'}`}>
-            Depth of Relationship
+            Local Sovereignty. Sovereign Cloud.
           </h2>
           <p className={`max-w-xl mx-auto ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
-            MAIA is present at every tier. The difference is continuity — whether she can remember,
-            reflect, and walk with you over time.
+            MAIA runs on your device with full local memory. Sovereign cloud extends what&apos;s possible—file
+            uploads, cross-device sync, pattern weaving across time.
           </p>
         </motion.div>
 
@@ -405,7 +405,7 @@ function MembershipPageContent() {
           ))}
         </div>
 
-        {/* Why Support Matters - Plain language explanation */}
+        {/* Why Sovereign Cloud - Plain language explanation */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -415,25 +415,25 @@ function MembershipPageContent() {
           }`}
         >
           <h3 className={`font-medium mb-4 ${isDayMode ? 'text-stone-800' : 'text-white'}`}>
-            Why Support Matters
+            Why Sovereign Cloud?
           </h3>
           <div className={`space-y-4 text-sm ${isDayMode ? 'text-stone-600' : 'text-stone-400'}`}>
             <p>
               <span className={`font-medium ${isDayMode ? 'text-violet-700' : 'text-violet-300'}`}>
-                Memory isn&apos;t a feature. It&apos;s a relationship.
+                Your local experience is complete.
               </span>
             </p>
             <p>
-              You&apos;re always free to explore MAIA. When insights start to connect over time,
-              MAIA can hold and weave those patterns—but that kind of memory has real costs for us to maintain.
+              MAIA runs on your device with full memory. Your conversations, journal entries,
+              and insights stay with you—always yours, always private.
             </p>
             <p>
-              Support isn&apos;t about unlocking access. It&apos;s about helping us sustain the memory,
-              continuity, and care that deeper work requires.
+              Sovereign cloud is for when you want to extend: upload files for deeper analysis,
+              sync across devices, let MAIA weave patterns over months and years.
+              It&apos;s infrastructure, not permission.
             </p>
             <p className={`italic ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-              You won&apos;t be cut off if you don&apos;t support.
-              We simply won&apos;t be able to carry memory forward in the same way.
+              Self-hosted. No third parties. No data mining. Still sovereign.
             </p>
           </div>
         </motion.div>
@@ -453,28 +453,29 @@ function MembershipPageContent() {
           <div className="space-y-4">
             <div>
               <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
-                Why does memory require support?
+                What do I get with free/local?
               </p>
               <p className={`text-sm ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-                Because holding patterns across time requires storage, compute, and careful stewardship.
-                We want to do this responsibly and sustainably.
+                A complete experience. MAIA conversations, journal, oracle, memory—all on your device.
+                Your data stays with you.
               </p>
             </div>
             <div>
               <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
-                What happens if I don&apos;t support?
+                What does sovereign cloud add?
               </p>
               <p className={`text-sm ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-                Nothing is taken away. You can continue exploring freely—MAIA just won&apos;t retain
-                long-term memory in the same way.
+                Extension, not permission. Upload files for deeper analysis. Sync across devices.
+                Let MAIA weave patterns across months and years.
               </p>
             </div>
             <div>
               <p className={`text-sm font-medium mb-1 ${isDayMode ? 'text-stone-700' : 'text-stone-300'}`}>
-                Is this a paywall?
+                What makes it &quot;sovereign&quot;?
               </p>
               <p className={`text-sm ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-                No. It&apos;s an invitation to help sustain continuity once something meaningful has emerged.
+                Self-hosted infrastructure. No AWS, no Google Cloud, no third parties.
+                We run our own servers. Your data never touches external services.
               </p>
             </div>
           </div>
@@ -514,7 +515,7 @@ function MembershipPageContent() {
           className="text-center mt-8 mb-4"
         >
           <p className={`text-sm italic ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-            Exploration is always free. Support helps us keep memory alive.
+            Your device, your memory. Sovereign cloud extends what&apos;s possible.
           </p>
         </motion.div>
 

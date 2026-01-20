@@ -262,8 +262,8 @@ export function SageTealWelcome({ userName = 'Explorer', onComplete }: SageTealW
               className="pt-4 text-center"
             >
               <p className="text-[#00695C]/60 text-xs italic leading-relaxed max-w-sm mx-auto">
-                Explore freely. When something meaningful begins to form,
-                I can hold it across time — with your support.
+                Explore freely on your device. When you&apos;re ready to extend—sync
+                across devices, upload files—sovereign cloud is here.
               </p>
             </motion.div>
           </motion.div>

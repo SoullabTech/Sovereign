@@ -34,7 +34,7 @@ export default function EthosFooter({
   const content = (
     <>
       <p className={`text-sm italic ${isDayMode ? 'text-stone-500' : 'text-stone-500'}`}>
-        Exploration is always free. Support helps us keep memory alive.
+        Your device, your memory. Sovereign cloud extends what&apos;s possible.
       </p>
       {showLearnMore && (
         <Link
