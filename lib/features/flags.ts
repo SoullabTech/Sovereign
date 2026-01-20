@@ -13,6 +13,8 @@
  *   const enabled = getFeatureFlag('VOICE_V2');
  */
 
+import { apiBaseUrl } from '@/lib/http/apiBase';
+
 export const FEATURES = {
   // Auth
   NATIVE_OAUTH: false,        // Native Google/Apple buttons on iOS
@@ -62,7 +64,9 @@ export function getFeatureFlag(key: FeatureKey): boolean {
 }
 
 /** Alias for getFeatureFlag - shorter callsites */
-export const ff = getFeatureFlag;
+export function ff(key: FeatureKey): boolean {
+  return getFeatureFlag(key);
+}
 
 /**
  * Get all feature flags as a record (useful for debugging/admin)
@@ -80,5 +84,5 @@ export function getAllFeatureFlags(): Record<FeatureKey, boolean> {
  * Call this on app startup to verify env vars are in the binary
  */
 export function logFeatureFlags(): void {
-  console.log('[flags]', getAllFeatureFlags());
+  console.log('[flags]', getAllFeatureFlags(), { apiBaseUrl: apiBaseUrl() });
 }
