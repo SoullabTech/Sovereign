@@ -25,12 +25,16 @@ export async function GET(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
+
+  // Use configured base URL for production (container returns internal address)
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(request.url).origin;
+
   try {
     const clientId = process.env.GOOGLE_CLIENT_ID;
 
     if (!clientId) {
       console.error('[GOOGLE AUTH] Missing GOOGLE_CLIENT_ID');
-      return NextResponse.redirect(new URL('/signin?error=oauth_not_configured', request.url));
+      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_not_configured`);
     }
 
     // Generate state for CSRF protection
@@ -62,8 +66,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Build Google OAuth URL - use NEXTAUTH_URL for production
-    const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(request.url).origin;
+    // Build Google OAuth URL
     const redirectUri = `${baseUrl}/api/auth/signin/google/callback`;
 
     const params = new URLSearchParams({
@@ -82,6 +85,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(googleAuthUrl);
   } catch (error) {
     console.error('[GOOGLE AUTH] Error:', error);
-    return NextResponse.redirect(new URL('/signin?error=oauth_error', request.url));
+    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_error`);
   }
 }
