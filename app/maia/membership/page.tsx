@@ -504,6 +504,12 @@ function MembershipPageContent() {
           <p className="text-[13px] italic text-stone-400">
             Your device, your memory. Sovereign cloud extends what&apos;s possible.
           </p>
+          <a
+            href="/maia/stewardship"
+            className="mt-3 inline-block text-[12px] text-stone-400 hover:text-[#5a7a6f] transition-colors"
+          >
+            Why does this cost money? →
+          </a>
         </div>
 
         {/* Selected tier confirmation */}

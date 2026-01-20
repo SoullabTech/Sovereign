@@ -1806,6 +1806,16 @@ export function AccountSettings() {
           <Sparkles className="inline w-4 h-4 mr-2" />
           Join Sustaining Circle
         </motion.button>
+
+        {/* Stewardship Link */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={() => window.location.href = '/maia/stewardship'}
+            className="text-sm text-white/40 hover:text-white/60 transition-colors"
+          >
+            Stewardship & Sustainability →
+          </button>
+        </div>
       </div>
     );
   };

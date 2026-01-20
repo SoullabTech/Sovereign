@@ -532,6 +532,16 @@ function PatronsContent() {
             <p className="mt-4 text-center text-xs text-stone-500 dark:text-stone-400">
               Secure payment via Stripe · Cancel anytime
             </p>
+
+            {/* Stewardship Link */}
+            <p className="mt-3 text-center">
+              <a
+                href="/maia/stewardship"
+                className="text-xs text-stone-400 dark:text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
+              >
+                Why does this cost money? →
+              </a>
+            </p>
           </div>
         </div>
       </section>

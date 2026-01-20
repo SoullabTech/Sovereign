@@ -238,6 +238,18 @@ export default function PersonalThresholdInvitation({
         >
           Your local experience is complete. Sovereign cloud extends what&apos;s possible—when you&apos;re ready.
         </p>
+
+        {/* Stewardship link — non-blocking */}
+        <a
+          href="/maia/stewardship"
+          className={`mt-2 inline-block text-xs transition-colors ${
+            isDayMode
+              ? 'text-stone-400 hover:text-violet-600'
+              : 'text-stone-500 hover:text-violet-400'
+          }`}
+        >
+          Why support matters →
+        </a>
       </div>
 
       {/* Decorative glow */}
