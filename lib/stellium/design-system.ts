@@ -19,7 +19,8 @@ export type ThemePackage =
   | 'haven'          // Therapy - soft, safe, calming blues
   | 'mystic'         // Shamanic - deep purple, sacred, mysterious
   | 'minimal'        // Clean, spacious, almost white
-  | 'midnight';      // Deep dark mode, elegant
+  | 'midnight'       // Deep dark mode, elegant
+  | 'soullab';       // B2C consumer - warm off-white, refined elegance
 
 export interface ThemeTokens {
   name: ThemePackage;
@@ -910,6 +911,103 @@ export const themes: Record<ThemePackage, ThemeTokens> = {
       },
     },
   },
+
+  soullab: {
+    name: 'soullab',
+    displayName: 'Soullab',
+    description: 'Warm, refined, grounded elegance. The primary B2C consumer aesthetic.',
+    colors: {
+      bg: {
+        primary: '#f8f7f5',      // Warm off-white
+        secondary: '#f4f3f0',    // Slightly warmer
+        tertiary: '#ffffff',     // Cards (bg-white/40 equivalent)
+        elevated: '#ffffff',     // Elevated surfaces
+        sunken: '#f0efec',       // Deepest warmth
+      },
+      text: {
+        primary: '#292524',      // stone-800
+        secondary: '#57534e',    // stone-600
+        muted: '#78716c',        // stone-500
+        accent: '#5a7a6f',       // Sage accent
+        inverse: '#f8f7f5',      // For dark surfaces
+      },
+      accent: {
+        primary: '#5a7a6f',      // Sage - growth, grounding
+        secondary: '#6b5a98',    // Violet - consciousness, intuition
+        glow: 'rgba(90, 122, 111, 0.1)',
+      },
+      border: {
+        subtle: 'rgba(214, 211, 209, 0.4)',   // stone-200/40
+        default: 'rgba(214, 211, 209, 0.6)',  // stone-200/60
+        strong: 'rgba(168, 162, 158, 0.6)',   // stone-400/60
+      },
+      semantic: {
+        success: '#5a7a6f',      // Sage
+        warning: '#8a7a5a',      // Gold
+        error: '#a85a5a',        // Muted red
+        info: '#6b5a98',         // Violet
+      },
+      special: {
+        gold: '#8a7a5a',         // Wisdom, achievement
+        silver: '#a8a29e',       // stone-400
+        rose: '#98706b',         // Warm rose
+      },
+    },
+    typography: {
+      fontFamily: {
+        display: '"Inter", -apple-system, sans-serif',
+        body: '"Inter", -apple-system, sans-serif',
+        mono: '"JetBrains Mono", monospace',
+      },
+      fontWeight: {
+        light: 300,              // Headers prefer light
+        regular: 400,
+        medium: 500,
+        semibold: 600,
+      },
+      letterSpacing: {
+        tight: '0',
+        normal: '0.025em',       // tracking-wide default
+        wide: '0.2em',           // For uppercase labels
+      },
+    },
+    spacing: {
+      xs: '0.25rem',
+      sm: '0.5rem',
+      md: '1rem',
+      lg: '1.5rem',
+      xl: '2rem',
+      '2xl': '3rem',
+      '3xl': '4rem',
+    },
+    radius: {
+      sm: '0.5rem',
+      md: '0.75rem',
+      lg: '1rem',
+      xl: '1.25rem',             // rounded-xl
+      full: '9999px',
+    },
+    shadows: {
+      subtle: '0 1px 2px rgba(0, 0, 0, 0.03)',
+      default: '0 2px 8px rgba(0, 0, 0, 0.05)',
+      elevated: '0 4px 16px rgba(0, 0, 0, 0.08)',
+      glow: '0 0 0 rgba(0, 0, 0, 0)',  // No glow for light theme
+    },
+    motion: {
+      duration: {
+        instant: '0ms',
+        fast: '150ms',
+        normal: '200ms',
+        slow: '300ms',
+        ritual: '500ms',
+      },
+      easing: {
+        default: 'cubic-bezier(0.4, 0, 0.2, 1)',
+        gentle: 'cubic-bezier(0.25, 0.1, 0.25, 1)',
+        bounce: 'cubic-bezier(0.34, 1.2, 0.64, 1)',
+      },
+    },
+  },
 };
 
 // ============================================
@@ -979,4 +1077,83 @@ export const modalityThemeMap: Record<string, ThemePackage> = {
 
 export function getRecommendedTheme(modality: string): ThemePackage {
   return modalityThemeMap[modality] || 'sanctuary';
+}
+
+// ============================================
+// CONTEXT-BASED THEME RECOMMENDATIONS
+// ============================================
+
+/**
+ * Theme recommendations by page context.
+ *
+ * The Stellium system supports two primary aesthetic directions:
+ *
+ * 1. SOULLAB (Light) - For consumer-facing B2C pages
+ *    - Warm off-white backgrounds, sage/violet/gold accents
+ *    - Lighter typography weights, wider letter-spacing
+ *    - Use for: membership, community, journal, onboarding, marketing
+ *
+ * 2. DARK THEMES (Immersive) - For atmospheric practitioner tools
+ *    - Deep backgrounds with glowing accents
+ *    - Preserved particles, sacred geometry, star fields
+ *    - Use for: Oracle, Astrology charts, Labtools, practitioner workspaces
+ */
+export type PageContext =
+  | 'consumer'          // B2C pages (membership, community, marketing)
+  | 'practitioner'      // B2B practitioner workspaces
+  | 'immersive'         // Atmospheric tools (Oracle, Astrology)
+  | 'journal'           // Personal reflection spaces
+  | 'onboarding';       // Welcome/signup flows
+
+export const contextThemeMap: Record<PageContext, ThemePackage> = {
+  consumer: 'soullab',
+  practitioner: 'sanctuary',
+  immersive: 'celestial',
+  journal: 'soullab',
+  onboarding: 'soullab',
+};
+
+export function getThemeByContext(context: PageContext): ThemePackage {
+  return contextThemeMap[context] || 'soullab';
+}
+
+/**
+ * Specific page recommendations
+ */
+export const pageThemeMap: Record<string, ThemePackage> = {
+  // Consumer / B2C - Use Soullab
+  '/maia/membership': 'soullab',
+  '/maia/community': 'soullab',
+  '/maia/community/commons': 'soullab',
+  '/labtools/journal': 'soullab',
+  '/begin': 'soullab',
+  '/intro-maia': 'soullab',
+  '/onboarding': 'soullab',
+  '/signin': 'soullab',
+
+  // Immersive / Atmospheric - Use dark themes
+  '/oracle': 'celestial',
+  '/astrology': 'celestial',
+  '/labtools': 'sanctuary',
+
+  // Practitioner workspaces - Use contextual dark
+  '/practitioner': 'sanctuary',
+  '/worldcraft': 'sanctuary',
+};
+
+export function getThemeForPage(pathname: string): ThemePackage {
+  // Exact match first
+  if (pageThemeMap[pathname]) {
+    return pageThemeMap[pathname];
+  }
+
+  // Prefix match
+  for (const [path, theme] of Object.entries(pageThemeMap)) {
+    if (pathname.startsWith(path)) {
+      return theme;
+    }
+  }
+
+  // Default to soullab for consumer experience
+  return 'soullab';
 }

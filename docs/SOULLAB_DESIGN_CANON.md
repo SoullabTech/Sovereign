@@ -4,6 +4,39 @@ A canonical reference for the Soullab visual language. All new components and pa
 
 ---
 
+## Integration with Stellium Theme System
+
+The Soullab Design Canon is now integrated into the Stellium theme system as a first-class theme package. This enables:
+
+- **Automatic theme selection** via `getThemeForPage()` for consumer-facing pages
+- **Vibe preset** for practitioners who want the Soullab aesthetic
+- **CSS variable generation** for runtime theming
+
+### When to Use Soullab vs Dark Themes
+
+| Context | Theme | Rationale |
+|---------|-------|-----------|
+| Membership, Community, Journal | **Soullab** | Consumer B2C, warm and inviting |
+| Onboarding, Marketing | **Soullab** | Brand-consistent, accessible |
+| Oracle, Astrology | **Celestial** (dark) | Atmospheric, immersive |
+| Practitioner Workspaces | **Sanctuary** (dark) | Professional, focused |
+
+For detailed guidance, see `/docs/THEME_HIERARCHY.md`.
+
+### Using the Theme Programmatically
+
+```typescript
+import { getTheme, getThemeForPage } from '@/lib/stellium/design-system';
+
+// Get the Soullab theme directly
+const soullab = getTheme('soullab');
+
+// Auto-detect theme for a page
+const theme = getThemeForPage('/maia/membership'); // Returns 'soullab'
+```
+
+---
+
 ## Philosophy
 
 Soullab's design serves the soul's journey — elegant, unhurried, and grounded. It favors:
@@ -394,6 +427,54 @@ Framer Motion animations can cause rendering issues. For critical content visibi
 
 - **Full Soullab aesthetic**: `/maia/membership`, `/maia/community/commons`, `/labtools/journal`
 - **Hybrid dark aesthetic**: `/oracle`, `/astrology`
+
+---
+
+## Stellium Integration Reference
+
+### Files
+
+| File | Purpose |
+|------|---------|
+| `/lib/stellium/design-system.ts` | Theme packages including `soullab` |
+| `/lib/theme/vibePresets.ts` | Vibe presets including `soullab` |
+| `/lib/theme/practitionerTheme.ts` | Schema with `soullab` vibe option |
+| `/docs/THEME_HIERARCHY.md` | When to use which theme |
+
+### Soullab Theme Tokens
+
+The `soullab` theme in Stellium provides these key tokens:
+
+```typescript
+{
+  colors: {
+    bg: {
+      primary: '#f8f7f5',    // Warm off-white
+      secondary: '#f4f3f0',  // Slightly warmer
+      tertiary: '#ffffff',   // Cards
+    },
+    text: {
+      primary: '#292524',    // stone-800
+      secondary: '#57534e',  // stone-600
+      muted: '#78716c',      // stone-500
+      accent: '#5a7a6f',     // Sage
+    },
+    accent: {
+      primary: '#5a7a6f',    // Sage
+      secondary: '#6b5a98',  // Violet
+    },
+    special: {
+      gold: '#8a7a5a',       // Gold
+    }
+  },
+  typography: {
+    letterSpacing: {
+      normal: '0.025em',     // tracking-wide
+      wide: '0.2em',         // For labels
+    }
+  }
+}
+```
 
 ---
 

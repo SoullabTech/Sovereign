@@ -10,7 +10,7 @@ import { PRACTITIONER_THEME_DEFAULTS_V1 } from "./practitionerTheme";
  * Future: Add asset packs (hero images, icons, textures)
  */
 
-export type VibePresetKey = "earthy" | "celestial" | "minimal" | "warm" | "mystical" | "clinical";
+export type VibePresetKey = "earthy" | "celestial" | "minimal" | "warm" | "mystical" | "clinical" | "soullab";
 
 export interface VibePreset {
   key: VibePresetKey;
@@ -157,6 +157,29 @@ export const VIBE_PRESETS: Record<VibePresetKey, VibePreset> = {
       customCss: null,
     },
     ai: { tone: "professional" },
+  },
+
+  soullab: {
+    key: "soullab",
+    name: "Soullab",
+    description: "Warm, refined, grounded elegance. Light theme for consumer-facing experiences.",
+    theme: {
+      ...PRACTITIONER_THEME_DEFAULTS_V1.theme,
+      vibe: "soullab",
+      colors: {
+        primary: "#5a7a6f",      // Sage - growth, grounding
+        accent: "#6b5a98",       // Violet - consciousness, intuition
+        background: "#f8f7f5",   // Warm off-white
+        surface: "#ffffff",      // White cards with opacity
+        text: "#292524",         // stone-800
+        textMuted: "#78716c",    // stone-500
+        border: "#d6d3d1",       // stone-200
+      },
+      typography: { heading: "inter", body: "inter" },
+      borderRadius: "rounded",
+      customCss: null,
+    },
+    ai: { tone: "warm" },
   },
 };
 

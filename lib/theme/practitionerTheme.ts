@@ -29,6 +29,7 @@ export const ThemeVibe = z.enum([
   "warm",
   "mystical",
   "clinical",
+  "soullab",     // Light theme - warm off-white, sage/violet/gold
   "custom",
 ]);
 export type ThemeVibe = z.infer<typeof ThemeVibe>;
