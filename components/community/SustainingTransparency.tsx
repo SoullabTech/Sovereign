@@ -175,7 +175,8 @@ export function SustainingTransparency() {
               </p>
               <p className="text-sm text-white/60 leading-relaxed mb-3">
                 Sovereign cloud is for when you want to extend: <em className="text-amber-300/80">file uploads,
-                cross-device sync, pattern weaving over time</em>. It&apos;s infrastructure, not permission.
+                cross-device sync, pattern weaving over time, and contributing to community and
+                collective intelligence</em>. It&apos;s infrastructure, not permission.
               </p>
               <p className="text-xs text-white/40 italic">
                 Self-hosted. No third parties. No data mining. Still sovereign.

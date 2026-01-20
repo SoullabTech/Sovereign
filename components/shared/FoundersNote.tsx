@@ -82,8 +82,8 @@ export default function FoundersNote({
             <span className={`mt-1 ${isDayMode ? 'text-violet-600' : 'text-violet-400'}`}>•</span>
             <span>
               <strong>Sovereign cloud.</strong> When you want more—upload files, sync across devices,
-              let MAIA weave patterns across time—we&apos;ve built infrastructure for that.
-              Self-hosted. No third parties. Still yours.
+              let MAIA weave patterns across time, contribute to community and collective intelligence—
+              we&apos;ve built infrastructure for that. Self-hosted. No third parties. Still yours.
             </span>
           </li>
           <li className="flex items-start gap-2">
@@ -104,8 +104,9 @@ export default function FoundersNote({
         <p className="text-sm leading-relaxed">
           File uploads and document analysis. Extended functions and abilities.
           Cross-device memory sync. Pattern weaving across months and years.
-          All on infrastructure we control—no cloud providers, no data mining,
-          no third parties between you and your data.
+          Contribution to community and collective intelligence—helping build something
+          that serves us all. All on infrastructure we control—no cloud providers,
+          no data mining, no third parties between you and your data.
         </p>
       </div>
 

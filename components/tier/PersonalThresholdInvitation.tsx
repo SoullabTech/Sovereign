@@ -54,7 +54,7 @@ const CONTEXT_MESSAGES: Record<string, { title: string; body: string; cta: strin
   },
   community_engagement: {
     title: "Your contributions are weaving into something",
-    body: "Your presence in the community is creating connections. Sovereign cloud can extend your capabilities—file uploads, cross-device access, and deeper pattern recognition across your journey.",
+    body: "Your presence in the community is creating connections. Sovereign cloud lets you contribute to collective intelligence—your insights help build something that serves us all, while extending your own capabilities.",
     cta: "Explore sovereign cloud",
   },
 };
