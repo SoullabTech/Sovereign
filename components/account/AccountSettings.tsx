@@ -165,8 +165,12 @@ export function AccountSettings() {
 
   // Password change state
   const [showPasskey, setShowPasskey] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordChanging, setPasswordChanging] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
 
   // Delete account state
   const [deleteConfirm, setDeleteConfirm] = useState('');
@@ -841,11 +845,28 @@ export function AccountSettings() {
       <div className="pt-4 border-t border-white/10">
         <h4 className="text-sm font-medium text-white/80 mb-4">Change Password</h4>
         <div className="space-y-3">
+          {passwordError && (
+            <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm">
+              {passwordError}
+            </div>
+          )}
+          {passwordSuccess && (
+            <div className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl text-green-400 text-sm">
+              Password updated successfully
+            </div>
+          )}
+          <input
+            type="password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            placeholder="Current password"
+            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
+          />
           <input
             type="password"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="New password"
+            placeholder="New password (min 8 characters)"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
           />
           <input
@@ -856,16 +877,60 @@ export function AccountSettings() {
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
           />
           <motion.button
-            disabled={!newPassword || newPassword !== confirmPassword}
-            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white/60 font-medium transition-colors disabled:opacity-30"
+            onClick={handleChangePassword}
+            disabled={!currentPassword || !newPassword || newPassword !== confirmPassword || passwordChanging}
+            className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white/60 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
             whileTap={{ scale: 0.98 }}
           >
-            Update Password
+            {passwordChanging ? 'Updating...' : 'Update Password'}
           </motion.button>
         </div>
       </div>
     </div>
   );
+
+  // Handler for changing password
+  const handleChangePassword = async () => {
+    if (!currentPassword || !newPassword || newPassword !== confirmPassword) {
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+
+    setPasswordChanging(true);
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    try {
+      const res = await fetch('/api/members/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPasswordError(data.error || 'Failed to change password');
+        return;
+      }
+
+      setPasswordSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err) {
+      setPasswordError('Network error. Please try again.');
+    } finally {
+      setPasswordChanging(false);
+    }
+  };
 
   // Helper to check if name is sensitive
   const isSensitiveName = (name: string) => {
