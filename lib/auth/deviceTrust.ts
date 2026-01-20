@@ -1,6 +1,8 @@
 /**
  * Device Trust & Fingerprinting
  * Tracks trusted devices and creates device fingerprints
+ *
+ * Connects to /api/auth/device/* endpoints for server-side trust management
  */
 
 import { generateUUID } from '@/lib/utils/uuid';
@@ -21,25 +23,35 @@ export interface DeviceFingerprint {
 
 export interface TrustedDevice {
   id: string;
-  userId: string;
+  memberId: string;
   deviceFingerprint: string;
   deviceName: string;
   deviceType: string;
-  location?: string;
-  ipAddress?: string;
-  trusted: boolean;
-  lastSeen: string;
+  trustLevel: 'standard' | 'high' | 'temporary';
+  lastSeenAt: string;
   createdAt: string;
   expiresAt: string;
+  isCurrent: boolean;
+}
+
+export interface DeviceTrustResult {
+  success: boolean;
+  deviceId?: string;
+  error?: string;
 }
 
 class DeviceTrustService {
+  private fingerprintCache: DeviceFingerprint | null = null;
+
   /**
    * Generate device fingerprint
+   * Uses browser APIs to create a unique device identifier
    */
   async generateFingerprint(): Promise<DeviceFingerprint> {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl');
+    // Return cached fingerprint if available (fingerprint doesn't change during session)
+    if (this.fingerprintCache) {
+      return this.fingerprintCache;
+    }
 
     const fingerprint = {
       id: generateUUID(),
@@ -50,54 +62,61 @@ class DeviceTrustService {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       screenResolution: `${screen.width}x${screen.height}`,
       colorDepth: screen.colorDepth,
-      hardwareConcurrency: navigator.hardwareConcurrency,
-      deviceMemory: (navigator as any).deviceMemory,
+      hardwareConcurrency: navigator.hardwareConcurrency || 0,
+      deviceMemory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory,
       hash: ''
     };
 
-    // Create hash from all properties
-    const fingerprintString = JSON.stringify(fingerprint);
+    // Create hash from all properties (excluding hash itself)
+    const dataToHash = {
+      userAgent: fingerprint.userAgent,
+      platform: fingerprint.platform,
+      vendor: fingerprint.vendor,
+      language: fingerprint.language,
+      timezone: fingerprint.timezone,
+      screenResolution: fingerprint.screenResolution,
+      colorDepth: fingerprint.colorDepth,
+      hardwareConcurrency: fingerprint.hardwareConcurrency,
+      deviceMemory: fingerprint.deviceMemory
+    };
+
+    const fingerprintString = JSON.stringify(dataToHash);
     const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(fingerprintString));
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     fingerprint.hash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
+    this.fingerprintCache = fingerprint;
     return fingerprint;
   }
 
   /**
    * Check if current device is trusted
+   * Requires authenticated session
    */
-  async isTrustedDevice(userId: string): Promise<boolean> {
+  async isTrustedDevice(): Promise<boolean> {
     try {
-      const fingerprint = await this.generateFingerprint();
-      const storedDeviceId = localStorage.getItem('device_id');
+      const devices = await this.getTrustedDevices();
+      const currentFingerprint = await this.generateFingerprint();
 
-      const response = await fetch('/api/auth/device/check', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          deviceId: storedDeviceId,
-          fingerprint: fingerprint.hash
-        })
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-
-      const { trusted } = await response.json();
-      return trusted;
+      // Check if any trusted device matches current fingerprint
+      return devices.some(device =>
+        device.deviceFingerprint === currentFingerprint.hash &&
+        new Date(device.expiresAt) > new Date()
+      );
     } catch (error) {
-      console.error('Device trust check error:', error);
+      console.error('[DeviceTrust] Check failed:', error);
       return false;
     }
   }
 
   /**
    * Trust current device
+   * Requires authenticated session
    */
-  async trustDevice(userId: string, deviceName?: string): Promise<{ success: boolean; deviceId?: string }> {
+  async trustDevice(
+    deviceName?: string,
+    trustLevel: 'standard' | 'high' | 'temporary' = 'standard'
+  ): Promise<DeviceTrustResult> {
     try {
       const fingerprint = await this.generateFingerprint();
       const deviceInfo = this.getDeviceInfo();
@@ -105,39 +124,45 @@ class DeviceTrustService {
       const response = await fetch('/api/auth/device/trust', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          userId,
           fingerprint: fingerprint.hash,
           deviceName: deviceName || deviceInfo.name,
           deviceType: deviceInfo.type,
-          fullFingerprint: fingerprint
+          trustLevel
         })
       });
 
       if (!response.ok) {
-        throw new Error('Failed to trust device');
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Failed to trust device');
       }
 
       const { deviceId } = await response.json();
 
-      // Store device ID locally
+      // Store device ID locally for quick reference
       localStorage.setItem('device_id', deviceId);
 
       return { success: true, deviceId };
     } catch (error) {
-      console.error('Device trust error:', error);
-      return { success: false };
+      console.error('[DeviceTrust] Trust error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to trust device'
+      };
     }
   }
 
   /**
    * Revoke device trust
+   * Requires authenticated session
    */
   async revokeDevice(deviceId: string): Promise<boolean> {
     try {
       const response = await fetch('/api/auth/device/revoke', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ deviceId })
       });
 
@@ -148,31 +173,34 @@ class DeviceTrustService {
       // Clear local storage if this is the current device
       if (localStorage.getItem('device_id') === deviceId) {
         localStorage.removeItem('device_id');
-        localStorage.removeItem('session_token');
       }
 
       return true;
     } catch (error) {
-      console.error('Device revoke error:', error);
+      console.error('[DeviceTrust] Revoke error:', error);
       return false;
     }
   }
 
   /**
-   * Get list of trusted devices for a user
+   * Get list of trusted devices for current user
+   * Requires authenticated session
    */
-  async getTrustedDevices(userId: string): Promise<TrustedDevice[]> {
+  async getTrustedDevices(): Promise<TrustedDevice[]> {
     try {
-      const response = await fetch(`/api/auth/device/list?userId=${userId}`);
+      const response = await fetch('/api/auth/device/list', {
+        method: 'GET',
+        credentials: 'include'
+      });
 
       if (!response.ok) {
         throw new Error('Failed to get devices');
       }
 
       const { devices } = await response.json();
-      return devices;
+      return devices || [];
     } catch (error) {
-      console.error('Get devices error:', error);
+      console.error('[DeviceTrust] Get devices error:', error);
       return [];
     }
   }
@@ -180,7 +208,7 @@ class DeviceTrustService {
   /**
    * Get device info for display
    */
-  private getDeviceInfo(): { type: string; name: string; icon: string } {
+  getDeviceInfo(): { type: string; name: string; icon: string } {
     const ua = navigator.userAgent;
 
     if (/iPhone/.test(ua)) {
@@ -188,10 +216,14 @@ class DeviceTrustService {
     } else if (/iPad/.test(ua)) {
       return { type: 'ipad', name: 'iPad', icon: '📱' };
     } else if (/Android/.test(ua)) {
+      // Try to get device model
+      const match = ua.match(/Android.*?;\s*([^;)]+)/);
+      const model = match ? match[1].trim() : null;
+
       if (/Mobile/.test(ua)) {
-        return { type: 'android-phone', name: 'Android Phone', icon: '📱' };
+        return { type: 'android-phone', name: model || 'Android Phone', icon: '📱' };
       }
-      return { type: 'android-tablet', name: 'Android Tablet', icon: '📱' };
+      return { type: 'android-tablet', name: model || 'Android Tablet', icon: '📱' };
     } else if (/Macintosh/.test(ua)) {
       return { type: 'mac', name: 'Mac', icon: '💻' };
     } else if (/Windows/.test(ua)) {
@@ -204,10 +236,35 @@ class DeviceTrustService {
   }
 
   /**
-   * Get current device ID
+   * Get current device ID from local storage
    */
   getCurrentDeviceId(): string | null {
     return localStorage.getItem('device_id');
+  }
+
+  /**
+   * Check if this is likely the same device based on fingerprint
+   * Useful for detecting when a user returns on a trusted device
+   */
+  async isKnownDevice(): Promise<boolean> {
+    const storedId = this.getCurrentDeviceId();
+    if (!storedId) {
+      return false;
+    }
+
+    try {
+      const devices = await this.getTrustedDevices();
+      return devices.some(d => d.id === storedId);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Clear cached fingerprint (useful for testing)
+   */
+  clearCache(): void {
+    this.fingerprintCache = null;
   }
 }
 
