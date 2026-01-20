@@ -4,30 +4,17 @@ export const dynamic = 'force-dynamic';
  * Practices API
  * GET  - List all practices for authenticated user
  * POST - Create a new practice
+ *
+ * Security: Uses httpOnly session cookie auth.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { requireMemberId } from '@/lib/auth/session';
 
-// Helper to get member from session (simplified - extend as needed)
-async function getMemberFromRequest(request: NextRequest): Promise<{ id: string } | null> {
-  // Check for member ID in headers (set by middleware or client)
-  const memberId = request.headers.get('x-member-id');
-  if (!memberId) return null;
-
-  // Verify member exists
-  const result = await query('SELECT id FROM members WHERE id = $1', [memberId]);
-  if (result.rows.length === 0) return null;
-
-  return { id: memberId };
-}
-
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const member = await getMemberFromRequest(request);
-    if (!member) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const memberId = await requireMemberId();
 
     const result = await query(
       `SELECT
@@ -36,7 +23,7 @@ export async function GET(request: NextRequest) {
        FROM rl_practices
        WHERE owner_user_id = $1
        ORDER BY created_at DESC`,
-      [member.id]
+      [memberId]
     );
 
     return NextResponse.json({
@@ -51,6 +38,9 @@ export async function GET(request: NextRequest) {
       }))
     });
   } catch (error) {
+    if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('[PRACTICES] List error:', error);
     return NextResponse.json({ error: 'Failed to list practices' }, { status: 500 });
   }
@@ -58,10 +48,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const member = await getMemberFromRequest(request);
-    if (!member) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const memberId = await requireMemberId();
 
     const body = await request.json();
     const { name, modes = [], timezone = 'UTC', capacityPolicy = {} } = body;
@@ -74,7 +61,7 @@ export async function POST(request: NextRequest) {
       `INSERT INTO rl_practices (owner_user_id, name, modes, timezone, capacity_policy)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, name, modes, timezone, capacity_policy, created_at, updated_at`,
-      [member.id, name.trim(), modes, timezone, JSON.stringify(capacityPolicy)]
+      [memberId, name.trim(), modes, timezone, JSON.stringify(capacityPolicy)]
     );
 
     const practice = result.rows[0];
@@ -92,6 +79,9 @@ export async function POST(request: NextRequest) {
       }
     }, { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.message === 'AUTH_REQUIRED') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     console.error('[PRACTICES] Create error:', error);
     return NextResponse.json({ error: 'Failed to create practice' }, { status: 500 });
   }
