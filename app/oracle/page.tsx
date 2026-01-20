@@ -11,7 +11,7 @@
  * Aesthetic: DUNE mysticism meets cosmic oracle chamber
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -22,6 +22,10 @@ import {
   Hexagon,
   ArrowLeft
 } from 'lucide-react';
+import { betaSession } from '@/lib/auth/betaSession';
+import { hasContinuityAccess, type MemberTier } from '@/lib/auth/tierAccess';
+import PersonalThresholdInvitation from '@/components/tier/PersonalThresholdInvitation';
+import TierDebugPill from '@/components/dev/TierDebugPill';
 
 type DivinationMethod = 'iching' | 'tarot' | 'runes' | null;
 
@@ -69,12 +73,103 @@ const ORACLE_METHODS: OracleMethod[] = [
   }
 ];
 
+// Helper to get/set weekly reading count in localStorage
+const READING_COUNT_KEY = 'oracle_readings_this_week';
+const READING_WEEK_KEY = 'oracle_week_start';
+
+function getWeekStart(): string {
+  const now = new Date();
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
+  const dayOfWeek = d.getDay(); // 0=Sun
+  d.setDate(d.getDate() - dayOfWeek); // Sunday start
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function getReadingCount(): number {
+  if (typeof window === 'undefined') return 0;
+  const weekStart = localStorage.getItem(READING_WEEK_KEY);
+  const currentWeekStart = getWeekStart();
+
+  // Reset count if new week
+  if (weekStart !== currentWeekStart) {
+    localStorage.setItem(READING_WEEK_KEY, currentWeekStart);
+    localStorage.setItem(READING_COUNT_KEY, '0');
+    return 0;
+  }
+
+  return parseInt(localStorage.getItem(READING_COUNT_KEY) || '0', 10);
+}
+
+function incrementReadingCount(): void {
+  if (typeof window === 'undefined') return;
+  const currentWeekStart = getWeekStart();
+  localStorage.setItem(READING_WEEK_KEY, currentWeekStart);
+  const count = getReadingCount();
+  localStorage.setItem(READING_COUNT_KEY, String(count + 1));
+}
+
+// Dismissal persistence (per week)
+const DISMISS_KEY = 'oracle_threshold_dismissed_week';
+
+function getThresholdDismissed(): boolean {
+  if (typeof window === 'undefined') return false;
+  return localStorage.getItem(DISMISS_KEY) === getWeekStart();
+}
+
+function setThresholdDismissed(): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(DISMISS_KEY, getWeekStart());
+}
+
 export default function OracleConsultationPage() {
   const router = useRouter();
   const [selectedMethod, setSelectedMethod] = useState<DivinationMethod>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  // Tier and reading tracking
+  const [tier, setTier] = useState<MemberTier>('free');
+  const [readingsThisWeek, setReadingsThisWeek] = useState(0);
+  const [thresholdDismissed, setDismissedState] = useState(false);
+
+  // Load user, reading count, and dismissal state
+  useEffect(() => {
+    const user = betaSession.getCurrentUser();
+    if (user?.tier) {
+      setTier(user.tier);
+    }
+
+    // Load persisted dismissal state
+    setDismissedState(getThresholdDismissed());
+
+    // Dev override: ?readings=5 to force threshold display
+    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const forceReadings = params.get('readings');
+      if (forceReadings) {
+        setReadingsThisWeek(parseInt(forceReadings, 10));
+        return;
+      }
+    }
+
+    setReadingsThisWeek(getReadingCount());
+  }, []);
+
+  const handleDismissThreshold = () => {
+    setThresholdDismissed();
+    setDismissedState(true);
+  };
+
+  const hasAccess = hasContinuityAccess({ tier });
+  const showThreshold = !hasAccess && readingsThisWeek >= 3 && !thresholdDismissed;
+
   const handleMethodSelect = (method: DivinationMethod) => {
+    // Track the reading
+    incrementReadingCount();
+    setReadingsThisWeek(prev => prev + 1);
+
     setIsTransitioning(true);
     setSelectedMethod(method);
 
@@ -157,12 +252,12 @@ export default function OracleConsultationPage() {
               <Compass className="w-10 h-10 text-[#D4B896]" />
             </motion.div>
 
-            <h1 className="text-6xl md:text-7xl font-bold mb-4 bg-gradient-to-r from-amber-200 via-[#D4B896] to-amber-300 bg-clip-text text-transparent"
+            <h1 className="text-5xl md:text-6xl font-light tracking-wide mb-4 bg-gradient-to-r from-amber-200 via-[#D4B896] to-amber-300 bg-clip-text text-transparent"
                 style={{ textShadow: '0 0 40px rgba(212, 184, 150, 0.3)' }}>
               Oracle Consultation
             </h1>
 
-            <p className="text-xl text-amber-200/60 max-w-3xl mx-auto font-light tracking-wide">
+            <p className="text-lg text-amber-200/60 max-w-3xl mx-auto font-light tracking-wider leading-relaxed">
               Enter the Sanctum of Divination. Choose your oracle, ask your question, and receive wisdom from the ages.
             </p>
 
@@ -173,6 +268,30 @@ export default function OracleConsultationPage() {
               <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent" />
             </div>
           </motion.div>
+
+          {/* Dev-only tier debug */}
+          <div className="mb-4 text-center">
+            <TierDebugPill
+              tier={tier}
+              hasAccess={hasAccess}
+              extra={{ readings: `${readingsThisWeek}/3`, showThreshold }}
+              hint="?readings=5 to force threshold"
+              scheme="dark"
+            />
+          </div>
+
+          {/* Threshold invitation for Free users who've consulted 3+ times this week */}
+          {showThreshold && (
+            <div className="mb-8">
+              <PersonalThresholdInvitation
+                context="oracle_frequency"
+                isDayMode={false}
+                onLearnMore={() => router.push('/maia/membership')}
+                onDismiss={handleDismissThreshold}
+                variant="card"
+              />
+            </div>
+          )}
 
           {/* Oracle Method Selection */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
@@ -211,15 +330,15 @@ export default function OracleConsultationPage() {
 
                   {/* Method Details */}
                   <div className="relative">
-                    <h3 className="text-2xl font-bold text-amber-100 mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-amber-100 group-hover:via-amber-200 group-hover:to-amber-100 group-hover:bg-clip-text transition-all duration-500">
+                    <h3 className="text-xl font-medium tracking-wide text-amber-100 mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-amber-100 group-hover:via-amber-200 group-hover:to-amber-100 group-hover:bg-clip-text transition-all duration-500">
                       {method.title}
                     </h3>
 
-                    <p className="text-sm text-amber-300/60 mb-4 font-light tracking-wider uppercase">
+                    <p className="text-[11px] text-amber-300/60 mb-4 font-light tracking-[0.2em] uppercase">
                       {method.subtitle}
                     </p>
 
-                    <p className="text-amber-200/50 leading-relaxed text-sm">
+                    <p className="text-amber-200/50 leading-relaxed text-[13px] tracking-wide">
                       {method.description}
                     </p>
                   </div>

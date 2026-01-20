@@ -496,7 +496,7 @@ export default function AstrologyPage() {
       const planets = [
         chart.sun, chart.moon, chart.mercury, chart.venus,
         chart.mars, chart.jupiter, chart.saturn
-      ].filter(Boolean);
+      ].filter((p): p is PlanetPosition => p != null);
 
       const elementCounts = { fire: 0, water: 0, earth: 0, air: 0 };
       const fireSign = ['Aries', 'Leo', 'Sagittarius'];
@@ -718,8 +718,8 @@ export default function AstrologyPage() {
         {/* Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-dune-amber mb-2">Your Cosmic Blueprint</h1>
-            <p className="text-dune-spice-sand">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
+            <h1 className="text-4xl font-light tracking-wide text-dune-amber mb-2">Your Cosmic Blueprint</h1>
+            <p className="text-dune-spice-sand text-sm tracking-wider">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
 
             {/* Zodiac System Toggle */}
             <div className="mt-6 flex flex-col items-center gap-2">
@@ -742,8 +742,8 @@ export default function AstrologyPage() {
 
           {/* Archetypal Profile */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-amber mb-4">Your Archetypal Profile</h2>
-            <p className="text-dune-spice-sand/80 mb-6">
+            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-4">Your Archetypal Profile</h2>
+            <p className="text-dune-spice-sand/80 mb-6 text-sm tracking-wide">
               The core archetypal energies shaping your soul's journey
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1179,11 +1179,11 @@ export default function AstrologyPage() {
 
           {/* Major Aspects */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-orange/30 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-dune-spice-orange" />
+            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-dune-spice-orange" />
               Major Aspects
             </h2>
-            <p className="text-dune-spice-sand/80 mb-6">
+            <p className="text-dune-spice-sand/80 mb-6 text-sm tracking-wide">
               Archetypal dynamics between planetary energies in your chart
             </p>
 
@@ -1228,11 +1228,11 @@ export default function AstrologyPage() {
           {/* North & South Nodes */}
           {(chartData.northNode || chartData.southNode) && (
           <div className="bg-black/40 backdrop-blur-md border border-dune-navigator-purple/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
-              <span className="text-3xl">☊☋</span>
+            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
+              <span className="text-2xl">☊☋</span>
               North & South Nodes
             </h2>
-            <p className="text-dune-spice-sand/80 mb-6">
+            <p className="text-dune-spice-sand/80 mb-6 text-sm tracking-wide">
               Your soul's evolutionary path: past mastery and future growth
             </p>
 
@@ -1290,11 +1290,11 @@ export default function AstrologyPage() {
 
           {/* Current Transits */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-blue/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-amber mb-6 flex items-center gap-2">
-              <span className="text-2xl">🌙</span>
+            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
+              <span className="text-lg">🌙</span>
               Current Transits & Activations
             </h2>
-            <p className="text-dune-spice-sand/80 mb-6">
+            <p className="text-dune-spice-sand/80 mb-6 text-sm tracking-wide">
               Planetary movements currently influencing your chart
             </p>
 
@@ -1323,8 +1323,8 @@ export default function AstrologyPage() {
 
           {/* Spiralogic Pathways */}
           <div className="bg-black/40 backdrop-blur-md border border-dune-spice-orange/30 rounded-lg p-6 shadow-xl">
-            <h2 className="text-2xl font-bold text-dune-amber mb-6">Spiralogic Pathways</h2>
-            <p className="text-dune-spice-sand/80 mb-6">
+            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6">Spiralogic Pathways</h2>
+            <p className="text-dune-spice-sand/80 mb-6 text-sm tracking-wide">
               The 12 houses organized by elemental pathways and consciousness functions
             </p>
 
