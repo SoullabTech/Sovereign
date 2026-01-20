@@ -18,7 +18,7 @@ export async function signin(req: Request, res: Response) {
 
   // Find member by username (case-insensitive)
   const result = await query(
-    'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step FROM members WHERE LOWER(username) = LOWER($1)',
+    'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step, tier, subscription_active, subscription_expires_at FROM members WHERE LOWER(username) = LOWER($1)',
     [username]
   );
 
@@ -54,7 +54,10 @@ export async function signin(req: Request, res: Response) {
         name: member.name,
         preferredName: member.preferred_name || member.name,
         onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step
+        onboardingStep: member.onboarding_step,
+        tier: member.tier || 'free',
+        subscriptionActive: member.subscription_active || false,
+        subscriptionExpiresAt: member.subscription_expires_at || null
       }
     }
   });

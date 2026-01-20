@@ -172,6 +172,9 @@ class ApiClient {
           preferredName: string;
           onboarded: boolean;
           onboardingStep: string;
+          tier: 'free' | 'personal' | 'pro';
+          subscriptionActive: boolean;
+          subscriptionExpiresAt: string | null;
         };
       }>('/members/signin', { username, password }),
 

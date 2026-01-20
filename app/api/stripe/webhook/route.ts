@@ -1,16 +1,26 @@
 /**
  * Stripe Webhook Handler
  *
- * Processes Stripe events for subscription and payment management.
+ * Processes Stripe events for membership subscriptions.
+ * Updates members.tier in database based on subscription status.
+ *
  * POST /api/stripe/webhook
+ *
+ * Key events handled:
+ * - checkout.session.completed → Set tier to paid tier
+ * - customer.subscription.updated → Handle tier changes
+ * - customer.subscription.deleted → Downgrade to free
+ * - invoice.payment_failed → Mark past_due (grace period)
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
-import { pool } from '@/lib/db/postgres';
-import Stripe from 'stripe';
+import { query } from '@/lib/db/postgres';
+import type Stripe from 'stripe';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
+
+type MembershipTier = 'free' | 'personal' | 'pro';
 
 async function getRawBody(request: NextRequest): Promise<Buffer> {
   const reader = request.body?.getReader();
@@ -75,7 +85,7 @@ export async function POST(request: NextRequest) {
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
-        await handleSubscriptionChange(event.data.object as Stripe.Subscription);
+        await handleSubscriptionChange(event.data.object as Stripe.Subscription, stripe);
         break;
 
       case 'customer.subscription.deleted':
@@ -105,235 +115,213 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * Handle successful checkout session
+ * Handle successful checkout session - upgrade member tier
  */
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
-  console.log(`[Stripe] Checkout completed: ${session.id}`);
+  console.log(`[Stripe Webhook] Checkout completed: ${session.id}`);
 
-  const { tier, memberId } = (session.metadata || {}) as { tier?: string; memberId?: string };
+  const metadata = session.metadata || {};
 
-  if (!memberId || memberId === 'anonymous') {
-    console.log('[Stripe] Anonymous checkout - skipping database update');
+  // Only handle membership checkouts
+  if (metadata.type !== 'membership') {
+    console.log('[Stripe Webhook] Not a membership checkout, skipping tier update');
     return;
   }
 
-  if (!pool) {
-    console.error('[Stripe] Database pool not available');
+  const { tier, memberId } = metadata as { tier?: MembershipTier; memberId?: string };
+
+  if (!memberId) {
+    console.error('[Stripe Webhook] No memberId in checkout metadata');
+    return;
+  }
+
+  if (!tier || !['personal', 'pro'].includes(tier)) {
+    console.error('[Stripe Webhook] Invalid tier in checkout metadata:', tier);
     return;
   }
 
   try {
-    // Determine amount and status based on mode
-    const amountTotal = session.amount_total || 0;
-    const isSubscription = session.mode === 'subscription';
+    // Calculate subscription expiry (Stripe provides this in subscription object)
+    // For now, set to 1 month/year from now as a fallback
+    const isAnnual = metadata.interval === 'year';
+    const expiresAt = new Date();
+    if (isAnnual) {
+      expiresAt.setFullYear(expiresAt.getFullYear() + 1);
+    } else {
+      expiresAt.setMonth(expiresAt.getMonth() + 1);
+    }
 
-    // Insert or update contribution record
-    await pool.query(
-      `INSERT INTO member_contributions (
-        member_id,
-        tier,
-        stripe_customer_id,
-        stripe_subscription_id,
-        amount_cents,
-        status
-      ) VALUES (
-        $1, $2, $3, $4, $5, 'active'
-      )
-      ON CONFLICT (member_id)
-      DO UPDATE SET
-        tier = $2,
-        stripe_customer_id = $3,
-        stripe_subscription_id = $4,
-        amount_cents = $5,
-        status = 'active',
-        updated_at = NOW()`,
+    // Update member tier in database
+    await query(
+      `UPDATE members SET
+        tier = $1,
+        stripe_customer_id = $2,
+        stripe_subscription_id = $3,
+        subscription_active = true,
+        subscription_expires_at = $4,
+        updated_at = NOW()
+      WHERE id = $5`,
       [
-        memberId,
-        tier || 'sustainer',
+        tier,
         session.customer,
-        isSubscription ? session.subscription : null,
-        amountTotal,
+        session.subscription,
+        expiresAt,
+        memberId,
       ]
     );
 
-    // Record payment if it's a one-time payment
-    if (!isSubscription && session.payment_intent) {
-      await pool.query(
-        `INSERT INTO contribution_payments (
-          contribution_id,
-          stripe_payment_intent_id,
-          stripe_checkout_session_id,
-          amount_cents,
-          status
-        )
-        SELECT id, $1, $2, $3, 'succeeded'
-        FROM member_contributions
-        WHERE member_id = $4`,
-        [session.payment_intent, session.id, amountTotal, memberId]
-      );
-    }
-
-    console.log(`[Stripe] Updated contribution for member: ${memberId}`);
+    console.log(`[Stripe Webhook] Updated member ${memberId} to tier: ${tier}`);
   } catch (error) {
-    console.error('[Stripe] Error updating contribution:', error);
+    console.error('[Stripe Webhook] Error updating member tier:', error);
   }
 }
 
 /**
- * Handle subscription changes
+ * Handle subscription changes (upgrades, downgrades, renewals)
  */
-async function handleSubscriptionChange(subscription: Stripe.Subscription) {
-  console.log(`[Stripe] Subscription change: ${subscription.id} - ${subscription.status}`);
+async function handleSubscriptionChange(subscription: Stripe.Subscription, stripe: Stripe) {
+  console.log(`[Stripe Webhook] Subscription change: ${subscription.id} - ${subscription.status}`);
 
-  if (!pool) {
-    console.error('[Stripe] Database pool not available');
+  // Get tier from subscription metadata
+  const metadata = subscription.metadata || {};
+
+  if (metadata.type !== 'membership') {
+    console.log('[Stripe Webhook] Not a membership subscription, skipping');
     return;
   }
 
-  const customerId = typeof subscription.customer === 'string'
-    ? subscription.customer
-    : subscription.customer.id;
+  const memberId = metadata.memberId;
+  if (!memberId) {
+    console.error('[Stripe Webhook] No memberId in subscription metadata');
+    return;
+  }
 
   try {
-    // Get current period end from subscription
-    const currentPeriodEnd = subscription.items?.data?.[0]?.current_period_end
-      || Math.floor(Date.now() / 1000) + (30 * 24 * 60 * 60);
+    const isActive = ['active', 'trialing'].includes(subscription.status);
+
+    // Get current period end for expiry (cast to access property)
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const subAny = subscription as any;
+    const currentPeriodEnd = new Date((subAny.current_period_end || Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60) * 1000);
 
     // Update subscription status
-    await pool.query(
-      `UPDATE member_contributions
-       SET status = $1,
-           current_period_end = $2,
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $3 OR stripe_customer_id = $4`,
-      [
-        subscription.status,
-        new Date(currentPeriodEnd * 1000),
-        subscription.id,
-        customerId,
-      ]
+    await query(
+      `UPDATE members SET
+        subscription_active = $1,
+        subscription_expires_at = $2,
+        updated_at = NOW()
+      WHERE id = $3`,
+      [isActive, currentPeriodEnd, memberId]
     );
 
-    console.log(`[Stripe] Updated subscription status: ${subscription.status}`);
+    console.log(`[Stripe Webhook] Updated subscription status for member ${memberId}: active=${isActive}`);
   } catch (error) {
-    console.error('[Stripe] Error updating subscription:', error);
+    console.error('[Stripe Webhook] Error updating subscription:', error);
   }
 }
 
 /**
- * Handle subscription cancellation
+ * Handle subscription cancellation - downgrade to free
  */
 async function handleSubscriptionCanceled(subscription: Stripe.Subscription) {
-  console.log(`[Stripe] Subscription canceled: ${subscription.id}`);
+  console.log(`[Stripe Webhook] Subscription canceled: ${subscription.id}`);
 
-  if (!pool) {
-    console.error('[Stripe] Database pool not available');
+  const metadata = subscription.metadata || {};
+
+  if (metadata.type !== 'membership') {
+    console.log('[Stripe Webhook] Not a membership subscription, skipping');
+    return;
+  }
+
+  const memberId = metadata.memberId;
+  if (!memberId) {
+    console.error('[Stripe Webhook] No memberId in subscription metadata');
     return;
   }
 
   try {
-    await pool.query(
-      `UPDATE member_contributions
-       SET status = 'canceled',
-           canceled_at = NOW(),
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
-      [subscription.id]
+    // Downgrade to free tier
+    await query(
+      `UPDATE members SET
+        tier = 'free',
+        subscription_active = false,
+        subscription_expires_at = NULL,
+        stripe_subscription_id = NULL,
+        updated_at = NOW()
+      WHERE id = $1`,
+      [memberId]
     );
 
-    console.log(`[Stripe] Marked subscription as canceled`);
+    console.log(`[Stripe Webhook] Downgraded member ${memberId} to free tier`);
   } catch (error) {
-    console.error('[Stripe] Error canceling subscription:', error);
+    console.error('[Stripe Webhook] Error downgrading member:', error);
   }
 }
 
 /**
- * Handle successful payment
+ * Handle successful payment - ensure tier is active
  */
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
-  console.log(`[Stripe] Payment succeeded: ${invoice.id}`);
+  console.log(`[Stripe Webhook] Payment succeeded: ${invoice.id}`);
 
-  // Access subscription from invoice (may be string or object depending on expand)
+  // Get subscription ID from invoice (cast to access subscription property)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const invoiceAny = invoice as any;
   const subscriptionId = typeof invoiceAny.subscription === 'string'
     ? invoiceAny.subscription
     : invoiceAny.subscription?.id;
 
-  if (!subscriptionId) return;
-
-  if (!pool) {
-    console.error('[Stripe] Database pool not available');
+  if (!subscriptionId) {
+    console.log('[Stripe Webhook] No subscription on invoice, skipping');
     return;
   }
 
   try {
-    // Update subscription status to active
-    await pool.query(
-      `UPDATE member_contributions
-       SET status = 'active',
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
+    // Ensure subscription is marked active
+    await query(
+      `UPDATE members SET
+        subscription_active = true,
+        updated_at = NOW()
+      WHERE stripe_subscription_id = $1`,
       [subscriptionId]
     );
 
-    // Record the payment
-    const paymentIntentId = typeof invoiceAny.payment_intent === 'string'
-      ? invoiceAny.payment_intent
-      : invoiceAny.payment_intent?.id;
-
-    if (paymentIntentId) {
-      await pool.query(
-        `INSERT INTO contribution_payments (
-          contribution_id,
-          stripe_payment_intent_id,
-          amount_cents,
-          status
-        )
-        SELECT id, $1, $2, 'succeeded'
-        FROM member_contributions
-        WHERE stripe_subscription_id = $3`,
-        [paymentIntentId, invoice.amount_paid, subscriptionId]
-      );
-    }
-
-    console.log(`[Stripe] Payment recorded for subscription: ${subscriptionId}`);
+    console.log(`[Stripe Webhook] Confirmed active status for subscription: ${subscriptionId}`);
   } catch (error) {
-    console.error('[Stripe] Error recording payment:', error);
+    console.error('[Stripe Webhook] Error confirming payment:', error);
   }
 }
 
 /**
- * Handle failed payment
+ * Handle failed payment - grace period, keep tier but mark inactive
  */
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
-  console.log(`[Stripe] Payment failed: ${invoice.id}`);
+  console.log(`[Stripe Webhook] Payment failed: ${invoice.id}`);
 
-  // Access subscription from invoice (may be string or object depending on expand)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const invoiceAny = invoice as any;
   const subscriptionId = typeof invoiceAny.subscription === 'string'
     ? invoiceAny.subscription
     : invoiceAny.subscription?.id;
 
-  if (!subscriptionId) return;
-
-  if (!pool) {
-    console.error('[Stripe] Database pool not available');
+  if (!subscriptionId) {
+    console.log('[Stripe Webhook] No subscription on invoice, skipping');
     return;
   }
 
   try {
-    await pool.query(
-      `UPDATE member_contributions
-       SET status = 'past_due',
-           updated_at = NOW()
-       WHERE stripe_subscription_id = $1`,
+    // Mark subscription as inactive (grace period - tier remains)
+    // After grace period exhausted, subscription.deleted event will trigger downgrade
+    await query(
+      `UPDATE members SET
+        subscription_active = false,
+        updated_at = NOW()
+      WHERE stripe_subscription_id = $1`,
       [subscriptionId]
     );
 
-    console.log(`[Stripe] Marked subscription as past_due`);
+    console.log(`[Stripe Webhook] Marked subscription inactive (payment failed): ${subscriptionId}`);
   } catch (error) {
-    console.error('[Stripe] Error updating failed payment:', error);
+    console.error('[Stripe Webhook] Error handling failed payment:', error);
   }
 }

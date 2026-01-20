@@ -8,6 +8,8 @@
  * - Device switches (with Supabase backup)
  */
 
+import type { MemberTier } from './tierAccess';
+
 export interface BetaUser {
   id: string;
   username: string;
@@ -19,6 +21,10 @@ export interface BetaUser {
   lastVisit?: string;
   createdAt: string;
   invitedBy?: string;
+  tier: MemberTier;
+  tier_started_at?: string;
+  subscriptionActive?: boolean;
+  subscriptionExpiresAt?: string | null;
 }
 
 export interface SessionState {
