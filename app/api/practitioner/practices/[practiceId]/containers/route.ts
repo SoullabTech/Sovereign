@@ -41,6 +41,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const { searchParams } = new URL(request.url);
     const statusFilter = searchParams.get('status')?.split(',').filter(Boolean);
     const typeFilter = searchParams.get('type');
+    const searchQuery = searchParams.get('q')?.trim();
     const limit = Math.min(parseInt(searchParams.get('limit') || '20', 10), 100);
     const offset = parseInt(searchParams.get('offset') || '0', 10);
 
@@ -87,12 +88,26 @@ export async function GET(request: NextRequest, context: RouteContext) {
       values.push(typeFilter);
     }
 
+    // Search by scope or participant name
+    if (searchQuery) {
+      sql += ` AND (
+        c.scope ILIKE $${paramIndex++}
+        OR EXISTS (
+          SELECT 1 FROM rl_participants cp
+          JOIN rl_people p ON p.id = cp.person_id
+          WHERE cp.container_id = c.id AND p.display_name ILIKE $${paramIndex++}
+        )
+      )`;
+      const searchPattern = `%${searchQuery}%`;
+      values.push(searchPattern, searchPattern);
+    }
+
     // Get total count
     const countSql = `SELECT COUNT(*) FROM rl_containers WHERE practice_id = $1`;
     const countResult = await query(countSql, [practiceId]);
     const total = parseInt(countResult.rows[0].count, 10);
 
-    sql += ` ORDER BY c.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+    sql += ` ORDER BY c.updated_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
     values.push(limit, offset);
 
     const result = await query(sql, values);
