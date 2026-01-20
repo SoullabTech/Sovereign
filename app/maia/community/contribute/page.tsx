@@ -5,13 +5,14 @@
  *
  * "Offer to the Commons" — the gateway for member contributions.
  * Uses the ContributionForm component for the actual form flow.
+ * Checks orientation status and prompts newcomers to complete it.
  *
  * See /docs/COMMONS_CONTRIBUTION_SYSTEM.md for context.
  */
 
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Shield } from 'lucide-react';
 import ContributionForm, { ContributionFormData } from '@/components/community/ContributionForm';
 
 interface MemberSession {
@@ -21,31 +22,69 @@ interface MemberSession {
   tier?: string;
 }
 
+interface ContributorStatus {
+  orientationCompleted: boolean;
+  level: number;
+  acceptedCount: number;
+}
+
 export default function ContributePage() {
   const router = useRouter();
   const [member, setMember] = useState<MemberSession | null>(null);
+  const [contributorStatus, setContributorStatus] = useState<ContributorStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Get member session from localStorage
-    const stored = localStorage.getItem('beta_user');
-    if (stored) {
+    const loadData = async () => {
+      // Get member session from localStorage
+      const stored = localStorage.getItem('beta_user');
+      if (!stored) {
+        setError('Please sign in to contribute');
+        setIsLoading(false);
+        return;
+      }
+
+      let memberData;
       try {
-        const parsed = JSON.parse(stored);
+        memberData = JSON.parse(stored);
         setMember({
-          id: parsed.id,
-          name: parsed.name,
-          preferred_name: parsed.preferred_name,
-          tier: parsed.tier,
+          id: memberData.id,
+          name: memberData.name,
+          preferred_name: memberData.preferred_name,
+          tier: memberData.tier,
         });
       } catch {
         setError('Unable to load session');
+        setIsLoading(false);
+        return;
       }
-    } else {
-      setError('Please sign in to contribute');
-    }
-    setIsLoading(false);
+
+      // Check contributor status (orientation, level)
+      try {
+        const response = await fetch(`/api/commons/contributions/orientation?memberId=${memberData.id}`);
+        if (response.ok) {
+          const data = await response.json();
+          setContributorStatus({
+            orientationCompleted: data.orientationCompleted || false,
+            level: data.level || 0,
+            acceptedCount: data.acceptedCount || 0,
+          });
+        }
+      } catch (err) {
+        console.error('Error checking contributor status:', err);
+        // Default to allowing contribution but showing orientation prompt
+        setContributorStatus({
+          orientationCompleted: false,
+          level: 0,
+          acceptedCount: 0,
+        });
+      }
+
+      setIsLoading(false);
+    };
+
+    loadData();
   }, []);
 
   const handleSave = async (data: ContributionFormData, status: 'draft' | 'submitted') => {
@@ -149,6 +188,36 @@ export default function ContributePage() {
             My Offerings
           </button>
         </header>
+
+        {/* Orientation Notice (for newcomers) */}
+        {contributorStatus && !contributorStatus.orientationCompleted && contributorStatus.level === 0 && (
+          <div className="mb-6 p-5 bg-[#5a7a6f]/10 border border-[#5a7a6f]/20 rounded-xl">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-[#5a7a6f]/20 flex items-center justify-center flex-shrink-0">
+                <Shield className="w-5 h-5 text-[#5a7a6f]" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-[14px] font-medium tracking-wide text-[#5a7a6f] mb-1">
+                  Safety & Boundaries Orientation
+                </h3>
+                <p className="text-[13px] text-stone-600 leading-relaxed mb-3">
+                  Before your first contribution can be approved, we ask that you complete a brief orientation
+                  on safety guidelines and community boundaries. This helps ensure the Commons remains a safe
+                  space for everyone.
+                </p>
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => router.push('/maia/community/commons/orientation?returnTo=/maia/community/contribute')}
+                    className="px-4 py-2 bg-[#5a7a6f] hover:bg-[#4a6a5f] text-white rounded-lg text-[12px] tracking-wide transition-colors"
+                  >
+                    Complete Orientation
+                  </button>
+                  <span className="text-[11px] text-stone-400">Takes about 3 minutes</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Tier Notice (Free tier) */}
         {!canSubmit && (

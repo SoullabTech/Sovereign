@@ -158,3 +158,9 @@ export {
   type MemberContribution,
   type ContributorStats,
 } from './MyOfferingsBoard';
+
+export {
+  default as SafetyOrientation,
+  // Types
+  type SafetyOrientationProps,
+} from './SafetyOrientation';
