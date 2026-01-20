@@ -23,9 +23,13 @@ import {
   Sparkles,
   Heart,
   Sun,
+  Shield,
+  FileText,
 } from 'lucide-react';
 import SessionCard from './SessionCard';
 import ClientCard from './ClientCard';
+import SessionPrepCard from './SessionPrepCard';
+import type { SessionPrepData } from '@/lib/practitioner/sessionPrep';
 
 interface DashboardData {
   today: {
@@ -97,10 +101,38 @@ export default function StelliumDashboard({
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [sessionPreps, setSessionPreps] = useState<Record<string, SessionPrepData>>({});
+  const [loadingPreps, setLoadingPreps] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetchDashboard();
   }, [practitionerId]);
+
+  // Fetch session prep for a specific client
+  // Auth is handled via session cookie - no need to pass practitionerId
+  const fetchSessionPrep = async (clientId: string) => {
+    if (sessionPreps[clientId] || loadingPreps.has(clientId)) return;
+
+    setLoadingPreps(prev => new Set([...prev, clientId]));
+    try {
+      const response = await fetch(
+        `/api/practitioner/clients/${clientId}/prep`,
+        { credentials: 'include' } // Ensure cookies are sent
+      );
+      if (response.ok) {
+        const result = await response.json();
+        setSessionPreps(prev => ({ ...prev, [clientId]: result.prep }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch session prep:', err);
+    } finally {
+      setLoadingPreps(prev => {
+        const next = new Set(prev);
+        next.delete(clientId);
+        return next;
+      });
+    }
+  };
 
   const fetchDashboard = async () => {
     try {
@@ -221,8 +253,96 @@ export default function StelliumDashboard({
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Upcoming Sessions */}
-        <div className="lg:col-span-2">
+        {/* Upcoming Sessions with Session Prep */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Today's Session Prep - Show prep cards for today's sessions */}
+          {data.upcomingSessions.filter(s => {
+            const sessionDate = new Date(s.scheduled_at);
+            const today = new Date();
+            return sessionDate.toDateString() === today.toDateString();
+          }).length > 0 && (
+            <Card className="bg-gray-900/50 backdrop-blur-xl border-sacred-gold/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sacred-gold flex items-center justify-between">
+                  <div className="flex items-center">
+                    <FileText className="w-5 h-5 mr-2" />
+                    Today&apos;s Session Prep
+                  </div>
+                  <span className="text-xs text-gray-500 font-normal">
+                    Before they walk in
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {data.upcomingSessions
+                  .filter(s => {
+                    const sessionDate = new Date(s.scheduled_at);
+                    const today = new Date();
+                    return sessionDate.toDateString() === today.toDateString();
+                  })
+                  .map((session, index) => {
+                    const prep = sessionPreps[session.client_id];
+                    const isLoading = loadingPreps.has(session.client_id);
+
+                    // Auto-fetch prep if not loaded
+                    if (!prep && !isLoading) {
+                      fetchSessionPrep(session.client_id);
+                    }
+
+                    return (
+                      <motion.div
+                        key={session.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        {isLoading ? (
+                          <div className="p-4 bg-gray-800/30 rounded-lg animate-pulse">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 rounded-full bg-gray-700/50" />
+                              <div className="flex-1 space-y-2">
+                                <div className="h-4 bg-gray-700/50 rounded w-1/3" />
+                                <div className="h-3 bg-gray-700/50 rounded w-1/2" />
+                              </div>
+                            </div>
+                          </div>
+                        ) : prep ? (
+                          <SessionPrepCard
+                            prep={prep}
+                            variant="dashboard"
+                            onViewEmergencyKit={() => onNavigate?.(`/stellium/clients/${session.client_id}/emergency`)}
+                            onViewFullHistory={() => onNavigate?.(`/stellium/clients/${session.client_id}`)}
+                            onViewProgressArc={() => onNavigate?.(`/stellium/clients/${session.client_id}/arc`)}
+                          />
+                        ) : (
+                          <div className="p-4 bg-gray-800/30 rounded-lg flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 rounded-full bg-gray-700/50 flex items-center justify-center">
+                                <Calendar className="w-5 h-5 text-gray-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm text-gray-200">
+                                  {session.client?.preferred_name || session.client?.name || 'Client'}
+                                </p>
+                                <p className="text-xs text-gray-500">{session.session_type}</p>
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => fetchSessionPrep(session.client_id)}
+                              className="text-xs text-sacred-gold hover:text-sacred-gold/80"
+                            >
+                              Load Prep
+                            </button>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Upcoming Sessions List */}
           <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
             <CardHeader className="pb-3">
               <CardTitle className="text-sacred-gold flex items-center justify-between">

@@ -4,6 +4,9 @@ const config = {
   testEnvironment: 'node',
   roots: ['<rootDir>'],
   testMatch: ['**/__tests__/**/*.test.ts', '**/?(*.)+(spec|test).ts'],
+  moduleNameMapper: {
+    '^@/(.*)$': '<rootDir>/$1',
+  },
   testPathIgnorePatterns: [
     '/node_modules/',
     '<rootDir>/app/api/backend/',   // Backend has separate test setup
