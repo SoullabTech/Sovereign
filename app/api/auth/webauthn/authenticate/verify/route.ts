@@ -11,7 +11,7 @@ export const dynamic = 'force-static' // Changed for Capacitor build compatibili
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthentication } from '@/lib/auth/webauthnServer';
-import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, getSessionFromRequest } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import {
@@ -89,17 +89,26 @@ export async function POST(request: NextRequest) {
 
     const member = memberResult.rows[0];
 
-    // Create server-side session
+    // Check for existing valid session (step-up re-auth vs initial signin)
+    const existingSession = await getSessionFromRequest(request);
+    const isStepUpReauth = existingSession && existingSession.memberId === member.id;
+
+    // Only create new session if this is initial signin, not step-up re-auth
     let session;
-    try {
-      session = await createSession({
-        memberId: member.id,
-        ipAddress: clientIP,
-        userAgent
-      });
-      await setSessionCookie(session.sessionToken, session.expiresAt);
-    } catch (sessionError) {
-      console.error('[WebAuthn] Failed to create session:', sessionError);
+    if (!isStepUpReauth) {
+      try {
+        session = await createSession({
+          memberId: member.id,
+          ipAddress: clientIP,
+          userAgent
+        });
+        await setSessionCookie(session.sessionToken, session.expiresAt);
+      } catch (sessionError) {
+        console.error('[WebAuthn] Failed to create session:', sessionError);
+      }
+    } else {
+      // Step-up re-auth: use existing session, don't create new one
+      session = existingSession;
     }
 
     // Update last sign in and set preferred auth method
@@ -110,10 +119,10 @@ export async function POST(request: NextRequest) {
     );
 
     await logAuthEvent({
-      action: 'webauthn_authenticate',
+      action: isStepUpReauth ? 'webauthn_step_up' : 'webauthn_authenticate',
       memberId: member.id,
       result: 'success',
-      metadata: { credentialId: result.credentialId }
+      metadata: { credentialId: result.credentialId, isStepUpReauth }
     }, request);
 
     return NextResponse.json({
