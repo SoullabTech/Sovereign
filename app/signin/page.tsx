@@ -17,7 +17,7 @@ import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { api, ApiError } from '@/lib/api-client';
 import { apiUrl, apiBaseUrl } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
-import { FEATURES } from '@/lib/features/flags';
+import { getFeatureFlag } from '@/lib/features/flags';
 
 interface MigrationPreview {
   oldUserId: string;
@@ -262,7 +262,7 @@ function SigninContent() {
   // Native OAuth handlers for Capacitor iOS
   const handleGoogleNative = async () => {
     // Feature flag gate: NATIVE_OAUTH must be enabled
-    if (!FEATURES.NATIVE_OAUTH) {
+    if (!getFeatureFlag('NATIVE_OAUTH')) {
       setError('Google sign-in is not enabled in this build.');
       return;
     }
@@ -314,7 +314,7 @@ function SigninContent() {
 
   const handleAppleNative = async () => {
     // Feature flag gate: NATIVE_OAUTH must be enabled
-    if (!FEATURES.NATIVE_OAUTH) {
+    if (!getFeatureFlag('NATIVE_OAUTH')) {
       setError('Apple sign-in is not enabled in this build.');
       return;
     }
@@ -562,10 +562,10 @@ function SigninContent() {
           <button
             type="button"
             onClick={handleGoogleNative}
-            disabled={!FEATURES.NATIVE_OAUTH}
-            title={!FEATURES.NATIVE_OAUTH ? 'Coming soon' : 'Continue with Google'}
+            disabled={!getFeatureFlag('NATIVE_OAUTH')}
+            title={!getFeatureFlag('NATIVE_OAUTH') ? 'Coming soon' : 'Continue with Google'}
             className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border flex items-center justify-center gap-2 ${
-              FEATURES.NATIVE_OAUTH
+              getFeatureFlag('NATIVE_OAUTH')
                 ? 'bg-white/70 hover:bg-white/90 hover:shadow-md border-gray-200/60'
                 : 'bg-white/40 border-gray-200/30 opacity-50 cursor-not-allowed'
             }`}
@@ -576,16 +576,16 @@ function SigninContent() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
             </svg>
-            <span className={FEATURES.NATIVE_OAUTH ? 'text-gray-700' : 'text-gray-500'}>Google</span>
+            <span className={getFeatureFlag('NATIVE_OAUTH') ? 'text-gray-700' : 'text-gray-500'}>Google</span>
           </button>
 
           <button
             type="button"
             onClick={handleAppleNative}
-            disabled={!FEATURES.NATIVE_OAUTH}
-            title={!FEATURES.NATIVE_OAUTH ? 'Coming soon' : 'Continue with Apple'}
+            disabled={!getFeatureFlag('NATIVE_OAUTH')}
+            title={!getFeatureFlag('NATIVE_OAUTH') ? 'Coming soon' : 'Continue with Apple'}
             className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition-all border flex items-center justify-center gap-2 ${
-              FEATURES.NATIVE_OAUTH
+              getFeatureFlag('NATIVE_OAUTH')
                 ? 'bg-black/90 hover:bg-black hover:shadow-md border-gray-800'
                 : 'bg-black/40 border-gray-600 opacity-50 cursor-not-allowed'
             }`}

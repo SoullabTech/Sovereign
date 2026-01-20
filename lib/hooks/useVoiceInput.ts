@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { FEATURES } from '@/lib/features/flags';
+import { getFeatureFlag } from '@/lib/features/flags';
 // Native recorder for iOS (bypasses WKWebView audio issues)
 import {
   isNativeApp,
@@ -261,7 +261,7 @@ export function useVoiceInput({
   // Request permission explicitly (for UI to call)
   const requestPermission = useCallback(async (): Promise<boolean> => {
     // Feature flag gate: VOICE_V2 must be enabled
-    if (!FEATURES.VOICE_V2) {
+    if (!getFeatureFlag('VOICE_V2')) {
       console.log('🎤 [VOICE_V2] Feature flag disabled, skipping permission request');
       return false;
     }
@@ -376,7 +376,7 @@ export function useVoiceInput({
 
   const startRecording = useCallback(async () => {
     // Feature flag gate: VOICE_V2 must be enabled
-    if (!FEATURES.VOICE_V2) {
+    if (!getFeatureFlag('VOICE_V2')) {
       const errorMsg = 'Voice is disabled in this build';
       console.log('🎤 [VOICE_V2] Feature flag disabled, blocking startRecording');
       setError(errorMsg);
