@@ -5,8 +5,12 @@
  * Client-safe via NEXT_PUBLIC_* env vars.
  *
  * Usage:
- *   import { getFeatureFlag, isCapacitorBuild } from '@/lib/features/flags';
- *   const VOICE_V2 = getFeatureFlag('VOICE_V2');
+ *   import { ff } from '@/lib/features/flags';
+ *   const enabled = ff('VOICE_V2');
+ *
+ *   // Or use full name:
+ *   import { getFeatureFlag } from '@/lib/features/flags';
+ *   const enabled = getFeatureFlag('VOICE_V2');
  */
 
 export const FEATURES = {
@@ -56,6 +60,9 @@ export function getFeatureFlag(key: FeatureKey): boolean {
   // Default
   return FEATURES[key];
 }
+
+/** Alias for getFeatureFlag - shorter callsites */
+export const ff = getFeatureFlag;
 
 /**
  * Get all feature flags as a record (useful for debugging/admin)
