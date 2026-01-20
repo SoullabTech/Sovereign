@@ -47,7 +47,7 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: typeof
   needs_revision: { label: 'Needs Revision', color: 'text-rose-600 bg-rose-50', icon: AlertCircle },
   published: { label: 'Published', color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle },
   flagged: { label: 'Flagged', color: 'text-rose-600 bg-rose-50', icon: AlertCircle },
-  archived: { label: 'Archived', color: 'text-stone-400 bg-stone-50', icon: Archive },
+  archived: { label: 'Archived', color: 'text-stone-500 bg-stone-50', icon: Archive },
 };
 
 const TYPE_LABELS: Record<string, string> = {
@@ -141,7 +141,7 @@ export default function MyOfferingsPage() {
 
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4M12 16h.01" />
               </svg>
@@ -204,7 +204,7 @@ export default function MyOfferingsPage() {
           <div className="p-5 rounded-xl border border-stone-200/60 bg-white/60 mb-8">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                   Contributor Level
                 </p>
                 <p className="text-lg font-medium text-stone-700">
@@ -220,7 +220,7 @@ export default function MyOfferingsPage() {
                 <p className="text-3xl font-light text-[#5a7a6f]">
                   {stats.acceptedCount}
                 </p>
-                <p className="text-[11px] text-stone-400">
+                <p className="text-[11px] text-stone-500">
                   accepted
                 </p>
               </div>
@@ -259,7 +259,7 @@ export default function MyOfferingsPage() {
         {/* Drafts */}
         {drafts.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-4">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4">
               Drafts ({drafts.length})
             </h2>
             <div className="space-y-3">
@@ -277,7 +277,7 @@ export default function MyOfferingsPage() {
         {/* In Review */}
         {inReview.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-4">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4">
               In Review ({inReview.length})
             </h2>
             <div className="space-y-3">
@@ -295,7 +295,7 @@ export default function MyOfferingsPage() {
         {/* Published */}
         {published.length > 0 && (
           <section className="mb-8">
-            <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-4">
+            <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-4">
               Published ({published.length})
             </h2>
             <div className="space-y-3">
@@ -380,7 +380,7 @@ function ContributionCard({
           </h3>
 
           {/* Date */}
-          <p className="text-[11px] text-stone-400">
+          <p className="text-[11px] text-stone-500">
             {contribution.publishedAt
               ? `Published ${formatDate(contribution.publishedAt)}`
               : contribution.submittedAt
@@ -399,7 +399,7 @@ function ContributionCard({
 
           {/* Stats (for published) */}
           {showStats && (
-            <div className="mt-3 flex items-center gap-4 text-[11px] text-stone-400">
+            <div className="mt-3 flex items-center gap-4 text-[11px] text-stone-500">
               <span>{contribution.usageCount || 0} uses</span>
               <span>{contribution.saveCount || 0} saves</span>
             </div>
@@ -411,7 +411,7 @@ function ContributionCard({
           {onEdit && (contribution.status === 'draft' || contribution.status === 'needs_revision') && (
             <button
               onClick={onEdit}
-              className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+              className="p-2 text-stone-500 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
             >
               <Edit3 className="w-4 h-4" />
             </button>
@@ -419,7 +419,7 @@ function ContributionCard({
           {onView && (
             <button
               onClick={onView}
-              className="p-2 text-stone-400 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
+              className="p-2 text-stone-500 hover:text-stone-600 hover:bg-stone-100 rounded-lg transition-colors"
             >
               <Eye className="w-4 h-4" />
             </button>

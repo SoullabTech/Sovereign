@@ -281,7 +281,7 @@ export default function CommunityPostCard({
                 {getTierName(post.author.tier)}
               </span>
             </div>
-            <span className="text-[13px] tracking-wide text-stone-400">
+            <span className="text-[13px] tracking-wide text-stone-500">
               {formatRelativeTime(post.createdAt)}
             </span>
           </div>
@@ -309,7 +309,7 @@ export default function CommunityPostCard({
       {/* Footer: Engagement stats */}
       <footer className="flex items-center gap-4 pt-4 border-t border-stone-200/40">
         {/* Reactions */}
-        <div className="flex items-center gap-1.5 text-stone-400">
+        <div className="flex items-center gap-1.5 text-stone-500">
           <svg
             viewBox="0 0 24 24"
             className="w-4 h-4"
@@ -324,7 +324,7 @@ export default function CommunityPostCard({
         </div>
 
         {/* Comments */}
-        <div className="flex items-center gap-1.5 text-stone-400">
+        <div className="flex items-center gap-1.5 text-stone-500">
           <svg
             viewBox="0 0 24 24"
             className="w-4 h-4"

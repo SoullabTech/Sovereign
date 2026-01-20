@@ -110,7 +110,7 @@ export default function ElementalAlchemyReaderPage() {
       <div className="h-screen flex items-center justify-center bg-stone-950">
         <div className="text-center">
           <Loader2 className="w-12 h-12 text-amber-500 animate-spin mx-auto mb-4" />
-          <p className="text-stone-400">Loading {chapterLabel}...</p>
+          <p className="text-stone-500">Loading {chapterLabel}...</p>
         </div>
       </div>
     )
@@ -121,7 +121,7 @@ export default function ElementalAlchemyReaderPage() {
       <div className="h-screen flex items-center justify-center bg-stone-950">
         <div className="text-center max-w-md px-6">
           <h1 className="text-2xl font-semibold text-amber-100 mb-4">Coming Soon</h1>
-          <p className="text-stone-400">
+          <p className="text-stone-500">
             This chapter is being prepared. Check back soon.
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function ElementalAlchemyReaderPage() {
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400 pointer-events-none" />
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-500 pointer-events-none" />
         </div>
       </div>
 

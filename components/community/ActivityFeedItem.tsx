@@ -215,7 +215,7 @@ function buildActivityDescription(activity: Activity): React.ReactNode {
             </span>
           )}
           {activity.metadata?.channelName && (
-            <span className="text-stone-400"> in {activity.metadata.channelName}</span>
+            <span className="text-stone-500"> in {activity.metadata.channelName}</span>
           )}
         </>
       );
@@ -249,7 +249,7 @@ function buildActivityDescription(activity: Activity): React.ReactNode {
             </span>
           )}
           {activity.metadata?.reactionType && (
-            <span className="text-stone-400"> ({activity.metadata.reactionType})</span>
+            <span className="text-stone-500"> ({activity.metadata.reactionType})</span>
           )}
         </>
       );
@@ -328,7 +328,7 @@ function CompactActivityItem({
       </div>
 
       {/* Timestamp */}
-      <span className="text-[11px] tracking-wide text-stone-400 flex-shrink-0">
+      <span className="text-[11px] tracking-wide text-stone-500 flex-shrink-0">
         {formatRelativeTime(activity.createdAt)}
       </span>
     </div>
@@ -371,7 +371,7 @@ function DetailedActivityItem({
           <p className="text-[14px] tracking-wide text-stone-600 leading-relaxed">
             {buildActivityDescription(activity)}
           </p>
-          <span className="text-[12px] tracking-wide text-stone-400 mt-1 block">
+          <span className="text-[12px] tracking-wide text-stone-500 mt-1 block">
             {formatRelativeTime(activity.createdAt)}
           </span>
         </div>
@@ -442,7 +442,7 @@ export function ActivityFeed({
       <div className={`text-center py-8 ${className}`}>
         <svg
           viewBox="0 0 24 24"
-          className="w-8 h-8 mx-auto mb-3 text-stone-300"
+          className="w-8 h-8 mx-auto mb-3 text-stone-500"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
@@ -450,7 +450,7 @@ export function ActivityFeed({
           <circle cx="12" cy="12" r="9" />
           <path d="M12 6v6l4 2" />
         </svg>
-        <p className="text-[13px] tracking-wide text-stone-400">
+        <p className="text-[13px] tracking-wide text-stone-500">
           {emptyMessage}
         </p>
       </div>

@@ -92,6 +92,52 @@ function OfferingSymbol({ className }: { className?: string }) {
   );
 }
 
+// Type icons for contribution cards
+function TypeIcon({ type, selected }: { type: ContributionType; selected: boolean }) {
+  const color = selected ? '#6b5a98' : '#78716c';
+
+  switch (type) {
+    case 'prompt':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke={color} strokeWidth="1.5">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 8v1M12 15v1" />
+        </svg>
+      );
+    case 'practice':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke={color} strokeWidth="1.5">
+          <circle cx="12" cy="12" r="8" />
+          <path d="M12 8v4l2 2" />
+        </svg>
+      );
+    case 'agreement':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke={color} strokeWidth="1.5">
+          <rect x="5" y="4" width="14" height="16" rx="2" />
+          <path d="M9 8h6M9 12h6M9 16h4" />
+        </svg>
+      );
+    case 'resource':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke={color} strokeWidth="1.5">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+      );
+    case 'story':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke={color} strokeWidth="1.5">
+          <path d="M8 10 Q12 8 12 12 Q12 16 8 14" />
+          <path d="M16 10 Q12 8 12 12 Q12 16 16 14" />
+          <line x1="12" y1="6" x2="12" y2="18" />
+        </svg>
+      );
+    default:
+      return null;
+  }
+}
+
 export default function ContributionForm({
   initialData,
   onSave,
@@ -226,8 +272,8 @@ export default function ContributionForm({
 
       {/* Step: Type Selection */}
       {step === 'type' && (
-        <div className="space-y-4">
-          <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-4">
+        <div className="space-y-3">
+          <h2 className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-6">
             What are you offering?
           </h2>
           {(Object.keys(TYPE_INFO) as ContributionType[]).map((type) => (
@@ -237,18 +283,28 @@ export default function ContributionForm({
                 updateField('type', type);
                 setStep('content');
               }}
-              className={`w-full p-4 text-left rounded-xl border transition-all ${
+              className={`w-full p-5 text-left rounded-xl border transition-all ${
                 formData.type === type
                   ? 'bg-[#6b5a98]/5 border-[#6b5a98]/30'
-                  : 'bg-white/40 border-stone-200/60 hover:bg-white/60'
+                  : 'bg-white/60 border-stone-200/60 hover:bg-white/80 hover:border-stone-300/60'
               }`}
             >
-              <p className="text-[14px] font-medium tracking-wide text-stone-700">
-                {TYPE_INFO[type].label}
-              </p>
-              <p className="text-[13px] tracking-wide text-stone-500 mt-1">
-                {TYPE_INFO[type].description}
-              </p>
+              <div className="flex items-start gap-4">
+                <div
+                  className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: formData.type === type ? 'rgba(107, 90, 152, 0.15)' : 'rgba(120, 113, 108, 0.1)' }}
+                >
+                  <TypeIcon type={type} selected={formData.type === type} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[14px] font-medium tracking-wide text-stone-700 mb-1">
+                    {TYPE_INFO[type].label}
+                  </p>
+                  <p className="text-[13px] tracking-wide text-stone-500 leading-relaxed">
+                    {TYPE_INFO[type].description}
+                  </p>
+                </div>
+              </div>
             </button>
           ))}
         </div>
@@ -264,7 +320,7 @@ export default function ContributionForm({
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
               Title
             </label>
             <input
@@ -278,16 +334,16 @@ export default function ContributionForm({
                   ? 'e.g., Morning Grounding Ritual'
                   : 'Give your offering a clear name'
               }
-              className="w-full px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40"
+              className="w-full px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40"
               maxLength={200}
             />
-            <p className="mt-1 text-[11px] tracking-wide text-stone-400">
+            <p className="mt-1 text-[11px] tracking-wide text-stone-500">
               {formData.title.length}/200 characters
             </p>
           </div>
 
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
               {formData.type === 'prompt' ? 'The Prompt' : 'Content'}
             </label>
             <textarea
@@ -302,7 +358,7 @@ export default function ContributionForm({
                   ? 'Share what you tried and what happened (not advice)...'
                   : 'Write your content here...'
               }
-              className="w-full h-48 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none leading-relaxed"
+              className="w-full h-48 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none leading-relaxed"
             />
           </div>
 
@@ -319,7 +375,7 @@ export default function ContributionForm({
               className={`px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors ${
                 canProceed()
                   ? 'bg-[#6b5a98] hover:bg-[#5b4a88] text-white'
-                  : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                  : 'bg-stone-200 text-stone-500 cursor-not-allowed'
               }`}
             >
               Continue
@@ -333,20 +389,20 @@ export default function ContributionForm({
         <div className="space-y-6">
           {/* When helpful */}
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
               When is this helpful?
             </label>
             <textarea
               value={formData.whenHelpful}
               onChange={(e) => updateField('whenHelpful', e.target.value)}
               placeholder="Describe situations where this might be useful..."
-              className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none"
+              className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none"
             />
           </div>
 
           {/* When NOT helpful */}
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
               When is this NOT helpful?
               {typeInfo.requiresWhenNot && (
                 <span className="text-rose-500 ml-1">*</span>
@@ -356,10 +412,10 @@ export default function ContributionForm({
               value={formData.whenNot}
               onChange={(e) => updateField('whenNot', e.target.value)}
               placeholder="Contraindications, cautions, when to avoid..."
-              className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none"
+              className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none"
             />
             {typeInfo.requiresWhenNot && (
-              <p className="mt-1 text-[11px] tracking-wide text-stone-400">
+              <p className="mt-1 text-[11px] tracking-wide text-stone-500">
                 Required for {typeInfo.label.toLowerCase()}s
               </p>
             )}
@@ -367,7 +423,7 @@ export default function ContributionForm({
 
           {/* Attribution */}
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
               Attribution
               {typeInfo.requiresAttribution && (
                 <span className="text-rose-500 ml-1">*</span>
@@ -378,10 +434,10 @@ export default function ContributionForm({
               value={formData.attribution}
               onChange={(e) => updateField('attribution', e.target.value)}
               placeholder="Where did this come from? Tradition, teacher, personal practice?"
-              className="w-full px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40"
+              className="w-full px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40"
             />
             {typeInfo.requiresAttribution && (
-              <p className="mt-1 text-[11px] tracking-wide text-stone-400">
+              <p className="mt-1 text-[11px] tracking-wide text-stone-500">
                 Required for {typeInfo.label.toLowerCase()}s
               </p>
             )}
@@ -389,7 +445,7 @@ export default function ContributionForm({
 
           {/* Tags */}
           <div>
-            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-3">
+            <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">
               Tags (optional)
             </label>
             <div className="space-y-3">
@@ -445,7 +501,7 @@ export default function ContributionForm({
               className={`px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors ${
                 canProceed()
                   ? 'bg-[#6b5a98] hover:bg-[#5b4a88] text-white'
-                  : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                  : 'bg-stone-200 text-stone-500 cursor-not-allowed'
               }`}
             >
               Review
@@ -480,7 +536,7 @@ export default function ContributionForm({
             </div>
             {formData.whenHelpful && (
               <div className="mt-4 pt-4 border-t border-stone-200/60">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                   When helpful
                 </p>
                 <p className="text-[13px] tracking-wide text-stone-500">
@@ -490,7 +546,7 @@ export default function ContributionForm({
             )}
             {formData.whenNot && (
               <div className="mt-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                   When not helpful
                 </p>
                 <p className="text-[13px] tracking-wide text-stone-500">
@@ -500,7 +556,7 @@ export default function ContributionForm({
             )}
             {formData.attribution && (
               <div className="mt-3">
-                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                   Attribution
                 </p>
                 <p className="text-[13px] tracking-wide text-stone-500 italic">
@@ -557,7 +613,7 @@ export default function ContributionForm({
                 className={`px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors ${
                   canProceed() && !isSubmitting
                     ? 'bg-[#6b5a98] hover:bg-[#5b4a88] text-white'
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                    : 'bg-stone-200 text-stone-500 cursor-not-allowed'
                 }`}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit for Review'}
@@ -572,7 +628,7 @@ export default function ContributionForm({
         <div className="mt-8 text-center">
           <button
             onClick={onCancel}
-            className="text-[13px] tracking-wide text-stone-400 hover:text-stone-600 transition-colors"
+            className="text-[13px] tracking-wide text-stone-500 hover:text-stone-600 transition-colors"
           >
             Cancel
           </button>

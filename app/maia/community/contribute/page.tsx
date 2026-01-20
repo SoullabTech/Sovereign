@@ -144,7 +144,7 @@ export default function ContributePage() {
 
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4M12 16h.01" />
               </svg>
@@ -155,7 +155,8 @@ export default function ContributePage() {
             </p>
             <button
               onClick={() => router.push('/signin')}
-              className="px-5 py-2.5 bg-[#6b5a98] hover:bg-[#5b4a88] text-white rounded-xl text-[13px] tracking-wide transition-colors"
+              className="px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors"
+              style={{ backgroundColor: '#6b5a98', color: 'white' }}
             >
               Sign In
             </button>
@@ -175,7 +176,7 @@ export default function ContributePage() {
         <header className="flex items-center justify-between mb-8">
           <button
             onClick={() => router.push('/maia/community/commons')}
-            className="flex items-center gap-2 px-4 py-2 text-[13px] text-stone-500 hover:text-stone-700 transition-colors -ml-4"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] tracking-wide text-stone-600 hover:text-stone-800 hover:bg-white/60 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Commons
@@ -183,7 +184,7 @@ export default function ContributePage() {
 
           <button
             onClick={() => router.push('/maia/community/commons/my-offerings')}
-            className="px-4 py-2 text-[13px] text-stone-500 hover:text-stone-700 transition-colors"
+            className="px-3 py-2 rounded-lg text-[13px] tracking-wide text-stone-600 hover:text-stone-800 hover:bg-white/60 transition-colors"
           >
             My Offerings
           </button>
@@ -191,16 +192,19 @@ export default function ContributePage() {
 
         {/* Orientation Notice (for newcomers) */}
         {contributorStatus && !contributorStatus.orientationCompleted && contributorStatus.level === 0 && (
-          <div className="mb-6 p-5 bg-[#5a7a6f]/10 border border-[#5a7a6f]/20 rounded-xl">
+          <div className="mb-6 p-5 bg-white/60 border border-[#5a7a6f]/30 rounded-xl">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-[#5a7a6f]/20 flex items-center justify-center flex-shrink-0">
-                <Shield className="w-5 h-5 text-[#5a7a6f]" />
+              <div
+                className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: 'rgba(90, 122, 111, 0.15)' }}
+              >
+                <Shield className="w-5 h-5" style={{ color: '#5a7a6f' }} />
               </div>
               <div className="flex-1">
-                <h3 className="text-[14px] font-medium tracking-wide text-[#5a7a6f] mb-1">
+                <h3 className="text-[14px] font-medium tracking-wide mb-1" style={{ color: '#5a7a6f' }}>
                   Safety & Boundaries Orientation
                 </h3>
-                <p className="text-[13px] text-stone-600 leading-relaxed mb-3">
+                <p className="text-[13px] tracking-wide text-stone-600 leading-relaxed mb-4">
                   Before your first contribution can be approved, we ask that you complete a brief orientation
                   on safety guidelines and community boundaries. This helps ensure the Commons remains a safe
                   space for everyone.
@@ -208,11 +212,14 @@ export default function ContributePage() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => router.push('/maia/community/commons/orientation?returnTo=/maia/community/contribute')}
-                    className="px-4 py-2 bg-[#5a7a6f] hover:bg-[#4a6a5f] text-white rounded-lg text-[12px] tracking-wide transition-colors"
+                    className="px-4 py-2.5 rounded-lg text-[13px] tracking-wide transition-colors"
+                    style={{ backgroundColor: '#5a7a6f', color: 'white' }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4a6a5f'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#5a7a6f'}
                   >
                     Complete Orientation
                   </button>
-                  <span className="text-[11px] text-stone-400">Takes about 3 minutes</span>
+                  <span className="text-[11px] tracking-wide text-stone-500">~3 minutes</span>
                 </div>
               </div>
             </div>
@@ -221,16 +228,19 @@ export default function ContributePage() {
 
         {/* Tier Notice (Free tier) */}
         {!canSubmit && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200/60 rounded-xl">
-            <h3 className="text-[13px] font-medium tracking-wide text-amber-700 mb-1">
+          <div className="mb-6 p-5 bg-white/60 border border-[#8a7a5a]/30 rounded-xl">
+            <h3 className="text-[14px] font-medium tracking-wide mb-1" style={{ color: '#8a7a5a' }}>
               Personal Membership Required
             </h3>
-            <p className="text-[13px] tracking-wide text-amber-600 leading-relaxed">
+            <p className="text-[13px] tracking-wide text-stone-600 leading-relaxed mb-4">
               You can browse contributions freely, but Personal or Pro membership is required to submit offerings to the Commons.
             </p>
             <button
               onClick={() => router.push('/maia/membership')}
-              className="mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-[12px] tracking-wide transition-colors"
+              className="px-4 py-2.5 rounded-lg text-[13px] tracking-wide transition-colors"
+              style={{ backgroundColor: '#8a7a5a', color: 'white' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#7a6a4a'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#8a7a5a'}
             >
               Learn About Membership
             </button>

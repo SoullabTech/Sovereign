@@ -119,7 +119,7 @@ function OrientationContent() {
 
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4M12 16h.01" />
               </svg>

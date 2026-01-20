@@ -175,7 +175,7 @@ function CompactProfileCard({
           </span>
           <TierBadge tier={member.tier} showLabel={false} />
         </div>
-        <span className="text-[12px] tracking-wide text-stone-400">
+        <span className="text-[12px] tracking-wide text-stone-500">
           Joined {formatJoinDate(member.joinDate)}
         </span>
       </div>
@@ -213,7 +213,7 @@ function ExpandedProfileCard({
       </div>
 
       {/* Tier description */}
-      <p className="text-[12px] tracking-wide text-stone-400 italic mb-3">
+      <p className="text-[12px] tracking-wide text-stone-500 italic mb-3">
         {getTierDescription(member.tier)}
       </p>
 
@@ -231,7 +231,7 @@ function ExpandedProfileCard({
             <div className="text-[16px] font-medium text-stone-800">
               {member.stats.posts || 0}
             </div>
-            <div className="text-[11px] tracking-wider uppercase text-stone-400">
+            <div className="text-[11px] tracking-wider uppercase text-stone-500">
               Posts
             </div>
           </div>
@@ -239,7 +239,7 @@ function ExpandedProfileCard({
             <div className="text-[16px] font-medium text-stone-800">
               {member.stats.comments || 0}
             </div>
-            <div className="text-[11px] tracking-wider uppercase text-stone-400">
+            <div className="text-[11px] tracking-wider uppercase text-stone-500">
               Comments
             </div>
           </div>
@@ -247,7 +247,7 @@ function ExpandedProfileCard({
             <div className="text-[16px] font-medium text-stone-800">
               {member.stats.reactions || 0}
             </div>
-            <div className="text-[11px] tracking-wider uppercase text-stone-400">
+            <div className="text-[11px] tracking-wider uppercase text-stone-500">
               Reactions
             </div>
           </div>
@@ -256,7 +256,7 @@ function ExpandedProfileCard({
 
       {/* Join date */}
       <div className="mt-4 pt-3 border-t border-stone-200/40">
-        <div className="flex items-center gap-2 text-stone-400">
+        <div className="flex items-center gap-2 text-stone-500">
           <svg
             viewBox="0 0 24 24"
             className="w-4 h-4"

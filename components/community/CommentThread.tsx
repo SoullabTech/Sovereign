@@ -129,7 +129,7 @@ function SingleComment({
             >
               {getTierName(comment.author.tier)}
             </span>
-            <span className="text-[11px] tracking-wide text-stone-400">
+            <span className="text-[11px] tracking-wide text-stone-500">
               {formatRelativeTime(comment.createdAt)}
             </span>
           </div>
@@ -145,7 +145,7 @@ function SingleComment({
           {/* React button */}
           <button
             onClick={() => onReact?.(comment.id)}
-            className="flex items-center gap-1.5 text-stone-400 hover:text-[#5a7a6f] transition-colors"
+            className="flex items-center gap-1.5 text-stone-500 hover:text-[#5a7a6f] transition-colors"
           >
             <ReactionSymbol className="w-3.5 h-3.5" />
             <span className="text-[12px] tracking-wide">
@@ -157,7 +157,7 @@ function SingleComment({
           {canNest && (
             <button
               onClick={() => onReply?.(comment.id)}
-              className="flex items-center gap-1.5 text-stone-400 hover:text-[#6b5a98] transition-colors"
+              className="flex items-center gap-1.5 text-stone-500 hover:text-[#6b5a98] transition-colors"
             >
               <ReplySymbol className="w-3.5 h-3.5" />
               <span className="text-[12px] tracking-wide">Reply</span>
@@ -168,7 +168,7 @@ function SingleComment({
           {hasReplies && (
             <button
               onClick={() => setShowReplies(!showReplies)}
-              className="flex items-center gap-1 text-stone-400 hover:text-stone-600 transition-colors ml-auto"
+              className="flex items-center gap-1 text-stone-500 hover:text-stone-600 transition-colors ml-auto"
             >
               <ChevronSymbol className="w-3.5 h-3.5" expanded={showReplies} />
               <span className="text-[11px] tracking-wide">
@@ -226,14 +226,14 @@ export default function CommentThread({
       <div className={`text-center py-8 ${className}`}>
         <svg
           viewBox="0 0 24 24"
-          className="w-8 h-8 mx-auto mb-3 text-stone-300"
+          className="w-8 h-8 mx-auto mb-3 text-stone-500"
           fill="none"
           stroke="currentColor"
           strokeWidth="1.5"
         >
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
         </svg>
-        <p className="text-[13px] tracking-wide text-stone-400">
+        <p className="text-[13px] tracking-wide text-stone-500">
           No comments yet. Be the first to share your thoughts.
         </p>
       </div>
@@ -245,7 +245,7 @@ export default function CommentThread({
       {/* Comment count header */}
       <div className="flex items-center gap-4 mb-6">
         <div className="flex-1 h-px bg-stone-200/60" />
-        <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+        <span className="text-[11px] uppercase tracking-[0.2em] text-stone-500">
           {comments.length} {comments.length === 1 ? 'Comment' : 'Comments'}
         </span>
         <div className="flex-1 h-px bg-stone-200/60" />

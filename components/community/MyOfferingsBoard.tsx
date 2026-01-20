@@ -106,7 +106,7 @@ function ContributionCard({
           </span>
         </div>
         {contribution.status === 'published' && (
-          <div className="flex items-center gap-3 text-[11px] tracking-wide text-stone-400">
+          <div className="flex items-center gap-3 text-[11px] tracking-wide text-stone-500">
             {contribution.usageCount > 0 && (
               <span>Used in {contribution.usageCount} circles</span>
             )}
@@ -143,7 +143,7 @@ function ContributionCard({
           {contribution.tags.map((tag, i) => (
             <span
               key={i}
-              className="text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-stone-100 text-stone-400"
+              className="text-[10px] tracking-wider px-2 py-0.5 rounded-md bg-stone-100 text-stone-500"
             >
               {tag.element || tag.domain}
             </span>
@@ -153,7 +153,7 @@ function ContributionCard({
 
       {/* Actions */}
       <div className="mt-4 pt-3 border-t border-stone-200/40 flex items-center justify-between">
-        <span className="text-[11px] tracking-wide text-stone-400">
+        <span className="text-[11px] tracking-wide text-stone-500">
           {contribution.status === 'published' && contribution.publishedAt
             ? `Published ${new Date(contribution.publishedAt).toLocaleDateString()}`
             : contribution.submittedAt
@@ -172,7 +172,7 @@ function ContributionCard({
           {canDelete && onDelete && (
             <button
               onClick={onDelete}
-              className="px-3 py-1.5 text-[12px] tracking-wide text-stone-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-[12px] tracking-wide text-stone-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
             >
               Delete
             </button>
@@ -235,7 +235,7 @@ export default function MyOfferingsBoard({
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+              <span className="text-[11px] uppercase tracking-[0.2em] text-stone-500">
                 Contribution Level
               </span>
               <span className={`text-[10px] tracking-wider uppercase px-2 py-0.5 rounded-md ${
@@ -256,7 +256,7 @@ export default function MyOfferingsBoard({
             <p className="text-[24px] font-light tracking-wide text-stone-700">
               {stats.acceptedCount}
             </p>
-            <p className="text-[11px] tracking-wide text-stone-400">
+            <p className="text-[11px] tracking-wide text-stone-500">
               accepted
             </p>
           </div>
@@ -280,7 +280,7 @@ export default function MyOfferingsBoard({
                   )}
                 </div>
                 <span className={`text-[12px] tracking-wide ${
-                  stats.orientationCompleted ? 'text-stone-600' : 'text-stone-400'
+                  stats.orientationCompleted ? 'text-stone-600' : 'text-stone-500'
                 }`}>
                   Complete Safety & Boundaries orientation
                 </span>
@@ -296,7 +296,7 @@ export default function MyOfferingsBoard({
                   )}
                 </div>
                 <span className={`text-[12px] tracking-wide ${
-                  stats.acceptedCount >= 2 ? 'text-stone-600' : 'text-stone-400'
+                  stats.acceptedCount >= 2 ? 'text-stone-600' : 'text-stone-500'
                 }`}>
                   {stats.acceptedCount}/2 accepted contributions
                 </span>
@@ -333,7 +333,7 @@ export default function MyOfferingsBoard({
       {filteredContributions.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 flex items-center justify-center">
-            <OfferingSymbol className="w-8 h-8 text-stone-400" />
+            <OfferingSymbol className="w-8 h-8 text-stone-500" />
           </div>
           <p className="text-[14px] tracking-wide text-stone-500 mb-4">
             {filter === 'all'

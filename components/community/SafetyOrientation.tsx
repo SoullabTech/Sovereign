@@ -238,7 +238,7 @@ export default function SafetyOrientation({ onComplete, onSkip }: SafetyOrientat
             <StepIcon className="w-5 h-5 text-stone-600" />
           </div>
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500">
               Step {currentStep + 1} of {orientationSteps.length}
             </p>
             <h2 className="text-[16px] font-medium text-stone-700">{step.title}</h2>
@@ -291,7 +291,7 @@ export default function SafetyOrientation({ onComplete, onSkip }: SafetyOrientat
           {onSkip && (
             <button
               onClick={onSkip}
-              className="px-4 py-2 text-[13px] text-stone-400 hover:text-stone-600 transition-colors"
+              className="px-4 py-2 text-[13px] text-stone-500 hover:text-stone-600 transition-colors"
             >
               Skip for now
             </button>
@@ -302,7 +302,7 @@ export default function SafetyOrientation({ onComplete, onSkip }: SafetyOrientat
             className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] transition-colors ${
               isAcknowledged && !isSubmitting
                 ? 'bg-[#5a7a6f] hover:bg-[#4a6a5f] text-white'
-                : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                : 'bg-stone-200 text-stone-500 cursor-not-allowed'
             }`}
           >
             {isSubmitting ? (
@@ -326,7 +326,7 @@ export default function SafetyOrientation({ onComplete, onSkip }: SafetyOrientat
       </div>
 
       {/* Footer Note */}
-      <p className="text-center text-[12px] text-stone-400 mt-8">
+      <p className="text-center text-[12px] text-stone-500 mt-8">
         This orientation helps ensure the Commons remains a safe space for everyone.
       </p>
     </div>

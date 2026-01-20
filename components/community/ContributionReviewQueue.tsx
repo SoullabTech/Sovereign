@@ -166,7 +166,7 @@ function ReviewCard({
             <p className="text-[13px] tracking-wide text-stone-600">
               {contribution.createdBy.name}
             </p>
-            <p className="text-[11px] tracking-wide text-stone-400">
+            <p className="text-[11px] tracking-wide text-stone-500">
               {contribution.createdBy.acceptedCount} accepted
             </p>
           </div>
@@ -183,7 +183,7 @@ function ReviewCard({
         <div className="mt-4 pt-4 border-t border-stone-200/40 grid gap-3">
           {contribution.whenHelpful && (
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                 When helpful
               </p>
               <p className="text-[13px] tracking-wide text-stone-500">
@@ -193,7 +193,7 @@ function ReviewCard({
           )}
           {contribution.whenNot && (
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                 When not helpful
               </p>
               <p className="text-[13px] tracking-wide text-stone-500">
@@ -203,7 +203,7 @@ function ReviewCard({
           )}
           {contribution.attribution && (
             <div>
-              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+              <p className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                 Attribution
               </p>
               <p className="text-[13px] tracking-wide text-stone-500 italic">
@@ -243,7 +243,7 @@ function ReviewCard({
       {/* Review Checklist */}
       {action === 'review' && (
         <div className="p-6 border-b border-stone-200/60 bg-stone-50/50">
-          <h4 className="text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-3">
+          <h4 className="text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-3">
             Review Checklist
           </h4>
           <div className="space-y-2">
@@ -279,7 +279,7 @@ function ReviewCard({
                 className={`p-4 rounded-xl text-center transition-all ${
                   checkedCriteria.every(Boolean)
                     ? 'bg-[#5a7a6f]/10 border-2 border-[#5a7a6f]/30 text-[#5a7a6f] hover:bg-[#5a7a6f]/20'
-                    : 'bg-stone-100 border border-stone-200 text-stone-400 cursor-not-allowed'
+                    : 'bg-stone-100 border border-stone-200 text-stone-500 cursor-not-allowed'
                 }`}
               >
                 <svg viewBox="0 0 24 24" className="w-5 h-5 mx-auto mb-1" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -318,14 +318,14 @@ function ReviewCard({
         {action === 'approve' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
                 Safety Notes (optional)
               </label>
               <textarea
                 value={safetyNotes}
                 onChange={(e) => setSafetyNotes(e.target.value)}
                 placeholder="Add any curator notes or cautions that should appear with this content..."
-                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#5a7a6f]/20 resize-none"
+                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#5a7a6f]/20 resize-none"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -349,14 +349,14 @@ function ReviewCard({
         {action === 'revision' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
                 Revision Notes <span className="text-rose-500">*</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="What needs to be changed? Be specific and kind..."
-                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 resize-none"
+                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20 resize-none"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -372,7 +372,7 @@ function ReviewCard({
                 className={`flex-1 px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors ${
                   notes.trim() && !isSubmitting
                     ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                    : 'bg-stone-200 text-stone-500 cursor-not-allowed'
                 }`}
               >
                 {isSubmitting ? 'Sending...' : 'Request Revision'}
@@ -384,14 +384,14 @@ function ReviewCard({
         {action === 'flag' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
                 Flag Reason <span className="text-rose-500">*</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="What safety concern does this raise?"
-                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/20 resize-none"
+                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-rose-500/20 resize-none"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -407,7 +407,7 @@ function ReviewCard({
                 className={`flex-1 px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors ${
                   notes.trim() && !isSubmitting
                     ? 'bg-rose-500 hover:bg-rose-600 text-white'
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                    : 'bg-stone-200 text-stone-500 cursor-not-allowed'
                 }`}
               >
                 {isSubmitting ? 'Flagging...' : 'Flag for Safety Review'}
@@ -419,14 +419,14 @@ function ReviewCard({
         {action === 'archive' && (
           <div className="space-y-4">
             <div>
-              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+              <label className="block text-[11px] uppercase tracking-[0.2em] text-stone-500 mb-2">
                 Archive Reason <span className="text-rose-500">*</span>
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Why is this being archived? (duplicate, outdated, etc.)"
-                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-500/20 resize-none"
+                className="w-full h-24 px-4 py-3 bg-white/60 border border-stone-200/60 rounded-xl text-[14px] tracking-wide text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-stone-500/20 resize-none"
               />
             </div>
             <div className="flex items-center gap-3">
@@ -442,7 +442,7 @@ function ReviewCard({
                 className={`flex-1 px-5 py-2.5 rounded-xl text-[13px] tracking-wide transition-colors ${
                   notes.trim() && !isSubmitting
                     ? 'bg-stone-600 hover:bg-stone-700 text-white'
-                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
+                    : 'bg-stone-200 text-stone-500 cursor-not-allowed'
                 }`}
               >
                 {isSubmitting ? 'Archiving...' : 'Archive'}
@@ -490,7 +490,7 @@ export default function ContributionReviewQueue({
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">Status</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-500">Status</span>
           <div className="flex gap-1">
             {['all', 'submitted', 'flagged'].map((f) => (
               <button
@@ -510,7 +510,7 @@ export default function ContributionReviewQueue({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">Type</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-500">Type</span>
           <div className="flex gap-1">
             {['all', 'prompt', 'practice', 'agreement', 'resource', 'story'].map((t) => (
               <button
@@ -533,7 +533,7 @@ export default function ContributionReviewQueue({
       {filteredContributions.length === 0 ? (
         <div className="text-center py-16">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M20 6L9 17l-5-5" />
             </svg>
           </div>

@@ -209,7 +209,7 @@ export default function ReviewQueuePage() {
 
           <div className="text-center py-16">
             <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-stone-100 flex items-center justify-center">
-              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-400" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg viewBox="0 0 24 24" className="w-8 h-8 text-stone-500" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 8v4M12 16h.01" />
               </svg>
@@ -293,7 +293,7 @@ export default function ReviewQueuePage() {
                       </h3>
 
                       {/* Author & Date */}
-                      <div className="flex items-center gap-3 text-[11px] text-stone-400">
+                      <div className="flex items-center gap-3 text-[11px] text-stone-500">
                         <span className="flex items-center gap-1">
                           <User className="w-3 h-3" />
                           {contribution.createdBy.name}
@@ -307,7 +307,7 @@ export default function ReviewQueuePage() {
                       </div>
                     </div>
 
-                    <div className="flex-shrink-0 text-stone-400">
+                    <div className="flex-shrink-0 text-stone-500">
                       {isExpanded ? (
                         <ChevronUp className="w-5 h-5" />
                       ) : (
@@ -330,7 +330,7 @@ export default function ReviewQueuePage() {
                       <div className="mt-4 grid grid-cols-2 gap-4">
                         {contribution.whenHelpful && (
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                               When Helpful
                             </p>
                             <p className="text-[12px] text-stone-500">{contribution.whenHelpful}</p>
@@ -338,7 +338,7 @@ export default function ReviewQueuePage() {
                         )}
                         {contribution.whenNot && (
                           <div>
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                               When Not Helpful
                             </p>
                             <p className="text-[12px] text-stone-500">{contribution.whenNot}</p>
@@ -346,7 +346,7 @@ export default function ReviewQueuePage() {
                         )}
                         {contribution.attribution && (
                           <div className="col-span-2">
-                            <p className="text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-1">
+                            <p className="text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-1">
                               Attribution
                             </p>
                             <p className="text-[12px] text-stone-500 italic">{contribution.attribution}</p>
@@ -370,7 +370,7 @@ export default function ReviewQueuePage() {
 
                       {/* Notes Input */}
                       <div className="mt-4">
-                        <label className="block text-[10px] uppercase tracking-[0.2em] text-stone-400 mb-2">
+                        <label className="block text-[10px] uppercase tracking-[0.2em] text-stone-500 mb-2">
                           Review Notes (required for revision/flag/archive)
                         </label>
                         <textarea
@@ -379,7 +379,7 @@ export default function ReviewQueuePage() {
                             setActionNotes(prev => ({ ...prev, [contribution.id]: e.target.value }))
                           }
                           placeholder="Feedback for the contributor..."
-                          className="w-full h-20 px-3 py-2 bg-white border border-stone-200/60 rounded-lg text-[13px] text-stone-700 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none"
+                          className="w-full h-20 px-3 py-2 bg-white border border-stone-200/60 rounded-lg text-[13px] text-stone-700 placeholder:text-stone-500 focus:outline-none focus:ring-2 focus:ring-[#6b5a98]/20 focus:border-[#6b5a98]/40 resize-none"
                           disabled={isProcessing}
                         />
                       </div>

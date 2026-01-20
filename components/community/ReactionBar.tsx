@@ -219,7 +219,7 @@ function ReactionButton({
       className={`
         flex items-center ${sizes.button} rounded-lg
         ${isActive ? config.activeBgColor : config.bgColor}
-        ${isActive ? config.color : 'text-stone-400'}
+        ${isActive ? config.color : 'text-stone-500'}
         ${!isActive && config.hoverColor}
         border border-stone-200/40
         hover:border-stone-200/60
@@ -231,7 +231,7 @@ function ReactionButton({
       <Symbol
         className={`
           ${sizes.icon}
-          ${isActive || isHovered ? config.color : 'text-stone-400'}
+          ${isActive || isHovered ? config.color : 'text-stone-500'}
           transition-colors
         `}
       />
@@ -249,7 +249,7 @@ function ReactionButton({
         <span
           className={`
             ${sizes.text} tracking-wide
-            ${isActive ? config.color : 'text-stone-400'}
+            ${isActive ? config.color : 'text-stone-500'}
           `}
         >
           {config.label}
@@ -292,7 +292,7 @@ function AddReactionButton({ size, onSelect }: AddReactionButtonProps) {
           bg-stone-100/50 border border-stone-200/40
           hover:bg-stone-100 hover:border-stone-200/60
           flex items-center justify-center
-          text-stone-400 hover:text-stone-500
+          text-stone-500 hover:text-stone-500
           transition-all
         `}
         title="Add reaction"
@@ -336,7 +336,7 @@ function AddReactionButton({ size, onSelect }: AddReactionButtonProps) {
                       className={`
                         p-2 rounded-lg
                         bg-stone-50 hover:${config.activeBgColor}
-                        text-stone-400 ${config.hoverColor}
+                        text-stone-500 ${config.hoverColor}
                         transition-all hover:scale-110
                       `}
                       title={config.label}
@@ -390,7 +390,7 @@ export default function ReactionBar({
       )}
 
       {visibleReactions.length === 0 && !showAddButton && (
-        <span className="text-[12px] tracking-wide text-stone-400">
+        <span className="text-[12px] tracking-wide text-stone-500">
           No reactions yet
         </span>
       )}

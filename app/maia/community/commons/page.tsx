@@ -360,22 +360,24 @@ export default function MAIACommunityCommonsPage() {
         <header className="flex items-center justify-between mb-12">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 px-4 py-2 text-[13px] text-stone-500 hover:text-stone-700 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] tracking-wide text-stone-700 hover:text-stone-900 hover:bg-white/60 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Community
           </button>
 
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px]
-                             border border-stone-200/60 text-stone-600 hover:bg-white/60 transition-all">
+            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] tracking-wide
+                             border border-stone-300/60 bg-white/40 text-stone-700 hover:bg-white/80 hover:border-stone-400/60 transition-all">
               <Search className="w-4 h-4" />
               Search
             </button>
             <button
               onClick={() => handleNavigate('/maia/community/contribute')}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px]
-                             bg-[#5a7a6f] text-white hover:bg-[#4a6a5f] transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px] tracking-wide transition-all"
+              style={{ backgroundColor: '#5a7a6f', color: 'white' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#4a6a5f'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#5a7a6f'}
             >
               <Plus className="w-4 h-4" />
               New Entry
@@ -410,10 +412,10 @@ export default function MAIACommunityCommonsPage() {
             <div key={section.title}>
               {/* Section Header */}
               <div className="flex items-center gap-3 mb-4">
-                <div className="text-stone-400">
+                <div className="text-stone-500">
                   <SectionSymbol type={section.type} />
                 </div>
-                <h2 className="text-[11px] font-medium text-stone-400 tracking-[0.2em] uppercase">
+                <h2 className="text-[11px] font-medium text-stone-500 tracking-[0.2em] uppercase">
                   {section.title}
                 </h2>
               </div>
@@ -442,7 +444,7 @@ export default function MAIACommunityCommonsPage() {
                           <span className={`text-[10px] px-2 py-0.5 rounded-md tracking-wide ${typeColors[item.type]}`}>
                             {item.type}
                           </span>
-                          <span className="text-[11px] text-stone-400">
+                          <span className="text-[11px] text-stone-500">
                             {item.readTime || item.count}
                           </span>
                         </div>
@@ -450,7 +452,7 @@ export default function MAIACommunityCommonsPage() {
                           {item.description}
                         </p>
                       </div>
-                      <div className="flex-shrink-0 text-stone-300 group-hover:text-stone-500 transition-all">
+                      <div className="flex-shrink-0 text-stone-500 group-hover:text-stone-500 transition-all">
                         <ArrowLeft className="w-4 h-4 rotate-180" />
                       </div>
                     </button>
@@ -464,7 +466,7 @@ export default function MAIACommunityCommonsPage() {
         {/* Divider */}
         <div className="flex items-center gap-6 my-12">
           <div className="flex-1 h-px bg-stone-200/60" />
-          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">Resources</span>
+          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-500">Resources</span>
           <div className="flex-1 h-px bg-stone-200/60" />
         </div>
 
@@ -483,8 +485,10 @@ export default function MAIACommunityCommonsPage() {
             </div>
             <button
               onClick={() => handleNavigate('/maia/community/wisdom-sources')}
-              className="px-5 py-2.5 rounded-lg text-[13px] font-medium
-                       bg-[#6b5a98] text-white hover:bg-[#5b4a88] transition-all flex-shrink-0"
+              className="px-5 py-2.5 rounded-lg text-[13px] font-medium tracking-wide transition-all flex-shrink-0"
+              style={{ backgroundColor: '#6b5a98', color: 'white' }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#5b4a88'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#6b5a98'}
             >
               View Library
             </button>
@@ -506,7 +510,7 @@ export default function MAIACommunityCommonsPage() {
                 </svg>
               </div>
               <div className="text-[13px] font-medium text-stone-700">Support</div>
-              <div className="text-[11px] text-stone-400">Become a patron</div>
+              <div className="text-[11px] text-stone-500">Become a patron</div>
             </button>
             <button
               onClick={() => handleNavigate('/maia/community/contribute')}
@@ -517,7 +521,7 @@ export default function MAIACommunityCommonsPage() {
                 <FileText className="w-4 h-4 text-stone-500" />
               </div>
               <div className="text-[13px] font-medium text-stone-700">Contribute</div>
-              <div className="text-[11px] text-stone-400">Share your wisdom</div>
+              <div className="text-[11px] text-stone-500">Share your wisdom</div>
             </button>
             {member && (
               <button
@@ -529,7 +533,7 @@ export default function MAIACommunityCommonsPage() {
                   <Gift className="w-4 h-4 text-[#6b5a98]" />
                 </div>
                 <div className="text-[13px] font-medium text-stone-700">My Offerings</div>
-                <div className="text-[11px] text-stone-400">Your contributions</div>
+                <div className="text-[11px] text-stone-500">Your contributions</div>
               </button>
             )}
             {isCurator && (
@@ -542,7 +546,7 @@ export default function MAIACommunityCommonsPage() {
                   <Inbox className="w-4 h-4 text-[#5a7a6f]" />
                 </div>
                 <div className="text-[13px] font-medium text-stone-700">Review Queue</div>
-                <div className="text-[11px] text-stone-400">Curator tools</div>
+                <div className="text-[11px] text-stone-500">Curator tools</div>
               </button>
             )}
             <button
@@ -554,7 +558,7 @@ export default function MAIACommunityCommonsPage() {
                 <BookOpen className="w-4 h-4 text-stone-500" />
               </div>
               <div className="text-[13px] font-medium text-stone-700">Guidelines</div>
-              <div className="text-[11px] text-stone-400">Community standards</div>
+              <div className="text-[11px] text-stone-500">Community standards</div>
             </button>
             <button
               onClick={() => handleNavigate('/maia/community/faq')}
@@ -569,14 +573,14 @@ export default function MAIACommunityCommonsPage() {
                 </svg>
               </div>
               <div className="text-[13px] font-medium text-stone-700">Help</div>
-              <div className="text-[11px] text-stone-400">Getting started</div>
+              <div className="text-[11px] text-stone-500">Getting started</div>
             </button>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center mt-10">
-          <p className="text-[13px] italic text-stone-400">
+          <p className="text-[13px] italic text-stone-500">
             Your sanctuary for consciousness exploration and wisdom sharing
           </p>
         </div>
