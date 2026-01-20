@@ -40,7 +40,8 @@ export async function GET(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ message: 'OAuth callback not available in static export' });
   }
-  const baseUrl = new URL(req.url).origin;
+  // Use configured base URL for production (container returns 0.0.0.0:3000)
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(req.url).origin;
   const params = new URL(req.url).searchParams;
   const code = params.get('code');
   const state = params.get('state');

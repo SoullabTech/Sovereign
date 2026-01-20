@@ -17,6 +17,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/onboarding', public: true, notes: 'Onboarding' },
   { prefix: '/welcome', public: true, notes: 'Welcome flow' },
   { prefix: '/beta-', public: true, notes: 'Invite-gated' },
+
+  // Trust & Stewardship (public)
+  { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },
+  { exact: '/maia/privacy', public: true, notes: 'Privacy & sovereignty' },
   { exact: '/account/settings', minTier: 'free', notes: 'Account settings' },
   { exact: '/account/security', minTier: 'free', notes: 'Account security' },
 

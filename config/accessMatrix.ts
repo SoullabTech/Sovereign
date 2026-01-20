@@ -47,6 +47,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/public-demo', public: true, notes: 'Public demo' },
   { exact: '/library', public: true, notes: 'Public library browse' },
 
+  // Trust & Stewardship (public - builds trust during consideration)
+  { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },
+  { exact: '/maia/privacy', public: true, notes: 'Privacy & sovereignty' },
+
   // Auth flows
   { exact: '/signin', public: true, notes: 'Sign in' },
   { exact: '/signup', public: true, notes: 'Sign up' },
