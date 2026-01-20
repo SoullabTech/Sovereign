@@ -17,7 +17,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Heart, Sparkles, Crown, Check, ChevronRight, Shield, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { betaSession } from '@/lib/auth/betaSession';
 import { type MemberTier } from '@/lib/auth/tierAccess';
 import { Holoflower } from '@/components/ui/Holoflower';
@@ -28,12 +28,40 @@ interface TierCardProps {
   onSelect: () => void;
 }
 
+// Elegant tier symbols - simple geometric SVGs
+const TierSymbol = ({ tier, className }: { tier: MemberTier; className?: string }) => {
+  if (tier === 'free') {
+    // Single circle - touch, beginning
+    return (
+      <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="20" cy="20" r="12" />
+      </svg>
+    );
+  }
+  if (tier === 'personal') {
+    // Vesica piscis - continuity, intersection
+    return (
+      <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
+        <circle cx="15" cy="20" r="10" />
+        <circle cx="25" cy="20" r="10" />
+      </svg>
+    );
+  }
+  // Three interlocking circles - stewardship, service
+  return (
+    <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
+      <circle cx="20" cy="14" r="8" />
+      <circle cx="14" cy="24" r="8" />
+      <circle cx="26" cy="24" r="8" />
+    </svg>
+  );
+};
+
 const TIER_DATA: Record<MemberTier, {
   name: string;
   tagline: string;
   price: string;
   priceNote?: string;
-  icon: typeof Heart;
   color: string;
   features: string[];
   emphasis: string;
@@ -43,8 +71,7 @@ const TIER_DATA: Record<MemberTier, {
     name: 'Touch',
     tagline: 'Explore MAIA',
     price: 'Free',
-    icon: Heart,
-    color: 'teal',
+    color: 'sage',
     features: [
       'MAIA conversations (Talk, Care, Note)',
       'Basic journal entries',
@@ -53,7 +80,7 @@ const TIER_DATA: Record<MemberTier, {
       'Element discovery',
       'Soul signature profile',
     ],
-    emphasis: 'Taste of presence',
+    emphasis: 'A taste of presence',
     cta: 'Begin here',
   },
   personal: {
@@ -61,7 +88,6 @@ const TIER_DATA: Record<MemberTier, {
     tagline: 'MAIA remembers',
     price: '$12',
     priceNote: '/month',
-    icon: Sparkles,
     color: 'violet',
     features: [
       'Everything in Touch, plus:',
@@ -83,8 +109,7 @@ const TIER_DATA: Record<MemberTier, {
     tagline: 'Serve others',
     price: '$35',
     priceNote: '/month',
-    icon: Crown,
-    color: 'amber',
+    color: 'gold',
     features: [
       'Everything in Continuity, plus:',
       'Scribe Pro: transcription & capture',
@@ -103,76 +128,77 @@ const TIER_DATA: Record<MemberTier, {
 
 function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
   const data = TIER_DATA[tier];
-  const Icon = data.icon;
 
   const colorClasses = {
-    teal: {
-      border: 'border-teal-300/40',
-      icon: 'text-teal-700 bg-teal-100/80',
-      button: 'bg-teal-600 hover:bg-teal-700',
-      check: 'text-teal-600',
-      glow: 'from-teal-200/30 to-teal-100/10',
+    sage: {
+      border: 'border-stone-300/50',
+      symbol: 'text-[#5a7a6f]',
+      accent: 'bg-[#5a7a6f]/10',
+      button: 'bg-[#5a7a6f] hover:bg-[#4a6a5f]',
+      check: 'text-[#5a7a6f]',
+      highlight: 'from-[#5a7a6f]/5 to-transparent',
     },
     violet: {
-      border: 'border-violet-300/40',
-      icon: 'text-violet-700 bg-violet-100/80',
-      button: 'bg-violet-600 hover:bg-violet-700',
-      check: 'text-violet-600',
-      glow: 'from-violet-200/30 to-violet-100/10',
+      border: 'border-[#8b7ab8]/30',
+      symbol: 'text-[#6b5a98]',
+      accent: 'bg-[#6b5a98]/10',
+      button: 'bg-[#6b5a98] hover:bg-[#5b4a88]',
+      check: 'text-[#6b5a98]',
+      highlight: 'from-[#6b5a98]/8 to-transparent',
     },
-    amber: {
-      border: 'border-amber-300/40',
-      icon: 'text-amber-700 bg-amber-100/80',
-      button: 'bg-amber-600 hover:bg-amber-700',
-      check: 'text-amber-600',
-      glow: 'from-amber-200/30 to-amber-100/10',
+    gold: {
+      border: 'border-[#b8a07a]/40',
+      symbol: 'text-[#8a7a5a]',
+      accent: 'bg-[#8a7a5a]/10',
+      button: 'bg-[#8a7a5a] hover:bg-[#7a6a4a]',
+      check: 'text-[#8a7a5a]',
+      highlight: 'from-[#8a7a5a]/8 to-transparent',
     },
   };
 
   const colors = colorClasses[data.color as keyof typeof colorClasses];
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4 }}
-      className={`relative rounded-3xl border overflow-hidden backdrop-blur-xl ${colors.border}`}
+    <div
+      className={`relative rounded-2xl border overflow-hidden hover:-translate-y-0.5 transition-transform duration-300 ${colors.border}`}
       style={{
-        background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4))',
-        boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.6)',
+        background: 'linear-gradient(175deg, rgba(255, 255, 255, 0.92), rgba(250, 249, 247, 0.85))',
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02)',
       }}
     >
-      {/* Subtle gradient glow */}
-      <div className={`absolute inset-0 bg-gradient-to-br ${colors.glow} pointer-events-none`} />
+      {/* Subtle highlight gradient */}
+      <div className={`absolute inset-0 bg-gradient-to-br ${colors.highlight} pointer-events-none`} />
 
-      {/* Current tier badge */}
+      {/* Current tier indicator */}
       {isCurrentTier && (
-        <div className="absolute top-4 right-4 px-3 py-1 rounded-full text-xs font-medium bg-teal-600/90 text-white shadow-sm">
-          Your tier
+        <div className="absolute top-5 right-5">
+          <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-stone-400">
+            Current
+          </span>
         </div>
       )}
 
-      <div className="relative p-6">
-        {/* Icon */}
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${colors.icon} shadow-sm`}>
-          <Icon className="w-6 h-6" />
+      <div className="relative px-7 py-8">
+        {/* Symbol */}
+        <div className="mb-6">
+          <TierSymbol tier={tier} className={`w-10 h-10 ${colors.symbol}`} />
         </div>
 
         {/* Header */}
-        <h3 className="text-xl font-semibold mb-1 text-teal-900">
+        <h3 className="text-lg font-medium tracking-wide mb-1 text-stone-800">
           {data.name}
         </h3>
-        <p className="text-sm mb-4 text-teal-700/70">
+        <p className="text-[13px] mb-5 text-stone-500 tracking-wide">
           {data.tagline}
         </p>
 
         {/* Price */}
-        <div className="mb-6">
-          <span className="text-3xl font-bold text-teal-900">
+        <div className="mb-6 pb-6 border-b border-stone-200/60">
+          <span className="text-2xl font-light tracking-tight text-stone-800">
             {data.price}
           </span>
           {data.priceNote && (
-            <span className="text-sm text-teal-600/70">
+            <span className="text-sm text-stone-400 ml-1">
               {data.priceNote}
             </span>
           )}
@@ -181,9 +207,10 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
         {/* Features */}
         <ul className="space-y-3 mb-6">
           {data.features.map((feature, idx) => (
-            <li key={idx} className="flex items-start gap-2">
-              <Check className={`w-4 h-4 mt-0.5 flex-shrink-0 ${colors.check}`} />
-              <span className="text-sm text-teal-800/80">
+            <li key={idx} className="flex items-start gap-3">
+              <span className={`mt-1.5 w-1 h-1 rounded-full flex-shrink-0 ${colors.accent}`}
+                style={{ backgroundColor: colors.check.replace('text-', '') }} />
+              <span className="text-[13px] leading-relaxed text-stone-600">
                 {feature}
               </span>
             </li>
@@ -191,36 +218,33 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
         </ul>
 
         {/* Emphasis */}
-        <p className="text-sm italic mb-6 text-teal-600/60">
+        <p className="text-[13px] italic mb-6 text-stone-400">
           {data.emphasis}
         </p>
 
         {/* CTA */}
         {!isCurrentTier && tier !== 'free' && (
-          <motion.button
+          <button
             onClick={onSelect}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full py-3 px-4 rounded-xl font-medium text-white transition-all flex items-center justify-center gap-2 shadow-lg ${colors.button}`}
+            className={`w-full py-3.5 px-4 rounded-lg text-[13px] font-medium tracking-wide text-white transition-all hover:scale-[1.01] active:scale-[0.99] ${colors.button}`}
           >
             {data.cta}
-            <ChevronRight className="w-4 h-4" />
-          </motion.button>
+          </button>
         )}
 
         {isCurrentTier && (
-          <div className="w-full py-3 px-4 rounded-xl text-center text-sm bg-teal-50/80 text-teal-700 border border-teal-200/50">
+          <div className="w-full py-3.5 px-4 rounded-lg text-center text-[13px] tracking-wide text-stone-400 border border-stone-200/60">
             This is where you are
           </div>
         )}
 
         {tier === 'free' && !isCurrentTier && (
-          <div className="w-full py-3 px-4 rounded-xl text-center text-sm bg-teal-50/80 text-teal-700 border border-teal-200/50">
+          <div className="w-full py-3.5 px-4 rounded-lg text-center text-[13px] tracking-wide text-stone-400 border border-stone-200/60">
             Always available
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 }
 
@@ -304,36 +328,35 @@ function MembershipPageContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] via-[#8FBFBD] to-[#7FB5B3]">
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #f8f7f5 0%, #f4f3f0 50%, #f0efec 100%)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-md bg-white/30 border-b border-white/30">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center gap-4">
-          <motion.button
+      <header className="sticky top-0 z-50 backdrop-blur-md bg-[#f8f7f5]/80 border-b border-stone-200/40">
+        <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-5">
+          <button
             onClick={() => router.back()}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="p-2 rounded-xl bg-white/50 hover:bg-white/70 transition-colors shadow-sm"
+            className="p-2 -ml-2 text-stone-500 hover:text-stone-700 hover:-translate-x-0.5 transition-all"
           >
-            <ArrowLeft className="w-5 h-5 text-teal-800" />
-          </motion.button>
-          <h1 className="text-lg font-medium text-teal-900">
-            Your Relationship with MAIA
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="h-4 w-px bg-stone-300/60" />
+          <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
+            Membership
           </h1>
         </div>
       </header>
 
       {/* Content */}
-      <main className="max-w-5xl mx-auto px-4 py-8">
+      <main className="max-w-5xl mx-auto px-6 py-12">
         {/* Success message */}
         <AnimatePresence>
           {successMessage && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-6 p-4 rounded-2xl bg-emerald-100/80 border border-emerald-300/50 text-emerald-800 backdrop-blur-sm"
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-8 p-5 rounded-lg bg-[#5a7a6f]/10 border border-[#5a7a6f]/20 text-stone-700"
             >
-              <p className="text-sm">{successMessage}</p>
+              <p className="text-[13px]">{successMessage}</p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -342,15 +365,15 @@ function MembershipPageContent() {
         <AnimatePresence>
           {checkoutError && (
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              className="mb-6 p-4 rounded-2xl bg-red-100/80 border border-red-300/50 text-red-800 backdrop-blur-sm"
+              exit={{ opacity: 0, y: -10 }}
+              className="mb-8 p-5 rounded-lg bg-rose-50 border border-rose-200/50 text-stone-700"
             >
-              <p className="text-sm">{checkoutError}</p>
+              <p className="text-[13px]">{checkoutError}</p>
               <button
                 onClick={() => setCheckoutError(null)}
-                className="text-xs underline mt-2 opacity-70 hover:opacity-100"
+                className="text-xs text-stone-500 mt-2 hover:text-stone-700 transition-colors"
               >
                 Dismiss
               </button>
@@ -358,204 +381,163 @@ function MembershipPageContent() {
           )}
         </AnimatePresence>
 
-        {/* Hero with Holoflower */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="w-24 h-24 mx-auto mb-6">
-            <Holoflower size="xl" glowIntensity="medium" animate={true} />
+        {/* Hero */}
+        <div className="text-center mb-16">
+          <div className="w-16 h-16 mx-auto mb-8 opacity-80">
+            <Holoflower size="lg" glowIntensity="low" animate={false} />
           </div>
-          <h2 className="text-3xl font-light mb-3 text-teal-900 tracking-wide">
-            Local Sovereignty. Sovereign Cloud.
+          <h2 className="text-2xl font-light mb-4 text-stone-800 tracking-wide">
+            Your Relationship with MAIA
           </h2>
-          <p className="max-w-xl mx-auto text-teal-800/70">
-            MAIA runs on your device with full local memory. Sovereign cloud extends what&apos;s possible—file
-            uploads, cross-device sync, pattern weaving across time.
+          <p className="max-w-lg mx-auto text-[15px] leading-relaxed text-stone-500">
+            MAIA runs on your device with full local memory. Sovereign cloud extends
+            what&apos;s possible: file uploads, cross-device sync, pattern weaving across time.
           </p>
-        </motion.div>
+        </div>
 
         {/* Tier cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {(['free', 'personal', 'pro'] as MemberTier[]).map((tier, idx) => (
-            <motion.div
+        <div className="grid md:grid-cols-3 gap-5 mb-16">
+          {(['free', 'personal', 'pro'] as MemberTier[]).map((tier) => (
+            <TierCard
               key={tier}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.1 }}
-            >
-              <TierCard
-                tier={tier}
-                isCurrentTier={tier === currentTier}
-                onSelect={() => handleTierSelect(tier)}
-              />
-            </motion.div>
+              tier={tier}
+              isCurrentTier={tier === currentTier}
+              onSelect={() => handleTierSelect(tier)}
+            />
           ))}
         </div>
 
+        {/* Divider */}
+        <div className="flex items-center gap-6 mb-12">
+          <div className="flex-1 h-px bg-stone-200/60" />
+          <span className="text-[11px] uppercase tracking-[0.2em] text-stone-400">Philosophy</span>
+          <div className="flex-1 h-px bg-stone-200/60" />
+        </div>
+
         {/* Why Sovereign Cloud */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="p-6 rounded-3xl mb-6 backdrop-blur-xl border border-violet-200/40"
-          style={{
-            background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.6), rgba(237, 233, 254, 0.4))',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
-          }}
-        >
-          <h3 className="font-medium mb-4 text-teal-900 text-lg">
+        <div className="mb-12">
+          <h3 className="text-sm font-medium tracking-wide mb-6 text-stone-700">
             Why Sovereign Cloud?
           </h3>
-          <div className="space-y-4 text-sm text-teal-800/80">
-            <p>
-              <span className="font-medium text-violet-700">
-                Your local experience is complete.
-              </span>
-            </p>
-            <p>
-              MAIA runs on your device with full memory. Your conversations, journal entries,
-              and insights stay with you—always yours, always private.
-            </p>
-            <p>
-              Sovereign cloud is for when you want to extend: upload files for deeper analysis,
-              sync across devices, let MAIA weave patterns over months and years,
-              and contribute to community and collective intelligence.
-              It&apos;s infrastructure, not permission.
-            </p>
-            <p className="italic text-teal-600/70">
-              Self-hosted. No third parties. No data mining. Still sovereign.
-            </p>
+          <div className="grid md:grid-cols-2 gap-8 text-[14px] leading-relaxed text-stone-600">
+            <div>
+              <p className="mb-4">
+                <span className="text-[#6b5a98]">Your local experience is complete.</span> MAIA runs
+                on your device with full memory. Your conversations, journal entries, and insights
+                stay with you always.
+              </p>
+              <p>
+                Sovereign cloud is for when you want to extend: upload files for deeper analysis,
+                sync across devices, let MAIA weave patterns over months and years.
+              </p>
+            </div>
+            <div>
+              <p className="mb-4">
+                Contribute to community and collective intelligence, helping build something
+                that serves us all. It&apos;s infrastructure, not permission.
+              </p>
+              <p className="italic text-stone-400">
+                Self-hosted. No third parties. No data mining. Still sovereign.
+              </p>
+            </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* FAQ Section */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className="p-6 rounded-3xl mb-6 backdrop-blur-xl border border-white/40"
-          style={{
-            background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4))',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
-          }}
-        >
-          <h3 className="font-medium mb-4 text-teal-900 text-lg">
+        <div className="mb-12">
+          <h3 className="text-sm font-medium tracking-wide mb-6 text-stone-700">
             Common Questions
           </h3>
-          <div className="space-y-4">
-            <div>
-              <p className="text-sm font-medium mb-1 text-teal-800">
+          <div className="space-y-6">
+            <div className="border-l-2 border-stone-200/60 pl-5">
+              <p className="text-[13px] font-medium mb-2 text-stone-700">
                 What do I get with free/local?
               </p>
-              <p className="text-sm text-teal-700/70">
-                A complete experience. MAIA conversations, journal, oracle, memory—all on your device.
+              <p className="text-[13px] text-stone-500 leading-relaxed">
+                A complete experience. MAIA conversations, journal, oracle, memory, all on your device.
                 Your data stays with you.
               </p>
             </div>
-            <div>
-              <p className="text-sm font-medium mb-1 text-teal-800">
+            <div className="border-l-2 border-stone-200/60 pl-5">
+              <p className="text-[13px] font-medium mb-2 text-stone-700">
                 What does sovereign cloud add?
               </p>
-              <p className="text-sm text-teal-700/70">
+              <p className="text-[13px] text-stone-500 leading-relaxed">
                 Extension, not permission. Upload files for deeper analysis. Sync across devices.
                 Let MAIA weave patterns across months and years. Contribute to community and
-                collective intelligence—helping build something that serves us all.
+                collective intelligence.
               </p>
             </div>
-            <div>
-              <p className="text-sm font-medium mb-1 text-teal-800">
+            <div className="border-l-2 border-stone-200/60 pl-5">
+              <p className="text-[13px] font-medium mb-2 text-stone-700">
                 What makes it &quot;sovereign&quot;?
               </p>
-              <p className="text-sm text-teal-700/70">
+              <p className="text-[13px] text-stone-500 leading-relaxed">
                 Self-hosted infrastructure. No AWS, no Google Cloud, no third parties.
                 We run our own servers. Your data never touches external services.
               </p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
         {/* Philosophy note */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="p-6 rounded-3xl backdrop-blur-xl border border-white/40"
-          style={{
-            background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4))',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
-          }}
-        >
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-2xl bg-teal-100/80 shadow-sm">
-              <Shield className="w-5 h-5 text-teal-700" />
-            </div>
-            <div>
-              <h3 className="font-medium mb-2 text-teal-900">
-                Your Data, Your Sovereignty
-              </h3>
-              <p className="text-sm text-teal-800/70">
-                MAIA runs on your terms. Your conversations, patterns, and insights belong to you.
-                Export your data anytime. Delete everything if you choose.
-                Privacy is not a premium feature — sanctuary mode is always free.
-              </p>
-            </div>
-          </div>
-        </motion.div>
+        <div className="p-6 rounded-xl border border-stone-200/60 bg-white/40">
+          <h3 className="text-sm font-medium mb-3 text-stone-700">
+            Your Data, Your Sovereignty
+          </h3>
+          <p className="text-[13px] text-stone-500 leading-relaxed">
+            MAIA runs on your terms. Your conversations, patterns, and insights belong to you.
+            Export your data anytime. Delete everything if you choose.
+            Privacy is not a premium feature. Sanctuary mode is always free.
+          </p>
+        </div>
 
         {/* Ethos line */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.7 }}
-          className="text-center mt-8 mb-4"
-        >
-          <p className="text-sm italic text-teal-700/60">
+        <div className="text-center mt-12 mb-4">
+          <p className="text-[13px] italic text-stone-400">
             Your device, your memory. Sovereign cloud extends what&apos;s possible.
           </p>
-        </motion.div>
+        </div>
 
         {/* Selected tier confirmation */}
         <AnimatePresence>
           {selectedTier && selectedTier !== 'free' && selectedTier !== currentTier && (
             <motion.div
-              initial={{ opacity: 0, y: 100 }}
+              initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 100 }}
-              className="fixed bottom-0 left-0 right-0 p-6 backdrop-blur-xl border-t border-white/40"
+              exit={{ opacity: 0, y: 40 }}
+              transition={{ duration: 0.25 }}
+              className="fixed bottom-0 left-0 right-0 p-6 backdrop-blur-xl border-t border-stone-200/60"
               style={{
-                background: 'linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.85))',
+                background: 'linear-gradient(to top, rgba(248, 247, 245, 0.98), rgba(248, 247, 245, 0.92))',
               }}
             >
               <div className="max-w-xl mx-auto">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center justify-between mb-5">
                   <div>
-                    <p className="font-medium text-teal-900">
+                    <p className="text-sm font-medium text-stone-800">
                       Continue to {TIER_DATA[selectedTier].name}
                     </p>
-                    <p className="text-sm text-teal-600/70">
+                    <p className="text-[13px] text-stone-500">
                       {TIER_DATA[selectedTier].price}{TIER_DATA[selectedTier].priceNote}
                     </p>
                   </div>
                   <button
                     onClick={() => setSelectedTier(null)}
                     disabled={isProcessing}
-                    className="px-4 py-2 rounded-xl text-sm text-teal-700 hover:bg-teal-50 disabled:opacity-50 transition-colors"
+                    className="px-4 py-2 text-[13px] text-stone-500 hover:text-stone-700 disabled:opacity-50 transition-colors"
                   >
                     Cancel
                   </button>
                 </div>
                 <div className="flex gap-3">
-                  <motion.button
+                  <button
                     onClick={() => handleCheckout(selectedTier, 'month')}
                     disabled={isProcessing}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`flex-1 py-3 px-4 rounded-xl font-medium text-white transition-all flex items-center justify-center gap-2 shadow-lg ${
+                    className={`flex-1 py-3.5 px-4 rounded-lg text-[13px] font-medium text-white transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] ${
                       selectedTier === 'personal'
-                        ? 'bg-violet-600 hover:bg-violet-700'
-                        : 'bg-amber-600 hover:bg-amber-700'
+                        ? 'bg-[#6b5a98] hover:bg-[#5b4a88]'
+                        : 'bg-[#8a7a5a] hover:bg-[#7a6a4a]'
                     } disabled:opacity-50`}
                   >
                     {isProcessing ? (
@@ -566,16 +548,14 @@ function MembershipPageContent() {
                     ) : (
                       <>Monthly ({TIER_DATA[selectedTier].price}/mo)</>
                     )}
-                  </motion.button>
-                  <motion.button
+                  </button>
+                  <button
                     onClick={() => handleCheckout(selectedTier, 'year')}
                     disabled={isProcessing}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`flex-1 py-3 px-4 rounded-xl font-medium transition-all flex items-center justify-center gap-2 border-2 ${
+                    className={`flex-1 py-3.5 px-4 rounded-lg text-[13px] font-medium transition-all flex items-center justify-center gap-2 border hover:scale-[1.01] active:scale-[0.99] ${
                       selectedTier === 'personal'
-                        ? 'border-violet-300 text-violet-700 hover:bg-violet-50'
-                        : 'border-amber-300 text-amber-700 hover:bg-amber-50'
+                        ? 'border-[#6b5a98]/30 text-[#6b5a98] hover:bg-[#6b5a98]/5'
+                        : 'border-[#8a7a5a]/30 text-[#8a7a5a] hover:bg-[#8a7a5a]/5'
                     } disabled:opacity-50`}
                   >
                     {isProcessing ? (
@@ -586,7 +566,7 @@ function MembershipPageContent() {
                     ) : (
                       <>Annual (2 months free)</>
                     )}
-                  </motion.button>
+                  </button>
                 </div>
               </div>
             </motion.div>
@@ -599,13 +579,12 @@ function MembershipPageContent() {
 
 function MembershipPageLoading() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] via-[#8FBFBD] to-[#7FB5B3] flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#f8f7f5' }}>
       <div className="text-center">
-        <div className="w-20 h-20 mx-auto mb-6">
-          <Holoflower size="lg" glowIntensity="medium" animate={true} />
+        <div className="w-12 h-12 mx-auto mb-6 opacity-60">
+          <Holoflower size="md" glowIntensity="low" animate={false} />
         </div>
-        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-3 text-teal-700" />
-        <p className="text-teal-800/70">Loading...</p>
+        <Loader2 className="w-5 h-5 animate-spin mx-auto text-stone-400" />
       </div>
     </div>
   );
