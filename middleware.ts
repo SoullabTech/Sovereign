@@ -1,132 +1,234 @@
 /**
- * Next.js Middleware for Multi-Tenant Practitioner Portals
+ * Next.js Middleware - Centralized Access Enforcement
  *
- * This middleware handles routing requests from practitioner subdomains
- * (loralee.soullab.life) and custom domains (stelliumbyloralee.com)
- * to the appropriate portal pages.
+ * Enforces access rules from config/accessMatrix.ts
+ * Runs server-side on every request before the route handler.
+ *
+ * IMPORTANT: This cannot read localStorage or client-side state.
+ * Auth state must come from cookies/headers.
  */
 
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import {
-  parseTenantFromHost,
-  buildPortalRewriteUrl,
-  shouldHandleAsPortal,
-  buildTenantHeaders,
-} from './lib/practitioner/multiTenantMiddleware';
+  checkAccess,
+  type Tier,
+  type Role,
+} from './config/accessMatrix';
 
-// Known application routes that should NOT be treated as passkeys
-const KNOWN_ROUTES = [
-  '/maia',
-  '/signin',
-  '/test-elemental',
-  '/begin',
-  '/api',
-  '/portal',
-  '/practitioner',
-  '/stellium',
-  '/faq',
-  '/onboarding',
-  '/account',
-  '/patrons',
-  '/intro-maia',
-  '/intro-daimon',
-  '/_next',
-];
+// =============================================================================
+// AUTH EXTRACTION - Replace with your actual auth implementation
+// =============================================================================
 
-// Check if a path looks like a passkey (SOULLAB-NAME, MAIA-NAME, etc.)
-function isPasskeyPath(pathname: string): boolean {
-  // First, check if this is a known application route (exact match or prefix)
-  const lowerPath = pathname.toLowerCase();
-  if (KNOWN_ROUTES.some(route => lowerPath === route || lowerPath.startsWith(route + '/'))) {
-    return false;
+/**
+ * Extract user's subscription tier from request
+ *
+ * TODO: Replace with actual implementation that reads from:
+ * - Cookie set at login after Stripe subscription check
+ * - Or JWT claim containing tier
+ * - Or server-side session lookup
+ */
+function getUserTier(req: NextRequest): Tier {
+  // Option 1: Cookie-based (recommended)
+  const tierCookie = req.cookies.get('maia_tier')?.value as Tier | undefined;
+  if (tierCookie && ['free', 'personal', 'pro'].includes(tierCookie)) {
+    return tierCookie;
   }
 
-  const path = pathname.slice(1).toUpperCase(); // Remove leading slash
-  // Match passkey patterns: SOULLAB-NAME, MAIA-NAME, PIONEER-NAME, FOUNDING-NAME
-  // Also match universal keys like CONSCIOUSNESS2025, DAIMON, ORACLE, etc.
-  const passkeyPatterns = [
-    /^SOULLAB-[A-Z0-9-]+$/,
-    /^MAIA-[A-Z0-9-]+$/,
-    /^PIONEER-[A-Z0-9-]+$/,
-    /^FOUNDING-[A-Z0-9-]+$/,
-    /^SOUL-PIONEER-\d+$/,
-    /^CONSCIOUSNESS\d+$/,
-  ];
-  // NOTE: 'MAIA' removed from universalKeys - it conflicts with the /maia route
-  // If MAIA is needed as a passkey, use MAIA-UNIVERSAL or similar
-  const universalKeys = ['DAIMON', 'ORACLE', 'SOULLAB'];
+  // Option 2: Header-based (for API routes)
+  const tierHeader = req.headers.get('x-maia-tier') as Tier | undefined;
+  if (tierHeader && ['free', 'personal', 'pro'].includes(tierHeader)) {
+    return tierHeader;
+  }
 
-  return passkeyPatterns.some(pattern => pattern.test(path)) || universalKeys.includes(path);
+  // Default: free tier
+  return 'free';
 }
 
-export async function middleware(request: NextRequest) {
-  const host = request.headers.get('host') || '';
-  const { pathname } = request.nextUrl;
-
-  // Parse tenant from host
-  const { subdomain, customDomain } = parseTenantFromHost(host);
-
-  // If no subdomain or custom domain, this is the main Soullab app
-  if (!subdomain && !customDomain) {
-    // Check if the path looks like a passkey and redirect to test-elemental
-    if (pathname !== '/' && isPasskeyPath(pathname)) {
-      const passkey = pathname.slice(1).toUpperCase();
-      const url = request.nextUrl.clone();
-      url.pathname = '/test-elemental';
-      url.searchParams.set('passkey', passkey);
-      return NextResponse.redirect(url);
+/**
+ * Extract user's roles from request
+ *
+ * TODO: Replace with actual implementation
+ */
+function getUserRoles(req: NextRequest): Role[] {
+  // Option 1: Cookie-based (JSON array)
+  const rolesCookie = req.cookies.get('maia_roles')?.value;
+  if (rolesCookie) {
+    try {
+      const parsed = JSON.parse(rolesCookie);
+      if (Array.isArray(parsed)) return parsed as Role[];
+    } catch {
+      // Invalid JSON, ignore
     }
+  }
+
+  // Option 2: Header-based (comma-separated)
+  const rolesHeader = req.headers.get('x-maia-roles');
+  if (rolesHeader) {
+    return rolesHeader.split(',').map((r) => r.trim()) as Role[];
+  }
+
+  // Default: member role (basic authenticated user)
+  return ['member'];
+}
+
+/**
+ * Check if user is authenticated
+ *
+ * TODO: Replace with actual implementation
+ */
+function isAuthenticated(req: NextRequest): boolean {
+  // Option 1: Session cookie
+  const sessionCookie = req.cookies.get('maia_session')?.value;
+  if (sessionCookie) return true;
+
+  // Option 2: Member ID header (for API routes)
+  const memberIdHeader = req.headers.get('x-member-id');
+  if (memberIdHeader) return true;
+
+  // Option 3: Legacy beta_user check (temporary)
+  // Note: Can't read localStorage from middleware!
+  // This would need to be a cookie instead
+
+  return false;
+}
+
+/**
+ * Get member ID for logging/debugging
+ */
+function getMemberId(req: NextRequest): string | null {
+  return (
+    req.cookies.get('maia_member_id')?.value ||
+    req.headers.get('x-member-id') ||
+    null
+  );
+}
+
+// =============================================================================
+// MIDDLEWARE
+// =============================================================================
+
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  // ---------------------------------------------------------------------
+  // Skip middleware for static assets and Next.js internals
+  // ---------------------------------------------------------------------
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/favicon') ||
+    pathname.startsWith('/assets') ||
+    pathname.startsWith('/images') ||
+    pathname.startsWith('/fonts') ||
+    pathname.includes('.') // Skip files with extensions (.css, .js, .png, etc.)
+  ) {
     return NextResponse.next();
   }
 
-  // Don't rewrite API routes, Next.js internals, or static files
-  if (!shouldHandleAsPortal(pathname)) {
-    return NextResponse.next();
+  // ---------------------------------------------------------------------
+  // Extract auth context
+  // ---------------------------------------------------------------------
+  const authed = isAuthenticated(req);
+  const tier = authed ? getUserTier(req) : 'free';
+  const roles = authed ? getUserRoles(req) : [];
+
+  // ---------------------------------------------------------------------
+  // Check access
+  // ---------------------------------------------------------------------
+  const { allowed, reason, rule } = checkAccess(pathname, tier, roles, authed);
+
+  // ---------------------------------------------------------------------
+  // Handle denials
+  // ---------------------------------------------------------------------
+  if (!allowed) {
+    const url = req.nextUrl.clone();
+
+    switch (reason) {
+      case 'unauthenticated':
+        // Redirect to sign in with return URL
+        url.pathname = '/signin';
+        url.searchParams.set('next', pathname);
+        return NextResponse.redirect(url);
+
+      case 'insufficient-tier':
+        // Redirect to upgrade page
+        url.pathname = '/maia/membership';
+        url.searchParams.set('upgrade', rule?.minTier || 'personal');
+        url.searchParams.set('next', pathname);
+        return NextResponse.redirect(url);
+
+      case 'missing-role':
+        // 403 Forbidden - user is authed but lacks role
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Forbidden',
+            message: 'You do not have permission to access this resource.',
+            requiredRoles: rule?.rolesAnyOf,
+          }),
+          {
+            status: 403,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+      case 'no-rule-match':
+        // Mode B (strict): Unmapped route denied
+        return new NextResponse(
+          JSON.stringify({
+            error: 'Not Found',
+            message: 'This route is not configured in the access matrix.',
+            pathname,
+          }),
+          {
+            status: 404,
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
+
+      default:
+        // Shouldn't happen, but handle gracefully
+        return new NextResponse('Access Denied', { status: 403 });
+    }
   }
 
-  // Determine the practitioner slug
-  // For subdomains, the slug is the subdomain
-  // For custom domains, we need to look it up (done in the page component)
-  const slug = subdomain || 'custom';
-  const isCustomDomain = !!customDomain;
+  // ---------------------------------------------------------------------
+  // Access granted - add context headers for downstream use
+  // ---------------------------------------------------------------------
+  const response = NextResponse.next();
 
-  // Build the rewrite URL
-  const rewriteUrl = buildPortalRewriteUrl(
-    slug,
-    pathname,
-    request.nextUrl.searchParams
-  );
+  // Add headers that route handlers can use (avoids re-parsing cookies)
+  response.headers.set('x-access-tier', tier);
+  response.headers.set('x-access-roles', roles.join(','));
+  response.headers.set('x-access-authed', String(authed));
 
-  // Create the rewrite response
-  const url = request.nextUrl.clone();
-  url.pathname = rewriteUrl.split('?')[0];
+  if (rule) {
+    response.headers.set('x-access-rule', rule.prefix || rule.exact || 'regex');
+  }
 
-  const response = NextResponse.rewrite(url);
-
-  // Add tenant headers for downstream components
-  const tenantHeaders = buildTenantHeaders(
-    isCustomDomain ? customDomain! : subdomain!,
-    isCustomDomain,
-    host
-  );
-
-  for (const [key, value] of Object.entries(tenantHeaders)) {
-    response.headers.set(key, value);
+  // Flag unmapped routes (Mode A allows them but we want visibility)
+  if (reason === 'no-rule-match') {
+    response.headers.set('x-access-unmapped', '1');
+    // In development, also log for discovery
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(`[Middleware] Unmapped route allowed (Mode A): ${pathname}`);
+    }
   }
 
   return response;
 }
 
-// Configure which paths the middleware runs on
+// =============================================================================
+// MATCHER CONFIG
+// =============================================================================
+
 export const config = {
+  // Apply to all routes except static files
   matcher: [
     /*
      * Match all request paths except:
      * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico, sitemap.xml, robots.txt (metadata files)
+     * - _next/image (image optimization)
+     * - favicon.ico (favicon file)
      */
-    '/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };

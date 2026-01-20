@@ -21,8 +21,21 @@ DYNAMIC_PAGES_FILE="$PROJECT_ROOT/.capacitor-dynamic-pages.txt"
 DYNAMIC_ROUTES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-routes-backup"
 
 # Dynamic routes to exclude from static export (incompatible with output: export)
+# These are either:
+# - Client Components with dynamic params (can't have generateStaticParams)
+# - Server-rendered pages that need data from the server
 EXCLUDED_DYNAMIC_ROUTES=(
     "app/ask-maia/[cardId]"
+    "app/practitioner/containers"
+    "app/portal/[slug]"
+    "app/practitioner/[slug]"
+    "app/partner/[slug]"
+    "app/admin/partners/prelude/[id]"
+    "app/maia/community/content/[...slug]"
+    "app/maia/community/territory/[slug]"
+    "app/community/commons/[id]"
+    "app/caseload"
+    "app/stellium"
 )
 
 RED='\033[0;31m'

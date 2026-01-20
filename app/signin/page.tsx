@@ -182,12 +182,29 @@ function SigninContent() {
       let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null } } | null = null;
 
       try {
-        data = await api.members.signin(username.toLowerCase(), password);
+        // Use apiUrl() for correct path - /api/members/signin (not /v1/)
+        const response = await fetch(apiUrl('/api/members/signin'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ username: username.toLowerCase(), password }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          if (response.status === 401) {
+            setError('Invalid username or password.');
+            setIsLoading(false);
+            return;
+          }
+          console.warn('[SignIn] API error:', response.status, errorData);
+          throw new Error(errorData.error || 'Sign in failed');
+        }
+
+        data = await response.json();
       } catch (err) {
-        if (err instanceof ApiError && err.code === 'INVALID_CREDENTIALS') {
-          setError('Invalid username or password.');
-          setIsLoading(false);
-          return;
+        if ((err as Error)?.message?.includes('Invalid username')) {
+          return; // Already handled above
         }
         console.warn('[SignIn] API error:', err);
       }
@@ -365,8 +382,8 @@ function SigninContent() {
     }
   };
 
-  const handleRecovery = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRecovery = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
     setError('');
     setRecoveryStatus('sending');
 
@@ -734,9 +751,10 @@ function SigninContent() {
                   className="w-full px-3 py-2 rounded-xl bg-gray-50 border border-gray-200 text-gray-900 outline-none focus:border-teal-400"
                 />
                 <button
-                  type="submit"
-                  disabled={recoveryStatus === 'sending'}
-                  className="w-full py-2 rounded-xl bg-teal-600 text-white font-medium disabled:opacity-50"
+                  type="button"
+                  onClick={handleRecovery}
+                  disabled={recoveryStatus === 'sending' || !recoveryEmail}
+                  className="w-full py-2 rounded-xl font-medium !bg-teal-600 !text-white hover:!bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-400/40"
                 >
                   {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
                 </button>

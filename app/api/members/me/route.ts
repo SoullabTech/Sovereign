@@ -5,7 +5,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getSessionFromRequest } from '@/lib/auth/serverSessions';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // Get identity from session cookie only - server decides who you are
-    const session = await getSessionFromRequest(request);
+    const session = await getCurrentSession();
     const memberId = session?.memberId ?? null;
 
     if (!memberId) {

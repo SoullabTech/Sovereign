@@ -254,8 +254,8 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
     }
   };
 
-  const handleRecovery = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleRecovery = async (e?: React.FormEvent | React.MouseEvent) => {
+    e?.preventDefault();
     setError('');
     setRecoveryStatus('sending');
 
@@ -1005,11 +1005,12 @@ function SacredSoulInduction({ onComplete, initialPasskey }: SacredSoulInduction
                       )}
 
                       <motion.button
-                        type="submit"
+                        type="button"
+                        onClick={handleRecovery}
                         disabled={!recoveryEmail.trim() || recoveryStatus === 'sending'}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full py-3 rounded-xl font-semibold text-white bg-teal-700 hover:bg-teal-600 shadow-[0_12px_30px_rgba(0,0,0,0.15)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="w-full py-3 rounded-xl font-semibold !text-white !bg-teal-700 hover:!bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-400/40"
                       >
                         {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
                       </motion.button>

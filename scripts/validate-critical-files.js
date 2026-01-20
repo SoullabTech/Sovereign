@@ -6,6 +6,13 @@
 const fs = require('fs');
 const path = require('path');
 
+// Files that are intentionally excluded in Capacitor builds (dynamic routes)
+const capacitorExcludedFiles = [
+  'app/partner/[slug]/page.tsx',
+];
+
+const isCapacitorBuild = process.env.CAPACITOR_BUILD === '1';
+
 const criticalFiles = [
   'app/globals.css',
   'lib/types/conversation-style.ts',
@@ -51,6 +58,12 @@ console.log('🔍 Validating critical files...\n');
 criticalFiles.forEach(file => {
   const filePath = path.join(process.cwd(), file);
   const exists = fs.existsSync(filePath);
+
+  // Skip files that are intentionally excluded during Capacitor builds
+  if (isCapacitorBuild && capacitorExcludedFiles.includes(file)) {
+    console.log(`○ ${file} (skipped - Capacitor build)`);
+    return;
+  }
 
   if (exists) {
     console.log(`✓ ${file}`);
