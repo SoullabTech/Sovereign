@@ -1,8 +1,9 @@
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static' // Changed for Capacitor build compatibility;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getSessionFromRequest } from '@/lib/auth/serverSessions';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -43,10 +44,13 @@ function isDbConnectionError(error: unknown): boolean {
 
 /**
  * GET /api/members/profile
- * Get member profile by ID or username
+ * Get member profile from session
+ *
+ * Authentication:
+ *   - Session cookie only (HttpOnly, secure)
+ *   - Server decides who you are - no client-provided identity
  *
  * Never returns 500 for expected failures:
- * - 400: Bad request (missing/invalid params)
  * - 401: Auth required
  * - 404: Member not found
  * - 503: Database unavailable (with retry hint)
@@ -61,27 +65,15 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const memberId = searchParams.get('id');
-    const username = searchParams.get('username');
+    // Get identity from session cookie only - server decides who you are
+    const session = await getSessionFromRequest(request);
+    const memberId = session?.memberId ?? null;
 
-    if (!memberId && !username) {
+    if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID or username required', correlationId },
-        { status: 400, headers }
+        { error: 'Session required', code: 'NO_SESSION', action: 'signin', correlationId },
+        { status: 401, headers }
       );
-    }
-
-    // Validate memberId if provided (must be valid UUID, not local_*)
-    if (memberId) {
-      const invalidCheck = isInvalidMemberId(memberId);
-      if (invalidCheck) {
-        console.warn(`[Profile API] ${correlationId} - Invalid memberId rejected:`, memberId, invalidCheck.reason);
-        return NextResponse.json(
-          { error: 'Invalid member ID', reason: invalidCheck.reason, needsReauth: true, correlationId },
-          { status: 400, headers }
-        );
-      }
     }
 
     // Query database with explicit error handling
@@ -97,8 +89,8 @@ export async function GET(request: NextRequest) {
           ms.circle_tier, ms.circle_amount, ms.circle_joined_at
         FROM members m
         LEFT JOIN member_settings ms ON m.id = ms.member_id
-        WHERE ${memberId ? 'm.id = $1' : 'm.username = $1'}`,
-        [memberId || username]
+        WHERE m.id = $1`,
+        [memberId]
       );
     } catch (dbError) {
       // Database unavailable - return 503 not 500
@@ -177,14 +169,30 @@ export async function GET(request: NextRequest) {
  * PUT /api/members/profile
  * Update member profile
  *
+ * Authentication:
+ *   - Session cookie only (HttpOnly, secure)
+ *   - Server decides who you are - no client-provided identity
+ *
  * Never returns 500 for expected failures:
  * - 400: Bad request (missing/invalid params, malformed JSON)
+ * - 401: Auth required (no valid session)
  * - 404: Member not found
  * - 503: Database unavailable
  */
 export async function PUT(request: NextRequest) {
   const correlationId = generateCorrelationId();
   const headers = { 'X-Correlation-ID': correlationId };
+
+  // Get identity from session cookie only - server decides who you are
+  const session = await getSessionFromRequest(request);
+  const memberId = session?.memberId ?? null;
+
+  if (!memberId) {
+    return NextResponse.json(
+      { error: 'Session required', code: 'NO_SESSION', action: 'signin', correlationId },
+      { status: 401, headers }
+    );
+  }
 
   // Parse body with error handling
   let body;
@@ -198,24 +206,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const { memberId, name, preferredName, email, bio, timezone, birthData } = body;
-
-    if (!memberId) {
-      return NextResponse.json(
-        { error: 'Member ID required', correlationId },
-        { status: 400, headers }
-      );
-    }
-
-    // Validate memberId (must be valid UUID, not local_*)
-    const invalidCheck = isInvalidMemberId(memberId);
-    if (invalidCheck) {
-      console.warn(`[Profile API] ${correlationId} - Invalid memberId rejected on PUT:`, memberId, invalidCheck.reason);
-      return NextResponse.json(
-        { error: 'Invalid member ID', reason: invalidCheck.reason, needsReauth: true, correlationId },
-        { status: 400, headers }
-      );
-    }
+    const { name, preferredName, email, bio, timezone, birthData } = body;
 
     // Build SET clauses dynamically
     const setClauses: string[] = [];
