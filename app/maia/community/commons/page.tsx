@@ -7,7 +7,7 @@
  * Refined with elegant Soullab aesthetic.
  */
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowLeft,
@@ -19,7 +19,9 @@ import {
   Link,
   Search,
   Plus,
-  Library
+  Library,
+  Inbox,
+  Gift
 } from 'lucide-react'
 
 // Section symbol component - elegant geometric markers
@@ -69,8 +71,40 @@ const SectionSymbol = ({ type }: { type: string }) => {
   return symbols[type] || symbols.concept
 }
 
+interface MemberSession {
+  id: string;
+  name: string;
+  tier?: string;
+}
+
 export default function MAIACommunityCommonsPage() {
   const router = useRouter()
+  const [member, setMember] = useState<MemberSession | null>(null)
+  const [isCurator, setIsCurator] = useState(false)
+
+  useEffect(() => {
+    const stored = localStorage.getItem('beta_user')
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored)
+        setMember(parsed)
+        // Pro tier automatically has curator access
+        if (parsed.tier?.toLowerCase() === 'pro') {
+          setIsCurator(true)
+        } else if (parsed.id) {
+          // Check if member has curator level
+          fetch(`/api/commons/contributions/my-offerings?memberId=${parsed.id}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data.stats?.level >= 2) {
+                setIsCurator(true)
+              }
+            })
+            .catch(() => {})
+        }
+      } catch {}
+    }
+  }, [])
 
   const handleBack = () => {
     router.push('/maia/community')
@@ -338,8 +372,11 @@ export default function MAIACommunityCommonsPage() {
               <Search className="w-4 h-4" />
               Search
             </button>
-            <button className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px]
-                             bg-[#5a7a6f] text-white hover:bg-[#4a6a5f] transition-all">
+            <button
+              onClick={() => handleNavigate('/maia/community/contribute')}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-[13px]
+                             bg-[#5a7a6f] text-white hover:bg-[#4a6a5f] transition-all"
+            >
               <Plus className="w-4 h-4" />
               New Entry
             </button>
@@ -482,6 +519,32 @@ export default function MAIACommunityCommonsPage() {
               <div className="text-[13px] font-medium text-stone-700">Contribute</div>
               <div className="text-[11px] text-stone-400">Share your wisdom</div>
             </button>
+            {member && (
+              <button
+                onClick={() => handleNavigate('/maia/community/commons/my-offerings')}
+                className="p-4 rounded-lg border border-[#6b5a98]/20 bg-[#6b5a98]/5
+                         hover:bg-[#6b5a98]/10 transition-all text-center group"
+              >
+                <div className="w-8 h-8 mx-auto mb-2 rounded-lg bg-[#6b5a98]/10 flex items-center justify-center">
+                  <Gift className="w-4 h-4 text-[#6b5a98]" />
+                </div>
+                <div className="text-[13px] font-medium text-stone-700">My Offerings</div>
+                <div className="text-[11px] text-stone-400">Your contributions</div>
+              </button>
+            )}
+            {isCurator && (
+              <button
+                onClick={() => handleNavigate('/maia/community/commons/review')}
+                className="p-4 rounded-lg border border-[#5a7a6f]/20 bg-[#5a7a6f]/5
+                         hover:bg-[#5a7a6f]/10 transition-all text-center group"
+              >
+                <div className="w-8 h-8 mx-auto mb-2 rounded-lg bg-[#5a7a6f]/10 flex items-center justify-center">
+                  <Inbox className="w-4 h-4 text-[#5a7a6f]" />
+                </div>
+                <div className="text-[13px] font-medium text-stone-700">Review Queue</div>
+                <div className="text-[11px] text-stone-400">Curator tools</div>
+              </button>
+            )}
             <button
               onClick={() => handleNavigate('/maia/community/guidelines')}
               className="p-4 rounded-lg border border-stone-200/60 bg-white/60
