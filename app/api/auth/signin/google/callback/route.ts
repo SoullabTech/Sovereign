@@ -40,8 +40,15 @@ export async function GET(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ message: 'OAuth callback not available in static export' });
   }
+
   // Use configured base URL for production (container returns 0.0.0.0:3000)
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(req.url).origin;
+  // Fail closed in production if not configured
+  const configuredUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL;
+  if (process.env.NODE_ENV === 'production' && !configuredUrl) {
+    console.error('[OAUTH] NEXTAUTH_URL or BASE_URL must be set in production');
+    return NextResponse.json({ error: 'OAuth not configured' }, { status: 500 });
+  }
+  const baseUrl = configuredUrl || new URL(req.url).origin;
   const params = new URL(req.url).searchParams;
   const code = params.get('code');
   const state = params.get('state');
