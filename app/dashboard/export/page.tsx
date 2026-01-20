@@ -35,7 +35,7 @@ export default async function ExportPage() {
               because it packages your private records into open files (JSON, Markdown, CSV).
             </p>
             <p className="text-sm">
-              Exports include your saved entries, reflections, and conversation history.
+              Exports include your saved entries, reflections, and session records.
             </p>
             <p className="text-sm italic">
               If Soullab ever <strong>winds down</strong>, exports remain available
