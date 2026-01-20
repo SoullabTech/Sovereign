@@ -59,6 +59,11 @@ function SigninContent() {
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'migrating' | 'done' | 'error'>('idle');
   const [pendingUser, setPendingUser] = useState<{ id: string; onboarded: boolean } | null>(null);
 
+  // Passkey prompt after password signin
+  const [showPasskeyPrompt, setShowPasskeyPrompt] = useState(false);
+  const [passkeyPromptStatus, setPasskeyPromptStatus] = useState<'idle' | 'registering' | 'success' | 'error'>('idle');
+  const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
+
   const biometricLabel = useMemo(() => biometricAuth.getBiometricName(), []);
 
   // Check biometric availability
@@ -168,7 +173,7 @@ function SigninContent() {
     setIsLoading(true);
 
     try {
-      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean } } | null = null;
+      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean } } | null = null;
 
       try {
         data = await api.members.signin(username.toLowerCase(), password);
@@ -230,11 +235,17 @@ function SigninContent() {
 
         storeSession(user);
 
-        if (user.onboarded) {
-          router.push('/maia');
-        } else {
-          router.push('/begin');
+        const redirectPath = user.onboarded ? '/maia' : '/begin';
+
+        // Offer passkey setup if biometrics available and user doesn't have one
+        if (bioPlatformAvailable && !data.member.hasWebauthn) {
+          setPendingRedirect(redirectPath);
+          setShowPasskeyPrompt(true);
+          setIsLoading(false);
+          return;
         }
+
+        router.push(redirectPath);
         return;
       }
 
@@ -421,6 +432,34 @@ function SigninContent() {
       localStorage.setItem('explorerId', pendingUser.id);
       setShowMigration(false);
       router.push(pendingUser.onboarded ? '/maia' : '/begin');
+    }
+  };
+
+  // Handle passkey registration after password signin
+  const handlePasskeySetup = async (setup: boolean) => {
+    if (!pendingRedirect) return;
+
+    if (setup) {
+      setPasskeyPromptStatus('registering');
+      try {
+        const result = await biometricAuth.register();
+        if (result.success) {
+          setPasskeyPromptStatus('success');
+          setTimeout(() => {
+            router.push(pendingRedirect);
+          }, 1500);
+        } else {
+          setPasskeyPromptStatus('error');
+          console.error('[Passkey] Registration failed:', result.error);
+        }
+      } catch (err) {
+        setPasskeyPromptStatus('error');
+        console.error('[Passkey] Registration error:', err);
+      }
+    } else {
+      // User skipped - continue to destination
+      setShowPasskeyPrompt(false);
+      router.push(pendingRedirect);
     }
   };
 
@@ -775,6 +814,81 @@ function SigninContent() {
                 <p className="text-red-700 mb-3">Something went wrong.</p>
                 <button onClick={() => handleMigration(false)} className="text-teal-600 text-sm">
                   Continue without linking
+                </button>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Passkey Setup Prompt */}
+      {showPasskeyPrompt && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+          >
+            {passkeyPromptStatus === 'idle' && (
+              <>
+                <div className="flex justify-center mb-4">
+                  <div className="w-14 h-14 bg-teal-100 rounded-full flex items-center justify-center">
+                    <Sparkles className="w-7 h-7 text-teal-600" />
+                  </div>
+                </div>
+                <h2 className="text-lg font-semibold text-teal-900 text-center mb-2">
+                  Enable {biometricLabel}?
+                </h2>
+                <p className="text-sm text-teal-800/70 text-center mb-5">
+                  Sign in with one tap next time. Faster and more secure than passwords.
+                </p>
+                <div className="space-y-2">
+                  <button
+                    onClick={() => handlePasskeySetup(true)}
+                    className="w-full py-3 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-500 transition-colors"
+                  >
+                    Yes, enable {biometricLabel}
+                  </button>
+                  <button
+                    onClick={() => handlePasskeySetup(false)}
+                    className="w-full py-2 text-sm text-teal-700/70 hover:text-teal-800"
+                  >
+                    Maybe later
+                  </button>
+                </div>
+              </>
+            )}
+
+            {passkeyPromptStatus === 'registering' && (
+              <div className="text-center py-6">
+                <div className="animate-spin w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
+                <p className="text-teal-700 font-medium">Setting up {biometricLabel}...</p>
+                <p className="text-sm text-teal-600/70 mt-1">Follow the prompts on your device</p>
+              </div>
+            )}
+
+            {passkeyPromptStatus === 'success' && (
+              <div className="text-center py-6">
+                <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <span className="text-emerald-600 text-2xl">✓</span>
+                </div>
+                <p className="text-emerald-800 font-medium text-lg">{biometricLabel} enabled!</p>
+                <p className="text-sm text-emerald-600/70 mt-1">You can now sign in with one tap</p>
+              </div>
+            )}
+
+            {passkeyPromptStatus === 'error' && (
+              <div className="text-center py-4">
+                <p className="text-red-700 mb-4">Setup didn&apos;t complete. You can try again later in settings.</p>
+                <button
+                  onClick={() => handlePasskeySetup(false)}
+                  className="text-teal-600 font-medium"
+                >
+                  Continue anyway
                 </button>
               </div>
             )}
