@@ -22,6 +22,17 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
+import { cookies } from 'next/headers';
+
+// Map database tiers to access matrix tiers
+function mapTierToAccessMatrix(dbTier: string | null): 'free' | 'personal' | 'pro' {
+  if (!dbTier) return 'personal'; // Default to personal for dev
+  const t = dbTier.toLowerCase();
+  if (t === 'pro' || t === 'premium' || t === 'vip') return 'pro';
+  if (t === 'free' || t === 'guest') return 'free';
+  // 'explorer', 'personal', 'member', etc. → personal
+  return 'personal';
+}
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -48,13 +59,19 @@ export async function GET(request: NextRequest) {
 
       if (isUUID) {
         const result = await query(
-          'SELECT id, username, name, preferred_name, email FROM members WHERE id = $1',
+          `SELECT m.id, m.username, m.name, m.preferred_name, m.email, ms.circle_tier
+           FROM members m
+           LEFT JOIN member_settings ms ON m.id = ms.member_id
+           WHERE m.id = $1`,
           [memberParam]
         );
         member = result.rows[0];
       } else {
         const result = await query(
-          'SELECT id, username, name, preferred_name, email FROM members WHERE username = $1',
+          `SELECT m.id, m.username, m.name, m.preferred_name, m.email, ms.circle_tier
+           FROM members m
+           LEFT JOIN member_settings ms ON m.id = ms.member_id
+           WHERE m.username = $1`,
           [memberParam]
         );
         member = result.rows[0];
@@ -69,7 +86,10 @@ export async function GET(request: NextRequest) {
     } else {
       // No member specified - get the first one (usually the dev's account)
       const result = await query(
-        'SELECT id, username, name, preferred_name, email FROM members ORDER BY created_at ASC LIMIT 1'
+        `SELECT m.id, m.username, m.name, m.preferred_name, m.email, ms.circle_tier
+         FROM members m
+         LEFT JOIN member_settings ms ON m.id = ms.member_id
+         ORDER BY m.created_at ASC LIMIT 1`
       );
       member = result.rows[0];
 

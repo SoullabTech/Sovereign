@@ -69,6 +69,13 @@ export default function StewardshipPage() {
           <p className="text-[15px] font-medium text-[#5a7a6f]">
             Local mode remains complete — whether you ever pay or not.
           </p>
+
+          {/* Safety Guarantee - 3 lines */}
+          <div className="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-2 text-[13px] text-stone-500">
+            <span>✓ Local mode is complete</span>
+            <span>✓ Cloud is optional</span>
+            <span>✓ Export anytime</span>
+          </div>
         </motion.div>
 
         {/* Core Reassurance */}

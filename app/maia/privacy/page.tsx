@@ -224,6 +224,12 @@ export default function PrivacyPage() {
           <p className="text-[13px] italic text-stone-400">
             Real honesty requires safety. This is ours.
           </p>
+          <p className="mt-4 text-[12px] text-stone-400">
+            Want the funding model in plain language?{' '}
+            <a href="/maia/stewardship" className="text-[#5a7a6f] hover:underline">
+              Why support matters →
+            </a>
+          </p>
         </motion.div>
 
         {/* Footer */}
