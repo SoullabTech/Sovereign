@@ -18,6 +18,7 @@ import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, Target, TrendingUp, Bo
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
+import { apiUrl } from '@/lib/http/apiBase';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { getZodiacArchetype } from '@/lib/astrology/archetypeLibrary';
 import { getSpiralogicPlanetDescription } from '@/lib/astrology/spiralogicHouseMapping';
@@ -179,7 +180,7 @@ export default function AstrologyPage() {
 
           if (memberId) {
             console.log('[Journey] Fetching birth data from profile API for:', memberId);
-            const profileRes = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
+            const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
             if (profileRes.ok) {
               const profile = await profileRes.json();
               console.log('[Journey] Profile response:', profile);

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import CompleteWelcomeFlow from '@/components/onboarding/CompleteWelcomeFlow';
 import { useRouter } from 'next/navigation';
+import { apiUrl } from '@/lib/http/apiBase';
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function OnboardingPage() {
 
     // Sync onboarding completion to server
     try {
-      await fetch('/api/members/progress', {
+      await fetch(apiUrl('/api/members/progress'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

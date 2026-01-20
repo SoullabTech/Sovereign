@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Lock, Mail, CheckCircle, AlertCircle } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
+import { apiUrl } from '@/lib/http/apiBase';
 
 function ResetPasswordContent() {
   const router = useRouter();
@@ -33,7 +34,7 @@ function ResetPasswordContent() {
 
   const validateToken = async () => {
     try {
-      const response = await fetch(`/api/members/reset-password?token=${token}`);
+      const response = await fetch(apiUrl(`/api/members/reset-password?token=${token}`));
       const data = await response.json();
 
       if (data.valid) {
@@ -55,7 +56,7 @@ function ResetPasswordContent() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/members/reset-password', {
+      const response = await fetch(apiUrl('/api/members/reset-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.toLowerCase() }),
@@ -92,7 +93,7 @@ function ResetPasswordContent() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch('/api/members/reset-password', {
+      const response = await fetch(apiUrl('/api/members/reset-password'), {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password }),

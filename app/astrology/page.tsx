@@ -18,6 +18,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Sparkles, Flame, Droplet, Sprout, Wind, Sparkle, TrendingUp, ArrowLeft, Settings2, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { apiUrl } from '@/lib/http/apiBase';
 import { ElementalBalanceDisplay } from '@/components/astrology/ElementalBalanceDisplay';
 import { SacredHouseWheel } from '@/components/astrology/SacredHouseWheel';
 import { MiniHoloflower } from '@/components/holoflower/MiniHoloflower';
@@ -330,7 +331,7 @@ export default function AstrologyPage() {
         if (memberId) {
           try {
             console.log('[Astrology] Fetching from profile API...');
-            const profileRes = await fetch(`/api/members/profile?id=${encodeURIComponent(memberId)}`);
+            const profileRes = await fetch(apiUrl(`/api/members/profile?id=${encodeURIComponent(memberId)}`));
             console.log('[Astrology] Profile API response status:', profileRes.status);
             if (profileRes.ok) {
               const profile = await profileRes.json();

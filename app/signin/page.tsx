@@ -7,6 +7,7 @@ import { Mail, ArrowRightLeft, Sparkles } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 import { api, ApiError } from '@/lib/api-client';
+import { apiUrl } from '@/lib/http/apiBase';
 
 interface MigrationPreview {
   oldUserId: string;
@@ -127,7 +128,7 @@ function SigninContent() {
         if (hasExistingData) {
           // Check if there's data to migrate
           try {
-            const previewResponse = await fetch(`/api/members/migrate-data?oldUserId=${encodeURIComponent(existingExplorerId)}`);
+            const previewResponse = await fetch(apiUrl(`/api/members/migrate-data?oldUserId=${encodeURIComponent(existingExplorerId)}`));
             if (previewResponse.ok) {
               const preview = await previewResponse.json();
               if (preview.totalRecords > 0) {
@@ -215,7 +216,7 @@ function SigninContent() {
     setRecoveryStatus('sending');
 
     try {
-      const response = await fetch('/api/members/recover', {
+      const response = await fetch(apiUrl('/api/members/recover'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: recoveryEmail.toLowerCase() }),
@@ -241,7 +242,7 @@ function SigninContent() {
     setMagicLinkStatus('sending');
 
     try {
-      const response = await fetch('/api/members/magic-link', {
+      const response = await fetch(apiUrl('/api/members/magic-link'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: magicLinkEmail.toLowerCase() }),
@@ -268,7 +269,7 @@ function SigninContent() {
     if (migrate) {
       setMigrationStatus('migrating');
       try {
-        const response = await fetch('/api/members/migrate-data', {
+        const response = await fetch(apiUrl('/api/members/migrate-data'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -708,7 +709,7 @@ function SigninContent() {
                   disabled={magicLinkStatus === 'sending' || !magicLinkEmail.trim()}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-3 rounded-xl font-medium bg-emerald-500/80 hover:bg-emerald-500 text-white transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-3 rounded-xl font-semibold bg-teal-700 hover:bg-teal-600 text-white shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {magicLinkStatus === 'sending' ? 'Sending...' : 'Send Magic Link'}
                 </motion.button>
