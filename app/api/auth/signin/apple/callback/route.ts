@@ -85,7 +85,8 @@ async function verifyIdToken(idToken: string): Promise<{
 }
 
 export async function POST(req: NextRequest) {
-  const baseUrl = new URL(req.url).origin;
+  // Use configured base URL for production (container returns 0.0.0.0:3000)
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(req.url).origin;
 
   try {
     // Parse form data (Apple uses form_post)
@@ -277,6 +278,7 @@ export async function GET(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
-  const baseUrl = new URL(req.url).origin;
+  // Use configured base URL for production (container returns 0.0.0.0:3000)
+  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(req.url).origin;
   return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=WRONG_HTTP_METHOD&detail=Apple_uses_POST`);
 }
