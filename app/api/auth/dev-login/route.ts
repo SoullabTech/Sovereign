@@ -48,7 +48,9 @@ export async function GET(request: NextRequest) {
 
   const searchParams = request.nextUrl.searchParams;
   const memberParam = searchParams.get('member');
-  const redirectTo = searchParams.get('redirect') || '/maia';
+  const rawRedirect = searchParams.get('redirect') || '/maia';
+  // Prevent open redirect: only allow relative paths starting with /
+  const redirectTo = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/maia';
 
   try {
     let member;
