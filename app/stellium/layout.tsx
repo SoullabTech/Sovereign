@@ -19,9 +19,9 @@ import {
   ChevronLeft,
   Menu,
   X,
-  Sparkles,
   TrendingUp,
 } from 'lucide-react';
+import { Holoflower } from '@/components/ui/Holoflower';
 
 interface NavItem {
   path: string;
@@ -67,7 +67,7 @@ export default function StelliumLayout({
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-gray-900/95 backdrop-blur-xl border-b border-gray-800">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-3">
-            <Sparkles className="w-6 h-6 text-sacred-gold" />
+            <Holoflower size="sm" animate={false} glowIntensity="low" />
             <span className="text-lg font-light text-gray-200">Stellium</span>
           </div>
           <button
@@ -99,7 +99,7 @@ export default function StelliumLayout({
       >
         <div className="p-4 border-b border-gray-800">
           <div className="flex items-center space-x-3">
-            <Sparkles className="w-6 h-6 text-sacred-gold" />
+            <Holoflower size="sm" animate={false} glowIntensity="low" />
             <span className="text-lg font-light text-gray-200">Stellium</span>
           </div>
         </div>
@@ -139,7 +139,7 @@ export default function StelliumLayout({
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sacred-gold/20 to-amber-600/20 flex items-center justify-center border border-sacred-gold/20">
-                <Sparkles className="w-5 h-5 text-sacred-gold" />
+                <Holoflower size="sm" animate={false} glowIntensity="low" />
               </div>
               {sidebarOpen && (
                 <span className="text-lg font-light text-gray-200">Stellium</span>

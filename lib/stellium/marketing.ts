@@ -913,7 +913,7 @@ export async function getMarketingDashboard(
 
   const byStatus: Record<string, number> = {};
   let total = 0;
-  for (const row of contactStats) {
+  for (const row of contactStats?.rows || []) {
     byStatus[row.status] = parseInt(row.count);
     total += parseInt(row.count);
   }

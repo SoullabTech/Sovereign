@@ -14,7 +14,6 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Brain,
-  Sparkles,
   BookOpen,
   MessageSquare,
   Shield,
@@ -24,6 +23,7 @@ import {
   FileText,
   Loader2,
 } from 'lucide-react';
+import { Holoflower } from '@/components/ui/Holoflower';
 import PersonaTraining from '@/components/stellium/PersonaTraining';
 import { PractitionerPersona } from '@/lib/stellium/types';
 
@@ -117,7 +117,9 @@ export default function PersonaPage() {
     return (
       <div className="max-w-2xl mx-auto py-8">
         <div className="text-center mb-8">
-          <Sparkles className="w-16 h-16 text-sacred-gold/50 mx-auto mb-4" />
+          <div className="flex justify-center mb-4">
+            <Holoflower size="xl" animate={true} glowIntensity="medium" />
+          </div>
           <h1 className="text-2xl font-light text-gray-100 mb-2">
             Create Your MAIA Persona
           </h1>
@@ -185,9 +187,7 @@ export default function PersonaPage() {
       <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
         <CardContent className="p-6">
           <div className="flex items-start space-x-6">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sacred-gold/20 to-amber-600/20 flex items-center justify-center border border-sacred-gold/20">
-              <Sparkles className="w-10 h-10 text-sacred-gold" />
-            </div>
+            <Holoflower size="lg" animate={false} glowIntensity="low" />
             <div className="flex-1">
               <h2 className="text-xl text-gray-200">{persona.persona_name}</h2>
               <p className="text-gray-500 capitalize">{persona.modality} persona</p>

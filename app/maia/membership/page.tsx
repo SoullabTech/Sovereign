@@ -30,11 +30,11 @@ interface TierCardProps {
 }
 
 // Elegant tier symbols - simple geometric SVGs
-const TierSymbol = ({ tier, className }: { tier: MemberTier; className?: string }) => {
+const TierSymbol = ({ tier, className, style }: { tier: MemberTier; className?: string; style?: React.CSSProperties }) => {
   if (tier === 'free') {
     // Single circle - touch, beginning
     return (
-      <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg viewBox="0 0 40 40" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="20" cy="20" r="12" />
       </svg>
     );
@@ -42,7 +42,7 @@ const TierSymbol = ({ tier, className }: { tier: MemberTier; className?: string 
   if (tier === 'personal') {
     // Vesica piscis - continuity, intersection
     return (
-      <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
+      <svg viewBox="0 0 40 40" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.5">
         <circle cx="15" cy="20" r="10" />
         <circle cx="25" cy="20" r="10" />
       </svg>
@@ -50,7 +50,7 @@ const TierSymbol = ({ tier, className }: { tier: MemberTier; className?: string 
   }
   // Three interlocking circles - stewardship, service
   return (
-    <svg viewBox="0 0 40 40" className={className} fill="none" stroke="currentColor" strokeWidth="1.5">
+    <svg viewBox="0 0 40 40" className={className} style={style} fill="none" stroke="currentColor" strokeWidth="1.5">
       <circle cx="20" cy="14" r="8" />
       <circle cx="14" cy="24" r="8" />
       <circle cx="26" cy="24" r="8" />
@@ -133,25 +133,28 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
   const colorClasses = {
     sage: {
       border: 'border-stone-300/50',
-      symbol: 'text-[#5a7a6f]',
+      symbol: '#5a7a6f',
       accent: 'bg-[#5a7a6f]/10',
-      button: 'bg-[#5a7a6f] hover:bg-[#4a6a5f]',
+      buttonBg: '#5a7a6f',
+      buttonHover: '#4a6a5f',
       check: 'text-[#5a7a6f]',
       highlight: 'from-[#5a7a6f]/5 to-transparent',
     },
     violet: {
       border: 'border-[#8b7ab8]/30',
-      symbol: 'text-[#6b5a98]',
+      symbol: '#6b5a98',
       accent: 'bg-[#6b5a98]/10',
-      button: 'bg-[#6b5a98] hover:bg-[#5b4a88]',
+      buttonBg: '#6b5a98',
+      buttonHover: '#5b4a88',
       check: 'text-[#6b5a98]',
       highlight: 'from-[#6b5a98]/8 to-transparent',
     },
     gold: {
       border: 'border-[#b8a07a]/40',
-      symbol: 'text-[#8a7a5a]',
+      symbol: '#8a7a5a',
       accent: 'bg-[#8a7a5a]/10',
-      button: 'bg-[#8a7a5a] hover:bg-[#7a6a4a]',
+      buttonBg: '#8a7a5a',
+      buttonHover: '#7a6a4a',
       check: 'text-[#8a7a5a]',
       highlight: 'from-[#8a7a5a]/8 to-transparent',
     },
@@ -182,7 +185,7 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
       <div className="relative px-7 py-8">
         {/* Symbol */}
         <div className="mb-6">
-          <TierSymbol tier={tier} className={`w-10 h-10 ${colors.symbol}`} />
+          <TierSymbol tier={tier} className="w-10 h-10" style={{ color: colors.symbol }} />
         </div>
 
         {/* Header */}
@@ -209,9 +212,9 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
         <ul className="space-y-3 mb-6">
           {data.features.map((feature, idx) => (
             <li key={idx} className="flex items-start gap-3">
-              <span className={`mt-1.5 w-1 h-1 rounded-full flex-shrink-0 ${colors.accent}`}
-                style={{ backgroundColor: colors.check.replace('text-', '') }} />
-              <span className="text-[13px] leading-relaxed text-stone-600">
+              <span className="mt-1.5 w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: colors.symbol }} />
+              <span className="text-[13px] leading-relaxed text-stone-700">
                 {feature}
               </span>
             </li>
@@ -219,22 +222,40 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
         </ul>
 
         {/* Emphasis */}
-        <p className="text-[13px] italic mb-6 text-stone-400">
+        <p className="text-[13px] italic mb-6 text-stone-600">
           {data.emphasis}
         </p>
 
         {/* CTA */}
         {!isCurrentTier && tier !== 'free' && (
-          <button
-            onClick={onSelect}
-            className={`w-full py-3.5 px-4 rounded-lg text-[13px] font-medium tracking-wide text-white transition-all hover:scale-[1.01] active:scale-[0.99] ${colors.button}`}
-          >
-            {data.cta}
-          </button>
+          <>
+            <button
+              onClick={onSelect}
+              style={{
+                position: 'relative',
+                zIndex: 10,
+                backgroundColor: tier === 'personal' ? 'rgba(107,90,152,0.12)' : 'rgba(138,122,90,0.12)',
+                width: '100%',
+                padding: '14px 16px',
+                borderRadius: '8px',
+                fontSize: '13px',
+                fontWeight: 600,
+                letterSpacing: '0.025em',
+                color: tier === 'personal' ? '#6b5a98' : '#8a7a5a',
+                border: `1px solid ${tier === 'personal' ? 'rgba(107,90,152,0.25)' : 'rgba(138,122,90,0.25)'}`,
+                cursor: 'pointer',
+              }}
+            >
+              {data.cta}
+            </button>
+            <p className="text-[11px] text-stone-400 text-center mt-3">
+              You can change this anytime.
+            </p>
+          </>
         )}
 
         {isCurrentTier && (
-          <div className="w-full py-3.5 px-4 rounded-lg text-center text-[13px] tracking-wide text-stone-400 border border-stone-200/60">
+          <div className="w-full py-3.5 px-4 rounded-lg text-center text-[13px] tracking-wide text-stone-600 border border-stone-300/80 bg-stone-100/50">
             This is where you are
           </div>
         )}
@@ -335,10 +356,9 @@ function MembershipPageContent() {
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-5">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 text-stone-700 hover:text-stone-900 hover:-translate-x-0.5 transition-all"
-            style={{ filter: 'drop-shadow(0 0 8px rgba(90, 122, 111, 0.3))' }}
+            className="p-2.5 -ml-2 rounded-lg bg-stone-800 text-white hover:bg-stone-900 hover:-translate-x-0.5 transition-all shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" strokeWidth={2} />
+            <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
           </button>
           <div className="h-4 w-px bg-stone-300/60" />
           <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
@@ -402,6 +422,11 @@ function MembershipPageContent() {
             what&apos;s possible: file uploads, cross-device sync, pattern weaving across time.
           </p>
         </div>
+
+        {/* Choice framing */}
+        <p className="text-center text-[14px] text-stone-500 mb-8">
+          Choose how you want to walk with MAIA.
+        </p>
 
         {/* Tier cards */}
         <div className="grid md:grid-cols-3 gap-5 mb-16">
@@ -551,11 +576,17 @@ function MembershipPageContent() {
                   <button
                     onClick={() => handleCheckout(selectedTier, 'month')}
                     disabled={isProcessing}
-                    className={`flex-1 py-3.5 px-4 rounded-lg text-[13px] font-medium text-white transition-all flex items-center justify-center gap-2 hover:scale-[1.01] active:scale-[0.99] ${
-                      selectedTier === 'personal'
-                        ? 'bg-[#6b5a98] hover:bg-[#5b4a88]'
-                        : 'bg-[#8a7a5a] hover:bg-[#7a6a4a]'
-                    } disabled:opacity-50`}
+                    className="flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#ffffff',
+                      backgroundColor: selectedTier === 'personal' ? '#6b5a98' : '#5a4a3a',
+                      border: '1px solid rgba(255,255,255,0.12)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                    }}
                   >
                     {isProcessing ? (
                       <>
@@ -569,11 +600,16 @@ function MembershipPageContent() {
                   <button
                     onClick={() => handleCheckout(selectedTier, 'year')}
                     disabled={isProcessing}
-                    className={`flex-1 py-3.5 px-4 rounded-lg text-[13px] font-medium transition-all flex items-center justify-center gap-2 border hover:scale-[1.01] active:scale-[0.99] ${
-                      selectedTier === 'personal'
-                        ? 'border-[#6b5a98]/30 text-[#6b5a98] hover:bg-[#6b5a98]/5'
-                        : 'border-[#8a7a5a]/30 text-[#8a7a5a] hover:bg-[#8a7a5a]/5'
-                    } disabled:opacity-50`}
+                    className="flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: selectedTier === 'personal' ? '#6b5a98' : '#5a4a3a',
+                      backgroundColor: 'transparent',
+                      border: `1px solid ${selectedTier === 'personal' ? 'rgba(107,90,152,0.3)' : 'rgba(90,74,58,0.3)'}`,
+                    }}
                   >
                     {isProcessing ? (
                       <>
