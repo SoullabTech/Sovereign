@@ -246,14 +246,7 @@ function SigninContent() {
 
         const redirectPath = user.onboarded ? '/maia' : '/begin';
 
-        // Offer passkey setup if biometrics available and user doesn't have one
-        if (bioPlatformAvailable && !data.member.hasWebauthn) {
-          setPendingRedirect(redirectPath);
-          setShowPasskeyPrompt(true);
-          setIsLoading(false);
-          return;
-        }
-
+        // Skip passkey prompt - users can enable later in settings
         router.push(redirectPath);
         return;
       }
