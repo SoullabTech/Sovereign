@@ -55,8 +55,15 @@ export async function POST(request: NextRequest) {
         metadata: { step: 'verification_failed' }
       }, request);
 
+      // Map known errors to diagnostic codes
+      let code = 'VERIFICATION_FAILED';
+      const err = result.error || '';
+      if (err.includes('Challenge expired')) code = 'CHALLENGE_EXPIRED';
+      else if (err.includes('not found')) code = 'NOT_FOUND';
+      else if (err.includes('save')) code = 'SAVE_FAILED';
+
       return NextResponse.json(
-        { error: result.error || 'Verification failed' },
+        { ok: false, code, error: result.error || 'Verification failed' },
         { status: 400 }
       );
     }
@@ -76,8 +83,23 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[WebAuthn] Registration verify error:', error);
+
+    // Extract diagnostic code from error
+    const errMsg = error instanceof Error ? error.message : String(error);
+    let code = 'UNKNOWN';
+
+    if (errMsg.includes('origin')) code = 'ORIGIN_MISMATCH';
+    else if (errMsg.includes('RP ID') || errMsg.includes('rpId')) code = 'RPID_MISMATCH';
+    else if (errMsg.includes('challenge')) code = 'CHALLENGE_INVALID';
+    else if (errMsg.includes('attestation')) code = 'ATTESTATION_FAILED';
+
     return NextResponse.json(
-      { error: 'Failed to verify registration' },
+      {
+        ok: false,
+        code,
+        error: 'Failed to verify registration',
+        detail: process.env.NODE_ENV === 'development' ? errMsg : undefined
+      },
       { status: 500 }
     );
   }

@@ -63,8 +63,15 @@ export async function POST(request: NextRequest) {
         errorMessage: result.error
       }, request);
 
+      // Map known errors to diagnostic codes
+      let code = 'VERIFICATION_FAILED';
+      const err = result.error || '';
+      if (err.includes('Challenge expired')) code = 'CHALLENGE_EXPIRED';
+      else if (err.includes('Credential not found')) code = 'CREDENTIAL_NOT_FOUND';
+      else if (err.includes('not found')) code = 'NOT_FOUND';
+
       return NextResponse.json(
-        { error: result.error || 'Authentication failed' },
+        { ok: false, code, error: result.error || 'Authentication failed' },
         { status: 401 }
       );
     }
@@ -144,8 +151,25 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[WebAuthn] Authentication verify error:', error);
+
+    // Extract diagnostic code from error
+    const errMsg = error instanceof Error ? error.message : String(error);
+    let code = 'UNKNOWN';
+
+    if (errMsg.includes('origin')) code = 'ORIGIN_MISMATCH';
+    else if (errMsg.includes('RP ID') || errMsg.includes('rpId')) code = 'RPID_MISMATCH';
+    else if (errMsg.includes('challenge')) code = 'CHALLENGE_INVALID';
+    else if (errMsg.includes('credential') || errMsg.includes('Credential')) code = 'CREDENTIAL_NOT_FOUND';
+    else if (errMsg.includes('user verification')) code = 'USER_VERIFICATION_REQUIRED';
+    else if (errMsg.includes('counter')) code = 'COUNTER_MISMATCH';
+
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      {
+        ok: false,
+        code,
+        error: 'Authentication failed',
+        detail: process.env.NODE_ENV === 'development' ? errMsg : undefined
+      },
       { status: 500 }
     );
   }
