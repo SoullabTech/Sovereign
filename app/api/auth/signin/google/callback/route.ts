@@ -15,7 +15,9 @@ export const runtime = 'nodejs';
 
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
+import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
+import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
 
 // Safe query wrapper
 async function safeQuery(
@@ -202,6 +204,51 @@ export async function GET(req: NextRequest) {
         [memberId, providerUserId, email, JSON.stringify({ name, picture })]
       );
     }
+
+    // Create server session and set cookies (required for middleware auth)
+    const session = await createSession({
+      memberId,
+      ipAddress: req.headers.get('x-forwarded-for')?.split(',')[0] || '127.0.0.1',
+      userAgent: req.headers.get('user-agent') || 'google-oauth'
+    });
+
+    // Set session cookie
+    await setSessionCookie(session.sessionToken, session.expiresAt);
+
+    // Fetch member tier for access control
+    const tierResult = await safeQuery(
+      `SELECT ms.circle_tier FROM member_settings ms WHERE ms.member_id = $1`,
+      [memberId]
+    );
+    const dbTier = tierResult.rows[0]?.circle_tier as string | null;
+
+    // Map tier to access matrix
+    let accessTier: 'free' | 'personal' | 'pro' = 'personal';
+    if (dbTier) {
+      const t = dbTier.toLowerCase();
+      if (t === 'pro' || t === 'premium' || t === 'vip') accessTier = 'pro';
+      else if (t === 'free' || t === 'guest') accessTier = 'free';
+    }
+
+    // Set tier and roles cookies
+    const cookieStore = await cookies();
+    cookieStore.set('maia_tier', accessTier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt
+    });
+
+    cookieStore.set('maia_roles', JSON.stringify([]), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt
+    });
+
+    console.log(`[OAUTH] Session created for ${memberId} (tier: ${accessTier})`);
 
     // Redirect to success page with session data
     const successUrl = new URL('/oauth-success', baseUrl);

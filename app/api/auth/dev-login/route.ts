@@ -124,13 +124,22 @@ export async function GET(request: NextRequest) {
       expires: session.expiresAt
     });
 
+    // Set roles cookie for middleware access control (Stellium needs 'practitioner')
+    cookieStore.set('maia_roles', JSON.stringify(['practitioner']), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt
+    });
+
     // Update last sign in
     await query(
       'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
       [member.id]
     );
 
-    console.log(`[Dev Login] Created session for ${member.username || member.id} (tier: ${accessTier})`);
+    console.log(`[Dev Login] Created session for ${member.username || member.id} (tier: ${accessTier}, roles: practitioner)`);
 
     // Check if client wants JSON response (API call) or redirect (browser)
     const acceptHeader = request.headers.get('accept') || '';
@@ -237,13 +246,22 @@ export async function POST(request: NextRequest) {
       expires: session.expiresAt
     });
 
+    // Set roles cookie for middleware access control (Stellium needs 'practitioner')
+    cookieStore.set('maia_roles', JSON.stringify(['practitioner']), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt
+    });
+
     // Update last sign in
     await query(
       'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
       [member.id]
     );
 
-    console.log(`[Dev Login] Created session for ${member.username || member.id} (tier: ${accessTier})`);
+    console.log(`[Dev Login] Created session for ${member.username || member.id} (tier: ${accessTier}, roles: practitioner)`);
 
     return NextResponse.json({
       success: true,
