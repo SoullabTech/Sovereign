@@ -270,5 +270,8 @@
   "engines": {
     "node": ">=18"
   },
+  "overrides": {
+    "tar": "^7.5.3"
+  },
   "packageManager": "npm@10.8.2"
 }
