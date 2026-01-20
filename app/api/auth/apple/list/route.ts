@@ -1,4 +1,5 @@
-export const dynamic = 'force-dynamic';
+// Static during Capacitor build (returns stub), dynamic at runtime on server
+export const dynamic = 'force-static';
 
 /**
  * Apple Sign-In OAuth Initiation

@@ -1,7 +1,7 @@
 // backend
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getSessionFromRequest } from '@/lib/auth/serverSessions';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 
 /**
  * POST /api/auth/session/revoke-others
@@ -10,7 +10,7 @@ import { getSessionFromRequest } from '@/lib/auth/serverSessions';
  * Authentication: Session cookie only
  */
 export async function POST(req: NextRequest) {
-  const session = await getSessionFromRequest(req);
+  const session = await getCurrentSession();
 
   if (!session?.memberId || !session?.id) {
     return NextResponse.json(

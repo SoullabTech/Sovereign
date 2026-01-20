@@ -1,6 +1,6 @@
 // backend
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionFromRequest } from '@/lib/auth/serverSessions';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 
 /**
@@ -11,7 +11,7 @@ import { query } from '@/lib/db/postgres';
  * Note: This should only be called after successful passkey re-authentication
  */
 export async function POST(req: NextRequest) {
-  const session = await getSessionFromRequest(req);
+  const session = await getCurrentSession();
 
   if (!session?.id) {
     return NextResponse.json(

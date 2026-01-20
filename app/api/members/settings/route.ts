@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { getSessionFromRequest } from '@/lib/auth/serverSessions';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 
 /**
  * GET /api/members/settings
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   }
   try {
     // Primary: Get identity from session cookie
-    const session = await getSessionFromRequest(request);
+    const session = await getCurrentSession();
     let memberId = session?.memberId ?? null;
 
     // Fallback: Query param for backward compatibility
@@ -106,7 +106,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     // Primary: Get identity from session cookie
-    const session = await getSessionFromRequest(request);
+    const session = await getCurrentSession();
     let memberId = session?.memberId ?? null;
 
     const body = await request.json();

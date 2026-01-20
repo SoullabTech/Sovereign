@@ -1,6 +1,6 @@
 // backend
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionFromRequest } from '@/lib/auth/serverSessions';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 
 const STEP_UP_WINDOW_SECONDS = 10 * 60; // 10 minutes
@@ -12,7 +12,7 @@ const STEP_UP_WINDOW_SECONDS = 10 * 60; // 10 minutes
  * Authentication: Session cookie only
  */
 export async function GET(req: NextRequest) {
-  const session = await getSessionFromRequest(req);
+  const session = await getCurrentSession();
 
   if (!session?.id) {
     return NextResponse.json(

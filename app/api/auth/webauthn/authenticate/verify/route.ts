@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthentication } from '@/lib/auth/webauthnServer';
-import { createSession, setSessionCookie, getSessionFromRequest } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import {
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     const member = memberResult.rows[0];
 
     // Check for existing valid session (step-up re-auth vs initial signin)
-    const existingSession = await getSessionFromRequest(request);
+    const existingSession = await getCurrentSession();
     const isStepUpReauth = existingSession && existingSession.memberId === member.id;
 
     // Only create new session if this is initial signin, not step-up re-auth
