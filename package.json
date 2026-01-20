@@ -268,6 +268,7 @@
     "puppeteer": "^24.34.0",
     "resend": "^6.6.0",
     "storybook": "^8.3.5",
+    "string-replace-loader": "^3.3.0",
     "ts-jest": "^29.4.6",
     "tsx": "^4.21.0",
     "vite-tsconfig-paths": "^6.0.3",

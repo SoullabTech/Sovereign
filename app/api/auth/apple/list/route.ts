@@ -1,4 +1,3 @@
-// Static during Capacitor build (returns stub), dynamic at runtime on server
 export const dynamic = 'force-static';
 
 /**
