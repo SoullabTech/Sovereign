@@ -130,3 +130,31 @@ export {
   // Utility functions
   buildActivityDescription
 } from './ActivityFeedItem';
+
+// ============================================================================
+// COMMONS CONTRIBUTIONS
+// ============================================================================
+
+export {
+  default as ContributionForm,
+  // Types
+  type ContributionFormData,
+  type ContributionType,
+  type ContributionStatus,
+  type ContributionTag,
+  // Pre-built forms
+  // (none exported yet)
+} from './ContributionForm';
+
+export {
+  default as ContributionReviewQueue,
+  // Types
+  type ContributionForReview,
+} from './ContributionReviewQueue';
+
+export {
+  default as MyOfferingsBoard,
+  // Types
+  type MemberContribution,
+  type ContributorStats,
+} from './MyOfferingsBoard';
