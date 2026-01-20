@@ -62,9 +62,12 @@ export default function StewardshipPage() {
               customColor="rgba(90, 122, 111, 0.6)"
             />
           </div>
-          <h2 className="text-2xl font-light mb-6 text-stone-800 tracking-wide">
+          <h2 className="text-2xl font-light mb-4 text-stone-800 tracking-wide">
             Stewardship & Sustainability
           </h2>
+          <p className="text-[15px] font-medium text-[#5a7a6f]">
+            Local mode remains complete — whether you ever pay or not.
+          </p>
         </motion.div>
 
         {/* Core Reassurance */}

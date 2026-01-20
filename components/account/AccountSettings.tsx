@@ -5,10 +5,11 @@ import { apiUrl } from '@/lib/http/apiBase';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
-  Link, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
+  Link as LinkIcon, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
   Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
   Star, MapPin, Search
 } from 'lucide-react';
+import Link from 'next/link';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import {
   getAccountSettings,
@@ -1809,12 +1810,12 @@ export function AccountSettings() {
 
         {/* Stewardship Link */}
         <div className="mt-4 text-center">
-          <button
-            onClick={() => window.location.href = '/maia/stewardship'}
+          <Link
+            href="/maia/stewardship"
             className="text-sm text-white/40 hover:text-white/60 transition-colors"
           >
-            Stewardship & Sustainability →
-          </button>
+            Why support matters →
+          </Link>
         </div>
       </div>
     );

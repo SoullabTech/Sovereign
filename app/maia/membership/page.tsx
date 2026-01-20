@@ -508,7 +508,7 @@ function MembershipPageContent() {
             href="/maia/stewardship"
             className="mt-3 inline-block text-[12px] text-stone-400 hover:text-[#5a7a6f] transition-colors"
           >
-            Why does this cost money? →
+            Why support matters →
           </a>
         </div>
 

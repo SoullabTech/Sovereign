@@ -539,7 +539,7 @@ function PatronsContent() {
                 href="/maia/stewardship"
                 className="text-xs text-stone-400 dark:text-stone-500 hover:text-amber-600 dark:hover:text-amber-400 transition-colors"
               >
-                Why does this cost money? →
+                Why support matters →
               </a>
             </p>
           </div>
