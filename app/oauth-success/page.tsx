@@ -14,8 +14,24 @@ function OAuthSuccessContent() {
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [message, setMessage] = useState('Completing sign in...');
+  const [errorCode, setErrorCode] = useState<string | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check for error state first (ok=0 means OAuth failed)
+    const ok = searchParams.get('ok');
+    const code = searchParams.get('code');
+    const detail = searchParams.get('detail');
+
+    if (ok === '0') {
+      setStatus('error');
+      setErrorCode(code);
+      setErrorDetail(detail);
+      setMessage(`OAuth failed: ${code || 'Unknown error'}`);
+      // Don't auto-redirect - let user see the error
+      return;
+    }
+
     const memberId = searchParams.get('memberId');
     const username = searchParams.get('username');
     const name = searchParams.get('name');
@@ -26,6 +42,7 @@ function OAuthSuccessContent() {
 
     if (!memberId) {
       setStatus('error');
+      setErrorCode('NO_MEMBER_ID');
       setMessage('Something went wrong. Please try again.');
       setTimeout(() => router.push('/signin?error=oauth_no_session'), 2000);
       return;
@@ -142,6 +159,26 @@ function OAuthSuccessContent() {
 
       {/* Message */}
       <p className="text-xl font-light text-teal-800">{message}</p>
+
+      {/* Debug info for errors */}
+      {status === 'error' && errorCode && (
+        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg text-left max-w-md mx-auto">
+          <p className="text-sm font-mono text-red-800">
+            <strong>Error Code:</strong> {errorCode}
+          </p>
+          {errorDetail && (
+            <p className="text-sm font-mono text-red-700 mt-1">
+              <strong>Detail:</strong> {errorDetail}
+            </p>
+          )}
+          <button
+            onClick={() => router.push('/signin')}
+            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
+          >
+            Return to Sign In
+          </button>
+        </div>
+      )}
     </motion.div>
   );
 }

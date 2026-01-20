@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /**
  * Apple Sign-In OAuth Callback
@@ -97,12 +98,12 @@ export async function POST(req: NextRequest) {
 
     if (errorParam) {
       console.log(`[APPLE] Auth error: ${errorParam}`);
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_cancelled`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=USER_CANCELLED&detail=${encodeURIComponent(errorParam)}`);
     }
 
     if (!code || !state) {
       console.error('[APPLE] Missing code or state');
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_invalid`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=MISSING_CODE_OR_STATE`);
     }
 
     // Validate state
@@ -114,7 +115,7 @@ export async function POST(req: NextRequest) {
 
     if (stateCheck.rows.length === 0) {
       console.error('[APPLE] Invalid or expired state');
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_state_invalid`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=STATE_INVALID_OR_EXPIRED`);
     }
 
     // Clean up used state
@@ -142,7 +143,8 @@ export async function POST(req: NextRequest) {
         email = tokenData.email || '';
       } catch (e) {
         console.error('[APPLE] id_token verification failed:', e);
-        return NextResponse.redirect(`${baseUrl}/signin?error=oauth_token_invalid`);
+        const errMsg = e instanceof Error ? e.message : 'Unknown';
+        return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=ID_TOKEN_INVALID&detail=${encodeURIComponent(errMsg.slice(0, 100))}`);
       }
     } else {
       // If no id_token, exchange code for tokens
@@ -165,7 +167,7 @@ export async function POST(req: NextRequest) {
       if (!tokenRes.ok) {
         const err = await tokenRes.text();
         console.error(`[APPLE] Token exchange failed: ${err}`);
-        return NextResponse.redirect(`${baseUrl}/signin?error=oauth_token`);
+        return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=TOKEN_EXCHANGE_FAILED&detail=${encodeURIComponent(err.slice(0, 100))}`);
       }
 
       const tokenData = await tokenRes.json();
@@ -173,7 +175,7 @@ export async function POST(req: NextRequest) {
 
       if (!newIdToken) {
         console.error('[APPLE] No id_token in response');
-        return NextResponse.redirect(`${baseUrl}/signin?error=oauth_no_token`);
+        return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=NO_ID_TOKEN`);
       }
 
       const verified = await verifyIdToken(newIdToken);
@@ -187,7 +189,7 @@ export async function POST(req: NextRequest) {
     const tableCheck = await safeQuery('SELECT 1 FROM oauth_accounts LIMIT 1');
     if (tableCheck.error) {
       console.error('[APPLE] oauth_accounts missing');
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_schema`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=SCHEMA_MISSING&detail=oauth_accounts`);
     }
 
     // Look for existing link
@@ -252,6 +254,7 @@ export async function POST(req: NextRequest) {
 
     // Redirect to success page
     const successUrl = new URL('/oauth-success', baseUrl);
+    successUrl.searchParams.set('ok', '1');
     successUrl.searchParams.set('memberId', memberData.id as string);
     successUrl.searchParams.set('username', (memberData.username as string) || '');
     successUrl.searchParams.set('name', (memberData.name as string) || '');
@@ -263,7 +266,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.redirect(successUrl.toString());
   } catch (error) {
     console.error('[APPLE] Error:', error);
-    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_failed`);
+    const errMsg = error instanceof Error ? error.message : 'Unknown';
+    return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=EXCEPTION&detail=${encodeURIComponent(errMsg.slice(0, 100))}`);
   }
 }
 
@@ -274,5 +278,5 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   const baseUrl = new URL(req.url).origin;
-  return NextResponse.redirect(`${baseUrl}/signin?error=oauth_method`);
+  return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=WRONG_HTTP_METHOD&detail=Apple_uses_POST`);
 }

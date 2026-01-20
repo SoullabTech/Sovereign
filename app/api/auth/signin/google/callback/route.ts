@@ -1,4 +1,5 @@
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /**
  * Google Sign-In OAuth Callback
@@ -48,12 +49,12 @@ export async function GET(req: NextRequest) {
   // User cancelled
   if (errorParam) {
     console.log(`[OAUTH] Google cancelled: ${errorParam}`);
-    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_cancelled`);
+    return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=USER_CANCELLED&detail=${encodeURIComponent(errorParam)}`);
   }
 
   if (!code || !state) {
     console.error('[OAUTH] Missing code or state');
-    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_invalid`);
+    return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=MISSING_CODE_OR_STATE`);
   }
 
   // Validate state (CSRF protection)
@@ -65,7 +66,7 @@ export async function GET(req: NextRequest) {
 
   if (stateCheck.rows.length === 0) {
     console.error('[OAUTH] Invalid or expired state');
-    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_state_invalid`);
+    return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=STATE_INVALID_OR_EXPIRED`);
   }
 
   // Clean up used state
@@ -76,7 +77,7 @@ export async function GET(req: NextRequest) {
 
   if (!clientId || !clientSecret) {
     console.error('[OAUTH] Missing Google credentials');
-    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_config`);
+    return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=MISSING_CREDENTIALS`);
   }
 
   const redirectUri = `${baseUrl}/api/auth/signin/google/callback`;
@@ -98,7 +99,7 @@ export async function GET(req: NextRequest) {
     if (!tokenRes.ok) {
       const err = await tokenRes.text();
       console.error(`[OAUTH] Token exchange failed: ${err}`);
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_token`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=TOKEN_EXCHANGE_FAILED&detail=${encodeURIComponent(err.slice(0, 100))}`);
     }
 
     const tokenData = await tokenRes.json();
@@ -106,7 +107,7 @@ export async function GET(req: NextRequest) {
 
     if (!accessToken) {
       console.error('[OAUTH] No access token');
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_no_token`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=NO_ACCESS_TOKEN`);
     }
 
     // Fetch user profile
@@ -116,7 +117,7 @@ export async function GET(req: NextRequest) {
 
     if (!userRes.ok) {
       console.error('[OAUTH] Userinfo failed');
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_userinfo`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=USERINFO_FAILED`);
     }
 
     const userInfo = await userRes.json();
@@ -131,7 +132,7 @@ export async function GET(req: NextRequest) {
     const tableCheck = await safeQuery('SELECT 1 FROM oauth_accounts LIMIT 1');
     if (tableCheck.error) {
       console.error('[OAUTH] oauth_accounts missing - run migrations');
-      return NextResponse.redirect(`${baseUrl}/signin?error=oauth_schema`);
+      return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=SCHEMA_MISSING&detail=oauth_accounts`);
     }
 
     // Look for existing link
@@ -196,6 +197,7 @@ export async function GET(req: NextRequest) {
 
     // Redirect to success page with session data
     const successUrl = new URL('/oauth-success', baseUrl);
+    successUrl.searchParams.set('ok', '1');
     successUrl.searchParams.set('memberId', memberData.id as string);
     successUrl.searchParams.set('username', (memberData.username as string) || '');
     successUrl.searchParams.set('name', (memberData.name as string) || '');
@@ -207,6 +209,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(successUrl.toString());
   } catch (error) {
     console.error('[OAUTH] Error:', error);
-    return NextResponse.redirect(`${baseUrl}/signin?error=oauth_failed`);
+    const errMsg = error instanceof Error ? error.message : 'Unknown';
+    return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=EXCEPTION&detail=${encodeURIComponent(errMsg.slice(0, 100))}`);
   }
 }

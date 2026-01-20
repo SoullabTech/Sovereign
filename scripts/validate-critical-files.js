@@ -49,6 +49,19 @@ const criticalFiles = [
   'components/partner/PartnerWelcomeFlow.tsx',
   'components/partner/PartnerWelcomeHeader.tsx',
   'app/partner/[slug]/page.tsx',
+  // AUTHENTICATION ENDPOINTS - CRITICAL FOR OAUTH/BIOMETRIC 🔐
+  'app/api/auth/google/list/route.ts',
+  'app/api/auth/apple/list/route.ts',
+  'app/api/auth/signin/google/callback/route.ts',
+  'app/api/auth/signin/apple/callback/route.ts',
+  'app/api/auth/webauthn/authenticate/options/route.ts',
+  'app/api/auth/webauthn/authenticate/verify/route.ts',
+  'app/api/auth/webauthn/register/options/route.ts',
+  'app/api/auth/webauthn/register/verify/route.ts',
+  'app/api/auth/passkeys/route.ts',
+  'app/api/auth/passkeys/revoke/route.ts',
+  'lib/auth/biometricAuth.ts',
+  'app/oauth-success/page.tsx',
 ];
 
 let allFilesExist = true;
