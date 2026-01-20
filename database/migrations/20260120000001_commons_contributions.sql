@@ -72,6 +72,7 @@ CREATE TABLE IF NOT EXISTS contribution_levels (
 
   -- Level 1 requirements
   orientation_completed BOOLEAN DEFAULT FALSE,
+  orientation_completed_at TIMESTAMPTZ,
   accepted_count INTEGER DEFAULT 0,
 
   -- Endorsement (alternative path to Level 1)
