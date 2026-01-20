@@ -50,6 +50,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // Trust & Stewardship (public - builds trust during consideration)
   { exact: '/maia/stewardship', public: true, notes: 'Stewardship & sustainability' },
   { exact: '/maia/privacy', public: true, notes: 'Privacy & sovereignty' },
+  { exact: '/dashboard/export', public: true, notes: 'Export preview (auth-gated action, public explanation)' },
 
   // Auth flows
   { exact: '/signin', public: true, notes: 'Sign in' },

@@ -1,7 +1,76 @@
 import React from 'react';
-import { Download, FileText, Calendar, Shield } from 'lucide-react';
+import Link from 'next/link';
+import { Download, FileText, Calendar, Shield, Lock } from 'lucide-react';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 
-export default function ExportPage() {
+/**
+ * Export page - Public preview with auth-gated action
+ *
+ * Unauthenticated users see an explanation of why export requires sign-in.
+ * Authenticated users see the full export interface.
+ */
+export default async function ExportPage() {
+  const session = await getCurrentSession();
+  const isAuthenticated = !!session;
+
+  // Blocked state for unauthenticated users
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-6">
+          {/* Icon */}
+          <div className="mx-auto w-16 h-16 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+            <Lock className="w-8 h-8 text-neutral-400" />
+          </div>
+
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-neutral-800 dark:text-neutral-200">
+            Export your data
+          </h1>
+
+          {/* Explanation */}
+          <div className="space-y-3 text-neutral-600 dark:text-neutral-400">
+            <p>
+              Your data is yours. Export is available once you're signed in,
+              because it packages your private records into open files (JSON, Markdown, CSV).
+            </p>
+            <p className="text-sm italic">
+              If Soullab ever <strong>winds down</strong>, exports remain available
+              during a <strong>90-day notice window</strong>.
+            </p>
+          </div>
+
+          {/* Primary CTA */}
+          <Link
+            href="/signin?next=/dashboard/export"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3
+                     bg-blue-600 hover:bg-blue-700 text-white rounded-lg
+                     font-medium transition-colors duration-200"
+          >
+            Sign in to export
+          </Link>
+
+          {/* Trust links */}
+          <div className="flex flex-wrap justify-center gap-4 text-sm">
+            <Link
+              href="/maia/stewardship"
+              className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+            >
+              Why support matters →
+            </Link>
+            <Link
+              href="/maia/privacy"
+              className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
+            >
+              Privacy →
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Full export interface for authenticated users
   return (
     <div className="space-y-6">
       {/* Header */}
