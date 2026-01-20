@@ -858,25 +858,26 @@ export function AccountSettings() {
           <input
             type="password"
             value={currentPassword}
-            onChange={(e) => setCurrentPassword(e.target.value)}
+            onChange={(e) => { setCurrentPassword(e.target.value); setPasswordError(null); }}
             placeholder="Current password"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={(e) => { setNewPassword(e.target.value); setPasswordError(null); }}
             placeholder="New password (min 8 characters)"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
           />
           <input
             type="password"
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={(e) => { setConfirmPassword(e.target.value); setPasswordError(null); }}
             placeholder="Confirm new password"
             className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:border-amber-500/50 focus:outline-none"
           />
           <motion.button
+            type="button"
             onClick={handleChangePassword}
             disabled={!currentPassword || !newPassword || newPassword !== confirmPassword || passwordChanging}
             className="w-full py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-white/60 font-medium transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
@@ -891,12 +892,21 @@ export function AccountSettings() {
 
   // Handler for changing password
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || newPassword !== confirmPassword) {
+    // Validate inputs with helpful messages
+    if (!currentPassword) {
+      setPasswordError('Please enter your current password');
       return;
     }
-
+    if (!newPassword) {
+      setPasswordError('Please enter a new password');
+      return;
+    }
     if (newPassword.length < 8) {
-      setPasswordError('Password must be at least 8 characters');
+      setPasswordError('New password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
       return;
     }
 

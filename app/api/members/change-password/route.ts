@@ -3,6 +3,12 @@ export const dynamic = 'force-dynamic';
 /**
  * Change Password Endpoint
  * Allows authenticated members to change their password
+ *
+ * Security:
+ * - Validates session from httpOnly cookie
+ * - Verifies current password using same hash function as signin
+ * - Invalidates all other sessions after password change
+ * - CSRF protection via Origin header check
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,8 +32,45 @@ interface MemberRow {
   password_hash: string;
 }
 
+/**
+ * Validate that request originates from our own domain (CSRF protection)
+ */
+function validateOrigin(request: NextRequest): boolean {
+  const origin = request.headers.get('origin');
+  const referer = request.headers.get('referer');
+
+  // In development, allow localhost
+  const allowedOrigins = [
+    process.env.NEXT_PUBLIC_APP_URL,
+    'http://localhost:3000',
+    'https://localhost:3000',
+  ].filter(Boolean);
+
+  // Check Origin header first (preferred)
+  if (origin) {
+    return allowedOrigins.some(allowed => origin.startsWith(allowed!));
+  }
+
+  // Fall back to Referer header
+  if (referer) {
+    return allowedOrigins.some(allowed => referer.startsWith(allowed!));
+  }
+
+  // No origin/referer is suspicious for a POST request
+  return false;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    // CSRF protection: validate request origin
+    if (!validateOrigin(request)) {
+      console.warn('[MEMBERS] Change password blocked: invalid origin');
+      return NextResponse.json(
+        { error: 'Invalid request origin' },
+        { status: 403 }
+      );
+    }
+
     const { currentPassword, newPassword } = await request.json();
 
     if (!currentPassword || !newPassword) {
@@ -55,7 +98,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate session
+    // Validate session in database (strong verification)
     const sessionResult = await query<SessionRow>(
       `SELECT member_id, expires_at, revoked
        FROM auth_sessions
@@ -94,7 +137,7 @@ export async function POST(request: NextRequest) {
 
     const member = memberResult.rows[0];
 
-    // Verify current password
+    // Verify current password (using exact same hash function as signin)
     const currentPasswordHash = hashPassword(currentPassword);
     if (currentPasswordHash !== member.password_hash) {
       return NextResponse.json(
@@ -110,7 +153,18 @@ export async function POST(request: NextRequest) {
       [newPasswordHash, member.id]
     );
 
-    console.log(`[MEMBERS] Password changed for member: ${member.id}`);
+    // Invalidate all OTHER sessions for this member (security best practice)
+    // Keep the current session valid so user isn't logged out
+    const revokedResult = await query(
+      `UPDATE auth_sessions
+       SET revoked = TRUE
+       WHERE member_id = $1
+         AND session_token != $2
+         AND revoked = FALSE`,
+      [member.id, token]
+    );
+
+    console.log(`[MEMBERS] Password changed for member: ${member.id}, revoked ${revokedResult.rowCount} other sessions`);
 
     return NextResponse.json({
       success: true,
