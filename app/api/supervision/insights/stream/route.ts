@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { getInsightsSince } from '@/lib/supervision/SupervisionStore';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 // Backoff intervals (ms): start at 2s (insights less frequent than transcript)
 const INTERVALS = [2000, 3000, 5000, 10000];

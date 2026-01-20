@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;

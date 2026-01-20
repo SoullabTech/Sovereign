@@ -8,7 +8,7 @@
  * "Not just scheduling — sacred preparation"
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getSessionContext, storeMaiaPrep } from '@/lib/stellium/sessions';

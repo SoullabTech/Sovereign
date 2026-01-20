@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 import Anthropic from '@anthropic-ai/sdk'
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 const anthropic = new Anthropic()
 

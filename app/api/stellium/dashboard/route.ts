@@ -5,7 +5,7 @@
  * This aggregates client stats, upcoming sessions, and actionable items
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientStats } from '@/lib/stellium/clients';

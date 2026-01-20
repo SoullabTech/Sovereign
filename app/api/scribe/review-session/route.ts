@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // app/api/scribe/review-session/route.ts
 // API endpoint for conversational interrogation of completed sessions
 

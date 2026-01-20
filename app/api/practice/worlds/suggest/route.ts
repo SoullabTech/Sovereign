@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { suggestWorldForContext, getSessionWorlds } from '@/lib/practice/WorldsStore';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {

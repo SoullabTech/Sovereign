@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * Enhanced Consciousness API Endpoint - Phase III
  * Quantum Field Memory + Consciousness Evolution + Collective Intelligence

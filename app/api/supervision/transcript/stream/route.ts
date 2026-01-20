@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { getTranscriptSegments } from '@/lib/supervision/SupervisionStore';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 // Backoff intervals (ms): start at 1s, back off when idle
 const INTERVALS = [1000, 2000, 3000, 5000];

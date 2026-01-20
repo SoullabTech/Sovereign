@@ -19,7 +19,7 @@ import {
   TransitAtTime,
 } from '@/lib/journal/chartIntegrationService';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/journal/chart-integration

@@ -14,7 +14,7 @@ import {
 import { isRlmAllowed } from '@/lib/rlm/access';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {

@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listSavedSynastryAnalyses } from '@/lib/astrology/synastry/synastryStore';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering

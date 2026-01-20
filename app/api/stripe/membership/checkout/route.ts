@@ -13,7 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
 import type Stripe from 'stripe';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 type MembershipTier = 'personal' | 'pro';
 type BillingInterval = 'month' | 'year';

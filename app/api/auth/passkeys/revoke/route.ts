@@ -6,7 +6,7 @@
  * Removes a passkey from the member's account.
  */
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';

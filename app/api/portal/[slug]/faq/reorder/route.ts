@@ -4,7 +4,7 @@
  * Reorder FAQs within a category
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';

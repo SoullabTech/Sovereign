@@ -14,7 +14,7 @@ import {
   type GrowthType
 } from '@/lib/practice/PracticeStore';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   // Static export: return stub response during pre-rendering

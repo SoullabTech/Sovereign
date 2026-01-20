@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 // app/api/feedback/route.ts
 // API endpoint for general platform feedback (problems, challenges, strengths, features, questions)

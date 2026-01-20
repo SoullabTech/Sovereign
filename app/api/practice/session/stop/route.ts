@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stopSession, getSession } from '@/lib/practice/PracticeStore';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {

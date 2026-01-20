@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 // Required for static export with dynamic routes
 export function generateStaticParams() {

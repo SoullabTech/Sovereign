@@ -1,6 +1,6 @@
 // Production web requires force-dynamic for runtime database access
 // Capacitor builds: API routes are moved aside by scripts/build-capacitor.sh
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 /**
  * Quick Journal API - Fast capture for dreams and day reflections

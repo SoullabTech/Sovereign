@@ -22,7 +22,7 @@ import { calculateSynastryFromCharts, chartToLongitudes } from '@/lib/astrology/
 import type { SynastryRequest, SynastryResponse, SynastryOptions } from '@/lib/astrology/synastry/types';
 import { createSynastryAnalysis, getSynastryAnalysisById } from '@/lib/astrology/synastry/synastryStore';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 interface MemberBirthRow {
   id: string;

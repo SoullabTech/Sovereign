@@ -14,7 +14,7 @@ import {
   ShadowFlow,
 } from '@/lib/consciousness/shadowWorkFlows';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/consciousness/shadow-work

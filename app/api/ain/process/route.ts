@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * AIN CONSCIOUSNESS PATTERN PROCESSING ENDPOINT
  * Processes consciousness patterns through the nested observer system

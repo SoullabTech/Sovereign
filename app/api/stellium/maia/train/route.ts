@@ -7,7 +7,7 @@
  * "Not generic AI — your apprentice"
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import {

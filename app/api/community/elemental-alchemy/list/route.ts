@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // app/api/community/elemental-alchemy/route.ts
 /**
  * ELEMENTAL ALCHEMY BOOK API

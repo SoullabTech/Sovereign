@@ -13,7 +13,7 @@ import {
 } from '@/lib/story/archetypalNarrativeService';
 import { BirthChartData } from '@/lib/story/storyWeaver';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 /**
  * POST /api/astrology/narrative

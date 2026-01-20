@@ -1,5 +1,5 @@
 // Production requires force-dynamic for semantic search
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';

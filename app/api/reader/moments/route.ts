@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { query } from '@/lib/db/postgres'
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 // GET reading moments for a member
 export async function GET(request: NextRequest) {

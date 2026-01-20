@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return [{ cardId: 'default' }]; }
 
 import { NextRequest, NextResponse } from 'next/server';

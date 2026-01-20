@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 // API Route: GET /api/neuropod/biometric-validation
 // Returns Bloom biometric validation data for a user
 

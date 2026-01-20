@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GmailService } from '@/lib/gmail/GmailService';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 interface SendEmailRequest {
   userId: string;

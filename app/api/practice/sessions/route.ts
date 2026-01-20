@@ -7,7 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { listSessions, getSession, updateSession } from '@/lib/practice/PracticeStore';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
   // Static export: return stub response during pre-rendering

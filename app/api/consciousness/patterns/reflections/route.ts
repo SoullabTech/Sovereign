@@ -16,7 +16,7 @@ import {
   PatternType,
 } from '@/lib/consciousness/PatternReflectionService';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/consciousness/patterns/reflections

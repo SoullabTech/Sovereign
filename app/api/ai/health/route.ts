@@ -1,6 +1,6 @@
 // AI Health Check Endpoint
 // Returns provider configuration status for smoke tests
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export const revalidate = false;
 
 import { NextResponse } from 'next/server';

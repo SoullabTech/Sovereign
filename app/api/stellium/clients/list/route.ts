@@ -5,7 +5,7 @@
  * Each client belongs to a practitioner - data isolation is enforced
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import {

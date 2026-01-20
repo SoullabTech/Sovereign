@@ -28,7 +28,7 @@ import {
 } from '@/lib/threshold';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export const maxDuration = 60; // Allow up to 60s for long conversations
 
 interface StreamRequest {

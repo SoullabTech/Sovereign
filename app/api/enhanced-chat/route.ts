@@ -1,5 +1,5 @@
 // @ts-nocheck
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * ENHANCED MAIA CHAT - Conversation-Aware Intelligence Integration
  *

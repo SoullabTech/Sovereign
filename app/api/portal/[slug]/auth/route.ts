@@ -5,7 +5,7 @@
  * Returns practitioner data if authenticated
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';

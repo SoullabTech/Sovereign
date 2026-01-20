@@ -1,4 +1,4 @@
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 /**
  * MAIA FIELD-DRIVEN RESPONSE API (TEMPORARILY DISABLED)
  *

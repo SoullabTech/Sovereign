@@ -7,7 +7,7 @@
  * This is the biometric signin endpoint.
  */
 
-export const dynamic = 'force-static'
+export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuthentication } from '@/lib/auth/webauthnServer';

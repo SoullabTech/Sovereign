@@ -5,7 +5,7 @@
  * all 10-year luck periods with TCM health guidance.
  */
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { calculateDaYun, formatDaYunPeriod, getCurrentPhasesSummary } from '@/lib/astrology/daYunCalculator';
