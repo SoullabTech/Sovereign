@@ -67,3 +67,11 @@ export function getAllFeatureFlags(): Record<FeatureKey, boolean> {
     return acc;
   }, {} as Record<FeatureKey, boolean>);
 }
+
+/**
+ * Log all feature flags to console (useful for TestFlight debugging)
+ * Call this on app startup to verify env vars are in the binary
+ */
+export function logFeatureFlags(): void {
+  console.log('[flags]', getAllFeatureFlags());
+}
