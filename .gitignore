@@ -302,6 +302,9 @@ artifacts/.manifest.json
 **/.temp/
 *.worktree/
 
+# dev tooling / local seeds
+app/api/dev/
+
 # Build artifacts
 app/api/backend/dist-minimal/
 
