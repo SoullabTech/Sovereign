@@ -1,13 +1,17 @@
 // Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
-
+export const dynamic = 'force-static' // Changed for Capacitor build compatibility;
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
+import { getSessionFromRequest } from '@/lib/auth/serverSessions';
 
 /**
  * GET /api/members/settings
  * Get member settings
+ *
+ * Authentication:
+ *   - Primary: Session cookie (HttpOnly, secure)
+ *   - Fallback: Query param memberId (legacy, will be deprecated)
  */
 export async function GET(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -15,13 +19,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ stub: true });
   }
   try {
-    const searchParams = request.nextUrl.searchParams;
-    const memberId = searchParams.get('memberId');
+    // Primary: Get identity from session cookie
+    const session = await getSessionFromRequest(request);
+    let memberId = session?.memberId ?? null;
+
+    // Fallback: Query param for backward compatibility
+    if (!memberId) {
+      const searchParams = request.nextUrl.searchParams;
+      memberId = searchParams.get('memberId');
+    }
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID required' },
-        { status: 400 }
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
 
@@ -87,16 +98,29 @@ export async function GET(request: NextRequest) {
 /**
  * PUT /api/members/settings
  * Update member settings
+ *
+ * Authentication:
+ *   - Primary: Session cookie (HttpOnly, secure)
+ *   - Fallback: Body memberId (legacy, will be deprecated)
  */
 export async function PUT(request: NextRequest) {
   try {
+    // Primary: Get identity from session cookie
+    const session = await getSessionFromRequest(request);
+    let memberId = session?.memberId ?? null;
+
     const body = await request.json();
-    const { memberId, ...updates } = body;
+    const { memberId: bodyMemberId, ...updates } = body;
+
+    // Fallback: Body memberId for backward compatibility
+    if (!memberId && bodyMemberId) {
+      memberId = bodyMemberId;
+    }
 
     if (!memberId) {
       return NextResponse.json(
-        { error: 'Member ID required' },
-        { status: 400 }
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
 
