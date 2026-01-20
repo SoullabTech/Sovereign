@@ -50,6 +50,11 @@ export function Holoflower({
   // Determine the color to use - custom color takes precedence
   const glowColor = customColor || colorMap.default;
 
+  // Drop shadow color based on theme
+  const dropShadow = theme === 'light'
+    ? 'drop-shadow(0 0 10px rgba(90, 122, 111, 0.35)) drop-shadow(0 1px 3px rgba(0, 0, 0, 0.06))'
+    : 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))';
+
   return (
     <div className={`${sizes.container} relative flex items-center justify-center ${className}`} style={{ background: 'transparent', boxShadow: 'none', border: 'none', outline: 'none', overflow: 'visible' }}>
 
@@ -118,7 +123,7 @@ export function Holoflower({
             alt="Soullab"
             className={`${sizes.image} object-contain`}
             style={{
-              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))',
+              filter: dropShadow,
             }}
           />
         </motion.div>
@@ -129,7 +134,7 @@ export function Holoflower({
             alt="Soullab"
             className={`${sizes.image} object-contain`}
             style={{
-              filter: 'drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))',
+              filter: dropShadow,
             }}
           />
         </div>

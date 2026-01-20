@@ -334,9 +334,10 @@ function MembershipPageContent() {
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-5">
           <button
             onClick={() => router.back()}
-            className="p-2 -ml-2 text-stone-500 hover:text-stone-700 hover:-translate-x-0.5 transition-all"
+            className="p-2 -ml-2 text-stone-700 hover:text-stone-900 hover:-translate-x-0.5 transition-all"
+            style={{ filter: 'drop-shadow(0 0 8px rgba(90, 122, 111, 0.3))' }}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" strokeWidth={2} />
           </button>
           <div className="h-4 w-px bg-stone-300/60" />
           <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">
@@ -383,8 +384,14 @@ function MembershipPageContent() {
 
         {/* Hero */}
         <div className="text-center mb-16">
-          <div className="w-16 h-16 mx-auto mb-8 opacity-80">
-            <Holoflower size="lg" glowIntensity="low" animate={false} />
+          <div className="w-20 h-20 mx-auto mb-8">
+            <Holoflower
+              size="lg"
+              glowIntensity="high"
+              animate={true}
+              theme="light"
+              customColor="rgba(90, 122, 111, 0.6)"
+            />
           </div>
           <h2 className="text-2xl font-light mb-4 text-stone-800 tracking-wide">
             Your Relationship with MAIA
