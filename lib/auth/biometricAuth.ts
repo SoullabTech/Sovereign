@@ -104,6 +104,10 @@ class BiometricAuthService {
    * Get device type and name for display
    */
   getDeviceInfo(): { type: string; name: string } {
+    // SSR safety: navigator doesn't exist during static generation
+    if (typeof window === 'undefined' || typeof navigator === 'undefined') {
+      return { type: 'unknown', name: 'Biometric' };
+    }
     const ua = navigator.userAgent;
 
     if (/iPhone/.test(ua)) {
