@@ -21,6 +21,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { betaSession } from '@/lib/auth/betaSession';
 import { type MemberTier } from '@/lib/auth/tierAccess';
 import { Holoflower } from '@/components/ui/Holoflower';
+import SupportFooter from '@/components/shared/SupportFooter';
 
 interface TierCardProps {
   tier: MemberTier;
@@ -511,6 +512,9 @@ function MembershipPageContent() {
             Why support matters →
           </a>
         </div>
+
+        {/* Footer */}
+        <SupportFooter theme="light" />
 
         {/* Selected tier confirmation */}
         <AnimatePresence>

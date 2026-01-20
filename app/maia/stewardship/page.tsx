@@ -16,6 +16,7 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Download, Shield, Server, Heart, Users, Clock } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
+import SupportFooter from '@/components/shared/SupportFooter';
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -292,6 +293,9 @@ export default function StewardshipPage() {
             This is a long game. Thank you for being part of it.
           </p>
         </motion.div>
+
+        {/* Footer */}
+        <SupportFooter theme="light" />
       </main>
     </div>
   );

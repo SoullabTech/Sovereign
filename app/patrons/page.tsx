@@ -807,6 +807,26 @@ function PatronsContent() {
           </div>
         </div>
       </section>
+
+      {/* Footer */}
+      <footer className="mx-auto max-w-5xl px-6 pb-12">
+        <div className="pt-8 border-t border-stone-200 dark:border-stone-800">
+          <div className="flex flex-wrap justify-center gap-6 text-xs">
+            <a href="/maia/stewardship" className="text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors">
+              Why support matters
+            </a>
+            <a href="/maia/privacy" className="text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors">
+              Privacy
+            </a>
+            <a href="/dashboard/export" className="text-stone-400 dark:text-stone-500 hover:text-stone-600 dark:hover:text-stone-300 transition-colors">
+              Export your data
+            </a>
+          </div>
+          <p className="mt-4 text-center text-[11px] text-stone-300 dark:text-stone-600">
+            Soullab · Your data stays yours
+          </p>
+        </div>
+      </footer>
     </main>
   );
 }
