@@ -13,7 +13,7 @@ export default function ExportPage() {
           Download your Soullab data in various formats
         </p>
         <p className="text-sm text-neutral-500 dark:text-neutral-500 mt-3 italic">
-          Exports are open formats (JSON, Markdown, CSV). If Soullab ever shuts down,
+          Exports are open formats (JSON, Markdown, CSV). If Soullab ever winds down,
           export remains available during a 90-day notice window.
         </p>
       </div>

@@ -46,7 +46,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/maia/soul-consciousness', minTier: 'personal', notes: 'Soul consciousness' },
   { exact: '/maia/consciousness-computing', minTier: 'personal', notes: 'Consciousness computing' },
   { exact: '/maia/interfaces', minTier: 'personal', notes: 'Interface selection' },
-  { exact: '/maia/membership', minTier: 'personal', notes: 'Membership' },
+  { exact: '/maia/membership', minTier: 'free', notes: 'Membership (accessible to all authed users)' },
   { exact: '/maia/training', minTier: 'personal', notes: 'Training' },
   { exact: '/maia/realtime-monitor', minTier: 'pro', notes: 'Real-time monitor' },
   { exact: '/maia/labtools', minTier: 'pro', notes: 'Lab tools' },

@@ -111,13 +111,24 @@ export async function GET(request: NextRequest) {
     // Set session cookie
     await setSessionCookie(session.sessionToken, session.expiresAt);
 
+    // Set tier cookie for middleware access control
+    const accessTier = mapTierToAccessMatrix(member.circle_tier);
+    const cookieStore = await cookies();
+    cookieStore.set('maia_tier', accessTier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt
+    });
+
     // Update last sign in
     await query(
       'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
       [member.id]
     );
 
-    console.log(`[Dev Login] Created session for ${member.username || member.id}`);
+    console.log(`[Dev Login] Created session for ${member.username || member.id} (tier: ${accessTier})`);
 
     // Check if client wants JSON response (API call) or redirect (browser)
     const acceptHeader = request.headers.get('accept') || '';
@@ -169,20 +180,29 @@ export async function POST(request: NextRequest) {
 
     if (memberId) {
       const result = await query(
-        'SELECT id, username, name, preferred_name, email FROM members WHERE id = $1',
+        `SELECT m.id, m.username, m.name, m.preferred_name, m.email, ms.circle_tier
+         FROM members m
+         LEFT JOIN member_settings ms ON m.id = ms.member_id
+         WHERE m.id = $1`,
         [memberId]
       );
       member = result.rows[0];
     } else if (username) {
       const result = await query(
-        'SELECT id, username, name, preferred_name, email FROM members WHERE username = $1',
+        `SELECT m.id, m.username, m.name, m.preferred_name, m.email, ms.circle_tier
+         FROM members m
+         LEFT JOIN member_settings ms ON m.id = ms.member_id
+         WHERE m.username = $1`,
         [username]
       );
       member = result.rows[0];
     } else {
       // Default to first member
       const result = await query(
-        'SELECT id, username, name, preferred_name, email FROM members ORDER BY created_at ASC LIMIT 1'
+        `SELECT m.id, m.username, m.name, m.preferred_name, m.email, ms.circle_tier
+         FROM members m
+         LEFT JOIN member_settings ms ON m.id = ms.member_id
+         ORDER BY m.created_at ASC LIMIT 1`
       );
       member = result.rows[0];
     }
@@ -204,13 +224,24 @@ export async function POST(request: NextRequest) {
     // Set session cookie
     await setSessionCookie(session.sessionToken, session.expiresAt);
 
+    // Set tier cookie for middleware access control
+    const accessTier = mapTierToAccessMatrix(member.circle_tier);
+    const cookieStore = await cookies();
+    cookieStore.set('maia_tier', accessTier, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      expires: session.expiresAt
+    });
+
     // Update last sign in
     await query(
       'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
       [member.id]
     );
 
-    console.log(`[Dev Login] Created session for ${member.username || member.id}`);
+    console.log(`[Dev Login] Created session for ${member.username || member.id} (tier: ${accessTier})`);
 
     return NextResponse.json({
       success: true,
