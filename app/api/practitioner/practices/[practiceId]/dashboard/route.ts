@@ -131,40 +131,44 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const billing = billingResult.rows[0] || { paid_this_month_cents: 0, pending_cents: 0, outstanding_invoices: 0 };
 
     // 6. HYGIENE - Containers needing attention
+    // Simplified query - filter in application code
     const attentionResult = await query(
       `SELECT
          c.id as container_id, c.scope as container_scope, c.status,
-         CASE
-           WHEN c.status = 'closing' AND NOT EXISTS (
-             SELECT 1 FROM rl_sessions s2
-             WHERE s2.container_id = c.id
-               AND s2.status = 'scheduled'
-               AND s2.scheduled_start_at > NOW()
-           ) THEN 'closing_no_next_session'
-           WHEN c.status = 'active' AND (
-             NOT EXISTS (SELECT 1 FROM rl_sessions s3 WHERE s3.container_id = c.id AND s3.status = 'completed')
-             OR (SELECT MAX(s4.scheduled_start_at) FROM rl_sessions s4 WHERE s4.container_id = c.id AND s4.status = 'completed') < NOW() - INTERVAL '30 days'
-           ) THEN 'no_recent_session'
-           ELSE NULL
-         END as reason
-       FROM rl_containers c
-       WHERE c.practice_id = $1
-         AND c.status IN ('active', 'closing')
-       HAVING
-         (c.status = 'closing' AND NOT EXISTS (
+         (SELECT MAX(s.scheduled_start_at) FROM rl_sessions s
+          WHERE s.container_id = c.id AND s.status = 'completed') as last_completed_session,
+         EXISTS (
            SELECT 1 FROM rl_sessions s2
            WHERE s2.container_id = c.id
              AND s2.status = 'scheduled'
              AND s2.scheduled_start_at > NOW()
-         ))
-         OR
-         (c.status = 'active' AND (
-           NOT EXISTS (SELECT 1 FROM rl_sessions s3 WHERE s3.container_id = c.id AND s3.status = 'completed')
-           OR (SELECT MAX(s4.scheduled_start_at) FROM rl_sessions s4 WHERE s4.container_id = c.id AND s4.status = 'completed') < NOW() - INTERVAL '30 days'
-         ))
-       GROUP BY c.id`,
+         ) as has_upcoming_session
+       FROM rl_containers c
+       WHERE c.practice_id = $1
+         AND c.status IN ('active', 'closing')`,
       [practiceId]
     );
+
+    // Process attention items in application code
+    const containersNeedingAttention = attentionResult.rows
+      .map(row => {
+        let reason: string | null = null;
+        if (row.status === 'closing' && !row.has_upcoming_session) {
+          reason = 'closing_no_next_session';
+        } else if (row.status === 'active') {
+          const lastSession = row.last_completed_session ? new Date(row.last_completed_session) : null;
+          const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+          if (!lastSession || lastSession < thirtyDaysAgo) {
+            reason = 'no_recent_session';
+          }
+        }
+        return reason ? {
+          containerId: row.container_id,
+          containerScope: row.container_scope,
+          reason
+        } : null;
+      })
+      .filter(Boolean);
 
     // 7. HYGIENE - Pending agreements
     const agreementsResult = await query(
@@ -212,13 +216,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         currency: 'USD'
       },
       hygiene: {
-        containersNeedingAttention: attentionResult.rows
-          .filter(r => r.reason)
-          .map(r => ({
-            containerId: r.container_id,
-            containerScope: r.container_scope,
-            reason: r.reason
-          })),
+        containersNeedingAttention,
         agreementsPending: parseInt(agreementsResult.rows[0]?.pending_agreements || '0', 10)
       }
     });
