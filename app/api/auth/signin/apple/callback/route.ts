@@ -86,7 +86,15 @@ async function verifyIdToken(idToken: string): Promise<{
 
 export async function POST(req: NextRequest) {
   // Use configured base URL for production (container returns 0.0.0.0:3000)
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(req.url).origin;
+  const configuredUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL;
+
+  // Fail-closed in production: require explicit base URL config
+  if (!configuredUrl && process.env.NODE_ENV === 'production') {
+    console.error('[APPLE] FATAL: NEXTAUTH_URL or BASE_URL must be set in production');
+    return new Response('Server misconfiguration: missing base URL', { status: 500 });
+  }
+
+  const baseUrl = configuredUrl || new URL(req.url).origin;
 
   try {
     // Parse form data (Apple uses form_post)
@@ -278,7 +286,15 @@ export async function GET(req: NextRequest) {
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
+
   // Use configured base URL for production (container returns 0.0.0.0:3000)
-  const baseUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL || new URL(req.url).origin;
+  const configuredUrl = process.env.NEXTAUTH_URL || process.env.BASE_URL;
+
+  if (!configuredUrl && process.env.NODE_ENV === 'production') {
+    console.error('[APPLE] FATAL: NEXTAUTH_URL or BASE_URL must be set in production');
+    return new Response('Server misconfiguration: missing base URL', { status: 500 });
+  }
+
+  const baseUrl = configuredUrl || new URL(req.url).origin;
   return NextResponse.redirect(`${baseUrl}/oauth-success?ok=0&code=WRONG_HTTP_METHOD&detail=Apple_uses_POST`);
 }
