@@ -18,7 +18,7 @@ import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
 import { query } from '@/lib/db/postgres';
 import type Stripe from 'stripe';
 
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 type MembershipTier = 'free' | 'personal' | 'pro';
 

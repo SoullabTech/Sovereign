@@ -6,7 +6,7 @@
  * Signs out a specific session.
  */
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-static'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession, revokeSession } from '@/lib/auth/serverSessions';

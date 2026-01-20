@@ -6,7 +6,7 @@
  * Returns all registered passkeys for the current member.
  */
 
-export const dynamic = 'force-dynamic'
+export const dynamic = 'force-static'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';

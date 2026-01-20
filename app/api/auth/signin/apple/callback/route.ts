@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = 'force-static';
 
 /**
  * Apple Sign-In OAuth Callback
