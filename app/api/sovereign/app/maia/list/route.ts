@@ -47,7 +47,7 @@ function isValidTimeZone(tz: string): boolean {
 }
 
 //  🔒 Soft timeout for sovereign processing (increased for DEEP path with Opus consultation)
-const SOVEREIGN_TIMEOUT_MS = 25000; // FAST: ~2s, CORE: ~4s, DEEP: ~15-20s (full consciousness + Opus)
+const SOVEREIGN_TIMEOUT_MS = 55000; // FAST: ~2s, CORE: ~4s, DEEP: ~20-45s (full consciousness + Opus + long history)
 
 // Step tracer for debugging hangs
 function msSince(t0: number) {
