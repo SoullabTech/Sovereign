@@ -5,6 +5,7 @@
 import { Capacitor } from '@capacitor/core';
 import { CapacitorVoiceRecorder } from '@lgicc/capacitor-voice-recorder';
 import { VoiceController } from './AudioSessionManager';
+import { FEATURES } from '@/lib/features/flags';
 
 // Diagnostic: Log platform info on module load
 console.log('[NativeRecorder] Module loaded. Platform:', Capacitor.getPlatform(), 'isNative:', Capacitor.isNativePlatform());
@@ -81,6 +82,12 @@ export async function canRecordNative(): Promise<{ available: boolean; status: P
  * @throws Error with status code if permission denied
  */
 export async function ensureNativeMicPermission(): Promise<void> {
+  // Feature flag gate: IOS_VOICE_NATIVE must be enabled
+  if (!FEATURES.IOS_VOICE_NATIVE) {
+    console.log('[NativeRecorder] IOS_VOICE_NATIVE feature flag disabled');
+    throw new Error('IOS_VOICE_NATIVE_DISABLED');
+  }
+
   const { status } = await CapacitorVoiceRecorder.canRecord();
   console.log('[NativeRecorder] Current permission status:', status);
 
@@ -104,6 +111,12 @@ export async function ensureNativeMicPermission(): Promise<void> {
  * @throws Error if permission denied or recording fails
  */
 export async function startNativeRecording(): Promise<void> {
+  // Feature flag gate: IOS_VOICE_NATIVE must be enabled
+  if (!FEATURES.IOS_VOICE_NATIVE) {
+    console.log('[NativeRecorder] IOS_VOICE_NATIVE feature flag disabled');
+    throw new Error('IOS_VOICE_NATIVE_DISABLED');
+  }
+
   console.log('[NativeRecorder] Starting recording...', {
     platform: Capacitor.getPlatform(),
     isNative: Capacitor.isNativePlatform()

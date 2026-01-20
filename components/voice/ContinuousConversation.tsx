@@ -7,6 +7,7 @@ import { getPlatformInfo, getVoiceUnavailableMessage, type PlatformInfo } from "
 import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
+import { FEATURES } from '@/lib/features/flags';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 export interface ContinuousConversationProps {
@@ -866,6 +867,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // 🎛️ Ensure native speech recognition is ready (permissions + availability)
   const ensureNativeSpeechReady = useCallback(async (): Promise<{ ok: boolean; reason?: string }> => {
+    // Feature flag gate: IOS_VOICE_NATIVE must be enabled for native speech
+    if (!FEATURES.IOS_VOICE_NATIVE) {
+      console.log('🔐 [ensureNativeSpeechReady] IOS_VOICE_NATIVE feature flag disabled');
+      addDebug('🚫 Native voice disabled by feature flag');
+      return { ok: false, reason: 'Native voice is disabled in this build' };
+    }
+
     const platform = Capacitor.getPlatform();
     addDebug(`Platform: ${platform}`);
     console.log('🔐 [ensureNativeSpeechReady] Platform:', platform);

@@ -1,0 +1,69 @@
+/**
+ * Feature Flags System
+ *
+ * Simple, reliable flags for Next.js App Router + Capacitor.
+ * Client-safe via NEXT_PUBLIC_* env vars.
+ *
+ * Usage:
+ *   import { getFeatureFlag, isCapacitorBuild } from '@/lib/features/flags';
+ *   const VOICE_V2 = getFeatureFlag('VOICE_V2');
+ */
+
+export const FEATURES = {
+  // Auth
+  NATIVE_OAUTH: false,        // Native Google/Apple buttons on iOS
+  PASSKEY_ENROLLMENT: true,   // Already working, keep on unless hard-disable needed
+
+  // Voice
+  VOICE_V2: false,            // New permission + recording flow
+  IOS_VOICE_NATIVE: false,    // Capacitor native mic/recorder paths
+} as const;
+
+export type FeatureKey = keyof typeof FEATURES;
+
+function parseBool(v: string | undefined): boolean | null {
+  if (!v) return null;
+  const s = v.trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(s)) return true;
+  if (['0', 'false', 'no', 'off'].includes(s)) return false;
+  return null;
+}
+
+/**
+ * Check if running in Capacitor native build
+ */
+export function isCapacitorBuild(): boolean {
+  return process.env.NEXT_PUBLIC_CAPACITOR_BUILD === '1' || process.env.CAPACITOR_BUILD === '1';
+}
+
+/**
+ * Get a feature flag value with env override support
+ *
+ * Priority:
+ * 1. NEXT_PUBLIC_FEATURE_<KEY> (client-safe override)
+ * 2. FEATURE_<KEY> (server-only override)
+ * 3. Default from FEATURES object
+ */
+export function getFeatureFlag(key: FeatureKey): boolean {
+  // Client override: NEXT_PUBLIC_FEATURE_<KEY>
+  const clientOverride = parseBool(process.env[`NEXT_PUBLIC_FEATURE_${key}`]);
+  if (clientOverride !== null) return clientOverride;
+
+  // Server-only override: FEATURE_<KEY>
+  const serverOverride = parseBool(process.env[`FEATURE_${key}`]);
+  if (serverOverride !== null) return serverOverride;
+
+  // Default
+  return FEATURES[key];
+}
+
+/**
+ * Get all feature flags as a record (useful for debugging/admin)
+ */
+export function getAllFeatureFlags(): Record<FeatureKey, boolean> {
+  const keys = Object.keys(FEATURES) as FeatureKey[];
+  return keys.reduce((acc, k) => {
+    acc[k] = getFeatureFlag(k);
+    return acc;
+  }, {} as Record<FeatureKey, boolean>);
+}
