@@ -93,6 +93,9 @@ services:
       AIN_SHAPE_TELEMETRY: "1"
       # Faster-Whisper for sovereign voice transcription (OpenAI-compatible API)
       WHISPER_LOCAL_URL: "http://whisper:8000"
+      # WebAuthn/Passkey configuration - must match the domain users access
+      WEBAUTHN_RP_ID: "soullab.life"
+      WEBAUTHN_ORIGIN: "https://soullab.life"
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]
