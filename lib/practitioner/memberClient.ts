@@ -7,6 +7,14 @@
 
 export function getDevMemberId(): string | null {
   if (typeof window === 'undefined') return null;
+
+  // First try cookie (set by signin)
+  const cookieMatch = document.cookie.match(/maia_member_id=([^;]+)/);
+  if (cookieMatch) {
+    return cookieMatch[1];
+  }
+
+  // Fallback to localStorage (legacy beta_user)
   try {
     const raw = localStorage.getItem('beta_user');
     if (!raw) return null;
