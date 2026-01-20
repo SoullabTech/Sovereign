@@ -8,20 +8,47 @@
  *   NEXT_PUBLIC_API_BASE_URL=https://your-domain.com CAPACITOR_BUILD=1 npm run build
  */
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+/**
+ * Get the API base URL - bulletproof for Capacitor
+ * Falls back to https://soullab.life if env var didn't inline
+ */
+export function apiBaseUrl(): string {
+  // Next will inline NEXT_PUBLIC_* at build time for client bundles,
+  // but if it ends up empty for any reason, we hard-fallback for Capacitor.
+  const envBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
+
+  // If the env var exists, trust it
+  if (envBase) return envBase.replace(/\/+$/, "");
+
+  // Capacitor iOS/Android fallback (prevents relative /api calls breaking)
+  const isCapacitor =
+    typeof window !== "undefined" &&
+    (window as any).Capacitor &&
+    (window as any).Capacitor.isNativePlatform?.();
+
+  if (isCapacitor) return "https://soullab.life";
+
+  // Web dev fallback: allow relative in browser
+  return "";
+}
+
+// Legacy export for backwards compatibility
+export const API_BASE = apiBaseUrl();
 
 // [ios-debug] Log the resolved API_BASE at module load
 if (typeof window !== 'undefined') {
-  console.log('[ios-debug] API_BASE resolved:', API_BASE || '(empty - using relative paths)');
+  console.log('[ios-debug] apiBaseUrl resolved:', apiBaseUrl() || '(relative)');
 }
 
 /**
  * Convert a relative API path to full URL for mobile apps
  * @param path - API path like "/api/journal/quick/list"
- * @returns Full URL if API_BASE is set, otherwise the original path
+ * @returns Full URL if in Capacitor, otherwise the original path for web
  */
 export function apiUrl(path: string): string {
-  return API_BASE ? `${API_BASE}${path}` : path;
+  const base = apiBaseUrl();
+  if (!base) return path; // web relative ok
+  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
 /**

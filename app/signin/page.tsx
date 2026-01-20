@@ -7,7 +7,8 @@ import { Mail, ArrowRightLeft, Sparkles } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import { betaSession } from '@/lib/auth/betaSession';
 import { api, ApiError } from '@/lib/api-client';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiUrl, apiBaseUrl } from '@/lib/http/apiBase';
+import { Capacitor } from '@capacitor/core';
 
 interface MigrationPreview {
   oldUserId: string;
@@ -40,6 +41,138 @@ function SigninContent() {
   const [migrationPreview, setMigrationPreview] = useState<MigrationPreview | null>(null);
   const [migrationStatus, setMigrationStatus] = useState<'idle' | 'migrating' | 'done' | 'error'>('idle');
   const [pendingUser, setPendingUser] = useState<{ id: string; onboarded: boolean } | null>(null);
+
+  // Native OAuth handlers for Capacitor iOS
+  const handleGoogleNative = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // Dynamic import to avoid bundling issues on web
+        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+
+        await GoogleAuth.initialize({
+          clientId: process.env.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
+          scopes: ['profile', 'email'],
+          grantOfflineAccess: true,
+        });
+
+        const result = await GoogleAuth.signIn();
+        const idToken = result.authentication?.idToken;
+
+        if (!idToken) {
+          throw new Error('Missing Google idToken from native sign-in');
+        }
+
+        const res = await fetch(apiUrl('/api/auth/google/native-callback'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            idToken,
+            email: result.email,
+            name: result.name,
+            imageUrl: result.imageUrl,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Google sign-in failed');
+        }
+
+        // Store session data
+        if (data.member) {
+          const user = data.member;
+          localStorage.setItem('beta_user', JSON.stringify(user));
+          localStorage.setItem('explorerId', user.id);
+          localStorage.setItem('explorerName', user.preferred_name || user.name || 'Friend');
+          localStorage.setItem('explorerPreferredName', user.preferred_name || user.name || 'Friend');
+          localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
+          localStorage.setItem('maia_session_version', '2');
+          localStorage.setItem('signup_completed', 'true');
+
+          if (user.onboarded) {
+            router.push('/maia');
+          } else {
+            router.push('/begin');
+          }
+        } else {
+          router.push('/');
+        }
+        return;
+      }
+
+      // Web fallback
+      window.location.href = '/api/auth/google/list';
+    } catch (e) {
+      console.error('GOOGLE SIGNIN ERROR', e);
+      setError('Google sign-in failed: ' + String(e instanceof Error ? e.message : e));
+    }
+  };
+
+  const handleAppleNative = async () => {
+    try {
+      if (Capacitor.isNativePlatform()) {
+        // Dynamic import to avoid bundling issues on web
+        const { SignInWithApple } = await import('@capacitor-community/apple-sign-in');
+
+        const result = await SignInWithApple.authorize({
+          clientId: 'life.soullab.maia', // iOS bundle ID
+          scopes: 'email name',
+          redirectURI: '',
+        });
+
+        const identityToken = result?.response?.identityToken;
+        if (!identityToken) {
+          throw new Error('Missing Apple identityToken from native sign-in');
+        }
+
+        const res = await fetch(apiUrl('/api/auth/apple/native-callback'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            identityToken,
+            authorizationCode: result.response?.authorizationCode,
+            email: result.response?.email,
+            givenName: result.response?.givenName,
+            familyName: result.response?.familyName,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || 'Apple sign-in failed');
+        }
+
+        // Store session data
+        if (data.member) {
+          const user = data.member;
+          localStorage.setItem('beta_user', JSON.stringify(user));
+          localStorage.setItem('explorerId', user.id);
+          localStorage.setItem('explorerName', user.preferred_name || user.name || 'Friend');
+          localStorage.setItem('explorerPreferredName', user.preferred_name || user.name || 'Friend');
+          localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
+          localStorage.setItem('maia_session_version', '2');
+          localStorage.setItem('signup_completed', 'true');
+
+          if (user.onboarded) {
+            router.push('/maia');
+          } else {
+            router.push('/begin');
+          }
+        } else {
+          router.push('/');
+        }
+        return;
+      }
+
+      // Web fallback
+      window.location.href = '/api/auth/apple/list';
+    } catch (e) {
+      console.error('APPLE SIGNIN ERROR', e);
+      setError('Apple sign-in failed: ' + String(e instanceof Error ? e.message : e));
+    }
+  };
 
   // Check for magic link errors, username prefill, and auto-open magic link modal
   useEffect(() => {
@@ -434,7 +567,7 @@ function SigninContent() {
           {/* Google Sign-In */}
           <button
             type="button"
-            onClick={() => window.location.href = '/api/auth/google/list'}
+            onClick={handleGoogleNative}
             className="px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 hover:shadow-md bg-white/70 hover:bg-white/90 border border-gray-200/60 flex items-center gap-1.5"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -449,7 +582,7 @@ function SigninContent() {
           {/* Apple Sign-In */}
           <button
             type="button"
-            onClick={() => window.location.href = '/api/auth/apple/list'}
+            onClick={handleAppleNative}
             className="px-4 py-2 rounded-lg text-xs font-medium transition-all duration-300 hover:shadow-md bg-black/90 hover:bg-black border border-gray-800 flex items-center gap-1.5"
           >
             <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -825,6 +958,11 @@ function SigninContent() {
           </motion.div>
         </motion.div>
       )}
+
+      {/* Debug: API Base URL indicator (remove after testing) */}
+      <div className="fixed bottom-2 left-2 text-xs text-teal-900/40 font-mono">
+        API: {apiBaseUrl() || '(relative)'}
+      </div>
     </>
   );
 }
