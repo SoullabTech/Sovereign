@@ -1,5 +1,5 @@
 export const dynamic = 'force-static';
-export async function generateStaticParams() { return [{ id: 'default' }]; }
+export async function generateStaticParams() { return []; }
 
 /**
  * Practitioner API - Individual Practitioner Routes

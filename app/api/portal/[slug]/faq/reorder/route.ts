@@ -5,7 +5,7 @@
  */
 
 export const dynamic = 'force-static';
-export async function generateStaticParams() { return [{ slug: 'default' }]; }
+export async function generateStaticParams() { return []; }
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query, transaction } from '@/lib/db/postgres';

@@ -7,7 +7,7 @@
  * Can be called without authentication (for signin flow).
  */
 
-export const dynamic = 'force-static' // Changed for Capacitor build compatibility;
+export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createAuthenticationOptions } from '@/lib/auth/webauthnServer';

@@ -1,5 +1,5 @@
 export const dynamic = 'force-static';
-export async function generateStaticParams() { return [{ slug: 'default' }]; }
+export async function generateStaticParams() { return []; }
 
 /**
  * PORTAL ARTICLES API

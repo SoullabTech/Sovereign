@@ -7,7 +7,7 @@
 
 export const revalidate = false;
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleCalendarService } from '@/lib/calendar/GoogleCalendarService';

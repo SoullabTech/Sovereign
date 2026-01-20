@@ -6,7 +6,7 @@
  * Returns all registered passkeys for the current member.
  */
 
-export const dynamic = 'force-static' // Changed for Capacitor build compatibility;
+export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession } from '@/lib/auth/serverSessions';

@@ -8,7 +8,7 @@
  */
 
 export const dynamic = 'force-static';
-export async function generateStaticParams() { return [{ id: 'default' }]; }
+export async function generateStaticParams() { return []; }
 export const revalidate = false;
 
 import { NextRequest, NextResponse } from 'next/server';
