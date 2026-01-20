@@ -60,6 +60,13 @@ export default function SecuritySettingsPage() {
   const [sessions, setSessions] = useState<ActiveSession[]>([]);
   const [activeSection, setActiveSection] = useState<string>('signin-methods');
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<{
+    hasPasskey: boolean;
+    emailVerified: boolean | null;
+    sessionsCount: number;
+    devicesCount: number;
+    preferredAuthMethod?: string | null;
+  } | null>(null);
 
   // Load security data
   useEffect(() => {
@@ -70,13 +77,20 @@ export default function SecuritySettingsPage() {
     try {
       setLoading(true);
 
+      // Load all data in parallel
+      let loadedPasskeys: Passkey[] = [];
+      let loadedDevices: TrustedDevice[] = [];
+      let loadedSessions: ActiveSession[] = [];
+      let loadedMemberAuth: MemberAuth | null = null;
+
       // Load passkeys
       const passkeysRes = await fetch('/api/auth/passkeys', {
         credentials: 'include',
       });
       if (passkeysRes.ok) {
         const data = await passkeysRes.json();
-        setPasskeys(data.passkeys || []);
+        loadedPasskeys = data.passkeys || [];
+        setPasskeys(loadedPasskeys);
       }
 
       // Load devices
@@ -85,7 +99,8 @@ export default function SecuritySettingsPage() {
       });
       if (devicesRes.ok) {
         const data = await devicesRes.json();
-        setDevices(data.devices || []);
+        loadedDevices = data.devices || [];
+        setDevices(loadedDevices);
       }
 
       // Load sessions
@@ -94,7 +109,8 @@ export default function SecuritySettingsPage() {
       });
       if (sessionsRes.ok) {
         const data = await sessionsRes.json();
-        setSessions(data.sessions || []);
+        loadedSessions = data.sessions || [];
+        setSessions(loadedSessions);
       }
 
       // Load member auth info
@@ -103,14 +119,24 @@ export default function SecuritySettingsPage() {
       });
       if (memberRes.ok) {
         const data = await memberRes.json();
-        setMemberAuth({
+        loadedMemberAuth = {
           hasWebauthn: data.member?.hasWebauthn || false,
           hasOauth: data.member?.hasOauth || false,
           oauthProvider: data.member?.oauthProvider || null,
           preferredAuthMethod: data.member?.preferredAuthMethod || 'password',
           emailVerified: data.member?.emailVerified || false,
-        });
+        };
+        setMemberAuth(loadedMemberAuth);
       }
+
+      // Set security status summary using loaded data
+      setStatus({
+        hasPasskey: loadedPasskeys.length > 0,
+        emailVerified: loadedMemberAuth?.emailVerified ?? null,
+        sessionsCount: loadedSessions.length,
+        devicesCount: loadedDevices.length,
+        preferredAuthMethod: loadedMemberAuth?.preferredAuthMethod ?? null,
+      });
 
     } catch (err) {
       console.error('Failed to load security data:', err);
@@ -167,6 +193,13 @@ export default function SecuritySettingsPage() {
       return;
     }
 
+    // Step-up auth required for sensitive action
+    const ok = await enforceStepUp();
+    if (!ok) {
+      setError('Please confirm with your passkey to continue.');
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/passkeys/revoke', {
         method: 'POST',
@@ -186,6 +219,13 @@ export default function SecuritySettingsPage() {
 
   // Revoke session handler
   async function handleRevokeSession(sessionId: string) {
+    // Step-up auth required for sensitive action
+    const ok = await enforceStepUp();
+    if (!ok) {
+      setError('Please confirm with your passkey to continue.');
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/session/revoke', {
         method: 'POST',
@@ -208,6 +248,13 @@ export default function SecuritySettingsPage() {
       return;
     }
 
+    // Step-up auth required for sensitive action
+    const ok = await enforceStepUp();
+    if (!ok) {
+      setError('Please confirm with your passkey to continue.');
+      return;
+    }
+
     try {
       const res = await fetch('/api/auth/device/revoke', {
         method: 'POST',
@@ -221,6 +268,81 @@ export default function SecuritySettingsPage() {
       loadSecurityData();
     } catch (err) {
       setError('Failed to remove trusted device');
+    }
+  }
+
+  // Sign out all other sessions handler
+  async function handleSignOutOtherSessions() {
+    if (!confirm('Sign out of all other sessions?')) return;
+
+    // Step-up auth required for bulk session revoke
+    const ok = await enforceStepUp();
+    if (!ok) {
+      setError('Please confirm with your passkey to continue.');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/auth/session/revoke-others', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      if (!res.ok) throw new Error('Failed to revoke other sessions');
+
+      loadSecurityData();
+    } catch (e) {
+      setError('Failed to sign out other sessions');
+    }
+  }
+
+  // Step-up authentication enforcer
+  async function enforceStepUp(): Promise<boolean> {
+    try {
+      // Check if recently authenticated
+      const statusRes = await fetch('/api/auth/session/step-up/status', {
+        credentials: 'include',
+      });
+
+      if (statusRes.ok) {
+        const s = await statusRes.json();
+        if (s.recent) return true;
+      }
+
+      // If not recent, attempt passkey re-auth
+      const optionsRes = await fetch('/api/auth/webauthn/authenticate/options', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!optionsRes.ok) return false;
+
+      const options = await optionsRes.json();
+
+      // Import WebAuthn browser helpers
+      const { startAuthentication } = await import('@simplewebauthn/browser');
+
+      // Perform authentication
+      const assertion = await startAuthentication({ optionsJSON: options });
+
+      const verifyRes = await fetch('/api/auth/webauthn/authenticate/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response: assertion }),
+      });
+
+      if (!verifyRes.ok) return false;
+
+      // Mark step-up time on session
+      await fetch('/api/auth/session/step-up/mark', {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      return true;
+    } catch (e) {
+      console.error('Step-up auth failed:', e);
+      return false;
     }
   }
 
@@ -277,6 +399,38 @@ export default function SecuritySettingsPage() {
             Manage how you sign in and keep your account secure
           </p>
         </div>
+
+        {/* Security Status Banner */}
+        {status && (
+          <div className="mb-6 rounded-2xl border border-maia-navy-700/50 bg-maia-navy-800/50 p-4 md:p-5">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <div className="text-sm text-maia-cream-100/70">Security status</div>
+                <div className="mt-1 text-lg font-semibold text-maia-cream-100">
+                  {status.hasPasskey ? '✓ Passkey enabled' : '○ Passkey not set'} ·{' '}
+                  {status.emailVerified === null
+                    ? 'Email status unknown'
+                    : status.emailVerified
+                      ? '✓ Email verified'
+                      : '○ Email unverified'}
+                </div>
+                <div className="mt-1 text-sm text-maia-cream-100/60">
+                  {status.sessionsCount} active session{status.sessionsCount === 1 ? '' : 's'} ·{' '}
+                  {status.devicesCount} trusted device{status.devicesCount === 1 ? '' : 's'}
+                </div>
+              </div>
+
+              {!status.hasPasskey && (
+                <button
+                  onClick={handleAddPasskey}
+                  className="rounded-xl bg-maia-spice-500 px-4 py-2 text-sm font-semibold text-white hover:bg-maia-spice-600 transition-colors"
+                >
+                  Add a passkey
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Error display */}
         {error && (
@@ -372,9 +526,9 @@ export default function SecuritySettingsPage() {
                     </div>
                     <span className="text-maia-cream-100">Google</span>
                   </div>
-                  <button className="text-maia-spice-400 hover:text-maia-spice-300 text-sm">
-                    {memberAuth?.oauthProvider === 'google' ? 'Connected' : 'Connect'}
-                  </button>
+                  <span className={`text-sm ${memberAuth?.oauthProvider === 'google' ? 'text-green-400' : 'text-maia-cream-100/40'}`}>
+                    {memberAuth?.oauthProvider === 'google' ? '✓ Connected' : 'Not connected'}
+                  </span>
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-maia-navy-700/30 rounded-lg">
@@ -384,11 +538,15 @@ export default function SecuritySettingsPage() {
                     </div>
                     <span className="text-maia-cream-100">Apple</span>
                   </div>
-                  <button className="text-maia-spice-400 hover:text-maia-spice-300 text-sm">
-                    {memberAuth?.oauthProvider === 'apple' ? 'Connected' : 'Connect'}
-                  </button>
+                  <span className={`text-sm ${memberAuth?.oauthProvider === 'apple' ? 'text-green-400' : 'text-maia-cream-100/40'}`}>
+                    {memberAuth?.oauthProvider === 'apple' ? '✓ Connected' : 'Not connected'}
+                  </span>
                 </div>
               </div>
+
+              <p className="text-xs text-maia-cream-100/40 mt-4">
+                Social sign-in can be added during your next sign-in if you choose Google or Apple.
+              </p>
             </section>
 
             {/* Password */}
@@ -447,7 +605,17 @@ export default function SecuritySettingsPage() {
         {/* Active Sessions Section */}
         {activeSection === 'sessions' && (
           <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
-            <h2 className="text-lg font-medium text-maia-cream-100 mb-4">Active sessions</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-medium text-maia-cream-100">Active sessions</h2>
+              {sessions.filter(s => !s.isCurrent).length > 0 && (
+                <button
+                  onClick={handleSignOutOtherSessions}
+                  className="rounded-xl border border-maia-navy-600/50 bg-maia-navy-700/30 px-3 py-2 text-sm text-maia-cream-100 hover:bg-maia-navy-700/50 transition-colors"
+                >
+                  Sign out other sessions
+                </button>
+              )}
+            </div>
             <p className="text-sm text-maia-cream-100/60 mb-4">
               Devices where you're currently signed in. Sign out of any you don't recognize.
             </p>
