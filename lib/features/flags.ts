@@ -22,7 +22,7 @@ export const FEATURES = {
 
   // Voice
   VOICE_V2: false,            // New permission + recording flow
-  IOS_VOICE_NATIVE: false,    // Capacitor native mic/recorder paths
+  IOS_VOICE_NATIVE: true,     // Capacitor native mic/recorder paths (enabled for iOS)
 } as const;
 
 export type FeatureKey = keyof typeof FEATURES;
