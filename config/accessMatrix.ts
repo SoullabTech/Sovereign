@@ -1,0 +1,396 @@
+/**
+ * Access Matrix - Single Source of Truth
+ *
+ * Generated from: practitioner-os/docs/OFFERINGS_INVENTORY.md
+ * All route access rules are defined here and enforced by middleware.
+ *
+ * DO NOT add per-route auth checks. Use this config instead.
+ */
+
+export type Tier = 'free' | 'personal' | 'pro';
+export type Role = 'admin' | 'steward' | 'curator' | 'practitioner' | 'partner' | 'member';
+
+export interface AccessRule {
+  /** Match route by prefix (checked first, faster) */
+  prefix?: string;
+  /** Match route by regex (checked if no prefix match) */
+  regex?: RegExp;
+  /** Exact route match */
+  exact?: string;
+
+  /** If true, no auth required */
+  public?: boolean;
+  /** Minimum tier required (free < personal < pro) */
+  minTier?: Tier;
+  /** User must have at least one of these roles */
+  rolesAnyOf?: Role[];
+
+  /** Human-readable note for documentation */
+  notes?: string;
+}
+
+// =============================================================================
+// ACCESS RULES - Generated from Offerings Inventory
+// =============================================================================
+
+export const ACCESS_RULES: AccessRule[] = [
+  // -------------------------------------------------------------------------
+  // 1) PUBLIC BY DESIGN - No auth required
+  // -------------------------------------------------------------------------
+
+  // Landing & Marketing
+  { exact: '/', public: true, notes: 'Landing page' },
+  { exact: '/faq', public: true, notes: 'Public FAQ' },
+  { exact: '/downloads', public: true, notes: 'Downloads page' },
+  { exact: '/patrons', public: true, notes: 'Patrons page' },
+  { exact: '/portals', public: true, notes: 'Portals listing' },
+  { exact: '/public-demo', public: true, notes: 'Public demo' },
+  { exact: '/library', public: true, notes: 'Public library browse' },
+
+  // Auth flows
+  { exact: '/signin', public: true, notes: 'Sign in' },
+  { exact: '/signup', public: true, notes: 'Sign up' },
+  { exact: '/reset-password', public: true, notes: 'Password reset' },
+  { exact: '/magic-link-success', public: true, notes: 'Magic link confirmation' },
+  { exact: '/oauth-success', public: true, notes: 'OAuth completion' },
+
+  // Onboarding (pre-auth)
+  { exact: '/begin', public: true, notes: 'Begin journey entry' },
+  { exact: '/intro', public: true, notes: 'Introduction' },
+  { exact: '/welcome', public: true, notes: 'Welcome page' },
+  { exact: '/welcome-back', public: true, notes: 'Welcome returning user' },
+  { exact: '/welcome-flow', public: true, notes: 'Welcome flow' },
+  { prefix: '/onboarding', public: true, notes: 'Onboarding flows' },
+
+  // Beta access (invite-gated but public routes)
+  { exact: '/beta-welcome', public: true, notes: 'Beta welcome' },
+  { exact: '/beta-onboarding', public: true, notes: 'Beta onboarding' },
+  { exact: '/beta-access', public: true, notes: 'Beta access' },
+
+  // Practitioner public portals - CLIENT-FACING
+  { prefix: '/portal/', public: true, notes: 'All practitioner portals are public by design' },
+
+  // Partner portals
+  { prefix: '/partner/', public: true, notes: 'Partner portals' },
+  { exact: '/partner-welcome', public: true, notes: 'Partner welcome' },
+
+  // Community browse (public, no contribution)
+  { exact: '/maia/community', public: true, notes: 'Community hub browse' },
+  { exact: '/maia/community/library', public: true, notes: 'Library browse' },
+  { exact: '/maia/community/wisdom-sources', public: true, notes: 'Wisdom sources browse' },
+  { exact: '/maia/community/faq', public: true, notes: 'Community FAQ' },
+  { exact: '/maia/community/events', public: true, notes: 'Events browse' },
+  { exact: '/maia/community/commons', public: true, notes: 'Commons home browse' },
+  { prefix: '/maia/community/content/', public: true, notes: 'Content pages browse' },
+  { prefix: '/maia/community/category/', public: true, notes: 'Category browse' },
+  { prefix: '/maia/community/territory/', public: true, notes: 'Territory browse' },
+  { exact: '/maia/community/commons/orientation', public: true, notes: 'Safety orientation (pre-contribute)' },
+
+  // Oracle browse (limited at free tier)
+  { exact: '/oracle', public: true, notes: 'Oracle home - limited queries for free' },
+  { exact: '/oracle/library', public: true, notes: 'Oracle library browse' },
+
+  // Astrology browse
+  { exact: '/astrology', public: true, notes: 'Astrology hub browse' },
+
+  // Practitioner pricing (public for discovery)
+  { regex: /^\/api\/practitioner\/[^/]+\/pricing$/, public: true, notes: 'Practitioner pricing is public' },
+
+  // -------------------------------------------------------------------------
+  // 2) FREE TIER - Auth required but no paid subscription
+  // -------------------------------------------------------------------------
+
+  // Account management
+  { exact: '/account/settings', minTier: 'free', notes: 'Account settings' },
+  { exact: '/account/security', minTier: 'free', notes: 'Account security' },
+  { exact: '/settings', minTier: 'free', notes: 'General settings' },
+
+  // -------------------------------------------------------------------------
+  // 3) PERSONAL TIER ($12/mo) - Core MAIA membership
+  // -------------------------------------------------------------------------
+
+  // Dashboard
+  { prefix: '/dashboard', minTier: 'personal', notes: 'Full dashboard access' },
+
+  // MAIA Interface (core)
+  { exact: '/maia', minTier: 'personal', notes: 'MAIA main interface' },
+  { exact: '/maia/compact', minTier: 'personal', notes: 'MAIA compact' },
+  { exact: '/maia/mandala', minTier: 'personal', notes: 'Mandala interface' },
+  { exact: '/maia/field-dashboard', minTier: 'personal', notes: 'Field dashboard' },
+  { exact: '/maia/soul-consciousness', minTier: 'personal', notes: 'Soul consciousness' },
+  { exact: '/maia/consciousness-computing', minTier: 'personal', notes: 'Consciousness computing' },
+  { exact: '/maia/interfaces', minTier: 'personal', notes: 'Interface selection' },
+  { exact: '/maia/membership', minTier: 'personal', notes: 'Membership management' },
+  { exact: '/maia/training', minTier: 'personal', notes: 'Training interface' },
+  { exact: '/ask-maia', minTier: 'personal', notes: 'Ask MAIA' },
+
+  // Community contribution (not browse)
+  { exact: '/maia/community/contribute', minTier: 'personal', notes: 'Contribute to commons' },
+  { exact: '/maia/community/commons/my-offerings', minTier: 'personal', notes: 'My offerings' },
+  { exact: '/maia/community/share', minTier: 'personal', notes: 'Share content' },
+  { exact: '/maia/community/new-post', minTier: 'personal', notes: 'Create post' },
+  { exact: '/maia/community/chat', minTier: 'personal', notes: 'Community chat' },
+  { exact: '/maia/community/reality-check', minTier: 'personal', notes: 'Reality check' },
+
+  // Elemental Alchemy
+  { prefix: '/maia/community/elemental-alchemy', minTier: 'personal', notes: 'Elemental alchemy system' },
+
+  // Oracle tools (beyond browse)
+  { exact: '/oracle/iching', minTier: 'personal', notes: 'I-Ching readings' },
+  { exact: '/oracle/tarot', minTier: 'personal', notes: 'Tarot readings' },
+  { exact: '/oracle/runes', minTier: 'personal', notes: 'Rune readings' },
+  { exact: '/oracle/yijing', minTier: 'personal', notes: 'Yi Jing readings' },
+  { exact: '/oracle/consciousness', minTier: 'personal', notes: 'Consciousness oracle' },
+  { exact: '/oracle/interactive', minTier: 'personal', notes: 'Interactive oracle' },
+
+  // Astrology tools (beyond browse)
+  { exact: '/birth-chart', minTier: 'personal', notes: 'Birth chart' },
+  { exact: '/chart', minTier: 'personal', notes: 'Chart generator' },
+  { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
+  { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
+  { exact: '/astrology/vedic', minTier: 'personal', notes: 'Vedic astrology' },
+  { prefix: '/astrology/aspects/', minTier: 'personal', notes: 'Aspect details' },
+  { prefix: '/astrology/pathways/', minTier: 'personal', notes: 'Pathways' },
+  { exact: '/astrology/synastry', minTier: 'personal', notes: 'Synastry' },
+  { exact: '/astrology/synastry/saved', minTier: 'personal', notes: 'Saved synastry' },
+  { prefix: '/astrology/synastry/', minTier: 'personal', notes: 'Synastry analysis' },
+
+  // Consciousness features
+  { exact: '/consciousness/dashboard', minTier: 'personal', notes: 'Consciousness dashboard' },
+  { exact: '/consciousness/meditation', minTier: 'personal', notes: 'Meditation guide' },
+  { exact: '/consciousness/omnidimensional-test', minTier: 'personal', notes: 'Omnidimensional test' },
+  { exact: '/consciousness/portals', minTier: 'personal', notes: 'Consciousness portals' },
+  { exact: '/consciousness-computing', minTier: 'personal', notes: 'Consciousness computing' },
+  { exact: '/consciousness-computing/feedback', minTier: 'personal', notes: 'Computing feedback' },
+  { exact: '/consciousness-computing/pwa', minTier: 'personal', notes: 'Computing PWA' },
+  { exact: '/consciousness-insights', minTier: 'personal', notes: 'Consciousness insights' },
+
+  // Book companion
+  { exact: '/book/companion', minTier: 'personal', notes: 'Book companion' },
+  { exact: '/book/ask', minTier: 'personal', notes: 'Book companion ask' },
+  { exact: '/book-companion/ain', minTier: 'personal', notes: 'Book companion AIN' },
+
+  // Journey & evolution
+  { exact: '/journey', minTier: 'personal', notes: 'Journey view' },
+  { exact: '/evolution', minTier: 'personal', notes: 'Evolution tracking' },
+  { exact: '/soul-gateway', minTier: 'personal', notes: 'Soul gateway' },
+  { exact: '/capture', minTier: 'personal', notes: 'Capture interface' },
+
+  // AIN features
+  { exact: '/ain-demo', minTier: 'personal', notes: 'AIN demo' },
+  { exact: '/ain-evolution', minTier: 'personal', notes: 'AIN evolution' },
+
+  // -------------------------------------------------------------------------
+  // 4) PRO TIER ($35/mo) - Practitioners + advanced features
+  // -------------------------------------------------------------------------
+
+  // Dashboard Pro features
+  { exact: '/dashboard/diamond', minTier: 'pro', notes: 'Diamond tier features' },
+  { exact: '/dashboard/beta', minTier: 'pro', notes: 'Beta analytics' },
+  { exact: '/dashboard/beta-analytics', minTier: 'pro', notes: 'Beta analytics detailed' },
+  { exact: '/dashboard/ops', minTier: 'pro', notes: 'Operations dashboard' },
+
+  // MAIA Pro features
+  { exact: '/maia/realtime-monitor', minTier: 'pro', notes: 'Real-time monitoring' },
+  { exact: '/maia/labtools', minTier: 'pro', notes: 'MAIA lab tools' },
+  { exact: '/maia/invites', minTier: 'pro', notes: 'Invite management' },
+
+  // Commons curation (role-gated)
+  { exact: '/maia/community/commons/review', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
+
+  // Lab Tools (all Pro)
+  { prefix: '/labtools', minTier: 'pro', notes: 'All lab tools require Pro' },
+
+  // Consciousness Pro features
+  { exact: '/consciousness/portals/admin', minTier: 'pro', rolesAnyOf: ['admin', 'steward'], notes: 'Portal admin' },
+  { exact: '/consciousness/portals/analytics', minTier: 'pro', rolesAnyOf: ['admin', 'steward'], notes: 'Portal analytics' },
+  { exact: '/consciousness-lab', minTier: 'pro', notes: 'Consciousness lab' },
+  { exact: '/consciousness-monitor', minTier: 'pro', notes: 'Consciousness monitoring' },
+  { exact: '/pfi-monitor', minTier: 'pro', notes: 'PFI monitoring' },
+
+  // Stellium (Practice Management)
+  { prefix: '/stellium', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Stellium requires Pro + practitioner role' },
+
+  // Caseload (Clinical Notes)
+  { prefix: '/caseload', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Caseload requires Pro + practitioner role' },
+
+  // Practitioner portal admin (owner-gated at API level)
+  { exact: '/practitioner/dashboard', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Practitioner dashboard' },
+  { prefix: '/practitioner/', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Practitioner admin routes' },
+  { prefix: '/practitioners/', minTier: 'pro', notes: 'Practitioner onboarding/signup' },
+
+  // Partner program
+  { prefix: '/partners/', minTier: 'pro', rolesAnyOf: ['partner'], notes: 'Partner onboarding' },
+
+  // Supervision
+  { exact: '/supervision', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Supervision' },
+
+  // -------------------------------------------------------------------------
+  // 5) ADMIN / STEWARD - Role-gated (not tier)
+  // -------------------------------------------------------------------------
+
+  { prefix: '/admin', minTier: 'pro', rolesAnyOf: ['admin'], notes: 'Admin panel - admin only' },
+  { prefix: '/steward', minTier: 'pro', rolesAnyOf: ['steward', 'admin'], notes: 'Steward tools' },
+
+  // -------------------------------------------------------------------------
+  // 6) API ROUTES
+  // -------------------------------------------------------------------------
+
+  // Public API
+  { exact: '/api/members/check', public: true, notes: 'Check member exists' },
+  { exact: '/api/members/register', public: true, notes: 'Register member' },
+  { exact: '/api/members/signin', public: true, notes: 'Sign in' },
+  { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
+  { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
+  { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
+
+  // Member API
+  { regex: /^\/api\/commons\/contributions\/[^/]+$/, minTier: 'personal', notes: 'Contribution detail' },
+  { exact: '/api/commons/contributions/my-offerings', minTier: 'personal', notes: 'User offerings' },
+  { exact: '/api/stripe/membership/checkout', minTier: 'free', notes: 'Create checkout' },
+
+  // Pro API
+  { exact: '/api/practitioners/create', minTier: 'pro', notes: 'Create practitioner' },
+  { prefix: '/api/practitioner/practices', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Practice management' },
+  { prefix: '/api/practitioner/sessions', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Session management' },
+  { prefix: '/api/practitioner/containers', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Container management' },
+  { prefix: '/api/stellium', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Stellium API' },
+  { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
+  { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },
+
+  // Sovereign API
+  { prefix: '/api/sovereign', minTier: 'pro', notes: 'Sovereign features' },
+
+  // Stripe webhooks (system routes, validated by signature)
+  { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },
+];
+
+// =============================================================================
+// HELPER FUNCTIONS
+// =============================================================================
+
+/**
+ * Find the most specific matching rule for a pathname
+ */
+export function matchRule(pathname: string): AccessRule | null {
+  // First pass: exact matches (most specific)
+  for (const rule of ACCESS_RULES) {
+    if (rule.exact && pathname === rule.exact) return rule;
+  }
+
+  // Second pass: prefix matches (ordered by specificity in array)
+  for (const rule of ACCESS_RULES) {
+    if (rule.prefix && pathname.startsWith(rule.prefix)) return rule;
+  }
+
+  // Third pass: regex matches
+  for (const rule of ACCESS_RULES) {
+    if (rule.regex && rule.regex.test(pathname)) return rule;
+  }
+
+  return null;
+}
+
+/**
+ * Tier hierarchy for comparison
+ */
+export const TIER_RANK: Record<Tier, number> = {
+  free: 0,
+  personal: 1,
+  pro: 2,
+};
+
+/**
+ * Check if user's tier meets minimum requirement
+ */
+export function tierSatisfies(userTier: Tier, minTier?: Tier): boolean {
+  if (!minTier) return true;
+  return TIER_RANK[userTier] >= TIER_RANK[minTier];
+}
+
+/**
+ * Check if user has any of the required roles
+ */
+export function hasRequiredRole(userRoles: Role[], requiredRoles?: Role[]): boolean {
+  if (!requiredRoles || requiredRoles.length === 0) return true;
+  return userRoles.some((role) => requiredRoles.includes(role));
+}
+
+/**
+ * Access control mode
+ *
+ * MODE_A (permissive): Unmapped routes pass through (safe during migration)
+ * MODE_B (strict): Unmapped routes are denied (production-ready)
+ *
+ * Set via environment variable: ACCESS_CONTROL_MODE=strict
+ */
+export type AccessMode = 'permissive' | 'strict';
+
+export function getAccessMode(): AccessMode {
+  return process.env.ACCESS_CONTROL_MODE === 'strict' ? 'strict' : 'permissive';
+}
+
+/**
+ * Track unmapped routes for discovery (dev/staging only)
+ */
+const unmappedRoutes = new Set<string>();
+
+export function getUnmappedRoutes(): string[] {
+  return Array.from(unmappedRoutes);
+}
+
+export function clearUnmappedRoutes(): void {
+  unmappedRoutes.clear();
+}
+
+/**
+ * Full access check - returns detailed result
+ */
+export function checkAccess(
+  pathname: string,
+  userTier: Tier,
+  userRoles: Role[],
+  isAuthenticated: boolean
+): { allowed: boolean; reason?: string; rule?: AccessRule; unmapped?: boolean } {
+  const rule = matchRule(pathname);
+  const mode = getAccessMode();
+
+  // No rule found - behavior depends on mode
+  if (!rule) {
+    // Track unmapped routes for discovery
+    if (process.env.NODE_ENV !== 'production') {
+      unmappedRoutes.add(pathname);
+      console.warn(`[AccessMatrix] Unmapped route: ${pathname}`);
+    }
+
+    if (mode === 'strict') {
+      // MODE B: Deny unmapped routes
+      return { allowed: false, reason: 'no-rule-match', unmapped: true };
+    } else {
+      // MODE A: Allow but flag as unmapped
+      return { allowed: true, reason: 'no-rule-match', unmapped: true };
+    }
+  }
+
+  // Public routes always allowed
+  if (rule.public) {
+    return { allowed: true, rule };
+  }
+
+  // Non-public requires auth
+  if (!isAuthenticated) {
+    return { allowed: false, reason: 'unauthenticated', rule };
+  }
+
+  // Check tier
+  if (!tierSatisfies(userTier, rule.minTier)) {
+    return { allowed: false, reason: 'insufficient-tier', rule };
+  }
+
+  // Check roles
+  if (!hasRequiredRole(userRoles, rule.rolesAnyOf)) {
+    return { allowed: false, reason: 'missing-role', rule };
+  }
+
+  return { allowed: true, rule };
+}
