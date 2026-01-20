@@ -164,6 +164,25 @@ export function SustainingTransparency() {
           className="border-t border-amber-500/20"
         >
           <div className="p-4 space-y-6">
+            {/* Why Support Matters - Relational framing */}
+            <div className="p-4 rounded-lg bg-gradient-to-r from-amber-500/5 to-orange-500/5 border border-amber-500/10">
+              <p className="text-sm text-amber-100/90 leading-relaxed mb-3">
+                <span className="font-medium text-amber-300">Memory isn&apos;t a feature. It&apos;s a relationship.</span>
+              </p>
+              <p className="text-sm text-white/60 leading-relaxed mb-3">
+                MAIA is free to explore. But remembering—holding patterns across time,
+                weaving insights, carrying continuity—takes real resources on our end.
+              </p>
+              <p className="text-sm text-white/60 leading-relaxed mb-3">
+                When you choose to support Soullab, you&apos;re not paying to continue.
+                You&apos;re helping make it possible for MAIA to <em className="text-amber-300/80">remember with you</em>.
+              </p>
+              <p className="text-xs text-white/40 italic">
+                You won&apos;t be cut off if you don&apos;t support.
+                We simply won&apos;t be able to carry memory forward in the same way.
+              </p>
+            </div>
+
             {/* Monthly Operations */}
             <div>
               <h4 className="text-sm font-medium text-amber-300/80 mb-3 flex items-center gap-2">
@@ -255,13 +274,16 @@ export function SustainingTransparency() {
               </div>
             </div>
 
-            {/* Current reality */}
+            {/* Ethos statement */}
             <div className="p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-blue-500/10
                           border border-purple-500/20 text-center">
-              <p className="text-sm text-white/70 italic">
-                "Currently sustained entirely by volunteer labor and founder resources.
+              <p className="text-sm font-medium text-amber-300 mb-2">
+                Support keeps memory alive. Exploration is always free.
+              </p>
+              <p className="text-xs text-white/50 italic">
+                Currently sustained by volunteer labor and founder resources.
                 <br />
-                <span className="text-purple-300">Contribution circles coming soon — consciousness shouldn't be paywalled.</span>"
+                <span className="text-purple-300">Contribution circles coming soon.</span>
               </p>
             </div>
           </div>

@@ -34,6 +34,9 @@ import {
   ExternalLink
 } from 'lucide-react';
 import { SustainingTransparency } from '@/components/community/SustainingTransparency';
+import PersonalThresholdInvitation from '@/components/tier/PersonalThresholdInvitation';
+import TierDebugPill from '@/components/dev/TierDebugPill';
+import type { MemberTier } from '@/lib/auth/tierAccess';
 
 /**
  * MAIA Community BBS - Sacred Territories
@@ -87,6 +90,9 @@ export default function CommunityBBSPage() {
   const router = useRouter();
   const commonsAccess = useFeatureAccess(PREMIUM_FEATURES.COMMUNITY_COMMONS);
 
+  // Tier state (from localStorage, default to free)
+  const [tier, setTier] = useState<MemberTier>('free');
+
   // State
   const [territories, setTerritories] = useState<Territory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -94,6 +100,7 @@ export default function CommunityBBSPage() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [thresholdDismissed, setThresholdDismissed] = useState(false);
 
   // Fetch territories from API
   useEffect(() => {
@@ -225,6 +232,24 @@ export default function CommunityBBSPage() {
       })
       .catch(err => console.error('Failed to fetch community stats:', err));
   }, []);
+
+  // Load tier from localStorage
+  useEffect(() => {
+    const storedUser = typeof window !== 'undefined' ? localStorage.getItem('beta_user') : null;
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        // Check for tier in user data, default to free
+        setTier((user.tier as MemberTier) || 'free');
+      } catch (e) {
+        console.error('Failed to parse user tier:', e);
+      }
+    }
+  }, []);
+
+  // Check for threshold moment (community engagement)
+  const shouldShowThreshold = tier === 'free' && (currentUser.posts >= 3 || currentUser.comments >= 5);
+  const thresholdType = 'community_engagement';
 
   // Get icon for territory
   const getTerritoryIcon = (slug: string): React.ComponentType<{ className?: string }> => {
@@ -386,6 +411,29 @@ export default function CommunityBBSPage() {
                 </div>
               </div>
             </div>
+
+            {/* Threshold Invitation — shown when meaningful engagement detected */}
+            {shouldShowThreshold && !thresholdDismissed && tier === 'free' && (
+              <PersonalThresholdInvitation
+                context={(thresholdType as 'community_engagement') || 'community_engagement'}
+                variant="card"
+                onLearnMore={() => router.push('/maia/membership')}
+                onDismiss={() => setThresholdDismissed(true)}
+              />
+            )}
+
+            {/* Dev-only tier debug pill */}
+            <TierDebugPill
+              tier={tier}
+              hasAccess={true}
+              extra={{
+                posts: currentUser.posts,
+                comments: currentUser.comments,
+                threshold: shouldShowThreshold ? thresholdType : 'none',
+              }}
+              hint={shouldShowThreshold ? 'threshold reached' : undefined}
+              scheme="dark"
+            />
 
             {/* Community Stats */}
             <div className="bg-slate-900/50 border border-amber-500/20 rounded-xl p-6">

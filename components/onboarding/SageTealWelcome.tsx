@@ -253,6 +253,19 @@ export function SageTealWelcome({ userName = 'Explorer', onComplete }: SageTealW
                 This is Soullab
               </p>
             </div>
+
+            {/* Ethos message - spoken version */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.5 }}
+              className="pt-4 text-center"
+            >
+              <p className="text-[#00695C]/60 text-xs italic leading-relaxed max-w-sm mx-auto">
+                Explore freely. When something meaningful begins to form,
+                I can hold it across time — with your support.
+              </p>
+            </motion.div>
           </motion.div>
         </div>
 
