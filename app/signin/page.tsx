@@ -909,16 +909,41 @@ function SigninContent() {
                 </p>
                 <div className="space-y-3">
                   <button
+                    type="button"
                     onClick={() => handleMigration(true)}
-                    style={{ backgroundColor: '#0d9488', color: '#ffffff' }}
-                    className="w-full py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
+                    style={{
+                      width: '100%',
+                      padding: '14px 16px',
+                      borderRadius: 14,
+                      backgroundColor: '#0d9488',
+                      color: '#ffffff',
+                      fontSize: 16,
+                      fontWeight: 700,
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      boxShadow: '0 8px 18px rgba(0,0,0,0.14)',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      WebkitTextFillColor: '#ffffff',
+                    }}
                   >
                     Yes, Link My History
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleMigration(false)}
-                    style={{ color: '#115e59' }}
-                    className="w-full py-2 text-sm font-medium"
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      borderRadius: 14,
+                      backgroundColor: '#f1f5f9',
+                      color: '#0f172a',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      border: '1px solid rgba(15,23,42,0.16)',
+                      cursor: 'pointer',
+                      opacity: 1,
+                      WebkitTextFillColor: '#0f172a',
+                    }}
                   >
                     No thanks, start fresh
                   </button>
