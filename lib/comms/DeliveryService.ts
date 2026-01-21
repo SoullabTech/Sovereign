@@ -23,43 +23,63 @@ import crypto from 'crypto';
 const CURRENT_KEY_VERSION = 1;
 
 interface EncryptedCredentials {
-  v: number;  // Key version for future rotation
+  v?: number;  // Key version (optional for legacy payloads)
   iv: string;
   encrypted: string;
   authTag: string;
 }
 
+function requireEnv(name: string): string {
+  const v = process.env[name];
+  if (!v) throw new Error(`${name} is required.`);
+  return v;
+}
+
 /**
- * Get derived encryption key (fail-fast if env vars missing)
+ * Return the correct base key for a given version.
+ * - v1: prefers COMMS_ENCRYPTION_KEY_V1 if present, else COMMS_ENCRYPTION_KEY
+ * - v2+: expects COMMS_ENCRYPTION_KEY_V2, etc.
  */
-function getDerivedKey(): Buffer {
-  const ENCRYPTION_KEY = process.env.COMMS_ENCRYPTION_KEY;
-  const ENCRYPTION_SALT = process.env.COMMS_ENCRYPTION_SALT;
-
-  if (!ENCRYPTION_KEY) {
-    throw new Error(
-      'COMMS_ENCRYPTION_KEY is required. Generate with: openssl rand -hex 32'
-    );
-  }
-  if (!ENCRYPTION_SALT) {
-    throw new Error(
-      'COMMS_ENCRYPTION_SALT is required. Generate with: openssl rand -hex 16'
-    );
+function getBaseKeyForVersion(version: number): string {
+  if (version === 1) {
+    return process.env.COMMS_ENCRYPTION_KEY_V1 ?? requireEnv('COMMS_ENCRYPTION_KEY');
   }
 
-  return crypto.scryptSync(ENCRYPTION_KEY, ENCRYPTION_SALT, 32);
+  const versioned = process.env[`COMMS_ENCRYPTION_KEY_V${version}`];
+  if (!versioned) {
+    throw new Error(
+      `COMMS_ENCRYPTION_KEY_V${version} is required to decrypt v${version} credentials.`
+    );
+  }
+  return versioned;
+}
+
+/**
+ * Derive encryption key for a given version (fail-fast).
+ * NOTE: We keep SALT global (COMMS_ENCRYPTION_SALT). If you ever want per-version
+ * salts, introduce COMMS_ENCRYPTION_SALT_V{n} similarly.
+ */
+function getDerivedKey(version: number): Buffer {
+  const salt = requireEnv('COMMS_ENCRYPTION_SALT');
+  const baseKey = getBaseKeyForVersion(version);
+
+  // 32 bytes = AES-256 key
+  return crypto.scryptSync(baseKey, salt, 32);
 }
 
 /**
  * Encrypt credentials for storage
- * Returns object (not string) for clean JSONB storage
+ * - Always encrypt with CURRENT_KEY_VERSION
+ * - Store as a clean JSON object for JSONB
  */
 function encryptCredentials(credentials: Record<string, string>): EncryptedCredentials {
-  const key = getDerivedKey();
+  const key = getDerivedKey(CURRENT_KEY_VERSION);
   const iv = crypto.randomBytes(16);
-  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
 
-  let encrypted = cipher.update(JSON.stringify(credentials), 'utf8', 'hex');
+  const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+  const json = JSON.stringify(credentials);
+
+  let encrypted = cipher.update(json, 'utf8', 'hex');
   encrypted += cipher.final('hex');
 
   const authTag = cipher.getAuthTag();
@@ -74,34 +94,26 @@ function encryptCredentials(credentials: Record<string, string>): EncryptedCrede
 
 /**
  * Decrypt credentials from storage
- * Handles both object and string input (legacy support)
- * Version-aware for future key rotation
+ * - Accepts legacy payloads without v (treated as v1)
+ * - Accepts both object + string inputs
+ * - Chooses the key based on payload v (NOT current)
  */
 function decryptCredentials(encryptedData: EncryptedCredentials | string): Record<string, string> {
   const data: EncryptedCredentials =
     typeof encryptedData === 'string' ? JSON.parse(encryptedData) : encryptedData;
 
-  // Version check - currently only v1 supported
-  // When rotating keys: add COMMS_ENCRYPTION_KEY_V2 env var and switch on data.v
-  const version = data.v ?? 1; // Treat unversioned as v1
-  if (version !== CURRENT_KEY_VERSION) {
-    throw new Error(`Unsupported credential encryption version: ${version}`);
-  }
+  const version = data.v ?? 1;
 
   const { iv, encrypted, authTag } = data;
-  const key = getDerivedKey();
+  const key = getDerivedKey(version);
 
-  const decipher = crypto.createDecipheriv(
-    'aes-256-gcm',
-    key,
-    Buffer.from(iv, 'hex')
-  );
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(iv, 'hex'));
   decipher.setAuthTag(Buffer.from(authTag, 'hex'));
 
   let decrypted = decipher.update(encrypted, 'hex', 'utf8');
   decrypted += decipher.final('utf8');
 
-  return JSON.parse(decrypted);
+  return JSON.parse(decrypted) as Record<string, string>;
 }
 
 export interface QueuedMessage {
