@@ -210,6 +210,17 @@ When we introduced encrypted identity columns (e.g., `name_enc`, `name_enc_meta`
    - If decryption fails, we **fall back to plaintext only when present** (Stage A compatibility)
    - We **do not throw** for decryption mismatch during Stage A (avoids breaking production reads while backfill is incomplete)
 
+### Pattern diagram
+
+```mermaid
+flowchart TD
+  A["1) DB Query<br/>SELECT ... JOIN client<br/><br/>- Select encrypted identity only (name_enc, preferred_name_enc, *_enc_meta)<br/>- Use shared fragment (CLIENT_NAME_JOIN_COLUMNS)<br/>- Avoid pulling plaintext identity 'for convenience'"] --> B
+
+  B["2) Normalization<br/>decryptJoinedClientFields(row, practitionerId)<br/><br/>- Run post-query (after DB returns rows)<br/>- Decrypt only if authorized<br/>- Normalize safe fields + strip raw *_enc blobs"] --> C
+
+  C["3) Safe Output<br/>UI / API payload<br/><br/>- Return decrypted.client_name || row.client_name (Stage A)<br/>- If decrypt fails in Stage A: don't crash; log + fallback only if plaintext exists<br/>- Never expose *_enc columns in payloads/logs/exports"]
+```
+
 ### Files updated (read surfaces protected)
 
 **Client join decryption helper**
