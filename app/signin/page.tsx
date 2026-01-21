@@ -907,16 +907,18 @@ function SigninContent() {
                 <p className="text-sm text-teal-800/70 text-center mb-4">
                   Found <strong>{migrationPreview.totalRecords}</strong> records from previous sessions.
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <button
                     onClick={() => handleMigration(true)}
-                    className="w-full py-2 rounded-xl bg-teal-600 text-white font-medium"
+                    style={{ backgroundColor: '#0d9488', color: '#ffffff' }}
+                    className="w-full py-3 rounded-xl font-medium shadow-md hover:shadow-lg transition-shadow"
                   >
                     Yes, Link My History
                   </button>
                   <button
                     onClick={() => handleMigration(false)}
-                    className="w-full text-sm text-teal-700/70"
+                    style={{ color: '#115e59' }}
+                    className="w-full py-2 text-sm font-medium"
                   >
                     No thanks, start fresh
                   </button>
