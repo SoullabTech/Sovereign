@@ -350,6 +350,54 @@ export function hashForSearch(value: string, context: PHIContext): string {
 }
 
 // ============================================================================
+// DATA LAYER SANITIZATION
+// ============================================================================
+
+/**
+ * SECURITY: Strip all encrypted columns before data leaves the data layer
+ *
+ * Call this on every row/object before returning from data access functions.
+ * Removes *_enc and *_enc_meta columns to prevent encrypted blobs from
+ * leaking to UI/API/logs/exports.
+ *
+ * Works recursively on nested objects and arrays.
+ *
+ * @param data - Row object, array of rows, or nested structure
+ * @returns Sanitized copy with encrypted columns removed
+ */
+export function stripEncryptedColumns<T>(data: T): T {
+  if (data === null || data === undefined) {
+    return data;
+  }
+
+  if (Array.isArray(data)) {
+    return data.map((item) => stripEncryptedColumns(item)) as T;
+  }
+
+  if (typeof data !== 'object') {
+    return data;
+  }
+
+  const result: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
+    // Skip encrypted columns
+    if (key.endsWith('_enc') || key.endsWith('_enc_meta')) {
+      continue;
+    }
+
+    // Recursively process nested objects/arrays
+    if (value !== null && typeof value === 'object') {
+      result[key] = stripEncryptedColumns(value);
+    } else {
+      result[key] = value;
+    }
+  }
+
+  return result as T;
+}
+
+// ============================================================================
 // KEY ROTATION HELPERS
 // ============================================================================
 
@@ -402,6 +450,7 @@ export const PHIEncryption = {
   deserialize,
   isEncrypted,
   hashForSearch,
+  stripEncryptedColumns,
   needsReencryption,
   reencrypt,
   clearKeyCache,

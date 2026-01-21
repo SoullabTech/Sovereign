@@ -74,15 +74,21 @@ jest.mock('@/lib/db/postgres', () => ({
 }));
 
 // Mock encryption functions to avoid key requirements in tests
-jest.mock('@/lib/security/phiEncryption', () => ({
-  encryptForDB: jest.fn().mockReturnValue({
-    ciphertext: 'encrypted-data',
-    meta: { kid: 'test', iv: 'test-iv' },
-  }),
-  decryptFromDB: jest.fn().mockImplementation(
-    (ciphertext: string, meta: any, context: any) => 'decrypted-value'
-  ),
-}));
+// Note: stripEncryptedColumns is imported directly from the real module in some files
+jest.mock('@/lib/security/phiEncryption', () => {
+  // Use the real stripEncryptedColumns implementation
+  const actual = jest.requireActual('@/lib/security/phiEncryption');
+  return {
+    encryptForDB: jest.fn().mockReturnValue({
+      ciphertext: 'encrypted-data',
+      meta: { kid: 'test', iv: 'test-iv' },
+    }),
+    decryptFromDB: jest.fn().mockImplementation(
+      (ciphertext: string, meta: any, context: any) => 'decrypted-value'
+    ),
+    stripEncryptedColumns: actual.stripEncryptedColumns,
+  };
+});
 
 // ============================================================================
 // Test data
@@ -253,6 +259,108 @@ describe('PHI Leak Prevention', () => {
     });
   });
 
+  describe('Message data layer', () => {
+    it('getMessage should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_MESSAGE_ROW_WITH_ENC] });
+
+      const { getMessage } = await import('@/lib/practitioner/messages');
+      const result = await getMessage('practitioner-456', 'message-123');
+
+      assertNoEncryptedColumns(result, 'getMessage');
+
+      // Verify we still get the body
+      expect(result).toHaveProperty('body');
+    });
+
+    it('getClientThread should never return *_enc columns', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [MOCK_CLIENT_ROW_WITH_ENC] }) // client query
+        .mockResolvedValueOnce({ rows: [MOCK_MESSAGE_ROW_WITH_ENC] }) // messages query
+        .mockResolvedValueOnce({ rows: [{ id: 'policy-1' }] }) // policy query
+        .mockResolvedValueOnce({ rows: [{ count: '0' }] }); // unread count query
+
+      const { getClientThread } = await import('@/lib/practitioner/messages');
+      const result = await getClientThread('practitioner-456', 'client-123');
+
+      assertNoEncryptedColumns(result, 'getClientThread');
+
+      // Verify structure is preserved
+      expect(result).toHaveProperty('client');
+      expect(result).toHaveProperty('messages');
+    });
+
+    it('getUnreviewedSafetyConcerns should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_MESSAGE_ROW_WITH_ENC] });
+
+      const { getUnreviewedSafetyConcerns } = await import('@/lib/practitioner/messages');
+      const result = await getUnreviewedSafetyConcerns('practitioner-456');
+
+      assertNoEncryptedColumns(result, 'getUnreviewedSafetyConcerns');
+
+      // Should be an array
+      expect(Array.isArray(result)).toBe(true);
+    });
+  });
+
+  describe('stripEncryptedColumns helper', () => {
+    it('should remove all *_enc and *_enc_meta keys', () => {
+      // Import the real function
+      const { stripEncryptedColumns } = require('@/lib/security/phiEncryption');
+
+      const input = {
+        id: '123',
+        name: 'Test',
+        name_enc: 'encrypted-blob',
+        name_enc_meta: { kid: 'k1' },
+        preferred_name_enc: 'blob',
+        preferred_name_enc_meta: { kid: 'k1' },
+        body_enc: 'encrypted-body',
+        body_enc_meta: { kid: 'k1' },
+      };
+
+      const result = stripEncryptedColumns(input);
+
+      expect(result).toEqual({
+        id: '123',
+        name: 'Test',
+      });
+      assertNoEncryptedColumns(result, 'stripEncryptedColumns');
+    });
+
+    it('should work recursively on nested objects', () => {
+      const { stripEncryptedColumns } = require('@/lib/security/phiEncryption');
+
+      const input = {
+        client: {
+          name: 'Test',
+          name_enc: 'blob',
+          name_enc_meta: { kid: 'k1' },
+        },
+      };
+
+      const result = stripEncryptedColumns(input);
+
+      expect(result.client.name).toBe('Test');
+      assertNoEncryptedColumns(result, 'stripEncryptedColumns nested');
+    });
+
+    it('should work on arrays', () => {
+      const { stripEncryptedColumns } = require('@/lib/security/phiEncryption');
+
+      const input = [
+        { id: '1', name_enc: 'blob' },
+        { id: '2', body_enc: 'blob' },
+      ];
+
+      const result = stripEncryptedColumns(input);
+
+      expect(result).toHaveLength(2);
+      expect(result[0]).toEqual({ id: '1' });
+      expect(result[1]).toEqual({ id: '2' });
+      assertNoEncryptedColumns(result, 'stripEncryptedColumns array');
+    });
+  });
+
   describe('Invariant: encrypted columns are internal only', () => {
     it('TRIPWIRE: any new data layer function must not expose *_enc columns', () => {
       // This is a documentation test - it always passes but serves as a reminder
@@ -263,6 +371,11 @@ describe('PHI Leak Prevention', () => {
         'getSessions',
         'getUpcomingSessions',
         'decryptJoinedClientFields',
+        // Added in PHI hardening pass
+        'getMessage',
+        'getClientThread',
+        'getUnreviewedSafetyConcerns',
+        'stripEncryptedColumns',
       ];
 
       // If you're adding a new function that handles client data,

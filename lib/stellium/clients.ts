@@ -99,7 +99,7 @@ function decryptClientName(
  * Process a client row to decrypt name fields
  * SECURITY: Strips encrypted columns from output to prevent PHI leakage
  */
-function decryptClientRow(row: any, practitionerId: string): PractitionerClient {
+export function decryptClientRow(row: any, practitionerId: string): PractitionerClient {
   if (!row) return row;
 
   // Decrypt name if encrypted version exists

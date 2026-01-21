@@ -20,7 +20,8 @@ import {
   verifyEncryptedBody,
   isPHIEncryptionEnabled,
 } from '@/lib/security/phiAccessors/clientMessages';
-import { decryptJoinedClientFields } from '@/lib/stellium/clients';
+import { stripEncryptedColumns } from '@/lib/security/phiEncryption';
+import { decryptJoinedClientFields, decryptClientRow } from '@/lib/stellium/clients';
 
 // SQL fragment for selecting encrypted client name columns in JOINs
 const CLIENT_NAME_JOIN_COLUMNS = `
@@ -509,6 +510,7 @@ export async function getInbox(
 
 /**
  * Get all messages for a specific client (thread view)
+ * SECURITY: Decrypts client names and strips *_enc columns before returning
  */
 export async function getClientThread(
   practitionerId: string,
@@ -531,12 +533,14 @@ export async function getClientThread(
     return null;
   }
 
-  const client = clientResult.rows[0] as PractitionerClient;
+  // SECURITY: Decrypt client row and strip encrypted columns
+  const client = decryptClientRow(clientResult.rows[0], practitionerId);
 
-  // Get messages with safety log data
+  // Get messages with safety log data (explicit columns to avoid body_enc leak)
   const messagesResult = await query(
     `SELECT
-      m.*,
+      m.id, m.client_id, m.practitioner_id, m.direction, m.message_type,
+      m.urgency, m.body, m.status, m.safety_reviewed, m.read_at, m.created_at, m.updated_at,
       scl.id as safety_log_id,
       scl.acknowledged_at as safety_log_acknowledged_at,
       scl.review_note as safety_log_review_note
@@ -548,13 +552,16 @@ export async function getClientThread(
     [clientId, practitionerId, limit, offset]
   );
 
+  // SECURITY: Strip any remaining encrypted columns from messages
+  const messages = stripEncryptedColumns(messagesResult.rows) as ClientMessageWithSafety[];
+
   // Get effective policy
   const policy = await getEffectivePolicy(practitionerId, clientId);
   if (!policy) {
     // Create default if none exists
     const defaultPolicy = await upsertDefaultPolicy(practitionerId, {});
     return {
-      messages: messagesResult.rows as ClientMessageWithSafety[],
+      messages,
       client,
       policy: defaultPolicy,
       unread_count: 0,
@@ -571,7 +578,7 @@ export async function getClientThread(
   );
 
   return {
-    messages: messagesResult.rows as ClientMessageWithSafety[],
+    messages,
     client,
     policy,
     unread_count: parseInt(unreadResult.rows[0]?.count || '0', 10),
@@ -580,13 +587,16 @@ export async function getClientThread(
 
 /**
  * Get a single message by ID
+ * SECURITY: Decrypts client names and strips *_enc columns before returning
  */
 export async function getMessage(
   practitionerId: string,
   messageId: string
 ): Promise<ClientMessage | null> {
   const result = await query(
-    `SELECT m.*, ${CLIENT_NAME_JOIN_COLUMNS}
+    `SELECT m.id, m.client_id, m.practitioner_id, m.direction, m.message_type,
+            m.urgency, m.body, m.status, m.safety_reviewed, m.read_at, m.created_at, m.updated_at,
+            ${CLIENT_NAME_JOIN_COLUMNS}
      FROM client_messages m
      JOIN practitioner_clients c ON m.client_id = c.id
      WHERE m.id = $1 AND m.practitioner_id = $2`,
@@ -595,14 +605,14 @@ export async function getMessage(
 
   if (!result.rows[0]) return null;
 
-  // Decrypt client name fields
+  // Decrypt client name fields and strip encrypted columns
   const row = result.rows[0];
   const decrypted = decryptJoinedClientFields(row, practitionerId);
-  return {
+  return stripEncryptedColumns({
     ...row,
     client_name: decrypted.client_name || row.client_name,
     client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
-  } as ClientMessage;
+  }) as ClientMessage;
 }
 
 /**
@@ -960,12 +970,15 @@ export async function getMessageDigest(
 
 /**
  * Get unreviewed safety concerns
+ * SECURITY: Decrypts client names and strips *_enc columns before returning
  */
 export async function getUnreviewedSafetyConcerns(
   practitionerId: string
 ): Promise<ClientMessage[]> {
   const result = await query(
-    `SELECT m.*, c.name as client_name, c.preferred_name as client_preferred_name
+    `SELECT m.id, m.client_id, m.practitioner_id, m.direction, m.message_type,
+            m.urgency, m.body, m.status, m.safety_reviewed, m.read_at, m.created_at, m.updated_at,
+            ${CLIENT_NAME_JOIN_COLUMNS}
      FROM client_messages m
      JOIN practitioner_clients c ON m.client_id = c.id
      WHERE m.practitioner_id = $1
@@ -974,7 +987,16 @@ export async function getUnreviewedSafetyConcerns(
      ORDER BY m.created_at ASC`,
     [practitionerId]
   );
-  return result.rows as ClientMessage[];
+
+  // Decrypt client names and strip encrypted columns
+  return result.rows.map((row) => {
+    const decrypted = decryptJoinedClientFields(row, practitionerId);
+    return stripEncryptedColumns({
+      ...row,
+      client_name: decrypted.client_name || row.client_name,
+      client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+    }) as ClientMessage;
+  });
 }
 
 /**
