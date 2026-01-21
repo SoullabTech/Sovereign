@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -9,14 +9,46 @@ interface User {
   agentId: string;
   agentName: string;
   createdAt: string;
+  // Legacy fields for compatibility
+  email?: string;
+  sacredName?: string;
+  lastLogin?: string;
+}
+
+/** @deprecated Legacy type - will be removed */
+interface OracleAgent {
+  id: string;
+  name: string;
+  archetype: string;
+  personality_config: any;
+  conversations_count: number;
+  wisdom_level: number;
+  last_conversation_at?: string;
+  created_at: string;
 }
 
 interface AuthContextType {
+  // Core fields
   user: User | null;
   loading: boolean;
   signIn: (username: string, password: string) => Promise<void>;
   signUp: (username: string, password: string) => Promise<void>;
   signOut: () => void;
+  // Legacy compatibility fields (deprecated)
+  /** @deprecated Use `loading` instead */
+  isLoading: boolean;
+  /** @deprecated Computed from user */
+  isAuthenticated: boolean;
+  /** @deprecated No longer used */
+  session: any;
+  /** @deprecated No longer used */
+  oracleAgent: OracleAgent | null;
+  /** @deprecated No longer tracked here */
+  error: string | null;
+  /** @deprecated No-op for compatibility */
+  refreshSession: () => Promise<void>;
+  /** @deprecated No-op for compatibility */
+  updateProfile: (data: any) => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -127,8 +159,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/');
   };
 
+  // Legacy compatibility - deprecated fields
+  const isAuthenticated = useMemo(() => !!user, [user]);
+  const refreshSession = useCallback(async () => {}, []);
+  const updateProfile = useCallback(async () => ({ error: null }), []);
+
+  const contextValue: AuthContextType = {
+    // Core
+    user,
+    loading,
+    signIn,
+    signUp,
+    signOut,
+    // Legacy compatibility (deprecated)
+    isLoading: loading,
+    isAuthenticated,
+    session: null,
+    oracleAgent: null,
+    error: null,
+    refreshSession,
+    updateProfile,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

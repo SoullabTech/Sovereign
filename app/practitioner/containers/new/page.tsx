@@ -118,31 +118,31 @@ function NewContainerContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+      <div className="min-h-screen bg-[#0a0f1a]">
         <div className="max-w-2xl mx-auto px-6 py-8">
-          <div className="text-stone-500">Loading...</div>
+          <div className="text-gray-500">Loading...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+    <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-2xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.push('/practitioner/containers')}
-            className="text-sm text-stone-500 hover:text-stone-700 mb-2"
+            className="text-sm text-gray-500 hover:text-gray-300 mb-2"
           >
             ← Containers
           </button>
-          <h1 className="text-2xl font-light text-stone-800">New Container</h1>
-          <p className="text-sm text-stone-500">Create a relational commitment.</p>
+          <h1 className="text-2xl font-medium text-white">New Container</h1>
+          <p className="text-sm text-gray-500">Create a relational commitment.</p>
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="mb-6 p-4 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400">
             {error}
           </div>
         )}
@@ -150,7 +150,7 @@ function NewContainerContent() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Container Type */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Type
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
@@ -161,14 +161,14 @@ function NewContainerContent() {
                   onClick={() => setType(opt.value)}
                   className={`p-3 rounded-lg border text-left transition-colors ${
                     type === opt.value
-                      ? 'border-stone-800 bg-stone-800 text-white'
-                      : 'border-stone-200 bg-white hover:bg-stone-50'
+                      ? 'border-amber-500/50 bg-amber-500/10'
+                      : 'border-gray-700 bg-gray-800 hover:bg-gray-700'
                   }`}
                 >
-                  <div className={`font-medium ${type === opt.value ? 'text-white' : 'text-stone-800'}`}>
+                  <div className={`font-medium ${type === opt.value ? 'text-amber-400' : 'text-white'}`}>
                     {opt.label}
                   </div>
-                  <div className={`text-xs ${type === opt.value ? 'text-stone-300' : 'text-stone-500'}`}>
+                  <div className={`text-xs ${type === opt.value ? 'text-amber-400/70' : 'text-gray-500'}`}>
                     {opt.description}
                   </div>
                 </button>
@@ -178,8 +178,8 @@ function NewContainerContent() {
 
           {/* Scope */}
           <div>
-            <label htmlFor="scope" className="block text-sm font-medium text-stone-700 mb-2">
-              Scope <span className="text-stone-400">(optional)</span>
+            <label htmlFor="scope" className="block text-sm font-medium text-gray-300 mb-2">
+              Scope <span className="text-gray-500">(optional)</span>
             </label>
             <input
               id="scope"
@@ -187,17 +187,17 @@ function NewContainerContent() {
               value={scope}
               onChange={e => setScope(e.target.value)}
               placeholder="e.g., Career Transition, Grief Processing..."
-              className="w-full px-4 py-3 rounded-lg border border-stone-200 bg-white
-                       focus:outline-none focus:ring-2 focus:ring-stone-300"
+              className="w-full px-4 py-3 rounded-lg border border-gray-700 bg-gray-900
+                       text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
             />
-            <p className="mt-1 text-xs text-stone-500">
+            <p className="mt-1 text-xs text-gray-500">
               A brief description of the work focus
             </p>
           </div>
 
           {/* Visibility */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
+            <label className="block text-sm font-medium text-gray-300 mb-2">
               Visibility
             </label>
             <div className="flex gap-3">
@@ -208,12 +208,16 @@ function NewContainerContent() {
                   onClick={() => setVisibility(opt.value)}
                   className={`flex-1 p-3 rounded-lg border text-left transition-colors ${
                     visibility === opt.value
-                      ? 'border-stone-800 bg-stone-50'
-                      : 'border-stone-200 bg-white hover:bg-stone-50'
+                      ? 'border-amber-500/50 bg-amber-500/10'
+                      : 'border-gray-700 bg-gray-800 hover:bg-gray-700'
                   }`}
                 >
-                  <div className="font-medium text-stone-800">{opt.label}</div>
-                  <div className="text-xs text-stone-500">{opt.description}</div>
+                  <div className={`font-medium ${visibility === opt.value ? 'text-amber-400' : 'text-white'}`}>
+                    {opt.label}
+                  </div>
+                  <div className={`text-xs ${visibility === opt.value ? 'text-amber-400/70' : 'text-gray-500'}`}>
+                    {opt.description}
+                  </div>
                 </button>
               ))}
             </div>
@@ -221,16 +225,16 @@ function NewContainerContent() {
 
           {/* Participants */}
           <div>
-            <label className="block text-sm font-medium text-stone-700 mb-2">
-              Participants <span className="text-stone-400">(optional)</span>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Participants <span className="text-gray-500">(optional)</span>
             </label>
             {people.length === 0 ? (
-              <div className="p-4 bg-stone-50 rounded-lg text-stone-500 text-sm">
+              <div className="p-4 bg-gray-800/50 rounded-lg text-gray-500 text-sm">
                 No people in your practice yet.
                 <button
                   type="button"
                   onClick={() => router.push('/practitioner/people/new')}
-                  className="ml-2 text-stone-700 underline"
+                  className="ml-2 text-amber-400 hover:underline"
                 >
                   Add someone?
                 </button>
@@ -244,25 +248,27 @@ function NewContainerContent() {
                     onClick={() => togglePerson(person.id)}
                     className={`w-full p-3 rounded-lg border text-left transition-colors flex items-center gap-3 ${
                       selectedPeople.includes(person.id)
-                        ? 'border-stone-800 bg-stone-50'
-                        : 'border-stone-200 bg-white hover:bg-stone-50'
+                        ? 'border-amber-500/50 bg-amber-500/10'
+                        : 'border-gray-700 bg-gray-800 hover:bg-gray-700'
                     }`}
                   >
                     <div className={`w-5 h-5 rounded border flex items-center justify-center ${
                       selectedPeople.includes(person.id)
-                        ? 'border-stone-800 bg-stone-800'
-                        : 'border-stone-300'
+                        ? 'border-amber-500 bg-amber-500'
+                        : 'border-gray-600'
                     }`}>
                       {selectedPeople.includes(person.id) && (
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                     </div>
                     <div>
-                      <div className="font-medium text-stone-800">{person.displayName}</div>
+                      <div className={`font-medium ${selectedPeople.includes(person.id) ? 'text-amber-400' : 'text-white'}`}>
+                        {person.displayName}
+                      </div>
                       {person.email && (
-                        <div className="text-xs text-stone-500">{person.email}</div>
+                        <div className="text-xs text-gray-500">{person.email}</div>
                       )}
                     </div>
                   </button>
@@ -276,16 +282,16 @@ function NewContainerContent() {
             <button
               type="button"
               onClick={() => router.push('/practitioner/containers')}
-              className="flex-1 px-4 py-3 rounded-lg border border-stone-200 bg-white
-                       text-stone-700 hover:bg-stone-50 transition-colors"
+              className="flex-1 px-4 py-3 rounded-lg border border-gray-700 bg-gray-800
+                       text-gray-300 hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={submitting}
-              className="flex-1 px-4 py-3 rounded-lg bg-stone-800 text-white
-                       hover:bg-stone-700 disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-3 rounded-lg bg-amber-500 text-black font-medium
+                       hover:bg-amber-400 disabled:opacity-50 transition-colors"
             >
               {submitting ? 'Creating...' : 'Create container'}
             </button>
@@ -299,9 +305,9 @@ function NewContainerContent() {
 export default function NewContainerPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+      <div className="min-h-screen bg-[#0a0f1a]">
         <div className="max-w-2xl mx-auto px-6 py-8">
-          <div className="text-stone-500">Loading...</div>
+          <div className="text-gray-500">Loading...</div>
         </div>
       </div>
     }>

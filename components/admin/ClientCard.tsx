@@ -111,7 +111,7 @@ export function ClientCard({ client, onClick, delay = 0 }: ClientCardProps) {
               color: colors.gold,
             }}
           >
-            {client.preferred_name?.[0] || client.name[0]}
+            {(client.preferred_name || client.name || 'C')[0]}
           </div>
 
           {/* Info */}

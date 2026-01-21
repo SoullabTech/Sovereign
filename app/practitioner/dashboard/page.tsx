@@ -88,12 +88,12 @@ function formatDate(date: Date, timezone: string): string {
 function DashboardSkeleton() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 animate-pulse">
-      <div className="h-8 bg-stone-200 rounded w-48 mb-2" />
-      <div className="h-4 bg-stone-100 rounded w-32 mb-8" />
-      <div className="h-32 bg-stone-100 rounded mb-8" />
+      <div className="h-8 bg-gray-700 rounded w-48 mb-2" />
+      <div className="h-4 bg-gray-800 rounded w-32 mb-8" />
+      <div className="h-32 bg-gray-800 rounded mb-8" />
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <div className="h-64 bg-stone-100 rounded" />
-        <div className="h-64 bg-stone-100 rounded" />
+        <div className="h-64 bg-gray-800 rounded" />
+        <div className="h-64 bg-gray-800 rounded" />
       </div>
     </div>
   );
@@ -187,9 +187,11 @@ export default function StewardshipDashboard() {
 
   if (error || !data || !practice) {
     return (
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-700">{error || 'Failed to load dashboard'}</p>
+      <div className="min-h-screen bg-[#0a0f1a]">
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-lg p-4">
+            <p className="text-red-400">{error || 'Failed to load dashboard'}</p>
+          </div>
         </div>
       </div>
     );
@@ -226,28 +228,28 @@ export default function StewardshipDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+    <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-4xl mx-auto px-6 py-8">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-xl font-light text-stone-800">{practice.name}</h1>
-            <p className="text-sm text-stone-500">
+            <h1 className="text-xl font-medium text-white">{practice.name}</h1>
+            <p className="text-sm text-gray-500">
               {formatDate(new Date(), practice.timezone)}
             </p>
           </div>
           <div className="flex gap-2">
             <button
               onClick={() => router.push('/practitioner/sessions/new')}
-              className="px-3 py-2 text-sm bg-white border border-stone-200 rounded-md
-                       hover:bg-stone-50 transition-colors flex items-center gap-2"
+              className="px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg
+                       hover:bg-gray-700 text-gray-300 hover:text-white transition-colors flex items-center gap-2"
             >
               <span>+ Session</span>
             </button>
             <button
               onClick={() => router.push('/practitioner/tasks/new')}
-              className="px-3 py-2 text-sm bg-white border border-stone-200 rounded-md
-                       hover:bg-stone-50 transition-colors flex items-center gap-2"
+              className="px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-lg
+                       hover:bg-gray-700 text-gray-300 hover:text-white transition-colors flex items-center gap-2"
             >
               <span>+ Task</span>
             </button>

@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { CaseList } from '@/components/caseload/CaseList';
-import { SacredCard } from '@/components/ui/SacredCard';
 import type { CaseWithStats, CaseListFilters, Element, CaseStatus, CreateCaseInput } from '@/lib/caseload/types';
 
 export default function CaseloadPage() {
@@ -91,29 +90,31 @@ export default function CaseloadPage() {
   // If practitioner mode not enabled
   if (error === 'practitioner_required') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-sacred-navy to-sacred-blue p-6">
-        <div className="max-w-2xl mx-auto pt-12">
-          <SacredCard variant="consciousness" size="lg">
+      <div className="min-h-screen bg-[#0a0f1a] p-6">
+        <div className="max-w-2xl mx-auto pt-16">
+          <div className="bg-[#111827] border border-amber-500/20 rounded-xl p-8 shadow-lg">
             <div className="text-center space-y-6">
-              <div className="text-5xl">🔮</div>
-              <h1 className="text-2xl font-light text-gold-divine">
+              {/* Soullab Logo/Icon */}
+              <div className="w-16 h-16 mx-auto rounded-full bg-gradient-to-br from-amber-500/20 to-amber-600/10 border border-amber-500/30 flex items-center justify-center">
+                <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <h1 className="text-2xl font-semibold text-white">
                 Practitioner Caseload
               </h1>
-              <p className="text-neutral-silver/80 leading-relaxed">
-                This feature allows therapists and practitioners to manage client cases
-                with MAIA as a clinical consultation partner.
-              </p>
-              <p className="text-neutral-silver/60 text-sm">
-                Create your first case to enable practitioner mode.
+              <p className="text-gray-400 leading-relaxed max-w-md mx-auto">
+                Manage your clinical cases with MAIA as an AI consultation partner.
+                Track progress, document sessions, and gain insights.
               </p>
               <button
                 onClick={() => setShowNewCaseForm(true)}
-                className="px-6 py-3 bg-gold-divine/20 hover:bg-gold-divine/30 border border-gold-divine/50 rounded-lg text-gold-divine transition-all"
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-black font-medium rounded-lg transition-colors"
               >
                 Create Your First Case
               </button>
             </div>
-          </SacredCard>
+          </div>
           {showNewCaseForm && (
             <NewCaseForm
               onClose={() => setShowNewCaseForm(false)}
@@ -129,22 +130,22 @@ export default function CaseloadPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-sacred-navy to-sacred-blue">
+    <div className="min-h-screen bg-[#0a0f1a]">
       {/* Header */}
-      <div className="border-b border-gold-divine/20 bg-sacred-navy/80 backdrop-blur-xl sticky top-0 z-10">
+      <div className="border-b border-gray-800 bg-[#0a0f1a]/95 backdrop-blur-xl sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-light text-gold-divine">
-                My Caseload
+              <h1 className="text-2xl font-semibold text-white">
+                Caseload
               </h1>
-              <p className="text-sm text-neutral-silver/60">
-                Manage cases with MAIA as your consultation partner
+              <p className="text-sm text-gray-500">
+                Clinical case management with AI consultation
               </p>
             </div>
             <button
               onClick={() => setShowNewCaseForm(true)}
-              className="px-4 py-2 bg-gold-divine/20 hover:bg-gold-divine/30 border border-gold-divine/40 hover:border-gold-divine/60 rounded-lg text-gold-divine transition-all flex items-center gap-2"
+              className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-medium rounded-lg transition-colors flex items-center gap-2"
             >
               <span>+</span>
               <span>New Case</span>
@@ -156,17 +157,17 @@ export default function CaseloadPage() {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
         {error && error !== 'practitioner_required' ? (
-          <SacredCard variant="outlined" className="border-red-500/30">
-            <div className="text-center py-8">
+          <div className="bg-red-900/20 border border-red-500/30 rounded-xl p-8">
+            <div className="text-center py-4">
               <p className="text-red-400">{error}</p>
               <button
                 onClick={() => fetchCases()}
-                className="mt-4 px-4 py-2 bg-sacred-navy/60 hover:bg-sacred-navy/80 border border-gold-divine/20 rounded-lg text-neutral-silver text-sm"
+                className="mt-4 px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-300 text-sm transition-colors"
               >
                 Try Again
               </button>
             </div>
-          </SacredCard>
+          </div>
         ) : (
           <CaseList
             cases={cases}
@@ -283,16 +284,16 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
-        <SacredCard variant="consciousness" size="lg">
+        <div className="bg-[#111827] border border-gray-700 rounded-xl p-6 shadow-2xl">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-medium text-gold-divine">New Case</h2>
+              <h2 className="text-xl font-semibold text-white">New Case</h2>
               <button
                 type="button"
                 onClick={onClose}
-                className="text-neutral-silver/60 hover:text-neutral-silver text-2xl"
+                className="text-gray-500 hover:text-gray-300 text-2xl leading-none"
               >
                 ×
               </button>
@@ -306,7 +307,7 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
 
             {/* Client identifier */}
             <div>
-              <label className="block text-sm font-medium text-neutral-silver mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Client Identifier *
               </label>
               <input
@@ -314,17 +315,17 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
                 value={formData.client_identifier}
                 onChange={(e) => setFormData({ ...formData, client_identifier: e.target.value })}
                 placeholder="e.g., JD-001, Client A, or initials"
-                className="w-full px-4 py-2 bg-sacred-navy/60 border border-gold-divine/20 focus:border-gold-divine/50 rounded-lg text-neutral-silver placeholder-neutral-silver/50 outline-none transition-colors"
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 focus:border-amber-500/50 rounded-lg text-white placeholder-gray-500 outline-none transition-colors"
                 required
               />
-              <p className="mt-1 text-xs text-neutral-silver/50">
+              <p className="mt-1 text-xs text-gray-500">
                 Use a pseudonym or code to protect client privacy
               </p>
             </div>
 
             {/* Presenting concerns */}
             <div>
-              <label className="block text-sm font-medium text-neutral-silver mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Presenting Concerns
               </label>
               <div className="flex gap-2 mb-2">
@@ -333,7 +334,7 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
                   value={concernInput}
                   onChange={(e) => setConcernInput(e.target.value)}
                   placeholder="Add a concern"
-                  className="flex-1 px-4 py-2 bg-sacred-navy/60 border border-gold-divine/20 focus:border-gold-divine/50 rounded-lg text-neutral-silver placeholder-neutral-silver/50 outline-none transition-colors"
+                  className="flex-1 px-4 py-2.5 bg-gray-900 border border-gray-700 focus:border-amber-500/50 rounded-lg text-white placeholder-gray-500 outline-none transition-colors"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault();
@@ -344,7 +345,7 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
                 <button
                   type="button"
                   onClick={addConcern}
-                  className="px-4 py-2 bg-sacred-navy/60 hover:bg-sacred-navy/80 border border-gold-divine/20 rounded-lg text-neutral-silver"
+                  className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-300 transition-colors"
                 >
                   Add
                 </button>
@@ -354,13 +355,13 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
                   {formData.presenting_concerns.map((concern, i) => (
                     <span
                       key={i}
-                      className="px-2 py-1 bg-sacred-navy/60 border border-gold-divine/10 rounded text-sm text-neutral-silver flex items-center gap-2"
+                      className="px-2 py-1 bg-gray-800 border border-gray-700 rounded text-sm text-gray-300 flex items-center gap-2"
                     >
                       {concern}
                       <button
                         type="button"
                         onClick={() => removeConcern(i)}
-                        className="text-neutral-silver/50 hover:text-red-400"
+                        className="text-gray-500 hover:text-red-400"
                       >
                         ×
                       </button>
@@ -370,18 +371,18 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
               )}
             </div>
 
-            {/* Primary element */}
+            {/* Case category (replacing mystical elements) */}
             <div>
-              <label className="block text-sm font-medium text-neutral-silver mb-2">
-                Primary Element
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Case Category
               </label>
-              <div className="flex gap-2">
+              <div className="grid grid-cols-5 gap-2">
                 {[
-                  { value: 'earth', icon: '🜃', label: 'Earth' },
-                  { value: 'water', icon: '🜄', label: 'Water' },
-                  { value: 'fire', icon: '🜂', label: 'Fire' },
-                  { value: 'air', icon: '🜁', label: 'Air' },
-                  { value: 'aether', icon: '✦', label: 'Aether' },
+                  { value: 'earth', label: 'Grounding', desc: 'Stability, routine' },
+                  { value: 'water', label: 'Emotional', desc: 'Feelings, relationships' },
+                  { value: 'fire', label: 'Motivation', desc: 'Energy, drive' },
+                  { value: 'air', label: 'Cognitive', desc: 'Thoughts, beliefs' },
+                  { value: 'aether', label: 'Existential', desc: 'Meaning, purpose' },
                 ].map((el) => (
                   <button
                     key={el.value}
@@ -392,15 +393,14 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
                         primary_element: formData.primary_element === el.value ? undefined : el.value as Element,
                       })
                     }
-                    className={`flex-1 py-2 rounded-lg border transition-all ${
+                    className={`py-2 px-1 rounded-lg border transition-all text-center ${
                       formData.primary_element === el.value
-                        ? 'bg-gold-divine/20 border-gold-divine/50 text-gold-divine'
-                        : 'bg-sacred-navy/60 border-gold-divine/10 text-neutral-silver/60 hover:text-neutral-silver'
+                        ? 'bg-amber-500/20 border-amber-500/50 text-amber-400'
+                        : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200 hover:border-gray-600'
                     }`}
-                    title={el.label}
+                    title={el.desc}
                   >
-                    <div className="text-xl">{el.icon}</div>
-                    <div className="text-xs mt-1">{el.label}</div>
+                    <div className="text-xs font-medium">{el.label}</div>
                   </button>
                 ))}
               </div>
@@ -408,13 +408,13 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
 
             {/* Privacy mode */}
             <div>
-              <label className="block text-sm font-medium text-neutral-silver mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Privacy Mode
               </label>
               <select
                 value={formData.privacy_mode}
                 onChange={(e) => setFormData({ ...formData, privacy_mode: e.target.value as any })}
-                className="w-full px-4 py-2 bg-sacred-navy/60 border border-gold-divine/20 focus:border-gold-divine/50 rounded-lg text-neutral-silver outline-none transition-colors"
+                className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 focus:border-amber-500/50 rounded-lg text-white outline-none transition-colors"
               >
                 <option value="private">Private - Your notes only</option>
                 <option value="transparent">Transparent - Client can see</option>
@@ -423,24 +423,24 @@ function NewCaseForm({ onClose, onSuccess }: NewCaseFormProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-3 pt-4 border-t border-gold-divine/20">
+            <div className="flex gap-3 pt-4 border-t border-gray-700">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-4 py-2 bg-sacred-navy/60 hover:bg-sacred-navy/80 border border-gold-divine/20 rounded-lg text-neutral-silver"
+                className="flex-1 px-4 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-lg text-gray-300 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 px-4 py-2 bg-gold-divine/20 hover:bg-gold-divine/30 border border-gold-divine/50 rounded-lg text-gold-divine disabled:opacity-50"
+                className="flex-1 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-black font-medium rounded-lg disabled:opacity-50 transition-colors"
               >
                 {loading ? 'Creating...' : 'Create Case'}
               </button>
             </div>
           </form>
-        </SacredCard>
+        </div>
       </div>
     </div>
   );

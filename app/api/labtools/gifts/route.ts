@@ -13,8 +13,16 @@ function getResendClient() {
   return new Resend(apiKey);
 }
 
-// Simple admin check - in production use proper auth
-const ADMIN_SECRET = process.env.LABTOOLS_SECRET || 'soullab-admin-2025';
+// Admin auth - requires LABTOOLS_SECRET environment variable
+const ADMIN_SECRET = process.env.LABTOOLS_SECRET;
+
+function validateAdminSecret(secret: string | null | undefined): boolean {
+  if (!ADMIN_SECRET) {
+    console.error('LABTOOLS_SECRET environment variable not configured');
+    return false;
+  }
+  return secret === ADMIN_SECRET;
+}
 
 function generatePasskey(name: string): string {
   // Create SOULLAB-NAME format, uppercase, no spaces
@@ -216,10 +224,10 @@ export async function POST(request: NextRequest) {
       adminSecret
     } = body;
 
-    // Simple auth check
-    if (adminSecret !== ADMIN_SECRET) {
+    // Admin auth check
+    if (!validateAdminSecret(adminSecret)) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - invalid or missing admin secret' },
         { status: 401 }
       );
     }
@@ -350,9 +358,9 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const { passkey, adminSecret } = body;
 
-    if (adminSecret !== ADMIN_SECRET) {
+    if (!validateAdminSecret(adminSecret)) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - invalid or missing admin secret' },
         { status: 401 }
       );
     }
@@ -423,9 +431,9 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const adminSecret = searchParams.get('adminSecret');
 
-    if (adminSecret !== ADMIN_SECRET) {
+    if (!validateAdminSecret(adminSecret)) {
       return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Unauthorized - invalid or missing admin secret' },
         { status: 401 }
       );
     }

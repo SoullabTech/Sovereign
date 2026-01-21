@@ -30,8 +30,8 @@ export function CapacityIndicator({
   };
 
   return (
-    <div className="bg-white rounded-lg border border-stone-200/60 p-6">
-      <h2 className="text-xs font-medium tracking-wider text-stone-400 uppercase mb-4">
+    <div className="bg-[#111827] rounded-xl border border-gray-700 p-6">
+      <h2 className="text-xs font-medium tracking-wider text-gray-500 uppercase mb-4">
         Capacity
       </h2>
 
@@ -39,19 +39,19 @@ export function CapacityIndicator({
         {/* Sessions this week */}
         <div>
           <div className="flex justify-between items-baseline mb-2">
-            <span className="text-sm text-stone-600">Sessions this week</span>
-            <span className="text-sm text-stone-800 tabular-nums">
+            <span className="text-sm text-gray-400">Sessions this week</span>
+            <span className="text-sm text-white tabular-nums">
               {sessionsThisWeek}
               {maxSessionsPerWeek && (
-                <span className="text-stone-400"> / {maxSessionsPerWeek}</span>
+                <span className="text-gray-500"> / {maxSessionsPerWeek}</span>
               )}
             </span>
           </div>
 
           {maxSessionsPerWeek && (
-            <div className="h-2 bg-stone-100 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
               <div
-                className="h-full bg-stone-400 rounded-full transition-all duration-300"
+                className="h-full bg-amber-500 rounded-full transition-all duration-300"
                 style={{ width: `${percentage}%` }}
               />
             </div>
@@ -60,11 +60,11 @@ export function CapacityIndicator({
 
         {/* Buffer integrity */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-stone-600">Buffer integrity</span>
+          <span className="text-sm text-gray-400">Buffer integrity</span>
           <span className={`text-sm ${
-            bufferIntegrity === 'ok' ? 'text-stone-600' :
-            bufferIntegrity === 'tight' ? 'text-amber-600' :
-            'text-stone-400'
+            bufferIntegrity === 'ok' ? 'text-green-400' :
+            bufferIntegrity === 'tight' ? 'text-amber-400' :
+            'text-gray-500'
           }`}>
             {bufferLabels[bufferIntegrity]}
           </span>
@@ -72,8 +72,8 @@ export function CapacityIndicator({
 
         {/* Recovery blocks */}
         <div className="flex justify-between items-center">
-          <span className="text-sm text-stone-600">Recovery blocks</span>
-          <span className="text-sm text-stone-600">
+          <span className="text-sm text-gray-400">Recovery blocks</span>
+          <span className="text-sm text-gray-300">
             {recoveryBlocksPresent ? 'Present' : 'Not scheduled'}
           </span>
         </div>

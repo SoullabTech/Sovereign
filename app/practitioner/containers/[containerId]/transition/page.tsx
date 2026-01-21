@@ -104,36 +104,36 @@ export default function ContainerTransitionPage() {
   const availableTransitions = currentStatus ? TRANSITIONS[currentStatus] || [] : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+    <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-2xl mx-auto px-6 py-8">
         <button
           onClick={() => router.back()}
-          className="text-sm text-stone-500 hover:text-stone-700 mb-4"
+          className="text-sm text-gray-500 hover:text-gray-300 mb-4"
         >
           ← Back
         </button>
 
-        <h1 className="text-2xl font-light text-stone-800 mb-2">Transition Status</h1>
-        <p className="text-stone-500 mb-6">{containerScope}</p>
+        <h1 className="text-2xl font-medium text-white mb-2">Transition Status</h1>
+        <p className="text-gray-500 mb-6">{containerScope}</p>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
         {currentStatus && (
           <div className="mb-6">
-            <div className="text-sm text-stone-500 mb-2">Current status</div>
-            <div className="inline-block px-3 py-1 rounded-full bg-stone-200 text-stone-700 font-medium capitalize">
+            <div className="text-sm text-gray-500 mb-2">Current status</div>
+            <div className="inline-block px-3 py-1 rounded-full bg-gray-700 text-gray-300 font-medium capitalize">
               {currentStatus}
             </div>
           </div>
         )}
 
         {availableTransitions.length === 0 ? (
-          <div className="bg-white rounded-lg border border-stone-200/60 p-5">
-            <p className="text-stone-500">
+          <div className="bg-[#111827] rounded-xl border border-gray-700 p-5">
+            <p className="text-gray-500">
               {currentStatus === 'completed' || currentStatus === 'declined' || currentStatus === 'referred_out'
                 ? 'This container has reached a terminal state.'
                 : 'No transitions available.'}
@@ -146,16 +146,16 @@ export default function ContainerTransitionPage() {
                 key={transition.to}
                 onClick={() => handleTransition(transition.to)}
                 disabled={saving}
-                className="w-full text-left p-4 bg-white rounded-lg border border-stone-200/60
-                         hover:border-stone-300 hover:bg-stone-50 transition-colors
+                className="w-full text-left p-4 bg-[#111827] rounded-xl border border-gray-700
+                         hover:border-gray-600 hover:bg-gray-800/50 transition-colors
                          disabled:opacity-50"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-stone-800">{transition.label}</div>
-                    <div className="text-sm text-stone-500">{transition.description}</div>
+                    <div className="font-medium text-white">{transition.label}</div>
+                    <div className="text-sm text-gray-500">{transition.description}</div>
                   </div>
-                  <div className="text-sm text-stone-400">
+                  <div className="text-sm text-gray-500">
                     → {transition.to}
                   </div>
                 </div>
@@ -167,8 +167,8 @@ export default function ContainerTransitionPage() {
         <div className="mt-6">
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 rounded-md border border-stone-200 text-stone-600
-                     hover:bg-stone-50 transition-colors"
+            className="px-4 py-2 rounded-lg border border-gray-700 bg-gray-800 text-gray-300
+                     hover:bg-gray-700 transition-colors"
           >
             Cancel
           </button>

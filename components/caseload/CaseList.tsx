@@ -24,13 +24,13 @@ const statusTabs: { value: CaseStatus | 'all'; label: string }[] = [
   { value: 'archived', label: 'Archived' },
 ];
 
-const elementFilters: { value: Element | 'all'; label: string; icon: string }[] = [
-  { value: 'all', label: 'All', icon: '○' },
-  { value: 'earth', label: 'Earth', icon: '🜃' },
-  { value: 'water', label: 'Water', icon: '🜄' },
-  { value: 'fire', label: 'Fire', icon: '🜂' },
-  { value: 'air', label: 'Air', icon: '🜁' },
-  { value: 'aether', label: 'Aether', icon: '✦' },
+const categoryFilters: { value: Element | 'all'; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'earth', label: 'Grounding' },
+  { value: 'water', label: 'Emotional' },
+  { value: 'fire', label: 'Motivation' },
+  { value: 'air', label: 'Cognitive' },
+  { value: 'aether', label: 'Existential' },
 ];
 
 export const CaseList: React.FC<CaseListProps> = ({
@@ -81,22 +81,22 @@ export const CaseList: React.FC<CaseListProps> = ({
   return (
     <div className={cn('space-y-6', className)}>
       {/* Stats row */}
-      <div className="flex flex-wrap gap-4">
-        <div className="flex items-center gap-2 px-4 py-2 bg-sacred-navy/60 border border-gold-divine/20 rounded-lg">
-          <span className="text-gold-divine text-xl font-light">{counts.total || 0}</span>
-          <span className="text-neutral-silver/70 text-sm">Total Cases</span>
+      <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-2 px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg">
+          <span className="text-white text-xl font-semibold">{counts.total || 0}</span>
+          <span className="text-gray-400 text-sm">Total</span>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-green-900/20 border border-green-500/20 rounded-lg">
-          <span className="text-green-400 text-xl font-light">{counts.active || 0}</span>
-          <span className="text-neutral-silver/70 text-sm">Active</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-green-900/20 border border-green-700/30 rounded-lg">
+          <span className="text-green-400 text-xl font-semibold">{counts.active || 0}</span>
+          <span className="text-gray-400 text-sm">Active</span>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-900/20 border border-yellow-500/20 rounded-lg">
-          <span className="text-yellow-400 text-xl font-light">{counts.paused || 0}</span>
-          <span className="text-neutral-silver/70 text-sm">Paused</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-yellow-900/20 border border-yellow-700/30 rounded-lg">
+          <span className="text-yellow-400 text-xl font-semibold">{counts.paused || 0}</span>
+          <span className="text-gray-400 text-sm">Paused</span>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-blue-900/20 border border-blue-500/20 rounded-lg">
-          <span className="text-blue-400 text-xl font-light">{counts.completed || 0}</span>
-          <span className="text-neutral-silver/70 text-sm">Completed</span>
+        <div className="flex items-center gap-2 px-4 py-2 bg-blue-900/20 border border-blue-700/30 rounded-lg">
+          <span className="text-blue-400 text-xl font-semibold">{counts.completed || 0}</span>
+          <span className="text-gray-400 text-sm">Completed</span>
         </div>
       </div>
 
@@ -109,32 +109,31 @@ export const CaseList: React.FC<CaseListProps> = ({
             placeholder="Search clients..."
             value={searchQuery}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full px-4 py-2 bg-sacred-navy/60 border border-gold-divine/20 focus:border-gold-divine/50 rounded-lg text-neutral-silver placeholder-neutral-silver/50 outline-none transition-colors"
+            className="w-full px-4 py-2.5 bg-gray-900 border border-gray-700 focus:border-amber-500/50 rounded-lg text-white placeholder-gray-500 outline-none transition-colors"
           />
         </div>
 
-        {/* Element filter */}
-        <div className="flex gap-1 p-1 bg-sacred-navy/40 border border-gold-divine/10 rounded-lg">
-          {elementFilters.map((el) => (
+        {/* Category filter */}
+        <div className="flex gap-1 p-1 bg-gray-800/50 border border-gray-700 rounded-lg">
+          {categoryFilters.map((cat) => (
             <button
-              key={el.value}
-              onClick={() => handleElementChange(el.value)}
+              key={cat.value}
+              onClick={() => handleElementChange(cat.value)}
               className={cn(
                 'px-3 py-1.5 rounded text-sm transition-all',
-                elementFilter === el.value
-                  ? 'bg-gold-divine/20 text-gold-divine'
-                  : 'text-neutral-silver/60 hover:text-neutral-silver'
+                elementFilter === cat.value
+                  ? 'bg-amber-500/20 text-amber-400'
+                  : 'text-gray-400 hover:text-gray-200'
               )}
-              title={el.label}
             >
-              {el.icon}
+              {cat.label}
             </button>
           ))}
         </div>
       </div>
 
       {/* Status tabs */}
-      <div className="flex gap-1 p-1 bg-sacred-navy/40 border border-gold-divine/10 rounded-lg overflow-x-auto">
+      <div className="flex gap-1 p-1 bg-gray-800/50 border border-gray-700 rounded-lg overflow-x-auto">
         {statusTabs.map((tab) => (
           <button
             key={tab.value}
@@ -142,13 +141,13 @@ export const CaseList: React.FC<CaseListProps> = ({
             className={cn(
               'px-4 py-2 rounded-md text-sm font-medium transition-all whitespace-nowrap',
               statusFilter === tab.value
-                ? 'bg-gold-divine/20 text-gold-divine'
-                : 'text-neutral-silver/60 hover:text-neutral-silver hover:bg-sacred-navy/40'
+                ? 'bg-amber-500/20 text-amber-400'
+                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800'
             )}
           >
             {tab.label}
             {tab.value !== 'all' && counts[tab.value] > 0 && (
-              <span className="ml-2 px-1.5 py-0.5 bg-sacred-navy/60 rounded text-xs">
+              <span className="ml-2 px-1.5 py-0.5 bg-gray-700 rounded text-xs">
                 {counts[tab.value]}
               </span>
             )}
@@ -159,16 +158,20 @@ export const CaseList: React.FC<CaseListProps> = ({
       {/* Case grid */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="text-gold-divine/60 animate-pulse">Loading cases...</div>
+          <div className="text-gray-400">Loading cases...</div>
         </div>
       ) : cases.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="text-4xl mb-4">📋</div>
-          <h3 className="text-lg font-medium text-neutral-silver mb-2">No cases yet</h3>
-          <p className="text-neutral-silver/60 text-sm max-w-sm">
+          <div className="w-12 h-12 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center mb-4">
+            <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-medium text-white mb-2">No cases found</h3>
+          <p className="text-gray-500 text-sm max-w-sm">
             {statusFilter !== 'all' || elementFilter !== 'all' || searchQuery
               ? 'No cases match your current filters. Try adjusting your search.'
-              : 'Create your first case to start tracking client sessions with MAIA as your consultation partner.'}
+              : 'Create your first case to start tracking client sessions with AI-assisted consultation.'}
           </p>
         </div>
       ) : (

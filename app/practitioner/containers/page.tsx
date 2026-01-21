@@ -122,23 +122,23 @@ function ContainersListContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+    <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-5xl mx-auto px-6 py-8">
         {/* Header */}
         <div className="flex items-end justify-between gap-4 mb-6">
           <div>
             <button
               onClick={() => router.push('/practitioner/dashboard')}
-              className="text-sm text-stone-500 hover:text-stone-700 mb-2"
+              className="text-sm text-gray-500 hover:text-gray-300 mb-2"
             >
               ← Dashboard
             </button>
-            <h1 className="text-2xl font-light text-stone-800">Containers</h1>
-            <p className="text-sm text-stone-500">Relational commitments, not contacts.</p>
+            <h1 className="text-2xl font-medium text-white">Containers</h1>
+            <p className="text-sm text-gray-500">Relational commitments, not contacts.</p>
           </div>
 
           <button
-            className="px-4 py-2 rounded-md bg-stone-800 text-white hover:bg-stone-700 transition-colors"
+            className="px-4 py-2 rounded-lg bg-amber-500 text-black font-medium hover:bg-amber-400 transition-colors"
             onClick={() => router.push('/practitioner/containers/new')}
           >
             + New container
@@ -152,10 +152,10 @@ function ContainersListContent() {
               <button
                 key={opt.value}
                 onClick={() => handleStatusChange(opt.value)}
-                className={`px-3 py-1.5 text-sm rounded-full transition-colors ${
+                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                   status === opt.value
-                    ? 'bg-stone-800 text-white'
-                    : 'bg-white border border-stone-200 text-stone-600 hover:bg-stone-50'
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                    : 'bg-gray-800 border border-gray-700 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
                 }`}
               >
                 {opt.label}
@@ -167,41 +167,41 @@ function ContainersListContent() {
             value={q}
             onChange={e => setQ(e.target.value)}
             placeholder="Search by name or scope..."
-            className="flex-1 px-3 py-2 rounded-md bg-white border border-stone-200
-                     focus:outline-none focus:ring-2 focus:ring-stone-300"
+            className="flex-1 px-4 py-2 rounded-lg bg-gray-900 border border-gray-700
+                     text-white placeholder-gray-500 focus:outline-none focus:border-amber-500/50"
           />
         </div>
 
         {/* Container List */}
-        <div className="bg-white rounded-lg border border-stone-200/60 overflow-hidden">
+        <div className="bg-[#111827] rounded-xl border border-gray-700 overflow-hidden">
           {loading ? (
-            <div className="p-6 text-stone-500">Loading...</div>
+            <div className="p-6 text-gray-500">Loading...</div>
           ) : containers.length === 0 ? (
-            <div className="p-6 text-stone-500">
+            <div className="p-6 text-gray-500">
               No {status} containers found.
               {status !== 'inquiry' && (
                 <button
                   onClick={() => handleStatusChange('inquiry')}
-                  className="ml-2 text-stone-700 underline"
+                  className="ml-2 text-amber-400 hover:underline"
                 >
                   Check inquiries?
                 </button>
               )}
             </div>
           ) : (
-            <div className="divide-y divide-stone-100">
+            <div className="divide-y divide-gray-700/50">
               {containers.map(container => (
                 <button
                   key={container.id}
                   onClick={() => router.push(`/practitioner/containers/${container.id}`)}
-                  className="w-full text-left p-4 hover:bg-stone-50 transition-colors"
+                  className="w-full text-left p-4 hover:bg-gray-800/50 transition-colors"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-stone-800 truncate">
+                      <div className="font-medium text-white truncate">
                         {getContainerTitle(container)}
                       </div>
-                      <div className="text-sm text-stone-500 flex items-center gap-2 mt-1">
+                      <div className="text-sm text-gray-500 flex items-center gap-2 mt-1">
                         <span className="capitalize">{container.type}</span>
                         {container.participants.length > 0 && (
                           <>
@@ -217,13 +217,13 @@ function ContainersListContent() {
                     <div className="text-right flex-shrink-0">
                       {container.nextSession ? (
                         <div className="text-sm">
-                          <div className="text-stone-600">Next session</div>
-                          <div className="text-stone-500">
+                          <div className="text-gray-400">Next session</div>
+                          <div className="text-gray-500">
                             {formatRelativeDate(container.nextSession.scheduledStartAt)}
                           </div>
                         </div>
                       ) : (
-                        <div className="text-sm text-stone-400 italic">
+                        <div className="text-sm text-gray-600 italic">
                           No session scheduled
                         </div>
                       )}
@@ -242,9 +242,9 @@ function ContainersListContent() {
 export default function ContainersListPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+      <div className="min-h-screen bg-[#0a0f1a]">
         <div className="max-w-5xl mx-auto px-6 py-8">
-          <div className="text-stone-500">Loading containers...</div>
+          <div className="text-gray-500">Loading containers...</div>
         </div>
       </div>
     }>

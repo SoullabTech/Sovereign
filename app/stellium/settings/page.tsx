@@ -25,6 +25,13 @@ import {
   CreditCard,
   DollarSign,
   ExternalLink,
+  Mail,
+  MessageSquare,
+  Smartphone,
+  Trash2,
+  Plus,
+  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import type {
   PractitionerSettings,
@@ -35,7 +42,7 @@ import type {
   LocationType,
 } from '@/lib/stellium/types';
 
-type TabId = 'profile' | 'sessionDefaults' | 'notifications' | 'practice' | 'payouts' | 'pricing';
+type TabId = 'profile' | 'sessionDefaults' | 'notifications' | 'practice' | 'payouts' | 'pricing' | 'comms';
 
 interface Tab {
   id: TabId;
@@ -48,6 +55,7 @@ const tabs: Tab[] = [
   { id: 'sessionDefaults', label: 'Sessions', icon: <Calendar className="w-4 h-4" /> },
   { id: 'notifications', label: 'Notifications', icon: <Bell className="w-4 h-4" /> },
   { id: 'practice', label: 'Practice', icon: <Building2 className="w-4 h-4" /> },
+  { id: 'comms', label: 'Email & SMS', icon: <Mail className="w-4 h-4" /> },
   { id: 'payouts', label: 'Payouts', icon: <CreditCard className="w-4 h-4" /> },
   { id: 'pricing', label: 'Pricing', icon: <DollarSign className="w-4 h-4" /> },
 ];
@@ -240,6 +248,7 @@ export default function SettingsPage() {
             saving={saving}
           />
         )}
+        {activeTab === 'comms' && <CommsTab />}
         {activeTab === 'payouts' && <PayoutsTab />}
         {activeTab === 'pricing' && <PricingTab />}
       </motion.div>
@@ -842,6 +851,453 @@ function PracticeTab({
         </form>
       </CardContent>
     </Card>
+  );
+}
+
+// ============================================
+// COMMS TAB (Email & SMS Providers)
+// ============================================
+
+interface CommsProvider {
+  id: string;
+  provider: string;
+  displayName: string;
+  channel: 'email' | 'sms';
+  verified: boolean;
+  verified_at: Date | null;
+  last_used_at: Date | null;
+  status: string;
+  error_count: number;
+  last_error: string | null;
+}
+
+interface CommsSettings {
+  default_email: string | null;
+  default_phone: string | null;
+  default_channel: string;
+  email_from_name: string | null;
+  email_signature: string | null;
+  sms_signature: string | null;
+  timezone: string;
+  auto_reminder_enabled: boolean;
+  auto_followup_enabled: boolean;
+}
+
+function CommsTab() {
+  const [providers, setProviders] = useState<CommsProvider[]>([]);
+  const [settings, setSettings] = useState<CommsSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showAddProvider, setShowAddProvider] = useState<'resend' | 'twilio' | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // Credential form state
+  const [apiKey, setApiKey] = useState('');
+  const [accountSid, setAccountSid] = useState('');
+  const [authToken, setAuthToken] = useState('');
+  const [fromNumber, setFromNumber] = useState('');
+
+  // Settings form state
+  const [formData, setFormData] = useState({
+    default_email: '',
+    email_from_name: '',
+    email_signature: '',
+    default_phone: '',
+    sms_signature: '',
+  });
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  async function fetchData() {
+    setLoading(true);
+    setError(null);
+    try {
+      const [settingsRes, providersRes] = await Promise.all([
+        fetch('/api/stellium/comms/settings', { credentials: 'include' }),
+        fetch('/api/stellium/comms/credentials', { credentials: 'include' }),
+      ]);
+
+      if (settingsRes.ok) {
+        const settingsJson = await settingsRes.json();
+        setSettings(settingsJson.settings);
+        setFormData({
+          default_email: settingsJson.settings?.default_email || '',
+          email_from_name: settingsJson.settings?.email_from_name || '',
+          email_signature: settingsJson.settings?.email_signature || '',
+          default_phone: settingsJson.settings?.default_phone || '',
+          sms_signature: settingsJson.settings?.sms_signature || '',
+        });
+      }
+
+      if (providersRes.ok) {
+        const providersJson = await providersRes.json();
+        setProviders(providersJson.providers || []);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function addProvider(provider: 'resend' | 'twilio') {
+    setSaving(true);
+    setError(null);
+
+    try {
+      const credentials = provider === 'resend'
+        ? { api_key: apiKey }
+        : { account_sid: accountSid, auth_token: authToken, from_number: fromNumber };
+
+      const res = await fetch('/api/stellium/comms/credentials', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ provider, credentials }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Failed to add provider');
+
+      // Refresh providers list
+      await fetchData();
+      setShowAddProvider(null);
+      setApiKey('');
+      setAccountSid('');
+      setAuthToken('');
+      setFromNumber('');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add provider');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeProvider(provider: string) {
+    if (!confirm(`Remove ${provider} credentials? This cannot be undone.`)) return;
+
+    try {
+      const res = await fetch(`/api/stellium/comms/credentials?provider=${provider}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+
+      if (!res.ok) throw new Error('Failed to remove provider');
+      await fetchData();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to remove');
+    }
+  }
+
+  async function saveSettings() {
+    setSaving(true);
+    setSaved(false);
+    setError(null);
+
+    try {
+      const res = await fetch('/api/stellium/comms/settings', {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error('Failed to save settings');
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const hasEmailProvider = providers.some(p => p.channel === 'email');
+  const hasSmsProvider = providers.some(p => p.channel === 'sms');
+
+  if (loading) {
+    return (
+      <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
+        <CardContent className="p-6 flex items-center justify-center">
+          <Loader2 className="w-6 h-6 text-sacred-gold/50 animate-spin" />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      {error && (
+        <Card className="bg-red-900/20 border-red-500/30">
+          <CardContent className="p-4">
+            <p className="text-red-300">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Provider Configuration */}
+      <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
+        <CardHeader>
+          <CardTitle className="text-lg text-gray-200">Connected Providers</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-gray-500 text-sm">
+            Connect your email and SMS providers to send messages to clients.
+          </p>
+
+          {/* Existing Providers */}
+          {providers.length > 0 && (
+            <div className="space-y-3">
+              {providers.map((p) => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between p-4 bg-gray-800/30 rounded-lg"
+                >
+                  <div className="flex items-center space-x-3">
+                    {p.channel === 'email' ? (
+                      <Mail className="w-5 h-5 text-blue-400" />
+                    ) : (
+                      <Smartphone className="w-5 h-5 text-green-400" />
+                    )}
+                    <div>
+                      <p className="text-gray-200 font-medium">{p.displayName}</p>
+                      <p className="text-gray-500 text-xs">
+                        {p.verified ? (
+                          <span className="text-green-400 flex items-center">
+                            <CheckCircle2 className="w-3 h-3 mr-1" /> Verified
+                          </span>
+                        ) : (
+                          <span className="text-amber-400 flex items-center">
+                            <AlertCircle className="w-3 h-3 mr-1" /> Not verified
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeProvider(p.provider)}
+                    className="p-2 text-gray-500 hover:text-red-400 transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Add Provider Buttons */}
+          <div className="flex flex-wrap gap-3 pt-2">
+            {!hasEmailProvider && (
+              <button
+                onClick={() => setShowAddProvider('resend')}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <Mail className="w-4 h-4" />
+                <span>Add Resend (Email)</span>
+              </button>
+            )}
+            {!hasSmsProvider && (
+              <button
+                onClick={() => setShowAddProvider('twilio')}
+                className="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                <MessageSquare className="w-4 h-4" />
+                <span>Add Twilio (SMS)</span>
+              </button>
+            )}
+          </div>
+
+          {/* Add Resend Form */}
+          {showAddProvider === 'resend' && (
+            <div className="p-4 bg-gray-800/50 rounded-lg space-y-4 border border-gray-700">
+              <h4 className="text-gray-200 font-medium">Connect Resend</h4>
+              <p className="text-gray-500 text-sm">
+                Get your API key from{' '}
+                <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-sacred-gold hover:underline">
+                  resend.com/api-keys
+                </a>
+              </p>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">API Key</label>
+                <input
+                  type="password"
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  placeholder="re_..."
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                />
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => addProvider('resend')}
+                  disabled={!apiKey || saving}
+                  className="flex items-center space-x-2 px-4 py-2 bg-sacred-gold/20 hover:bg-sacred-gold/30 text-sacred-gold rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Connect</span>
+                </button>
+                <button
+                  onClick={() => { setShowAddProvider(null); setApiKey(''); }}
+                  className="px-4 py-2 text-gray-400 hover:text-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Add Twilio Form */}
+          {showAddProvider === 'twilio' && (
+            <div className="p-4 bg-gray-800/50 rounded-lg space-y-4 border border-gray-700">
+              <h4 className="text-gray-200 font-medium">Connect Twilio</h4>
+              <p className="text-gray-500 text-sm">
+                Get your credentials from{' '}
+                <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer" className="text-sacred-gold hover:underline">
+                  console.twilio.com
+                </a>
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Account SID</label>
+                  <input
+                    type="text"
+                    value={accountSid}
+                    onChange={(e) => setAccountSid(e.target.value)}
+                    placeholder="AC..."
+                    className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">Auth Token</label>
+                  <input
+                    type="password"
+                    value={authToken}
+                    onChange={(e) => setAuthToken(e.target.value)}
+                    placeholder="Enter auth token"
+                    className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">From Phone Number</label>
+                <input
+                  type="text"
+                  value={fromNumber}
+                  onChange={(e) => setFromNumber(e.target.value)}
+                  placeholder="+1234567890"
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                />
+                <p className="text-xs text-gray-600">The phone number you purchased from Twilio</p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => addProvider('twilio')}
+                  disabled={!accountSid || !authToken || !fromNumber || saving}
+                  className="flex items-center space-x-2 px-4 py-2 bg-sacred-gold/20 hover:bg-sacred-gold/30 text-sacred-gold rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Connect</span>
+                </button>
+                <button
+                  onClick={() => { setShowAddProvider(null); setAccountSid(''); setAuthToken(''); setFromNumber(''); }}
+                  className="px-4 py-2 text-gray-400 hover:text-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Sender Settings */}
+      <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
+        <CardHeader>
+          <CardTitle className="text-lg text-gray-200">Sender Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={(e) => { e.preventDefault(); saveSettings(); }} className="space-y-6">
+            {/* Email Settings */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-medium text-gray-300 flex items-center">
+                <Mail className="w-4 h-4 mr-2" /> Email
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">From Email</label>
+                  <input
+                    type="email"
+                    value={formData.default_email}
+                    onChange={(e) => setFormData({ ...formData, default_email: e.target.value })}
+                    placeholder="you@yourdomain.com"
+                    className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm text-gray-400">From Name</label>
+                  <input
+                    type="text"
+                    value={formData.email_from_name}
+                    onChange={(e) => setFormData({ ...formData, email_from_name: e.target.value })}
+                    placeholder="Your Practice Name"
+                    className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">Email Signature</label>
+                <textarea
+                  value={formData.email_signature}
+                  onChange={(e) => setFormData({ ...formData, email_signature: e.target.value })}
+                  placeholder="Best wishes,&#10;Your Name"
+                  rows={3}
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none resize-none"
+                />
+              </div>
+            </div>
+
+            {/* SMS Settings */}
+            <div className="space-y-4 pt-4 border-t border-gray-800">
+              <h3 className="text-sm font-medium text-gray-300 flex items-center">
+                <Smartphone className="w-4 h-4 mr-2" /> SMS
+              </h3>
+              <div className="space-y-2">
+                <label className="text-sm text-gray-400">SMS Signature (appended to messages)</label>
+                <input
+                  type="text"
+                  value={formData.sms_signature}
+                  onChange={(e) => setFormData({ ...formData, sms_signature: e.target.value })}
+                  placeholder="- Your Name"
+                  className="w-full px-4 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-gray-200 focus:border-sacred-gold/50 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+              <button
+                type="submit"
+                disabled={saving}
+                className="flex items-center space-x-2 px-6 py-2 bg-sacred-gold/20 hover:bg-sacred-gold/30 text-sacred-gold rounded-lg transition-colors disabled:opacity-50"
+              >
+                {saving ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : saved ? (
+                  <Check className="w-4 h-4" />
+                ) : (
+                  <Save className="w-4 h-4" />
+                )}
+                <span>{saved ? 'Saved!' : 'Save Settings'}</span>
+              </button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
 

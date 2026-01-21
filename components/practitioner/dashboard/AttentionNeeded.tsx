@@ -27,29 +27,29 @@ function formatReason(reason: string): string {
 
 export function AttentionNeeded({ items, onContainerClick }: AttentionNeededProps) {
   return (
-    <div className="bg-white rounded-lg border border-stone-200/60 p-6">
-      <h2 className="text-xs font-medium tracking-wider text-stone-400 uppercase mb-4">
-        Hygiene · Containers
+    <div className="bg-[#111827] rounded-xl border border-gray-700 p-6">
+      <h2 className="text-xs font-medium tracking-wider text-gray-500 uppercase mb-4">
+        Attention Needed
       </h2>
 
       {items.length === 0 ? (
-        <p className="text-sm text-stone-400 italic">All containers look good</p>
+        <p className="text-sm text-gray-500 italic">All containers look good</p>
       ) : (
         <div className="space-y-2">
           {items.map(item => (
             <button
               key={item.containerId}
               onClick={() => onContainerClick?.(item.containerId)}
-              className="w-full text-left flex items-start gap-3 py-2 px-3 rounded
-                       hover:bg-stone-50 transition-colors"
+              className="w-full text-left flex items-start gap-3 py-2 px-3 rounded-lg
+                       hover:bg-gray-800 transition-colors"
             >
-              <span className="w-2 h-2 rounded-full bg-stone-300 mt-1.5 flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-amber-500/50 mt-1.5 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <span className="text-sm text-stone-700">
+                <span className="text-sm text-gray-300">
                   {item.containerScope || 'Unnamed container'}
                 </span>
-                <span className="mx-2 text-stone-300">—</span>
-                <span className="text-sm text-stone-500">
+                <span className="mx-2 text-gray-600">—</span>
+                <span className="text-sm text-gray-500">
                   {formatReason(item.reason)}
                 </span>
               </div>

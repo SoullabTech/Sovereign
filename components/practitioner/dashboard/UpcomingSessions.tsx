@@ -83,38 +83,38 @@ export function UpcomingSessions({ sessions, onSessionClick }: UpcomingSessionsP
   }, [sessions, today]);
 
   return (
-    <div className="bg-white rounded-lg border border-stone-200/60 p-6">
-      <h2 className="text-xs font-medium tracking-wider text-stone-400 uppercase mb-4">
-        Care Horizon · Sessions
+    <div className="bg-[#111827] rounded-xl border border-gray-700 p-6">
+      <h2 className="text-xs font-medium tracking-wider text-gray-500 uppercase mb-4">
+        Upcoming Sessions
       </h2>
 
       {groupedSessions.length === 0 ? (
-        <p className="text-sm text-stone-400 italic">No upcoming sessions</p>
+        <p className="text-sm text-gray-500 italic">No upcoming sessions</p>
       ) : (
         <div className="space-y-4">
           {groupedSessions.map(group => (
             <div key={group.label}>
-              <div className="text-sm font-medium text-stone-600 mb-2">
+              <div className="text-sm font-medium text-gray-400 mb-2">
                 {group.label}
               </div>
-              <div className="space-y-2 pl-2 border-l-2 border-stone-100">
+              <div className="space-y-2 pl-2 border-l-2 border-gray-700">
                 {group.sessions.map(session => (
                   <button
                     key={session.id}
                     onClick={() => onSessionClick?.(session.id)}
-                    className="w-full text-left px-3 py-2 rounded hover:bg-stone-50 transition-colors"
+                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-800 transition-colors"
                   >
-                    <span className="text-sm text-stone-500 tabular-nums">
+                    <span className="text-sm text-gray-500 tabular-nums">
                       {formatTime(new Date(session.scheduledStartAt))}
                     </span>
-                    <span className="mx-2 text-stone-300">·</span>
-                    <span className="text-sm text-stone-700">
+                    <span className="mx-2 text-gray-600">·</span>
+                    <span className="text-sm text-gray-300">
                       {formatSessionType(session.sessionType)}
                     </span>
                     {session.containerScope && (
                       <>
-                        <span className="mx-2 text-stone-300">·</span>
-                        <span className="text-sm text-stone-500">
+                        <span className="mx-2 text-gray-600">·</span>
+                        <span className="text-sm text-gray-500">
                           {session.containerScope}
                         </span>
                       </>

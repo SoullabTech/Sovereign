@@ -76,28 +76,28 @@ export default function NewSessionPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-50 to-stone-100">
+    <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-2xl mx-auto px-6 py-8">
         <button
           onClick={() => router.back()}
-          className="text-sm text-stone-500 hover:text-stone-700 mb-4"
+          className="text-sm text-gray-500 hover:text-gray-300 mb-4"
         >
           ← Back
         </button>
 
-        <h1 className="text-2xl font-light text-stone-800 mb-6">New Session</h1>
+        <h1 className="text-2xl font-medium text-white mb-6">New Session</h1>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md text-red-700 text-sm">
+          <div className="mb-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
             {error}
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="bg-white rounded-lg border border-stone-200/60 p-5 space-y-4">
+          <div className="bg-[#111827] rounded-xl border border-gray-700 p-5 space-y-4">
             {/* Start Time */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Start time
               </label>
               <input
@@ -105,21 +105,21 @@ export default function NewSessionPage() {
                 value={startsAt}
                 onChange={e => setStartsAt(e.target.value)}
                 required
-                className="w-full px-3 py-2 rounded-md border border-stone-200
-                         focus:outline-none focus:ring-2 focus:ring-stone-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900
+                         text-white focus:outline-none focus:border-amber-500/50"
               />
             </div>
 
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Duration
               </label>
               <select
                 value={durationMin}
                 onChange={e => setDurationMin(parseInt(e.target.value, 10))}
-                className="w-full px-3 py-2 rounded-md border border-stone-200
-                         focus:outline-none focus:ring-2 focus:ring-stone-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900
+                         text-white focus:outline-none focus:border-amber-500/50"
               >
                 <option value={30}>30 minutes</option>
                 <option value={45}>45 minutes</option>
@@ -132,14 +132,14 @@ export default function NewSessionPage() {
 
             {/* Session Type */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Session type
               </label>
               <select
                 value={sessionType}
                 onChange={e => setSessionType(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-stone-200
-                         focus:outline-none focus:ring-2 focus:ring-stone-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900
+                         text-white focus:outline-none focus:border-amber-500/50"
               >
                 <option value="session">Regular session</option>
                 <option value="intake">Intake / Discovery</option>
@@ -150,14 +150,14 @@ export default function NewSessionPage() {
 
             {/* Location */}
             <div>
-              <label className="block text-sm font-medium text-stone-700 mb-2">
+              <label className="block text-sm font-medium text-gray-300 mb-2">
                 Location
               </label>
               <select
                 value={location}
                 onChange={e => setLocation(e.target.value)}
-                className="w-full px-3 py-2 rounded-md border border-stone-200
-                         focus:outline-none focus:ring-2 focus:ring-stone-300"
+                className="w-full px-3 py-2 rounded-lg border border-gray-700 bg-gray-900
+                         text-white focus:outline-none focus:border-amber-500/50"
               >
                 <option value="video">Video call</option>
                 <option value="in_person">In-person</option>
@@ -170,16 +170,16 @@ export default function NewSessionPage() {
             <button
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 rounded-md border border-stone-200 text-stone-600
-                       hover:bg-stone-50 transition-colors"
+              className="px-4 py-2 rounded-lg border border-gray-700 bg-gray-800 text-gray-300
+                       hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving || !startsAt}
-              className="px-4 py-2 rounded-md bg-stone-800 text-white
-                       hover:bg-stone-700 disabled:opacity-50 transition-colors"
+              className="px-4 py-2 rounded-lg bg-amber-500 text-black font-medium
+                       hover:bg-amber-400 disabled:opacity-50 transition-colors"
             >
               {saving ? 'Saving...' : 'Create Session'}
             </button>

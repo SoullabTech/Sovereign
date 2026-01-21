@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * MAIA LabTools - Sacred Lab Interface
+ * MAIA LabTools
  *
- * Organized access to consciousness tools in drawer-style layout
+ * Organized access to tools in drawer-style layout
  */
 
 import React from 'react';
@@ -45,194 +45,182 @@ export default function LabToolsPage() {
 
   const menuSections = [
     {
-      title: 'ELDER COUNCIL',
-      icon: '🌟',
+      title: 'EXPLORE',
+      icon: '🔮',
       items: [
-        {
-          icon: Sparkles,
-          label: 'Choose Your Elder',
-          path: '/maia?action=choose-guide',
-          description: '39 wisdom traditions as harmonic frequencies'
-        },
-        {
-          icon: Brain,
-          label: 'Current Teaching',
-          path: '/maia?action=show-current-elder',
-          description: 'See which wisdom guides you now'
-        },
-      ],
-    },
-    {
-      title: 'SACRED TEACHINGS',
-      icon: '📿',
-      items: [
-        {
-          icon: Sparkles,
-          label: 'Sacred Story Creator',
-          path: '/story-creator',
-          description: 'Personalized wisdom from 46+ traditions'
-        },
         {
           icon: Compass,
           label: 'Oracle',
           path: '/oracle',
           description: 'I Ching • Tarot • Runes'
         },
+        {
+          icon: Compass,
+          label: 'Journey',
+          path: '/journey',
+          description: 'Archetypal mapping & patterns'
+        },
+        {
+          icon: Sparkles,
+          label: 'Story Creator',
+          path: '/labtools/story-creator',
+          description: 'Personalized narratives from 46+ traditions'
+        },
       ],
     },
     {
-      title: 'SACRED KNOWLEDGE',
-      icon: '📚',
+      title: 'CREATE',
+      icon: '✍️',
       items: [
         {
-          icon: Library,
-          label: 'Library of Alexandria',
-          path: '/library',
-          description: 'Your personal sacred library'
-        },
-        {
           icon: BookOpen,
-          label: 'Sacred Journal',
-          path: '/journal',
-          description: 'Capture your transformative moments'
+          label: 'Journal',
+          path: '/labtools/journal',
+          description: 'Capture thoughts and insights'
         },
         {
           icon: FileText,
           label: 'Lab Notes',
-          path: '/lab-notes',
+          path: '/labtools/lab-notes',
           description: 'Research and discoveries'
+        },
+        {
+          icon: Radio,
+          label: 'Capture',
+          path: '/capture',
+          description: 'Session notes for export'
+        },
+        {
+          icon: Mic,
+          label: 'Scribe',
+          path: '/labtools/scribe',
+          description: 'Record and transcribe sessions'
         },
       ],
     },
     {
-      title: 'CONSCIOUSNESS TOOLS',
-      icon: '🧠',
+      title: 'LIBRARY',
+      icon: '📚',
       items: [
         {
-          icon: Compass,
-          label: 'Archetypal Journey',
-          path: '/journey',
-          description: 'Your cosmic spiral & soul blueprint'
+          icon: Library,
+          label: 'Library',
+          path: '/library',
+          description: 'Your personal collection'
+        },
+        {
+          icon: Heart,
+          label: 'Favorites',
+          path: '/labtools/favorites',
+          description: 'Saved items'
+        },
+        {
+          icon: Download,
+          label: 'Downloads',
+          path: '/labtools/downloads',
+          description: 'Access your content'
+        },
+        {
+          icon: Upload,
+          label: 'Upload',
+          path: '/labtools/upload',
+          description: 'Share files with MAIA'
+        },
+      ],
+    },
+    {
+      title: 'SETTINGS',
+      icon: '⚙️',
+      items: [
+        {
+          icon: User,
+          label: 'Profile',
+          path: '/labtools/profile',
+          description: 'Account & preferences'
         },
         {
           icon: Globe,
-          label: 'Language Tools',
-          path: '/language',
+          label: 'Language',
+          path: '/labtools/language',
           description: 'MAIA speaks 30+ languages'
         },
         {
           icon: Mic,
-          label: 'Voice Laboratory',
-          path: '/voice',
-          description: 'Voice synthesis & conversation modes'
-        },
-        {
-          icon: Brain,
-          label: 'Brain Trust',
-          path: '/brain-trust',
-          description: 'Multi-model consciousness weaver'
-        },
-        {
-          icon: Compass,
-          label: 'Navigator Lab',
-          path: '/labtools/navigator',
-          description: 'Wisdom training & Spiralogic integration'
-        },
-        {
-          icon: Zap,
-          label: 'Claude Code',
-          path: '/consciousness/claude-code',
-          description: 'Co-creator & consciousness explorer'
-        },
-        {
-          icon: Eye,
-          label: 'Field Analytics',
-          path: '/labtools/field-analytics',
-          description: 'Collective consciousness field observation'
+          label: 'Voice',
+          path: '/labtools/voice',
+          description: 'Voice synthesis & modes'
         },
         {
           icon: Shield,
           label: 'Data Sovereignty',
           path: '/labtools/sovereignty',
-          description: 'Complete control over your consciousness data'
+          description: 'Control over your data'
+        },
+        {
+          icon: Sparkles,
+          label: 'Birth Chart',
+          path: '/birth-chart',
+          description: 'Astrological profile'
+        },
+      ],
+    },
+    {
+      title: 'ADVANCED',
+      icon: '🧪',
+      items: [
+        {
+          icon: Brain,
+          label: 'Brain Trust',
+          path: '/labtools/brain-trust',
+          description: 'Multi-model orchestration'
+        },
+        {
+          icon: Eye,
+          label: 'Field Analytics',
+          path: '/labtools/field-analytics',
+          description: 'Observation & metrics'
+        },
+        {
+          icon: Compass,
+          label: 'Navigator',
+          path: '/labtools/navigator',
+          description: 'Spiralogic integration'
+        },
+        {
+          icon: Radio,
+          label: 'Field Protocol',
+          path: '/labtools/field-protocol',
+          description: 'Document explorations'
         },
         {
           icon: Star,
           label: 'Pioneer Circle',
           path: '/labtools/beta-testing',
-          description: 'Beta testing with 10-participant sacred laboratory'
+          description: 'Beta testing program'
+        },
+      ],
+    },
+    {
+      title: 'DEVELOPER',
+      icon: '💻',
+      items: [
+        {
+          icon: Zap,
+          label: 'Claude Code',
+          path: '/labtools/claude-code',
+          description: 'AI development tools'
         },
         {
           icon: Search,
           label: 'RLM Navigator',
           path: '/labtools/rlm',
-          description: 'Codebase bloodhound: "what file should I open next?"'
+          description: 'Codebase exploration'
         },
         {
           icon: Activity,
-          label: 'AIN Shape Telemetry',
+          label: 'AIN Telemetry',
           path: '/labtools/ain',
-          description: 'Structural evaluation of MAIA responses'
-        },
-      ],
-    },
-    {
-      title: 'DOCUMENTATION',
-      icon: '📊',
-      items: [
-        {
-          icon: Radio,
-          label: 'Capture',
-          path: '/capture',
-          description: 'Session notes for Descript & Patreon export'
-        },
-        {
-          icon: Radio,
-          label: 'Field Protocol',
-          path: '/field-protocol',
-          description: 'Document consciousness explorations'
-        },
-        {
-          icon: Mic,
-          label: 'Scribe Mode',
-          path: '/scribe',
-          description: 'Record and transcribe sessions'
-        },
-        {
-          icon: Upload,
-          label: 'Upload Files',
-          path: '/upload',
-          description: 'Share files with MAIA'
-        },
-        {
-          icon: Download,
-          label: 'Download Resources',
-          path: '/downloads',
-          description: 'Access your content library'
-        },
-      ],
-    },
-    {
-      title: 'YOUR MATRIX',
-      icon: '🧬',
-      items: [
-        {
-          icon: User,
-          label: 'Profile',
-          path: '/profile',
-          description: 'Your soul signature'
-        },
-        {
-          icon: Sparkles,
-          label: 'Cosmic Blueprint',
-          path: '/birth-chart',
-          description: 'Your birth chart & astrology'
-        },
-        {
-          icon: Heart,
-          label: 'Favorites',
-          path: '/favorites',
-          description: 'Cherished moments & insights'
+          description: 'Response structure analysis'
         },
       ],
     },
@@ -263,13 +251,13 @@ export default function LabToolsPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold text-[#D4B896] tracking-wide">Lab Tools</h1>
-              <p className="text-[#D4B896]/60 text-sm">Your sacred workspace</p>
+              <p className="text-[#D4B896]/60 text-sm">Your workspace</p>
             </div>
           </div>
 
           <p className="text-white/60 max-w-2xl mx-auto leading-relaxed">
-            Organized access to MAIA's consciousness tools, sacred practices, and laboratory instruments.
-            Each section contains specialized tools for your transformative journey.
+            Organized access to MAIA's tools and laboratory instruments.
+            Each section contains specialized tools for your journey.
           </p>
         </div>
 
@@ -332,7 +320,7 @@ export default function LabToolsPage() {
           <div className="inline-flex items-center gap-2 px-6 py-3 bg-[#D4B896]/10 border border-[#D4B896]/20 rounded-xl">
             <Sparkles className="w-4 h-4 text-[#D4B896]" />
             <span className="text-white/70 text-sm">
-              Your complete sacred laboratory workspace
+              Your complete laboratory workspace
             </span>
           </div>
         </div>

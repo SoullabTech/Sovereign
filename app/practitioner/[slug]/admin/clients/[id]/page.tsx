@@ -262,7 +262,7 @@ export default function ClientProfilePage() {
                 color: colors.gold,
               }}
             >
-              {client.preferred_name?.[0] || client.name[0]}
+              {(client.preferred_name || client.name || 'C')[0]}
             </div>
             <div>
               <h1 className="text-2xl font-display" style={{ color: colors.starlight }}>
