@@ -2563,20 +2563,16 @@ I'm not sure what I'm feeling yet.`;
         signal: controller.signal
       });
       } catch (fetchError) {
-        // [ios-debug] Catch network-level errors (CORS, network unreachable, etc.)
-        console.error('[ios-debug] fetch threw:', fetchError);
-        alert(`iOS network error: ${String(fetchError)}`);
+        // Network-level errors (CORS, network unreachable, etc.)
+        console.error('[fetch] network error:', fetchError);
         throw fetchError;
       }
 
       clearTimeout(timeoutId);
 
-      console.log('[ios-debug] status:', response.status, response.statusText);
-
       if (!response.ok) {
         const errorText = await response.text().catch(() => '(no body)');
-        console.error('[ios-debug] non-OK response:', response.status, errorText);
-        alert(`API error ${response.status}: ${errorText.slice(0, 200)}`);
+        console.error('[fetch] non-OK response:', response.status, errorText);
         throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
       }
 
@@ -3229,6 +3225,13 @@ I'm not sure what I'm feeling yet.`;
       console.error('Text chat API error:', error);
       trackEvent.error(userId || 'anonymous', 'api_error', String(error));
 
+      // 🔥 CRITICAL: Reset voice state on error - no audio will play, so unblock mic immediately
+      // Without this, voice mode stays stuck in "responding" state forever after 401/errors
+      setIsResponding(false);
+      setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
+      console.log('🔇 [ERROR RECOVERY] Reset voice state after API error');
+
       // Provide specific error messages based on error type
       let errorText = 'I apologize, I\'m having trouble connecting right now. Could you say that again?';
       if (error.name === 'AbortError') {
@@ -3237,6 +3240,9 @@ I'm not sure what I'm feeling yet.`;
       } else if (error.message?.includes('fetch')) {
         console.error('🚨 Network error - cannot reach server');
         errorText = 'I can\'t connect right now. Check your internet connection and try again.';
+      } else if (error.message?.includes('401')) {
+        console.error('🚨 Authentication required - user not signed in');
+        errorText = 'You need to sign in to continue our conversation.';
       }
 
       const errorMessage: ConversationMessage = {
