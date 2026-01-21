@@ -263,8 +263,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
   { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },
 
-  // Sovereign API
-  { prefix: '/api/sovereign', minTier: 'pro', notes: 'Sovereign features' },
+  // Sovereign API - all open to authenticated users (tier check temporarily disabled)
+  { prefix: '/api/sovereign', minTier: 'free', notes: 'Sovereign features' },
 
   // Stripe webhooks (system routes, validated by signature)
   { prefix: '/api/stripe/webhook', public: true, notes: 'Stripe webhooks - validated by signature' },

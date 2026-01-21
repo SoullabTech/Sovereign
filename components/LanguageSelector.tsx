@@ -1,16 +1,18 @@
 // frontend
 'use client';
 
-import React from 'react';
-import { Check, Globe } from 'lucide-react';
-import { useLanguage, SUPPORTED_LANGUAGES, LanguageConfig } from '@/lib/services/languageService';
+import React, { useState, useRef, useEffect } from 'react';
+import { Check, Globe, ChevronDown } from 'lucide-react';
+import { useLanguage, SUPPORTED_LANGUAGES } from '@/lib/services/languageService';
 
 interface LanguageSelectorProps {
   className?: string;
 }
 
 export function LanguageSelector({ className }: LanguageSelectorProps) {
-  const { language, setLanguage, availableLanguages } = useLanguage();
+  const { language, setLanguage } = useLanguage();
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Group languages by region for better UX
   const languageGroups = {
@@ -24,79 +26,93 @@ export function LanguageSelector({ className }: LanguageSelectorProps) {
 
   const handleSelect = (langCode: string) => {
     setLanguage(langCode);
+    setIsOpen(false);
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const currentConfig = SUPPORTED_LANGUAGES[language];
 
   return (
-    <div className={className}>
-      {/* Current Language Display */}
-      <div className="mb-6 p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-lg">
-        <div className="flex items-center gap-3">
-          <Globe className="w-5 h-5 text-amber-400" />
-          <div>
-            <div className="text-sm text-amber-200/60">Current Language</div>
-            <div className="text-lg font-medium text-white">
-              {currentConfig?.flag} {currentConfig?.nativeName} ({currentConfig?.name})
+    <div className={className} ref={dropdownRef}>
+      {/* Dropdown Trigger */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-lg hover:border-amber-500/40 transition-all"
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Globe className="w-5 h-5 text-amber-400" />
+            <div className="text-left">
+              <div className="text-sm text-amber-200/60">Current Language</div>
+              <div className="text-lg font-medium text-white">
+                {currentConfig?.flag} {currentConfig?.nativeName} ({currentConfig?.name})
+              </div>
             </div>
           </div>
+          <ChevronDown className={`w-5 h-5 text-amber-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </div>
-      </div>
+      </button>
 
-      {/* Language Grid by Region */}
-      <div className="space-y-6">
-        {Object.entries(languageGroups).map(([region, codes]) => {
-          const regionLanguages = codes
-            .filter(code => SUPPORTED_LANGUAGES[code]?.available)
-            .map(code => SUPPORTED_LANGUAGES[code]);
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div className="absolute z-50 mt-2 w-full max-w-md max-h-80 overflow-y-auto bg-[#1a1f2e] border border-amber-500/20 rounded-lg shadow-xl">
+          {Object.entries(languageGroups).map(([region, codes]) => {
+            const regionLanguages = codes
+              .filter(code => SUPPORTED_LANGUAGES[code]?.available)
+              .map(code => SUPPORTED_LANGUAGES[code]);
 
-          if (regionLanguages.length === 0) return null;
+            if (regionLanguages.length === 0) return null;
 
-          return (
-            <div key={region}>
-              <h4 className="text-xs uppercase tracking-wider text-white/40 mb-2">{region}</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            return (
+              <div key={region} className="px-2 py-1">
+                <div className="px-3 py-2 text-xs uppercase tracking-wider text-white/40 sticky top-0 bg-[#1a1f2e]">
+                  {region}
+                </div>
                 {regionLanguages.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => handleSelect(lang.code)}
                     className={`
-                      p-3 rounded-lg border text-left transition-all
+                      w-full px-3 py-2 rounded-lg text-left transition-all flex items-center justify-between
                       ${language === lang.code
-                        ? 'border-amber-500/50 bg-amber-500/10'
-                        : 'border-white/10 bg-black/20 hover:border-white/20 hover:bg-white/5'
+                        ? 'bg-amber-500/20 text-white'
+                        : 'hover:bg-white/5 text-white/80'
                       }
                     `}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xl">{lang.flag}</span>
-                        <div>
-                          <div className="text-sm font-medium text-white">{lang.nativeName}</div>
-                          <div className="text-xs text-white/50">{lang.name}</div>
-                        </div>
-                      </div>
-                      {language === lang.code && (
-                        <Check className="w-4 h-4 text-amber-400" />
-                      )}
-                    </div>
-                    {lang.beta && (
-                      <div className="mt-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">{lang.flag}</span>
+                      <span className="text-sm font-medium">{lang.nativeName}</span>
+                      <span className="text-xs text-white/50">({lang.name})</span>
+                      {lang.beta && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300">
                           Beta
                         </span>
-                      </div>
+                      )}
+                    </div>
+                    {language === lang.code && (
+                      <Check className="w-4 h-4 text-amber-400" />
                     )}
                   </button>
                 ))}
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Info about what language setting affects */}
-      <div className="mt-6 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+      <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
         <p className="text-xs text-blue-200/70">
           <strong>What this changes:</strong> MAIA will respond in your selected language.
           Voice recognition and speech will also adapt to your language preference.

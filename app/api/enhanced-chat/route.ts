@@ -13,6 +13,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
 import { ConversationAwareConsciousnessEngine } from '@/lib/consciousness/conversation-aware-consciousness-engine';
+import { MasterMemberArchetypeIntelligence } from '@/lib/consciousness/master-member-archetype-intelligence';
 
 // Skip during static export (Capacitor builds)
 export async function POST(request: NextRequest) {
