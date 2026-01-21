@@ -445,7 +445,24 @@ cmd_update() {
 
     log_info "Running migrations..."
     if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then
-        log_warn "⚠️  DATABASE MIGRATIONS FAILED - check manually with: ./scripts/deploy-production.sh migrate"
+        echo ""
+        log_warn "════════════════════════════════════════════════════════════════"
+        log_warn "⚠️  DATABASE MIGRATIONS FAILED"
+        log_warn "════════════════════════════════════════════════════════════════"
+        log_warn ""
+        log_warn "Recovery steps:"
+        log_warn "  1. Check what's missing:"
+        log_warn "     docker exec maia-postgres psql -U soullab -d maia_consciousness \\"
+        log_warn "       -c \"SELECT filename FROM schema_migrations ORDER BY applied_at DESC LIMIT 10;\""
+        log_warn ""
+        log_warn "  2. Re-run migrations:"
+        log_warn "     ./scripts/deploy-production.sh migrate"
+        log_warn ""
+        log_warn "  3. Verify required tables exist:"
+        log_warn "     docker exec maia-postgres psql -U soullab -d maia_consciousness -c '\\dt *comms*'"
+        log_warn ""
+        log_warn "════════════════════════════════════════════════════════════════"
+        echo ""
     fi
 
     log_success "Update complete!"
