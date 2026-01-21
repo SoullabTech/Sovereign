@@ -149,7 +149,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/oracle/interactive', minTier: 'personal', notes: 'Interactive oracle' },
 
   // Astrology tools (beyond browse)
-  { exact: '/birth-chart', minTier: 'personal', notes: 'Birth chart' },
+  { exact: '/birth-chart', minTier: 'free', notes: 'Redirect to /astrology' },
   { exact: '/chart', minTier: 'personal', notes: 'Chart generator' },
   { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
   { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
@@ -205,6 +205,11 @@ export const ACCESS_RULES: AccessRule[] = [
 
   // Lab Tools (all Pro)
   { prefix: '/labtools', minTier: 'pro', notes: 'All lab tools require Pro' },
+
+  // Legacy redirects to labtools
+  { exact: '/journal', minTier: 'pro', notes: 'Redirect to /labtools/journal' },
+  { exact: '/voice', minTier: 'pro', notes: 'Redirect to /labtools/voice' },
+  { exact: '/language', minTier: 'pro', notes: 'Redirect to /labtools/language' },
 
   // Consciousness Pro features
   { exact: '/consciousness/portals/admin', minTier: 'pro', rolesAnyOf: ['admin', 'steward'], notes: 'Portal admin' },
