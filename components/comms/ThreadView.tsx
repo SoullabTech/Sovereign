@@ -261,12 +261,11 @@ export function ThreadView({
     }
   };
 
-  // Phase 4 polish: Submit card-level feedback (toggle behavior)
+  // Phase 4 polish: Submit card-level feedback (no toggle - feedback is a record)
   const submitSuggestionFeedback = async (suggestionId: string, signal: 1 | -1) => {
-    // Toggle off if clicking same vote
+    // Already voted? Ignore (feedback is final, not a fidget)
     const current = suggestionFeedback[suggestionId];
-    if (current === signal) {
-      setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: null }));
+    if (current !== null && current !== undefined) {
       return;
     }
 
@@ -283,12 +282,12 @@ export function ThreadView({
 
       if (!res.ok) {
         // Revert on failure
-        setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: current ?? null }));
+        setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: null }));
       }
     } catch (err) {
       console.error('[ThreadView] Failed to submit suggestion feedback:', err);
       // Revert on error
-      setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: current ?? null }));
+      setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: null }));
     } finally {
       setFeedbackBusy(prev => ({ ...prev, [suggestionId]: false }));
     }
@@ -1077,14 +1076,16 @@ function SuggestionCard({
           </button>
         </div>
 
-        {/* Phase 4 polish: Feedback buttons */}
+        {/* Phase 4 polish: Feedback buttons (one-shot, not toggleable) */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => onFeedback(1)}
-            disabled={isFeedbackBusy}
+            disabled={isFeedbackBusy || feedback !== null}
             className={`p-1.5 rounded transition-colors ${
               feedback === 1
                 ? 'bg-green-500/20 text-green-400'
+                : feedback !== null
+                ? 'text-gray-600 cursor-not-allowed'
                 : 'text-gray-500 hover:text-green-400 hover:bg-green-500/10'
             } disabled:opacity-50`}
             title="Helpful suggestion"
@@ -1093,10 +1094,12 @@ function SuggestionCard({
           </button>
           <button
             onClick={() => onFeedback(-1)}
-            disabled={isFeedbackBusy}
+            disabled={isFeedbackBusy || feedback !== null}
             className={`p-1.5 rounded transition-colors ${
               feedback === -1
                 ? 'bg-red-500/20 text-red-400'
+                : feedback !== null
+                ? 'text-gray-600 cursor-not-allowed'
                 : 'text-gray-500 hover:text-red-400 hover:bg-red-500/10'
             } disabled:opacity-50`}
             title="Not helpful"
