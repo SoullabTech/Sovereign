@@ -28,6 +28,13 @@ export { default as SlidingScalePolicyCard } from './SlidingScalePolicyCard';
 export { default as SlidingScaleRequestsInbox } from './SlidingScaleRequestsInbox';
 export { default as SlidingScaleRequestDetail } from './SlidingScaleRequestDetail';
 
+// Trusted Colleagues Components (Warm Handoff System)
+export { default as DirectoryProfileCard } from './DirectoryProfileCard';
+export { default as ColleaguesList } from './ColleaguesList';
+export { default as ColleagueSearch } from './ColleagueSearch';
+export { default as ReferralComposer } from './ReferralComposer';
+export { default as ReferralInbox } from './ReferralInbox';
+
 // Marketing Components
 export { default as MarketingDashboard } from './MarketingDashboard';
 export { default as ContentGenerator } from './ContentGenerator';
