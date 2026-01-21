@@ -95,9 +95,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/oracle', public: true, notes: 'Oracle home - limited queries for free' },
   { exact: '/oracle/library', public: true, notes: 'Oracle library browse' },
 
-  // Patterns & Astrology
+  // Patterns (symbolic lenses)
   { exact: '/patterns', public: true, notes: 'Patterns landing - symbolic systems & cycles' },
-  { exact: '/astrology', public: true, notes: 'Astrology hub (nested under Patterns)' },
+  { exact: '/astrology', public: true, notes: 'Cycle lens module (nested under Patterns)' },
 
   // Practitioner pricing (public for discovery)
   { regex: /^\/api\/practitioner\/[^/]+\/pricing$/, public: true, notes: 'Practitioner pricing is public' },

@@ -15,6 +15,7 @@ import { ArrowLeft, Sparkles, Clock, Users, Compass, BookOpen } from 'lucide-rea
 export default function PatternsPage() {
   const router = useRouter();
 
+  // frontend: pattern-forward labels, astrology is the engine underneath
   const modules = [
     {
       id: 'cycles',
@@ -35,7 +36,7 @@ export default function PatternsPage() {
     {
       id: 'blueprint',
       icon: Sparkles,
-      title: 'Personal Blueprint',
+      title: 'Personal Pattern Profile',
       description: 'Add timing data to refine pattern resolution',
       path: '/astrology',
       available: true,
@@ -44,8 +45,8 @@ export default function PatternsPage() {
     {
       id: 'relational',
       icon: Users,
-      title: 'Interpersonal Resonance',
-      description: 'Explore relational dynamics',
+      title: 'Relational Dynamics',
+      description: 'Explore interpersonal patterns and resonance',
       path: '/astrology/synastry',
       available: true,
     },
@@ -138,9 +139,9 @@ export default function PatternsPage() {
           transition={{ delay: 0.6 }}
           className="text-center text-sm text-slate-500 mt-12 max-w-xl mx-auto"
         >
-          This platform explores consciousness through multiple lenses—symbolic, psychological,
-          somatic, and relational. Pattern systems are offered as optional frameworks for
-          recognition, not as belief or prediction.
+          MAIA is a consciousness exploration lab. We use multiple lenses—symbolic,
+          psychological, somatic, and relational—to support pattern recognition,
+          reflection, and integration.
         </motion.p>
       </section>
     </div>

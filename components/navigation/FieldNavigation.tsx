@@ -10,12 +10,12 @@ interface NavigationItem {
   significance: "primary" | "secondary" | "tertiary";
 }
 
-interface SoulNavigationProps {
+interface FieldNavigationProps {
   currentRoute?: string;
   onNavigate: (route: string) => void;
 }
 
-const SoulNavigation: React.FC<SoulNavigationProps> = ({
+const FieldNavigation: React.FC<FieldNavigationProps> = ({
   currentRoute,
   onNavigate,
 }) => {
@@ -231,4 +231,4 @@ const SoulNavigation: React.FC<SoulNavigationProps> = ({
   );
 };
 
-export default SoulNavigation;
+export default FieldNavigation;
