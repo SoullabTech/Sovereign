@@ -6,11 +6,12 @@
  * - Session cookies
  * - API keys
  *
- * NOTE: Password hashing is NOT in this file.
- * Use @/lib/auth/passwordUtils for all password operations (bcrypt).
+ * NOTE: hashPassword here uses legacy SHA256 for verifying existing hashes.
+ * New passwords in the main app use bcrypt via lib/auth/passwordUtils.
  */
 
 import { Request, Response, NextFunction } from 'express';
+import { createHash } from 'crypto';
 
 export interface AuthenticatedRequest extends Request {
   userId?: string;
@@ -120,4 +121,12 @@ export function requireAuth(req: AuthenticatedRequest, res: Response, next: Next
   });
 }
 
-// NOTE: hashPassword removed - use @/lib/auth/passwordUtils instead
+/**
+ * Hash password with SHA256 (legacy format)
+ * NOTE: This is for verifying existing SHA256 password hashes.
+ * New passwords in the main app use bcrypt via lib/auth/passwordUtils.ts
+ */
+export function hashPassword(password: string): string {
+  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
+  return createHash('sha256').update(password + salt).digest('hex');
+}
