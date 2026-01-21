@@ -47,9 +47,9 @@ async function getOnboardingStatus(
 
   const hasStripe = !!practitionerResult.rows[0]?.stripe_account_id;
 
-  // Check if pricing tiers are configured (any active tier with price > 0)
+  // Check if pricing tiers are configured (any active tier, including $0 scholarship tiers)
   const tierPricing = await getTierPricing(practitionerId);
-  const hasPricing = tierPricing.some(t => t.is_active && t.monthly_price_cents > 0);
+  const hasPricing = tierPricing.some(t => t.is_active);
 
   // Build the checklist
   const steps = [
