@@ -385,7 +385,9 @@ cmd_deploy() {
 
     # Run migrations
     log_info "Running database migrations..."
-    docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate || true
+    if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then
+        log_warn "⚠️  DATABASE MIGRATIONS FAILED - check manually with: ./scripts/deploy-production.sh migrate"
+    fi
 
     log_success "Deployment complete!"
     echo ""
@@ -425,7 +427,9 @@ cmd_update() {
     docker compose -f "$COMPOSE_FILE" up -d
 
     log_info "Running migrations..."
-    docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate || true
+    if ! docker compose -f "$COMPOSE_FILE" --profile migrate run --rm migrate; then
+        log_warn "⚠️  DATABASE MIGRATIONS FAILED - check manually with: ./scripts/deploy-production.sh migrate"
+    fi
 
     log_success "Update complete!"
     cmd_status

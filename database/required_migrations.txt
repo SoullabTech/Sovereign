@@ -3,3 +3,4 @@
 # Both ensure-migrations.sh and lib/db/schemaGate.ts read this file
 
 20260112000010_add_origin_route_and_processing_profile.sql
+20260122_comms_delivery_infrastructure.sql
