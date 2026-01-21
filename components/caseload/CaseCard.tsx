@@ -22,6 +22,21 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
   archived: { label: 'Archived', color: 'text-neutral-400', bg: 'bg-neutral-900/30' },
 };
 
+// Activity state based on days since last session
+type ActivityState = 'active' | 'quiet' | 'needs_attention';
+const activityConfig: Record<ActivityState, { label: string; color: string; dot: string }> = {
+  active: { label: 'Active', color: 'text-green-400', dot: 'bg-green-400' },
+  quiet: { label: 'Quiet', color: 'text-neutral-400', dot: 'bg-neutral-400' },
+  needs_attention: { label: 'Needs attention', color: 'text-amber-400', dot: 'bg-amber-400' },
+};
+
+function getActivityState(days: number | null): ActivityState {
+  if (days === null) return 'needs_attention'; // No sessions yet
+  if (days <= 7) return 'active';
+  if (days <= 21) return 'quiet';
+  return 'needs_attention';
+}
+
 interface CaseCardProps {
   caseData: CaseWithStats;
   onClick?: () => void;
@@ -56,6 +71,8 @@ export const CaseCard: React.FC<CaseCardProps> = ({
   };
 
   const days = daysSinceLastSession();
+  const activityState = getActivityState(days);
+  const activity = activityConfig[activityState];
 
   return (
     <SacredCard
@@ -129,14 +146,12 @@ export const CaseCard: React.FC<CaseCardProps> = ({
           <span>{caseData.note_count} notes</span>
         </div>
 
-        {days !== null && (
-          <div className="flex items-center gap-1">
-            <span className="text-gold-divine/70">⏱️</span>
-            <span>
-              {days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days}d ago`}
-            </span>
-          </div>
-        )}
+        <div className="flex items-center gap-1.5" title={activity.label}>
+          <span className={cn('w-2 h-2 rounded-full', activity.dot)} />
+          <span className={activity.color}>
+            {days === null ? 'No sessions' : days === 0 ? 'Today' : days === 1 ? 'Yesterday' : `${days}d ago`}
+          </span>
+        </div>
 
         <div className="flex items-center gap-1">
           <span className="text-gold-divine/70">📅</span>
