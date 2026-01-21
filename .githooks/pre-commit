@@ -11,7 +11,11 @@ SUPABASE_EXIT=$?
 npm run check:no-phi-enc
 PHI_EXIT=$?
 
-if [ $SUPABASE_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ]; then
+# 3. PHI columns inventory check
+npm run check:phi-inventory
+INVENTORY_EXIT=$?
+
+if [ $SUPABASE_EXIT -eq 0 ] && [ $PHI_EXIT -eq 0 ] && [ $INVENTORY_EXIT -eq 0 ]; then
   echo "✅ Sovereignty check passed"
   exit 0
 else
@@ -21,6 +25,9 @@ else
   fi
   if [ $PHI_EXIT -ne 0 ]; then
     echo "   - PHI encryption leak risks found"
+  fi
+  if [ $INVENTORY_EXIT -ne 0 ]; then
+    echo "   - PHI inventory inconsistent"
   fi
   exit 1
 fi

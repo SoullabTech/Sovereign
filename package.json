@@ -42,6 +42,7 @@
     "check:backend-imports": "node scripts/check-backend-imports.js",
     "check:no-sha256-passwords": "bash scripts/check-no-sha256-passwords.sh",
     "check:no-phi-enc": "tsx scripts/check-no-phi-enc-in-responses.ts",
+    "check:phi-inventory": "tsx scripts/check-phi-columns-inventory.ts",
     "guard:no-scripted-maia": "npx ts-node scripts/guards/no-scripted-maia.ts",
     "guard:ain-v2-integration": "npx tsx scripts/guards/ain-v2-integration-present.ts",
     "guard:phi": "bash scripts/guards/phi-no-plaintext-drift.sh",
