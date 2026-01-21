@@ -110,6 +110,10 @@ Critical safety information requiring protection.
 
 | Table | Column | Type | Status | PHI Reason |
 |-------|--------|------|--------|------------|
+| `client_emergency_info` | `safety_plan` | TEXT | ENCRYPTED | Client safety plan |
+| `client_emergency_info` | `medications` | TEXT | ENCRYPTED | Current medications |
+| `client_emergency_info` | `medical_conditions` | TEXT | ENCRYPTED | Medical conditions |
+| `client_emergency_info` | `risk_notes` | TEXT | ENCRYPTED | Practitioner risk notes |
 | `safety_concern_logs` | `review_note` | TEXT | PLAINTEXT | Safety review notes |
 
 ---

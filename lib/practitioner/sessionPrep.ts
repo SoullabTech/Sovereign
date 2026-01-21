@@ -13,6 +13,11 @@ import type { PractitionerClient, PractitionerSession } from '@/lib/stellium/typ
 import type { MessageDigest, ClientMessage } from '@/lib/practitioner/messages';
 import { getMessageDigest } from '@/lib/practitioner/messages';
 import { decryptJoinedClientFields } from '@/lib/stellium/clients';
+import {
+  encryptEmergencyInfoPatch,
+  sanitizeEmergencyInfoRow,
+  isPHIEncryptionEnabled,
+} from '@/lib/security/phiAccessors/emergencyInfo';
 
 // SQL fragment for selecting encrypted client name columns in JOINs
 const CLIENT_NAME_JOIN_COLUMNS = `
@@ -334,11 +339,14 @@ export async function getEmergencyInfo(
   }
 
   const row = result.rows[0];
-  return {
+  const emergencyInfo = {
     ...row,
     emergency_contacts: row.emergency_contacts || [],
     crisis_resources: row.crisis_resources || [],
   } as ClientEmergencyInfo;
+
+  // SECURITY: Sanitize before returning to strip *_enc columns
+  return sanitizeEmergencyInfoRow(emergencyInfo);
 }
 
 /**
@@ -372,6 +380,25 @@ export async function upsertEmergencyInfo(
   const hasSafetyPlan = !!safety_plan && safety_plan.trim().length > 0;
   const hasRiskFactors = !!risk_notes && risk_notes.trim().length > 0;
 
+  // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
+  let encryptedColumns: {
+    safety_plan_enc?: string;
+    safety_plan_enc_meta?: string;
+    medications_enc?: string;
+    medications_enc_meta?: string;
+    medical_conditions_enc?: string;
+    medical_conditions_enc_meta?: string;
+    risk_notes_enc?: string;
+    risk_notes_enc_meta?: string;
+  } = {};
+
+  if (isPHIEncryptionEnabled()) {
+    encryptedColumns = encryptEmergencyInfoPatch(
+      { safety_plan, medications, medical_conditions, risk_notes },
+      { rowId: clientId, practitionerId }
+    );
+  }
+
   const result = await query(
     `INSERT INTO client_emergency_info (
       client_id,
@@ -382,8 +409,16 @@ export async function upsertEmergencyInfo(
       risk_notes,
       crisis_resources,
       has_safety_plan,
-      has_risk_factors
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+      has_risk_factors,
+      safety_plan_enc,
+      safety_plan_enc_meta,
+      medications_enc,
+      medications_enc_meta,
+      medical_conditions_enc,
+      medical_conditions_enc_meta,
+      risk_notes_enc,
+      risk_notes_enc_meta
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
     ON CONFLICT (client_id)
     DO UPDATE SET
       emergency_contacts = EXCLUDED.emergency_contacts,
@@ -394,6 +429,14 @@ export async function upsertEmergencyInfo(
       crisis_resources = EXCLUDED.crisis_resources,
       has_safety_plan = EXCLUDED.has_safety_plan,
       has_risk_factors = EXCLUDED.has_risk_factors,
+      safety_plan_enc = EXCLUDED.safety_plan_enc,
+      safety_plan_enc_meta = EXCLUDED.safety_plan_enc_meta,
+      medications_enc = EXCLUDED.medications_enc,
+      medications_enc_meta = EXCLUDED.medications_enc_meta,
+      medical_conditions_enc = EXCLUDED.medical_conditions_enc,
+      medical_conditions_enc_meta = EXCLUDED.medical_conditions_enc_meta,
+      risk_notes_enc = EXCLUDED.risk_notes_enc,
+      risk_notes_enc_meta = EXCLUDED.risk_notes_enc_meta,
       updated_at = NOW()
     RETURNING *`,
     [
@@ -406,15 +449,26 @@ export async function upsertEmergencyInfo(
       JSON.stringify(crisis_resources),
       hasSafetyPlan,
       hasRiskFactors,
+      encryptedColumns.safety_plan_enc || null,
+      encryptedColumns.safety_plan_enc_meta || null,
+      encryptedColumns.medications_enc || null,
+      encryptedColumns.medications_enc_meta || null,
+      encryptedColumns.medical_conditions_enc || null,
+      encryptedColumns.medical_conditions_enc_meta || null,
+      encryptedColumns.risk_notes_enc || null,
+      encryptedColumns.risk_notes_enc_meta || null,
     ]
   );
 
   const row = result.rows[0];
-  return {
+  const emergencyInfo = {
     ...row,
     emergency_contacts: row.emergency_contacts || [],
     crisis_resources: row.crisis_resources || [],
   } as ClientEmergencyInfo;
+
+  // SECURITY: Sanitize before returning to strip *_enc columns
+  return sanitizeEmergencyInfoRow(emergencyInfo);
 }
 
 /**

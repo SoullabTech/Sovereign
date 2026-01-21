@@ -166,6 +166,30 @@ const MOCK_CASE_NOTE_ROW_WITH_ENC = {
   updated_at: '2024-01-15T10:00:00Z',
 };
 
+const MOCK_EMERGENCY_INFO_ROW_WITH_ENC = {
+  id: 'emergency-123',
+  client_id: 'client-123',
+  emergency_contacts: [{ name: 'John Doe', phone: '555-1234', relationship: 'spouse' }],
+  safety_plan: 'Call therapist, then 988 hotline, then ER',
+  medications: 'Lexapro 10mg daily, Xanax 0.5mg PRN',
+  medical_conditions: 'Anxiety disorder, PTSD',
+  risk_notes: 'History of SI 2023, currently stable',
+  crisis_resources: [{ name: '988', phone: '988', type: 'hotline' }],
+  has_safety_plan: true,
+  has_risk_factors: true,
+  // These should NEVER appear in output
+  safety_plan_enc: 'encrypted-safety-plan',
+  safety_plan_enc_meta: { kid: 'k1', iv: 'iv-safety' },
+  medications_enc: 'encrypted-medications',
+  medications_enc_meta: { kid: 'k1', iv: 'iv-meds' },
+  medical_conditions_enc: 'encrypted-conditions',
+  medical_conditions_enc_meta: { kid: 'k1', iv: 'iv-conditions' },
+  risk_notes_enc: 'encrypted-risk-notes',
+  risk_notes_enc_meta: { kid: 'k1', iv: 'iv-risk' },
+  created_at: '2024-01-15T10:00:00Z',
+  updated_at: '2024-01-15T10:00:00Z',
+};
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -400,6 +424,48 @@ describe('PHI Leak Prevention', () => {
     });
   });
 
+  describe('Emergency info data layer (Wave 2)', () => {
+    it('getEmergencyInfo should never return *_enc columns', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: 'client-123' }] }) // client check
+        .mockResolvedValueOnce({ rows: [MOCK_EMERGENCY_INFO_ROW_WITH_ENC] }); // emergency info
+
+      const { getEmergencyInfo } = await import('@/lib/practitioner/sessionPrep');
+      const result = await getEmergencyInfo('practitioner-456', 'client-123');
+
+      assertNoEncryptedColumns(result, 'getEmergencyInfo');
+
+      // Verify we still get the plaintext fields
+      expect(result).toHaveProperty('safety_plan');
+      expect(result?.safety_plan).toBe('Call therapist, then 988 hotline, then ER');
+      expect(result).toHaveProperty('medications');
+      expect(result).toHaveProperty('medical_conditions');
+      expect(result).toHaveProperty('risk_notes');
+    });
+
+    it('upsertEmergencyInfo should never return *_enc columns', async () => {
+      mockQuery
+        .mockResolvedValueOnce({ rows: [{ id: 'client-123' }] }) // client check
+        .mockResolvedValueOnce({ rows: [MOCK_EMERGENCY_INFO_ROW_WITH_ENC] }); // upsert result
+
+      const { upsertEmergencyInfo } = await import('@/lib/practitioner/sessionPrep');
+      const result = await upsertEmergencyInfo('practitioner-456', 'client-123', {
+        safety_plan: 'Updated safety plan',
+        medications: 'Updated medications',
+        medical_conditions: 'Updated conditions',
+        risk_notes: 'Updated risk notes',
+      });
+
+      assertNoEncryptedColumns(result, 'upsertEmergencyInfo');
+
+      // Verify we still get the plaintext fields
+      expect(result).toHaveProperty('safety_plan');
+      expect(result).toHaveProperty('medications');
+      expect(result).toHaveProperty('medical_conditions');
+      expect(result).toHaveProperty('risk_notes');
+    });
+  });
+
   describe('stripEncryptedColumns helper', () => {
     it('should remove all *_enc and *_enc_meta keys', () => {
       // Import the real function
@@ -480,6 +546,9 @@ describe('PHI Leak Prevention', () => {
         'createNote',
         'updateNote',
         'updateNoteAnalysis',
+        // Wave 2: Emergency info
+        'getEmergencyInfo',
+        'upsertEmergencyInfo',
         // Utilities
         'stripEncryptedColumns',
       ];
