@@ -137,24 +137,34 @@ async function checkTables(): Promise<ComponentHealth> {
   }
 }
 
-// Check memory usage
+// Check memory usage against V8 heap limit (not dynamic heapTotal)
 function checkMemory(): ComponentHealth {
   try {
+    const v8 = require('node:v8');
     const memUsage = process.memoryUsage();
+    const heapStats = v8.getHeapStatistics();
+
     const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
     const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
+    const heapLimitMB = Math.round(heapStats.heap_size_limit / 1024 / 1024);
     const rssMB = Math.round(memUsage.rss / 1024 / 1024);
 
-    // Consider degraded if using more than 80% of heap
-    const heapPercent = (memUsage.heapUsed / memUsage.heapTotal) * 100;
+    // Measure against V8 heap limit, not dynamic heapTotal
+    // heapTotal grows with demand; heapLimit is the actual ceiling
+    const heapPercent = Math.round((heapUsedMB / heapLimitMB) * 100);
+
+    // ok < 70%, degraded 70-85%, thresholds
+    let status: HealthStatus = 'ok';
+    if (heapPercent > 85) status = 'degraded';
 
     return {
-      status: heapPercent > 90 ? 'degraded' : 'ok',
+      status,
       details: {
         heapUsedMB,
         heapTotalMB,
+        heapLimitMB,
         rssMB,
-        heapPercent: Math.round(heapPercent),
+        heapPercent,
       },
     };
   } catch {
