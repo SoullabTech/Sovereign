@@ -708,9 +708,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const average = dataArray.reduce((a, b) => a + b, 0) / bufferLength;
       const normalizedLevel = Math.min(average / 128, 1);
 
-      // DEBUG: Log audio level every 30 frames (~0.5 sec) to see if mic is picking up anything
+      // DEBUG: Log audio level every 30 frames (~0.5 sec) - dev only
       debugCounter++;
-      if (debugCounter % 30 === 0) {
+      if (debugCounter % 30 === 0 && process.env.NODE_ENV === 'development') {
         console.log(`🎚️ [MIC DEBUG] Audio level: ${normalizedLevel.toFixed(3)} (raw avg: ${average.toFixed(1)})`);
       }
 
@@ -739,12 +739,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         isSpeakingNowRef.current = true;
         hasSpokenRef.current = true; // Mark that we've detected real speech
         silenceStartTimeRef.current = 0;
-        console.log('🗣️ [VAD] User speaking (level:', normalizedLevel.toFixed(2), ')');
+        if (process.env.NODE_ENV === 'development') console.log('🗣️ [VAD] User speaking (level:', normalizedLevel.toFixed(2), ')');
       } else if (!isSpeakingNow && wasSpeaking) {
         // User paused - start silence timer (might be thinking, might be done)
         isSpeakingNowRef.current = false;
         silenceStartTimeRef.current = now;
-        console.log('⏸️ [VAD] Pause detected - listening for continuation...');
+        if (process.env.NODE_ENV === 'development') console.log('⏸️ [VAD] Pause detected - listening for continuation...');
       } else if (!isSpeakingNow && silenceStartTimeRef.current > 0 && hasSpokenRef.current) {
         // Check if pause has lasted long enough AND we have real content
         const silenceDuration = now - silenceStartTimeRef.current;
