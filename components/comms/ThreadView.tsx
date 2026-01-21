@@ -865,7 +865,8 @@ function SuggestionsPanel({
         {isBlocked ? (
           <button
             onClick={onOpenSafetyModal}
-            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded transition-colors"
+            disabled={!onOpenSafetyModal}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Shield className="w-3.5 h-3.5" />
             <span>Acknowledge safety flag to unlock</span>
