@@ -13,7 +13,11 @@
 - Infrastructure: Docker + Caddy (reverse proxy with auto-SSL via Let's Encrypt)
 - Deployment script: `./scripts/deploy-production.sh`
 - Production compose: `docker-compose.production.yml`
-- To deploy: SSH to server, `git pull`, run `./scripts/deploy-production.sh deploy`
+- **Production server**: AWS EC2 `i-0bd7985f26c872359` at `35.167.91.24`
+- **Deploy command**:
+  ```bash
+  ssh -i ~/.ssh/maia-sovereign-key.pem ubuntu@35.167.91.24 "cd /opt/maia && git pull && ./scripts/deploy-production.sh update"
+  ```
 
 ### Why Self-Hosted
 
