@@ -72,6 +72,10 @@ export interface ReferralRequest {
   client_contact: string | null;
   consent_recorded_at: string | null;
 
+  // Sealing (set when connection breaks)
+  sealed_at: string | null;
+  sealed_reason: string | null;
+
   // Timestamps
   created_at: string;
   sent_at: string | null;
@@ -561,6 +565,7 @@ export async function recordConsent(
 
 /**
  * Get referrals (inbox or sent)
+ * Filters out sealed referrals (connection broken)
  */
 export async function getReferrals(
   practitionerId: string,
@@ -576,6 +581,7 @@ export async function getReferrals(
      LEFT JOIN members m_from ON m_from.id = r.from_practitioner_id
      LEFT JOIN members m_to ON m_to.id = r.to_practitioner_id
      WHERE r.${field} = $1
+       AND r.sealed_at IS NULL
      ORDER BY r.created_at DESC`,
     [practitionerId]
   );
@@ -585,6 +591,7 @@ export async function getReferrals(
 
 /**
  * Get single referral (with note privacy enforced)
+ * Returns null for sealed referrals (connection broken)
  */
 export async function getReferral(
   referralId: string,
@@ -598,7 +605,8 @@ export async function getReferral(
      LEFT JOIN members m_from ON m_from.id = r.from_practitioner_id
      LEFT JOIN members m_to ON m_to.id = r.to_practitioner_id
      WHERE r.id = $1
-       AND (r.from_practitioner_id = $2 OR r.to_practitioner_id = $2)`,
+       AND (r.from_practitioner_id = $2 OR r.to_practitioner_id = $2)
+       AND r.sealed_at IS NULL`,
     [referralId, practitionerId]
   );
 
@@ -721,6 +729,8 @@ function formatReferralView(row: any, viewerId: string): ReferralView {
     client_name: row.client_name,
     client_contact: row.client_contact,
     consent_recorded_at: row.consent_recorded_at,
+    sealed_at: row.sealed_at,
+    sealed_reason: row.sealed_reason,
     created_at: row.created_at,
     sent_at: row.sent_at,
     viewed_at: row.viewed_at,

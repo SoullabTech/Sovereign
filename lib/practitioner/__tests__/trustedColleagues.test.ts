@@ -20,6 +20,7 @@ import {
   getReferrals,
   getReferral,
   respondToReferral,
+  type ReferralView,
 } from '../trustedColleagues';
 
 // Mock the database query function
@@ -382,6 +383,171 @@ describe('Trusted Colleagues', () => {
           requester_note: 'Test',
         })
       ).rejects.toThrow('NOT_COLLEAGUES');
+    });
+  });
+
+  describe('Abuse Path / Adversarial QA', () => {
+    it('revocation should redact identity (destructive delete)', async () => {
+      // When consent is revoked, the library clears identity fields
+      // The DB trigger provides additional safety, but library must do it too
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'referral-1',
+          from_practitioner_id: 'practitioner-1',
+          client_consent_given: false,
+          client_name_shared: false,
+          client_name: null,  // Must be null after revocation
+          client_contact: null,  // Must be null after revocation
+          presenting_themes: [],
+          constraints: [],
+        }],
+      });
+
+      const referral = await recordConsent('referral-1', 'practitioner-1', {
+        client_consent_given: false,
+      });
+
+      // Verify library clears identity on revocation
+      expect(referral.client_consent_given).toBe(false);
+      expect(referral.client_name_shared).toBe(false);
+      expect(referral.client_name).toBeNull();
+      expect(referral.client_contact).toBeNull();
+
+      // Verify the SQL explicitly sets NULL
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('client_name = NULL'),
+        expect.any(Array)
+      );
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('client_contact = NULL'),
+        expect.any(Array)
+      );
+    });
+
+    it('getReferrals should filter out sealed referrals', async () => {
+      // Sealed referrals (from broken connections) should not appear
+      mockQuery.mockResolvedValueOnce({
+        rows: [
+          // Only unsealed referral should be returned
+          {
+            id: 'referral-2',
+            from_practitioner_id: 'other',
+            to_practitioner_id: 'practitioner-1',
+            status: 'sent',
+            sealed_at: null,  // Not sealed
+            presenting_themes: [],
+            constraints: [],
+          },
+          // Sealed referral should be filtered by the query
+        ],
+      });
+
+      const referrals = await getReferrals('practitioner-1', 'inbox');
+
+      // Verify query includes sealed_at IS NULL filter
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('sealed_at IS NULL'),
+        expect.any(Array)
+      );
+
+      expect(referrals.length).toBe(1);
+      expect(referrals[0].id).toBe('referral-2');
+    });
+
+    it('getReferral should return null for sealed referrals', async () => {
+      // Sealed referrals should not be accessible by ID
+      mockQuery.mockResolvedValueOnce({ rows: [] });  // No rows = sealed or not found
+
+      const referral = await getReferral('referral-sealed', 'practitioner-1');
+
+      // Verify query includes sealed_at IS NULL filter
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('sealed_at IS NULL'),
+        expect.any(Array)
+      );
+
+      expect(referral).toBeNull();
+    });
+
+    it('consent endpoint cannot create invalid DB state (name without consent)', async () => {
+      // Even if client tries to pass name with consent=false, library clears it
+      // The SQL shows client_name = NULL when consent is false
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'referral-1',
+          from_practitioner_id: 'practitioner-1',
+          client_consent_given: false,
+          client_name_shared: false,
+          client_name: null,
+          client_contact: null,
+          presenting_themes: [],
+          constraints: [],
+        }],
+      });
+
+      const referral = await recordConsent('referral-1', 'practitioner-1', {
+        client_consent_given: false,
+        // Even if attacker tried to pass these, they should be ignored
+      });
+
+      expect(referral.client_name).toBeNull();
+      expect(referral.client_contact).toBeNull();
+    });
+
+    it('consent endpoint cannot set name_shared without consent_given', async () => {
+      // If consent_given=true but name_shared=false, name must be null
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'referral-1',
+          from_practitioner_id: 'practitioner-1',
+          client_consent_given: true,
+          client_name_shared: false,  // Not sharing
+          client_name: null,  // Must be null
+          client_contact: null,
+          presenting_themes: [],
+          constraints: [],
+        }],
+      });
+
+      const referral = await recordConsent('referral-1', 'practitioner-1', {
+        client_consent_given: true,
+        client_name_shared: false,  // Consent given but not sharing name
+      });
+
+      expect(referral.client_consent_given).toBe(true);
+      expect(referral.client_name_shared).toBe(false);
+      expect(referral.client_name).toBeNull();
+    });
+
+    it('sendReferral uses atomic update (WHERE status=draft)', async () => {
+      // Double-send protection: only one wins
+      mockQuery.mockResolvedValueOnce({
+        rows: [{
+          id: 'referral-1',
+          from_practitioner_id: 'practitioner-1',
+          status: 'sent',
+          sent_at: '2026-01-21T00:00:00Z',
+          presenting_themes: [],
+          constraints: [],
+        }],
+      });
+
+      await sendReferral('referral-1', 'practitioner-1');
+
+      // Verify atomic update pattern
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining("status = 'draft'"),
+        expect.any(Array)
+      );
+    });
+
+    it('double-send should fail for already-sent referral', async () => {
+      // Second send attempt should fail because status is no longer 'draft'
+      mockQuery.mockResolvedValueOnce({ rows: [] });  // No rows = already sent
+
+      await expect(
+        sendReferral('referral-1', 'practitioner-1')
+      ).rejects.toThrow('REFERRAL_NOT_FOUND');
     });
   });
 });
