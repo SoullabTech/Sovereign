@@ -28,12 +28,14 @@ import type { CommsDomain, InboxQueryOptions } from '@/lib/comms/types';
  * - filter: 'unread' | 'safety' | 'unanswered' | 'all' (default: 'all')
  * - limit: number (default: 50)
  * - offset: number (default: 0)
+ * - count_only: 'true' to return just unread count (lightweight for badges)
  */
 export async function GET(request: NextRequest) {
   try {
     const practitionerId = await requireMemberId();
 
     const url = new URL(request.url);
+    const countOnly = url.searchParams.get('count_only') === 'true';
     const domain = (url.searchParams.get('domain') || 'all') as CommsDomain | 'all';
     const filter = (url.searchParams.get('filter') || 'all') as InboxQueryOptions['filter'];
     const limit = parseInt(url.searchParams.get('limit') || '50', 10);
@@ -53,6 +55,14 @@ export async function GET(request: NextRequest) {
         { error: 'Invalid filter. Must be unread, safety, unanswered, or all.' },
         { status: 400 }
       );
+    }
+
+    // Fast path: count_only mode for badge display
+    if (countOnly) {
+      const inbox = await getInbox(practitionerId, { domain: 'all', filter: 'all', limit: 1, offset: 0 });
+      return NextResponse.json({
+        unread_count: inbox.summary.total_unread,
+      });
     }
 
     // Get inbox and safety status in parallel

@@ -206,6 +206,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '⚕️',
       items: [
         {
+          icon: MessageSquare,
+          label: 'Client Comms',
+          action: () => onNavigate('/stellium/comms'),
+          description: 'Client messaging inbox (Stellium)'
+        },
+        {
           icon: Briefcase,
           label: 'Caseload',
           action: () => onNavigate('/caseload'),
