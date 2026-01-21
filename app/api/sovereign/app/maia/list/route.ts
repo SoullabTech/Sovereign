@@ -8,6 +8,75 @@ export const dynamic = 'force-dynamic';
  * Do not infer these deeper in the stack.
  */
 import { NextRequest, NextResponse } from 'next/server';
+
+// =============================================================================
+// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
+// =============================================================================
+
+const ALLOWED_ORIGINS = new Set([
+  'https://soullab.life',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'ionic://localhost',
+  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
+]);
+
+// Default headers to allow if client doesn't specify (non-preflight requests)
+const DEFAULT_ALLOWED_HEADERS = 'Content-Type, Authorization, X-Requested-With, X-Member-Id, X-Maia-Tier, X-Maia-Roles';
+
+function getCorsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin');
+
+  // Handle origin: allow known origins, or treat 'null' as capacitor
+  let allowedOrigin: string;
+  if (origin === 'null') {
+    allowedOrigin = 'null'; // WebKit Capacitor edge case
+  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
+    allowedOrigin = origin;
+  } else {
+    allowedOrigin = 'https://soullab.life';
+  }
+
+  // Echo requested headers for preflight (more robust than fixed list)
+  const requestedHeaders = req.headers.get('access-control-request-headers');
+  const allowHeaders = requestedHeaders || DEFAULT_ALLOWED_HEADERS;
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS',
+    'Access-Control-Allow-Headers': allowHeaders,
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
+
+/**
+ * Helper to create JSON response with CORS headers
+ */
+function jsonWithCors(
+  req: NextRequest,
+  data: unknown,
+  status: number = 200,
+  extraHeaders?: Record<string, string>
+): NextResponse {
+  const headers = {
+    ...getCorsHeaders(req),
+    ...extraHeaders,
+  };
+  return NextResponse.json(data, { status, headers });
+}
+
+/**
+ * CORS Preflight Handler
+ * Returns 204 with proper CORS headers for OPTIONS requests
+ */
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
 import { getMaiaResponse } from '@/lib/sovereign/maiaService';
 import { ensureSession, initializeSessionTable } from '@/lib/sovereign/sessionManager';
 import { ensureSchemaReady } from '@/lib/db/schemaGate';
@@ -130,14 +199,11 @@ export async function POST(req: NextRequest) {
     await withTimeoutLabeled('ensureSchemaReady', ensureSchemaReady(), 5000, start);
   } catch (schemaErr: any) {
     console.error('❌ [SchemaGate] DB schema behind code:', schemaErr.message);
-    return NextResponse.json(
-      {
-        error: 'DB_SCHEMA_BEHIND',
-        message: 'Database schema is behind code. Run migrations.',
-        details: schemaErr.message,
-      },
-      { status: 503 }
-    );
+    return jsonWithCors(req, {
+      error: 'DB_SCHEMA_BEHIND',
+      message: 'Database schema is behind code. Run migrations.',
+      details: schemaErr.message,
+    }, 503);
   }
 
   try {
@@ -164,7 +230,7 @@ export async function POST(req: NextRequest) {
           `⚠️ DEMO sovereign request took ${duration}ms (should be near-instant)`
         );
       }
-      return NextResponse.json(defaultSovereignResponse(), { status: 200 });
+      return jsonWithCors(req, defaultSovereignResponse(), 200);
     }
 
     if (!message || typeof message !== 'string') {
@@ -172,10 +238,7 @@ export async function POST(req: NextRequest) {
       console.warn(
         `⚠️ Sovereign request rejected in ${duration}ms: missing message`
       );
-      return NextResponse.json(
-        { error: 'Missing `message` in request body', code: 'NO_MESSAGE' },
-        { status: 400 }
-      );
+      return jsonWithCors(req, { error: 'Missing `message` in request body', code: 'NO_MESSAGE' }, 400);
     }
 
     // Initialize database tables if needed
@@ -220,30 +283,27 @@ export async function POST(req: NextRequest) {
             );
 
             const duration = Date.now() - start;
-            return NextResponse.json(
-              {
-                message: fieldSafety.message,
-                elementalNote: fieldSafety.elementalNote,
-                route: {
-                  endpoint: '/api/sovereign/app/maia',
-                  type: 'Sovereign Consciousness Interface',
-                  operational: true,
-                  mode: 'field-safety-boundary',
-                },
-                session: {
-                  id: session.id,
-                  turns: session.turns,
-                },
-                metadata: {
-                  fieldWorkSafe: false,
-                  fieldRouting: fieldSafety.fieldRouting,
-                  cognitiveAltitude: cognitiveProfile.rollingAverage,
-                  stability: cognitiveProfile.stability,
-                  processingTimeMs: duration,
-                },
+            return jsonWithCors(req, {
+              message: fieldSafety.message,
+              elementalNote: fieldSafety.elementalNote,
+              route: {
+                endpoint: '/api/sovereign/app/maia',
+                type: 'Sovereign Consciousness Interface',
+                operational: true,
+                mode: 'field-safety-boundary',
               },
-              { status: 200 }, // Not an error - this is expected behavior
-            );
+              session: {
+                id: session.id,
+                turns: session.turns,
+              },
+              metadata: {
+                fieldWorkSafe: false,
+                fieldRouting: fieldSafety.fieldRouting,
+                cognitiveAltitude: cognitiveProfile.rollingAverage,
+                stability: cognitiveProfile.stability,
+                processingTimeMs: duration,
+              },
+            }, 200);
           }
 
           console.log(
@@ -465,10 +525,7 @@ export async function POST(req: NextRequest) {
       repaired: orchestratorResult.regenerated || false,
     });
 
-    const response = NextResponse.json(responseData, { status: 200 });
-    Object.entries(canonHeaders).forEach(([key, value]) => {
-      response.headers.set(key, value);
-    });
+    const response = jsonWithCors(req, responseData, 200, canonHeaders);
     return response;
   } catch (err: any) {
     const duration = Date.now() - start;
@@ -477,65 +534,56 @@ export async function POST(req: NextRequest) {
     // Fail closed with clear status - never pretend to be MAIA
     if (err?.code === 'PROVIDERS_UNAVAILABLE') {
       console.error(`🚨 All providers unavailable after ${duration}ms:`, err.message);
-      return NextResponse.json(
-        {
-          error: 'PROVIDERS_UNAVAILABLE',
-          status: 'Language providers offline (Claude + Ollama). Check API keys and model availability.',
-          route: {
-            endpoint: '/api/sovereign/app/maia',
-            type: 'Sovereign Consciousness Interface',
-            operational: false,
-            mode: 'providers-offline',
-          },
-          meta: {
-            durationMs: duration,
-            reason: err.reason || 'unknown',
-          },
+      return jsonWithCors(req, {
+        error: 'PROVIDERS_UNAVAILABLE',
+        status: 'Language providers offline (Claude + Ollama). Check API keys and model availability.',
+        route: {
+          endpoint: '/api/sovereign/app/maia',
+          type: 'Sovereign Consciousness Interface',
+          operational: false,
+          mode: 'providers-offline',
         },
-        { status: 503 }
-      );
+        meta: {
+          durationMs: duration,
+          reason: err.reason || 'unknown',
+        },
+      }, 503);
     }
 
     // 🔥 Timeout-specific handling
     if (err?.code === 'SOVEREIGN_TIMEOUT' || err?.message === 'SOVEREIGN_TIMEOUT') {
       console.error(`❌ Sovereign MAIA timeout after ${duration}ms`);
-      return NextResponse.json(
-        {
-          error: 'SOVEREIGN_TIMEOUT',
-          status: 'Request timed out. Try a shorter message or wait a moment.',
-          route: {
-            endpoint: '/api/sovereign/app/maia',
-            type: 'Sovereign Consciousness Interface',
-            operational: false,
-            mode: 'timeout',
-          },
-          meta: {
-            durationMs: duration,
-          },
+      return jsonWithCors(req, {
+        error: 'SOVEREIGN_TIMEOUT',
+        status: 'Request timed out. Try a shorter message or wait a moment.',
+        route: {
+          endpoint: '/api/sovereign/app/maia',
+          type: 'Sovereign Consciousness Interface',
+          operational: false,
+          mode: 'timeout',
         },
-        { status: 504 }
-      );
+        meta: {
+          durationMs: duration,
+        },
+      }, 504);
     }
 
     console.error(`❌ Sovereign MAIA error after ${duration}ms:`, err);
 
     // Final fallback - neutral status message, not MAIA-voice
-    return NextResponse.json(
-      {
-        error: 'SYSTEM_ERROR',
-        status: 'Service temporarily unavailable. Please try again.',
-        route: {
-          endpoint: '/api/sovereign/app/maia',
-          type: 'Sovereign Consciousness Interface',
-          operational: false,
-          mode: 'error',
-        },
-        meta: {
-          durationMs: duration,
-          code: err?.code || 'UNKNOWN',
-        },
+    return jsonWithCors(req, {
+      error: 'SYSTEM_ERROR',
+      status: 'Service temporarily unavailable. Please try again.',
+      route: {
+        endpoint: '/api/sovereign/app/maia',
+        type: 'Sovereign Consciousness Interface',
+        operational: false,
+        mode: 'error',
       },
-      { status: 503 }
-    );
+      meta: {
+        durationMs: duration,
+        code: err?.code || 'UNKNOWN',
+      },
+    }, 503);
   }
 }

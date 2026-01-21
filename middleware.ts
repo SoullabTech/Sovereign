@@ -111,10 +111,15 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ---------------------------------------------------------------------
-  // CORS: Never auth-redirect preflight OPTIONS requests
-  // This prevents Capacitor/mobile apps from getting 405 on preflights
+  // CORS: Handle OPTIONS preflight requests
+  // API routes have their own OPTIONS handlers with proper CORS headers
+  // Non-API routes get a simple 204 response
   // ---------------------------------------------------------------------
   if (req.method === 'OPTIONS') {
+    if (pathname.startsWith('/api/')) {
+      // Let the route handler's OPTIONS respond with correct CORS headers
+      return NextResponse.next();
+    }
     return new NextResponse(null, { status: 204 });
   }
 
