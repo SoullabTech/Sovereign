@@ -474,10 +474,10 @@ export default function SecuritySettingsPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-maia-cream-100 font-medium mb-1">
-                      New device? Old passkey stopped working?
+                      New device? Face ID stopped working?
                     </h3>
                     <p className="text-sm text-maia-cream-100/70 mb-3">
-                      Passkeys are tied to the domain where they were created. If you're here after Face ID / Touch ID didn't work on sign-in, just create a new one below.
+                      If your passkey was created before the SOULLAB upgrade, it won't work anymore. Just create a fresh one — takes 10 seconds.
                     </p>
                     <div className="text-sm text-maia-cream-100/60 space-y-1.5 mb-4">
                       <div className="flex gap-2">
@@ -705,17 +705,17 @@ export default function SecuritySettingsPage() {
             <div className="bg-amber-500/10 rounded-xl p-6 border border-amber-500/30">
               <h3 className="text-maia-cream-100 font-medium mb-2">My Face ID / Touch ID stopped working?</h3>
               <p className="text-sm text-maia-cream-100/60 mb-3">
-                Passkeys are tied to the domain where they were created. If SOULLAB moved domains
-                or you're using a new device, your old passkey won't work. The fix is simple:
+                If your passkey was created before the SOULLAB upgrade, it won't work anymore.
+                Your account is safe — you just need to create a fresh passkey:
               </p>
               <ol className="text-sm text-maia-cream-100/60 list-decimal list-inside space-y-1 mb-3">
-                <li>Sign in with your password (or Google/Apple)</li>
+                <li>Sign in with your password (or Google)</li>
                 <li>Go to <strong className="text-maia-cream-100">Sign-in methods</strong> tab</li>
                 <li>Click <strong className="text-maia-cream-100">Add passkey</strong></li>
                 <li>Name it <strong className="text-maia-cream-100">SOULLAB-[YourName]</strong></li>
               </ol>
               <p className="text-sm text-maia-cream-100/60">
-                Your account is safe — this is just refreshing your device's key.
+                Takes about 10 seconds. Then Face ID will work again.
               </p>
             </div>
 
