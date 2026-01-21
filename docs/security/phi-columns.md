@@ -559,3 +559,27 @@ To move to encrypted-only (remove plaintext):
 3. Run: `ALTER TABLE practice_transcript_segments ALTER COLUMN text DROP NOT NULL;`
 4. Update code to stop writing plaintext
 5. Backfill `text = NULL` for all rows
+
+---
+
+## Security Exceptions (Documented)
+
+### GHSA-8qq5-rm4j-mr97, GHSA-r6q2-hw4h-h46w (`tar` via `node-gyp`)
+
+**Severity:** High (6 instances in dependency graph)
+
+**Scope:** Present in prod dependency graph via native module install tooling:
+```
+sqlite3 / swisseph → node-gyp → make-fetch-happen → cacache → tar
+```
+
+**Runtime Impact:** Not invoked by application runtime; only executes during dependency install/native compilation. The vulnerable `tar` code path (archive extraction with path traversal) is never called by the running application.
+
+**Mitigation:**
+- Production deploys use CI-built artifacts/Docker images
+- No package installation occurs on production hosts
+- CI runners are ephemeral with least privileges
+
+**Plan:** Monitor upstream dependency updates; re-evaluate when sqlite3/swisseph release versions that remove/patch the vulnerable tar chain.
+
+**Last Reviewed:** 2026-01-21
