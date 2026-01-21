@@ -14,6 +14,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { requireMemberId } from '@/lib/auth/session';
+import { queryOne } from '@/lib/db/postgres';
 import {
   generateSuggestions,
   getSuggestions,
@@ -40,6 +41,29 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const practitionerId = await requireMemberId();
     const { threadId } = await params;
+
+    // HARD GUARDRAIL: block if unacknowledged safety flags exist
+    // Ritual first, then drafts.
+    const unacked = await queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int AS count
+       FROM comms_safety_flags sf
+       JOIN comms_threads t ON t.id = sf.thread_id
+       WHERE sf.thread_id = $1
+         AND t.practitioner_id = $2
+         AND sf.acknowledged_at IS NULL`,
+      [threadId, practitionerId]
+    );
+
+    if ((unacked?.count ?? 0) > 0) {
+      return NextResponse.json(
+        {
+          error: 'Acknowledge safety flag to generate drafts',
+          code: 'SAFETY_UNACKNOWLEDGED',
+          unacknowledged_count: unacked?.count,
+        },
+        { status: 409 }
+      );
+    }
 
     const body = (await request.json().catch(() => ({}))) as GenerateBody;
 
