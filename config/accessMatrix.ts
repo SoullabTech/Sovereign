@@ -149,7 +149,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/oracle/interactive', minTier: 'personal', notes: 'Interactive oracle' },
 
   // Astrology tools (beyond browse)
-  { exact: '/birth-chart', minTier: 'free', notes: 'Redirect to /astrology' },
+  { exact: '/birth-chart', public: true, minTier: 'free', notes: 'Redirect to /astrology' },
   { exact: '/chart', minTier: 'personal', notes: 'Chart generator' },
   { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
   { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
