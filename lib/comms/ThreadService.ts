@@ -249,7 +249,27 @@ export async function sendMessage(
     throw new Error('Outbound messages disabled for this thread');
   }
 
-  // Insert message
+  // Phase 4: Validate suggestion_id if provided (forgiving mode - ignore invalid)
+  let usedSuggestionId: string | null = null;
+  if (input.suggestion_id) {
+    const suggestion = await queryOne<{
+      id: string;
+      thread_id: string;
+      status: string;
+    }>(
+      `SELECT id, thread_id, status
+       FROM comms_reply_suggestions
+       WHERE id = $1`,
+      [input.suggestion_id]
+    );
+
+    // Only link if suggestion exists, belongs to this thread, and is draft
+    if (suggestion && suggestion.thread_id === threadId && suggestion.status === 'draft') {
+      usedSuggestionId = suggestion.id;
+    }
+  }
+
+  // Insert message with used_suggestion_id
   const message = await queryOne<CommsMessage>(
     `INSERT INTO comms_messages (
       thread_id,
@@ -262,8 +282,9 @@ export async function sendMessage(
       delivery_status,
       is_quick_response,
       quick_response_type,
-      reply_to_id
-    ) VALUES ($1, 'practitioner', $2, $3, $4, $5, $6, 'sent', $7, $8, $9)
+      reply_to_id,
+      used_suggestion_id
+    ) VALUES ($1, 'practitioner', $2, $3, $4, $5, $6, 'sent', $7, $8, $9, $10)
     RETURNING *`,
     [
       threadId,
@@ -275,11 +296,37 @@ export async function sendMessage(
       input.is_quick_response || false,
       input.quick_response_type || null,
       input.reply_to_id || null,
+      usedSuggestionId,
     ]
   );
 
   if (!message) {
     throw new Error('Failed to create message');
+  }
+
+  // Phase 4: Mark suggestion as sent + supersede siblings
+  if (usedSuggestionId) {
+    // Mark the used suggestion as sent
+    await query(
+      `UPDATE comms_reply_suggestions
+       SET status = 'sent',
+           sent_message_id = $2,
+           sent_at = NOW(),
+           updated_at = NOW()
+       WHERE id = $1`,
+      [usedSuggestionId, message.id]
+    );
+
+    // Supersede other draft suggestions for this thread
+    await query(
+      `UPDATE comms_reply_suggestions
+       SET status = 'superseded',
+           updated_at = NOW()
+       WHERE thread_id = $1
+         AND status = 'draft'
+         AND id <> $2`,
+      [threadId, usedSuggestionId]
+    );
   }
 
   // Emit event
@@ -293,6 +340,7 @@ export async function sendMessage(
       channel_type: message.channel_type,
       message_type: message.message_type || undefined,
       urgency: message.urgency,
+      used_suggestion_id: usedSuggestionId || undefined,
     }
   );
 

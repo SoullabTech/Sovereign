@@ -36,6 +36,7 @@ interface RouteParams {
  * - is_quick_response: boolean
  * - quick_response_type: 'noted' | 'discuss_next_session' | 'acknowledged'
  * - reply_to_id: string (optional, for threading)
+ * - suggestion_id: string (optional, Phase 4 - links message to source suggestion)
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       is_quick_response: isQuickResponse,
       quick_response_type: quickResponseType,
       reply_to_id: body.reply_to_id,
+      suggestion_id: body.suggestion_id, // Phase 4: link to source suggestion
     };
 
     // Send message
