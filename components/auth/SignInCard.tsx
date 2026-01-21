@@ -211,7 +211,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
               <button
                 type="button"
                 onClick={() => setView('magic-link')}
-                className="w-full rounded-2xl bg-teal-700/15 px-5 py-4 text-sm font-semibold text-teal-900 ring-1 ring-teal-700/20 hover:bg-teal-700/20 transition"
+                className="w-full rounded-2xl bg-teal-600 px-5 py-4 text-sm font-semibold text-white shadow-sm ring-1 ring-teal-700 hover:bg-teal-700 transition"
               >
                 ✧ Email me a sign-in link
               </button>
@@ -317,7 +317,7 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
                   type="button"
                   onClick={handleMagicLink}
                   disabled={loading || !email}
-                  className="w-full rounded-2xl bg-teal-700/15 px-5 py-4 text-sm font-semibold text-teal-900 ring-1 ring-teal-700/20 hover:bg-teal-700/20 transition disabled:opacity-50"
+                  className="w-full rounded-2xl bg-teal-600 px-5 py-4 text-sm font-semibold text-white shadow-sm ring-1 ring-teal-700 hover:bg-teal-700 transition disabled:bg-teal-600/50 disabled:text-white/70"
                 >
                   {loading ? 'Sending...' : 'Send sign-in link'}
                 </button>
