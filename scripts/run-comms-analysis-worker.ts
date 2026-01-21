@@ -14,6 +14,7 @@
  * multiple workers running concurrently (if needed for scale).
  */
 
+import os from 'node:os';
 import { query, queryOne, closePool } from '../lib/db/postgres';
 import { analyzeCommsMessage } from '../lib/comms/maiaAnalyzer';
 
@@ -24,6 +25,7 @@ import { analyzeCommsMessage } from '../lib/comms/maiaAnalyzer';
 const POLL_INTERVAL_MS = 1000; // How often to check for new jobs when idle
 const MAX_CONSECUTIVE_ERRORS = 10; // Shut down if too many errors in a row
 const BATCH_SIZE = 1; // Process one at a time for now
+const WORKER_ID = `${os.hostname()}:${process.pid}`; // Unique identity for this worker instance
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JOB PROCESSING
@@ -39,13 +41,17 @@ interface QueueJob {
 /**
  * Claim the next available job from the queue.
  * Uses FOR UPDATE SKIP LOCKED for safe concurrent access.
+ * Tracks worker identity for debugging and stale job detection.
  */
 async function claimNextJob(): Promise<QueueJob | null> {
   const result = await queryOne<QueueJob>(
     `UPDATE comms_analysis_queue
      SET status = 'processing',
          attempts = attempts + 1,
-         started_at = NOW()
+         started_at = NOW(),
+         claimed_by = $1,
+         claimed_at = COALESCE(claimed_at, NOW()),
+         heartbeat_at = NOW()
      WHERE id = (
        SELECT id FROM comms_analysis_queue
        WHERE status = 'queued'
@@ -53,7 +59,8 @@ async function claimNextJob(): Promise<QueueJob | null> {
        LIMIT 1
        FOR UPDATE SKIP LOCKED
      )
-     RETURNING id, message_id, thread_id, attempts`
+     RETURNING id, message_id, thread_id, attempts`,
+    [WORKER_ID]
   );
   return result;
 }
@@ -117,6 +124,7 @@ let consecutiveErrors = 0;
  */
 async function runWorkerLoop(): Promise<void> {
   console.log('[Worker] MAIA Comms Analysis Worker starting...');
+  console.log(`[Worker] Identity: ${WORKER_ID}`);
   console.log(`[Worker] Poll interval: ${POLL_INTERVAL_MS}ms`);
   console.log('[Worker] Press Ctrl+C to stop\n');
 

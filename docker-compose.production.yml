@@ -218,6 +218,45 @@ services:
       - maia-network
 
   # ═════════════════════════════════════════════════════════════════════════════
+  # Comms Analysis Worker - MAIA Message Intelligence
+  # ═════════════════════════════════════════════════════════════════════════════
+  # Processes comms_analysis_queue, runs MAIA analysis on client messages
+  # Same image as maia, different entrypoint
+  #
+  # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia maia-comms-worker
+  # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-comms-worker
+  maia-comms-worker:
+    build: *maia_build
+    image: *maia_image
+    container_name: maia-comms-worker
+    restart: unless-stopped
+    logging: *default_logging
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    env_file:
+      - .env.production
+
+    environment:
+      NODE_ENV: production
+      # DATABASE_URL comes from .env.production
+
+    command: ["npx", "tsx", "scripts/run-comms-analysis-worker.ts"]
+
+    # Healthcheck: verify DB is reachable (worker has no HTTP endpoint)
+    healthcheck:
+      test: ["CMD-SHELL", "psql $${DATABASE_URL} -c 'SELECT 1' >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+    networks:
+      - maia-network
+
+  # ═════════════════════════════════════════════════════════════════════════════
   # PostgreSQL - Consciousness Data Persistence
   # ═════════════════════════════════════════════════════════════════════════════
   postgres:
