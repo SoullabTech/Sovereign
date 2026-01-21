@@ -84,11 +84,27 @@ function SigninContent() {
     })();
   }, []);
 
-  // Check for magic link errors, username prefill
+  // Check for magic link errors, username prefill, and auth reason codes
   useEffect(() => {
     const errorParam = searchParams?.get('error');
     const magicParam = searchParams?.get('magic');
     const usernameParam = searchParams?.get('username');
+    const reasonParam = searchParams?.get('reason');
+
+    // Handle reason codes from middleware/auth redirects
+    if (reasonParam) {
+      const reasonMessages: Record<string, string> = {
+        'no_session_cookie': 'Please sign in to continue.',
+        'invalid_session': 'Your session is invalid. Please sign in again.',
+        'expired_session': 'Your session has expired. Please sign in again.',
+        'revoked_session': 'Your session was ended. Please sign in again.',
+        'missing_credentials': 'Please enter your credentials to continue.',
+      };
+      const reasonError = reasonMessages[reasonParam];
+      if (reasonError) {
+        setError(reasonError);
+      }
+    }
 
     if (errorParam === 'invalid_token') {
       setError('Your sign-in link has expired or is invalid. Try requesting a new one.');

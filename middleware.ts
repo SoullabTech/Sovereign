@@ -144,9 +144,10 @@ export function middleware(req: NextRequest) {
 
     switch (reason) {
       case 'unauthenticated':
-        // Redirect to sign in with return URL
+        // Redirect to sign in with return URL and reason code
         url.pathname = '/signin';
         url.searchParams.set('next', pathname);
+        url.searchParams.set('reason', 'no_session_cookie');
         return NextResponse.redirect(url);
 
       case 'insufficient-tier':
