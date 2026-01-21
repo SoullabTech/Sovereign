@@ -352,6 +352,7 @@ export function ThreadView({
           suggestions={suggestions}
           isLoading={isLoadingSuggestions}
           isVisible={showSuggestions}
+          isBlocked={hasPendingSafetyFlags}
           onToggle={() => setShowSuggestions(!showSuggestions)}
           onGenerate={generateSuggestions}
           onInsert={insertSuggestion}
@@ -803,6 +804,7 @@ interface SuggestionsPanelProps {
   suggestions: ReplySuggestion[];
   isLoading: boolean;
   isVisible: boolean;
+  isBlocked: boolean; // True when unacknowledged safety flags exist
   onToggle: () => void;
   onGenerate: () => void;
   onInsert: (suggestion: ReplySuggestion) => void;
@@ -813,6 +815,7 @@ function SuggestionsPanel({
   suggestions,
   isLoading,
   isVisible,
+  isBlocked,
   onToggle,
   onGenerate,
   onInsert,
@@ -837,14 +840,21 @@ function SuggestionsPanel({
           )}
         </button>
 
-        <button
-          onClick={onGenerate}
-          disabled={isLoading}
-          className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded transition-colors disabled:opacity-50"
-        >
-          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-          <span>{isLoading ? 'Generating...' : 'Generate'}</span>
-        </button>
+        {isBlocked ? (
+          <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-amber-400/80">
+            <Shield className="w-3.5 h-3.5" />
+            <span>Acknowledge safety flag to unlock</span>
+          </span>
+        ) : (
+          <button
+            onClick={onGenerate}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded transition-colors disabled:opacity-50"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>{isLoading ? 'Generating...' : 'Generate'}</span>
+          </button>
+        )}
       </div>
 
       {/* Suggestions List */}
