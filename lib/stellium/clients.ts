@@ -2,6 +2,11 @@
  * STELLIUM CLIENT MANAGEMENT
  *
  * Server-side functions for managing practitioner clients
+ *
+ * PHI ENCRYPTION: Client names are encrypted at rest using AES-256-GCM.
+ * - Dual-write: Both plaintext (name) and encrypted (name_enc) columns are written
+ * - Read: Decrypts from name_enc when available, falls back to plaintext
+ * - Migration: Backfill script encrypts existing plaintext records
  */
 
 import { query } from '@/lib/db/postgres';
@@ -10,6 +15,116 @@ import {
   CreateClientInput,
   UpdateClientInput,
 } from './types';
+import { PHIEncryption, PHIContext, PHIEncryptionMeta } from '@/lib/security/phiEncryption';
+
+// ============================================
+// ENCRYPTION HELPERS
+// ============================================
+
+/**
+ * Get practitioner's encryption key salt from database
+ * Falls back to a default salt if practitioner doesn't have one yet
+ */
+async function getPractitionerEncryptionSalt(practitionerId: string): Promise<string | null> {
+  try {
+    const result = await query(
+      `SELECT encryption_key_salt FROM practitioners WHERE member_id = $1`,
+      [practitionerId]
+    );
+    return result.rows[0]?.encryption_key_salt || null;
+  } catch {
+    // Practitioners table may not have this column yet
+    return null;
+  }
+}
+
+/**
+ * Build PHI context for client name encryption
+ */
+function buildClientNameContext(clientId: string, practitionerId: string): PHIContext {
+  return {
+    table: 'practitioner_clients',
+    column: 'name',
+    rowId: clientId,
+    ownerId: practitionerId,
+  };
+}
+
+/**
+ * Encrypt a client name for storage
+ * Returns null if encryption is not configured
+ */
+function encryptClientName(
+  name: string,
+  clientId: string,
+  practitionerId: string
+): { ciphertext: string; meta: PHIEncryptionMeta } | null {
+  try {
+    // Check if encryption key is configured
+    if (!process.env.PHI_ENCRYPTION_KEY) {
+      return null;
+    }
+    const context = buildClientNameContext(clientId, practitionerId);
+    return PHIEncryption.encryptForDB(name, context);
+  } catch (error) {
+    console.warn('[Stellium] Client name encryption failed, continuing with plaintext:', error);
+    return null;
+  }
+}
+
+/**
+ * Decrypt a client name from storage
+ * Falls back to plaintext if decryption fails
+ */
+function decryptClientName(
+  ciphertext: string | null,
+  meta: PHIEncryptionMeta | null,
+  clientId: string,
+  practitionerId: string,
+  plaintextFallback: string
+): string {
+  if (!ciphertext || !meta) {
+    return plaintextFallback;
+  }
+  try {
+    const context = buildClientNameContext(clientId, practitionerId);
+    return PHIEncryption.decryptFromDB(ciphertext, meta, context);
+  } catch (error) {
+    console.warn('[Stellium] Client name decryption failed, using plaintext:', error);
+    return plaintextFallback;
+  }
+}
+
+/**
+ * Process a client row to decrypt name fields
+ */
+function decryptClientRow(row: any, practitionerId: string): PractitionerClient {
+  if (!row) return row;
+
+  // Decrypt name if encrypted version exists
+  if (row.name_enc && row.name_enc_meta) {
+    row.name = decryptClientName(
+      row.name_enc,
+      row.name_enc_meta,
+      row.id,
+      practitionerId,
+      row.name
+    );
+  }
+
+  // Decrypt preferred_name if encrypted version exists
+  if (row.preferred_name_enc && row.preferred_name_enc_meta) {
+    row.preferred_name = decryptClientName(
+      row.preferred_name_enc,
+      row.preferred_name_enc_meta,
+      row.id,
+      practitionerId,
+      row.preferred_name
+    );
+  }
+
+  return row as PractitionerClient;
+}
 
 // ============================================
 // CLIENT CRUD
@@ -74,8 +189,11 @@ export async function getClients(
     [...params, limit, offset]
   );
 
+  // Decrypt names in results
+  const clients = result.rows.map(row => decryptClientRow(row, practitionerId));
+
   return {
-    clients: result.rows as PractitionerClient[],
+    clients,
     total,
   };
 }
@@ -93,11 +211,16 @@ export async function getClient(
     [clientId, practitionerId]
   );
 
-  return result.rows[0] as PractitionerClient | null;
+  if (!result.rows[0]) return null;
+  return decryptClientRow(result.rows[0], practitionerId);
 }
 
 /**
  * Create a new client
+ *
+ * DUAL-WRITE: Writes both plaintext name and encrypted name_enc.
+ * During migration, plaintext is kept for backward compatibility.
+ * Once backfill is complete, plaintext column will be removed.
  */
 export async function createClient(
   practitionerId: string,
@@ -119,7 +242,8 @@ export async function createClient(
     status = 'active',
   } = input;
 
-  const result = await query(
+  // Step 1: Insert client with plaintext name (we need the ID for encryption context)
+  const insertResult = await query(
     `INSERT INTO practitioner_clients (
       practitioner_id, name, email, phone, preferred_name, pronouns,
       birth_date, birth_time, birth_location, birth_timezone,
@@ -144,11 +268,48 @@ export async function createClient(
     ]
   );
 
-  return result.rows[0] as PractitionerClient;
+  const client = insertResult.rows[0];
+  const clientId = client.id;
+
+  // Step 2: Encrypt name and preferred_name, then update
+  const nameEncrypted = encryptClientName(name, clientId, practitionerId);
+  const preferredNameEncrypted = preferred_name
+    ? encryptClientName(preferred_name, clientId, practitionerId)
+    : null;
+
+  // Only update if we successfully encrypted
+  if (nameEncrypted || preferredNameEncrypted) {
+    const updates: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (nameEncrypted) {
+      updates.push(`name_enc = $${paramIndex}, name_enc_meta = $${paramIndex + 1}`);
+      params.push(nameEncrypted.ciphertext, JSON.stringify(nameEncrypted.meta));
+      paramIndex += 2;
+    }
+
+    if (preferredNameEncrypted) {
+      updates.push(`preferred_name_enc = $${paramIndex}, preferred_name_enc_meta = $${paramIndex + 1}`);
+      params.push(preferredNameEncrypted.ciphertext, JSON.stringify(preferredNameEncrypted.meta));
+      paramIndex += 2;
+    }
+
+    params.push(clientId);
+
+    await query(
+      `UPDATE practitioner_clients SET ${updates.join(', ')} WHERE id = $${paramIndex}`,
+      params
+    );
+  }
+
+  return client as PractitionerClient;
 }
 
 /**
  * Update a client
+ *
+ * DUAL-WRITE: When name or preferred_name is updated, also updates encrypted columns.
  */
 export async function updateClient(
   practitionerId: string,
@@ -176,6 +337,25 @@ export async function updateClient(
         params.push(input[field]);
       }
       paramIndex++;
+
+      // DUAL-WRITE: Also encrypt name fields
+      if (field === 'name') {
+        const encrypted = encryptClientName(input.name as string, clientId, practitionerId);
+        if (encrypted) {
+          updates.push(`name_enc = $${paramIndex}, name_enc_meta = $${paramIndex + 1}`);
+          params.push(encrypted.ciphertext, JSON.stringify(encrypted.meta));
+          paramIndex += 2;
+        }
+      }
+
+      if (field === 'preferred_name') {
+        const encrypted = encryptClientName(input.preferred_name as string, clientId, practitionerId);
+        if (encrypted) {
+          updates.push(`preferred_name_enc = $${paramIndex}, preferred_name_enc_meta = $${paramIndex + 1}`);
+          params.push(encrypted.ciphertext, JSON.stringify(encrypted.meta));
+          paramIndex += 2;
+        }
+      }
     }
   }
 
@@ -354,7 +534,8 @@ export async function updateClientBirthData(
     ]
   );
 
-  return result.rows[0] as PractitionerClient | null;
+  if (!result.rows[0]) return null;
+  return decryptClientRow(result.rows[0], practitionerId);
 }
 
 /**
@@ -370,5 +551,5 @@ export async function getClientsWithCharts(
     [practitionerId]
   );
 
-  return result.rows as PractitionerClient[];
+  return result.rows.map(row => decryptClientRow(row, practitionerId));
 }
