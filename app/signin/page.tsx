@@ -9,7 +9,7 @@
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, ArrowRightLeft, Sparkles, ChevronDown, ChevronUp, Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowRightLeft, Sparkles, Eye, EyeOff } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import EthosFooter from '@/components/shared/EthosFooter';
 import { betaSession } from '@/lib/auth/betaSession';
@@ -36,12 +36,10 @@ function SigninContent() {
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
 
-  // Biometric signin
-  const [showUsernameHint, setShowUsernameHint] = useState(false);
-  const [bioUsername, setBioUsername] = useState('');
+  // Biometric signin (username optional for discoverable credentials)
+  const [bioUsername] = useState('');
 
-  // Password fallback
-  const [showPassword, setShowPassword] = useState(false);
+  // Password visibility toggle
   const [showPasswordText, setShowPasswordText] = useState(false);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -584,7 +582,7 @@ function SigninContent() {
           border: '1px solid rgba(255, 255, 255, 0.4)',
         }}
       >
-        <div className="text-center mb-5">
+        <div className="text-center mb-6">
           <h1 className="text-xl font-light text-teal-900 tracking-tight">Welcome back</h1>
         </div>
 
@@ -594,54 +592,79 @@ function SigninContent() {
           </div>
         )}
 
-        {/* Primary: Biometric Sign-In */}
-        <motion.button
-          onClick={handlePasskeySignIn}
-          disabled={isLoading || !bioAvailable}
-          whileHover={{ scale: bioAvailable ? 1.01 : 1 }}
-          whileTap={{ scale: 0.99 }}
-          className="w-full rounded-2xl border border-teal-400/40 bg-teal-600/90 px-4 py-4 text-left hover:bg-teal-500/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
-        >
-          <div className="text-base font-semibold text-white">
-            {isLoading ? 'Signing in...' : `Use ${biometricLabel}`}
-          </div>
-          <div className="mt-1 text-sm text-teal-100/80">
-            {bioAvailable
-              ? 'Fastest and safest — one tap sign-in'
-              : 'Passkeys not available on this device'}
-          </div>
-        </motion.button>
-
-        {/* Username hint for non-discoverable passkeys */}
-        {bioAvailable && (
-          <div className="mt-2">
+        {/* Primary: Password Sign-In */}
+        <form onSubmit={handlePasswordSignIn} className="space-y-3">
+          <input
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            placeholder="Username"
+            autoComplete="username"
+            className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
+          />
+          <div className="relative">
+            <input
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Password"
+              type={showPasswordText ? 'text' : 'password'}
+              autoComplete="current-password"
+              className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 pr-11 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
+            />
             <button
-              onClick={() => setShowUsernameHint(!showUsernameHint)}
-              className="text-xs text-teal-700/60 hover:text-teal-800 flex items-center gap-1"
+              type="button"
+              onClick={() => setShowPasswordText(!showPasswordText)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-teal-600/50 hover:text-teal-700 transition-colors"
+              tabIndex={-1}
             >
-              {showUsernameHint ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-              Having trouble? Enter username
+              {showPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
             </button>
-            {showUsernameHint && (
-              <input
-                value={bioUsername}
-                onChange={(e) => setBioUsername(e.target.value)}
-                placeholder="Username (helps find your passkey)"
-                className="mt-2 w-full rounded-xl bg-white/30 border border-teal-200/40 px-3 py-2 text-sm text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60"
-              />
-            )}
           </div>
+          <motion.button
+            type="submit"
+            disabled={isLoading || !username || !password}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="w-full rounded-xl bg-teal-600 hover:bg-teal-500 text-white px-4 py-3 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+          >
+            {isLoading ? 'Signing in...' : 'Sign in'}
+          </motion.button>
+        </form>
+
+        {/* Biometric Option */}
+        {bioAvailable && (
+          <motion.button
+            onClick={handlePasskeySignIn}
+            disabled={isLoading}
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="mt-3 w-full rounded-xl border border-teal-300/40 bg-white/30 px-4 py-3 text-center hover:bg-white/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+          >
+            <span className="text-sm font-medium text-teal-800">
+              Use {biometricLabel}
+            </span>
+          </motion.button>
         )}
 
-        {/* OAuth Divider */}
-        <div className="mt-5 flex items-center gap-3">
-          <div className="flex-1 h-px bg-teal-300/40" />
-          <span className="text-xs text-teal-600/60">or continue with</span>
-          <div className="flex-1 h-px bg-teal-300/40" />
+        {/* Divider */}
+        <div className="mt-6 flex items-center gap-3">
+          <div className="flex-1 h-px bg-teal-300/30" />
+          <span className="text-xs text-teal-600/50 uppercase tracking-wide">or</span>
+          <div className="flex-1 h-px bg-teal-300/30" />
         </div>
 
-        {/* OAuth Buttons - Glass icons only */}
+        {/* Secondary Options */}
         <div className="mt-4 flex justify-center gap-3">
+          {/* Magic Link */}
+          <button
+            type="button"
+            onClick={() => setShowMagicLink(true)}
+            title="Email me a sign-in link"
+            className="w-11 h-11 rounded-xl bg-white/30 hover:bg-white/50 border border-teal-200/30 flex items-center justify-center transition-all"
+          >
+            <Mail className="w-5 h-5 text-teal-700/70" />
+          </button>
+
+          {/* Google */}
           <button
             type="button"
             onClick={handleGoogleNative}
@@ -649,8 +672,8 @@ function SigninContent() {
             title={nativeOAuthEnabled ? 'Continue with Google' : 'Coming soon'}
             className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
               nativeOAuthEnabled
-                ? 'bg-white/40 hover:bg-white/60 border border-white/50 shadow-sm hover:shadow-md backdrop-blur-sm'
-                : 'bg-white/20 border border-white/20 opacity-50 cursor-not-allowed'
+                ? 'bg-white/40 hover:bg-white/60 border border-teal-200/30'
+                : 'bg-white/20 border border-white/20 opacity-40 cursor-not-allowed'
             }`}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -661,6 +684,7 @@ function SigninContent() {
             </svg>
           </button>
 
+          {/* Apple */}
           <button
             type="button"
             onClick={handleAppleNative}
@@ -668,8 +692,8 @@ function SigninContent() {
             title={nativeOAuthEnabled ? 'Continue with Apple' : 'Coming soon'}
             className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all ${
               nativeOAuthEnabled
-                ? 'bg-black/60 hover:bg-black/80 border border-black/20 shadow-sm hover:shadow-md backdrop-blur-sm'
-                : 'bg-black/30 border border-black/10 opacity-50 cursor-not-allowed'
+                ? 'bg-black/60 hover:bg-black/80 border border-black/20'
+                : 'bg-black/30 border border-black/10 opacity-40 cursor-not-allowed'
             }`}
           >
             <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor">
@@ -678,80 +702,20 @@ function SigninContent() {
           </button>
         </div>
 
-        {/* Magic Link */}
-        <div className="mt-4">
-          <button
-            type="button"
-            onClick={() => setShowMagicLink(true)}
-            className="w-full text-sm font-medium px-4 py-2.5 rounded-xl transition-all hover:shadow-md bg-emerald-50/80 text-emerald-700 border border-emerald-200/50 flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>Email me a sign-in link</span>
-          </button>
-        </div>
-
-        {/* Password Fallback */}
-        <div className="mt-4 rounded-xl border border-white/20 bg-white/10 p-3">
-          <button
-            onClick={() => setShowPassword(!showPassword)}
-            className="w-full text-left text-sm text-teal-800/80 hover:text-teal-900 flex items-center justify-between"
-          >
-            <span>{showPassword ? 'Hide password' : 'Use password'}</span>
-            {showPassword ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-
-          {showPassword && (
-            <form onSubmit={handlePasswordSignIn} className="mt-3 space-y-2">
-              <input
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="Username"
-                autoComplete="username"
-                className="w-full rounded-xl bg-white/40 border border-teal-200/40 px-3 py-2 text-sm text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60"
-              />
-              <div className="relative">
-                <input
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Password"
-                  type={showPasswordText ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  className="w-full rounded-xl bg-white/40 border border-teal-200/40 px-3 py-2 pr-10 text-sm text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPasswordText(!showPasswordText)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-teal-600/60 hover:text-teal-700 transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPasswordText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full rounded-xl bg-teal-600 hover:bg-teal-500 text-white px-3 py-2 text-sm font-medium disabled:opacity-50"
-              >
-                {isLoading ? 'Signing in...' : 'Sign in'}
-              </button>
-            </form>
-          )}
-        </div>
-
         {/* Footer Links */}
-        <div className="mt-4 text-center space-y-2">
+        <div className="mt-6 text-center space-y-3">
           <button
             type="button"
             onClick={() => setShowRecovery(true)}
-            className="text-sm text-teal-700/60 hover:text-teal-800"
+            className="text-sm text-teal-700/50 hover:text-teal-700 transition-colors"
           >
-            Forgot your passkey or password?
+            Forgot password?
           </button>
 
-          <div className="pt-2 border-t border-teal-200/30">
+          <div className="pt-3 border-t border-teal-200/20">
             <button
               onClick={() => router.push('/signup')}
-              className="text-sm font-medium text-teal-700 hover:text-teal-800"
+              className="text-sm font-medium text-teal-700 hover:text-teal-800 transition-colors"
             >
               New to Soullab? Create account
             </button>
@@ -1116,10 +1080,7 @@ function SigninContent() {
                 </button>
               )}
               <button
-                onClick={() => {
-                  setShowPasskeyRenewal(false);
-                  setShowPassword(true);
-                }}
+                onClick={() => setShowPasskeyRenewal(false)}
                 className="w-full py-3 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-500 transition-colors"
               >
                 Use password instead
