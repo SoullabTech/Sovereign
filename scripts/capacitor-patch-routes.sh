@@ -36,6 +36,8 @@ EXCLUDED_DYNAMIC_ROUTES=(
     "app/community/commons/[id]"
     "app/caseload"
     "app/stellium"
+    "app/debug"  # useSearchParams without Suspense boundary
+    "app/dashboard/export"  # uses cookies() with dynamic=error
 )
 
 RED='\033[0;31m'

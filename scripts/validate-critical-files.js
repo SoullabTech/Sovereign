@@ -11,6 +11,11 @@ const capacitorExcludedFiles = [
   'app/partner/[slug]/page.tsx',
 ];
 
+// API routes are moved to .capacitor-api-backup during Capacitor builds
+const capacitorExcludedPrefixes = [
+  'app/api/',  // All API routes are moved during Capacitor build
+];
+
 const isCapacitorBuild = process.env.CAPACITOR_BUILD === '1';
 
 const criticalFiles = [
@@ -73,9 +78,16 @@ criticalFiles.forEach(file => {
   const exists = fs.existsSync(filePath);
 
   // Skip files that are intentionally excluded during Capacitor builds
-  if (isCapacitorBuild && capacitorExcludedFiles.includes(file)) {
-    console.log(`○ ${file} (skipped - Capacitor build)`);
-    return;
+  if (isCapacitorBuild) {
+    if (capacitorExcludedFiles.includes(file)) {
+      console.log(`○ ${file} (skipped - Capacitor build)`);
+      return;
+    }
+    // Skip API routes (moved to .capacitor-api-backup during build)
+    if (capacitorExcludedPrefixes.some(prefix => file.startsWith(prefix))) {
+      console.log(`○ ${file} (skipped - API moved during Capacitor build)`);
+      return;
+    }
   }
 
   if (exists) {
