@@ -55,7 +55,7 @@ These columns contain clinical narratives and session content. **Highest breach 
 
 | Table | Column | Type | Status | PHI Reason |
 |-------|--------|------|--------|------------|
-| `case_notes` | `content` | TEXT | PLAINTEXT | Full session notes |
+| `case_notes` | `content` | TEXT | ENCRYPTED | Full session notes |
 | `case_notes` | `interventions_used` | TEXT[] | PLAINTEXT | Clinical interventions |
 | `case_notes` | `themes_observed` | TEXT[] | PLAINTEXT | Client patterns |
 | `case_notes` | `maia_analysis` | JSONB | PLAINTEXT | AI clinical insights |

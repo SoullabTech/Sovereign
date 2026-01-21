@@ -69,8 +69,10 @@ function assertNoEncryptedColumns(obj: unknown, context: string) {
 // ============================================================================
 
 const mockQuery = jest.fn();
+const mockInsertOne = jest.fn();
 jest.mock('@/lib/db/postgres', () => ({
   query: (...args: any[]) => mockQuery(...args),
+  insertOne: (...args: any[]) => mockInsertOne(...args),
 }));
 
 // Mock encryption functions to avoid key requirements in tests
@@ -142,6 +144,28 @@ const MOCK_MESSAGE_ROW_WITH_ENC = {
   client_name_enc_meta: { kid: 'k1', iv: 'iv123' },
 };
 
+const MOCK_CASE_NOTE_ROW_WITH_ENC = {
+  id: 'note-123',
+  case_id: 'case-456',
+  practitioner_id: 'practitioner-456',
+  note_type: 'session',
+  session_date: '2024-01-15',
+  session_duration_minutes: 60,
+  content: 'Test note content with sensitive clinical info',
+  // These should NEVER appear in output
+  content_enc: 'encrypted-content-blob',
+  content_enc_meta: { kid: 'k1', iv: 'iv-content' },
+  interventions_used: ['CBT', 'mindfulness'],
+  themes_observed: ['anxiety', 'relationships'],
+  element_focus: 'water',
+  spiral_movement: 'ascending',
+  maia_analysis: null,
+  pattern_markers: [],
+  linked_capture_session_id: null,
+  created_at: '2024-01-15T10:00:00Z',
+  updated_at: '2024-01-15T10:00:00Z',
+};
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -150,6 +174,7 @@ describe('PHI Leak Prevention', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockQuery.mockReset();
+    mockInsertOne.mockReset();
   });
 
   describe('containsEncryptedColumns helper', () => {
@@ -302,6 +327,79 @@ describe('PHI Leak Prevention', () => {
     });
   });
 
+  describe('Case notes data layer (Wave 2)', () => {
+    it('getNote should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CASE_NOTE_ROW_WITH_ENC] });
+
+      const { getNote } = await import('@/lib/caseload/CaseStore');
+      const result = await getNote('note-123', 'practitioner-456');
+
+      assertNoEncryptedColumns(result, 'getNote');
+
+      // Verify we still get the content
+      expect(result).toHaveProperty('content');
+      expect(result?.content).toBe('Test note content with sensitive clinical info');
+    });
+
+    it('listNotes should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CASE_NOTE_ROW_WITH_ENC, MOCK_CASE_NOTE_ROW_WITH_ENC] });
+
+      const { listNotes } = await import('@/lib/caseload/CaseStore');
+      const result = await listNotes('case-456', 'practitioner-456');
+
+      assertNoEncryptedColumns(result, 'listNotes');
+
+      // Should be an array with content
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(2);
+      expect(result[0]).toHaveProperty('content');
+    });
+
+    it('createNote should never return *_enc columns', async () => {
+      mockInsertOne.mockResolvedValueOnce(MOCK_CASE_NOTE_ROW_WITH_ENC);
+
+      const { createNote } = await import('@/lib/caseload/CaseStore');
+      const result = await createNote('case-456', 'practitioner-456', {
+        note_type: 'session',
+        content: 'Test note content',
+      });
+
+      assertNoEncryptedColumns(result, 'createNote');
+
+      // Verify we still get the content
+      expect(result).toHaveProperty('content');
+    });
+
+    it('updateNote should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CASE_NOTE_ROW_WITH_ENC] });
+
+      const { updateNote } = await import('@/lib/caseload/CaseStore');
+      const result = await updateNote('note-123', 'practitioner-456', {
+        content: 'Updated content',
+      });
+
+      assertNoEncryptedColumns(result, 'updateNote');
+
+      // Verify we still get the content
+      expect(result).toHaveProperty('content');
+    });
+
+    it('updateNoteAnalysis should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CASE_NOTE_ROW_WITH_ENC] });
+
+      const { updateNoteAnalysis } = await import('@/lib/caseload/CaseStore');
+      const result = await updateNoteAnalysis('note-123', 'practitioner-456', {
+        patterns_observed: ['test'],
+        analyzed_at: '2024-01-15T10:00:00Z',
+      }, ['pattern1']);
+
+      assertNoEncryptedColumns(result, 'updateNoteAnalysis');
+
+      // Verify we still get the content
+      expect(result).toHaveProperty('content');
+    });
+  });
+
   describe('stripEncryptedColumns helper', () => {
     it('should remove all *_enc and *_enc_meta keys', () => {
       // Import the real function
@@ -366,19 +464,27 @@ describe('PHI Leak Prevention', () => {
       // This is a documentation test - it always passes but serves as a reminder
       // When adding new data layer functions, add a test case here
       const testedFunctions = [
+        // Wave 1: Client identity
         'getClients',
         'getClient',
         'getSessions',
         'getUpcomingSessions',
         'decryptJoinedClientFields',
-        // Added in PHI hardening pass
+        // Wave 1: Messages
         'getMessage',
         'getClientThread',
         'getUnreviewedSafetyConcerns',
+        // Wave 2: Case notes
+        'getNote',
+        'listNotes',
+        'createNote',
+        'updateNote',
+        'updateNoteAnalysis',
+        // Utilities
         'stripEncryptedColumns',
       ];
 
-      // If you're adding a new function that handles client data,
+      // If you're adding a new function that handles PHI data,
       // add it to this list AND add a test case above
       expect(testedFunctions.length).toBeGreaterThan(0);
     });

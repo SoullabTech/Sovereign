@@ -3,9 +3,20 @@
  *
  * Database operations for practitioner caseload management.
  * Handles cases, notes, and capture session links.
+ *
+ * SECURITY: Session notes (case_notes.content) are PHI.
+ * - Uses dual-write pattern (plaintext + encrypted)
+ * - Strips *_enc columns before returning
+ * @see docs/security/free-text-phi-doctrine.md
  */
 
 import { query, insertOne, transaction } from '@/lib/db/postgres';
+import {
+  getEncryptedColumnsForInsert,
+  sanitizeNoteRow,
+  sanitizeNoteRows,
+  isPHIEncryptionEnabled,
+} from '@/lib/security/phiAccessors/sessionNotes';
 import type {
   PractitionerCase,
   CreateCaseInput,
@@ -265,13 +276,17 @@ export async function getCaseCounts(
 
 /**
  * Create a new case note
+ * SECURITY: Dual-writes content to both plaintext and encrypted columns
  */
 export async function createNote(
   caseId: string,
   practitionerId: string,
   input: CreateNoteInput
 ): Promise<CaseNote> {
-  const data = {
+  // Generate a temporary ID for encryption context (will be replaced by DB)
+  const tempId = crypto.randomUUID();
+
+  const data: Record<string, any> = {
     case_id: caseId,
     practitioner_id: practitionerId,
     note_type: input.note_type,
@@ -286,11 +301,25 @@ export async function createNote(
     linked_capture_session_id: input.linked_capture_session_id || null,
   };
 
-  return insertOne<CaseNote>('case_notes', data);
+  // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
+  if (isPHIEncryptionEnabled()) {
+    const encrypted = getEncryptedColumnsForInsert(input.content, {
+      rowId: tempId,
+      practitionerId,
+    });
+    data.content_enc = encrypted.contentEnc;
+    data.content_enc_meta = encrypted.contentEncMeta;
+  }
+
+  const result = await insertOne<CaseNote>('case_notes', data);
+
+  // SECURITY: Strip *_enc columns before returning
+  return sanitizeNoteRow(result);
 }
 
 /**
  * Get a single note by ID
+ * SECURITY: Strips *_enc columns before returning
  */
 export async function getNote(
   noteId: string,
@@ -301,11 +330,15 @@ export async function getNote(
      WHERE id = $1 AND practitioner_id = $2`,
     [noteId, practitionerId]
   );
-  return result.rows[0] || null;
+  if (!result.rows[0]) return null;
+
+  // SECURITY: Strip *_enc columns before returning
+  return sanitizeNoteRow(result.rows[0]);
 }
 
 /**
  * List notes for a case with optional filters
+ * SECURITY: Strips *_enc columns before returning
  */
 export async function listNotes(
   caseId: string,
@@ -352,11 +385,13 @@ export async function listNotes(
     params
   );
 
-  return result.rows;
+  // SECURITY: Strip *_enc columns before returning
+  return sanitizeNoteRows(result.rows);
 }
 
 /**
  * Update a note
+ * SECURITY: Dual-writes content to encrypted columns if content is being updated
  */
 export async function updateNote(
   noteId: string,
@@ -386,6 +421,20 @@ export async function updateNote(
     }
   }
 
+  // SECURITY: Dual-write encrypted columns if content is being updated
+  if (input.content !== undefined && isPHIEncryptionEnabled()) {
+    const encrypted = getEncryptedColumnsForInsert(input.content, {
+      rowId: noteId,
+      practitionerId,
+    });
+    updates.push(`content_enc = $${paramIndex}`);
+    values.push(encrypted.contentEnc);
+    paramIndex++;
+    updates.push(`content_enc_meta = $${paramIndex}`);
+    values.push(encrypted.contentEncMeta);
+    paramIndex++;
+  }
+
   if (updates.length === 0) {
     return getNote(noteId, practitionerId);
   }
@@ -398,7 +447,10 @@ export async function updateNote(
     values
   );
 
-  return result.rows[0] || null;
+  if (!result.rows[0]) return null;
+
+  // SECURITY: Strip *_enc columns before returning
+  return sanitizeNoteRow(result.rows[0]);
 }
 
 /**
@@ -418,6 +470,7 @@ export async function deleteNote(
 
 /**
  * Update MAIA analysis on a note
+ * SECURITY: Strips *_enc columns before returning
  */
 export async function updateNoteAnalysis(
   noteId: string,
@@ -432,7 +485,10 @@ export async function updateNoteAnalysis(
      RETURNING *`,
     [noteId, practitionerId, JSON.stringify(analysis), patternMarkers]
   );
-  return result.rows[0] || null;
+  if (!result.rows[0]) return null;
+
+  // SECURITY: Strip *_enc columns before returning
+  return sanitizeNoteRow(result.rows[0]);
 }
 
 // ================================================
