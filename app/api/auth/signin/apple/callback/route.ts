@@ -273,40 +273,51 @@ export async function POST(req: NextRequest) {
     // Set session cookie
     await setSessionCookie(session.sessionToken, session.expiresAt);
 
-    // Fetch member tier for access control
+    // Fetch member tier and roles for access control
     const tierResult = await safeQuery(
-      `SELECT ms.circle_tier FROM member_settings ms WHERE ms.member_id = $1`,
+      `SELECT m.tier, m.roles, ms.circle_tier
+       FROM members m
+       LEFT JOIN member_settings ms ON m.id = ms.member_id
+       WHERE m.id = $1`,
       [memberId]
     );
-    const dbTier = tierResult.rows[0]?.circle_tier as string | null;
+    const memberTier = tierResult.rows[0]?.tier as string | null;
+    const circleTier = tierResult.rows[0]?.circle_tier as string | null;
+    const memberRoles = tierResult.rows[0]?.roles as string[] | null;
 
-    // Map tier to access matrix
+    // Map tier to access matrix (prefer members.tier, fallback to member_settings.circle_tier)
     let accessTier: 'free' | 'personal' | 'pro' = 'personal';
+    const dbTier = memberTier || circleTier;
     if (dbTier) {
       const t = dbTier.toLowerCase();
       if (t === 'pro' || t === 'premium' || t === 'vip') accessTier = 'pro';
       else if (t === 'free' || t === 'guest') accessTier = 'free';
     }
 
+    // Get roles from members table (default to ['member'] if not set)
+    const roles = Array.isArray(memberRoles) && memberRoles.length > 0
+      ? memberRoles
+      : ['member'];
+
     // Set tier and roles cookies
     const cookieStore = await cookies();
     cookieStore.set('maia_tier', accessTier, {
-      httpOnly: true,
+      httpOnly: false, // Allow client to read for UI gating
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       expires: session.expiresAt
     });
 
-    cookieStore.set('maia_roles', JSON.stringify([]), {
-      httpOnly: true,
+    cookieStore.set('maia_roles', JSON.stringify(roles), {
+      httpOnly: false, // Allow client to read for UI gating
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
       expires: session.expiresAt
     });
 
-    console.log(`[APPLE] Session created for ${memberId} (tier: ${accessTier})`);
+    console.log(`[APPLE] Session created for ${memberId} (tier: ${accessTier}, roles: ${roles.join(',')})`);
 
     // Redirect to success page
     const successUrl = new URL('/oauth-success', baseUrl);
