@@ -136,7 +136,7 @@ CREATE TABLE IF NOT EXISTS practitioner_themes (
   UNIQUE(practitioner_id)
 );
 
-CREATE INDEX idx_themes_practitioner ON practitioner_themes(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_themes_practitioner ON practitioner_themes(practitioner_id);
 
 -- ============== PRACTITIONER DOMAINS ==============
 
