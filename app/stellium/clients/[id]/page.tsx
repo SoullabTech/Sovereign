@@ -419,29 +419,29 @@ export default function ClientDetailPage() {
         transition={{ delay: 0.3 }}
       >
         <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-6">
+          <CardContent className="p-3 sm:p-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 text-sm">
+              <div className="flex flex-wrap items-center gap-4 sm:gap-6">
                 {client.first_session && (
                   <div>
-                    <span className="text-gray-500">First session</span>
-                    <p className="text-gray-300">{formatDate(client.first_session)}</p>
+                    <span className="text-gray-500 text-xs sm:text-sm">First session</span>
+                    <p className="text-gray-300 text-xs sm:text-sm">{formatDate(client.first_session)}</p>
                   </div>
                 )}
                 {client.last_session && (
                   <div>
-                    <span className="text-gray-500">Last session</span>
-                    <p className="text-gray-300">{formatDate(client.last_session)}</p>
+                    <span className="text-gray-500 text-xs sm:text-sm">Last session</span>
+                    <p className="text-gray-300 text-xs sm:text-sm">{formatDate(client.last_session)}</p>
                   </div>
                 )}
                 {client.next_session && (
                   <div>
-                    <span className="text-gray-500">Next session</span>
-                    <p className="text-sacred-gold">{formatDate(client.next_session)}</p>
+                    <span className="text-gray-500 text-xs sm:text-sm">Next session</span>
+                    <p className="text-sacred-gold text-xs sm:text-sm">{formatDate(client.next_session)}</p>
                   </div>
                 )}
               </div>
-              <div className="text-gray-500">
+              <div className="text-gray-500 text-xs sm:text-sm">
                 Client since {formatDate(client.created_at)}
               </div>
             </div>

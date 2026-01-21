@@ -185,22 +185,24 @@ export default function SettingsPage() {
         </Card>
       )}
 
-      {/* Tabs */}
-      <div className="flex flex-wrap gap-2 border-b border-gray-800 pb-4">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-              activeTab === tab.id
-                ? 'bg-sacred-gold/10 text-sacred-gold border border-sacred-gold/20'
-                : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
-            }`}
-          >
-            {tab.icon}
-            <span>{tab.label}</span>
-          </button>
-        ))}
+      {/* Tabs - scrollable on mobile */}
+      <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+        <div className="flex gap-2 border-b border-gray-800 pb-4 min-w-max sm:min-w-0 sm:flex-wrap">
+          {tabs.map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center space-x-1.5 sm:space-x-2 px-3 sm:px-4 py-2 rounded-lg transition-colors whitespace-nowrap text-sm ${
+                activeTab === tab.id
+                  ? 'bg-sacred-gold/10 text-sacred-gold border border-sacred-gold/20'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/50'
+              }`}
+            >
+              {tab.icon}
+              <span>{tab.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Tab Content */}

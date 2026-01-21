@@ -211,7 +211,7 @@ export default function StelliumDashboard({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900/80 to-gray-800/50 border border-sacred-gold/20 p-6"
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-900/80 to-gray-800/50 border border-sacred-gold/20 p-4 sm:p-6"
       >
         <div className="relative z-10">
           <div className="flex items-center space-x-2 text-sacred-gold/70 mb-2">
@@ -531,17 +531,17 @@ function StatCard({
       className={onClick ? 'cursor-pointer' : ''}
     >
       <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20 hover:border-sacred-gold/20 transition-colors">
-        <CardContent className="p-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 rounded-lg bg-sacred-gold/10 text-sacred-gold">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="p-1.5 sm:p-2 rounded-lg bg-sacred-gold/10 text-sacred-gold flex-shrink-0">
               {icon}
             </div>
-            <div>
-              <p className="text-2xl font-medium text-gray-100">{value}</p>
-              <p className="text-xs text-gray-500">{label}</p>
+            <div className="min-w-0">
+              <p className="text-lg sm:text-2xl font-medium text-gray-100 truncate">{value}</p>
+              <p className="text-xs text-gray-500 truncate">{label}</p>
             </div>
           </div>
-          <p className="text-xs text-gray-600 mt-2">{subtext}</p>
+          <p className="text-xs text-gray-600 mt-2 truncate">{subtext}</p>
         </CardContent>
       </Card>
     </motion.div>

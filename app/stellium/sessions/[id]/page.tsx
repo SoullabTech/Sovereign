@@ -183,11 +183,11 @@ export default function SessionDetailPage() {
         animate={{ opacity: 1, y: 0 }}
       >
         <Card className="bg-gray-900/50 backdrop-blur-xl border-gray-700/20">
-          <CardContent className="p-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <div className="flex items-center space-x-3 mb-2">
-                  <h1 className="text-2xl font-light text-gray-100">
+          <CardContent className="p-4 sm:p-6">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-2">
+                  <h1 className="text-xl sm:text-2xl font-light text-gray-100">
                     {session.session_type || 'Session'}
                   </h1>
                   <span className={`px-2 py-0.5 rounded-full text-xs ${getStatusColor(session.status)}`}>
@@ -196,14 +196,14 @@ export default function SessionDetailPage() {
                 </div>
 
                 {/* Date & Time */}
-                <div className="flex items-center space-x-4 text-gray-400">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-gray-400 text-sm">
                   <div className="flex items-center space-x-2">
-                    <Calendar className="w-4 h-4" />
-                    <span>{formatDate(session.scheduled_at)}</span>
+                    <Calendar className="w-4 h-4 flex-shrink-0" />
+                    <span className="truncate">{formatDate(session.scheduled_at)}</span>
                   </div>
                   {session.scheduled_at && (
                     <div className="flex items-center space-x-2">
-                      <Clock className="w-4 h-4" />
+                      <Clock className="w-4 h-4 flex-shrink-0" />
                       <span>
                         {formatTime(session.scheduled_at)}
                         {session.duration_minutes && ` (${session.duration_minutes} min)`}

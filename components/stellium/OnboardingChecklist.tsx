@@ -45,21 +45,21 @@ export default function OnboardingChecklist({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-6"
+      className="mb-4 sm:mb-6"
     >
       <Card className="bg-gradient-to-br from-indigo-900/30 to-purple-900/20 border-indigo-500/30 backdrop-blur-xl">
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-6">
           <CardTitle className="text-indigo-300 flex items-center justify-between">
             <div className="flex items-center">
-              <Sparkles className="w-5 h-5 mr-2" />
-              Get Started
+              <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+              <span className="text-sm sm:text-base">Get Started</span>
             </div>
-            <span className="text-sm font-normal text-indigo-400/70">
-              {completedCount} of {totalCount} complete
+            <span className="text-xs sm:text-sm font-normal text-indigo-400/70">
+              {completedCount}/{totalCount}
             </span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-2 px-4 sm:px-6">
           {steps.map((step, index) => (
             <motion.button
               key={step.id}
@@ -68,29 +68,29 @@ export default function OnboardingChecklist({
               transition={{ delay: index * 0.1 }}
               onClick={() => !step.completed && onNavigate?.(step.href)}
               disabled={step.completed}
-              className={`w-full flex items-center justify-between p-3 rounded-lg transition-all ${
+              className={`w-full flex items-center justify-between p-2.5 sm:p-3 rounded-lg transition-all ${
                 step.completed
                   ? 'bg-emerald-500/10 border border-emerald-500/20'
                   : 'bg-gray-800/50 border border-gray-700/30 hover:border-indigo-500/40 hover:bg-indigo-500/10 cursor-pointer'
               }`}
             >
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
                 {step.completed ? (
-                  <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                  <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 flex-shrink-0" />
                 ) : (
-                  <Circle className="w-5 h-5 text-gray-500" />
+                  <Circle className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 flex-shrink-0" />
                 )}
-                <div className="text-left">
-                  <p className={`text-sm font-medium ${
+                <div className="text-left min-w-0">
+                  <p className={`text-xs sm:text-sm font-medium truncate ${
                     step.completed ? 'text-emerald-300' : 'text-gray-200'
                   }`}>
                     {step.title}
                   </p>
-                  <p className="text-xs text-gray-500">{step.description}</p>
+                  <p className="text-xs text-gray-500 truncate hidden sm:block">{step.description}</p>
                 </div>
               </div>
               {!step.completed && (
-                <ChevronRight className="w-4 h-4 text-gray-500" />
+                <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0" />
               )}
             </motion.button>
           ))}
