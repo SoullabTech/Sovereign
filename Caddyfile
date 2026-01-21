@@ -96,6 +96,17 @@ soullab.life {
             Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
             Access-Control-Max-Age "86400"
         }
+        # Null origin (WebKit edge case - some Capacitor/WKWebView contexts)
+        @preflight_null {
+            header Origin null
+        }
+        header @preflight_null {
+            Access-Control-Allow-Origin "null"
+            Access-Control-Allow-Credentials "true"
+            Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Max-Age "86400"
+        }
         respond "" 204
     }
 
@@ -117,6 +128,12 @@ soullab.life {
         }
         header @stream_ionic Access-Control-Allow-Origin "ionic://localhost"
         header @stream_ionic Access-Control-Allow-Credentials "true"
+        # CORS for null origin (WebKit edge case)
+        @stream_null {
+            header Origin null
+        }
+        header @stream_null Access-Control-Allow-Origin "null"
+        header @stream_null Access-Control-Allow-Credentials "true"
 
         reverse_proxy maia:3000 {
             header_up Host {host}
@@ -145,6 +162,12 @@ soullab.life {
         }
         header @api_ionic Access-Control-Allow-Origin "ionic://localhost"
         header @api_ionic Access-Control-Allow-Credentials "true"
+        # CORS for null origin (WebKit edge case)
+        @api_null {
+            header Origin null
+        }
+        header @api_null Access-Control-Allow-Origin "null"
+        header @api_null Access-Control-Allow-Credentials "true"
 
         reverse_proxy maia:3000 {
             header_up Host {host}
