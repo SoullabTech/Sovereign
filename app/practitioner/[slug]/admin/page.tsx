@@ -24,6 +24,7 @@ import { usePractitionerAuth } from '@/lib/auth/practitionerAuth';
 import { DashboardStats } from '@/components/admin/DashboardStats';
 import { ClientCard } from '@/components/admin/ClientCard';
 import type { PractitionerDashboard, PractitionerSession, PractitionerClient } from '@/lib/stellium/types';
+import { mapDashboardResponse } from '@/lib/stellium/mapDashboardResponse';
 
 const colors = {
   void: '#0D0B14',
@@ -151,17 +152,30 @@ export default function AdminDashboard() {
   const params = useParams();
   const router = useRouter();
   const slug = params.slug as string;
-  const { practitioner, practitionerId } = usePractitionerAuth();
+  const { practitioner, practitionerId, isLoading: authLoading, error: authError } = usePractitionerAuth();
 
   const [dashboard, setDashboard] = useState<PractitionerDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (practitionerId) {
-      fetchDashboard();
+    // Don't fetch until auth is ready
+    if (authLoading) return;
+
+    // Auth finished but no practitionerId - diagnostic log + show error
+    if (!practitionerId) {
+      console.error('[Practitioner Admin] Auth ready but practitionerId missing', {
+        slug,
+        authError,
+        hasPractitioner: !!practitioner,
+      });
+      setError('Session not found. Please sign in again.');
+      setLoading(false);
+      return;
     }
-  }, [practitionerId]);
+
+    fetchDashboard();
+  }, [practitionerId, authLoading]);
 
   const fetchDashboard = async () => {
     try {
@@ -169,7 +183,7 @@ export default function AdminDashboard() {
       const response = await fetch(`/api/stellium/dashboard?practitionerId=${practitionerId}`);
       if (!response.ok) throw new Error('Failed to fetch dashboard');
       const data = await response.json();
-      setDashboard(data.dashboard);
+      setDashboard(mapDashboardResponse(data, practitionerId || ''));
     } catch (err) {
       console.error('[Dashboard] Error:', err);
       setError('Failed to load dashboard');
@@ -387,10 +401,10 @@ export default function AdminDashboard() {
                           color: colors.gold,
                         }}
                       >
-                        {client.name[0]}
+                        {(client.preferred_name || client.name || 'C')[0]}
                       </div>
                       <span className="text-sm" style={{ color: colors.starlight }}>
-                        {client.preferred_name || client.name}
+                        {client.preferred_name || client.name || 'Client'}
                       </span>
                     </div>
                     <ChevronRight className="w-4 h-4" style={{ color: colors.dim }} />
