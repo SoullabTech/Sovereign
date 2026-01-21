@@ -149,7 +149,6 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/oracle/interactive', minTier: 'personal', notes: 'Interactive oracle' },
 
   // Astrology tools (beyond browse)
-  { exact: '/birth-chart', public: true, minTier: 'free', notes: 'Redirect to /astrology' },
   { exact: '/chart', minTier: 'personal', notes: 'Chart generator' },
   { exact: '/astrology/chinese', minTier: 'personal', notes: 'Chinese astrology' },
   { exact: '/astrology/mayan', minTier: 'personal', notes: 'Mayan astrology' },
@@ -206,10 +205,18 @@ export const ACCESS_RULES: AccessRule[] = [
   // Lab Tools (all Pro)
   { prefix: '/labtools', minTier: 'pro', notes: 'All lab tools require Pro' },
 
-  // Legacy redirects to labtools
-  { exact: '/journal', minTier: 'pro', notes: 'Redirect to /labtools/journal' },
-  { exact: '/voice', minTier: 'pro', notes: 'Redirect to /labtools/voice' },
-  { exact: '/language', minTier: 'pro', notes: 'Redirect to /labtools/language' },
+  // ─────────────────────────────────────────────────────────────────
+  // Legacy Redirects
+  // These routes exist only for backwards compatibility with old links.
+  // Each redirects to a canonical location; auth is enforced here to
+  // avoid double-redirect (legacy → signin → canonical).
+  // ─────────────────────────────────────────────────────────────────
+  // public: only redirects to public page, avoids auth wall on old links
+  { exact: '/birth-chart', public: true, minTier: 'free', notes: '→ /astrology' },
+  // pro: labtools require auth, enforce here not at destination
+  { exact: '/journal', minTier: 'pro', notes: '→ /labtools/journal' },
+  { exact: '/voice', minTier: 'pro', notes: '→ /labtools/voice' },
+  { exact: '/language', minTier: 'pro', notes: '→ /labtools/language' },
 
   // Consciousness Pro features
   { exact: '/consciousness/portals/admin', minTier: 'pro', rolesAnyOf: ['admin', 'steward'], notes: 'Portal admin' },
