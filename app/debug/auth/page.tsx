@@ -9,7 +9,7 @@
  * Usage: Navigate to /debug/auth to see current auth state.
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { WhoamiResponse } from '@/app/api/auth/whoami/route';
 
@@ -28,6 +28,14 @@ interface CookieInfo {
 }
 
 export default function AuthDebugPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-900 text-gray-100 p-6">Loading...</div>}>
+      <AuthDebugContent />
+    </Suspense>
+  );
+}
+
+function AuthDebugContent() {
   const searchParams = useSearchParams();
   const [serverState, setServerState] = useState<WhoamiResponse | null>(null);
   const [localStorageState, setLocalStorageState] = useState<LocalStorageState | null>(null);
