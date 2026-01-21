@@ -580,6 +580,11 @@ sqlite3 / swisseph → node-gyp → make-fetch-happen → cacache → tar
 - No package installation occurs on production hosts
 - CI runners are ephemeral with least privileges
 
+**Condition:** This exception is valid **only if** production deploys do **not** run `npm install` (or any dependency installation step) on production hosts. Installs occur in Docker build stage; runtime image is immutable.
+
+**Verification (deploy checklist):**
+- [ ] Confirm deploy pipeline uses pre-built artifact/image (no install step on prod host)
+
 **Plan:** Monitor upstream dependency updates; re-evaluate when sqlite3/swisseph release versions that remove/patch the vulnerable tar chain.
 
 **Last Reviewed:** 2026-01-21
