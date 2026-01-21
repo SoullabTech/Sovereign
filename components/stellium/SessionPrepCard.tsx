@@ -26,12 +26,14 @@ import {
 } from 'lucide-react';
 import type { SessionPrepData } from '@/lib/practitioner/sessionPrep';
 import type { PractitionerClient } from '@/lib/stellium/types';
+import { MessageDigestCard, DigestSynthesisLine } from '@/components/stellium';
 
 interface SessionPrepCardProps {
   prep: SessionPrepData;
   onViewEmergencyKit?: () => void;
   onViewFullHistory?: () => void;
   onViewProgressArc?: () => void;
+  onViewMessages?: () => void;
   variant?: 'full' | 'compact' | 'dashboard';
 }
 
@@ -40,9 +42,10 @@ export default function SessionPrepCard({
   onViewEmergencyKit,
   onViewFullHistory,
   onViewProgressArc,
+  onViewMessages,
   variant = 'full',
 }: SessionPrepCardProps) {
-  const { client, last_session, journey, flags, recent_sessions } = prep;
+  const { client, last_session, journey, flags, recent_sessions, message_digest } = prep;
 
   const displayName = client.preferred_name || client.name;
   const initials = displayName
@@ -191,6 +194,17 @@ export default function SessionPrepCard({
                   ))}
                 </div>
               )}
+
+              {/* Message Digest Synthesis (dashboard) */}
+              {message_digest && message_digest.messages_since_last_session > 0 && (
+                <div className="mt-2">
+                  <DigestSynthesisLine
+                    digest={message_digest}
+                    onClick={onViewMessages}
+                    variant="default"
+                  />
+                </div>
+              )}
             </div>
           </div>
         </CardContent>
@@ -280,6 +294,15 @@ export default function SessionPrepCard({
               </p>
             </div>
           </div>
+        )}
+
+        {/* Message Digest Synthesis - Prominent one-liner */}
+        {message_digest && message_digest.messages_since_last_session > 0 && (
+          <DigestSynthesisLine
+            digest={message_digest}
+            onClick={onViewMessages}
+            variant="prominent"
+          />
         )}
 
         {/* Last Session */}
@@ -413,6 +436,15 @@ export default function SessionPrepCard({
               ))}
             </ul>
           </div>
+        )}
+
+        {/* Between-Session Messages */}
+        {message_digest && message_digest.messages_since_last_session > 0 && (
+          <MessageDigestCard
+            digest={message_digest}
+            onViewAll={onViewMessages || (() => {})}
+            variant="full"
+          />
         )}
 
         {/* Quick Links */}

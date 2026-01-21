@@ -16,6 +16,13 @@ export { default as SessionPrepCard } from './SessionPrepCard';
 export { default as EmergencyKitCard } from './EmergencyKitCard';
 export { default as EmergencyKitForm } from './EmergencyKitForm';
 
+// Between-Session Messaging Components (Practitioner Guild)
+export { default as MessagePolicyForm } from './MessagePolicyForm';
+export { default as MessageInbox } from './MessageInbox';
+export { default as MessageThread } from './MessageThread';
+export { default as MessageDigestCard } from './MessageDigestCard';
+export { default as DigestSynthesisLine } from './DigestSynthesisLine';
+
 // Marketing Components
 export { default as MarketingDashboard } from './MarketingDashboard';
 export { default as ContentGenerator } from './ContentGenerator';
