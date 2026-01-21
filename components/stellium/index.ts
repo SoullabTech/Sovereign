@@ -23,6 +23,11 @@ export { default as MessageThread } from './MessageThread';
 export { default as MessageDigestCard } from './MessageDigestCard';
 export { default as DigestSynthesisLine } from './DigestSynthesisLine';
 
+// Sliding Scale Components (Dignified Affordability)
+export { default as SlidingScalePolicyCard } from './SlidingScalePolicyCard';
+export { default as SlidingScaleRequestsInbox } from './SlidingScaleRequestsInbox';
+export { default as SlidingScaleRequestDetail } from './SlidingScaleRequestDetail';
+
 // Marketing Components
 export { default as MarketingDashboard } from './MarketingDashboard';
 export { default as ContentGenerator } from './ContentGenerator';
