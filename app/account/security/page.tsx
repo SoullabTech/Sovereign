@@ -465,6 +465,45 @@ export default function SecuritySettingsPage() {
         {/* Sign-in Methods Section */}
         {activeSection === 'signin-methods' && (
           <div className="space-y-6">
+            {/* Passkey Help Panel - Shows when user has no passkeys */}
+            {passkeys.length === 0 && (
+              <section className="bg-amber-500/10 rounded-xl p-5 border border-amber-500/30">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 bg-amber-500/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xl">🔑</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-maia-cream-100 font-medium mb-1">
+                      New device? Old passkey stopped working?
+                    </h3>
+                    <p className="text-sm text-maia-cream-100/70 mb-3">
+                      Passkeys are tied to the domain where they were created. If you're here after Face ID / Touch ID didn't work on sign-in, just create a new one below.
+                    </p>
+                    <div className="text-sm text-maia-cream-100/60 space-y-1.5 mb-4">
+                      <div className="flex gap-2">
+                        <span className="text-amber-400">1.</span>
+                        <span>Click <strong className="text-maia-cream-100">Add passkey</strong> below</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-amber-400">2.</span>
+                        <span>Use Face ID / Touch ID when prompted</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-amber-400">3.</span>
+                        <span>Name it <strong className="text-maia-cream-100">SOULLAB-[YourName]</strong></span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleAddPasskey}
+                      className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors text-sm font-medium"
+                    >
+                      Add passkey now
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
             {/* Passkeys */}
             <section className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
               <div className="flex items-center justify-between mb-4">
@@ -663,6 +702,23 @@ export default function SecuritySettingsPage() {
         {/* FAQ Section */}
         {activeSection === 'faq' && (
           <section className="space-y-4">
+            <div className="bg-amber-500/10 rounded-xl p-6 border border-amber-500/30">
+              <h3 className="text-maia-cream-100 font-medium mb-2">My Face ID / Touch ID stopped working?</h3>
+              <p className="text-sm text-maia-cream-100/60 mb-3">
+                Passkeys are tied to the domain where they were created. If SOULLAB moved domains
+                or you're using a new device, your old passkey won't work. The fix is simple:
+              </p>
+              <ol className="text-sm text-maia-cream-100/60 list-decimal list-inside space-y-1 mb-3">
+                <li>Sign in with your password (or Google/Apple)</li>
+                <li>Go to <strong className="text-maia-cream-100">Sign-in methods</strong> tab</li>
+                <li>Click <strong className="text-maia-cream-100">Add passkey</strong></li>
+                <li>Name it <strong className="text-maia-cream-100">SOULLAB-[YourName]</strong></li>
+              </ol>
+              <p className="text-sm text-maia-cream-100/60">
+                Your account is safe — this is just refreshing your device's key.
+              </p>
+            </div>
+
             <div className="bg-maia-navy-800/50 rounded-xl p-6 border border-maia-navy-700/50">
               <h3 className="text-maia-cream-100 font-medium mb-2">What is a passkey?</h3>
               <p className="text-sm text-maia-cream-100/60">

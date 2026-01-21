@@ -67,6 +67,9 @@ function SigninContent() {
   const [passkeyPromptStatus, setPasskeyPromptStatus] = useState<'idle' | 'registering' | 'success' | 'error'>('idle');
   const [pendingRedirect, setPendingRedirect] = useState<string | null>(null);
 
+  // Passkey renewal modal (for users with old/invalid passkeys)
+  const [showPasskeyRenewal, setShowPasskeyRenewal] = useState(false);
+
   const biometricLabel = useMemo(() => biometricAuth.getBiometricName(), []);
 
   // Feature flags - cached once per render
@@ -143,15 +146,22 @@ function SigninContent() {
       const res = await biometricAuth.authenticate(bioUsername || undefined);
 
       if (!res.success) {
+        // Show dedicated renewal UI for domain mismatch errors
+        if (res.code === 'RPID_MISMATCH' || res.code === 'ORIGIN_MISMATCH') {
+          setShowPasskeyRenewal(true);
+          setIsLoading(false);
+          return;
+        }
+
         // Provide helpful guidance based on error code
         let errorMessage = res.error || 'Passkey sign-in failed';
 
-        if (res.code === 'RPID_MISMATCH' || res.code === 'ORIGIN_MISMATCH') {
-          errorMessage = 'Your passkey was registered on a different domain. Please sign in with password and set up a new passkey in Settings > Security.';
-        } else if (res.code === 'CREDENTIAL_NOT_FOUND') {
+        if (res.code === 'CREDENTIAL_NOT_FOUND') {
           errorMessage = 'No passkey found for this account. Sign in with password, then enable Face ID/Touch ID in Settings.';
         } else if (res.code === 'CHALLENGE_EXPIRED' || res.code === 'CHALLENGE_INVALID') {
           errorMessage = 'Session expired. Please try again.';
+        } else if (res.code === 'USER_CANCELLED') {
+          errorMessage = 'Sign-in was cancelled. Tap to try again.';
         }
 
         setError(errorMessage);
@@ -974,6 +984,73 @@ function SigninContent() {
                 </button>
               </div>
             )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Passkey Renewal Modal */}
+      {showPasskeyRenewal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl p-6 max-w-md w-full shadow-2xl bg-white/95 border border-white/30"
+          >
+            <div className="flex justify-center mb-4">
+              <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center">
+                <span className="text-2xl">🔑</span>
+              </div>
+            </div>
+            <h2 className="text-lg font-semibold text-teal-900 text-center mb-2">
+              Passkey needs to be renewed
+            </h2>
+            <p className="text-sm text-teal-800/70 text-center mb-5">
+              Your passkey was created on an older SOULLAB domain, so it can&apos;t be used here anymore.
+              <br /><span className="text-teal-700 font-medium">No worries — your account is still safe.</span>
+            </p>
+
+            <div className="bg-teal-50/80 rounded-xl p-4 mb-5 border border-teal-200/50">
+              <div className="text-sm text-teal-800 space-y-2">
+                <div className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-semibold">1</span>
+                  <span><strong>Sign in with email + password</strong> (or Google)</span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-semibold">2</span>
+                  <span>Go to <strong>Settings → Security</strong></span>
+                </div>
+                <div className="flex gap-3">
+                  <span className="flex-shrink-0 w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center font-semibold">3</span>
+                  <span>Select <strong>Add passkey</strong> and name it <strong>SOULLAB-[YourName]</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => {
+                  setShowPasskeyRenewal(false);
+                  setShowPassword(true);
+                }}
+                className="w-full py-3 rounded-xl bg-teal-600 text-white font-medium hover:bg-teal-500 transition-colors"
+              >
+                Sign in another way
+              </button>
+              <button
+                onClick={() => setShowPasskeyRenewal(false)}
+                className="w-full py-2 text-sm text-teal-700/70 hover:text-teal-800"
+              >
+                Close
+              </button>
+            </div>
+
+            <p className="text-xs text-teal-600/60 text-center mt-4">
+              If you don&apos;t see &quot;Add passkey&quot; in Settings, update iOS/macOS and try again.
+            </p>
           </motion.div>
         </motion.div>
       )}
