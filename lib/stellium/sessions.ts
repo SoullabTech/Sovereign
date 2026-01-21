@@ -16,6 +16,43 @@ import {
   MaiaSessionPrep,
   SessionStatus,
 } from './types';
+import { decryptJoinedClientFields } from './clients';
+
+// SQL fragment for selecting encrypted client name columns
+const CLIENT_NAME_COLUMNS = `
+  c.name as client_name,
+  c.preferred_name as client_preferred_name,
+  c.name_enc as client_name_enc,
+  c.name_enc_meta as client_name_enc_meta,
+  c.preferred_name_enc as client_preferred_name_enc,
+  c.preferred_name_enc_meta as client_preferred_name_enc_meta
+`;
+
+/**
+ * Transform a joined row with client info, decrypting name fields
+ */
+function transformSessionWithClient(row: any, practitionerId: string): any {
+  if (!row.client_id) {
+    return { ...row, client: undefined };
+  }
+
+  // Decrypt client name fields
+  const decrypted = decryptJoinedClientFields(row, practitionerId);
+
+  return {
+    ...row,
+    client: {
+      id: row.client_id,
+      name: decrypted.client_name || row.client_name,
+      preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+      email: row.client_email,
+      phone: row.client_phone,
+      has_chart: row.client_has_chart,
+      themes: row.client_themes,
+      private_notes: row.client_notes,
+    },
+  };
+}
 
 // ============================================
 // SESSION CRUD
@@ -77,12 +114,11 @@ export async function getSessions(
   );
   const total = parseInt(countResult.rows[0]?.total || '0', 10);
 
-  // Get sessions with client info
+  // Get sessions with client info (including encrypted name columns)
   const result = await query(
     `SELECT
       s.*,
-      c.name as client_name,
-      c.preferred_name as client_preferred_name,
+      ${CLIENT_NAME_COLUMNS},
       c.email as client_email,
       c.has_chart as client_has_chart
     FROM practitioner_sessions s
@@ -93,17 +129,8 @@ export async function getSessions(
     [...params, limit, offset]
   );
 
-  // Transform to include nested client
-  const sessions = result.rows.map(row => ({
-    ...row,
-    client: row.client_name ? {
-      id: row.client_id,
-      name: row.client_name,
-      preferred_name: row.client_preferred_name,
-      email: row.client_email,
-      has_chart: row.client_has_chart,
-    } : undefined,
-  }));
+  // Transform with decryption
+  const sessions = result.rows.map(row => transformSessionWithClient(row, practitionerId));
 
   return { sessions: sessions as PractitionerSession[], total };
 }
@@ -118,8 +145,7 @@ export async function getUpcomingSessions(
   const result = await query(
     `SELECT
       s.*,
-      c.name as client_name,
-      c.preferred_name as client_preferred_name,
+      ${CLIENT_NAME_COLUMNS},
       c.has_chart as client_has_chart
     FROM practitioner_sessions s
     LEFT JOIN practitioner_clients c ON s.client_id = c.id
@@ -131,15 +157,7 @@ export async function getUpcomingSessions(
     [practitionerId]
   );
 
-  return result.rows.map(row => ({
-    ...row,
-    client: row.client_name ? {
-      id: row.client_id,
-      name: row.client_name,
-      preferred_name: row.client_preferred_name,
-      has_chart: row.client_has_chart,
-    } : undefined,
-  })) as PractitionerSession[];
+  return result.rows.map(row => transformSessionWithClient(row, practitionerId)) as PractitionerSession[];
 }
 
 /**
@@ -152,8 +170,7 @@ export async function getSession(
   const result = await query(
     `SELECT
       s.*,
-      c.name as client_name,
-      c.preferred_name as client_preferred_name,
+      ${CLIENT_NAME_COLUMNS},
       c.email as client_email,
       c.phone as client_phone,
       c.has_chart as client_has_chart,
@@ -167,20 +184,7 @@ export async function getSession(
 
   if (!result.rows[0]) return null;
 
-  const row = result.rows[0];
-  return {
-    ...row,
-    client: row.client_name ? {
-      id: row.client_id,
-      name: row.client_name,
-      preferred_name: row.client_preferred_name,
-      email: row.client_email,
-      phone: row.client_phone,
-      has_chart: row.client_has_chart,
-      themes: row.client_themes,
-      private_notes: row.client_notes,
-    } : undefined,
-  } as PractitionerSession;
+  return transformSessionWithClient(result.rows[0], practitionerId) as PractitionerSession;
 }
 
 /**
@@ -407,8 +411,7 @@ export async function getSessionsNeedingFollowUp(
   const result = await query(
     `SELECT
       s.*,
-      c.name as client_name,
-      c.preferred_name as client_preferred_name,
+      ${CLIENT_NAME_COLUMNS},
       c.email as client_email
     FROM practitioner_sessions s
     LEFT JOIN practitioner_clients c ON s.client_id = c.id
@@ -420,15 +423,7 @@ export async function getSessionsNeedingFollowUp(
     [practitionerId]
   );
 
-  return result.rows.map(row => ({
-    ...row,
-    client: row.client_name ? {
-      id: row.client_id,
-      name: row.client_name,
-      preferred_name: row.client_preferred_name,
-      email: row.client_email,
-    } : undefined,
-  })) as PractitionerSession[];
+  return result.rows.map(row => transformSessionWithClient(row, practitionerId)) as PractitionerSession[];
 }
 
 // ============================================

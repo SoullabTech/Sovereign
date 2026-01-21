@@ -15,6 +15,32 @@
 import { query, transaction } from '@/lib/db/postgres';
 import type { PractitionerClient } from '@/lib/stellium/types';
 import crypto from 'crypto';
+import {
+  getEncryptedColumnsForInsert,
+  verifyEncryptedBody,
+  isPHIEncryptionEnabled,
+} from '@/lib/security/phiAccessors/clientMessages';
+import { decryptJoinedClientFields } from '@/lib/stellium/clients';
+
+// SQL fragment for selecting encrypted client name columns in JOINs
+const CLIENT_NAME_JOIN_COLUMNS = `
+  c.name as client_name,
+  c.preferred_name as client_preferred_name,
+  c.name_enc as client_name_enc,
+  c.name_enc_meta as client_name_enc_meta,
+  c.preferred_name_enc as client_preferred_name_enc,
+  c.preferred_name_enc_meta as client_preferred_name_enc_meta
+`;
+
+// SQL fragment for selecting encrypted client name columns directly
+const CLIENT_NAME_DIRECT_COLUMNS = `
+  name,
+  preferred_name,
+  name_enc,
+  name_enc_meta,
+  preferred_name_enc,
+  preferred_name_enc_meta
+`;
 
 // ============================================
 // TYPES
@@ -449,8 +475,7 @@ export async function getInbox(
     )
     SELECT
       c.id as client_id,
-      c.name as client_name,
-      c.preferred_name as client_preferred_name,
+      ${CLIENT_NAME_JOIN_COLUMNS},
       COALESCE(uc.unread_count, 0) as unread_count,
       COALESCE(uc.safety_count, 0) as safety_count,
       COALESCE(uc.latest_message_at, lm.created_at) as latest_message_at,
@@ -471,7 +496,15 @@ export async function getInbox(
     [practitionerId, limit, offset, includeRead]
   );
 
-  return result.rows as MessageInboxItem[];
+  // Decrypt client names in results
+  return result.rows.map(row => {
+    const decrypted = decryptJoinedClientFields(row, practitionerId);
+    return {
+      ...row,
+      client_name: decrypted.client_name || row.client_name,
+      client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+    };
+  }) as MessageInboxItem[];
 }
 
 /**
@@ -553,13 +586,23 @@ export async function getMessage(
   messageId: string
 ): Promise<ClientMessage | null> {
   const result = await query(
-    `SELECT m.*, c.name as client_name, c.preferred_name as client_preferred_name
+    `SELECT m.*, ${CLIENT_NAME_JOIN_COLUMNS}
      FROM client_messages m
      JOIN practitioner_clients c ON m.client_id = c.id
      WHERE m.id = $1 AND m.practitioner_id = $2`,
     [messageId, practitionerId]
   );
-  return result.rows[0] as ClientMessage | null;
+
+  if (!result.rows[0]) return null;
+
+  // Decrypt client name fields
+  const row = result.rows[0];
+  const decrypted = decryptJoinedClientFields(row, practitionerId);
+  return {
+    ...row,
+    client_name: decrypted.client_name || row.client_name,
+    client_preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+  } as ClientMessage;
 }
 
 /**
@@ -624,23 +667,61 @@ export async function sendReply(
 
   const { body, is_quick_response = false, quick_response_type, reply_to_id } = input;
 
-  const result = await query(
-    `INSERT INTO client_messages (
-      client_id, practitioner_id, direction,
-      message_type, body,
-      is_quick_response, quick_response_type,
-      reply_to_id, status
-    ) VALUES ($1, $2, 'practitioner_to_client', 'reply', $3, $4, $5, $6, 'sent')
-    RETURNING *`,
-    [
-      clientId,
+  // Generate UUID client-side (needed for encryption context)
+  const messageId = crypto.randomUUID();
+
+  // Dual-write: plaintext + encrypted columns (Stage A)
+  let result;
+  if (isPHIEncryptionEnabled()) {
+    const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(body, {
+      rowId: messageId,
       practitionerId,
-      body,
-      is_quick_response,
-      quick_response_type || null,
-      reply_to_id || null,
-    ]
-  );
+    });
+
+    result = await query(
+      `INSERT INTO client_messages (
+        id, client_id, practitioner_id, direction,
+        message_type, body, body_enc, body_enc_meta,
+        is_quick_response, quick_response_type,
+        reply_to_id, status
+      ) VALUES ($1, $2, $3, 'practitioner_to_client', 'reply', $4, $5, $6, $7, $8, $9, 'sent')
+      RETURNING *`,
+      [
+        messageId,
+        clientId,
+        practitionerId,
+        body,
+        bodyEnc,
+        bodyEncMeta,
+        is_quick_response,
+        quick_response_type || null,
+        reply_to_id || null,
+      ]
+    );
+
+    // Background verification (Stage A)
+    verifyEncryptedBody(messageId, practitionerId, body).catch(() => {});
+  } else {
+    // No encryption key configured - plaintext only
+    result = await query(
+      `INSERT INTO client_messages (
+        id, client_id, practitioner_id, direction,
+        message_type, body,
+        is_quick_response, quick_response_type,
+        reply_to_id, status
+      ) VALUES ($1, $2, $3, 'practitioner_to_client', 'reply', $4, $5, $6, $7, 'sent')
+      RETURNING *`,
+      [
+        messageId,
+        clientId,
+        practitionerId,
+        body,
+        is_quick_response,
+        quick_response_type || null,
+        reply_to_id || null,
+      ]
+    );
+  }
 
   return result.rows[0] as ClientMessage;
 }
@@ -741,9 +822,9 @@ export async function getMessageDigest(
   practitionerId: string,
   clientId: string
 ): Promise<MessageDigest | null> {
-  // Get client and last session date
+  // Get client and last session date (including encrypted name columns)
   const clientResult = await query(
-    `SELECT id, name, preferred_name, last_session
+    `SELECT id, ${CLIENT_NAME_DIRECT_COLUMNS}, last_session
      FROM practitioner_clients
      WHERE id = $1 AND practitioner_id = $2`,
     [clientId, practitionerId]
@@ -753,7 +834,22 @@ export async function getMessageDigest(
     return null;
   }
 
-  const client = clientResult.rows[0];
+  // Decrypt client name fields
+  const rawClient = clientResult.rows[0];
+  const decrypted = decryptJoinedClientFields({
+    client_id: rawClient.id,
+    client_name: rawClient.name,
+    client_name_enc: rawClient.name_enc,
+    client_name_enc_meta: rawClient.name_enc_meta,
+    client_preferred_name: rawClient.preferred_name,
+    client_preferred_name_enc: rawClient.preferred_name_enc,
+    client_preferred_name_enc_meta: rawClient.preferred_name_enc_meta,
+  }, practitionerId);
+  const client = {
+    ...rawClient,
+    name: decrypted.client_name || rawClient.name,
+    preferred_name: decrypted.client_preferred_name || rawClient.preferred_name,
+  };
   const lastSession = client.last_session;
 
   // Get messages since last session with safety log acknowledgment status

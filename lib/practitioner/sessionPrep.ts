@@ -12,6 +12,17 @@ import { query } from '@/lib/db/postgres';
 import type { PractitionerClient, PractitionerSession } from '@/lib/stellium/types';
 import type { MessageDigest, ClientMessage } from '@/lib/practitioner/messages';
 import { getMessageDigest } from '@/lib/practitioner/messages';
+import { decryptJoinedClientFields } from '@/lib/stellium/clients';
+
+// SQL fragment for selecting encrypted client name columns in JOINs
+const CLIENT_NAME_JOIN_COLUMNS = `
+  c.name as client_name,
+  c.preferred_name as client_preferred_name,
+  c.name_enc as client_name_enc,
+  c.name_enc_meta as client_name_enc_meta,
+  c.preferred_name_enc as client_preferred_name_enc,
+  c.preferred_name_enc_meta as client_preferred_name_enc_meta
+`;
 
 // ============================================
 // TYPES
@@ -451,8 +462,7 @@ export async function getUpcomingSessionsWithPrep(
   const result = await query(
     `SELECT
       s.*,
-      c.name as client_name,
-      c.preferred_name as client_preferred_name,
+      ${CLIENT_NAME_JOIN_COLUMNS},
       c.email as client_email,
       c.phone as client_phone,
       c.total_sessions as client_total_sessions,
@@ -472,12 +482,15 @@ export async function getUpcomingSessionsWithPrep(
   );
 
   return result.rows.map(row => {
+    // Decrypt client name fields
+    const decrypted = decryptJoinedClientFields(row, practitionerId);
+
     const session = {
       ...row,
       client: {
         id: row.client_id,
-        name: row.client_name,
-        preferred_name: row.client_preferred_name,
+        name: decrypted.client_name || row.client_name,
+        preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
         email: row.client_email,
         phone: row.client_phone,
         total_sessions: row.client_total_sessions,

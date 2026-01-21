@@ -126,6 +126,68 @@ function decryptClientRow(row: any, practitionerId: string): PractitionerClient 
   return row as PractitionerClient;
 }
 
+/**
+ * Decrypt client name fields from a joined row
+ *
+ * Use this when you have a row from a JOIN query that includes client fields
+ * with prefixes like 'client_name', 'client_name_enc', etc.
+ *
+ * @param row - The joined row with client fields
+ * @param clientId - The client ID (usually row.client_id)
+ * @param practitionerId - The practitioner ID
+ * @returns Object with decrypted client_name and client_preferred_name
+ */
+export function decryptJoinedClientFields(
+  row: {
+    client_id?: string;
+    client_name?: string;
+    client_name_enc?: string;
+    client_name_enc_meta?: any;
+    client_preferred_name?: string;
+    client_preferred_name_enc?: string;
+    client_preferred_name_enc_meta?: any;
+  },
+  practitionerId: string
+): { client_name: string | null; client_preferred_name: string | null } {
+  if (!row || !row.client_id) {
+    return { client_name: null, client_preferred_name: null };
+  }
+
+  const clientId = row.client_id;
+
+  // Decrypt name
+  let clientName = row.client_name || null;
+  if (row.client_name_enc && row.client_name_enc_meta) {
+    const meta = typeof row.client_name_enc_meta === 'string'
+      ? JSON.parse(row.client_name_enc_meta)
+      : row.client_name_enc_meta;
+    clientName = decryptClientName(
+      row.client_name_enc,
+      meta,
+      clientId,
+      practitionerId,
+      row.client_name || ''
+    );
+  }
+
+  // Decrypt preferred_name
+  let clientPreferredName = row.client_preferred_name || null;
+  if (row.client_preferred_name_enc && row.client_preferred_name_enc_meta) {
+    const meta = typeof row.client_preferred_name_enc_meta === 'string'
+      ? JSON.parse(row.client_preferred_name_enc_meta)
+      : row.client_preferred_name_enc_meta;
+    clientPreferredName = decryptClientName(
+      row.client_preferred_name_enc,
+      meta,
+      clientId,
+      practitionerId,
+      row.client_preferred_name || ''
+    );
+  }
+
+  return { client_name: clientName, client_preferred_name: clientPreferredName };
+}
+
 // ============================================
 // CLIENT CRUD
 // ============================================

@@ -6,6 +6,7 @@
  */
 
 import { query } from '@/lib/db/postgres';
+import { randomUUID } from 'crypto';
 import type {
   ClientMessage,
   MessagePolicy,
@@ -14,6 +15,11 @@ import type {
   ClientMessageToken,
   CreateMessageInput,
 } from '@/lib/practitioner/messages';
+import {
+  getEncryptedColumnsForInsert,
+  verifyEncryptedBody,
+  isPHIEncryptionEnabled,
+} from '@/lib/security/phiAccessors/clientMessages';
 import {
   formatPolicyForClient,
   formatCheckDays,
@@ -191,15 +197,40 @@ export async function sendClientMessage(
     return { success: false, error: 'Message is too long (max 10000 characters)' };
   }
 
-  // Create message
-  const result = await query(
-    `INSERT INTO client_messages (
-      client_id, practitioner_id, direction,
-      message_type, urgency, body
-    ) VALUES ($1, $2, 'client_to_practitioner', $3, $4, $5)
-    RETURNING *`,
-    [clientId, practitionerId, message_type || null, urgency, body.trim()]
-  );
+  // Generate UUID client-side (needed for encryption context)
+  const messageId = randomUUID();
+  const trimmedBody = body.trim();
+
+  // Dual-write: plaintext + encrypted columns (Stage A)
+  let result;
+  if (isPHIEncryptionEnabled()) {
+    const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(trimmedBody, {
+      rowId: messageId,
+      practitionerId,
+    });
+
+    result = await query(
+      `INSERT INTO client_messages (
+        id, client_id, practitioner_id, direction,
+        message_type, urgency, body, body_enc, body_enc_meta
+      ) VALUES ($1, $2, $3, 'client_to_practitioner', $4, $5, $6, $7, $8)
+      RETURNING *`,
+      [messageId, clientId, practitionerId, message_type || null, urgency, trimmedBody, bodyEnc, bodyEncMeta]
+    );
+
+    // Background verification (Stage A)
+    verifyEncryptedBody(messageId, practitionerId, trimmedBody).catch(() => {});
+  } else {
+    // No encryption key configured - plaintext only
+    result = await query(
+      `INSERT INTO client_messages (
+        id, client_id, practitioner_id, direction,
+        message_type, urgency, body
+      ) VALUES ($1, $2, $3, 'client_to_practitioner', $4, $5, $6)
+      RETURNING *`,
+      [messageId, clientId, practitionerId, message_type || null, urgency, trimmedBody]
+    );
+  }
 
   const message = result.rows[0] as ClientMessage;
 
