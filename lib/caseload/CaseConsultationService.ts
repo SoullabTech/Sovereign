@@ -18,6 +18,7 @@ import { getSpiralogicContext, analyzeThemesThroughSpiralogic } from './Spiralog
 import {
   encryptConsultationCreate,
   encryptConsultationFeedback,
+  decryptConsultationRow,
   sanitizeConsultationRow,
   sanitizeConsultationRows,
   isPHIEncryptionEnabled,
@@ -320,8 +321,11 @@ CONSULTATION TYPE: ${consultationType}`;
       [caseId, memberId, limit]
     );
 
-    // SECURITY: Sanitize before returning to strip *_enc columns
-    return sanitizeConsultationRows(rows);
+    // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+    const decrypted = rows.map((row) =>
+      decryptConsultationRow(row, { rowId: row.id, practitionerId: memberId }, { preferEncrypted: true })
+    );
+    return sanitizeConsultationRows(decrypted);
   }
 
   /**
@@ -343,8 +347,13 @@ CONSULTATION TYPE: ${consultationType}`;
 
     if (!rows[0]) return null;
 
-    // SECURITY: Sanitize before returning to strip *_enc columns
-    return sanitizeConsultationRow(rows[0]);
+    // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+    const decrypted = decryptConsultationRow(
+      rows[0],
+      { rowId: consultationId, practitionerId: memberId },
+      { preferEncrypted: true }
+    );
+    return sanitizeConsultationRow(decrypted);
   }
 
   /**
@@ -396,7 +405,12 @@ CONSULTATION TYPE: ${consultationType}`;
 
     if (!rows[0]) return null;
 
-    // SECURITY: Sanitize before returning to strip *_enc columns
-    return sanitizeConsultationRow(rows[0]);
+    // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+    const decrypted = decryptConsultationRow(
+      rows[0],
+      { rowId: consultationId, practitionerId: memberId },
+      { preferEncrypted: true }
+    );
+    return sanitizeConsultationRow(decrypted);
   }
 }
