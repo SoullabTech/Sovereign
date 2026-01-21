@@ -67,10 +67,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     const body = (await request.json().catch(() => ({}))) as GenerateBody;
 
-    // If regenerating, supersede old suggestions
-    if (body.regenerate) {
-      await supersedeSuggestions(threadId, body.messageId);
-    }
+    // Phase 4 polish: ALWAYS supersede existing drafts before generating
+    // This prevents draft pileups - each Generate yields a clean slate
+    await supersedeSuggestions(threadId, body.messageId);
 
     // Generate new suggestions
     const suggestions = await generateSuggestions({
