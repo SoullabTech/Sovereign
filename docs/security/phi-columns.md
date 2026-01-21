@@ -82,10 +82,10 @@ Between-session messages and practitioner-client communication.
 | `client_messages` | `body` | TEXT | PLAINTEXT | Client-written content |
 | `practitioner_messages` | `subject` | TEXT | PLAINTEXT | Message subject |
 | `practitioner_messages` | `body` | TEXT | PLAINTEXT | Message content |
-| `maia_consultations` | `practitioner_query` | TEXT | PLAINTEXT | Clinical question |
-| `maia_consultations` | `context_provided` | JSONB | PLAINTEXT | Case context |
-| `maia_consultations` | `maia_response` | TEXT | PLAINTEXT | Clinical response |
-| `maia_consultations` | `practitioner_feedback` | TEXT | PLAINTEXT | Clinical reflection |
+| `maia_consultations` | `practitioner_query` | TEXT | ENCRYPTED | Clinical question |
+| `maia_consultations` | `context_provided` | JSONB | ENCRYPTED | Case context |
+| `maia_consultations` | `maia_response` | TEXT | ENCRYPTED | Clinical response |
+| `maia_consultations` | `practitioner_feedback` | TEXT | ENCRYPTED | Clinical reflection |
 
 ---
 

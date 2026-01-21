@@ -15,6 +15,13 @@ import { CaseStore } from './CaseStore';
 import { CaseMemoryService } from './CaseMemoryService';
 import { CasePatternService } from './CasePatternService';
 import { getSpiralogicContext, analyzeThemesThroughSpiralogic } from './SpiralogicConsultationContext';
+import {
+  encryptConsultationCreate,
+  encryptConsultationFeedback,
+  sanitizeConsultationRow,
+  sanitizeConsultationRows,
+  isPHIEncryptionEnabled,
+} from '@/lib/security/phiAccessors/maiaConsultations';
 
 // Valid consultation types per DB constraint
 export type ConsultationType =
@@ -231,6 +238,28 @@ CONSULTATION TYPE: ${consultationType}`;
       };
     }
 
+    // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
+    const tempId = crypto.randomUUID();
+    let encryptedColumns: {
+      practitioner_query_enc?: string;
+      practitioner_query_enc_meta?: string;
+      context_provided_enc?: string;
+      context_provided_enc_meta?: string;
+      maia_response_enc?: string;
+      maia_response_enc_meta?: string;
+    } = {};
+
+    if (isPHIEncryptionEnabled()) {
+      encryptedColumns = encryptConsultationCreate(
+        {
+          practitioner_query: practitionerQuery,
+          context_provided: contextProvided,
+          maia_response: JSON.stringify(parsedResponse),
+        },
+        { rowId: tempId, practitionerId: memberId }
+      );
+    }
+
     // Store in maia_consultations table
     const { rows } = await query(
       `INSERT INTO maia_consultations (
@@ -241,8 +270,14 @@ CONSULTATION TYPE: ${consultationType}`;
         context_provided,
         maia_response,
         model_used,
+        practitioner_query_enc,
+        practitioner_query_enc_meta,
+        context_provided_enc,
+        context_provided_enc_meta,
+        maia_response_enc,
+        maia_response_enc_meta,
         created_at
-      ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, NOW())
+      ) VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8, $9, $10, $11, $12, $13, NOW())
       RETURNING *`,
       [
         memberId,
@@ -252,10 +287,17 @@ CONSULTATION TYPE: ${consultationType}`;
         JSON.stringify(contextProvided),
         JSON.stringify(parsedResponse),
         result.provider?.model || 'unknown',
+        encryptedColumns.practitioner_query_enc || null,
+        encryptedColumns.practitioner_query_enc_meta || null,
+        encryptedColumns.context_provided_enc || null,
+        encryptedColumns.context_provided_enc_meta || null,
+        encryptedColumns.maia_response_enc || null,
+        encryptedColumns.maia_response_enc_meta || null,
       ]
     );
 
-    return rows[0];
+    // SECURITY: Sanitize before returning to strip *_enc columns
+    return sanitizeConsultationRow(rows[0]);
   }
 
   /**
@@ -278,7 +320,8 @@ CONSULTATION TYPE: ${consultationType}`;
       [caseId, memberId, limit]
     );
 
-    return rows;
+    // SECURITY: Sanitize before returning to strip *_enc columns
+    return sanitizeConsultationRows(rows);
   }
 
   /**
@@ -298,7 +341,10 @@ CONSULTATION TYPE: ${consultationType}`;
       [consultationId, memberId]
     );
 
-    return rows[0] || null;
+    if (!rows[0]) return null;
+
+    // SECURITY: Sanitize before returning to strip *_enc columns
+    return sanitizeConsultationRow(rows[0]);
   }
 
   /**
@@ -316,16 +362,41 @@ CONSULTATION TYPE: ${consultationType}`;
       throw new Error('Rating must be between 1 and 5');
     }
 
+    // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
+    let encryptedColumns: {
+      practitioner_feedback_enc?: string;
+      practitioner_feedback_enc_meta?: string;
+    } = {};
+
+    if (isPHIEncryptionEnabled() && feedback) {
+      encryptedColumns = encryptConsultationFeedback(
+        { practitioner_feedback: feedback },
+        { rowId: consultationId, practitionerId: memberId }
+      );
+    }
+
     const { rows } = await query(
       `UPDATE maia_consultations
        SET practitioner_rating = $1,
-           practitioner_feedback = $2
-       WHERE id = $3
-         AND practitioner_id = $4
+           practitioner_feedback = $2,
+           practitioner_feedback_enc = $3,
+           practitioner_feedback_enc_meta = $4
+       WHERE id = $5
+         AND practitioner_id = $6
        RETURNING *`,
-      [rating, feedback || null, consultationId, memberId]
+      [
+        rating,
+        feedback || null,
+        encryptedColumns.practitioner_feedback_enc || null,
+        encryptedColumns.practitioner_feedback_enc_meta || null,
+        consultationId,
+        memberId,
+      ]
     );
 
-    return rows[0] || null;
+    if (!rows[0]) return null;
+
+    // SECURITY: Sanitize before returning to strip *_enc columns
+    return sanitizeConsultationRow(rows[0]);
   }
 }

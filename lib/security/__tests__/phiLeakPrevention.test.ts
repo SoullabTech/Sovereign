@@ -190,6 +190,30 @@ const MOCK_EMERGENCY_INFO_ROW_WITH_ENC = {
   updated_at: '2024-01-15T10:00:00Z',
 };
 
+const MOCK_CONSULTATION_ROW_WITH_ENC = {
+  id: 'consultation-123',
+  practitioner_id: 'practitioner-456',
+  case_id: 'case-789',
+  consultation_type: 'pattern_analysis',
+  practitioner_query: 'What themes are emerging with this client?',
+  context_provided: { case: { id: 'case-789' }, patterns: null },
+  maia_response: '{"case_summary": "Test summary", "themes_emerging": ["anxiety"]}',
+  practitioner_rating: 4,
+  practitioner_feedback: 'Very helpful insights',
+  model_used: 'deepseek-r1',
+  tokens_used: 500,
+  // These should NEVER appear in output
+  practitioner_query_enc: 'encrypted-query',
+  practitioner_query_enc_meta: { kid: 'k1', iv: 'iv-query' },
+  context_provided_enc: 'encrypted-context',
+  context_provided_enc_meta: { kid: 'k1', iv: 'iv-context' },
+  maia_response_enc: 'encrypted-response',
+  maia_response_enc_meta: { kid: 'k1', iv: 'iv-response' },
+  practitioner_feedback_enc: 'encrypted-feedback',
+  practitioner_feedback_enc_meta: { kid: 'k1', iv: 'iv-feedback' },
+  created_at: '2024-01-15T10:00:00Z',
+};
+
 // ============================================================================
 // Tests
 // ============================================================================
@@ -466,6 +490,62 @@ describe('PHI Leak Prevention', () => {
     });
   });
 
+  describe('MAIA consultations data layer (Wave 2)', () => {
+    it('CaseConsultationService.list should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CONSULTATION_ROW_WITH_ENC] });
+
+      const { CaseConsultationService } = await import('@/lib/caseload/CaseConsultationService');
+      const result = await CaseConsultationService.list({
+        caseId: 'case-789',
+        memberId: 'practitioner-456',
+      });
+
+      assertNoEncryptedColumns(result, 'CaseConsultationService.list');
+
+      // Verify we still get the plaintext fields
+      expect(Array.isArray(result)).toBe(true);
+      expect(result[0]).toHaveProperty('practitioner_query');
+      expect(result[0]).toHaveProperty('maia_response');
+      expect(result[0]).toHaveProperty('practitioner_feedback');
+    });
+
+    it('CaseConsultationService.get should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CONSULTATION_ROW_WITH_ENC] });
+
+      const { CaseConsultationService } = await import('@/lib/caseload/CaseConsultationService');
+      const result = await CaseConsultationService.get({
+        consultationId: 'consultation-123',
+        memberId: 'practitioner-456',
+      });
+
+      assertNoEncryptedColumns(result, 'CaseConsultationService.get');
+
+      // Verify we still get the plaintext fields
+      expect(result).toHaveProperty('practitioner_query');
+      expect(result?.practitioner_query).toBe('What themes are emerging with this client?');
+      expect(result).toHaveProperty('maia_response');
+      expect(result).toHaveProperty('context_provided');
+    });
+
+    it('CaseConsultationService.rate should never return *_enc columns', async () => {
+      mockQuery.mockResolvedValueOnce({ rows: [MOCK_CONSULTATION_ROW_WITH_ENC] });
+
+      const { CaseConsultationService } = await import('@/lib/caseload/CaseConsultationService');
+      const result = await CaseConsultationService.rate({
+        consultationId: 'consultation-123',
+        memberId: 'practitioner-456',
+        rating: 5,
+        feedback: 'Great consultation',
+      });
+
+      assertNoEncryptedColumns(result, 'CaseConsultationService.rate');
+
+      // Verify we still get the plaintext fields
+      expect(result).toHaveProperty('practitioner_feedback');
+      expect(result).toHaveProperty('practitioner_rating');
+    });
+  });
+
   describe('stripEncryptedColumns helper', () => {
     it('should remove all *_enc and *_enc_meta keys', () => {
       // Import the real function
@@ -549,6 +629,10 @@ describe('PHI Leak Prevention', () => {
         // Wave 2: Emergency info
         'getEmergencyInfo',
         'upsertEmergencyInfo',
+        // Wave 2: MAIA consultations
+        'CaseConsultationService.list',
+        'CaseConsultationService.get',
+        'CaseConsultationService.rate',
         // Utilities
         'stripEncryptedColumns',
       ];
