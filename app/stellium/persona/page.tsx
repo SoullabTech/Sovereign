@@ -9,7 +9,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -17,40 +16,24 @@ import {
   BookOpen,
   MessageSquare,
   Shield,
-  Plus,
   Check,
-  Upload,
   FileText,
   Loader2,
 } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import PersonaTraining from '@/components/stellium/PersonaTraining';
 import { PractitionerPersona } from '@/lib/stellium/types';
+import { usePractitionerContext } from '@/lib/auth/practitionerAuth';
 
 export default function PersonaPage() {
-  const router = useRouter();
+  const { practitionerId, isLoading: authLoading } = usePractitionerContext();
+
   const [persona, setPersona] = useState<PractitionerPersona | null>(null);
   const [loading, setLoading] = useState(true);
   const [showTraining, setShowTraining] = useState(false);
   const [trainingType, setTrainingType] = useState<'voice' | 'framework' | 'boundaries' | 'conversation' | null>(null);
   const [trainingContent, setTrainingContent] = useState('');
   const [training, setTraining] = useState(false);
-
-  const [practitionerId, setPractitionerId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('beta_user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setPractitionerId(user.id || user.memberId || 'demo-practitioner');
-      } catch {
-        setPractitionerId('demo-practitioner');
-      }
-    } else {
-      setPractitionerId('demo-practitioner');
-    }
-  }, []);
 
   useEffect(() => {
     if (practitionerId) {
@@ -104,7 +87,7 @@ export default function PersonaPage() {
     }
   };
 
-  if (loading) {
+  if (authLoading || loading || !practitionerId) {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <Loader2 className="w-8 h-8 text-sacred-gold/50 animate-spin" />

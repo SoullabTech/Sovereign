@@ -22,9 +22,12 @@ import {
 } from 'lucide-react';
 import ContactCard from '@/components/stellium/ContactCard';
 import { MarketingContact, ContactStatus, ContactSource } from '@/lib/stellium/marketing';
+import { usePractitionerContext } from '@/lib/auth/practitionerAuth';
 
 export default function ContactsPage() {
   const router = useRouter();
+  const { practitionerId, isLoading: authLoading } = usePractitionerContext();
+
   const [contacts, setContacts] = useState<MarketingContact[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -41,22 +44,6 @@ export default function ContactsPage() {
   // Pagination
   const [page, setPage] = useState(0);
   const limit = 20;
-
-  const [practitionerId, setPractitionerId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('beta_user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setPractitionerId(user.id || user.memberId || 'demo-practitioner');
-      } catch {
-        setPractitionerId('demo-practitioner');
-      }
-    } else {
-      setPractitionerId('demo-practitioner');
-    }
-  }, []);
 
   useEffect(() => {
     if (practitionerId) {

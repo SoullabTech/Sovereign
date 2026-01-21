@@ -14,18 +14,20 @@ import {
   Calendar,
   Plus,
   Filter,
-  ChevronDown,
   Clock,
   Loader2,
   Brain,
 } from 'lucide-react';
 import SessionCard from '@/components/stellium/SessionCard';
 import { PractitionerSession, SessionStatus } from '@/lib/stellium/types';
+import { usePractitionerContext } from '@/lib/auth/practitionerAuth';
 
 type ViewMode = 'upcoming' | 'all' | 'needs_followup';
 
 export default function SessionsPage() {
   const router = useRouter();
+  const { practitionerId, isLoading: authLoading } = usePractitionerContext();
+
   const [sessions, setSessions] = useState<PractitionerSession[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -41,22 +43,6 @@ export default function SessionsPage() {
   // Pagination
   const [page, setPage] = useState(0);
   const limit = 20;
-
-  const [practitionerId, setPractitionerId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('beta_user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setPractitionerId(user.id || user.memberId || 'demo-practitioner');
-      } catch {
-        setPractitionerId('demo-practitioner');
-      }
-    } else {
-      setPractitionerId('demo-practitioner');
-    }
-  }, []);
 
   useEffect(() => {
     if (practitionerId) {

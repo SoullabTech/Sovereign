@@ -9,21 +9,23 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Users,
   Plus,
   Search,
   Filter,
-  ChevronDown,
   X,
   Loader2,
 } from 'lucide-react';
 import ClientCard from '@/components/stellium/ClientCard';
 import { PractitionerClient } from '@/lib/stellium/types';
+import { usePractitionerContext } from '@/lib/auth/practitionerAuth';
 
 export default function ClientsPage() {
   const router = useRouter();
+  const { practitionerId, isLoading: authLoading } = usePractitionerContext();
+
   const [clients, setClients] = useState<PractitionerClient[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -39,23 +41,6 @@ export default function ClientsPage() {
   // Pagination
   const [page, setPage] = useState(0);
   const limit = 20;
-
-  // Get practitioner ID
-  const [practitionerId, setPractitionerId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('beta_user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setPractitionerId(user.id || user.memberId || 'demo-practitioner');
-      } catch {
-        setPractitionerId('demo-practitioner');
-      }
-    } else {
-      setPractitionerId('demo-practitioner');
-    }
-  }, []);
 
   useEffect(() => {
     if (practitionerId) {

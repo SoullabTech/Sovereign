@@ -24,6 +24,7 @@ import {
   Star,
 } from 'lucide-react';
 import { MarketingCampaign, CampaignType, CampaignStatus } from '@/lib/stellium/marketing';
+import { usePractitionerContext } from '@/lib/auth/practitionerAuth';
 
 const typeIcons: Record<CampaignType, React.ReactNode> = {
   sequence: <Mail className="w-4 h-4" />,
@@ -42,6 +43,8 @@ const statusColors: Record<CampaignStatus, { bg: string; text: string }> = {
 
 export default function CampaignsPage() {
   const router = useRouter();
+  const { practitionerId, isLoading: authLoading } = usePractitionerContext();
+
   const [campaigns, setCampaigns] = useState<MarketingCampaign[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -54,22 +57,6 @@ export default function CampaignsPage() {
   // Pagination
   const [page, setPage] = useState(0);
   const limit = 20;
-
-  const [practitionerId, setPractitionerId] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedUser = localStorage.getItem('beta_user');
-    if (storedUser) {
-      try {
-        const user = JSON.parse(storedUser);
-        setPractitionerId(user.id || user.memberId || 'demo-practitioner');
-      } catch {
-        setPractitionerId('demo-practitioner');
-      }
-    } else {
-      setPractitionerId('demo-practitioner');
-    }
-  }, []);
 
   useEffect(() => {
     if (practitionerId) {
