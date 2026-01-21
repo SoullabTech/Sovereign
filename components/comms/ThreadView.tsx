@@ -25,6 +25,8 @@ import {
   Shield,
   Brain,
   Eye,
+  ThumbsUp,
+  ThumbsDown,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ComposeBox, type QuickResponseType } from './ComposeBox';
@@ -382,18 +384,103 @@ function MessageBubble({ message, onOpenAcknowledgeModal, index }: MessageBubble
 
         {/* MAIA analysis indicator */}
         {message.maia_analysis?.classification && (
-          <div className={`flex items-center space-x-2 mt-1 text-xs text-gray-500 ${
-            isPractitioner ? 'justify-end' : 'justify-start'
-          }`}>
-            <Brain className="w-3 h-3 text-purple-400" />
-            <span>
-              MAIA: {message.maia_analysis.classification.inferred_type}
-              {message.maia_analysis.classification.confidence > 0.7 && ' (high confidence)'}
-            </span>
+          <div className={`mt-1 ${isPractitioner ? 'text-right' : 'text-left'}`}>
+            <div className={`flex items-center space-x-2 text-xs text-gray-500 ${
+              isPractitioner ? 'justify-end' : 'justify-start'
+            }`}>
+              <Brain className="w-3 h-3 text-purple-400" />
+              <span>
+                MAIA: {message.maia_analysis.classification.inferred_type}
+                {message.maia_analysis.classification.confidence > 0.7 && ' (high confidence)'}
+              </span>
+            </div>
+
+            {/* MAIA Feedback buttons */}
+            <MAIAFeedback messageId={message.id} />
           </div>
         )}
       </div>
     </motion.div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MAIA FEEDBACK
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface MAIAFeedbackProps {
+  messageId: string;
+}
+
+function MAIAFeedback({ messageId }: MAIAFeedbackProps) {
+  const [feedback, setFeedback] = useState<1 | -1 | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const sendFeedback = async (signal: 1 | -1) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await fetch(`/api/comms/messages/${messageId}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signal }),
+      });
+
+      if (res.ok) {
+        setFeedback(signal);
+      }
+    } catch (err) {
+      console.error('[MAIA Feedback] Error:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-2 mt-1.5">
+      <button
+        type="button"
+        onClick={() => sendFeedback(1)}
+        disabled={isSubmitting}
+        className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
+          feedback === 1
+            ? 'bg-green-500/20 text-green-400 border border-green-500/40'
+            : 'bg-white/5 hover:bg-white/10 border border-gray-700/60 text-gray-400 hover:text-gray-300'
+        }`}
+        title="MAIA got this right"
+      >
+        <ThumbsUp className="w-3.5 h-3.5" />
+        <span>Helpful</span>
+      </button>
+
+      <button
+        type="button"
+        onClick={() => sendFeedback(-1)}
+        disabled={isSubmitting}
+        className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-colors ${
+          feedback === -1
+            ? 'bg-red-500/20 text-red-400 border border-red-500/40'
+            : 'bg-white/5 hover:bg-white/10 border border-gray-700/60 text-gray-400 hover:text-gray-300'
+        }`}
+        title="MAIA got this wrong"
+      >
+        <ThumbsDown className="w-3.5 h-3.5" />
+        <span>Off</span>
+      </button>
+
+      {feedback === null && (
+        <span className="text-[11px] text-gray-500 ml-1">
+          (trains your practice)
+        </span>
+      )}
+
+      {feedback !== null && (
+        <span className="text-[11px] text-gray-500 ml-1">
+          Feedback recorded
+        </span>
+      )}
+    </div>
   );
 }
 
