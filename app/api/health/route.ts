@@ -20,6 +20,25 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
+// Timeout-bounded DB query wrapper
+// Health checks MUST return within a bounded time, even if DB is wedged
+const DB_QUERY_TIMEOUT_MS = 3000;
+
+async function queryWithTimeout<T>(
+  sql: string,
+  params?: unknown[],
+  timeoutMs: number = DB_QUERY_TIMEOUT_MS
+): Promise<{ rows: T[]; rowCount: number }> {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error(`DB query timed out after ${timeoutMs}ms`)), timeoutMs);
+  });
+
+  return Promise.race([
+    query<T>(sql, params),
+    timeoutPromise,
+  ]);
+}
+
 // Health status types
 type HealthStatus = 'ok' | 'degraded' | 'down';
 
@@ -55,7 +74,9 @@ function generateRequestId(): string {
 async function checkDatabase(): Promise<ComponentHealth> {
   const start = Date.now();
   try {
-    const result = await query('SELECT 1 as ok, NOW() as server_time');
+    const result = await queryWithTimeout<{ ok: number; server_time: Date }>(
+      'SELECT 1 as ok, NOW() as server_time'
+    );
     const latencyMs = Date.now() - start;
 
     if (result.rows.length > 0 && result.rows[0].ok === 1) {
@@ -91,8 +112,8 @@ async function checkTables(): Promise<ComponentHealth> {
   try {
     for (const table of criticalTables) {
       try {
-        // Just check if table exists and is queryable
-        await query(`SELECT 1 FROM ${table} LIMIT 1`);
+        // Just check if table exists and is queryable (with timeout)
+        await queryWithTimeout(`SELECT 1 FROM ${table} LIMIT 1`);
         tableStatus[table] = true;
       } catch {
         tableStatus[table] = false;
