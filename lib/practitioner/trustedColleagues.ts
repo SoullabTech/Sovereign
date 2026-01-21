@@ -540,9 +540,14 @@ export async function recordConsent(
   // Consent given - optionally share name
   const shareInfo = input.client_name_shared === true;
 
+  // PHYSICS: If sharing, name is REQUIRED (DB CHECK will reject NULL)
+  if (shareInfo && !input.client_name?.trim()) {
+    throw new Error('CLIENT_NAME_REQUIRED_WHEN_SHARED');
+  }
+
   // INVARIANT #2: name/contact only if both consent AND share are true
-  const clientName = shareInfo ? input.client_name || null : null;
-  const clientContact = shareInfo ? input.client_contact || null : null;
+  const clientName = shareInfo ? input.client_name!.trim() : null;
+  const clientContact = shareInfo ? input.client_contact?.trim() || null : null;
 
   const result = await query(
     `UPDATE referral_requests

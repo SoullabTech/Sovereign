@@ -549,5 +549,28 @@ describe('Trusted Colleagues', () => {
         sendReferral('referral-1', 'practitioner-1')
       ).rejects.toThrow('REFERRAL_NOT_FOUND');
     });
+
+    it('cannot share identity without providing name (physics check)', async () => {
+      // This tests the forbidden state: shared=true but name=null
+      // Library should reject before DB CHECK even sees it
+      await expect(
+        recordConsent('referral-1', 'practitioner-1', {
+          client_consent_given: true,
+          client_name_shared: true,
+          // client_name intentionally omitted
+        })
+      ).rejects.toThrow('CLIENT_NAME_REQUIRED_WHEN_SHARED');
+    });
+
+    it('cannot share identity with empty name (physics check)', async () => {
+      // Empty string should also be rejected
+      await expect(
+        recordConsent('referral-1', 'practitioner-1', {
+          client_consent_given: true,
+          client_name_shared: true,
+          client_name: '   ',  // whitespace only
+        })
+      ).rejects.toThrow('CLIENT_NAME_REQUIRED_WHEN_SHARED');
+    });
   });
 });
