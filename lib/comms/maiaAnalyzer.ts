@@ -349,7 +349,7 @@ export async function analyzeCommsMessage(messageId: string): Promise<MaiaAnalys
   console.log(`[MAIA Analyzer] Analyzed message ${msg.id}: type=${classification.inferred_type}, urgency=${urgency}`);
 
   // Auto-generate reply suggestions if safe to do so
-  await autoGenerateSuggestions(msg.id, msg.thread_id, safety.detected);
+  await autoGenerateSuggestions(msg.id, msg.thread_id);
 
   return maiaAnalysis;
 }
@@ -364,8 +364,7 @@ export async function analyzeCommsMessage(messageId: string): Promise<MaiaAnalys
  */
 async function autoGenerateSuggestions(
   messageId: string,
-  threadId: string,
-  hasSafetyDetected: boolean
+  threadId: string
 ): Promise<void> {
   try {
     // Get thread context
@@ -403,10 +402,22 @@ async function autoGenerateSuggestions(
       return;
     }
 
-    // Check for unacknowledged safety flags (stricter check for auto-generation)
-    if (hasSafetyDetected) {
-      // If this message triggered safety, still generate (but templates will be safety-aware)
-      console.log(`[MAIA Analyzer] Auto-suggest: Safety detected, generating safety-aware suggestions`);
+    // HARD GUARDRAIL: do not auto-generate if any safety flags are unacknowledged
+    // Safety acknowledgment is the "gate" for outbound cognition.
+    // Ritual first, then drafts.
+    const unacked = await queryOne<{ count: number }>(
+      `SELECT COUNT(*)::int AS count
+       FROM comms_safety_flags
+       WHERE thread_id = $1
+         AND acknowledged_at IS NULL`,
+      [threadId]
+    );
+
+    if ((unacked?.count ?? 0) > 0) {
+      console.log(
+        `[MAIA Analyzer] Auto-suggest: blocked (unacknowledged safety flags=${unacked?.count}) thread=${threadId}`
+      );
+      return;
     }
 
     // Supersede old suggestions for this thread
