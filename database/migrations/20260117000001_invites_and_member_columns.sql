@@ -22,7 +22,12 @@ CREATE INDEX IF NOT EXISTS idx_invites_status ON invites(status);
 CREATE INDEX IF NOT EXISTS idx_invites_created_by ON invites(created_by);
 
 COMMENT ON TABLE invites IS 'Invite passkeys for member onboarding';
-COMMENT ON COLUMN invites.status IS 'pending=unused, redeemed=used, expired=past expiry, revoked=manually disabled';
+COMMENT ON COLUMN invites.status IS E'State machine (monotonic, terminal states cannot transition):\n  pending → redeemed (exactly-once, sets redeemed_by + redeemed_at)\n  pending → revoked  (idempotent, manual disable)\n  pending → expired  (conditional, time-based)\nAll transitions require WHERE status=''pending'' to prevent overwrites.';
+
+-- Invariant: redeemed status must have redemption metadata
+ALTER TABLE invites DROP CONSTRAINT IF EXISTS invites_redeemed_metadata;
+ALTER TABLE invites ADD CONSTRAINT invites_redeemed_metadata
+  CHECK (status != 'redeemed' OR (redeemed_at IS NOT NULL AND redeemed_by IS NOT NULL));
 
 -- =============================================================================
 -- ADD MISSING COLUMNS TO MEMBERS TABLE

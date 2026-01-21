@@ -38,6 +38,7 @@ import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/v
 import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
+import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -1287,6 +1288,10 @@ export async function POST(req: NextRequest) {
     // 🌀 DECISION GOVERNOR: Build addendum for system prompt injection
     const governorAddendum = buildGovernorAddendum(decision);
 
+    // 💫 RELATIONSHIP MODE: Tier-based relationship depth
+    const relationshipResult = await buildRelationshipAddendumForUser(effectiveUserId);
+    const relationshipModeAddendum = relationshipResult?.addendum ?? null;
+
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
       message,
@@ -1308,6 +1313,7 @@ export async function POST(req: NextRequest) {
         reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
         astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
         governorAddendum, // 🌀 Spiralogic posture constraints
+        relationshipModeAddendum, // 💫 Tier-based relationship depth
       },
       // Route/profile tracing for corpus callosum filtering
       originRoute: '/api/between/chat',

@@ -119,7 +119,8 @@ export async function POST(request: NextRequest) {
       }
 
       if (invite.expires_at && new Date(invite.expires_at as string) < new Date()) {
-        await safeQuery('UPDATE invites SET status = $1 WHERE id = $2', ['expired', invite.id]);
+        // Conditional guard: only expire if still pending (defensive, matches list route pattern)
+        await safeQuery('UPDATE invites SET status = $1 WHERE id = $2 AND status = $3', ['expired', invite.id, 'pending']);
         return NextResponse.json(
           { error: 'This invite has expired. Please request a new one.' },
           { status: 400 }
@@ -165,12 +166,25 @@ export async function POST(request: NextRequest) {
     console.log(`[MEMBERS] Successfully registered: ${normalizedUsername} (${member.id})`);
 
     // Try to update invite status (optional - might fail if table missing)
+    // Conditional WHERE prevents double-redemption race condition
     if (inviteId) {
-      await safeQuery(
-        `UPDATE invites SET status = 'redeemed', redeemed_by = $1, redeemed_at = NOW() WHERE id = $2`,
+      const updateResult = await safeQuery(
+        `UPDATE invites
+         SET status = 'redeemed', redeemed_by = $1, redeemed_at = NOW()
+         WHERE id = $2 AND status = 'pending'`,
         [member.id, inviteId]
       );
-      console.log(`[MEMBERS] Invite redeemed: ${inviteId}`);
+
+      if (!updateResult.error && updateResult.rowCount === 1) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(`[MEMBERS] Invite redeemed: ${inviteId}`);
+        }
+      } else if (!updateResult.error && updateResult.rowCount === 0) {
+        // Race condition: invite was already redeemed between check and update
+        // Member was still created, but invite might have been used by another request
+        // Always warn (even in prod) - this is a "should rarely happen" sentinel
+        console.warn(`[MEMBERS] Race sentinel [redeem]: invite=${inviteId.slice(0, 8)}... state changed before update`);
+      }
     }
 
     return NextResponse.json({
