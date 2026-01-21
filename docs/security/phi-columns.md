@@ -44,7 +44,9 @@
 | Status | Meaning |
 |--------|---------|
 | `ENCRYPTED` | Already encrypted with AES-256-GCM |
+| `DUAL-WRITE (3A)` | Phase 3A: writes both plaintext + encrypted, reads prefer encrypted |
 | `PLAINTEXT` | Currently plaintext, needs encryption |
+| `METADATA` | Encryption metadata column (iv, tag, kid, v) |
 | `EXEMPT` | Not PHI (IDs, timestamps, enums) |
 
 ---
@@ -60,8 +62,12 @@ These columns contain clinical narratives and session content. **Highest breach 
 | `case_notes` | `themes_observed` | TEXT[] | PLAINTEXT | Client patterns |
 | `case_notes` | `maia_analysis` | JSONB | PLAINTEXT | AI clinical insights |
 | `case_notes` | `pattern_markers` | TEXT[] | PLAINTEXT | Clinical markers |
-| `supervision_transcript_segments` | `text` | TEXT | PLAINTEXT | Clinical dialogue |
-| `practice_transcript_segments` | `text` | TEXT | PLAINTEXT | Session dialogue |
+| `supervision_transcript_segments` | `text` | TEXT | DUAL-WRITE (3A) | Clinical dialogue |
+| `supervision_transcript_segments` | `text_enc` | TEXT | ENCRYPTED | Encrypted text (AES-256-GCM) |
+| `supervision_transcript_segments` | `text_enc_meta` | JSONB | METADATA | Encryption metadata |
+| `practice_transcript_segments` | `text` | TEXT | DUAL-WRITE (3A) | Session dialogue |
+| `practice_transcript_segments` | `text_enc` | TEXT | ENCRYPTED | Encrypted text (AES-256-GCM) |
+| `practice_transcript_segments` | `text_enc_meta` | JSONB | METADATA | Encryption metadata |
 | `supervision_insights` | `content` | TEXT | PLAINTEXT | AI clinical insight |
 | `session_insights` | `content` | TEXT | PLAINTEXT | Session observations |
 
@@ -409,3 +415,61 @@ It's also the template we'll reuse for additional PHI waves.
 - [ ] Session prep: same
 - [ ] Confirm: no API payload includes raw `*_enc` blobs unintentionally
 - [ ] Confirm: decryption failure does **not** crash list pages (Stage A), but logs are visible for investigation
+
+---
+
+## Phase 3A: Transcript Encryption (Commit `75774bad`)
+
+**Highest PHI exposure surface** - full clinical dialogue.
+
+### Tables
+
+| Table | Column | Status |
+|-------|--------|--------|
+| `supervision_transcript_segments` | `text` | DUAL-WRITE |
+| `supervision_transcript_segments` | `text_enc` | ENCRYPTED |
+| `supervision_transcript_segments` | `text_enc_meta` | METADATA |
+| `practice_transcript_segments` | `text` | DUAL-WRITE |
+| `practice_transcript_segments` | `text_enc` | ENCRYPTED |
+| `practice_transcript_segments` | `text_enc_meta` | METADATA |
+
+### Files
+
+- **Migration**: `database/migrations/20260122_transcript_encryption.sql`
+- **PHI Accessor**: `lib/security/phiAccessors/transcripts.ts`
+- **Backfill Script**: `scripts/backfill-transcript-encryption.ts`
+- **Tests**: `lib/security/__tests__/transcriptEncryption.test.ts`
+
+### Updated Data Access
+
+**SupervisionStore.ts**:
+- `addTranscriptSegment()` - dual-write
+- `getTranscript()` - decrypt + sanitize
+- `getRecentTranscript()` - decrypt + sanitize
+
+**PracticeStore.ts**:
+- `addTranscriptSegment()` - dual-write
+- `getTranscriptSegments()` - decrypt + sanitize
+- `getFullTranscript()` - decrypt + sanitize
+
+### Rollout Checklist
+
+1. **Set env**: `PHI_ENCRYPTION_KEY` (64 hex chars or 44 base64 chars)
+2. **Run migration**: `psql -d maia_consciousness -f database/migrations/20260122_transcript_encryption.sql`
+3. **Deploy code** (dual-write enabled)
+4. **Backfill**:
+   ```bash
+   npx tsx scripts/backfill-transcript-encryption.ts --dry-run
+   npx tsx scripts/backfill-transcript-encryption.ts --live
+   npx tsx scripts/backfill-transcript-encryption.ts --verify
+   ```
+5. **Phase 3B** (next): Stop writing plaintext, add constraints
+
+### PR Checklist
+
+When your PR touches transcript reads:
+```
+[ ] Uses decryptTranscriptSegments() or accessor
+[ ] Output contains text, not *_enc columns
+[ ] No raw SELECT * from transcript tables
+```
