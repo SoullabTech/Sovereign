@@ -27,9 +27,9 @@ interface RouteParams {
  * - clientId: Client ID
  * - tier: 'subscriber' or 'vip'
  * - billingInterval: 'monthly' or 'annual'
- * - successUrl: URL to redirect after successful payment
- * - cancelUrl: URL to redirect if payment is canceled
  * - clientEmail: Optional email for checkout prefill
+ *
+ * Note: Success/cancel URLs are built server-side for security.
  */
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
@@ -39,18 +39,26 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       clientId,
       tier,
       billingInterval,
-      successUrl,
-      cancelUrl,
       clientEmail,
     } = body;
 
     // Validate required fields
-    if (!clientId || !tier || !billingInterval || !successUrl || !cancelUrl) {
+    if (!clientId || !tier || !billingInterval) {
       return NextResponse.json(
         { error: 'Missing required fields' },
         { status: 400 }
       );
     }
+
+    // Build success/cancel URLs server-side (never trust client input)
+    // Prefer server-only APP_URL, fallback to request origin, then hardcoded default
+    const baseUrl =
+      process.env.APP_URL ||
+      request.headers.get('origin') ||
+      `https://${request.headers.get('host')}` ||
+      'https://soullab.life';
+    const successUrl = `${baseUrl}/portal/${slug}/subscribe/success?session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${baseUrl}/portal/${slug}/subscribe/cancel`;
 
     // Validate tier
     if (!['subscriber', 'vip'].includes(tier)) {

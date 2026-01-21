@@ -339,6 +339,9 @@ export async function reactivateClientSubscription(
 
 /**
  * Handle subscription created from webhook
+ *
+ * IDEMPOTENT: Uses UPSERT to safely handle Stripe webhook retries.
+ * Same stripe_subscription_id will update existing record rather than fail.
  */
 export async function handleSubscriptionCreated(
   stripeSubscription: Stripe.Subscription,
@@ -357,13 +360,32 @@ export async function handleSubscriptionCreated(
   const item = stripeSubscription.items.data[0];
   const priceCents = item?.price?.unit_amount || 0;
 
-  // Create subscription record
+  const stripeCustomerId = typeof stripeSubscription.customer === 'string'
+    ? stripeSubscription.customer
+    : stripeSubscription.customer?.id;
+
+  const status = stripeSubscription.status;
+  const currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000).toISOString();
+  const currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000).toISOString();
+
+  // UPSERT subscription record (idempotent - safe for Stripe retries)
   const result = await query<ClientSubscription>(
     `INSERT INTO client_subscriptions (
       id, client_id, practitioner_id, tier, billing_interval, price_cents,
       stripe_subscription_id, stripe_customer_id, status,
-      current_period_start, current_period_end
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      current_period_start, current_period_end, cancel_at_period_end
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    ON CONFLICT (stripe_subscription_id)
+    DO UPDATE SET
+      stripe_customer_id = EXCLUDED.stripe_customer_id,
+      tier = EXCLUDED.tier,
+      billing_interval = EXCLUDED.billing_interval,
+      price_cents = EXCLUDED.price_cents,
+      status = EXCLUDED.status,
+      current_period_start = EXCLUDED.current_period_start,
+      current_period_end = EXCLUDED.current_period_end,
+      cancel_at_period_end = EXCLUDED.cancel_at_period_end,
+      updated_at = NOW()
     RETURNING *`,
     [
       uuid(),
@@ -373,17 +395,17 @@ export async function handleSubscriptionCreated(
       billingInterval || 'monthly',
       priceCents,
       stripeSubscription.id,
-      typeof stripeSubscription.customer === 'string'
-        ? stripeSubscription.customer
-        : stripeSubscription.customer?.id,
-      stripeSubscription.status,
-      new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-      new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+      stripeCustomerId,
+      status,
+      currentPeriodStart,
+      currentPeriodEnd,
+      stripeSubscription.cancel_at_period_end || false,
     ]
   );
 
-  // Update client tier
-  await updateClientTier(clientId, practitionerId, tier);
+  // Update client tier (deterministic based on status)
+  const isPaid = status === 'active' || status === 'trialing';
+  await updateClientTier(clientId, practitionerId, isPaid ? tier : 'free');
 
   return result.rows[0];
 }
