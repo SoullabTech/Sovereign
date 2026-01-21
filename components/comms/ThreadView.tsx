@@ -165,6 +165,10 @@ export function ThreadView({
   const [armedSuggestionId, setArmedSuggestionId] = useState<string | null>(null);
   const [armedSuggestionText, setArmedSuggestionText] = useState<string | null>(null);
 
+  // Phase 4 polish: Card-level feedback state
+  const [suggestionFeedback, setSuggestionFeedback] = useState<Record<string, 1 | -1 | null>>({});
+  const [feedbackBusy, setFeedbackBusy] = useState<Record<string, boolean>>({});
+
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -254,6 +258,39 @@ export function ThreadView({
       }
     } catch (err) {
       console.error('[ThreadView] Failed to dismiss suggestion:', err);
+    }
+  };
+
+  // Phase 4 polish: Submit card-level feedback (toggle behavior)
+  const submitSuggestionFeedback = async (suggestionId: string, signal: 1 | -1) => {
+    // Toggle off if clicking same vote
+    const current = suggestionFeedback[suggestionId];
+    if (current === signal) {
+      setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: null }));
+      return;
+    }
+
+    // Optimistic update
+    setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: signal }));
+    setFeedbackBusy(prev => ({ ...prev, [suggestionId]: true }));
+
+    try {
+      const res = await fetch(`/api/comms/replies/suggestions/${suggestionId}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ signal }),
+      });
+
+      if (!res.ok) {
+        // Revert on failure
+        setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: current ?? null }));
+      }
+    } catch (err) {
+      console.error('[ThreadView] Failed to submit suggestion feedback:', err);
+      // Revert on error
+      setSuggestionFeedback(prev => ({ ...prev, [suggestionId]: current ?? null }));
+    } finally {
+      setFeedbackBusy(prev => ({ ...prev, [suggestionId]: false }));
     }
   };
 
@@ -403,6 +440,9 @@ export function ThreadView({
           onInsert={insertSuggestion}
           onDismiss={dismissSuggestion}
           onOpenSafetyModal={openFirstSafetyFlag}
+          feedback={suggestionFeedback}
+          feedbackBusy={feedbackBusy}
+          onFeedback={submitSuggestionFeedback}
         />
       )}
 
@@ -856,6 +896,10 @@ interface SuggestionsPanelProps {
   onInsert: (suggestion: ReplySuggestion) => void;
   onDismiss: (suggestionId: string) => void;
   onOpenSafetyModal?: () => void; // Opens the first unacked safety flag modal
+  // Phase 4 polish: Card-level feedback
+  feedback: Record<string, 1 | -1 | null>;
+  feedbackBusy: Record<string, boolean>;
+  onFeedback: (suggestionId: string, signal: 1 | -1) => void;
 }
 
 function SuggestionsPanel({
@@ -868,6 +912,9 @@ function SuggestionsPanel({
   onInsert,
   onDismiss,
   onOpenSafetyModal,
+  feedback,
+  feedbackBusy,
+  onFeedback,
 }: SuggestionsPanelProps) {
   const hasSuggestions = suggestions.length > 0;
 
@@ -930,6 +977,9 @@ function SuggestionsPanel({
                     suggestion={suggestion}
                     onInsert={() => onInsert(suggestion)}
                     onDismiss={() => onDismiss(suggestion.id)}
+                    feedback={feedback[suggestion.id] ?? null}
+                    isFeedbackBusy={feedbackBusy[suggestion.id] ?? false}
+                    onFeedback={(signal) => onFeedback(suggestion.id, signal)}
                   />
                 ))
               )}
@@ -949,9 +999,20 @@ interface SuggestionCardProps {
   suggestion: ReplySuggestion;
   onInsert: () => void;
   onDismiss: () => void;
+  // Phase 4 polish: Card-level feedback
+  feedback: 1 | -1 | null;
+  isFeedbackBusy: boolean;
+  onFeedback: (signal: 1 | -1) => void;
 }
 
-function SuggestionCard({ suggestion, onInsert, onDismiss }: SuggestionCardProps) {
+function SuggestionCard({
+  suggestion,
+  onInsert,
+  onDismiss,
+  feedback,
+  isFeedbackBusy,
+  onFeedback,
+}: SuggestionCardProps) {
   const kindColors = {
     reply: 'border-purple-500/30 bg-purple-900/20',
     follow_up: 'border-blue-500/30 bg-blue-900/20',
@@ -998,21 +1059,51 @@ function SuggestionCard({ suggestion, onInsert, onDismiss }: SuggestionCardProps
       )}
 
       {/* Actions */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onInsert}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded transition-colors"
-        >
-          <PenLine className="w-3.5 h-3.5" />
-          <span>Insert into compose</span>
-        </button>
-        <button
-          onClick={onDismiss}
-          className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
-        >
-          <XCircle className="w-3.5 h-3.5" />
-          <span>Dismiss</span>
-        </button>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={onInsert}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded transition-colors"
+          >
+            <PenLine className="w-3.5 h-3.5" />
+            <span>Insert into compose</span>
+          </button>
+          <button
+            onClick={onDismiss}
+            className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+          >
+            <XCircle className="w-3.5 h-3.5" />
+            <span>Dismiss</span>
+          </button>
+        </div>
+
+        {/* Phase 4 polish: Feedback buttons */}
+        <div className="flex items-center gap-1">
+          <button
+            onClick={() => onFeedback(1)}
+            disabled={isFeedbackBusy}
+            className={`p-1.5 rounded transition-colors ${
+              feedback === 1
+                ? 'bg-green-500/20 text-green-400'
+                : 'text-gray-500 hover:text-green-400 hover:bg-green-500/10'
+            } disabled:opacity-50`}
+            title="Helpful suggestion"
+          >
+            <ThumbsUp className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => onFeedback(-1)}
+            disabled={isFeedbackBusy}
+            className={`p-1.5 rounded transition-colors ${
+              feedback === -1
+                ? 'bg-red-500/20 text-red-400'
+                : 'text-gray-500 hover:text-red-400 hover:bg-red-500/10'
+            } disabled:opacity-50`}
+            title="Not helpful"
+          >
+            <ThumbsDown className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
     </div>
   );
