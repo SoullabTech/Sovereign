@@ -9,7 +9,7 @@
  * Route: /stellium/comms
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageSquare, RefreshCw, Shield } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -32,6 +32,14 @@ interface InboxResponse {
 }
 
 export default function CommsInboxPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-black text-white p-6">Loading...</div>}>
+      <CommsInboxContent />
+    </Suspense>
+  );
+}
+
+function CommsInboxContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
