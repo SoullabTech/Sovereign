@@ -36,14 +36,18 @@ CREATE TABLE IF NOT EXISTS message_policies (
 
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-
-  -- Each practitioner has one default policy (client_id = null)
-  -- And optionally one policy per client (override)
-  UNIQUE NULLS NOT DISTINCT (practitioner_id, client_id)
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+  -- Uniqueness enforced via partial indexes below for PG14 compatibility
 );
 
--- Indexes
+-- PostgreSQL 14 compatible: use two partial indexes instead of UNIQUE NULLS NOT DISTINCT
+-- One index for client-specific policies, one for default (null) policies
+CREATE UNIQUE INDEX IF NOT EXISTS idx_message_policies_unique_client
+  ON message_policies(practitioner_id, client_id) WHERE client_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_message_policies_unique_default
+  ON message_policies(practitioner_id) WHERE client_id IS NULL;
+
+-- Additional indexes for query performance
 CREATE INDEX IF NOT EXISTS idx_message_policies_practitioner
   ON message_policies(practitioner_id);
 CREATE INDEX IF NOT EXISTS idx_message_policies_client
