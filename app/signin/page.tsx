@@ -124,13 +124,27 @@ function SigninContent() {
     }
   }, [searchParams]);
 
-  // Check if already authenticated
+  // Check if already authenticated via SERVER SESSION (not localStorage)
+  // This is the single source of truth - localStorage is just UI cache
+  const [checkingAuth, setCheckingAuth] = useState(true);
   useEffect(() => {
-    const sessionState = betaSession.restoreSession();
-    if (sessionState.isAuthenticated && sessionState.user) {
-      router.replace('/maia');
+    async function checkServerSession() {
+      try {
+        const res = await fetch('/api/auth/whoami', { credentials: 'include' });
+        const data = await res.json();
+        if (data.authed) {
+          // Server says we're authenticated - redirect to intended destination
+          const next = searchParams?.get('next') || '/maia';
+          router.replace(next);
+          return;
+        }
+      } catch (e) {
+        console.error('[Signin] Failed to check server session:', e);
+      }
+      setCheckingAuth(false);
     }
-  }, [router]);
+    checkServerSession();
+  }, [router, searchParams]);
 
   // Trust device helper
   async function trustThisDevice() {
@@ -530,6 +544,15 @@ function SigninContent() {
       router.push(pendingRedirect);
     }
   };
+
+  // Show loading while checking server session
+  if (checkingAuth) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-sky-50 via-emerald-50/30 to-amber-50/20">
+        <div className="text-teal-600/60 animate-pulse">Checking session...</div>
+      </div>
+    );
+  }
 
   return (
     <>

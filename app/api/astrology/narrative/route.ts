@@ -12,6 +12,8 @@ import {
   NarrativeRequest,
 } from '@/lib/story/archetypalNarrativeService';
 import { BirthChartData } from '@/lib/story/storyWeaver';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { query } from '@/lib/db/postgres';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,7 +31,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { chartData, userId, focus, userName } = body;
+    const { chartData, userId, focus } = body;
 
     if (!chartData) {
       return NextResponse.json(
@@ -46,11 +48,29 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Server-side userName derivation (never trust client-sent name)
+    let serverUserName: string | undefined;
+    try {
+      const serverSession = await getCurrentSession();
+      if (serverSession) {
+        const memberResult = await query(
+          `SELECT name, preferred_name FROM members WHERE id = $1`,
+          [serverSession.memberId]
+        );
+        if (memberResult.rows.length > 0) {
+          const member = memberResult.rows[0];
+          serverUserName = member.preferred_name || member.name;
+        }
+      }
+    } catch (err) {
+      console.warn('[Narrative API] Could not derive userName from session:', err);
+    }
+
     const request: NarrativeRequest = {
       chartData: chartData as BirthChartData,
       userId,
       focus,
-      userName,
+      userName: serverUserName,
     };
 
     const narrative = await generateArchetypalNarrative(request);

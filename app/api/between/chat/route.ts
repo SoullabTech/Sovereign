@@ -39,6 +39,8 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { query } from '@/lib/db/postgres';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -801,8 +803,30 @@ export async function POST(req: NextRequest) {
       process.env.MAIA_DEV_TRUST_BODY_ID === '1' &&
       (!IS_PROD || process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1');
 
-    // TODO: When auth is implemented, authUserId should come from verified session/token
-    const authUserId: string | null = null; // Placeholder for future auth integration
+    // =========================================================================
+    // SERVER-SIDE IDENTITY: Validate session and derive identity server-side
+    // This prevents "Kelly" name bleed where stale localStorage sends wrong name
+    // =========================================================================
+    let authUserId: string | null = null;
+    let serverUserName = 'Friend'; // Safe fallback
+    try {
+      const serverSession = await getCurrentSession();
+      if (serverSession) {
+        authUserId = serverSession.memberId;
+        // Derive userName from database - never trust client-sent name
+        const memberResult = await query(
+          `SELECT name, preferred_name FROM members WHERE id = $1`,
+          [serverSession.memberId]
+        );
+        if (memberResult.rows.length > 0) {
+          const member = memberResult.rows[0];
+          serverUserName = member.preferred_name || member.name || 'Friend';
+        }
+      }
+    } catch (err) {
+      console.warn('[Chat API] Could not validate server session:', err);
+      // Graceful degradation - continue without server auth
+    }
 
     let effectiveUserId: string;
     if (authUserId) {
@@ -1303,7 +1327,7 @@ export async function POST(req: NextRequest) {
         chatType: 'between-member',
         endpoint: '/api/between/chat',
         mode: mode || 'dialogue', // Pass mode (Talk/Care/Note) for appropriate system prompts
-        userName: userName || 'Friend',
+        userName: serverUserName, // Server-derived, not client-sent (prevents "Kelly" name bleed)
         localHour, // Client's local hour (0-23) for correct time-of-day greetings
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon

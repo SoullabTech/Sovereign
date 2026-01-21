@@ -228,6 +228,10 @@ class BetaSessionManager {
 
   /**
    * Clear session (logout)
+   *
+   * IMPORTANT: This must remove ALL identity-bearing localStorage keys.
+   * Split-brain auth issues occur when signout clears server cookies
+   * but leaves stale identity in localStorage.
    */
   public clearSession(): void {
     this.currentUser = null;
@@ -235,10 +239,41 @@ class BetaSessionManager {
     // Guard: Only access localStorage on client side
     if (typeof window === 'undefined') return;
 
+    // =========================================================================
+    // NUCLEAR OPTION: Clear ALL identity-bearing localStorage keys
+    // This prevents split-brain where client thinks it's signed in but server doesn't
+    // =========================================================================
+
+    // Primary session
     localStorage.removeItem('beta_user');
+
+    // CRITICAL: Remove plaintext password storage (legacy, insecure)
+    localStorage.removeItem('beta_users');
+
+    // Member identity
+    localStorage.removeItem('soullab_member');
+    localStorage.removeItem('member_profile');
+
+    // Explorer identity
     localStorage.removeItem('explorerId');
     localStorage.removeItem('explorerName');
+    localStorage.removeItem('explorerPreferredName');
+
+    // Onboarding state
+    localStorage.removeItem('betaOnboardingComplete');
+    localStorage.removeItem('signup_completed');
+
+    // Session versioning
+    localStorage.removeItem('maia_session_version');
+
+    // Any other identity-adjacent keys
+    localStorage.removeItem('userName');
+    localStorage.removeItem('displayName');
+    localStorage.removeItem('userTier');
+
+    // Clear session storage entirely
     sessionStorage.clear();
+
     this.notifyListeners();
   }
 

@@ -39,6 +39,7 @@ import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
 import { randomUUID } from 'crypto';
 import { getAstrologyContextForUser, type AstrologyContext } from '@/lib/services/maiaAstrologyContextService';
 import { query } from '@/lib/db/postgres';
+import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { persistTrace } from '@/backend/src/services/traceService';
 import type { ConsciousnessTrace } from '@/backend/src/types/consciousnessTrace';
 
@@ -363,6 +364,41 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // =========================================================================
+    // SERVER-SIDE IDENTITY: Derive userName from session, not client request
+    // This prevents "Kelly" name bleed where stale localStorage sends wrong name
+    // =========================================================================
+    let serverUserName = 'Explorer'; // Safe fallback
+    try {
+      const serverSession = await getCurrentSession();
+      if (serverSession && serverSession.memberId === userId) {
+        // Session is valid and matches the claimed userId - trust this session
+        const memberResult = await query(
+          `SELECT name, preferred_name FROM members WHERE id = $1`,
+          [serverSession.memberId]
+        );
+        if (memberResult.rows.length > 0) {
+          const member = memberResult.rows[0];
+          serverUserName = member.preferred_name || member.name || 'Explorer';
+        }
+      } else if (serverSession) {
+        // Session exists but userId doesn't match - log and use session's member
+        console.warn(`[Oracle] userId mismatch: body=${userId.substring(0, 8)}... session=${serverSession.memberId.substring(0, 8)}...`);
+        const memberResult = await query(
+          `SELECT name, preferred_name FROM members WHERE id = $1`,
+          [serverSession.memberId]
+        );
+        if (memberResult.rows.length > 0) {
+          const member = memberResult.rows[0];
+          serverUserName = member.preferred_name || member.name || 'Explorer';
+        }
+      }
+      // If no server session, fall back to 'Explorer' - don't trust client-sent name
+    } catch (err) {
+      console.warn('[Oracle] Could not derive userName from session:', err);
+      // Graceful degradation - use fallback
+    }
+
     // Ensure conversationHistory is always an array (defensive)
     const conversationHistory = Array.isArray(body.conversationHistory)
       ? body.conversationHistory
@@ -383,7 +419,7 @@ export async function POST(request: NextRequest) {
         fieldSafety = enforceFieldSafety({
           cognitiveProfile,
           element: body.element,
-          userName: body.userName,
+          userName: serverUserName, // Use server-derived name, not body.userName
           context: 'oracle',
         });
 
