@@ -29,6 +29,7 @@ import {
 import SessionCard from './SessionCard';
 import ClientCard from './ClientCard';
 import SessionPrepCard from './SessionPrepCard';
+import OnboardingChecklist from './OnboardingChecklist';
 import type { SessionPrepData } from '@/lib/practitioner/sessionPrep';
 
 interface DashboardData {
@@ -85,6 +86,16 @@ interface DashboardData {
     lastTrained: string | null;
     isReady: boolean;
   } | null;
+  onboarding?: {
+    isComplete: boolean;
+    steps: {
+      id: string;
+      title: string;
+      description: string;
+      completed: boolean;
+      href: string;
+    }[];
+  };
 }
 
 interface StelliumDashboardProps {
@@ -220,6 +231,15 @@ export default function StelliumDashboard({
         {/* Subtle glow effect */}
         <div className="absolute top-0 right-0 w-64 h-64 bg-sacred-gold/5 rounded-full blur-3xl" />
       </motion.div>
+
+      {/* Onboarding Checklist - shows for new practitioners */}
+      {data.onboarding && !data.onboarding.isComplete && (
+        <OnboardingChecklist
+          steps={data.onboarding.steps}
+          isComplete={data.onboarding.isComplete}
+          onNavigate={onNavigate}
+        />
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

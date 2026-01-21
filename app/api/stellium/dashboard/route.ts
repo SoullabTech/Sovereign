@@ -8,6 +8,7 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
+import { query } from '@/lib/db/postgres';
 import { getClientStats } from '@/lib/stellium/clients';
 import {
   getSessionStats,
@@ -15,6 +16,77 @@ import {
   getSessionsNeedingFollowUp,
 } from '@/lib/stellium/sessions';
 import { getPersona, generatePersonaPrompt } from '@/lib/stellium/personas';
+import { getTierPricing } from '@/lib/practitioner/tierPricing';
+
+interface OnboardingStatus {
+  isComplete: boolean;
+  steps: {
+    id: string;
+    title: string;
+    description: string;
+    completed: boolean;
+    href: string;
+  }[];
+}
+
+/**
+ * Get onboarding checklist status for a practitioner
+ */
+async function getOnboardingStatus(
+  practitionerId: string,
+  clientCount: number,
+  hasPersona: boolean
+): Promise<OnboardingStatus> {
+  // Check Stripe connection from practitioners table
+  const practitionerResult = await query<{
+    stripe_account_id: string | null;
+  }>(
+    `SELECT stripe_account_id FROM practitioners WHERE id = $1`,
+    [practitionerId]
+  );
+
+  const hasStripe = !!practitionerResult.rows[0]?.stripe_account_id;
+
+  // Check if pricing tiers are configured (any active tier with price > 0)
+  const tierPricing = await getTierPricing(practitionerId);
+  const hasPricing = tierPricing.some(t => t.is_active && t.monthly_price_cents > 0);
+
+  // Build the checklist
+  const steps = [
+    {
+      id: 'add-client',
+      title: 'Add your first client',
+      description: 'Invite someone to your practice',
+      completed: clientCount > 0,
+      href: '/stellium/clients',
+    },
+    {
+      id: 'connect-stripe',
+      title: 'Connect payments',
+      description: 'Set up Stripe to receive payments',
+      completed: hasStripe,
+      href: '/stellium/settings?tab=payouts',
+    },
+    {
+      id: 'set-pricing',
+      title: 'Set your pricing',
+      description: 'Configure subscription tiers',
+      completed: hasPricing,
+      href: '/stellium/settings?tab=pricing',
+    },
+    {
+      id: 'train-maia',
+      title: 'Train your MAIA',
+      description: 'Teach MAIA your voice and approach',
+      completed: hasPersona,
+      href: '/stellium/persona',
+    },
+  ];
+
+  const isComplete = steps.every(s => s.completed);
+
+  return { isComplete, steps };
+}
 
 /**
  * GET /api/stellium/dashboard
@@ -130,6 +202,7 @@ export async function GET(request: NextRequest) {
     };
 
     // Build persona summary
+    const personaIsReady = (persona?.training_transcripts || 0) >= 3;
     const personaSummary = persona
       ? {
           name: persona.persona_name,
@@ -138,9 +211,16 @@ export async function GET(request: NextRequest) {
           materialsIndexed: persona.materials_indexed?.length || 0,
           booksReferenced: persona.books_referenced?.length || 0,
           lastTrained: persona.last_trained_at,
-          isReady: (persona.training_transcripts || 0) >= 3, // Minimum viable training
+          isReady: personaIsReady,
         }
       : null;
+
+    // Get onboarding checklist status
+    const onboarding = await getOnboardingStatus(
+      practitionerId,
+      clientStats.total,
+      personaIsReady
+    );
 
     return NextResponse.json({
       today: todayContext,
@@ -152,6 +232,7 @@ export async function GET(request: NextRequest) {
         return priorityOrder[a.priority] - priorityOrder[b.priority];
       }),
       persona: personaSummary,
+      onboarding,
     });
   } catch (error) {
     console.error('[Stellium Dashboard API] Error:', error);
