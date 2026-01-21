@@ -882,7 +882,7 @@ export function handleNameChangeResponse(metadata: { nameChange?: { newName: str
       localStorage.setItem('beta_user', JSON.stringify(user));
     }
 
-    console.log(`✨ [greetingService] Updated preferred name to "${newName}" in localStorage`);
+    console.log(`✨ [greetingService] Updated preferred name in localStorage`);
     return true;
   } catch (e) {
     console.error('[greetingService] Failed to update localStorage for name change:', e);

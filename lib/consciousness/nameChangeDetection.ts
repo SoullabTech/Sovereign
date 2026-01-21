@@ -100,7 +100,7 @@ export async function updatePreferredName(userId: string, newName: string): Prom
       return { success: false, error: 'Member not found' };
     }
 
-    console.log(`[NAME_CHANGE] Updated preferred_name to "${newName}" for user ${userId}`);
+    console.log(`[NAME_CHANGE] Updated preferred_name for user ${userId}`);
     return { success: true };
   } catch (error) {
     console.error('[NAME_CHANGE] Error updating preferred name:', error);

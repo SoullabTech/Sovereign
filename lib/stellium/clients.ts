@@ -97,6 +97,7 @@ function decryptClientName(
 
 /**
  * Process a client row to decrypt name fields
+ * SECURITY: Strips encrypted columns from output to prevent PHI leakage
  */
 function decryptClientRow(row: any, practitionerId: string): PractitionerClient {
   if (!row) return row;
@@ -122,6 +123,13 @@ function decryptClientRow(row: any, practitionerId: string): PractitionerClient 
       row.preferred_name
     );
   }
+
+  // SECURITY: Strip encrypted columns - they must never leave the data layer
+  // See: docs/security/phi-columns.md
+  delete row.name_enc;
+  delete row.name_enc_meta;
+  delete row.preferred_name_enc;
+  delete row.preferred_name_enc_meta;
 
   return row as PractitionerClient;
 }
