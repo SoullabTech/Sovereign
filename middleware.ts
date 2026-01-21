@@ -111,6 +111,14 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ---------------------------------------------------------------------
+  // CORS: Never auth-redirect preflight OPTIONS requests
+  // This prevents Capacitor/mobile apps from getting 405 on preflights
+  // ---------------------------------------------------------------------
+  if (req.method === 'OPTIONS') {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  // ---------------------------------------------------------------------
   // Skip middleware for static assets and Next.js internals
   // ---------------------------------------------------------------------
   if (
@@ -123,6 +131,12 @@ export function middleware(req: NextRequest) {
   ) {
     return NextResponse.next();
   }
+
+  // ---------------------------------------------------------------------
+  // Generate request ID for auth incident correlation
+  // Short ID is sufficient for debugging - not cryptographic
+  // ---------------------------------------------------------------------
+  const rid = Math.random().toString(36).substring(2, 10);
 
   // ---------------------------------------------------------------------
   // Extract auth context
@@ -144,17 +158,26 @@ export function middleware(req: NextRequest) {
 
     switch (reason) {
       case 'unauthenticated':
-        // Redirect to sign in with return URL and reason code
+        // API routes get 401 JSON (not redirect) - critical for CORS/mobile
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            { error: 'Unauthorized', message: 'Authentication required.', rid },
+            { status: 401 }
+          );
+        }
+        // Page routes redirect to sign in with incident stamp
         url.pathname = '/signin';
         url.searchParams.set('next', pathname);
         url.searchParams.set('reason', 'no_session_cookie');
+        url.searchParams.set('rid', rid);
         return NextResponse.redirect(url);
 
       case 'insufficient-tier':
-        // Redirect to upgrade page
+        // Redirect to upgrade page with incident stamp
         url.pathname = '/maia/membership';
         url.searchParams.set('upgrade', rule?.minTier || 'personal');
         url.searchParams.set('next', pathname);
+        url.searchParams.set('rid', rid);
         return NextResponse.redirect(url);
 
       case 'missing-role':
@@ -164,6 +187,7 @@ export function middleware(req: NextRequest) {
             error: 'Forbidden',
             message: 'You do not have permission to access this resource.',
             requiredRoles: rule?.rolesAnyOf,
+            rid,
           }),
           {
             status: 403,
@@ -178,6 +202,7 @@ export function middleware(req: NextRequest) {
             error: 'Not Found',
             message: 'This route is not configured in the access matrix.',
             pathname,
+            rid,
           }),
           {
             status: 404,

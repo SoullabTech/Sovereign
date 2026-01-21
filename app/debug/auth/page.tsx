@@ -37,6 +37,7 @@ export default function AuthDebugPage() {
 
   const redirectReason = searchParams.get('reason');
   const redirectNext = searchParams.get('next');
+  const incidentId = searchParams.get('rid');
 
   useEffect(() => {
     // Read localStorage
@@ -129,9 +130,16 @@ export default function AuthDebugPage() {
         </p>
 
         {/* Redirect Info */}
-        {(redirectReason || redirectNext) && (
+        {(redirectReason || redirectNext || incidentId) && (
           <div className="bg-red-900/50 border border-red-500 rounded-lg p-4 mb-6">
             <h2 className="text-red-400 font-semibold mb-2">Redirect Detected</h2>
+            {incidentId && (
+              <p className="text-sm mb-2">
+                <span className="text-gray-400">Incident ID:</span>{' '}
+                <code className="bg-yellow-900 px-2 py-0.5 rounded text-yellow-300 font-mono">{incidentId}</code>
+                <span className="text-gray-500 text-xs ml-2">(share this for debugging)</span>
+              </p>
+            )}
             {redirectReason && (
               <p className="text-sm">
                 <span className="text-gray-400">Reason:</span>{' '}

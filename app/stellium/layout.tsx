@@ -20,6 +20,7 @@ import {
   Menu,
   X,
   TrendingUp,
+  MessageSquare,
 } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 
@@ -32,6 +33,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { path: '/stellium', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { path: '/stellium/comms', label: 'Comms', icon: <MessageSquare className="w-5 h-5" /> },
   { path: '/stellium/clients', label: 'Clients', icon: <Users className="w-5 h-5" /> },
   { path: '/stellium/sessions', label: 'Sessions', icon: <Calendar className="w-5 h-5" /> },
   { path: '/stellium/persona', label: 'MAIA Persona', icon: <Brain className="w-5 h-5" /> },

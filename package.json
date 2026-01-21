@@ -15,6 +15,7 @@
     "dev:voice": "bash start-voice.sh",
     "dev:https": "node server.mjs",
     "worker": "env -u DATABASE_URL AIN_WORKER=true npx tsx scripts/start-ain-worker.ts",
+    "comms:worker": "npx tsx scripts/run-comms-analysis-worker.ts",
     "build": "NODE_OPTIONS=--max-old-space-size=8192 node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && next build",
     "build:docker": "NODE_OPTIONS=--max-old-space-size=8192 node scripts/verify-aetheric-consciousness.js && node scripts/validate-critical-files.js && next build --webpack",
     "build:sovereign": "bash scripts/sovereign-build.sh",
