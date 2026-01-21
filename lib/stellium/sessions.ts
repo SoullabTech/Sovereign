@@ -30,6 +30,7 @@ const CLIENT_NAME_COLUMNS = `
 
 /**
  * Transform a joined row with client info, decrypting name fields
+ * SECURITY: Strips encrypted columns from output to prevent PHI leakage
  */
 function transformSessionWithClient(row: any, practitionerId: string): any {
   if (!row.client_id) {
@@ -39,12 +40,25 @@ function transformSessionWithClient(row: any, practitionerId: string): any {
   // Decrypt client name fields
   const decrypted = decryptJoinedClientFields(row, practitionerId);
 
+  // SECURITY: Strip encrypted columns before spreading
+  // See: docs/security/phi-columns.md
+  const {
+    client_name_enc,
+    client_name_enc_meta,
+    client_preferred_name_enc,
+    client_preferred_name_enc_meta,
+    // Also strip raw client_name/preferred_name from top level (use nested client object)
+    client_name,
+    client_preferred_name,
+    ...sessionFields
+  } = row;
+
   return {
-    ...row,
+    ...sessionFields,
     client: {
       id: row.client_id,
-      name: decrypted.client_name || row.client_name,
-      preferred_name: decrypted.client_preferred_name || row.client_preferred_name,
+      name: decrypted.client_name || client_name,
+      preferred_name: decrypted.client_preferred_name || client_preferred_name,
       email: row.client_email,
       phone: row.client_phone,
       has_chart: row.client_has_chart,
