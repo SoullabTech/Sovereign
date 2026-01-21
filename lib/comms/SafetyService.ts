@@ -7,7 +7,7 @@
  * @module lib/comms/SafetyService
  */
 
-import { query, queryOne } from '@/lib/db';
+import { query, queryOne } from '../db/postgres';
 import { emitSafetyFlagged, emitSafetyAcknowledged } from './events';
 import type {
   CommsSafetyFlag,

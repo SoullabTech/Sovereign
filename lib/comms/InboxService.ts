@@ -7,7 +7,7 @@
  * @module lib/comms/InboxService
  */
 
-import { query, queryOne } from '@/lib/db';
+import { query, queryOne } from '../db/postgres';
 import type {
   CommsDomain,
   InboxQueryOptions,

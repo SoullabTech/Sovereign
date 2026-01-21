@@ -6,7 +6,7 @@
  * @module lib/comms/ThreadService
  */
 
-import { query, queryOne, transaction } from '@/lib/db';
+import { query, queryOne, transaction } from '../db/postgres';
 import { emitMessageCreated, emitThreadCreated } from './events';
 import type {
   CommsThread,

@@ -7,7 +7,7 @@
  * @module lib/comms/events
  */
 
-import { query } from '@/lib/db';
+import { query } from '../db/postgres';
 import type { CommsEventType, CommsSenderType } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────

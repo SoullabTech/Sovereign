@@ -13,7 +13,7 @@
  * @module lib/comms/maiaAnalyzer
  */
 
-import { query, queryOne } from '@/lib/db';
+import { query, queryOne } from '../db/postgres';
 import { emitMAIAClassified, emitSafetyFlagged } from './events';
 import type { CommsSafetySeverity } from './types';
 
