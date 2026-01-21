@@ -143,7 +143,18 @@ function SigninContent() {
       const res = await biometricAuth.authenticate(bioUsername || undefined);
 
       if (!res.success) {
-        setError(res.error || 'Passkey sign-in failed');
+        // Provide helpful guidance based on error code
+        let errorMessage = res.error || 'Passkey sign-in failed';
+
+        if (res.code === 'RPID_MISMATCH' || res.code === 'ORIGIN_MISMATCH') {
+          errorMessage = 'Your passkey was registered on a different domain. Please sign in with password and set up a new passkey in Settings > Security.';
+        } else if (res.code === 'CREDENTIAL_NOT_FOUND') {
+          errorMessage = 'No passkey found for this account. Sign in with password, then enable Face ID/Touch ID in Settings.';
+        } else if (res.code === 'CHALLENGE_EXPIRED' || res.code === 'CHALLENGE_INVALID') {
+          errorMessage = 'Session expired. Please try again.';
+        }
+
+        setError(errorMessage);
         setIsLoading(false);
         return;
       }

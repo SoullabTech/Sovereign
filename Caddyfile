@@ -35,7 +35,12 @@
     encode gzip zstd
 }
 
-soullab.life, www.soullab.life {
+# Redirect www to apex (prevents WebAuthn ORIGIN_MISMATCH)
+www.soullab.life {
+    redir https://soullab.life{uri} permanent
+}
+
+soullab.life {
     # ═══════════════════════════════════════════════════════════════════════════
     # CORS for API requests (iOS/Capacitor app support)
     # Allows requests from capacitor://localhost, ionic://localhost, etc.

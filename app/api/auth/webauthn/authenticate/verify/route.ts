@@ -63,16 +63,16 @@ export async function POST(request: NextRequest) {
         errorMessage: result.error
       }, request);
 
-      // Map known errors to diagnostic codes
+      // Map known errors to diagnostic codes (case-insensitive)
       let code = 'VERIFICATION_FAILED';
-      const err = result.error || '';
-      if (err.includes('Challenge expired')) code = 'CHALLENGE_EXPIRED';
-      else if (err.includes('Credential not found')) code = 'CREDENTIAL_NOT_FOUND';
-      else if (err.includes('not found')) code = 'NOT_FOUND';
+      const err = (result.error || '').toLowerCase();
+      if (err.includes('challenge') && err.includes('expire')) code = 'CHALLENGE_EXPIRED';
+      else if (err.includes('credential') && err.includes('not found')) code = 'CREDENTIAL_NOT_FOUND';
+      else if (err.includes('not found')) code = 'CREDENTIAL_NOT_FOUND';
 
       return NextResponse.json(
         { ok: false, code, error: result.error || 'Authentication failed' },
-        { status: 401 }
+        { status: 400 }
       );
     }
 
@@ -152,16 +152,32 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[WebAuthn] Authentication verify error:', error);
 
-    // Extract diagnostic code from error
+    // Extract diagnostic code from error (case-insensitive)
     const errMsg = error instanceof Error ? error.message : String(error);
+    const errLower = errMsg.toLowerCase();
     let code = 'UNKNOWN';
+    let status = 500; // Default to server error
 
-    if (errMsg.includes('origin')) code = 'ORIGIN_MISMATCH';
-    else if (errMsg.includes('RP ID') || errMsg.includes('rpId')) code = 'RPID_MISMATCH';
-    else if (errMsg.includes('challenge')) code = 'CHALLENGE_INVALID';
-    else if (errMsg.includes('credential') || errMsg.includes('Credential')) code = 'CREDENTIAL_NOT_FOUND';
-    else if (errMsg.includes('user verification')) code = 'USER_VERIFICATION_REQUIRED';
-    else if (errMsg.includes('counter')) code = 'COUNTER_MISMATCH';
+    // Client errors (400) - user/config issues
+    if (errLower.includes('origin')) {
+      code = 'ORIGIN_MISMATCH';
+      status = 400;
+    } else if (errLower.includes('rp id') || errLower.includes('rpid') || errLower.includes('relying party')) {
+      code = 'RPID_MISMATCH';
+      status = 400;
+    } else if (errLower.includes('challenge')) {
+      code = 'CHALLENGE_INVALID';
+      status = 400;
+    } else if (errLower.includes('credential') || errLower.includes('passkey')) {
+      code = 'CREDENTIAL_NOT_FOUND';
+      status = 400;
+    } else if (errLower.includes('user verification') || errLower.includes('uv')) {
+      code = 'USER_VERIFICATION_REQUIRED';
+      status = 400;
+    } else if (errLower.includes('counter')) {
+      code = 'COUNTER_MISMATCH';
+      status = 400;
+    }
 
     return NextResponse.json(
       {
@@ -170,7 +186,7 @@ export async function POST(request: NextRequest) {
         error: 'Authentication failed',
         detail: process.env.NODE_ENV === 'development' ? errMsg : undefined
       },
-      { status: 500 }
+      { status }
     );
   }
 }

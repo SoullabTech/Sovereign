@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
         metadata: { step: 'verification_failed' }
       }, request);
 
-      // Map known errors to diagnostic codes
+      // Map known errors to diagnostic codes (case-insensitive)
       let code = 'VERIFICATION_FAILED';
-      const err = result.error || '';
-      if (err.includes('Challenge expired')) code = 'CHALLENGE_EXPIRED';
-      else if (err.includes('not found')) code = 'NOT_FOUND';
-      else if (err.includes('save')) code = 'SAVE_FAILED';
+      const err = (result.error || '').toLowerCase();
+      if (err.includes('challenge') && err.includes('expire')) code = 'CHALLENGE_EXPIRED';
+      else if (err.includes('challenge') && err.includes('not found')) code = 'CHALLENGE_NOT_FOUND';
+      else if (err.includes('save') || err.includes('store')) code = 'SAVE_FAILED';
 
       return NextResponse.json(
         { ok: false, code, error: result.error || 'Verification failed' },
@@ -84,14 +84,26 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[WebAuthn] Registration verify error:', error);
 
-    // Extract diagnostic code from error
+    // Extract diagnostic code from error (case-insensitive)
     const errMsg = error instanceof Error ? error.message : String(error);
+    const errLower = errMsg.toLowerCase();
     let code = 'UNKNOWN';
+    let status = 500; // Default to server error
 
-    if (errMsg.includes('origin')) code = 'ORIGIN_MISMATCH';
-    else if (errMsg.includes('RP ID') || errMsg.includes('rpId')) code = 'RPID_MISMATCH';
-    else if (errMsg.includes('challenge')) code = 'CHALLENGE_INVALID';
-    else if (errMsg.includes('attestation')) code = 'ATTESTATION_FAILED';
+    // Client errors (400) - user/config issues
+    if (errLower.includes('origin')) {
+      code = 'ORIGIN_MISMATCH';
+      status = 400;
+    } else if (errLower.includes('rp id') || errLower.includes('rpid') || errLower.includes('relying party')) {
+      code = 'RPID_MISMATCH';
+      status = 400;
+    } else if (errLower.includes('challenge')) {
+      code = 'CHALLENGE_INVALID';
+      status = 400;
+    } else if (errLower.includes('attestation')) {
+      code = 'ATTESTATION_FAILED';
+      status = 400;
+    }
 
     return NextResponse.json(
       {
@@ -100,7 +112,7 @@ export async function POST(request: NextRequest) {
         error: 'Failed to verify registration',
         detail: process.env.NODE_ENV === 'development' ? errMsg : undefined
       },
-      { status: 500 }
+      { status }
     );
   }
 }

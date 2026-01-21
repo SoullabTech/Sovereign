@@ -33,6 +33,8 @@ export interface BiometricAuthResult {
   success: boolean;
   credentialId?: string;
   error?: string;
+  /** Diagnostic error code from server (e.g., RPID_MISMATCH, CREDENTIAL_NOT_FOUND) */
+  code?: string;
   memberId?: string;
   member?: {
     id: string;
@@ -286,7 +288,11 @@ class BiometricAuthService {
 
       if (!verifyResponse.ok) {
         const errorData = await verifyResponse.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Authentication failed');
+        // Capture diagnostic code from server
+        const serverCode = errorData.code as string | undefined;
+        const err = new Error(errorData.error || 'Authentication failed');
+        (err as Error & { code?: string }).code = serverCode;
+        throw err;
       }
 
       const result = await verifyResponse.json();
@@ -302,25 +308,31 @@ class BiometricAuthService {
     } catch (error) {
       console.error('[BiometricAuth] Authentication error:', error);
 
+      // Extract code from error if present (set by server errors)
+      const serverCode = (error as Error & { code?: string })?.code;
+
       // Handle specific WebAuthn errors
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           return {
             success: false,
-            error: 'Authentication was cancelled or not allowed'
+            error: 'Authentication was cancelled or not allowed',
+            code: 'USER_CANCELLED'
           };
         }
         if (error.name === 'NotFoundError') {
           return {
             success: false,
-            error: 'No matching passkey found on this device'
+            error: 'No matching passkey found on this device',
+            code: 'CREDENTIAL_NOT_FOUND'
           };
         }
       }
 
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Authentication failed'
+        error: error instanceof Error ? error.message : 'Authentication failed',
+        code: serverCode
       };
     }
   }
