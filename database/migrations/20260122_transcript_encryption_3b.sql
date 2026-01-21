@@ -13,18 +13,25 @@
 -- ENFORCEMENT TRIGGER FUNCTION
 -- ============================================================================
 
--- Trigger function to enforce text_enc on INSERT
--- Allows existing NULL rows (for backward compat) but requires new rows to have text_enc
+-- Trigger function to enforce text_enc on INSERT and UPDATE
+-- Prevents plaintext drift by ensuring encrypted column is always populated
 CREATE OR REPLACE FUNCTION enforce_transcript_encryption()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Only enforce on INSERT (not UPDATE of legacy rows)
+  -- Require text_enc on INSERT
   IF TG_OP = 'INSERT' THEN
-    -- Require text_enc when writing new transcripts
     IF NEW.text_enc IS NULL THEN
       RAISE EXCEPTION 'PHI enforcement: text_enc required for new transcript segments. Set PHI_ENCRYPTION_KEY and ensure encryption is enabled.';
     END IF;
   END IF;
+
+  -- Require text_enc on UPDATE (prevents clearing encrypted column)
+  IF TG_OP = 'UPDATE' THEN
+    IF NEW.text_enc IS NULL THEN
+      RAISE EXCEPTION 'PHI enforcement: text_enc cannot be NULL. Encrypted column is required.';
+    END IF;
+  END IF;
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -36,14 +43,14 @@ $$ LANGUAGE plpgsql;
 -- Drop existing trigger if any (idempotent)
 DROP TRIGGER IF EXISTS enforce_supervision_transcript_enc ON supervision_transcript_segments;
 
--- Create enforcement trigger
+-- Create enforcement trigger (INSERT and UPDATE)
 CREATE TRIGGER enforce_supervision_transcript_enc
-  BEFORE INSERT ON supervision_transcript_segments
+  BEFORE INSERT OR UPDATE ON supervision_transcript_segments
   FOR EACH ROW
   EXECUTE FUNCTION enforce_transcript_encryption();
 
 COMMENT ON TRIGGER enforce_supervision_transcript_enc ON supervision_transcript_segments
-  IS 'Phase 3B: Enforces text_enc on new inserts (HIPAA compliance)';
+  IS 'Phase 3B: Enforces text_enc on INSERT/UPDATE (HIPAA compliance)';
 
 -- ============================================================================
 -- PRACTICE TRANSCRIPT SEGMENTS
@@ -52,14 +59,14 @@ COMMENT ON TRIGGER enforce_supervision_transcript_enc ON supervision_transcript_
 -- Drop existing trigger if any (idempotent)
 DROP TRIGGER IF EXISTS enforce_practice_transcript_enc ON practice_transcript_segments;
 
--- Create enforcement trigger
+-- Create enforcement trigger (INSERT and UPDATE)
 CREATE TRIGGER enforce_practice_transcript_enc
-  BEFORE INSERT ON practice_transcript_segments
+  BEFORE INSERT OR UPDATE ON practice_transcript_segments
   FOR EACH ROW
   EXECUTE FUNCTION enforce_transcript_encryption();
 
 COMMENT ON TRIGGER enforce_practice_transcript_enc ON practice_transcript_segments
-  IS 'Phase 3B: Enforces text_enc on new inserts (HIPAA compliance)';
+  IS 'Phase 3B: Enforces text_enc on INSERT/UPDATE (HIPAA compliance)';
 
 -- ============================================================================
 -- UPDATE STATUS TRACKING

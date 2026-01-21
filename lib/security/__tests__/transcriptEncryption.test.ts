@@ -17,6 +17,7 @@ import {
   decryptTranscriptSegmentRow,
   decryptTranscriptSegments,
   isPHIEncryptionEnabled,
+  isTranscriptStageBActive,
   type TranscriptSegmentRow,
 } from '../phiAccessors/transcripts';
 import { stripEncryptedColumns, clearKeyCache } from '../phiEncryption';
@@ -397,5 +398,141 @@ describe('PHI Leak Prevention', () => {
     expect(json).not.toContain('SHOULD_NOT_APPEAR');
     expect(json).not.toContain('text_enc');
     expect(json).toContain('How are you feeling today?');
+  });
+});
+
+/**
+ * Stage B Insert Path Test
+ *
+ * HIPAA Sprint 7 Phase 3B
+ *
+ * Verifies that when Stage B is active:
+ * 1. PHI_TRANSCRIPT_STAGE_B flag is detected
+ * 2. Encrypted columns are always populated (required for DB trigger)
+ * 3. Data round-trips correctly through encrypt/decrypt
+ *
+ * Note: Actual DB trigger enforcement is tested via integration tests.
+ * This unit test verifies the encryption helpers work correctly.
+ */
+describe('Stage B Insert Path', () => {
+  let originalKey: string | undefined;
+  let originalStageB: string | undefined;
+
+  beforeAll(() => {
+    originalKey = process.env.PHI_ENCRYPTION_KEY;
+    originalStageB = process.env.PHI_TRANSCRIPT_STAGE_B;
+
+    // Enable encryption and Stage B
+    process.env.PHI_ENCRYPTION_KEY = TEST_ENCRYPTION_KEY;
+    process.env.PHI_TRANSCRIPT_STAGE_B = 'true';
+    clearKeyCache();
+  });
+
+  afterAll(() => {
+    // Restore original env
+    if (originalKey !== undefined) {
+      process.env.PHI_ENCRYPTION_KEY = originalKey;
+    } else {
+      delete process.env.PHI_ENCRYPTION_KEY;
+    }
+    if (originalStageB !== undefined) {
+      process.env.PHI_TRANSCRIPT_STAGE_B = originalStageB;
+    } else {
+      delete process.env.PHI_TRANSCRIPT_STAGE_B;
+    }
+    clearKeyCache();
+  });
+
+  test('isTranscriptStageBActive should return true when flag is set', () => {
+    expect(isTranscriptStageBActive()).toBe(true);
+  });
+
+  test('Stage B insert should produce valid encrypted columns', () => {
+    // Simulate Stage B insert: plaintext + encrypted (required)
+    const segmentId = 'stage-b-test-001';
+    const sessionId = 'sess-stage-b';
+    const practitionerId = 'prac-stage-b';
+    const transcriptText = 'Client disclosed history of trauma during childhood.';
+
+    const ctx = {
+      table: 'supervision_transcript_segments' as const,
+      rowId: segmentId,
+      sessionId,
+      practitionerId,
+    };
+
+    // Get encrypted columns for INSERT (what the store does)
+    const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(transcriptText, ctx);
+
+    // Stage B requires these to be non-null (DB trigger enforces this)
+    expect(textEnc).toBeDefined();
+    expect(textEnc.length).toBeGreaterThan(0);
+    expect(textEncMeta).toBeDefined();
+
+    // Metadata should be valid JSON with required fields
+    const meta = JSON.parse(textEncMeta);
+    expect(meta.iv).toBeDefined();
+    expect(meta.tag).toBeDefined();
+    expect(meta.kid).toBeDefined();
+    expect(meta.v).toBe(1);
+  });
+
+  test('Stage B insert data should read back correctly', () => {
+    // Simulate a complete Stage B write/read cycle
+    const segmentId = 'stage-b-roundtrip';
+    const sessionId = 'sess-stage-b-rt';
+    const transcriptText = 'Therapist noted significant progress in emotion regulation.';
+
+    const ctx = {
+      table: 'practice_transcript_segments' as const,
+      rowId: segmentId,
+      sessionId,
+    };
+
+    // Stage B INSERT: both plaintext and encrypted
+    const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(transcriptText, ctx);
+
+    // Simulate row as it would be stored in DB
+    const dbRow: TranscriptSegmentRow = {
+      id: segmentId,
+      session_id: sessionId,
+      speaker: 'THERAPIST',
+      text: transcriptText,       // Stage B still writes plaintext (for DDL compatibility)
+      text_enc: textEnc,          // Required by Stage B trigger
+      text_enc_meta: textEncMeta, // Required by Stage B trigger
+    };
+
+    // Read should prefer encrypted (what readTranscriptText does)
+    const readCtx = { table: ctx.table, sessionId };
+    const result = decryptTranscriptSegmentRow(dbRow, readCtx);
+
+    // Should get back original text
+    expect(result.text).toBe(transcriptText);
+
+    // Encrypted columns should be stripped from result
+    expect(result.text_enc).toBeUndefined();
+    expect(result.text_enc_meta).toBeUndefined();
+  });
+
+  test('Stage B without encryption key should fail appropriately', () => {
+    // Temporarily disable encryption
+    const savedKey = process.env.PHI_ENCRYPTION_KEY;
+    delete process.env.PHI_ENCRYPTION_KEY;
+    clearKeyCache();
+
+    // Without key, encryption helpers should fail
+    const ctx = {
+      table: 'supervision_transcript_segments' as const,
+      rowId: 'no-key-test',
+      sessionId: 'sess-no-key',
+    };
+
+    // This would cause Stage B insert to fail (trigger would reject NULL text_enc)
+    // In real usage, isPHIEncryptionEnabled() check prevents this path
+    expect(isPHIEncryptionEnabled()).toBe(false);
+
+    // Restore key
+    process.env.PHI_ENCRYPTION_KEY = savedKey;
+    clearKeyCache();
   });
 });

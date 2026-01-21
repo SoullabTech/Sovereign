@@ -14,7 +14,6 @@ import {
   getEncryptedColumnsForInsert,
   decryptTranscriptSegments,
   isPHIEncryptionEnabled,
-  isTranscriptStageBActive,
   type TranscriptSegmentRow,
 } from '@/lib/security/phiAccessors/transcripts';
 
@@ -281,7 +280,10 @@ export async function addTranscriptSegment(params: {
 }): Promise<PracticeTranscriptSegment> {
   const segmentId = randomUUID();
 
-  // SECURITY: Encrypted writes (Stage A dual-write or Stage B encrypted-only)
+  // SECURITY: Dual-write plaintext + encrypted
+  // Stage A: encryption optional (no DB enforcement)
+  // Stage B: encryption required (DB trigger enforces text_enc IS NOT NULL)
+  // Stage C (future): encrypted-only after ALTER COLUMN text DROP NOT NULL
   if (isPHIEncryptionEnabled()) {
     const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(params.text, {
       table: 'practice_transcript_segments',
@@ -290,34 +292,6 @@ export async function addTranscriptSegment(params: {
       practitionerId: params.practitionerId,
     });
 
-    // Stage B: encrypted-only (no plaintext)
-    if (isTranscriptStageBActive()) {
-      const result = await query<PracticeTranscriptSegment>(`
-        INSERT INTO practice_transcript_segments (
-          id, session_id, speaker, speaker_confidence, start_ms, end_ms,
-          text_enc, text_enc_meta, transcription_confidence, language, is_final
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING id, session_id, speaker, speaker_confidence, start_ms, end_ms,
-                  transcription_confidence, language, is_final, created_at
-      `, [
-        segmentId,
-        params.sessionId,
-        params.speaker,
-        params.speakerConfidence ?? null,
-        params.startMs,
-        params.endMs,
-        textEnc,
-        textEncMeta,
-        params.transcriptionConfidence ?? null,
-        params.language || 'en',
-        params.isFinal ?? true
-      ]);
-
-      // Return with decrypted text for caller
-      return { ...result.rows[0], text: params.text };
-    }
-
-    // Stage A: dual-write (plaintext + encrypted)
     const result = await query<PracticeTranscriptSegment>(`
       INSERT INTO practice_transcript_segments (
         id, session_id, speaker, speaker_confidence, start_ms, end_ms,
