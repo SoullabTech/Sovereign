@@ -1088,7 +1088,7 @@ function SuggestionCard({
                 ? 'text-gray-600 cursor-not-allowed'
                 : 'text-gray-500 hover:text-green-400 hover:bg-green-500/10'
             } disabled:opacity-50`}
-            title="Helpful suggestion"
+            title={feedback === 1 ? 'Marked helpful' : 'Helpful suggestion'}
           >
             <ThumbsUp className="w-3.5 h-3.5" />
           </button>
@@ -1102,7 +1102,7 @@ function SuggestionCard({
                 ? 'text-gray-600 cursor-not-allowed'
                 : 'text-gray-500 hover:text-red-400 hover:bg-red-500/10'
             } disabled:opacity-50`}
-            title="Not helpful"
+            title={feedback === -1 ? 'Marked not helpful' : 'Not helpful'}
           >
             <ThumbsDown className="w-3.5 h-3.5" />
           </button>
