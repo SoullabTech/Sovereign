@@ -158,9 +158,9 @@ export default function LabToolsPage() {
         },
         {
           icon: Sparkles,
-          label: 'Birth Chart',
-          path: '/birth-chart',
-          description: 'Astrological profile'
+          label: 'Patterns',
+          path: '/patterns',
+          description: 'Symbolic systems & cycles'
         },
       ],
     },

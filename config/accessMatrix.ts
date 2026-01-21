@@ -212,7 +212,7 @@ export const ACCESS_RULES: AccessRule[] = [
   // avoid double-redirect (legacy → signin → canonical).
   // ─────────────────────────────────────────────────────────────────
   // public: only redirects to public page, avoids auth wall on old links
-  { exact: '/birth-chart', public: true, minTier: 'free', notes: '→ /astrology' },
+  { exact: '/birth-chart', public: true, minTier: 'free', notes: '→ /patterns' },
   // pro: labtools require auth, enforce here not at destination
   { exact: '/journal', minTier: 'pro', notes: '→ /labtools/journal' },
   { exact: '/voice', minTier: 'pro', notes: '→ /labtools/voice' },

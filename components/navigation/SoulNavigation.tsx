@@ -10,18 +10,18 @@ interface NavigationItem {
   significance: "primary" | "secondary" | "tertiary";
 }
 
-interface SacredNavigationProps {
+interface SoulNavigationProps {
   currentRoute?: string;
   onNavigate: (route: string) => void;
 }
 
-const SacredNavigation: React.FC<SacredNavigationProps> = ({
+const SoulNavigation: React.FC<SoulNavigationProps> = ({
   currentRoute,
   onNavigate,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Sacred geometric arrangement based on Vector Equilibrium / Cuboctahedron
+  // Geometric arrangement based on Vector Equilibrium / Cuboctahedron
   const navigationItems: NavigationItem[] = [
     // Center - Oracle Access
     {
@@ -155,7 +155,7 @@ const SacredNavigation: React.FC<SacredNavigationProps> = ({
             );
           })}
 
-          {/* Connecting Lines (Sacred Geometry) */}
+          {/* Connecting Lines (Geometric Pattern) */}
           {isExpanded && (
             <svg
               className="absolute inset-0 w-full h-full pointer-events-none"
@@ -231,4 +231,4 @@ const SacredNavigation: React.FC<SacredNavigationProps> = ({
   );
 };
 
-export default SacredNavigation;
+export default SoulNavigation;

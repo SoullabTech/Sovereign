@@ -6,11 +6,11 @@ export const revalidate = 0;
 export const fetchCache = 'force-no-store';
 
 /**
- * Birth Chart - Redirects to /astrology
+ * Birth Chart - Redirects to /patterns
  *
- * The birth chart functionality has been consolidated into /astrology.
- * This page now redirects to maintain backwards compatibility.
+ * Legacy route. Astrology is now nested under Patterns
+ * as one symbolic system among many.
  */
 export default function BirthChartPage() {
-  redirect('/astrology');
+  redirect('/patterns');
 }
