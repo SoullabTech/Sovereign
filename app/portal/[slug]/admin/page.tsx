@@ -169,7 +169,18 @@ export default function AdminDashboard() {
       const response = await fetch(`/api/stellium/dashboard?practitionerId=${practitionerId}`);
       if (!response.ok) throw new Error('Failed to fetch dashboard');
       const data = await response.json();
-      setDashboard(data.dashboard);
+      // Map API response to expected dashboard format
+      const mappedDashboard: PractitionerDashboard = {
+        total_clients: data.clients?.total || 0,
+        active_clients: data.clients?.active || 0,
+        sessions_this_week: data.sessions?.this_week || 0,
+        sessions_this_month: data.sessions?.this_month || 0,
+        revenue_this_month: data.sessions?.revenue_this_month,
+        upcoming_sessions: data.upcomingSessions || [],
+        recent_sessions: data.upcomingSessions?.slice(0, 5) || [],
+        clients_needing_follow_up: data.actionItems?.filter((a: any) => a.type === 'follow_up').map((a: any) => a.data) || [],
+      };
+      setDashboard(mappedDashboard);
     } catch (err) {
       console.error('[Dashboard] Error:', err);
       setError('Failed to load dashboard');
