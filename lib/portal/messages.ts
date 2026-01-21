@@ -18,7 +18,6 @@ import type {
 import {
   getEncryptedColumnsForInsert,
   verifyEncryptedBody,
-  isPHIEncryptionEnabled,
 } from '@/lib/security/phiAccessors/clientMessages';
 import {
   formatPolicyForClient,
@@ -201,36 +200,23 @@ export async function sendClientMessage(
   const messageId = randomUUID();
   const trimmedBody = body.trim();
 
-  // Dual-write: plaintext + encrypted columns (Stage A)
-  let result;
-  if (isPHIEncryptionEnabled()) {
-    const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(trimmedBody, {
-      rowId: messageId,
-      practitionerId,
-    });
+  // PHI encryption: plaintext + encrypted columns
+  const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(trimmedBody, {
+    rowId: messageId,
+    practitionerId,
+  });
 
-    result = await query(
-      `INSERT INTO client_messages (
-        id, client_id, practitioner_id, direction,
-        message_type, urgency, body, body_enc, body_enc_meta
-      ) VALUES ($1, $2, $3, 'client_to_practitioner', $4, $5, $6, $7, $8)
-      RETURNING *`,
-      [messageId, clientId, practitionerId, message_type || null, urgency, trimmedBody, bodyEnc, bodyEncMeta]
-    );
+  const result = await query(
+    `INSERT INTO client_messages (
+      id, client_id, practitioner_id, direction,
+      message_type, urgency, body, body_enc, body_enc_meta
+    ) VALUES ($1, $2, $3, 'client_to_practitioner', $4, $5, $6, $7, $8)
+    RETURNING *`,
+    [messageId, clientId, practitionerId, message_type || null, urgency, trimmedBody, bodyEnc, bodyEncMeta]
+  );
 
-    // Background verification (Stage A)
-    verifyEncryptedBody(messageId, practitionerId, trimmedBody).catch(() => {});
-  } else {
-    // No encryption key configured - plaintext only
-    result = await query(
-      `INSERT INTO client_messages (
-        id, client_id, practitioner_id, direction,
-        message_type, urgency, body
-      ) VALUES ($1, $2, $3, 'client_to_practitioner', $4, $5, $6)
-      RETURNING *`,
-      [messageId, clientId, practitionerId, message_type || null, urgency, trimmedBody]
-    );
-  }
+  // Background verification
+  verifyEncryptedBody(messageId, practitionerId, trimmedBody).catch(() => {});
 
   const message = result.rows[0] as ClientMessage;
 

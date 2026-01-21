@@ -18,7 +18,6 @@ import crypto from 'crypto';
 import {
   getEncryptedColumnsForInsert,
   verifyEncryptedBody,
-  isPHIEncryptionEnabled,
 } from '@/lib/security/phiAccessors/clientMessages';
 import { stripEncryptedColumns } from '@/lib/security/phiEncryption';
 import { decryptJoinedClientFields, decryptClientRow } from '@/lib/stellium/clients';
@@ -680,58 +679,35 @@ export async function sendReply(
   // Generate UUID client-side (needed for encryption context)
   const messageId = crypto.randomUUID();
 
-  // Dual-write: plaintext + encrypted columns (Stage A)
-  let result;
-  if (isPHIEncryptionEnabled()) {
-    const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(body, {
-      rowId: messageId,
+  // PHI encryption: plaintext + encrypted columns
+  const { bodyEnc, bodyEncMeta } = getEncryptedColumnsForInsert(body, {
+    rowId: messageId,
+    practitionerId,
+  });
+
+  const result = await query(
+    `INSERT INTO client_messages (
+      id, client_id, practitioner_id, direction,
+      message_type, body, body_enc, body_enc_meta,
+      is_quick_response, quick_response_type,
+      reply_to_id, status
+    ) VALUES ($1, $2, $3, 'practitioner_to_client', 'reply', $4, $5, $6, $7, $8, $9, 'sent')
+    RETURNING *`,
+    [
+      messageId,
+      clientId,
       practitionerId,
-    });
+      body,
+      bodyEnc,
+      bodyEncMeta,
+      is_quick_response,
+      quick_response_type || null,
+      reply_to_id || null,
+    ]
+  );
 
-    result = await query(
-      `INSERT INTO client_messages (
-        id, client_id, practitioner_id, direction,
-        message_type, body, body_enc, body_enc_meta,
-        is_quick_response, quick_response_type,
-        reply_to_id, status
-      ) VALUES ($1, $2, $3, 'practitioner_to_client', 'reply', $4, $5, $6, $7, $8, $9, 'sent')
-      RETURNING *`,
-      [
-        messageId,
-        clientId,
-        practitionerId,
-        body,
-        bodyEnc,
-        bodyEncMeta,
-        is_quick_response,
-        quick_response_type || null,
-        reply_to_id || null,
-      ]
-    );
-
-    // Background verification (Stage A)
-    verifyEncryptedBody(messageId, practitionerId, body).catch(() => {});
-  } else {
-    // No encryption key configured - plaintext only
-    result = await query(
-      `INSERT INTO client_messages (
-        id, client_id, practitioner_id, direction,
-        message_type, body,
-        is_quick_response, quick_response_type,
-        reply_to_id, status
-      ) VALUES ($1, $2, $3, 'practitioner_to_client', 'reply', $4, $5, $6, $7, 'sent')
-      RETURNING *`,
-      [
-        messageId,
-        clientId,
-        practitionerId,
-        body,
-        is_quick_response,
-        quick_response_type || null,
-        reply_to_id || null,
-      ]
-    );
-  }
+  // Background verification
+  verifyEncryptedBody(messageId, practitionerId, body).catch(() => {});
 
   return result.rows[0] as ClientMessage;
 }

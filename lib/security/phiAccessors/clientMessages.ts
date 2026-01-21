@@ -215,18 +215,3 @@ export async function readMessageBodyPreferEncrypted(
   return row.body || '';
 }
 
-// ============================================================================
-// ENVIRONMENT FLAG
-// ============================================================================
-
-/**
- * Check if PHI encryption is enabled
- *
- * Phase 2B: Always returns true. Encryption is unconditional.
- * Kept for backwards compatibility - will be removed in Phase 3.
- *
- * @deprecated Use encryption unconditionally; this function always returns true
- */
-export function isPHIEncryptionEnabled(): boolean {
-  return true;
-}

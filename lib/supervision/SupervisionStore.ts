@@ -13,7 +13,6 @@ import { randomUUID } from 'crypto';
 import {
   getEncryptedColumnsForInsert,
   decryptTranscriptSegments,
-  isPHIEncryptionEnabled,
   type TranscriptSegmentRow,
 } from '@/lib/security/phiAccessors/transcripts';
 
@@ -241,50 +240,21 @@ export async function addTranscriptSegment(params: {
 }): Promise<TranscriptSegment> {
   const segmentId = randomUUID();
 
-  // SECURITY: Dual-write plaintext + encrypted
-  // Stage A: encryption optional (no DB enforcement)
-  // Stage B: encryption required (DB trigger enforces text_enc IS NOT NULL)
-  // Stage C (future): encrypted-only after ALTER COLUMN text DROP NOT NULL
-  if (isPHIEncryptionEnabled()) {
-    const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(params.text, {
-      table: 'supervision_transcript_segments',
-      rowId: segmentId,
-      sessionId: params.sessionId,
-      practitionerId: params.practitionerId,
-    });
+  // SECURITY: PHI encryption - plaintext + encrypted columns
+  const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(params.text, {
+    table: 'supervision_transcript_segments',
+    rowId: segmentId,
+    sessionId: params.sessionId,
+    practitionerId: params.practitionerId,
+  });
 
-    const result = await query<TranscriptSegment>(`
-      INSERT INTO supervision_transcript_segments (
-        id, session_id, speaker, speaker_confidence, start_ms, end_ms,
-        text, text_enc, text_enc_meta, transcription_confidence, language, is_final
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
-      RETURNING id, session_id, speaker, speaker_confidence, start_ms, end_ms,
-                text, transcription_confidence, language, is_final, created_at
-    `, [
-      segmentId,
-      params.sessionId,
-      params.speaker,
-      params.speakerConfidence ?? null,
-      params.startMs,
-      params.endMs,
-      params.text,
-      textEnc,
-      textEncMeta,
-      params.transcriptionConfidence ?? null,
-      params.language || 'en',
-      params.isFinal ?? true
-    ]);
-
-    return result.rows[0];
-  }
-
-  // Fallback: plaintext only (encryption not enabled)
   const result = await query<TranscriptSegment>(`
     INSERT INTO supervision_transcript_segments (
       id, session_id, speaker, speaker_confidence, start_ms, end_ms,
-      text, transcription_confidence, language, is_final
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-    RETURNING *
+      text, text_enc, text_enc_meta, transcription_confidence, language, is_final
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+    RETURNING id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+              text, transcription_confidence, language, is_final, created_at
   `, [
     segmentId,
     params.sessionId,
@@ -293,6 +263,8 @@ export async function addTranscriptSegment(params: {
     params.startMs,
     params.endMs,
     params.text,
+    textEnc,
+    textEncMeta,
     params.transcriptionConfidence ?? null,
     params.language || 'en',
     params.isFinal ?? true

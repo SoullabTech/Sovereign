@@ -46,21 +46,6 @@ export interface TranscriptSegmentRow {
   [key: string]: unknown;
 }
 
-// ============================================================================
-// CONFIGURATION
-// ============================================================================
-
-/**
- * Check if PHI encryption is enabled
- *
- * Phase 2B: Always returns true. Encryption is unconditional.
- * Kept for backwards compatibility - will be removed in Phase 3.
- *
- * @deprecated Use encryption unconditionally; this function always returns true
- */
-export function isPHIEncryptionEnabled(): boolean {
-  return true;
-}
 
 /**
  * Check if Stage B is active (encrypted-only, no plaintext writes)
@@ -261,8 +246,6 @@ export async function verifyEncryptedText(
   table: TranscriptTable,
   practitionerId?: string
 ): Promise<void> {
-  if (!isPHIEncryptionEnabled()) return;
-
   try {
     // This would require a database read to verify - implement if needed
     // For now, encryption success is assumed if no error thrown

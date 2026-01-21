@@ -16,7 +16,6 @@ import {
   readTranscriptText,
   decryptTranscriptSegmentRow,
   decryptTranscriptSegments,
-  isPHIEncryptionEnabled,
   isTranscriptStageBActive,
   type TranscriptSegmentRow,
 } from '../phiAccessors/transcripts';
@@ -47,19 +46,6 @@ describe('Transcript PHI Encryption', () => {
     }
     // Clear key cache after tests
     clearKeyCache();
-  });
-
-  describe('isPHIEncryptionEnabled', () => {
-    test('should return true when key is set', () => {
-      expect(isPHIEncryptionEnabled()).toBe(true);
-    });
-
-    test('should return false when key is not set', () => {
-      const saved = process.env.PHI_ENCRYPTION_KEY;
-      delete process.env.PHI_ENCRYPTION_KEY;
-      expect(isPHIEncryptionEnabled()).toBe(false);
-      process.env.PHI_ENCRYPTION_KEY = saved;
-    });
   });
 
   describe('encryptTranscriptText / decryptTranscriptText', () => {
@@ -514,22 +500,22 @@ describe('Stage B Insert Path', () => {
     expect(result.text_enc_meta).toBeUndefined();
   });
 
-  test('Stage B without encryption key should fail appropriately', () => {
-    // Temporarily disable encryption
+  test('Encryption without key should throw', () => {
+    // Temporarily remove encryption key
     const savedKey = process.env.PHI_ENCRYPTION_KEY;
     delete process.env.PHI_ENCRYPTION_KEY;
     clearKeyCache();
 
-    // Without key, encryption helpers should fail
     const ctx = {
       table: 'supervision_transcript_segments' as const,
       rowId: 'no-key-test',
       sessionId: 'sess-no-key',
     };
 
-    // This would cause Stage B insert to fail (trigger would reject NULL text_enc)
-    // In real usage, isPHIEncryptionEnabled() check prevents this path
-    expect(isPHIEncryptionEnabled()).toBe(false);
+    // Encryption is unconditional - attempting without key should throw
+    expect(() => {
+      encryptTranscriptText('test text', ctx);
+    }).toThrow();
 
     // Restore key
     process.env.PHI_ENCRYPTION_KEY = savedKey;
