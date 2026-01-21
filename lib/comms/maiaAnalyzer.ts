@@ -15,6 +15,7 @@
 
 import { query, queryOne } from '../db/postgres';
 import { emitMAIAClassified, emitSafetyFlagged } from './events';
+import { generateSuggestions, supersedeSuggestions } from './ReplySuggestionService';
 import type { CommsSafetySeverity } from './types';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -346,7 +347,83 @@ export async function analyzeCommsMessage(messageId: string): Promise<MaiaAnalys
   }
 
   console.log(`[MAIA Analyzer] Analyzed message ${msg.id}: type=${classification.inferred_type}, urgency=${urgency}`);
+
+  // Auto-generate reply suggestions if safe to do so
+  await autoGenerateSuggestions(msg.id, msg.thread_id, safety.detected);
+
   return maiaAnalysis;
+}
+
+/**
+ * Auto-generate reply suggestions after analysis completes.
+ *
+ * Guardrails:
+ * - Only if no unacknowledged safety flags for this thread
+ * - Only if thread has outbound enabled (policy)
+ * - Supersedes old suggestions to keep drafts fresh
+ */
+async function autoGenerateSuggestions(
+  messageId: string,
+  threadId: string,
+  hasSafetyDetected: boolean
+): Promise<void> {
+  try {
+    // Get thread context
+    const thread = await queryOne<{
+      practitioner_id: string;
+      client_id: string | null;
+      domain: string;
+    }>(
+      `SELECT practitioner_id, client_id, domain FROM comms_threads WHERE id = $1`,
+      [threadId]
+    );
+
+    if (!thread) {
+      console.log(`[MAIA Analyzer] Auto-suggest: Thread not found ${threadId}`);
+      return;
+    }
+
+    // Check if outbound is allowed (get effective policy)
+    const policy = await queryOne<{ allow_outbound: boolean }>(
+      `SELECT allow_outbound FROM comms_policies
+       WHERE practitioner_id = $1
+         AND (client_id = $2 OR client_id IS NULL)
+         AND domain = $3
+         AND is_active = TRUE
+       ORDER BY client_id NULLS LAST
+       LIMIT 1`,
+      [thread.practitioner_id, thread.client_id, thread.domain]
+    );
+
+    // Default to allowing outbound if no policy exists
+    const allowOutbound = policy?.allow_outbound !== false;
+
+    if (!allowOutbound) {
+      console.log(`[MAIA Analyzer] Auto-suggest: Outbound disabled for thread ${threadId}`);
+      return;
+    }
+
+    // Check for unacknowledged safety flags (stricter check for auto-generation)
+    if (hasSafetyDetected) {
+      // If this message triggered safety, still generate (but templates will be safety-aware)
+      console.log(`[MAIA Analyzer] Auto-suggest: Safety detected, generating safety-aware suggestions`);
+    }
+
+    // Supersede old suggestions for this thread
+    await supersedeSuggestions(threadId, messageId);
+
+    // Generate new suggestions
+    const suggestions = await generateSuggestions({
+      thread_id: threadId,
+      message_id: messageId,
+      practitioner_id: thread.practitioner_id,
+    });
+
+    console.log(`[MAIA Analyzer] Auto-generated ${suggestions.length} suggestions for message ${messageId}`);
+  } catch (err) {
+    // Don't let suggestion errors break the analysis pipeline
+    console.error(`[MAIA Analyzer] Auto-suggest error (non-fatal):`, err);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -113,7 +113,7 @@ export interface ThreadContext {
     timezone: string;
     max_response_hours: number;
     crisis_copy: string;
-    outbound_enabled: boolean;
+    allow_outbound: boolean;
   } | null;
 }
 
@@ -347,7 +347,7 @@ export function ThreadView({
       </div>
 
       {/* Suggestions Panel */}
-      {context.policy?.outbound_enabled !== false && (
+      {context.policy?.allow_outbound !== false && (
         <SuggestionsPanel
           suggestions={suggestions}
           isLoading={isLoadingSuggestions}
@@ -361,7 +361,7 @@ export function ThreadView({
 
       {/* Compose */}
       <div className="p-4 border-t border-gray-800/50">
-        {context.policy?.outbound_enabled === false ? (
+        {context.policy?.allow_outbound === false ? (
           <div className="text-center py-4 text-gray-500">
             <Shield className="w-6 h-6 mx-auto mb-2 opacity-50" />
             <p className="text-sm">Outbound messages disabled for this thread</p>
