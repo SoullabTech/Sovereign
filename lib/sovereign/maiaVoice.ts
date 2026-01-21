@@ -68,6 +68,8 @@ export interface MaiaContext {
   astrologicalContextAddendum?: string;
   // 🌀 DECISION GOVERNOR: Spiralogic posture constraints from preflight
   governorAddendum?: string;
+  // 💫 RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
+  relationshipModeAddendum?: string;
 }
 
 /**
@@ -694,6 +696,12 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (context.governorAddendum) {
     adaptedPrompt += `\n\n${context.governorAddendum}`;
     console.log(`🌀 [Governor] Posture guidance injected`);
+  }
+
+  // 💫 RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
+  if (context.relationshipModeAddendum) {
+    adaptedPrompt += `\n\n${context.relationshipModeAddendum}`;
+    console.log(`💫 [Relationship] Mode: ${context.relationshipModeAddendum.split('\n')[0]}`);
   }
 
   return adaptedPrompt.trim();

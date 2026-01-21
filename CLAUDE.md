@@ -164,7 +164,8 @@ Users who forget their passkey can request email recovery:
 1. Search codebase for existing implementations
 2. Run `npm run check:no-supabase` to verify no Supabase violations
 3. Run `npm run preflight` for full sovereignty check
-4. Test with `npm run smoke` before committing
+4. Run `npm run typecheck` for TypeScript validation (do not run single-file `tsc` - it bypasses path mappings)
+5. Test with `npm run smoke` before committing
 
 ## Setup (New Clones)
 

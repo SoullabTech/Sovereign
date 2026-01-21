@@ -8,7 +8,134 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useRouter } from 'next/navigation';
 import { Practitioner } from '@/lib/stellium/types';
+
+/**
+ * Shape of practitioner context stored in localStorage
+ */
+interface StoredPractitionerContext {
+  id: string;
+  slug: string;
+  name: string;
+}
+
+/**
+ * Hook return type for usePractitionerContext
+ */
+interface PractitionerContextResult {
+  practitionerId: string | null;
+  practitionerName: string;
+  practitionerSlug: string | null;
+  isLoading: boolean;
+}
+
+/**
+ * Simple hook to get practitioner context from localStorage
+ * Redirects to signup if no practitioner context exists
+ *
+ * Use this for stellium pages that need the practitioner ID
+ * without making an API call to validate.
+ */
+export function usePractitionerContext(redirectOnMissing = true): PractitionerContextResult {
+  const router = useRouter();
+  const [practitionerId, setPractitionerId] = useState<string | null>(null);
+  const [practitionerName, setPractitionerName] = useState<string>('there');
+  const [practitionerSlug, setPractitionerSlug] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Check localStorage for practitioner_context
+    const storedContext = localStorage.getItem('practitioner_context');
+    if (storedContext) {
+      try {
+        const ctx: StoredPractitionerContext = JSON.parse(storedContext);
+
+        // SAFETY TRIPWIRE: Reject demo/placeholder IDs
+        // This ensures no "demo-practitioner" fallback ever sneaks back into production
+        const isDemoId = !ctx.id || ctx.id.includes('demo') || ctx.id === 'demo-practitioner';
+        const isDemoSlug = ctx.slug?.includes('demo') || ctx.slug === 'demo-practitioner';
+
+        if (isDemoId || isDemoSlug) {
+          console.warn('[usePractitionerContext] Rejected demo practitioner context - clearing and redirecting');
+          localStorage.removeItem('practitioner_context');
+          // Leave breadcrumb so signup page can explain what happened
+          sessionStorage.setItem('practitioner_context_reset_reason', 'demo_id_detected');
+          if (redirectOnMissing) {
+            router.push('/practitioners/signup');
+          }
+          setIsLoading(false);
+          return;
+        }
+
+        // Validate required fields
+        if (!ctx.id || !ctx.slug) {
+          console.warn('[usePractitionerContext] Invalid context (missing id or slug) - clearing');
+          localStorage.removeItem('practitioner_context');
+        } else {
+          setPractitionerId(ctx.id);
+          setPractitionerName(ctx.name || 'there');
+          setPractitionerSlug(ctx.slug);
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.error('[usePractitionerContext] Failed to parse context:', e);
+        localStorage.removeItem('practitioner_context');
+      }
+    }
+
+    // No valid practitioner context found
+    setIsLoading(false);
+    if (redirectOnMissing) {
+      router.push('/practitioners/signup');
+    }
+  }, [router, redirectOnMissing]);
+
+  return { practitionerId, practitionerName, practitionerSlug, isLoading };
+}
+
+/**
+ * Validates practitioner context is not a demo/placeholder
+ * Returns true if valid, false if demo/invalid
+ */
+function isValidPractitionerContext(ctx: StoredPractitionerContext): boolean {
+  if (!ctx.id || !ctx.slug) return false;
+
+  const isDemoId = ctx.id.includes('demo') || ctx.id === 'demo-practitioner';
+  const isDemoSlug = ctx.slug.includes('demo') || ctx.slug === 'demo-practitioner';
+
+  return !isDemoId && !isDemoSlug;
+}
+
+/**
+ * Utility to set practitioner context in localStorage
+ * Called after practitioner creation/signup
+ *
+ * SAFETY: Rejects demo/placeholder IDs at write time
+ * - Development: throws error (developer pain is good)
+ * - Production: refuses write + redirects to signup (user always lands somewhere valid)
+ */
+export function setPractitionerContext(ctx: StoredPractitionerContext): void {
+  if (!isValidPractitionerContext(ctx)) {
+    console.error('[setPractitionerContext] Rejected invalid/demo context:', ctx);
+    if (process.env.NODE_ENV !== 'production') {
+      throw new Error('Cannot store demo or invalid practitioner context');
+    }
+    // Production: refuse write, leave breadcrumb, redirect to signup
+    sessionStorage.setItem('practitioner_context_reset_reason', 'invalid_context_write');
+    window.location.href = '/practitioners/signup';
+    return;
+  }
+  localStorage.setItem('practitioner_context', JSON.stringify(ctx));
+}
+
+/**
+ * Utility to clear practitioner context (e.g., on logout)
+ */
+export function clearPractitionerContext(): void {
+  localStorage.removeItem('practitioner_context');
+}
 
 interface PractitionerAuthContextType {
   practitioner: Practitioner | null;

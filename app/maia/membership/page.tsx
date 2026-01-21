@@ -77,6 +77,7 @@ const TIER_DATA: Record<MemberTier, {
       'MAIA conversations (Talk, Care, Note)',
       'Basic journal entries',
       'Birth chart overview',
+      'Pattern recognition across time',
       'Occasional oracle readings',
       'Element discovery',
       'Soul signature profile',
@@ -86,14 +87,15 @@ const TIER_DATA: Record<MemberTier, {
   },
   personal: {
     name: 'Continuity',
-    tagline: 'MAIA remembers',
+    tagline: 'Sovereign cloud extends',
     price: '$12',
     priceNote: '/month',
     color: 'violet',
     features: [
       'Everything in Touch, plus:',
-      'Unlimited MAIA conversations',
-      'Pattern recognition across time',
+      'Cross-device sync',
+      'Cloud backup (your keys)',
+      'File uploads for deeper analysis',
       'Full astrology: transits, cycles, returns',
       'Complete oracle access',
       'Dream journal with symbol tracking',
@@ -102,23 +104,24 @@ const TIER_DATA: Record<MemberTier, {
       'Relationship synastry',
       'Data export (your sovereignty)',
     ],
-    emphasis: 'MAIA holds your thread',
+    emphasis: 'Your data, our servers, your keys',
     cta: 'Deepen the relationship',
   },
   pro: {
     name: 'Stewardship',
-    tagline: 'Serve others',
+    tagline: 'Serve others sovereignly',
     price: '$35',
     priceNote: '/month',
     color: 'gold',
     features: [
       'Everything in Continuity, plus:',
+      'Practitioner portal (your clients)',
+      'Client session sovereignty',
       'Scribe Pro: transcription & capture',
       'Brain Trust: multi-model weaving',
       'Library of Alexandria access',
       'Guardian Console: biometrics',
       'Navigator Lab: depth training',
-      'Practitioner session tools',
       'Advanced client synastry',
       'Field analytics',
     ],
@@ -231,20 +234,9 @@ function TierCard({ tier, isCurrentTier, onSelect }: TierCardProps) {
           <>
             <button
               onClick={onSelect}
-              style={{
-                position: 'relative',
-                zIndex: 10,
-                backgroundColor: tier === 'personal' ? 'rgba(107,90,152,0.12)' : 'rgba(138,122,90,0.12)',
-                width: '100%',
-                padding: '14px 16px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 600,
-                letterSpacing: '0.025em',
-                color: tier === 'personal' ? '#6b5a98' : '#8a7a5a',
-                border: `1px solid ${tier === 'personal' ? 'rgba(107,90,152,0.25)' : 'rgba(138,122,90,0.25)'}`,
-                cursor: 'pointer',
-              }}
+              className={`w-full py-3.5 px-4 rounded-lg text-[13px] font-semibold tracking-wide border-0 cursor-pointer shadow-lg !text-white ${
+                tier === 'personal' ? '!bg-[#5b4a88]' : '!bg-[#7a6a4a]'
+              }`}
             >
               {data.cta}
             </button>
@@ -576,17 +568,7 @@ function MembershipPageContent() {
                   <button
                     onClick={() => handleCheckout(selectedTier, 'month')}
                     disabled={isProcessing}
-                    className="flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: '#ffffff',
-                      backgroundColor: selectedTier === 'personal' ? '#6b5a98' : '#5a4a3a',
-                      border: '1px solid rgba(255,255,255,0.12)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-lg text-[13px] font-semibold disabled:opacity-50 !bg-stone-800 !text-white hover:!bg-stone-900 transition-colors shadow-lg"
                   >
                     {isProcessing ? (
                       <>
@@ -600,16 +582,7 @@ function MembershipPageContent() {
                   <button
                     onClick={() => handleCheckout(selectedTier, 'year')}
                     disabled={isProcessing}
-                    className="flex-1 flex items-center justify-center gap-2 disabled:opacity-50"
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: '8px',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: selectedTier === 'personal' ? '#6b5a98' : '#5a4a3a',
-                      backgroundColor: 'transparent',
-                      border: `1px solid ${selectedTier === 'personal' ? 'rgba(107,90,152,0.3)' : 'rgba(90,74,58,0.3)'}`,
-                    }}
+                    className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-lg text-[13px] font-semibold disabled:opacity-50 !bg-[#5b4a88] !text-white hover:!bg-[#4a3a77] transition-colors shadow-lg"
                   >
                     {isProcessing ? (
                       <>

@@ -14,7 +14,6 @@ interface CreatePractitionerInput {
   practiceName: string;
   slug: string;
   email: string;
-  modality?: string;
 }
 
 /**
@@ -29,7 +28,7 @@ interface CreatePractitionerInput {
 export async function POST(request: NextRequest) {
   try {
     const body: CreatePractitionerInput = await request.json();
-    const { memberId, practiceName, slug, email, modality = 'other' } = body;
+    const { memberId, practiceName, slug, email } = body;
 
     // Validate required fields
     if (!memberId || !practiceName || !slug || !email) {
@@ -92,12 +91,12 @@ export async function POST(request: NextRequest) {
       const practitionerId = uuid();
       const now = new Date().toISOString();
 
-      // Create practitioner record
+      // Create practitioner record (status defaults to 'onboarding')
       await client.query(
         `INSERT INTO practitioners (
-          id, member_id, slug, name, email, modality, is_active, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-        [practitionerId, memberId, slug, practiceName, email, modality, true, now, now]
+          id, member_id, slug, name, email, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+        [practitionerId, memberId, slug, practiceName, email, now, now]
       );
 
       // Create initial practitioner_themes record with defaults
@@ -154,8 +153,7 @@ export async function POST(request: NextRequest) {
         slug,
         name: practiceName,
         email,
-        modality,
-        is_active: true,
+        status: 'onboarding',
         created_at: now,
         updated_at: now,
       };

@@ -13,6 +13,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { setPractitionerContext } from '@/lib/auth/practitionerAuth';
 
 interface MemberSession {
   id: string;
@@ -33,6 +34,7 @@ export default function PractitionerSignupPage() {
   const [slugChecking, setSlugChecking] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [resetReason, setResetReason] = useState<string | null>(null);
 
   // Check member session and practitioner status on mount
   useEffect(() => {
@@ -69,10 +71,11 @@ export default function PractitionerSignupPage() {
 
         if (checkData.hasPractitioner) {
           // Already a practitioner, store context and redirect to admin
-          localStorage.setItem('practitioner_context', JSON.stringify({
-            practitionerId: checkData.practitioner.id,
+          setPractitionerContext({
+            id: checkData.practitioner.id,
             slug: checkData.practitioner.slug,
-          }));
+            name: checkData.practitioner.name,
+          });
           router.push(`/stellium`);
           return;
         }
@@ -87,6 +90,15 @@ export default function PractitionerSignupPage() {
 
     checkAuth();
   }, [router]);
+
+  // Check for reset reason breadcrumb (one-shot)
+  useEffect(() => {
+    const reason = sessionStorage.getItem('practitioner_context_reset_reason');
+    if (reason) {
+      setResetReason(reason);
+      sessionStorage.removeItem('practitioner_context_reset_reason');
+    }
+  }, []);
 
   // Generate slug from practice name
   const generateSlug = (name: string): string => {
@@ -176,10 +188,11 @@ export default function PractitionerSignupPage() {
       }
 
       // Store practitioner context for auth provider
-      localStorage.setItem('practitioner_context', JSON.stringify({
-        practitionerId: data.practitioner.id,
+      setPractitionerContext({
+        id: data.practitioner.id,
         slug: data.practitioner.slug,
-      }));
+        name: data.practitioner.name,
+      });
 
       // Redirect to onboarding
       router.push('/practitioners/onboarding/step/1');
@@ -215,6 +228,17 @@ export default function PractitionerSignupPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {resetReason && (
+            <div className="rounded-xl bg-amber-900/20 border border-amber-700/30 p-4 text-sm text-amber-200">
+              <p className="font-medium mb-1">Session reset</p>
+              <p className="text-amber-300/80">
+                {resetReason === 'demo_id_detected'
+                  ? 'Your previous session used a temporary ID. Please sign up or sign in to continue.'
+                  : 'Your session couldn\'t be verified. Please sign up or sign in to continue.'}
+              </p>
+            </div>
+          )}
+
           {error && (
             <div className="rounded-xl bg-red-900/20 border border-red-700/30 p-4 text-sm text-red-300">
               {error}

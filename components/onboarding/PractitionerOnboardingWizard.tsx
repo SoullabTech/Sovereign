@@ -18,8 +18,13 @@ type Preset = {
 
 interface Props {
   initialStep: number;
-  // TODO: Pass practitionerId from session/auth context
   practitionerId?: string;
+}
+
+interface PractitionerContext {
+  id: string;
+  slug: string;
+  name: string;
 }
 
 export default function PractitionerOnboardingWizard({ initialStep, practitionerId }: Props) {
@@ -27,6 +32,7 @@ export default function PractitionerOnboardingWizard({ initialStep, practitioner
   const [step, setStep] = useState<WizardStep>(() => clampStep(initialStep));
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activePractitionerId, setActivePractitionerId] = useState<string | null>(practitionerId || null);
 
   const [theme, setTheme] = useState<PractitionerThemeV1>(PRACTITIONER_THEME_DEFAULTS_V1);
   const [presets, setPresets] = useState<Preset[]>([]);
@@ -34,11 +40,37 @@ export default function PractitionerOnboardingWizard({ initialStep, practitioner
 
   const apiBase = "/api/practitioner/theme/list";
 
-  // TODO: In production, practitionerId should come from auth session
-  // For now, we'll use a placeholder and handle the "no practitioner" case gracefully
-  const activePractitionerId = practitionerId || "demo-practitioner";
+  // Check for practitioner context on mount
+  useEffect(() => {
+    // If practitionerId was passed as prop, use it
+    if (practitionerId) {
+      setActivePractitionerId(practitionerId);
+      return;
+    }
+
+    // Otherwise check localStorage for practitioner_context
+    const storedContext = localStorage.getItem("practitioner_context");
+    if (storedContext) {
+      try {
+        const ctx: PractitionerContext = JSON.parse(storedContext);
+        if (ctx.id) {
+          setActivePractitionerId(ctx.id);
+          return;
+        }
+      } catch {
+        // Invalid JSON, clear it
+        localStorage.removeItem("practitioner_context");
+      }
+    }
+
+    // No practitioner found - redirect to signup
+    router.push("/practitioners/signup");
+  }, [practitionerId, router]);
 
   useEffect(() => {
+    // Don't boot until we have a practitioner ID (or redirect has been triggered)
+    if (!activePractitionerId) return;
+
     let cancelled = false;
 
     async function boot() {
@@ -155,7 +187,8 @@ export default function PractitionerOnboardingWizard({ initialStep, practitioner
     return true;
   }, [saving, loading, theme]);
 
-  if (loading) {
+  // Show loading while checking practitioner context or loading theme
+  if (!activePractitionerId || loading) {
     return (
       <main className="mx-auto max-w-4xl px-6 py-10">
         <div className="rounded-2xl border p-6">Loading your setup...</div>

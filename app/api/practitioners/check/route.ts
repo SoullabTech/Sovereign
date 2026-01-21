@@ -17,8 +17,7 @@ interface PractitionerResult {
   slug: string;
   name: string;
   email: string;
-  modality: string;
-  is_active: boolean;
+  status: string;
 }
 
 /**
@@ -41,7 +40,7 @@ export async function POST(request: NextRequest) {
 
     // Check for existing practitioner
     const result = await query<PractitionerResult>(
-      `SELECT id, slug, name, email, modality, is_active
+      `SELECT id, slug, name, email, status
        FROM practitioners
        WHERE member_id = $1`,
       [memberId]

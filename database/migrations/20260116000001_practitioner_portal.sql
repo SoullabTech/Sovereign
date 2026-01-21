@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS ai_companion_configs (
   UNIQUE(practitioner_id)
 );
 
-CREATE INDEX idx_ai_configs_practitioner ON ai_companion_configs(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_ai_configs_practitioner ON ai_companion_configs(practitioner_id);
 
 -- ============== PRACTITIONER THEMES ==============
 
