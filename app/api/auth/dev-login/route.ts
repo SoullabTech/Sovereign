@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
     const cookieStore = await cookies();
     cookieStore.set('maia_tier', accessTier, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: (process.env.NODE_ENV as string) === 'production',
       sameSite: 'lax',
       path: '/',
       expires: session.expiresAt
@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
     // Set roles cookie for middleware access control (Stellium needs 'practitioner')
     cookieStore.set('maia_roles', JSON.stringify(['practitioner']), {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: (process.env.NODE_ENV as string) === 'production',
       sameSite: 'lax',
       path: '/',
       expires: session.expiresAt
@@ -240,7 +240,7 @@ export async function POST(request: NextRequest) {
     const cookieStore = await cookies();
     cookieStore.set('maia_tier', accessTier, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: (process.env.NODE_ENV as string) === 'production',
       sameSite: 'lax',
       path: '/',
       expires: session.expiresAt
@@ -249,7 +249,7 @@ export async function POST(request: NextRequest) {
     // Set roles cookie for middleware access control (Stellium needs 'practitioner')
     cookieStore.set('maia_roles', JSON.stringify(['practitioner']), {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: (process.env.NODE_ENV as string) === 'production',
       sameSite: 'lax',
       path: '/',
       expires: session.expiresAt

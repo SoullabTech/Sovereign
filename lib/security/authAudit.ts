@@ -16,7 +16,11 @@ export type AuthAction =
   | 'passcode_invalid'
   | 'register_success'
   | 'register_failed'
-  | 'signout';
+  | 'signout'
+  | 'webauthn_authenticate'
+  | 'webauthn_register'
+  | 'webauthn_step_up'
+  | 'session_revoked';
 
 export interface AuthAuditEntry {
   action: AuthAction;

@@ -29,7 +29,7 @@ export async function GET(
     }
 
     // Get related cards based on tags and type
-    const relatedCards = await getRelatedCards(card, 4);
+    const relatedCards = await getRelatedCards(card.id, 4);
 
     return NextResponse.json({
       success: true,

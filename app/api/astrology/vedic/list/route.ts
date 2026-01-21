@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
     const vedicChart = convertToVedicChart(tropicalChart, birthDate, ayanamsaType);
 
     // Calculate Vimshottari Dasha if requested
-    let dasha = null;
+    let dasha: ReturnType<typeof calculateVimshottariDasha> | null = null;
     if (includeDasha) {
       const moonSiderealLong = vedicChart.grahas.Chandra.longitude;
       dasha = calculateVimshottariDasha(birthDate, moonSiderealLong);
