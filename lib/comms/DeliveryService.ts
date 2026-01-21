@@ -19,7 +19,11 @@ import {
 // SECURITY: No fallbacks - fail fast if env vars missing
 import crypto from 'crypto';
 
+// Current key version - increment when rotating keys
+const CURRENT_KEY_VERSION = 1;
+
 interface EncryptedCredentials {
+  v: number;  // Key version for future rotation
   iv: string;
   encrypted: string;
   authTag: string;
@@ -61,6 +65,7 @@ function encryptCredentials(credentials: Record<string, string>): EncryptedCrede
   const authTag = cipher.getAuthTag();
 
   return {
+    v: CURRENT_KEY_VERSION,
     iv: iv.toString('hex'),
     encrypted,
     authTag: authTag.toString('hex'),
@@ -70,10 +75,18 @@ function encryptCredentials(credentials: Record<string, string>): EncryptedCrede
 /**
  * Decrypt credentials from storage
  * Handles both object and string input (legacy support)
+ * Version-aware for future key rotation
  */
 function decryptCredentials(encryptedData: EncryptedCredentials | string): Record<string, string> {
   const data: EncryptedCredentials =
     typeof encryptedData === 'string' ? JSON.parse(encryptedData) : encryptedData;
+
+  // Version check - currently only v1 supported
+  // When rotating keys: add COMMS_ENCRYPTION_KEY_V2 env var and switch on data.v
+  const version = data.v ?? 1; // Treat unversioned as v1
+  if (version !== CURRENT_KEY_VERSION) {
+    throw new Error(`Unsupported credential encryption version: ${version}`);
+  }
 
   const { iv, encrypted, authTag } = data;
   const key = getDerivedKey();

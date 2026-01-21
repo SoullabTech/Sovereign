@@ -416,7 +416,7 @@ services:
       PORT: "4321"
 
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4321/ || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4321/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -450,7 +450,7 @@ services:
       BRAND_PRESET: demo
 
     healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:4322/ || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4322/ || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

@@ -332,7 +332,7 @@ beta-tester-email.md
 backups/
 
 # Allow production deployment templates (but not actual secrets)
-!.env.production.template
+!.env.docker.template
 !docker-compose.production.yml
 !Caddyfile
 
