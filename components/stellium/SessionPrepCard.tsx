@@ -23,6 +23,7 @@ import {
   History,
   Sparkles,
   User,
+  DollarSign,
 } from 'lucide-react';
 import type { SessionPrepData } from '@/lib/practitioner/sessionPrep';
 import type { PractitionerClient } from '@/lib/stellium/types';
@@ -45,7 +46,7 @@ export default function SessionPrepCard({
   onViewMessages,
   variant = 'full',
 }: SessionPrepCardProps) {
-  const { client, last_session, journey, flags, recent_sessions, message_digest } = prep;
+  const { client, last_session, journey, flags, recent_sessions, message_digest, sliding_scale_rate_cents } = prep;
 
   const displayName = client.preferred_name || client.name;
   const initials = displayName
@@ -368,6 +369,16 @@ export default function SessionPrepCard({
                 </p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Sliding Scale Rate */}
+        {sliding_scale_rate_cents && (
+          <div className="flex items-center space-x-2 p-2 bg-sacred-gold/5 border border-sacred-gold/10 rounded-lg">
+            <DollarSign className="w-4 h-4 text-sacred-gold" />
+            <span className="text-sm text-gray-300">
+              Sliding Scale: <span className="font-medium text-sacred-gold">${(sliding_scale_rate_cents / 100).toFixed(0)}</span>/session
+            </span>
           </div>
         )}
 

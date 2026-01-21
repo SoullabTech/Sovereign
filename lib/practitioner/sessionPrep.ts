@@ -10,6 +10,8 @@
 
 import { query } from '@/lib/db/postgres';
 import type { PractitionerClient, PractitionerSession } from '@/lib/stellium/types';
+import type { MessageDigest, ClientMessage } from '@/lib/practitioner/messages';
+import { getMessageDigest } from '@/lib/practitioner/messages';
 
 // ============================================
 // TYPES
@@ -88,6 +90,12 @@ export interface SessionPrepData {
     type: string;
     themes?: string[];
   }>;
+
+  // Between-session messages (since last session)
+  message_digest?: MessageDigest | null;
+
+  // Sliding scale rate (if client has active award)
+  sliding_scale_rate_cents?: number | null;
 }
 
 export interface CreateEmergencyInfoInput {
@@ -209,6 +217,32 @@ export async function getSessionPrep(
     }
   }
 
+  // Get message digest (messages since last session)
+  let messageDigest: MessageDigest | null = null;
+  try {
+    messageDigest = await getMessageDigest(practitionerId, clientId);
+  } catch (err) {
+    // If message digest fails, don't break the prep
+    console.error('Failed to fetch message digest:', err);
+  }
+
+  // Get sliding scale rate if client has an active award
+  let slidingScaleRateCents: number | null = null;
+  try {
+    const awardResult = await query(
+      `SELECT rate_cents FROM sliding_scale_awards
+       WHERE client_id = $1 AND practitioner_id = $2 AND status = 'active'
+       LIMIT 1`,
+      [clientId, practitionerId]
+    );
+    if (awardResult.rows[0]) {
+      slidingScaleRateCents = awardResult.rows[0].rate_cents;
+    }
+  } catch (err) {
+    // If sliding scale query fails, don't break the prep
+    console.error('Failed to fetch sliding scale award:', err);
+  }
+
   return {
     client,
 
@@ -249,6 +283,10 @@ export async function getSessionPrep(
       type: s.session_type,
       themes: s.themes,
     })),
+
+    message_digest: messageDigest,
+
+    sliding_scale_rate_cents: slidingScaleRateCents,
   };
 }
 

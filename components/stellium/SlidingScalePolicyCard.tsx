@@ -221,10 +221,29 @@ export default function SlidingScalePolicyCard({
               <Award className="w-4 h-4" />
               <span>{counts.active_awards} active</span>
             </div>
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-500/10 border border-gray-500/30 text-gray-400 text-sm">
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+                spotsAvailable === 0 && parseInt(spotsTotal || '0', 10) > 0
+                  ? 'bg-rose-500/10 border border-rose-500/30 text-rose-400'
+                  : 'bg-gray-500/10 border border-gray-500/30 text-gray-400'
+              }`}
+            >
               <Users className="w-4 h-4" />
-              <span>{spotsAvailable} spots available</span>
+              <span>
+                {spotsAvailable === 0 && parseInt(spotsTotal || '0', 10) > 0
+                  ? 'At capacity'
+                  : `${spotsAvailable} spots available`}
+              </span>
             </div>
+          </div>
+        )}
+
+        {/* Capacity full notice */}
+        {isEnabled && spotsAvailable === 0 && parseInt(spotsTotal || '0', 10) > 0 && (
+          <div className="p-3 rounded-lg bg-rose-500/5 border border-rose-500/20">
+            <p className="text-sm text-rose-300">
+              All sliding scale spots are currently filled. New requests will be held until a spot opens.
+            </p>
           </div>
         )}
 
