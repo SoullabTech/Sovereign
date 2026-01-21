@@ -182,3 +182,97 @@ Run `npm run check:phi-encryption` to verify:
 - All PHI columns have `_enc` counterparts
 - No direct reads of plaintext PHI columns in app code
 - Encryption metadata columns exist
+
+---
+
+## Addendum: Side-Route Leak Fixes (Commit `a637a1a6`)
+
+### What we fixed
+
+When we introduced encrypted identity columns (e.g., `name_enc`, `name_enc_meta`, `preferred_name_enc`, etc.), we discovered a common "side-route leak" pattern:
+
+- A feature query joins client identity fields in a SELECT (sessions, inbox, prep, etc.)
+- The code expects plaintext `client_name` (or equivalent)
+- A future dev (or exporter, or logger) might accidentally surface identity because "it was already in the row"
+- Result: PHI can leak through *non-obvious read paths* even if the primary "client read" endpoint is safe
+
+**Fix:** Standardize joined identity selection + post-query decryption + safe fallback.
+
+### Pattern applied (standard)
+
+1. **Add a shared SQL fragment:**
+   - `CLIENT_NAME_JOIN_COLUMNS` includes encrypted fields needed for decryption (`name_enc`, `name_enc_meta`, `preferred_name_enc`, etc.)
+
+2. **Post-query normalization:**
+   - `decryptJoinedClientFields(row, practitionerId)` runs **after** the DB returns the row
+
+3. **Safe fallback behavior:**
+   - If decryption fails, we **fall back to plaintext only when present** (Stage A compatibility)
+   - We **do not throw** for decryption mismatch during Stage A (avoids breaking production reads while backfill is incomplete)
+
+### Files updated (read surfaces protected)
+
+**Client join decryption helper**
+- `lib/stellium/clients.ts`
+  - Added `decryptJoinedClientFields()` export
+
+**Session read paths**
+- `lib/stellium/sessions.ts`
+  - `getSessions`
+  - `getUpcomingSessions`
+  - `getSession`
+  - `getSessionsNeedingFollowUp`
+
+**Messaging read paths**
+- `lib/practitioner/messages.ts`
+  - `getInbox`
+  - `getMessage`
+  - `getMessageDigest`
+
+**Session prep read path**
+- `lib/practitioner/sessionPrep.ts`
+  - `getUpcomingSessionsWithPrep`
+
+### Why this matters
+
+This closes a whole class of bugs:
+
+- "PHI lurking in the row" (identity present even when UI shouldn't show it)
+- Accidental leakage via exports / logs / admin tooling
+- Future feature joins that unknowingly pull sensitive columns
+
+It's also the template we'll reuse for additional PHI waves.
+
+---
+
+## Operational Next Steps (deployment sequence)
+
+1. Generate key:
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+
+2. Deploy migrations → verify new encrypted columns exist
+
+3. Deploy code → dual-write enabled
+
+4. Test dual-write:
+   - Create client message
+   - Verify `body_enc IS NOT NULL`
+
+5. Backfill:
+   - `--dry-run` first
+   - Then live backfill with `--verify`
+
+6. Phase 1.5 (recommended): Add NULL/consistency constraints to prevent plaintext drift once Stage B begins
+
+---
+
+## QA: "Side-route leak" verification checklist
+
+- [ ] Sessions list: client name resolves correctly (encrypted when present)
+- [ ] Session detail: same
+- [ ] Inbox/digest/message detail: same
+- [ ] Session prep: same
+- [ ] Confirm: no API payload includes raw `*_enc` blobs unintentionally
+- [ ] Confirm: decryption failure does **not** crash list pages (Stage A), but logs are visible for investigation
