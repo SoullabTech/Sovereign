@@ -476,30 +476,41 @@ When your PR touches transcript reads:
 
 ---
 
-## Phase 3B: Transcript Encryption Enforcement (Commit `7034617c`)
+## Phase 3B: Transcript Encryption Enforcement (Commit `e751b7a2`)
 
-**Stop plaintext drift** - encrypted-only writes + DB enforcement.
+**Stop plaintext drift** - encryption required via DB trigger.
+
+### Stage Model (Clarified)
+
+| Stage | Plaintext | Encrypted | Enforcement |
+|-------|-----------|-----------|-------------|
+| **A** | ✓ writes | ✓ optional | None (code-level) |
+| **B** | ✓ writes | ✓ required | DB trigger (INSERT/UPDATE) |
+| **C** | ✗ removed | ✓ only | DDL (`text DROP NOT NULL`) |
+
+**Why Stage B still writes plaintext**: The `text` column has `NOT NULL` constraint.
+Removing that constraint requires a separate migration after Stage B is stable.
 
 ### Prerequisites
 
-1. Phase 3A complete (migration + backfill)
-2. All existing rows have `text_enc` populated
-3. Code deployed with Stage B support
+1. Phase 3A complete (migration applied)
+2. Backfill complete (0 rows with `text_enc IS NULL`)
 
 ### Code Changes
 
-- **`isTranscriptStageBActive()`** - checks `PHI_TRANSCRIPT_STAGE_B=true`
-- **SupervisionStore/PracticeStore** - encrypted-only writes in Stage B
+- **`isTranscriptStageBActive()`** - semantic flag for `PHI_TRANSCRIPT_STAGE_B=true`
+- **SupervisionStore/PracticeStore** - dual-write (text + text_enc) when encryption enabled
+- **DB triggers** - enforce `text_enc IS NOT NULL` on INSERT and UPDATE
 
 ### Migration
 
 `database/migrations/20260122_transcript_encryption_3b.sql`:
 - `enforce_transcript_encryption()` trigger function
-- Triggers on both transcript tables
-- Requires `text_enc IS NOT NULL` on INSERT
+- Triggers on both transcript tables (INSERT and UPDATE)
+- Requires `text_enc IS NOT NULL`
 - Rollback script included
 
-### Rollout Checklist
+### Rollout Checklist (Safe Order)
 
 1. **Verify backfill complete**:
    ```sql
@@ -508,16 +519,23 @@ When your PR touches transcript reads:
    -- Both should return 0
    ```
 
-2. **Set env**: `PHI_TRANSCRIPT_STAGE_B=true`
-
-3. **Deploy code** (Stage B writes active)
-
-4. **Run Phase 3B migration**:
+2. **Run Phase 3B migration** (trigger enforcement):
    ```bash
    psql -d maia_consciousness -f database/migrations/20260122_transcript_encryption_3b.sql
    ```
 
-5. **Verify enforcement**:
+3. **Verify triggers exist**:
+   ```sql
+   SELECT tgname FROM pg_trigger
+   WHERE tgname IN ('enforce_supervision_transcript_enc', 'enforce_practice_transcript_enc');
+   -- Should return 2 rows
+   ```
+
+4. **Deploy code** (dual-write always when encryption enabled)
+
+5. **Set env**: `PHI_TRANSCRIPT_STAGE_B=true` (semantic flag)
+
+6. **Verify enforcement**:
    ```sql
    -- This should fail with "PHI enforcement" error
    INSERT INTO supervision_transcript_segments (session_id, speaker, start_ms, end_ms, text)
@@ -531,3 +549,13 @@ DROP TRIGGER enforce_supervision_transcript_enc ON supervision_transcript_segmen
 DROP TRIGGER enforce_practice_transcript_enc ON practice_transcript_segments;
 -- Then unset PHI_TRANSCRIPT_STAGE_B in env
 ```
+
+### Phase 3C (Future)
+
+To move to encrypted-only (remove plaintext):
+
+1. Verify Stage B stable (no trigger failures)
+2. Run: `ALTER TABLE supervision_transcript_segments ALTER COLUMN text DROP NOT NULL;`
+3. Run: `ALTER TABLE practice_transcript_segments ALTER COLUMN text DROP NOT NULL;`
+4. Update code to stop writing plaintext
+5. Backfill `text = NULL` for all rows
