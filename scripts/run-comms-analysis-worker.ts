@@ -26,6 +26,8 @@ const POLL_INTERVAL_MS = 1000; // How often to check for new jobs when idle
 const MAX_CONSECUTIVE_ERRORS = 10; // Shut down if too many errors in a row
 const BATCH_SIZE = 1; // Process one at a time for now
 const WORKER_ID = `${os.hostname()}:${process.pid}`; // Unique identity for this worker instance
+const REAPER_EVERY_N_LOOPS = 60; // Run stale job reaper every ~60 seconds
+const STALE_AFTER = '5 minutes'; // Jobs stuck longer than this get requeued
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JOB PROCESSING
@@ -50,7 +52,7 @@ async function claimNextJob(): Promise<QueueJob | null> {
          attempts = attempts + 1,
          started_at = NOW(),
          claimed_by = $1,
-         claimed_at = COALESCE(claimed_at, NOW()),
+         claimed_at = NOW(),
          heartbeat_at = NOW()
      WHERE id = (
        SELECT id FROM comms_analysis_queue
@@ -118,6 +120,7 @@ async function processJob(job: QueueJob): Promise<void> {
 
 let running = true;
 let consecutiveErrors = 0;
+let loopCount = 0;
 
 /**
  * Main worker loop.
@@ -126,10 +129,28 @@ async function runWorkerLoop(): Promise<void> {
   console.log('[Worker] MAIA Comms Analysis Worker starting...');
   console.log(`[Worker] Identity: ${WORKER_ID}`);
   console.log(`[Worker] Poll interval: ${POLL_INTERVAL_MS}ms`);
+  console.log(`[Worker] Stale job reaper: every ${REAPER_EVERY_N_LOOPS} loops, threshold ${STALE_AFTER}`);
   console.log('[Worker] Press Ctrl+C to stop\n');
 
   while (running) {
     try {
+      loopCount++;
+
+      // Periodically check for and requeue stale jobs
+      if (loopCount % REAPER_EVERY_N_LOOPS === 0) {
+        try {
+          const row = await queryOne<{ requeued: number }>(
+            `SELECT fn_requeue_stale_comms_jobs($1::interval) AS requeued`,
+            [STALE_AFTER]
+          );
+          if (row?.requeued && row.requeued > 0) {
+            console.log(`[Worker] Requeued ${row.requeued} stale job(s)`);
+          }
+        } catch (e) {
+          console.warn('[Worker] Reaper failed (non-fatal):', e);
+        }
+      }
+
       const job = await claimNextJob();
 
       if (!job) {
