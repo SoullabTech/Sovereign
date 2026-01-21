@@ -2,12 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { createHash } from 'crypto';
-
-function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
-}
+import { hashPassword } from '@/lib/auth/passwordUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,8 +23,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Hash the new password
-    const passwordHash = hashPassword(newPassword);
+    // Hash the new password with bcrypt
+    const passwordHash = await hashPassword(newPassword);
 
     // Update password in database
     const result = await query(

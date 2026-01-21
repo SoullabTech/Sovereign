@@ -1,28 +1,11 @@
 /**
  * Shared Utilities for MAIA Platform
+ *
+ * NOTE: Password hashing is NOT in this file.
+ * Use @/lib/auth/passwordUtils for all password operations (bcrypt).
  */
 
-import { createHash, randomBytes } from 'crypto';
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Password Hashing
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Hash a password using SHA256 with salt
- * NOTE: For production, consider using bcrypt or argon2
- */
-export function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
-}
-
-/**
- * Verify a password against a hash
- */
-export function verifyPassword(password: string, hash: string): boolean {
-  return hashPassword(password) === hash;
-}
+import { randomBytes } from 'crypto';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // ID Generation

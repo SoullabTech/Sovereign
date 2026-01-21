@@ -1,10 +1,16 @@
 /**
  * Password utilities with bcrypt
+ * ================================
+ * ONLY APPROVED PASSWORD HASHING ENTRYPOINT
  *
  * Handles:
  * - bcrypt hashing for new passwords (cost 12)
  * - SHA256 verification for legacy passwords
+ * - Auto-detection of hash algorithm from prefix
  * - Transparent upgrade from SHA256 → bcrypt on signin
+ *
+ * DO NOT use crypto.createHash('sha256') for passwords elsewhere.
+ * All password operations MUST go through this module.
  */
 
 import bcrypt from 'bcrypt';
@@ -12,59 +18,56 @@ import { createHash } from 'crypto';
 
 const BCRYPT_COST = 12;
 
+export interface VerifyResult {
+  ok: boolean;
+  needsUpgrade: boolean;
+}
+
 /**
  * Hash a new password with bcrypt
+ * This is the ONLY way to create new password hashes
  */
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, BCRYPT_COST);
 }
 
 /**
+ * Detect if a hash is bcrypt based on prefix
+ * bcrypt hashes start with $2a$, $2b$, or $2y$
+ */
+function isBcryptHash(hash: string): boolean {
+  return /^\$2[aby]\$/.test(hash);
+}
+
+/**
  * Verify a password against a hash
- * Handles both bcrypt and legacy SHA256 hashes
+ * Auto-detects bcrypt vs legacy SHA256 based on hash format
+ *
+ * @returns { ok: true if password matches, needsUpgrade: true if SHA256 }
  */
 export async function verifyPassword(
   password: string,
-  hash: string,
-  algo: 'bcrypt' | 'sha256' = 'sha256'
-): Promise<boolean> {
-  if (algo === 'bcrypt') {
-    return bcrypt.compare(password, hash);
+  storedHash: string
+): Promise<VerifyResult> {
+  if (isBcryptHash(storedHash)) {
+    const ok = await bcrypt.compare(password, storedHash);
+    return { ok, needsUpgrade: false };
   }
 
   // Legacy SHA256 verification
   const legacyHash = hashPasswordLegacy(password);
-  return legacyHash === hash;
+  const ok = legacyHash === storedHash;
+  return { ok, needsUpgrade: ok }; // Only flag upgrade if password was correct
 }
 
 /**
- * Legacy SHA256 hashing (for verifying old passwords)
- * DO NOT use for new passwords
+ * Legacy SHA256 hashing (for verifying old passwords ONLY)
+ * DO NOT use for new passwords - use hashPassword() instead
+ * @internal
  */
-export function hashPasswordLegacy(password: string): string {
+function hashPasswordLegacy(password: string): string {
   const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
   return createHash('sha256').update(password + salt).digest('hex');
-}
-
-/**
- * Check if a password needs to be upgraded from SHA256 to bcrypt
- */
-export function needsUpgrade(algo: string | null | undefined): boolean {
-  return !algo || algo === 'sha256';
-}
-
-/**
- * Upgrade a password hash from SHA256 to bcrypt
- * Call this after successful signin with a SHA256 password
- *
- * @returns New bcrypt hash and 'bcrypt' algo
- */
-export async function upgradePasswordHash(password: string): Promise<{
-  hash: string;
-  algo: 'bcrypt';
-}> {
-  const hash = await hashPassword(password);
-  return { hash, algo: 'bcrypt' };
 }
 
 /**

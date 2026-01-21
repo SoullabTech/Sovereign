@@ -10,8 +10,9 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { createHash, randomBytes } from 'crypto';
+import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
+import { hashPassword } from '@/lib/auth/passwordUtils';
 
 // Lazy init Resend
 let resend: Resend | null = null;
@@ -20,12 +21,6 @@ function getResend() {
     resend = new Resend(process.env.RESEND_API_KEY);
   }
   return resend;
-}
-
-// Password hashing (must match register/signin)
-function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
 }
 
 // Generate secure token
@@ -211,8 +206,8 @@ export async function PUT(request: NextRequest) {
 
     const tokenRecord = tokenResult.rows[0];
 
-    // Update password
-    const passwordHash = hashPassword(password);
+    // Update password with bcrypt
+    const passwordHash = await hashPassword(password);
     await query(
       'UPDATE members SET password_hash = $1, updated_at = NOW() WHERE id = $2',
       [passwordHash, tokenRecord.member_id]

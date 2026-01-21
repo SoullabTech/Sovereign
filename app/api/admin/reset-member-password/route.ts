@@ -10,13 +10,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { createHash } from 'crypto';
-
-// Password hashing (must match register/signin)
-function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
-}
+import { hashPassword } from '@/lib/auth/passwordUtils';
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,8 +51,8 @@ export async function POST(request: NextRequest) {
 
     const member = result.rows[0];
 
-    // Update password
-    const passwordHash = hashPassword(newPassword);
+    // Update password with bcrypt
+    const passwordHash = await hashPassword(newPassword);
     await query(
       'UPDATE members SET password_hash = $1, updated_at = NOW() WHERE id = $2',
       [passwordHash, member.id]

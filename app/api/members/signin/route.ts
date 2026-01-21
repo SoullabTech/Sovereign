@@ -3,17 +3,14 @@ export const dynamic = 'force-dynamic';
 /**
  * Sign in existing member
  * Validates username/password, creates server-side session, sets httpOnly cookie
+ * Transparently upgrades legacy SHA256 hashes to bcrypt on successful login
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
-import crypto, { createHash } from 'crypto';
-
-function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
-}
+import crypto from 'crypto';
+import { verifyPassword, hashPassword } from '@/lib/auth/passwordUtils';
 
 function newSessionToken(): string {
   return crypto.randomBytes(32).toString('hex'); // 64 chars
@@ -54,21 +51,35 @@ export async function POST(request: NextRequest) {
 
     const member = result.rows[0];
 
-    // Verify password
-    const passwordHash = hashPassword(password);
-    if (passwordHash !== member.password_hash) {
-      console.log(`[MEMBERS] Sign in failed: wrong password - ${username}`);
+    // Verify password (auto-detects bcrypt vs legacy SHA256)
+    const { ok, needsUpgrade } = await verifyPassword(password, member.password_hash);
+    if (!ok) {
+      console.log(`[MEMBERS] Sign in failed: wrong password - member=${member.id.slice(0, 8)}`);
       return NextResponse.json(
         { error: 'Invalid username or password' },
         { status: 401 }
       );
     }
 
-    // Update last sign in
-    await query(
-      'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
-      [member.id]
-    );
+    // Transparently upgrade legacy SHA256 hash to bcrypt
+    // Race-safe: only upgrade if hash hasn't changed (concurrent login won't flap)
+    if (needsUpgrade) {
+      const bcryptHash = await hashPassword(password);
+      const upgradeResult = await query(
+        'UPDATE members SET password_hash = $1, last_sign_in = NOW() WHERE id = $2 AND password_hash = $3',
+        [bcryptHash, member.id, member.password_hash]
+      );
+      if (upgradeResult.rowCount === 1) {
+        console.log(`[MEMBERS] Upgraded password hash to bcrypt: member=${member.id.slice(0, 8)}`);
+      }
+      // rowCount=0 means another process already upgraded - that's fine
+    } else {
+      // Update last sign in only
+      await query(
+        'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
+        [member.id]
+      );
+    }
 
     // Create server-side session
     const token = newSessionToken();

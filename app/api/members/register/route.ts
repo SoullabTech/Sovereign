@@ -14,13 +14,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
-import { createHash } from 'crypto';
-
-// Simple password hashing (for production, use bcrypt)
-function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
-}
+import { hashPassword } from '@/lib/auth/passwordUtils';
 
 // Check if passkey is an admin passkey (always allowed)
 function isAdminPasskey(passkey: string): boolean {
@@ -132,8 +126,8 @@ export async function POST(request: NextRequest) {
     }
     // If no invite found but it's an admin passkey, that's fine - continue
 
-    // Hash password
-    const passwordHash = hashPassword(password);
+    // Hash password with bcrypt
+    const passwordHash = await hashPassword(password);
     const displayName = name || username;
 
     // Try full insert first (with all columns)

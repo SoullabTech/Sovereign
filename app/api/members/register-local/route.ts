@@ -16,6 +16,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { betaConfig, validatePassword, validateEmail } from '@/lib/auth/betaConfig';
 import crypto from 'crypto';
+import { hashPassword } from '@/lib/auth/passwordUtils';
 
 export async function POST(request: NextRequest) {
   // Static export: return stub response during pre-rendering
@@ -71,11 +72,8 @@ export async function POST(request: NextRequest) {
     const memberId = crypto.randomUUID();
     const passkey = `SOULLAB-${normalizedUsername.toUpperCase()}`;
 
-    // Hash password
-    const passwordHash = crypto
-      .createHash('sha256')
-      .update(password)
-      .digest('hex');
+    // Hash password with bcrypt
+    const passwordHash = await hashPassword(password);
 
     // Create member
     await query(

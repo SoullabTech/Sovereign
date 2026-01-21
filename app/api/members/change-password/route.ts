@@ -14,12 +14,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
-import { createHash } from 'crypto';
-
-function hashPassword(password: string): string {
-  const salt = process.env.PASSWORD_SALT || 'maia-sovereign-salt';
-  return createHash('sha256').update(password + salt).digest('hex');
-}
+import { verifyPassword, hashPassword } from '@/lib/auth/passwordUtils';
 
 interface SessionRow {
   member_id: string;
@@ -137,17 +132,17 @@ export async function POST(request: NextRequest) {
 
     const member = memberResult.rows[0];
 
-    // Verify current password (using exact same hash function as signin)
-    const currentPasswordHash = hashPassword(currentPassword);
-    if (currentPasswordHash !== member.password_hash) {
+    // Verify current password (auto-detects bcrypt vs legacy SHA256)
+    const { ok } = await verifyPassword(currentPassword, member.password_hash);
+    if (!ok) {
       return NextResponse.json(
         { error: 'Current password is incorrect' },
         { status: 403 }
       );
     }
 
-    // Update password
-    const newPasswordHash = hashPassword(newPassword);
+    // Update password with bcrypt
+    const newPasswordHash = await hashPassword(newPassword);
     await query(
       'UPDATE members SET password_hash = $1, updated_at = NOW() WHERE id = $2',
       [newPasswordHash, member.id]
