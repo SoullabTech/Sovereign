@@ -14,7 +14,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft,
   User,
@@ -29,11 +29,32 @@ import {
   ThumbsDown,
   X,
   MessageSquareText,
+  Sparkles,
+  PenLine,
+  XCircle,
+  RefreshCw,
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
-import { ComposeBox, type QuickResponseType } from './ComposeBox';
+import { ComposeBox, type QuickResponseType, type ComposeBoxRef } from './ComposeBox';
 import { SafetyAcknowledgeModal } from './SafetyAcknowledgeModal';
 import type { CommsDomain, CommsSafetySeverity } from '@/lib/comms/types';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUGGESTION TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ReplySuggestion {
+  id: string;
+  thread_id: string;
+  message_id: string;
+  kind: 'reply' | 'follow_up' | 'boundary' | 'safety';
+  title: string | null;
+  suggested_text: string;
+  confidence: number;
+  rationale: string | null;
+  status: 'draft' | 'dismissed' | 'sent' | 'superseded';
+  created_at: string;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TYPES
@@ -131,13 +152,84 @@ export function ThreadView({
   isLoading = false,
 }: ThreadViewProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const composeBoxRef = useRef<ComposeBoxRef>(null);
   const [selectedFlag, setSelectedFlag] = useState<ModalFlagContext | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Suggestions state
+  const [suggestions, setSuggestions] = useState<ReplySuggestion[]>([]);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length]);
+
+  // Fetch existing suggestions when thread loads
+  useEffect(() => {
+    if (context.thread_id) {
+      fetchSuggestions();
+    }
+  }, [context.thread_id]);
+
+  // Fetch suggestions from API
+  const fetchSuggestions = async () => {
+    try {
+      const res = await fetch(`/api/comms/threads/${context.thread_id}/suggested-replies?status=draft`);
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+        if (data.suggestions?.length > 0) {
+          setShowSuggestions(true);
+        }
+      }
+    } catch (err) {
+      console.error('[ThreadView] Failed to fetch suggestions:', err);
+    }
+  };
+
+  // Generate new suggestions
+  const generateSuggestions = async () => {
+    setIsLoadingSuggestions(true);
+    try {
+      const res = await fetch(`/api/comms/threads/${context.thread_id}/suggested-replies`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ regenerate: true }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestions(data.suggestions || []);
+        setShowSuggestions(true);
+      }
+    } catch (err) {
+      console.error('[ThreadView] Failed to generate suggestions:', err);
+    } finally {
+      setIsLoadingSuggestions(false);
+    }
+  };
+
+  // Insert suggestion into compose box
+  const insertSuggestion = (suggestion: ReplySuggestion) => {
+    composeBoxRef.current?.insertText(suggestion.suggested_text);
+  };
+
+  // Dismiss a suggestion
+  const dismissSuggestion = async (suggestionId: string) => {
+    try {
+      const res = await fetch(`/api/comms/replies/suggestions/${suggestionId}/dismiss`, {
+        method: 'POST',
+      });
+
+      if (res.ok) {
+        setSuggestions(prev => prev.filter(s => s.id !== suggestionId));
+      }
+    } catch (err) {
+      console.error('[ThreadView] Failed to dismiss suggestion:', err);
+    }
+  };
 
   const unacknowledgedFlags = messages
     .flatMap(m => m.safety_flags)
@@ -254,6 +346,19 @@ export function ThreadView({
         <div ref={messagesEndRef} />
       </div>
 
+      {/* Suggestions Panel */}
+      {context.policy?.outbound_enabled !== false && (
+        <SuggestionsPanel
+          suggestions={suggestions}
+          isLoading={isLoadingSuggestions}
+          isVisible={showSuggestions}
+          onToggle={() => setShowSuggestions(!showSuggestions)}
+          onGenerate={generateSuggestions}
+          onInsert={insertSuggestion}
+          onDismiss={dismissSuggestion}
+        />
+      )}
+
       {/* Compose */}
       <div className="p-4 border-t border-gray-800/50">
         {context.policy?.outbound_enabled === false ? (
@@ -263,6 +368,7 @@ export function ThreadView({
           </div>
         ) : (
           <ComposeBox
+            ref={composeBoxRef}
             onSend={onSendMessage}
             onQuickResponse={onQuickResponse}
             placeholder="Write a reply..."
@@ -688,6 +794,171 @@ function SafetyFlagAlert({ flags, onOpenModal }: SafetyFlagAlertProps) {
     </div>
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUGGESTIONS PANEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SuggestionsPanelProps {
+  suggestions: ReplySuggestion[];
+  isLoading: boolean;
+  isVisible: boolean;
+  onToggle: () => void;
+  onGenerate: () => void;
+  onInsert: (suggestion: ReplySuggestion) => void;
+  onDismiss: (suggestionId: string) => void;
+}
+
+function SuggestionsPanel({
+  suggestions,
+  isLoading,
+  isVisible,
+  onToggle,
+  onGenerate,
+  onInsert,
+  onDismiss,
+}: SuggestionsPanelProps) {
+  const hasSuggestions = suggestions.length > 0;
+
+  return (
+    <div className="border-t border-gray-800/50">
+      {/* Header / Toggle */}
+      <div className="flex items-center justify-between px-4 py-2 bg-gray-800/30">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-200 transition-colors"
+        >
+          <Sparkles className="w-4 h-4 text-purple-400" />
+          <span>Suggested Drafts</span>
+          {hasSuggestions && (
+            <span className="px-1.5 py-0.5 text-xs bg-purple-500/20 text-purple-300 rounded">
+              {suggestions.length}
+            </span>
+          )}
+        </button>
+
+        <button
+          onClick={onGenerate}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 px-2.5 py-1 text-xs bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded transition-colors disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+          <span>{isLoading ? 'Generating...' : 'Generate'}</span>
+        </button>
+      </div>
+
+      {/* Suggestions List */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 py-3 space-y-2 bg-gray-900/30">
+              {!hasSuggestions ? (
+                <p className="text-sm text-gray-500 text-center py-4">
+                  No suggestions yet. Click "Generate" to create drafts.
+                </p>
+              ) : (
+                suggestions.map((suggestion) => (
+                  <SuggestionCard
+                    key={suggestion.id}
+                    suggestion={suggestion}
+                    onInsert={() => onInsert(suggestion)}
+                    onDismiss={() => onDismiss(suggestion.id)}
+                  />
+                ))
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SUGGESTION CARD
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface SuggestionCardProps {
+  suggestion: ReplySuggestion;
+  onInsert: () => void;
+  onDismiss: () => void;
+}
+
+function SuggestionCard({ suggestion, onInsert, onDismiss }: SuggestionCardProps) {
+  const kindColors = {
+    reply: 'border-purple-500/30 bg-purple-900/20',
+    follow_up: 'border-blue-500/30 bg-blue-900/20',
+    boundary: 'border-amber-500/30 bg-amber-900/20',
+    safety: 'border-red-500/30 bg-red-900/20',
+  };
+
+  const kindLabels = {
+    reply: 'Reply',
+    follow_up: 'Follow-up',
+    boundary: 'Boundary',
+    safety: 'Safety',
+  };
+
+  return (
+    <div className={`rounded-lg border p-3 ${kindColors[suggestion.kind]}`}>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs px-1.5 py-0.5 bg-white/5 text-gray-400 rounded">
+            {kindLabels[suggestion.kind]}
+          </span>
+          {suggestion.title && (
+            <span className="text-sm text-gray-300">{suggestion.title}</span>
+          )}
+        </div>
+        <div className="flex items-center gap-1">
+          {suggestion.confidence >= 0.7 && (
+            <span className="text-[10px] text-green-400/70">High confidence</span>
+          )}
+        </div>
+      </div>
+
+      {/* Body */}
+      <p className="text-sm text-gray-300 whitespace-pre-wrap mb-3">
+        {suggestion.suggested_text}
+      </p>
+
+      {/* Rationale */}
+      {suggestion.rationale && (
+        <p className="text-xs text-gray-500 italic mb-3">
+          {suggestion.rationale}
+        </p>
+      )}
+
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onInsert}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-purple-600 hover:bg-purple-500 text-white rounded transition-colors"
+        >
+          <PenLine className="w-3.5 h-3.5" />
+          <span>Insert into compose</span>
+        </button>
+        <button
+          onClick={onDismiss}
+          className="flex items-center gap-1 px-2 py-1.5 text-xs text-gray-400 hover:text-gray-200 hover:bg-gray-700/50 rounded transition-colors"
+        >
+          <XCircle className="w-3.5 h-3.5" />
+          <span>Dismiss</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPER COMPONENTS
+// ─────────────────────────────────────────────────────────────────────────────
 
 function MessageIcon({ className }: { className?: string }) {
   return (

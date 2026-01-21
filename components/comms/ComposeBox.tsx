@@ -11,7 +11,7 @@
  * - Send on Enter (with Shift+Enter for newline)
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { Send, Zap, Clock, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -51,17 +51,35 @@ const QUICK_RESPONSES: Array<{
   },
 ];
 
-export function ComposeBox({
+/** Methods exposed via ref */
+export interface ComposeBoxRef {
+  insertText: (text: string) => void;
+  getText: () => string;
+  focus: () => void;
+}
+
+export const ComposeBox = forwardRef<ComposeBoxRef, ComposeBoxProps>(function ComposeBox({
   onSend,
   onQuickResponse,
   disabled = false,
   placeholder = "Write a reply...",
   maxLength = 10000,
-}: ComposeBoxProps) {
+}, ref) {
   const [body, setBody] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [showQuickResponses, setShowQuickResponses] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    insertText: (text: string) => {
+      setBody(text);
+      // Focus the textarea after inserting
+      setTimeout(() => textareaRef.current?.focus(), 0);
+    },
+    getText: () => body,
+    focus: () => textareaRef.current?.focus(),
+  }), [body]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -181,6 +199,6 @@ export function ComposeBox({
       </p>
     </div>
   );
-}
+});
 
 export default ComposeBox;
