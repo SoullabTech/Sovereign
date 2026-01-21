@@ -3,9 +3,19 @@
  *
  * For solo practitioners (coaches, guides, healers, therapists)
  * MAIA as developmental mentor
+ *
+ * SECURITY: Transcript text is PHI - encrypted at rest (Phase 3A)
+ * See: docs/security/phi-free-text.md
  */
 
 import { query } from '@/lib/db/postgres';
+import { randomUUID } from 'crypto';
+import {
+  getEncryptedColumnsForInsert,
+  decryptTranscriptSegments,
+  isPHIEncryptionEnabled,
+  type TranscriptSegmentRow,
+} from '@/lib/security/phiAccessors/transcripts';
 
 // Types
 
@@ -266,14 +276,53 @@ export async function addTranscriptSegment(params: {
   transcriptionConfidence?: number;
   language?: string;
   isFinal?: boolean;
+  practitionerId?: string;
 }): Promise<PracticeTranscriptSegment> {
+  const segmentId = randomUUID();
+
+  // SECURITY: Dual-write encrypted + plaintext (Stage A)
+  if (isPHIEncryptionEnabled()) {
+    const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(params.text, {
+      table: 'practice_transcript_segments',
+      rowId: segmentId,
+      sessionId: params.sessionId,
+      practitionerId: params.practitionerId,
+    });
+
+    const result = await query<PracticeTranscriptSegment>(`
+      INSERT INTO practice_transcript_segments (
+        id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+        text, text_enc, text_enc_meta, transcription_confidence, language, is_final
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+                text, transcription_confidence, language, is_final, created_at
+    `, [
+      segmentId,
+      params.sessionId,
+      params.speaker,
+      params.speakerConfidence ?? null,
+      params.startMs,
+      params.endMs,
+      params.text,
+      textEnc,
+      textEncMeta,
+      params.transcriptionConfidence ?? null,
+      params.language || 'en',
+      params.isFinal ?? true
+    ]);
+
+    return result.rows[0];
+  }
+
+  // Fallback: plaintext only (encryption not enabled)
   const result = await query<PracticeTranscriptSegment>(`
     INSERT INTO practice_transcript_segments (
-      session_id, speaker, speaker_confidence, start_ms, end_ms,
+      id, session_id, speaker, speaker_confidence, start_ms, end_ms,
       text, transcription_confidence, language, is_final
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *
   `, [
+    segmentId,
     params.sessionId,
     params.speaker,
     params.speakerConfidence ?? null,
@@ -290,14 +339,16 @@ export async function addTranscriptSegment(params: {
 
 export async function getTranscriptSegments(
   sessionId: string,
-  opts?: { afterMs?: number; limit?: number }
+  opts?: { afterMs?: number; limit?: number; practitionerId?: string }
 ): Promise<PracticeTranscriptSegment[]> {
   const afterMs = opts?.afterMs ?? -1;
   const limit = Math.min(Math.max(opts?.limit ?? 200, 1), 1000);
 
+  // SECURITY: Select all columns including encrypted for decrypt
   // First try practice_transcript_segments
-  const practiceResult = await query<PracticeTranscriptSegment>(`
-    SELECT *
+  const practiceResult = await query<TranscriptSegmentRow>(`
+    SELECT id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+           text, text_enc, text_enc_meta, transcription_confidence, language, is_final, created_at
     FROM practice_transcript_segments
     WHERE session_id = $1
       AND COALESCE(end_ms, start_ms, 0) > $2
@@ -306,11 +357,16 @@ export async function getTranscriptSegments(
   `, [sessionId, afterMs, limit]);
 
   if (practiceResult.rows.length > 0) {
-    return practiceResult.rows;
+    // SECURITY: Decrypt and strip encrypted columns before returning
+    return decryptTranscriptSegments(practiceResult.rows, {
+      table: 'practice_transcript_segments',
+      sessionId,
+      practitionerId: opts?.practitionerId,
+    }) as PracticeTranscriptSegment[];
   }
 
   // Also check supervision_transcript_segments (for Practice mode in /supervision)
-  const supervisionResult = await query<PracticeTranscriptSegment>(`
+  const supervisionResult = await query<TranscriptSegmentRow>(`
     SELECT
       id,
       session_id,
@@ -319,6 +375,8 @@ export async function getTranscriptSegments(
       start_ms,
       end_ms,
       text,
+      text_enc,
+      text_enc_meta,
       transcription_confidence,
       COALESCE(language, 'en') as language,
       COALESCE(is_final, true) as is_final,
@@ -330,23 +388,39 @@ export async function getTranscriptSegments(
     LIMIT $3
   `, [sessionId, afterMs, limit]);
 
-  return supervisionResult.rows;
+  // SECURITY: Decrypt and strip encrypted columns before returning
+  return decryptTranscriptSegments(supervisionResult.rows, {
+    table: 'supervision_transcript_segments',
+    sessionId,
+    practitionerId: opts?.practitionerId,
+  }) as PracticeTranscriptSegment[];
 }
 
-export async function getFullTranscript(sessionId: string): Promise<PracticeTranscriptSegment[]> {
+export async function getFullTranscript(
+  sessionId: string,
+  practitionerId?: string
+): Promise<PracticeTranscriptSegment[]> {
+  // SECURITY: Select all columns including encrypted for decrypt
   // First try practice_transcript_segments
-  const practiceResult = await query<PracticeTranscriptSegment>(`
-    SELECT * FROM practice_transcript_segments
+  const practiceResult = await query<TranscriptSegmentRow>(`
+    SELECT id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+           text, text_enc, text_enc_meta, transcription_confidence, language, is_final, created_at
+    FROM practice_transcript_segments
     WHERE session_id = $1 AND is_final = TRUE
     ORDER BY start_ms ASC
   `, [sessionId]);
 
   if (practiceResult.rows.length > 0) {
-    return practiceResult.rows;
+    // SECURITY: Decrypt and strip encrypted columns before returning
+    return decryptTranscriptSegments(practiceResult.rows, {
+      table: 'practice_transcript_segments',
+      sessionId,
+      practitionerId,
+    }) as PracticeTranscriptSegment[];
   }
 
   // Also check supervision_transcript_segments
-  const supervisionResult = await query<PracticeTranscriptSegment>(`
+  const supervisionResult = await query<TranscriptSegmentRow>(`
     SELECT
       id,
       session_id,
@@ -355,6 +429,8 @@ export async function getFullTranscript(sessionId: string): Promise<PracticeTran
       start_ms,
       end_ms,
       text,
+      text_enc,
+      text_enc_meta,
       transcription_confidence,
       COALESCE(language, 'en') as language,
       COALESCE(is_final, true) as is_final,
@@ -364,7 +440,12 @@ export async function getFullTranscript(sessionId: string): Promise<PracticeTran
     ORDER BY start_ms ASC
   `, [sessionId]);
 
-  return supervisionResult.rows;
+  // SECURITY: Decrypt and strip encrypted columns before returning
+  return decryptTranscriptSegments(supervisionResult.rows, {
+    table: 'supervision_transcript_segments',
+    sessionId,
+    practitionerId,
+  }) as PracticeTranscriptSegment[];
 }
 
 // Session Insights

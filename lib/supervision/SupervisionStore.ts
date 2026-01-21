@@ -3,9 +3,19 @@
  *
  * All supervision data stored in local PostgreSQL.
  * HIPAA compliant - no cloud storage.
+ *
+ * SECURITY: Transcript text is PHI - encrypted at rest (Phase 3A)
+ * See: docs/security/phi-free-text.md
  */
 
 import { query } from '@/lib/db/postgres';
+import { randomUUID } from 'crypto';
+import {
+  getEncryptedColumnsForInsert,
+  decryptTranscriptSegments,
+  isPHIEncryptionEnabled,
+  type TranscriptSegmentRow,
+} from '@/lib/security/phiAccessors/transcripts';
 
 // Types
 export interface SupervisionSession {
@@ -227,14 +237,53 @@ export async function addTranscriptSegment(params: {
   transcriptionConfidence?: number;
   language?: string;
   isFinal?: boolean;
+  practitionerId?: string;
 }): Promise<TranscriptSegment> {
+  const segmentId = randomUUID();
+
+  // SECURITY: Dual-write encrypted + plaintext (Stage A)
+  if (isPHIEncryptionEnabled()) {
+    const { textEnc, textEncMeta } = getEncryptedColumnsForInsert(params.text, {
+      table: 'supervision_transcript_segments',
+      rowId: segmentId,
+      sessionId: params.sessionId,
+      practitionerId: params.practitionerId,
+    });
+
+    const result = await query<TranscriptSegment>(`
+      INSERT INTO supervision_transcript_segments (
+        id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+        text, text_enc, text_enc_meta, transcription_confidence, language, is_final
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+                text, transcription_confidence, language, is_final, created_at
+    `, [
+      segmentId,
+      params.sessionId,
+      params.speaker,
+      params.speakerConfidence ?? null,
+      params.startMs,
+      params.endMs,
+      params.text,
+      textEnc,
+      textEncMeta,
+      params.transcriptionConfidence ?? null,
+      params.language || 'en',
+      params.isFinal ?? true
+    ]);
+
+    return result.rows[0];
+  }
+
+  // Fallback: plaintext only (encryption not enabled)
   const result = await query<TranscriptSegment>(`
     INSERT INTO supervision_transcript_segments (
-      session_id, speaker, speaker_confidence, start_ms, end_ms,
+      id, session_id, speaker, speaker_confidence, start_ms, end_ms,
       text, transcription_confidence, language, is_final
-    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+    ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
     RETURNING *
   `, [
+    segmentId,
     params.sessionId,
     params.speaker,
     params.speakerConfidence ?? null,
@@ -249,24 +298,47 @@ export async function addTranscriptSegment(params: {
   return result.rows[0];
 }
 
-export async function getTranscript(sessionId: string): Promise<TranscriptSegment[]> {
-  const result = await query<TranscriptSegment>(`
-    SELECT * FROM supervision_transcript_segments
+export async function getTranscript(
+  sessionId: string,
+  practitionerId?: string
+): Promise<TranscriptSegment[]> {
+  // SECURITY: Select all columns including encrypted for decrypt
+  const result = await query<TranscriptSegmentRow>(`
+    SELECT id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+           text, text_enc, text_enc_meta, transcription_confidence, language, is_final, created_at
+    FROM supervision_transcript_segments
     WHERE session_id = $1 AND is_final = TRUE
     ORDER BY start_ms ASC
   `, [sessionId]);
 
-  return result.rows;
+  // SECURITY: Decrypt and strip encrypted columns before returning
+  return decryptTranscriptSegments(result.rows, {
+    table: 'supervision_transcript_segments',
+    sessionId,
+    practitionerId,
+  }) as TranscriptSegment[];
 }
 
-export async function getRecentTranscript(sessionId: string, lastMs: number): Promise<TranscriptSegment[]> {
-  const result = await query<TranscriptSegment>(`
-    SELECT * FROM supervision_transcript_segments
+export async function getRecentTranscript(
+  sessionId: string,
+  lastMs: number,
+  practitionerId?: string
+): Promise<TranscriptSegment[]> {
+  // SECURITY: Select all columns including encrypted for decrypt
+  const result = await query<TranscriptSegmentRow>(`
+    SELECT id, session_id, speaker, speaker_confidence, start_ms, end_ms,
+           text, text_enc, text_enc_meta, transcription_confidence, language, is_final, created_at
+    FROM supervision_transcript_segments
     WHERE session_id = $1 AND is_final = TRUE AND start_ms >= $2
     ORDER BY start_ms ASC
   `, [sessionId, lastMs]);
 
-  return result.rows;
+  // SECURITY: Decrypt and strip encrypted columns before returning
+  return decryptTranscriptSegments(result.rows, {
+    table: 'supervision_transcript_segments',
+    sessionId,
+    practitionerId,
+  }) as TranscriptSegment[];
 }
 
 /**
