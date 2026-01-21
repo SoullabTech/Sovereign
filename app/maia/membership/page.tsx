@@ -348,9 +348,14 @@ function MembershipPageContent() {
         <div className="max-w-5xl mx-auto px-6 py-5 flex items-center gap-5">
           <button
             onClick={() => router.back()}
-            className="p-2.5 -ml-2 rounded-lg bg-stone-800 text-white hover:bg-stone-900 hover:-translate-x-0.5 transition-all shadow-sm"
+            className="p-2.5 -ml-2 rounded-lg hover:-translate-x-0.5 transition-all"
+            style={{
+              backgroundColor: '#292524',
+              color: '#ffffff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+            }}
           >
-            <ArrowLeft className="w-5 h-5" strokeWidth={2.5} />
+            <ArrowLeft className="w-5 h-5" style={{ color: '#ffffff' }} strokeWidth={2.5} />
           </button>
           <div className="h-4 w-px bg-stone-300/60" />
           <h1 className="text-sm font-medium tracking-wide text-stone-600 uppercase">

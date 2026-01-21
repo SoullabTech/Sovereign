@@ -12,7 +12,6 @@ import { useParams, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Sparkles, Send, Star, Moon, Settings } from 'lucide-react';
-import { api } from '@/lib/api-client';
 
 interface PortalConfig {
   practitioner_id: string;
@@ -108,8 +107,13 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const fetchPortalConfig = async () => {
     try {
-      const data = await api.portal.config(slug);
-      setConfig(data.config);
+      const response = await fetch(`/api/portal/${slug}/config`);
+      if (response.ok) {
+        const result = await response.json();
+        // Handle both { config } and { success, data: { config } } formats
+        const config = result.data?.config || result.config;
+        setConfig(config);
+      }
     } catch (err) {
       console.error('Failed to load portal config:', err);
     } finally {
@@ -195,6 +199,7 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
 
   const navigation = config.navigation?.length > 0 ? config.navigation : [
     { label: 'Home', path: '/' },
+    { label: 'Your Chart', path: '/chart' },
     { label: 'Learn', path: '/learn' },
     { label: 'Offerings', path: '/services' },
     { label: 'Free Gift', path: '/free' },

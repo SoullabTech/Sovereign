@@ -78,7 +78,7 @@ export async function GET(
       footer_text: settings.footer_text || null,
     };
 
-    return NextResponse.json({ config });
+    return NextResponse.json({ success: true, data: { config } });
   } catch (error) {
     console.error('Portal config error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
