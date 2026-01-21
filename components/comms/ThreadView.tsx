@@ -121,7 +121,7 @@ interface ThreadViewProps {
   context: ThreadContext;
   messages: ThreadMessage[];
   onBack: () => void;
-  onSendMessage: (body: string) => Promise<void>;
+  onSendMessage: (body: string, suggestionId?: string) => Promise<void>; // Phase 4: optional suggestionId
   onQuickResponse: (type: QuickResponseType) => Promise<void>;
   onAcknowledgeSafetyFlag: (flagId: string, reviewNote?: string) => Promise<void>;
   isLoading?: boolean;
@@ -160,6 +160,10 @@ export function ThreadView({
   const [suggestions, setSuggestions] = useState<ReplySuggestion[]>([]);
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Phase 4: Armed suggestion for "sent" tracking
+  const [armedSuggestionId, setArmedSuggestionId] = useState<string | null>(null);
+  const [armedSuggestionText, setArmedSuggestionText] = useState<string | null>(null);
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -211,9 +215,31 @@ export function ThreadView({
     }
   };
 
-  // Insert suggestion into compose box
+  // Insert suggestion into compose box + arm for sent tracking
   const insertSuggestion = (suggestion: ReplySuggestion) => {
     composeBoxRef.current?.insertText(suggestion.suggested_text);
+    // Phase 4: Arm this suggestion so send can link it
+    setArmedSuggestionId(suggestion.id);
+    setArmedSuggestionText(suggestion.suggested_text);
+  };
+
+  // Phase 4: Wrap send to include suggestion_id if text matches
+  const handleSendWithSuggestion = async (body: string) => {
+    // Check if compose text matches armed suggestion (verbatim use)
+    const shouldAttachSuggestion =
+      armedSuggestionId &&
+      armedSuggestionText &&
+      body.trim() === armedSuggestionText.trim();
+
+    // Call parent handler with optional suggestionId
+    await onSendMessage(body, shouldAttachSuggestion ? armedSuggestionId : undefined);
+
+    // Clear armed state after send
+    setArmedSuggestionId(null);
+    setArmedSuggestionText(null);
+
+    // Refresh suggestions (sent one will be gone, siblings superseded)
+    fetchSuggestions();
   };
 
   // Dismiss a suggestion
@@ -390,7 +416,7 @@ export function ThreadView({
         ) : (
           <ComposeBox
             ref={composeBoxRef}
-            onSend={onSendMessage}
+            onSend={handleSendWithSuggestion}
             onQuickResponse={onQuickResponse}
             placeholder="Write a reply..."
           />

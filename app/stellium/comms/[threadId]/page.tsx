@@ -66,13 +66,16 @@ export default function CommsThreadPage() {
     router.push('/stellium/comms');
   };
 
-  // Handle send message
-  const handleSendMessage = async (body: string) => {
+  // Handle send message (Phase 4: accepts optional suggestionId for sent tracking)
+  const handleSendMessage = async (body: string, suggestionId?: string) => {
     try {
       const res = await fetch(`/api/comms/threads/${threadId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ body }),
+        body: JSON.stringify({
+          body,
+          ...(suggestionId ? { suggestion_id: suggestionId } : {}),
+        }),
       });
 
       if (res.ok) {
