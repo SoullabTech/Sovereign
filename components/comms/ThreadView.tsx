@@ -237,6 +237,25 @@ export function ThreadView({
 
   const hasPendingSafetyFlags = unacknowledgedFlags.length > 0;
 
+  // Find the first unacked flag with its message context (for clickable gate)
+  const getFirstUnackedFlagWithContext = () => {
+    for (const message of messages) {
+      const unacked = message.safety_flags.find(f => !f.acknowledged_at);
+      if (unacked) {
+        return { flag: unacked, message };
+      }
+    }
+    return null;
+  };
+
+  // Open the modal for the first unacked flag (used by clickable gate)
+  const openFirstSafetyFlag = () => {
+    const found = getFirstUnackedFlagWithContext();
+    if (found) {
+      openAcknowledgeModal(found.flag, found.message.body, found.message.created_at);
+    }
+  };
+
   // Open the acknowledgment modal for a specific flag
   const openAcknowledgeModal = (flag: {
     id: string;
@@ -357,6 +376,7 @@ export function ThreadView({
           onGenerate={generateSuggestions}
           onInsert={insertSuggestion}
           onDismiss={dismissSuggestion}
+          onOpenSafetyModal={openFirstSafetyFlag}
         />
       )}
 
@@ -809,6 +829,7 @@ interface SuggestionsPanelProps {
   onGenerate: () => void;
   onInsert: (suggestion: ReplySuggestion) => void;
   onDismiss: (suggestionId: string) => void;
+  onOpenSafetyModal?: () => void; // Opens the first unacked safety flag modal
 }
 
 function SuggestionsPanel({
@@ -820,6 +841,7 @@ function SuggestionsPanel({
   onGenerate,
   onInsert,
   onDismiss,
+  onOpenSafetyModal,
 }: SuggestionsPanelProps) {
   const hasSuggestions = suggestions.length > 0;
 
@@ -841,10 +863,13 @@ function SuggestionsPanel({
         </button>
 
         {isBlocked ? (
-          <span className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-amber-400/80">
+          <button
+            onClick={onOpenSafetyModal}
+            className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 rounded transition-colors"
+          >
             <Shield className="w-3.5 h-3.5" />
             <span>Acknowledge safety flag to unlock</span>
-          </span>
+          </button>
         ) : (
           <button
             onClick={onGenerate}
