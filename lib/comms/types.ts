@@ -151,6 +151,7 @@ export interface CommsMessage {
   is_quick_response: boolean;
   quick_response_type: CommsQuickResponseType | null;
   maia_analysis: CommsMAIAAnalysis | null;
+  used_suggestion_id: string | null; // Phase 4: links to suggestion that produced this message
   created_at: string;
   updated_at: string;
 }
@@ -390,6 +391,7 @@ export interface SendMessageInput {
   is_quick_response?: boolean;
   quick_response_type?: CommsQuickResponseType;
   reply_to_id?: string;
+  suggestion_id?: string; // Phase 4: if message came from a suggestion
 }
 
 /** Safety flag response (for dashboard) */
