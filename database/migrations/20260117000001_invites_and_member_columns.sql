@@ -74,12 +74,7 @@ BEGIN
 END $$;
 
 -- =============================================================================
--- SEED SOME ADMIN PASSKEYS FOR BETA TESTERS
+-- NOTE: Seed data removed from migration (seeds belong in separate seed.sql)
+-- Admin passkeys (SOULLAB-*) are validated by prefix in register route,
+-- not by invite table lookup. See isAdminPasskey() in register/route.ts.
 -- =============================================================================
-
-INSERT INTO invites (passkey, status, notes, expires_at) VALUES
-  ('SOULLAB-TESTER', 'pending', 'General beta tester passkey', NOW() + INTERVAL '1 year'),
-  ('SOULLAB-BETA', 'pending', 'General beta passkey', NOW() + INTERVAL '1 year'),
-  ('SOULLAB-TARA', 'pending', 'Beta tester - Tara McLoughlin', NOW() + INTERVAL '1 year'),
-  ('SOULLAB-PIONEER', 'pending', 'Pioneer circle passkey', NOW() + INTERVAL '1 year')
-ON CONFLICT (passkey) DO NOTHING;
