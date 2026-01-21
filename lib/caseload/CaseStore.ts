@@ -13,9 +13,9 @@
 import { query, insertOne, transaction } from '@/lib/db/postgres';
 import {
   getEncryptedColumnsForInsert,
+  decryptNoteRow,
   sanitizeNoteRow,
   sanitizeNoteRows,
-  isPHIEncryptionEnabled,
 } from '@/lib/security/phiAccessors/sessionNotes';
 import type {
   PractitionerCase,
@@ -301,25 +301,28 @@ export async function createNote(
     linked_capture_session_id: input.linked_capture_session_id || null,
   };
 
-  // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
-  if (isPHIEncryptionEnabled()) {
-    const encrypted = getEncryptedColumnsForInsert(input.content, {
-      rowId: tempId,
-      practitionerId,
-    });
-    data.content_enc = encrypted.contentEnc;
-    data.content_enc_meta = encrypted.contentEncMeta;
-  }
+  // SECURITY: Phase 2B - Encryption is unconditional
+  const encrypted = getEncryptedColumnsForInsert(input.content, {
+    rowId: tempId,
+    practitionerId,
+  });
+  data.content_enc = encrypted.contentEnc;
+  data.content_enc_meta = encrypted.contentEncMeta;
 
   const result = await insertOne<CaseNote>('case_notes', data);
 
-  // SECURITY: Strip *_enc columns before returning
-  return sanitizeNoteRow(result);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = decryptNoteRow(
+    result,
+    { rowId: result.id, practitionerId },
+    { preferEncrypted: true }
+  );
+  return sanitizeNoteRow(decrypted);
 }
 
 /**
  * Get a single note by ID
- * SECURITY: Strips *_enc columns before returning
+ * SECURITY: Stage B - Decrypt from _enc, then strip
  */
 export async function getNote(
   noteId: string,
@@ -332,8 +335,13 @@ export async function getNote(
   );
   if (!result.rows[0]) return null;
 
-  // SECURITY: Strip *_enc columns before returning
-  return sanitizeNoteRow(result.rows[0]);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = decryptNoteRow(
+    result.rows[0],
+    { rowId: noteId, practitionerId },
+    { preferEncrypted: true }
+  );
+  return sanitizeNoteRow(decrypted);
 }
 
 /**
@@ -385,8 +393,11 @@ export async function listNotes(
     params
   );
 
-  // SECURITY: Strip *_enc columns before returning
-  return sanitizeNoteRows(result.rows);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = result.rows.map((row) =>
+    decryptNoteRow(row, { rowId: row.id, practitionerId }, { preferEncrypted: true })
+  );
+  return sanitizeNoteRows(decrypted);
 }
 
 /**
@@ -421,8 +432,8 @@ export async function updateNote(
     }
   }
 
-  // SECURITY: Dual-write encrypted columns if content is being updated
-  if (input.content !== undefined && isPHIEncryptionEnabled()) {
+  // SECURITY: Phase 2B - Encryption is unconditional when content updated
+  if (input.content !== undefined) {
     const encrypted = getEncryptedColumnsForInsert(input.content, {
       rowId: noteId,
       practitionerId,
@@ -449,8 +460,13 @@ export async function updateNote(
 
   if (!result.rows[0]) return null;
 
-  // SECURITY: Strip *_enc columns before returning
-  return sanitizeNoteRow(result.rows[0]);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = decryptNoteRow(
+    result.rows[0],
+    { rowId: noteId, practitionerId },
+    { preferEncrypted: true }
+  );
+  return sanitizeNoteRow(decrypted);
 }
 
 /**
@@ -487,8 +503,13 @@ export async function updateNoteAnalysis(
   );
   if (!result.rows[0]) return null;
 
-  // SECURITY: Strip *_enc columns before returning
-  return sanitizeNoteRow(result.rows[0]);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = decryptNoteRow(
+    result.rows[0],
+    { rowId: noteId, practitionerId },
+    { preferEncrypted: true }
+  );
+  return sanitizeNoteRow(decrypted);
 }
 
 // ================================================

@@ -15,8 +15,8 @@ import { getMessageDigest } from '@/lib/practitioner/messages';
 import { decryptJoinedClientFields } from '@/lib/stellium/clients';
 import {
   encryptEmergencyInfoPatch,
+  decryptEmergencyInfoRow,
   sanitizeEmergencyInfoRow,
-  isPHIEncryptionEnabled,
 } from '@/lib/security/phiAccessors/emergencyInfo';
 
 // SQL fragment for selecting encrypted client name columns in JOINs
@@ -345,8 +345,13 @@ export async function getEmergencyInfo(
     crisis_resources: row.crisis_resources || [],
   } as ClientEmergencyInfo;
 
-  // SECURITY: Sanitize before returning to strip *_enc columns
-  return sanitizeEmergencyInfoRow(emergencyInfo);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = decryptEmergencyInfoRow(
+    emergencyInfo,
+    { rowId: row.id, clientId },
+    { preferEncrypted: true }
+  );
+  return sanitizeEmergencyInfoRow(decrypted);
 }
 
 /**
@@ -380,24 +385,11 @@ export async function upsertEmergencyInfo(
   const hasSafetyPlan = !!safety_plan && safety_plan.trim().length > 0;
   const hasRiskFactors = !!risk_notes && risk_notes.trim().length > 0;
 
-  // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
-  let encryptedColumns: {
-    safety_plan_enc?: string;
-    safety_plan_enc_meta?: string;
-    medications_enc?: string;
-    medications_enc_meta?: string;
-    medical_conditions_enc?: string;
-    medical_conditions_enc_meta?: string;
-    risk_notes_enc?: string;
-    risk_notes_enc_meta?: string;
-  } = {};
-
-  if (isPHIEncryptionEnabled()) {
-    encryptedColumns = encryptEmergencyInfoPatch(
-      { safety_plan, medications, medical_conditions, risk_notes },
-      { rowId: clientId, practitionerId }
-    );
-  }
+  // SECURITY: Phase 2B - Encryption is unconditional
+  const encryptedColumns = encryptEmergencyInfoPatch(
+    { safety_plan, medications, medical_conditions, risk_notes },
+    { rowId: clientId, practitionerId }
+  );
 
   const result = await query(
     `INSERT INTO client_emergency_info (
@@ -467,8 +459,13 @@ export async function upsertEmergencyInfo(
     crisis_resources: row.crisis_resources || [],
   } as ClientEmergencyInfo;
 
-  // SECURITY: Sanitize before returning to strip *_enc columns
-  return sanitizeEmergencyInfoRow(emergencyInfo);
+  // SECURITY: Stage B - Decrypt from _enc columns, then strip them
+  const decrypted = decryptEmergencyInfoRow(
+    emergencyInfo,
+    { rowId: row.id, clientId },
+    { preferEncrypted: true }
+  );
+  return sanitizeEmergencyInfoRow(decrypted);
 }
 
 /**

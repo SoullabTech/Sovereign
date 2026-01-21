@@ -268,8 +268,12 @@ export function sanitizeConsultationRows<T>(rows: T[]): T[] {
 
 /**
  * Check if PHI encryption is enabled
- * Returns false if PHI_ENCRYPTION_KEY not set (dev/test without encryption)
+ *
+ * Phase 2B: Always returns true. Encryption is unconditional.
+ * Kept for backwards compatibility - will be removed in Phase 3.
+ *
+ * @deprecated Use encryption unconditionally; this function always returns true
  */
 export function isPHIEncryptionEnabled(): boolean {
-  return !!process.env.PHI_ENCRYPTION_KEY;
+  return true;
 }

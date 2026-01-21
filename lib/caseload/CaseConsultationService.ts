@@ -21,7 +21,6 @@ import {
   decryptConsultationRow,
   sanitizeConsultationRow,
   sanitizeConsultationRows,
-  isPHIEncryptionEnabled,
 } from '@/lib/security/phiAccessors/maiaConsultations';
 
 // Valid consultation types per DB constraint
@@ -239,27 +238,16 @@ CONSULTATION TYPE: ${consultationType}`;
       };
     }
 
-    // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
+    // SECURITY: Phase 2B - Encryption is unconditional
     const tempId = crypto.randomUUID();
-    let encryptedColumns: {
-      practitioner_query_enc?: string;
-      practitioner_query_enc_meta?: string;
-      context_provided_enc?: string;
-      context_provided_enc_meta?: string;
-      maia_response_enc?: string;
-      maia_response_enc_meta?: string;
-    } = {};
-
-    if (isPHIEncryptionEnabled()) {
-      encryptedColumns = encryptConsultationCreate(
-        {
-          practitioner_query: practitionerQuery,
-          context_provided: contextProvided,
-          maia_response: JSON.stringify(parsedResponse),
-        },
-        { rowId: tempId, practitionerId: memberId }
-      );
-    }
+    const encryptedColumns = encryptConsultationCreate(
+      {
+        practitioner_query: practitionerQuery,
+        context_provided: contextProvided,
+        maia_response: JSON.stringify(parsedResponse),
+      },
+      { rowId: tempId, practitionerId: memberId }
+    );
 
     // Store in maia_consultations table
     const { rows } = await query(
@@ -371,18 +359,13 @@ CONSULTATION TYPE: ${consultationType}`;
       throw new Error('Rating must be between 1 and 5');
     }
 
-    // SECURITY: Dual-write encrypted columns if PHI encryption is enabled
-    let encryptedColumns: {
-      practitioner_feedback_enc?: string;
-      practitioner_feedback_enc_meta?: string;
-    } = {};
-
-    if (isPHIEncryptionEnabled() && feedback) {
-      encryptedColumns = encryptConsultationFeedback(
-        { practitioner_feedback: feedback },
-        { rowId: consultationId, practitionerId: memberId }
-      );
-    }
+    // SECURITY: Phase 2B - Encryption is unconditional when feedback provided
+    const encryptedColumns = feedback
+      ? encryptConsultationFeedback(
+          { practitioner_feedback: feedback },
+          { rowId: consultationId, practitionerId: memberId }
+        )
+      : {};
 
     const { rows } = await query(
       `UPDATE maia_consultations

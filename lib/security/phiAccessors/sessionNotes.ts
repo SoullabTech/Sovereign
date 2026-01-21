@@ -219,6 +219,47 @@ export async function readNoteContentPreferEncrypted(
 }
 
 // ============================================================================
+// STAGE B: ROW DECRYPTION
+// ============================================================================
+
+interface NoteRowContext {
+  rowId: string;
+  practitionerId: string;
+}
+
+/**
+ * Decrypt note row, preferring encrypted content if available
+ *
+ * Stage B: Returns decrypted content from _enc, falls back to plaintext
+ */
+export function decryptNoteRow<T extends Record<string, any>>(
+  row: T,
+  ctx: NoteRowContext,
+  options: { preferEncrypted?: boolean } = {}
+): T {
+  const { preferEncrypted = false } = options;
+  if (!preferEncrypted) return row;
+
+  const result = { ...row };
+
+  // Only process if encrypted columns exist
+  if (row.content_enc && row.content_enc_meta) {
+    try {
+      const decrypted = decryptNoteContent(row.content_enc, row.content_enc_meta, {
+        rowId: ctx.rowId,
+        practitionerId: ctx.practitionerId,
+      });
+      (result as any).content = decrypted;
+    } catch (err) {
+      console.error('[PHI] Decrypt failed for case_notes.content, using plaintext:', ctx.rowId, err);
+      // Keep plaintext fallback
+    }
+  }
+
+  return result;
+}
+
+// ============================================================================
 // SANITIZATION
 // ============================================================================
 
@@ -245,8 +286,12 @@ export function sanitizeNoteRows<T>(rows: T[]): T[] {
 
 /**
  * Check if PHI encryption is enabled
- * Returns false if PHI_ENCRYPTION_KEY not set (dev/test without encryption)
+ *
+ * Phase 2B: Always returns true. Encryption is unconditional.
+ * Kept for backwards compatibility - will be removed in Phase 3.
+ *
+ * @deprecated Use encryption unconditionally; this function always returns true
  */
 export function isPHIEncryptionEnabled(): boolean {
-  return !!process.env.PHI_ENCRYPTION_KEY;
+  return true;
 }
