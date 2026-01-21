@@ -163,9 +163,9 @@ CREATE TABLE IF NOT EXISTS practitioner_domains (
   UNIQUE(custom_domain)
 );
 
-CREATE INDEX idx_domains_practitioner ON practitioner_domains(practitioner_id);
-CREATE INDEX idx_domains_subdomain ON practitioner_domains(subdomain);
-CREATE INDEX idx_domains_custom ON practitioner_domains(custom_domain) WHERE custom_domain IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_domains_practitioner ON practitioner_domains(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_domains_subdomain ON practitioner_domains(subdomain);
+CREATE INDEX IF NOT EXISTS idx_domains_custom ON practitioner_domains(custom_domain) WHERE custom_domain IS NOT NULL;
 
 -- ============== PRACTITIONER FEATURES ==============
 
@@ -214,7 +214,7 @@ CREATE TABLE IF NOT EXISTS practitioner_features (
   UNIQUE(practitioner_id)
 );
 
-CREATE INDEX idx_features_practitioner ON practitioner_features(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_features_practitioner ON practitioner_features(practitioner_id);
 
 -- ============== PRACTITIONER ONBOARDING ==============
 
@@ -245,7 +245,7 @@ CREATE TABLE IF NOT EXISTS practitioner_onboarding (
   UNIQUE(practitioner_id)
 );
 
-CREATE INDEX idx_onboarding_practitioner ON practitioner_onboarding(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_onboarding_practitioner ON practitioner_onboarding(practitioner_id);
 
 -- ============== PRACTITIONER CLIENTS ==============
 
@@ -338,10 +338,10 @@ CREATE TABLE IF NOT EXISTS revenue_records (
   settled_at TIMESTAMPTZ
 );
 
-CREATE INDEX idx_revenue_practitioner ON revenue_records(practitioner_id);
-CREATE INDEX idx_revenue_status ON revenue_records(status);
-CREATE INDEX idx_revenue_created ON revenue_records(created_at);
-CREATE INDEX idx_revenue_stripe_payment ON revenue_records(stripe_payment_id);
+CREATE INDEX IF NOT EXISTS idx_revenue_practitioner ON revenue_records(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_revenue_status ON revenue_records(status);
+CREATE INDEX IF NOT EXISTS idx_revenue_created ON revenue_records(created_at);
+CREATE INDEX IF NOT EXISTS idx_revenue_stripe_payment ON revenue_records(stripe_payment_id);
 
 -- ============== KNOWLEDGE BASE MATERIALS ==============
 
@@ -371,9 +371,9 @@ CREATE TABLE IF NOT EXISTS practitioner_materials (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_materials_practitioner ON practitioner_materials(practitioner_id);
-CREATE INDEX idx_materials_type ON practitioner_materials(practitioner_id, type);
-CREATE INDEX idx_materials_processing ON practitioner_materials(processing_status);
+CREATE INDEX IF NOT EXISTS idx_materials_practitioner ON practitioner_materials(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_materials_type ON practitioner_materials(practitioner_id, type);
+CREATE INDEX IF NOT EXISTS idx_materials_processing ON practitioner_materials(processing_status);
 
 -- ============== AI CONVERSATION LOGS (for practitioner's clients) ==============
 
@@ -398,9 +398,9 @@ CREATE TABLE IF NOT EXISTS practitioner_ai_conversations (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
-CREATE INDEX idx_ai_convos_practitioner ON practitioner_ai_conversations(practitioner_id);
-CREATE INDEX idx_ai_convos_client ON practitioner_ai_conversations(client_id);
-CREATE INDEX idx_ai_convos_flagged ON practitioner_ai_conversations(practitioner_id, flagged_for_review) WHERE flagged_for_review = true;
+CREATE INDEX IF NOT EXISTS idx_ai_convos_practitioner ON practitioner_ai_conversations(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_ai_convos_client ON practitioner_ai_conversations(client_id);
+CREATE INDEX IF NOT EXISTS idx_ai_convos_flagged ON practitioner_ai_conversations(practitioner_id, flagged_for_review) WHERE flagged_for_review = true;
 
 -- ============== TRIGGER FOR UPDATED_AT ==============
 
@@ -412,35 +412,43 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Apply triggers to all tables with updated_at
+-- Apply triggers to all tables with updated_at (idempotent with DROP IF EXISTS)
+DROP TRIGGER IF EXISTS tr_practitioners_updated_at ON practitioners;
 CREATE TRIGGER tr_practitioners_updated_at
   BEFORE UPDATE ON practitioners
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_ai_configs_updated_at ON ai_companion_configs;
 CREATE TRIGGER tr_ai_configs_updated_at
   BEFORE UPDATE ON ai_companion_configs
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_themes_updated_at ON practitioner_themes;
 CREATE TRIGGER tr_themes_updated_at
   BEFORE UPDATE ON practitioner_themes
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_domains_updated_at ON practitioner_domains;
 CREATE TRIGGER tr_domains_updated_at
   BEFORE UPDATE ON practitioner_domains
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_features_updated_at ON practitioner_features;
 CREATE TRIGGER tr_features_updated_at
   BEFORE UPDATE ON practitioner_features
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_onboarding_updated_at ON practitioner_onboarding;
 CREATE TRIGGER tr_onboarding_updated_at
   BEFORE UPDATE ON practitioner_onboarding
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_clients_updated_at ON practitioner_clients;
 CREATE TRIGGER tr_clients_updated_at
   BEFORE UPDATE ON practitioner_clients
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_materials_updated_at ON practitioner_materials;
 CREATE TRIGGER tr_materials_updated_at
   BEFORE UPDATE ON practitioner_materials
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
