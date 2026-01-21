@@ -57,6 +57,18 @@ export function isPHIEncryptionEnabled(): boolean {
   return !!process.env.PHI_ENCRYPTION_KEY;
 }
 
+/**
+ * Check if Stage B is active (encrypted-only, no plaintext writes)
+ *
+ * Stage A: Dual-write (plaintext + encrypted) - safe for migration
+ * Stage B: Encrypted-only (no plaintext) - after backfill complete
+ *
+ * Set PHI_TRANSCRIPT_STAGE_B=true to activate Stage B
+ */
+export function isTranscriptStageBActive(): boolean {
+  return process.env.PHI_TRANSCRIPT_STAGE_B === 'true';
+}
+
 // ============================================================================
 // ENCRYPTION HELPERS
 // ============================================================================
