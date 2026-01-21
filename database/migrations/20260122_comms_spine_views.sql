@@ -107,23 +107,19 @@ SELECT
   p.id,
   p.practitioner_id,
   p.client_id,
-  -- Extract check_days from schedule JSONB
-  COALESCE(
-    (SELECT array_agg(elem::text)
-     FROM jsonb_array_elements_text(p.schedule->'check_days') AS elem),
-    ARRAY['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
-  ) AS check_days,
-  -- Extract window times
-  (p.schedule->>'check_window_start')::TIME AS check_window_start,
-  (p.schedule->>'check_window_end')::TIME AS check_window_end,
-  COALESCE(p.schedule->>'timezone', 'America/New_York') AS timezone,
-  -- Max response hours from comms_policies
+  -- check_days is already an array in comms_policies
+  COALESCE(p.check_days, ARRAY['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) AS check_days,
+  -- Window times are already proper columns
+  COALESCE(p.check_window_start, '09:00'::TIME) AS check_window_start,
+  COALESCE(p.check_window_end, '17:00'::TIME) AS check_window_end,
+  COALESCE(p.timezone, 'America/New_York') AS timezone,
+  -- Max response hours
   COALESCE(p.max_response_hours, 48) AS max_response_hours,
   -- Crisis copy
   COALESCE(p.crisis_copy, 'This is not monitored 24/7. If you are in crisis, please call 988 or text HOME to 741741.') AS crisis_copy,
-  -- Permissions
-  p.inbound_enabled AS allow_client_messages,
-  p.outbound_enabled AS allow_practitioner_reply,
+  -- Permissions - map new names to legacy names
+  p.allow_inbound AS allow_client_messages,
+  p.allow_outbound AS allow_practitioner_reply,
   p.is_active,
   p.created_at,
   p.updated_at
@@ -566,7 +562,8 @@ BEGIN
       AND cm.practitioner_id = rec.practitioner_id
     ON CONFLICT (id) DO NOTHING;
 
-    GET DIAGNOSTICS v_messages_migrated = v_messages_migrated + ROW_COUNT;
+    GET DIAGNOSTICS v_threads_created = ROW_COUNT;
+    v_messages_migrated := v_messages_migrated + v_threads_created;
   END LOOP;
 
   -- Migrate safety concern logs to comms_safety_flags
@@ -606,22 +603,20 @@ DECLARE
   v_count INT;
 BEGIN
   INSERT INTO comms_policies (
-    practitioner_id, client_id, domain, thread_type,
-    schedule, max_response_hours, crisis_copy,
-    inbound_enabled, outbound_enabled, is_active,
+    practitioner_id, client_id, domain,
+    check_days, check_window_start, check_window_end, timezone,
+    max_response_hours, crisis_copy,
+    allow_inbound, allow_outbound, is_active,
     created_at, updated_at
   )
   SELECT
     mp.practitioner_id,
     mp.client_id,
     'clinical',
-    'between_session',
-    jsonb_build_object(
-      'check_days', mp.check_days,
-      'check_window_start', mp.check_window_start::text,
-      'check_window_end', mp.check_window_end::text,
-      'timezone', COALESCE(mp.timezone, 'America/New_York')
-    ),
+    mp.check_days,
+    mp.check_window_start,
+    mp.check_window_end,
+    COALESCE(mp.timezone, 'America/New_York'),
     COALESCE(mp.max_response_hours, 48),
     mp.crisis_copy,
     COALESCE(mp.allow_client_messages, TRUE),

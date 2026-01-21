@@ -350,12 +350,16 @@ CREATE TABLE IF NOT EXISTS comms_policies (
 
   -- Timestamps
   created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-
-  -- Each practitioner has one default policy per domain (client_id = null)
-  -- Plus optional per-client overrides
-  UNIQUE NULLS NOT DISTINCT (practitioner_id, client_id, domain)
+  updated_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Each practitioner has one default policy per domain (client_id = null)
+-- Plus optional per-client overrides
+-- PostgreSQL 14 compatible: use two partial indexes instead of NULLS NOT DISTINCT
+CREATE UNIQUE INDEX IF NOT EXISTS idx_comms_policies_unique_client
+  ON comms_policies(practitioner_id, client_id, domain) WHERE client_id IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_comms_policies_unique_default
+  ON comms_policies(practitioner_id, domain) WHERE client_id IS NULL;
 
 CREATE INDEX IF NOT EXISTS idx_comms_policies_practitioner
   ON comms_policies(practitioner_id, domain);
