@@ -4,6 +4,41 @@
 > This document defines the canonical list of PHI columns requiring encryption.
 > All columns listed here MUST be encrypted with AES-256-GCM before HIPAA compliance.
 
+---
+
+## Do Not Break These Invariants
+
+```
+1. Encrypted identity is never trusted in raw form
+   - *_enc and *_enc_meta must never leave the data layer
+   - If it's in a payload, log, or export, that's a bug
+
+2. Identity is resolved post-query, not in SQL
+   - JOINs may fetch encrypted columns only
+   - Decryption happens in application code via shared helpers
+
+3. No "convenience plaintext" joins
+   - Plaintext identity is not pulled "just in case"
+   - If you think you need it, you probably don't
+
+4. Authorization precedes decryption
+   - Practitioner context is required to decrypt
+   - Absence of auth means absence of identity
+
+5. Decryption failure must be safe
+   - Stage A: log + fallback only if plaintext exists
+   - Never crash list views
+   - Never silently substitute incorrect identity
+
+6. One pattern, everywhere
+   - All read paths use:
+     SELECT + shared join fragment
+     → decryptJoinedClientFields()
+     → safe output
+```
+
+---
+
 ## Encryption Status Legend
 
 | Status | Meaning |

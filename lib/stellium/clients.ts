@@ -137,6 +137,10 @@ function decryptClientRow(row: any, practitionerId: string): PractitionerClient 
  * @param practitionerId - The practitioner ID
  * @returns Object with decrypted client_name and client_preferred_name
  */
+// SECURITY CRITICAL:
+// This function exists to prevent side-route PHI leakage.
+// If you bypass it, you are creating a data breach.
+// See: docs/security/phi-columns.md
 export function decryptJoinedClientFields(
   row: {
     client_id?: string;
