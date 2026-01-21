@@ -41,12 +41,12 @@ services:
     # Environment Configuration
     # ═══════════════════════════════════════════════════════════════════════════
     # CRITICAL: All secrets (DATABASE_URL, POSTGRES_PASSWORD, API keys) come from
-    # .env.production, NOT from interpolation here. This avoids the footgun where
-    # ${VAR:-default} silently uses 'default' when .env.production exists but
+    # .env.docker, NOT from interpolation here. This avoids the footgun where
+    # ${VAR:-default} silently uses 'default' when .env.docker exists but
     # compose doesn't read it for interpolation.
     # ═══════════════════════════════════════════════════════════════════════════
     env_file:
-      - .env.production
+      - .env.docker
 
     environment:
       # Application runtime settings (non-secret)
@@ -55,7 +55,7 @@ services:
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
 
-      # NOTE: DATABASE_URL, POSTGRES_PASSWORD, API keys, etc. are in .env.production
+      # NOTE: DATABASE_URL, POSTGRES_PASSWORD, API keys, etc. are in .env.docker
       # DO NOT add them here - let env_file provide them
 
     restart: unless-stopped
@@ -78,9 +78,9 @@ services:
     image: postgres:16-alpine
     container_name: maia-postgres
 
-    # Read POSTGRES_PASSWORD from .env.production
+    # Read POSTGRES_PASSWORD from .env.docker
     env_file:
-      - .env.production
+      - .env.docker
 
     environment:
       # Database name and user (non-secret)
@@ -113,9 +113,9 @@ services:
       dockerfile: Dockerfile
       target: builder  # Uses builder stage with Prisma CLI
 
-    # Read DATABASE_URL from .env.production
+    # Read DATABASE_URL from .env.docker
     env_file:
-      - .env.production
+      - .env.docker
 
     depends_on:
       postgres:
@@ -153,7 +153,7 @@ services:
   #   networks:
   #     - maia-network
   #
-  # Then change MAIA environment in .env.production to:
+  # Then change MAIA environment in .env.docker to:
   #   OLLAMA_BASE_URL=http://ollama:11434
 
 # ═══════════════════════════════════════════════════════════════════════════════

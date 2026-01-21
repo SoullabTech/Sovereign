@@ -199,7 +199,7 @@ export class DeliveryService {
        ON CONFLICT (practitioner_id, provider) DO UPDATE SET
          credentials_encrypted = EXCLUDED.credentials_encrypted,
          updated_at = NOW()`,
-      [practitionerId, provider, JSON.stringify(encrypted)]
+      [practitionerId, provider, encrypted]
     );
   }
 

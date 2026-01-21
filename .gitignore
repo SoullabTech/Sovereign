@@ -79,6 +79,7 @@ jspm_packages/
 .env.test.local
 .env.production
 .env.production.local
+.env.docker
 .env.*.local
 .env.override
 
