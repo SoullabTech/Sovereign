@@ -212,13 +212,96 @@ When we introduced encrypted identity columns (e.g., `name_enc`, `name_enc_meta`
 
 ### Pattern diagram
 
-```mermaid
-flowchart TD
-  A["1) DB Query<br/>SELECT ... JOIN client<br/><br/>- Select encrypted identity only (name_enc, preferred_name_enc, *_enc_meta)<br/>- Use shared fragment (CLIENT_NAME_JOIN_COLUMNS)<br/>- Avoid pulling plaintext identity 'for convenience'"] --> B
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1) DATABASE QUERY                                            │
+│                                                             │
+│ SELECT ...                                                   │
+│   JOIN client                                                │
+│                                                             │
+│ • Select encrypted identity columns only                    │
+│   (name_enc, preferred_name_enc, *_enc_meta)                │
+│ • Use shared fragment: CLIENT_NAME_JOIN_COLUMNS             │
+│ • Do NOT pull plaintext identity "for convenience"          │
+│                                                             │
+│ Result: row contains *_enc fields only                       │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 2) POST-QUERY NORMALIZATION                                  │
+│                                                             │
+│ decryptJoinedClientFields(row, practitionerId)               │
+│                                                             │
+│ • Runs AFTER DB returns rows                                │
+│ • Decrypts only if practitioner is authorized               │
+│ • Normalizes safe fields (e.g. client_name)                 │
+│ • Strips raw *_enc blobs from output                         │
+│                                                             │
+│ Result: normalized row (safe for UI / API)                  │
+└─────────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│ 3) SAFE OUTPUT                                               │
+│                                                             │
+│ UI / API Payload                                             │
+│                                                             │
+│ • client_name =                                              │
+│     decrypted.client_name || row.client_name (Stage A)      │
+│ • If decrypt fails in Stage A:                               │
+│     – Do NOT crash                                           │
+│     – Log for investigation                                  │
+│     – Fallback only if plaintext exists                     │
+│ • Never expose *_enc columns                                 │
+│   (payloads, logs, exports, admin tools)                    │
+│                                                             │
+│ Result: no side-route PHI leakage                            │
+└─────────────────────────────────────────────────────────────┘
+```
 
-  B["2) Normalization<br/>decryptJoinedClientFields(row, practitionerId)<br/><br/>- Run post-query (after DB returns rows)<br/>- Decrypt only if authorized<br/>- Normalize safe fields + strip raw *_enc blobs"] --> C
+### PR Checklist (Copy Into PRs)
 
-  C["3) Safe Output<br/>UI / API payload<br/><br/>- Return decrypted.client_name || row.client_name (Stage A)<br/>- If decrypt fails in Stage A: don't crash; log + fallback only if plaintext exists<br/>- Never expose *_enc columns in payloads/logs/exports"]
+When your PR touches any query that JOINs `practitioner_clients`:
+
+```
+[ ] Used CLIENT_NAME_JOIN_COLUMNS (not raw c.name)
+[ ] Called decryptJoinedClientFields() post-query
+[ ] Output contains client_name, not *_enc columns
+[ ] No plaintext fallback without PHI_ALLOW_PLAINTEXT_FALLBACK guard
+```
+
+### Wrong vs Right
+
+**Wrong (Side Route Leak):**
+
+```typescript
+// ❌ Pulls plaintext directly, bypasses encryption layer
+const result = await query(`
+  SELECT s.*, c.name as client_name
+  FROM sessions s
+  JOIN practitioner_clients c ON s.client_id = c.id
+`);
+return result.rows; // Leaks plaintext name
+```
+
+**Right (Encrypted Path):**
+
+```typescript
+// ✅ Uses shared fragment, decrypts post-query
+const result = await query(`
+  SELECT s.*, ${CLIENT_NAME_JOIN_COLUMNS}
+  FROM sessions s
+  JOIN practitioner_clients c ON s.client_id = c.id
+`);
+return result.rows.map(row => {
+  const decrypted = decryptJoinedClientFields(row, practitionerId);
+  return {
+    ...row,
+    client_name: decrypted.client_name || row.client_name,
+    // Strip *_enc columns from output
+  };
+});
 ```
 
 ### Files updated (read surfaces protected)
