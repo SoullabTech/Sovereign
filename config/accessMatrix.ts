@@ -118,7 +118,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/dashboard', minTier: 'personal', notes: 'Full dashboard access' },
 
   // MAIA Interface (core)
-  { exact: '/maia', minTier: 'personal', notes: 'MAIA main interface' },
+  { exact: '/maia', minTier: 'free', notes: 'MAIA main interface - open to all authenticated users' },
   { exact: '/maia/compact', minTier: 'personal', notes: 'MAIA compact' },
   { exact: '/maia/mandala', minTier: 'personal', notes: 'Mandala interface' },
   { exact: '/maia/field-dashboard', minTier: 'personal', notes: 'Field dashboard' },
