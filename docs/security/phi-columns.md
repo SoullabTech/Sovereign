@@ -473,3 +473,61 @@ When your PR touches transcript reads:
 [ ] Output contains text, not *_enc columns
 [ ] No raw SELECT * from transcript tables
 ```
+
+---
+
+## Phase 3B: Transcript Encryption Enforcement (Commit `7034617c`)
+
+**Stop plaintext drift** - encrypted-only writes + DB enforcement.
+
+### Prerequisites
+
+1. Phase 3A complete (migration + backfill)
+2. All existing rows have `text_enc` populated
+3. Code deployed with Stage B support
+
+### Code Changes
+
+- **`isTranscriptStageBActive()`** - checks `PHI_TRANSCRIPT_STAGE_B=true`
+- **SupervisionStore/PracticeStore** - encrypted-only writes in Stage B
+
+### Migration
+
+`database/migrations/20260122_transcript_encryption_3b.sql`:
+- `enforce_transcript_encryption()` trigger function
+- Triggers on both transcript tables
+- Requires `text_enc IS NOT NULL` on INSERT
+- Rollback script included
+
+### Rollout Checklist
+
+1. **Verify backfill complete**:
+   ```sql
+   SELECT COUNT(*) FROM supervision_transcript_segments WHERE text_enc IS NULL;
+   SELECT COUNT(*) FROM practice_transcript_segments WHERE text_enc IS NULL;
+   -- Both should return 0
+   ```
+
+2. **Set env**: `PHI_TRANSCRIPT_STAGE_B=true`
+
+3. **Deploy code** (Stage B writes active)
+
+4. **Run Phase 3B migration**:
+   ```bash
+   psql -d maia_consciousness -f database/migrations/20260122_transcript_encryption_3b.sql
+   ```
+
+5. **Verify enforcement**:
+   ```sql
+   -- This should fail with "PHI enforcement" error
+   INSERT INTO supervision_transcript_segments (session_id, speaker, start_ms, end_ms, text)
+   VALUES (gen_random_uuid(), 'TEST', 0, 1000, 'test');
+   ```
+
+### Rollback (if needed)
+
+```sql
+DROP TRIGGER enforce_supervision_transcript_enc ON supervision_transcript_segments;
+DROP TRIGGER enforce_practice_transcript_enc ON practice_transcript_segments;
+-- Then unset PHI_TRANSCRIPT_STAGE_B in env
+```
