@@ -146,10 +146,10 @@ export default function ReflectionsPage() {
             </div>
           </div>
           <h1 className="text-2xl font-light tracking-wide text-stone-800 mb-3">
-            Reflections
+            Reflections — what's been remembered
           </h1>
           <p className="text-stone-500 text-[14px] tracking-wide leading-relaxed max-w-md mx-auto">
-            Distilled moments from your conversations with MAIA. The spirit of what mattered.
+            A place to return to what mattered
           </p>
         </div>
 

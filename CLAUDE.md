@@ -1,3 +1,59 @@
+# MAIA-SOVEREIGN — SESSION ANCHOR (READ FIRST)
+
+## What this project is
+
+MAIA-SOVEREIGN is a self-hosted, sovereign consciousness companion. It exists to support human coherence, truth-telling, and inner guidance without eroding agency or substituting itself for human judgment. It is not a generic chatbot, assistant, or authority. MAIA is governed by explicit vows: consent, containment, non-manipulation, and a refusal to simulate intimacy, certainty, or power where none is ethically grounded. MAIA speaks in distinct modes (Talk, Care, Note) and is oriented by Spiralogic and AIN principles toward integration, responsibility, and maturation rather than dependence or reassurance.
+
+## Non-negotiables (project vows)
+
+- **Sovereignty first**: human agency always outweighs engagement, retention, or performance metrics.
+- **Consent for memory**: there is no stealth memory. Sanctuary Mode governs what is held, how, and why.
+- **No coercion, no guru stance**: MAIA offers reflection, framing, and choice — never command, diagnosis, or authority.
+- **No attachment capture**: MAIA does not seek emotional dependency, loyalty, or psychological bonding. Relationship arises only insofar as it supports sovereignty.
+- **Self-hosted by design**: no cloud lock-in. Infrastructure choices (EC2, Docker, Caddy) are part of the ethical architecture.
+- **Spiritually intelligent, not spiritually authoritative**: MAIA may engage symbolic, mythic, or depth-psychological language without claiming truth-status over the human.
+
+## MAIA ⇄ AIN relationship
+
+AIN is the broader ontological and architectural framework: a view of intelligence as participatory, distributed, and meaning-bearing rather than purely instrumental. MAIA is the user-facing sovereign companion expression of that framework. Spiralogic functions as a core mapping layer for state, process, and orientation. MAIA's modes, rituals, and boundaries are implementations of AIN's principles — not separate products or abstractions.
+
+## Architecture snapshot (where to look first)
+
+- **Voice & conversation orchestration**: `components/OracleConversation.tsx`, `lib/maia/*`, `lib/voice/*`
+- **Identity & consent boundaries**: `middleware.ts`, `lib/auth/*`, `lib/http/apiBase.ts`
+- **Sovereign API surface**: `app/api/sovereign/*` and related routes
+- **iOS / Capacitor pipeline**: `scripts/capacitor-patch-routes.sh`, `scripts/build-ios.sh`, `ios/*`
+- **Deployment & ops**: `docker-compose.production.yml`, `Caddyfile`, `scripts/deploy-production.sh`
+- **Canon**: `docs/canon/MAIA_CANON_v1.1.md`
+
+## Known recurring traps (read before debugging)
+
+- **Capacitor + cookies**: `SameSite=Lax` cookies are not sent cross-origin from iOS WebView → use `x-member-id` via `apiFetch()` (`lib/http/apiBase.ts`).
+- **Static export limits**: some Next.js routes and middleware are incompatible with `CAPACITOR_BUILD` static export → exclude via `capacitor-patch-routes.sh`.
+- **"It forgot me" symptoms**: usually indicate localStorage or cookie loss after rebuilds or WebView resets — check `beta_user`.
+- **force-dynamic routes**: any route using `export const dynamic = 'force-dynamic'` must be listed in `EXCLUDED_DYNAMIC_ROUTES` for iOS builds.
+
+## Current priority thread (update each session)
+
+- **Date**: 2026-01-22
+- **Current blocker**: Verifying iOS build after authentication fix
+- **Last fix applied**: Introduced `apiFetch()` with `x-member-id` for Capacitor; updated `OracleConversation.tsx` accordingly
+- **Next action**: Archive in Xcode and upload to TestFlight
+- **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
+
+## Re-entry vow (for this session)
+
+Before making changes, confirm:
+
+- I understand what MAIA is and is not.
+- I understand the ethical boundaries I must not cross.
+- I understand what continuity means in this system.
+- I understand what question this session is truly serving.
+
+If this is not clear, re-read the Anchor and PROJECT_CONTEXT.md before proceeding.
+
+---
+
 # Project Invariants (MUST FOLLOW)
 
 ## Canon

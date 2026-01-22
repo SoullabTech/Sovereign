@@ -254,6 +254,12 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+            <a
+              href="/reset-password"
+              className="block text-center text-sm font-medium text-teal-800/90 hover:text-teal-900 transition"
+            >
+              Forgot password?
+            </a>
             <button
               type="button"
               onClick={() => setView('main')}

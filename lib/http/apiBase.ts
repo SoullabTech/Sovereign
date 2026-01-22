@@ -268,3 +268,60 @@ if (typeof window !== 'undefined') {
   (window as any).__healIdentity = healIdentity;
   (window as any).__clearAuthState = clearAuthState;
 }
+
+/**
+ * Enhanced fetch for API calls - automatically adds x-member-id header for Capacitor apps
+ *
+ * For Capacitor/iOS apps, cookies with SameSite: 'lax' aren't sent cross-origin.
+ * This wrapper adds the x-member-id header which the middleware accepts for auth.
+ *
+ * Usage:
+ *   import { apiFetch } from '@/lib/http/apiBase';
+ *   const response = await apiFetch('/api/sovereign/app/maia', {
+ *     method: 'POST',
+ *     body: JSON.stringify({ message: 'hello' }),
+ *   });
+ */
+export async function apiFetch(
+  path: string,
+  options: RequestInit = {}
+): Promise<Response> {
+  const url = apiUrl(path);
+
+  // Build headers - start with existing headers
+  const headers = new Headers(options.headers);
+
+  // Ensure Content-Type is set for POST/PUT requests with body
+  if (options.body && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  // For Capacitor apps, add x-member-id header for auth
+  // (cookies with SameSite: 'lax' won't be sent cross-origin)
+  const isCapacitor =
+    typeof window !== 'undefined' &&
+    (window as any).Capacitor &&
+    (window as any).Capacitor.isNativePlatform?.();
+
+  if (isCapacitor) {
+    const memberId = getValidMemberId();
+    if (memberId) {
+      headers.set('x-member-id', memberId);
+      console.log('[apiFetch] Added x-member-id header for Capacitor:', memberId.slice(0, 8) + '...');
+    } else {
+      console.warn('[apiFetch] No valid member ID for Capacitor request - auth may fail');
+    }
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include', // Still include for non-Capacitor
+    mode: 'cors',
+  });
+}
+
+// Expose apiFetch for console debugging
+if (typeof window !== 'undefined') {
+  (window as any).__apiFetch = apiFetch;
+}

@@ -38,6 +38,7 @@ EXCLUDED_DYNAMIC_ROUTES=(
     "app/stellium"
     "app/debug"  # useSearchParams without Suspense boundary
     "app/dashboard/export"  # uses cookies() with dynamic=error
+    "app/birth-chart"  # force-dynamic not compatible with static export
 )
 
 RED='\033[0;31m'

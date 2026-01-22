@@ -1,149 +1,108 @@
 'use client';
 
-/**
- * Patterns - Symbolic Systems & Cycles
- *
- * Umbrella page for pattern recognition tools.
- * Astrology is one symbolic input among several.
- */
-
 import React from 'react';
-import { motion } from 'framer-motion';
-import { useRouter } from 'next/navigation';
-import { ArrowLeft, Sparkles, Clock, Users, Compass, BookOpen } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowRight, Activity, Compass, Fingerprint, Users, NotebookPen } from 'lucide-react';
+
+type PatternModule = {
+  title: string;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badge?: string;
+};
+
+const MODULES: PatternModule[] = [
+  {
+    title: 'Field Snapshot',
+    description: "See what's active right now — signals, themes, and timing layers.",
+    href: '/astrology',
+    icon: Activity,
+    badge: 'Now',
+  },
+  {
+    title: 'Theme Focus',
+    description: 'Zoom in on a single motif and work it through reflection + practice.',
+    href: '/journey',
+    icon: Compass,
+  },
+  {
+    title: 'Personal Pattern Profile (optional)',
+    description: "Add birth data to refine pattern resolution. Not fate — just structure.",
+    href: '/astrology',
+    icon: Fingerprint,
+    badge: 'Optional',
+  },
+  {
+    title: 'Relational Dynamics',
+    description: 'Explore resonance, friction, and growth edges in relationship space.',
+    href: '/astrology/synastry',
+    icon: Users,
+  },
+  {
+    title: 'Integration Protocols',
+    description: "Translate insight into action — journaling, rituals, experiments, next steps.",
+    href: '/labtools/journal',
+    icon: NotebookPen,
+  },
+];
 
 export default function PatternsPage() {
-  const router = useRouter();
-
-  // frontend: pattern-forward labels, astrology is the engine underneath
-  const modules = [
-    {
-      id: 'cycles',
-      icon: Clock,
-      title: 'Cycle Snapshot',
-      description: 'What patterns are active now?',
-      path: '/astrology',
-      available: true,
-    },
-    {
-      id: 'archetypes',
-      icon: Compass,
-      title: 'Archetype Focus',
-      description: 'Which themes are asking for attention?',
-      path: '/journey',
-      available: true,
-    },
-    {
-      id: 'blueprint',
-      icon: Sparkles,
-      title: 'Personal Pattern Profile',
-      description: 'Add timing data to refine pattern resolution',
-      path: '/astrology',
-      available: true,
-      note: 'optional',
-    },
-    {
-      id: 'relational',
-      icon: Users,
-      title: 'Relational Dynamics',
-      description: 'Explore interpersonal patterns and resonance',
-      path: '/astrology/synastry',
-      available: true,
-    },
-    {
-      id: 'integration',
-      icon: BookOpen,
-      title: 'Integration Practices',
-      description: 'Translate insight into action',
-      path: '/labtools/journal',
-      available: true,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#0a0f1a]/95 backdrop-blur-sm border-b border-slate-800/50">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center gap-4">
-          <button
-            onClick={() => router.push('/maia')}
-            className="p-2 rounded-lg hover:bg-slate-800/50 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-slate-400" />
-          </button>
-          <div>
-            <h1 className="text-xl font-medium text-amber-100">Patterns</h1>
-            <p className="text-sm text-slate-500">Symbolic systems & cycles</p>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="max-w-4xl mx-auto px-4 py-12">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-2xl md:text-3xl font-light text-amber-100 mb-4">
-            Patterns of Meaning Across Time, Psyche, and Body
-          </h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">
-            Explore symbolic systems as tools for reflection, orientation, and integration.
-            Not fate. Not fortune-telling. A map for meaning-making.
+    <main className="min-h-[calc(100vh-64px)] px-4 py-10">
+      <div className="mx-auto w-full max-w-5xl">
+        <header className="mb-8">
+          <h1 className="text-3xl font-semibold tracking-tight">Patterns</h1>
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+            A lab for meaning-making across time, psyche, body, and relationship.
           </p>
-        </motion.div>
+          <p className="mt-3 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
+            We use multiple lenses—symbolic, psychological, somatic, and relational—to support pattern recognition,
+            reflection, and integration. These tools are offered as frameworks for orientation, not belief or prediction.
+          </p>
+        </header>
 
-        {/* Modules Grid */}
-        <div className="grid gap-4 md:grid-cols-2">
-          {modules.map((module, index) => (
-            <motion.button
-              key={module.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-              onClick={() => module.available && router.push(module.path)}
-              disabled={!module.available}
-              className={`
-                p-6 rounded-xl border text-left transition-all
-                ${module.available
-                  ? 'bg-[#111827] border-slate-700/50 hover:border-amber-500/50 hover:bg-[#1a2234]'
-                  : 'bg-[#0d1117] border-slate-800/30 opacity-50 cursor-not-allowed'
-                }
-              `}
-            >
-              <div className="flex items-start gap-4">
-                <div className="p-3 rounded-lg bg-slate-800/50">
-                  <module.icon className="w-6 h-6 text-amber-500" />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium text-amber-100">{module.title}</h3>
-                    {module.note && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-slate-700/50 text-slate-400">
-                        {module.note}
-                      </span>
-                    )}
+        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {MODULES.map((m) => {
+            const Icon = m.icon;
+            return (
+              <Link
+                key={m.title}
+                href={m.href}
+                className="group relative rounded-2xl border border-slate-200 bg-white/60 p-5 shadow-sm transition hover:shadow-md dark:border-slate-800 dark:bg-slate-950/40"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+                      <Icon className="h-5 w-5 text-slate-700 dark:text-slate-200" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">{m.title}</h2>
+                        {m.badge ? (
+                          <span className="rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] text-slate-600 dark:border-slate-800 dark:bg-slate-900/40 dark:text-slate-300">
+                            {m.badge}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-sm text-slate-600 dark:text-slate-300">{m.description}</p>
+                    </div>
                   </div>
-                  <p className="text-sm text-slate-400 mt-1">{module.description}</p>
-                </div>
-              </div>
-            </motion.button>
-          ))}
-        </div>
 
-        {/* Positioning Statement */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="text-center text-sm text-slate-500 mt-12 max-w-xl mx-auto"
-        >
-          MAIA is a consciousness exploration lab. We use multiple lenses—symbolic,
-          psychological, somatic, and relational—to support pattern recognition,
-          reflection, and integration.
-        </motion.p>
-      </section>
-    </div>
+                  <ArrowRight className="mt-2 h-4 w-4 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-slate-600 dark:text-slate-500 dark:group-hover:text-slate-300" />
+                </div>
+
+                <div className="pointer-events-none absolute inset-0 rounded-2xl ring-0 ring-slate-900/5 transition group-hover:ring-1 dark:ring-white/5 dark:group-hover:ring-white/10" />
+              </Link>
+            );
+          })}
+        </section>
+
+        <footer className="mt-10 text-xs text-slate-500 dark:text-slate-400">
+          Tip: If you&apos;re not sure where to start, open <span className="font-medium text-slate-700 dark:text-slate-200">Field Snapshot</span>, then
+          move into <span className="font-medium text-slate-700 dark:text-slate-200">Integration Protocols</span>.
+        </footer>
+      </div>
+    </main>
   );
 }

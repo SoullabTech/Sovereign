@@ -166,7 +166,14 @@ services:
   #
   # Deploy: docker compose --env-file .env.production -f docker-compose.production.yml up -d --build maia maia-embed-worker
   # Logs:   docker compose --env-file .env.production -f docker-compose.production.yml logs -f maia-embed-worker
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Embedding Worker - LOCAL EMBEDDINGS VIA OLLAMA
+  # ═══════════════════════════════════════════════════════════════════════════
+  # DISABLED BY DEFAULT (Ollama removed for disk space - Jan 2026)
+  # To enable: docker compose --profile embeddings -f docker-compose.production.yml up -d
+  # Requires: Ollama running on host at port 11434
   maia-embed-worker:
+    profiles: ["embeddings"]
     build: *maia_build
     image: *maia_image
     container_name: maia-embed-worker
