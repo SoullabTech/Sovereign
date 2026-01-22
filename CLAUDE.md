@@ -64,28 +64,32 @@ If this is not clear, re-read the Anchor and PROJECT_CONTEXT.md before proceedin
 
 This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any change that violates the oath is invalid, regardless of technical merit.
 
-## Deployment
+## Infrastructure (Single Source of Truth)
 
-- **We do NOT use cloud providers.** No EC2, AWS, GCP, Azure, or any cloud VPS. Never suggest cloud hosting.
-- **We do NOT use Vercel.** Never suggest or assume Vercel deployment.
-- **Self-hosted infrastructure**: All services run on local/owned hardware
-- **Caddy is our edge proxy** (replaces Cloudflare) — handles HTTPS, routing, security headers, multi-domain
+### What we DO NOT use
+- **No managed hosting platforms** (Vercel, Netlify, Heroku) — we control deployment
+- **No managed databases** (Supabase, PlanetScale, Neon) — PostgreSQL is self-hosted
+- **No CDN/proxy middlemen** (Cloudflare) doing MITM on traffic
+
+### What we DO use
+- **Production (public)**: Self-managed server at `35.167.91.24` running Docker + **Caddy** (auto TLS)
+- **Local dev/sovereignty compute**: M4 Mac Docker Server for local consciousness computing
+- **Reverse proxy**: Caddy (NOT Nginx)
+- **Database**: Self-hosted PostgreSQL (NOT Supabase)
+
+### Deployment
 - Infrastructure: Docker + Caddy (reverse proxy with auto-SSL via Let's Encrypt)
 - Deployment script: `./scripts/deploy-production.sh`
 - Production compose: `docker-compose.production.yml`
-- **Production server**: AWS EC2 `i-0bd7985f26c872359` at `35.167.91.24`
 - **Deploy command**:
   ```bash
   ssh -i ~/.ssh/maia-sovereign-key.pem ubuntu@35.167.91.24 "cd /opt/maia && git pull && ./scripts/deploy-production.sh update"
   ```
 
-### Why Self-Hosted
-
-True sovereignty means no third party sits between users and their data:
-- No cloud provider with physical access to hardware
-- No CDN/proxy (Cloudflare) doing MITM on traffic
+### Why This Architecture
+- No third party sits between users and their data
 - No jurisdiction concerns — we control the location
-- Complete air-gap capability if needed
+- Complete air-gap capability if needed for local-only mode
 
 ## Database & Backend
 

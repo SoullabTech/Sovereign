@@ -1,23 +1,26 @@
-# CLAUDE CODE - CORRECT PROJECT DIRECTORY
+# CLAUDE CODE - MAIA SOVEREIGN PROJECT
 # ==================================================
 #
-# ✅ THIS IS THE CORRECT MAIA PROJECT
-#
-# Project: MAIA-SOVEREIGN (Spiralogic Oracle)
+# Project: MAIA-SOVEREIGN
 # Path: /Users/soullab/MAIA-SOVEREIGN/
+# GitHub: https://github.com/SoullabTech/Sovereign.git
+# Production: https://soullab.life
 #
-# 🚫 DO NOT WORK IN:
-# - /Users/soullab/MAIA-PAI-SOVEREIGN/ (Wrong - uses Vercel/Cloudflare)
-# - Any /apps/web/ subdirectories
+# INFRASTRUCTURE (Single Source of Truth):
+# - Production: Self-managed server (35.167.91.24) + Docker + Caddy
+# - Local dev: M4 Mac Docker Server
+# - Database: Self-hosted PostgreSQL (NOT Supabase)
+# - Proxy: Caddy (NOT Nginx)
 #
-# ✅ CORRECT ARCHITECTURE:
-# - MAIA App: /app/maia/page.tsx
-# - Intro: /app/intro/page.tsx
-# - Components: /components/onboarding/SageTealDaimonWelcome.tsx
+# CRITICAL RULES:
+# - No Supabase - use lib/db/postgres.ts
+# - No Nginx - Caddy is the proxy
+# - No Vercel/Netlify - self-managed deployment
 #
-# 🎨 DESIGN STANDARDS:
-# - Sage/Teal + Dark Navy ONLY
-# - NO PURPLE anywhere
-# - Use SageTealDaimonWelcome for all welcome flows
+# KEY FILES:
+# - CLAUDE.md - Session anchor
+# - docs/canon/MAIA_OATH.md - Ethical standard
+# - lib/db/postgres.ts - Database client
+# - Caddyfile - Proxy config
 #
-# Last Updated: 2024-11-29
+# Last Updated: 2026-01-22
