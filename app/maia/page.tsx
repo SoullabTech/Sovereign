@@ -1265,7 +1265,11 @@ function MAIAPageContent() {
           }}
           onAction={(action) => {
             console.log('Lab action:', action);
-            // Handle specific actions here
+            setShowLabDrawer(false);
+            // Dispatch event that OracleConversation can handle
+            window.dispatchEvent(new CustomEvent('labAction', {
+              detail: { action }
+            }));
           }}
         />
 

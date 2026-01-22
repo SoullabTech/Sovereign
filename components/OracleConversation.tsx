@@ -636,6 +636,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const lastAudioCallbackUpdateRef = useRef<number>(0); // Throttle audio level callbacks
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
   const activatingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Safety timeout for stuck activating state
+  const handleCaptureSpiritRef = useRef<(() => void) | null>(null); // Ref for capture spirit handler (for event dispatch)
 
   // 🌊 LIQUID AI - Rhythm tracker instance
   const rhythmTrackerRef = useRef<ConversationalRhythm>(
@@ -1806,6 +1807,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('journalAskMaia', handleJournalAskMaia as EventListener);
   }, []);
 
+  // Listen for Lab Actions dispatched from page.tsx
+  useEffect(() => {
+    const handleLabAction = (e: Event) => {
+      const ce = e as CustomEvent<{ action: string }>;
+      const action = ce.detail?.action;
+      if (!action) return;
+
+      console.log('🔬 [LabAction] Received from page:', action);
+
+      // Route to appropriate handler
+      if (action === 'capture-spirit') {
+        // Defer to allow state to settle after drawer close
+        setTimeout(() => {
+          if (handleCaptureSpiritRef.current) {
+            handleCaptureSpiritRef.current();
+          } else {
+            console.error('❌ [LabAction] handleCaptureSpirit not available');
+          }
+        }, 100);
+      }
+    };
+
+    window.addEventListener('labAction', handleLabAction as EventListener);
+    return () => window.removeEventListener('labAction', handleLabAction as EventListener);
+  }, []);
+
   // Listen for Inner Lands "Talk to MAIA" events
   useEffect(() => {
     const handleInnerLandsAskMaia = (e: Event) => {
@@ -2215,6 +2242,11 @@ I'm not sure what I'm feeling yet.`;
       setCaptureSuggestionDismissed(true);
     }
   }, [userId, messages, sessionId]);
+
+  // Keep ref updated for event dispatch
+  useEffect(() => {
+    handleCaptureSpiritRef.current = handleCaptureSpirit;
+  }, [handleCaptureSpirit]);
 
   // Update captured capsule (quick edits)
   const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
