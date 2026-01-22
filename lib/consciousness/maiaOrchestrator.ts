@@ -390,7 +390,7 @@ export async function generateMaiaTurn(input: MaiaConsciousnessInput): Promise<M
       if (memoryBundle) {
         memoryContext = MemoryBundleService.formatForPrompt(memoryBundle);
         console.log(`📦 [MemoryBundle] Retrieved: ${memoryBundle.retrievalStats.totalCandidates} candidates → ${memoryBundle.memoryBullets.length} bullets`);
-        console.log(`📦 [MemoryBundle] Relationship: ${memoryBundle.relationshipSnapshot.encounterCount} encounters, ${memoryBundle.relationshipSnapshot.breakthroughs.length} breakthroughs`);
+        console.log(`📦 [MemoryBundle] Relationship: ${memoryBundle.relationshipSnapshot.encounterCount} encounters, ${memoryBundle.relationshipSnapshot.breakthroughCount} breakthroughs`);
       }
 
       layerTimings['memory-bundle'] = Date.now() - memoryBundleStartTime;
