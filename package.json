@@ -9,8 +9,8 @@
   "main": "electron/main.js",
   "homepage": "./",
   "scripts": {
-    "dev": "PORT=3000 env -u DATABASE_URL next dev",
-    "dev:clean": "rm -rf .next && lsof -ti:3000 | xargs kill -9 2>/dev/null || true; PORT=3000 env -u DATABASE_URL next dev",
+    "dev": "env -u DATABASE_URL next dev -p ${PORT:-3000}",
+    "dev:clean": "rm -rf .next && lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true; env -u DATABASE_URL next dev -p ${PORT:-3000}",
     "clean": "rm -rf .next && echo '✓ .next cache cleared'",
     "dev:voice": "bash start-voice.sh",
     "dev:https": "node server.mjs",

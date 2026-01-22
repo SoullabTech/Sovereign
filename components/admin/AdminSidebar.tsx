@@ -25,6 +25,7 @@ import {
   ChevronLeft,
   Sparkles,
   Star,
+  Plug,
 } from 'lucide-react';
 import type { Practitioner } from '@/lib/stellium/types';
 
@@ -46,6 +47,7 @@ const navItems: NavItem[] = [
   { path: '/commerce', label: 'Commerce', icon: <ShoppingBag className="w-5 h-5" /> },
   { path: '/persona', label: 'AI Persona', icon: <Brain className="w-5 h-5" /> },
   { path: '/faq', label: 'FAQ', icon: <HelpCircle className="w-5 h-5" /> },
+  { path: '/integrations', label: 'Integrations', icon: <Plug className="w-5 h-5" /> },
   { path: '/settings', label: 'Settings', icon: <Settings className="w-5 h-5" /> },
 ];
 

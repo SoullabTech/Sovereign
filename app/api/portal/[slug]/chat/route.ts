@@ -6,17 +6,60 @@ export async function generateStaticParams() { return []; }
  *
  * AI companion that embodies the practitioner's voice and wisdom
  * For Loralee: Evolutionary astrology with warm, nurturing guidance
+ *
+ * When conversational booking is enabled (premium feature), the AI can:
+ * - List available services
+ * - Check appointment availability
+ * - Create bookings
+ * - Submit inquiries
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import Anthropic from '@anthropic-ai/sdk';
+import { getPractitionerFeaturesById } from '@/lib/practitioner/features';
+import {
+  BOOKING_TOOLS,
+  executeTool,
+  type ToolContext,
+} from '@/lib/portal/bookingTools';
+import {
+  sendBookingConfirmation,
+  sendBookingNotificationToPractitioner,
+  sendInquiryNotification,
+} from '@/lib/portal/notifications';
 
 const anthropic = new Anthropic();
 
 interface Message {
   role: 'user' | 'assistant';
-  content: string;
+  content: string | Anthropic.ContentBlock[];
+}
+
+/**
+ * Retry Anthropic calls on transient 500/529 errors
+ */
+async function anthropicCreateWithRetry<T>(createFn: () => Promise<T>): Promise<T> {
+  try {
+    return await createFn();
+  } catch (err: any) {
+    const status = err?.status;
+    if (status === 500 || status === 529) {
+      // Single immediate retry for transient server errors
+      console.log('[Portal Chat] Retrying after transient error:', status);
+      return await createFn();
+    }
+    throw err;
+  }
+}
+
+/**
+ * Normalize message content to ensure it's valid for Anthropic
+ */
+function normalizeMessageContent(content: any): string | Anthropic.ContentBlockParam[] {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) return content;
+  return String(content ?? '');
 }
 
 export async function POST(
@@ -35,7 +78,7 @@ export async function POST(
     // Get practitioner and AI config
     const practitionerResult = await db.query(
       `SELECT
-        p.id, p.name, p.business_name, p.bio, p.tagline,
+        p.id, p.name, p.email, p.business_name, p.bio, p.tagline,
         p.specialties, p.approach, p.values,
         ac.name as ai_name, ac.voice_style, ac.tone,
         ac.frameworks, ac.primary_framework, ac.specialties as ai_specialties,
@@ -51,53 +94,253 @@ export async function POST(
     }
 
     const practitioner = practitionerResult.rows[0];
-    const boundaries = practitioner.boundaries || {};
-    const knowledgeBase = practitioner.knowledge_base || {};
+    const practitionerId = practitioner.id;
 
-    // Build system prompt for Virtual Loralee
-    const systemPrompt = buildVirtualPractitionerPrompt(practitioner);
+    // Get practitioner features (premium feature flags)
+    const features = await getPractitionerFeaturesById(practitionerId);
+    const bookingEnabled = features.conversationalBookingEnabled;
+    const emailsEnabled = features.bookingConfirmationEmailsEnabled;
 
-    // Format conversation history
-    const messages: Message[] = [
-      ...history.slice(-10), // Keep last 10 messages for context
-      { role: 'user', content: message }
+    // Build system prompt
+    const systemPrompt = buildVirtualPractitionerPrompt(practitioner, bookingEnabled);
+
+    // Format conversation history for Claude API
+    const claudeMessages: Anthropic.MessageParam[] = [
+      ...history.slice(-10).map((m: Message) => ({
+        role: m.role as 'user' | 'assistant',
+        content: normalizeMessageContent(m.content),
+      })),
+      { role: 'user' as const, content: message },
     ];
 
-    // Call Claude
-    const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1024,
-      system: systemPrompt,
-      messages: messages.map(m => ({
-        role: m.role,
-        content: m.content,
-      })),
-    });
+    // Prepare tool context
+    const toolContext: ToolContext = {
+      portalSlug: slug,
+      practitionerId,
+    };
 
-    const assistantMessage = response.content[0].type === 'text'
-      ? response.content[0].text
-      : '';
+    // Call Claude with optional tools
+    let response: Anthropic.Message;
+    try {
+      // Log request summary for debugging
+      console.log('[Portal Chat] Anthropic request', {
+        slug,
+        model: 'claude-sonnet-4-20250514',
+        messagesCount: claudeMessages.length,
+        toolsEnabled: bookingEnabled,
+        toolsCount: bookingEnabled ? BOOKING_TOOLS.length : 0,
+      });
+
+      response = await anthropicCreateWithRetry(() =>
+        anthropic.messages.create({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages: claudeMessages,
+          ...(bookingEnabled ? { tools: BOOKING_TOOLS } : {}),
+        })
+      );
+    } catch (err: any) {
+      console.error('[Portal Chat] Anthropic error', {
+        slug,
+        name: err?.name,
+        status: err?.status,
+        message: err?.message,
+        request_id: err?.request_id,
+        type: err?.type,
+        error: err?.error,
+      });
+      throw err;
+    }
+
+    // Handle tool use loop (max 5 iterations for safety)
+    let iterations = 0;
+    const maxIterations = 5;
+
+    while (response.stop_reason === 'tool_use' && iterations < maxIterations) {
+      iterations++;
+
+      // Find tool use blocks
+      const toolUseBlocks = response.content.filter(
+        (block): block is Anthropic.ToolUseBlock => block.type === 'tool_use'
+      );
+
+      // Execute tools and collect results
+      const toolResults: Anthropic.ToolResultBlockParam[] = [];
+
+      for (const toolUse of toolUseBlocks) {
+        const result = await executeTool(
+          toolUse.name,
+          toolUse.input as Record<string, unknown>,
+          toolContext
+        );
+
+        // Send notifications for successful bookings/inquiries
+        if (result.success && toolUse.name === 'create_booking' && emailsEnabled) {
+          const bookingData = result.data as {
+            service_name: string;
+            date: string;
+            time: string;
+            duration_minutes: number;
+            client_name: string;
+            client_email: string;
+          };
+
+          const practitionerInfo = {
+            name: practitioner.name,
+            email: practitioner.email,
+            portalSlug: slug,
+            businessName: practitioner.business_name,
+          };
+
+          const bookingDetails = {
+            clientName: bookingData.client_name,
+            clientEmail: bookingData.client_email,
+            sessionType: bookingData.service_name,
+            dateTime: new Date(`${bookingData.date}T${bookingData.time}`),
+            duration: bookingData.duration_minutes,
+            timezone: 'America/Chicago', // TODO: Get from client
+          };
+
+          // Send emails async (don't block response)
+          Promise.all([
+            sendBookingConfirmation(bookingDetails, practitionerInfo),
+            sendBookingNotificationToPractitioner(bookingDetails, practitionerInfo),
+          ]).catch((err) => console.error('[Portal Chat] Email send error:', err));
+        }
+
+        if (result.success && toolUse.name === 'submit_inquiry') {
+          const inquiryData = result.data as {
+            inquiry_id: string;
+            confirmation_message: string;
+          };
+
+          // Get inquiry details for notification
+          const input = toolUse.input as {
+            name?: string;
+            email?: string;
+            phone?: string;
+            topic?: string;
+            message: string;
+          };
+
+          const practitionerInfo = {
+            name: practitioner.name,
+            email: practitioner.email,
+            portalSlug: slug,
+            businessName: practitioner.business_name,
+          };
+
+          // Send inquiry notification async
+          sendInquiryNotification(
+            {
+              name: input.name,
+              email: input.email,
+              phone: input.phone,
+              topic: input.topic,
+              message: input.message,
+              source: 'portal_chat',
+            },
+            practitionerInfo
+          ).catch((err) => console.error('[Portal Chat] Inquiry notification error:', err));
+        }
+
+        // Cap tool result size to prevent oversized payloads
+        const resultJson = JSON.stringify(result);
+        toolResults.push({
+          type: 'tool_result',
+          tool_use_id: toolUse.id,
+          content: resultJson.length > 8000 ? resultJson.slice(0, 8000) + '...(truncated)' : resultJson,
+          is_error: !result.success,
+        });
+      }
+
+      // Continue conversation with tool results
+      claudeMessages.push({
+        role: 'assistant',
+        content: response.content,
+      });
+
+      claudeMessages.push({
+        role: 'user',
+        content: toolResults,
+      });
+
+      // Get next response
+      try {
+        response = await anthropicCreateWithRetry(() =>
+          anthropic.messages.create({
+            model: 'claude-sonnet-4-20250514',
+            max_tokens: 1024,
+            system: systemPrompt,
+            messages: claudeMessages,
+            ...(bookingEnabled ? { tools: BOOKING_TOOLS } : {}),
+          })
+        );
+      } catch (err: any) {
+        console.error('[Portal Chat] Anthropic error (tool loop)', {
+          slug,
+          iteration: iterations,
+          status: err?.status,
+          message: err?.message,
+          request_id: err?.request_id,
+        });
+        throw err;
+      }
+    }
+
+    // Extract final text response
+    const textBlocks = response.content.filter(
+      (block): block is Anthropic.TextBlock => block.type === 'text'
+    );
+    const assistantMessage = textBlocks.map((b) => b.text).join('\n') || '';
 
     return NextResponse.json({
       message: assistantMessage,
       ai_name: practitioner.ai_name || 'Guide',
+      features_enabled: {
+        booking: bookingEnabled,
+        inquiry: features.inquiryFormEnabled,
+      },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Portal chat error:', error);
+
+    // Check if this is an Anthropic API error
+    const status = error?.status;
+    const isAnthropicError = status === 500 || status === 529 || status === 401 || status === 403 || status === 429;
+
+    if (isAnthropicError) {
+      // Return graceful degradation message instead of crashing
+      const degradedMessage =
+        status === 429
+          ? "I'm receiving a lot of messages right now and need a moment to catch up. Please try again in a minute or two."
+          : "I'm having a little trouble connecting right now. If you'd like to book a session or have a question, feel free to use the inquiry form, or try again in a moment.";
+
+      return NextResponse.json({
+        message: degradedMessage,
+        ai_name: 'Guide',
+        degraded: true,
+        features_enabled: {
+          booking: false,
+          inquiry: true,
+        },
+      });
+    }
+
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
-function buildVirtualPractitionerPrompt(practitioner: any): string {
+function buildVirtualPractitionerPrompt(
+  practitioner: any,
+  bookingEnabled: boolean = false
+): string {
   const aiName = practitioner.ai_name || 'Guide';
-  const voiceStyle = practitioner.voice_style || 'warm';
-  const frameworks = practitioner.frameworks || ['evolutionary'];
-  const primaryFramework = practitioner.primary_framework || 'evolutionary';
   const boundaries = practitioner.boundaries || {};
-  const knowledgeBase = practitioner.knowledge_base || {};
 
   // Loralee-specific prompt for evolutionary astrology
-  return `You are ${aiName}, a virtual guide embodying the wisdom and voice of ${practitioner.name}, an evolutionary astrologer.
+  let prompt = `You are ${aiName}, a virtual guide embodying the wisdom and voice of ${practitioner.name}, an evolutionary astrologer.
 
 ## Your Essence
 
@@ -187,4 +430,41 @@ You're having a conversation with someone interested in astrology. Be present, b
 If you don't know their birth chart details, you can speak generally about astrological principles or gently ask what they'd like to explore. Never pretend to know their chart if they haven't shared the details.
 
 ${practitioner.bio ? `\n## About ${practitioner.name}\n\n${practitioner.bio}` : ''}`;
+
+  // Add booking capabilities when enabled
+  if (bookingEnabled) {
+    prompt += `
+
+## Booking & Scheduling Capabilities
+
+You have access to tools that allow you to help people book sessions:
+
+1. **list_services** — Use when someone asks about available sessions, services, or pricing
+2. **check_availability** — Use when someone wants to see available times for a specific date
+3. **create_booking** — Use when you have all the required information to book a session
+4. **submit_inquiry** — Use when someone has questions that need ${practitioner.name}'s personal attention
+
+### Booking Guidelines
+
+- Always warmly acknowledge someone's interest in booking before checking availability
+- When someone wants to book, first ask what type of session they're interested in
+- Once they choose a service, ask what date works for them
+- Present available times in a friendly, readable format
+- Before creating a booking, confirm ALL details with the person:
+  - Service type
+  - Date and time
+  - Their name
+  - Their email (required for confirmation)
+  - Their phone (optional but helpful)
+- After a successful booking, express genuine warmth about looking forward to the session
+- If someone has questions beyond scheduling, use submit_inquiry to send their message directly to ${practitioner.name}
+
+### Never
+
+- Create a booking without explicit confirmation of all details
+- Make up availability — always use check_availability
+- Skip the warm, personal touch even when handling logistics`;
+  }
+
+  return prompt;
 }

@@ -5,11 +5,17 @@ export async function generateStaticParams() { return []; }
  * PORTAL BOOKING API
  *
  * Handles session booking from the portal
+ * Sends confirmation emails when enabled for the practitioner
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import db from '@/lib/db/postgres';
 import crypto from 'crypto';
+import { getPractitionerFeaturesById } from '@/lib/practitioner/features';
+import {
+  sendBookingConfirmation,
+  sendBookingNotificationToPractitioner,
+} from '@/lib/portal/notifications';
 
 export async function POST(
   request: NextRequest,
@@ -30,7 +36,7 @@ export async function POST(
 
     // Get practitioner
     const practitionerResult = await db.query(
-      `SELECT id, name as practitioner_name, settings
+      `SELECT id, name as practitioner_name, email, business_name, settings
        FROM practitioners
        WHERE slug = $1 AND status = 'active'`,
       [slug]
@@ -150,8 +156,35 @@ export async function POST(
       );
     }
 
-    // TODO: Send confirmation emails to both practitioner and client
-    // This would integrate with email service (Resend, etc.)
+    // Send confirmation emails if enabled for this practitioner
+    const features = await getPractitionerFeaturesById(practitionerId);
+
+    if (features.bookingConfirmationEmailsEnabled && practitioner.email) {
+      const practitionerInfo = {
+        name: practitioner.practitioner_name,
+        email: practitioner.email,
+        portalSlug: slug,
+        businessName: practitioner.business_name,
+      };
+
+      const bookingDetails = {
+        clientName: name,
+        clientEmail: email,
+        sessionType: service.name,
+        dateTime: scheduledStart,
+        duration: service.duration_minutes,
+        timezone: body.timezone || 'America/Chicago', // Default if not provided
+        notes: notes,
+      };
+
+      // Send emails asynchronously (don't block the response)
+      Promise.all([
+        sendBookingConfirmation(bookingDetails, practitionerInfo),
+        sendBookingNotificationToPractitioner(bookingDetails, practitionerInfo),
+      ]).catch((err) => {
+        console.error('[Portal Booking] Email notification error:', err);
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -164,6 +197,7 @@ export async function POST(
         duration: service.duration_minutes,
         practitioner: practitioner.practitioner_name,
       },
+      email_sent: features.bookingConfirmationEmailsEnabled,
     });
   } catch (error) {
     console.error('Portal booking error:', error);

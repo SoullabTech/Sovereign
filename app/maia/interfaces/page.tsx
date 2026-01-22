@@ -8,7 +8,7 @@
 'use client';
 
 import React from 'react';
-import SafeLink from '@/components/debug/SafeLink';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 export default function MaiaInterfacesPage() {
@@ -91,7 +91,7 @@ export default function MaiaInterfacesPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.2, duration: 0.8 }}
             >
-              <SafeLink href={interface_.path}>
+              <Link href={interface_.path}>
                 <div className={`
                   relative group cursor-pointer
                   bg-gradient-to-br ${interface_.gradient}
@@ -144,7 +144,7 @@ export default function MaiaInterfacesPage() {
                     </div>
                   </div>
                 </div>
-              </SafeLink>
+              </Link>
             </motion.div>
           ))}
         </div>

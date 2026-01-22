@@ -1,0 +1,634 @@
+/**
+ * Portal Booking Tools - Claude Tool Implementations
+ *
+ * Tools for the portal chat to:
+ * - List available services
+ * - Check availability for dates
+ * - Create bookings
+ * - Submit inquiries
+ *
+ * These are called by Claude via tool_use when the conversationalBookingEnabled
+ * feature flag is true for the practitioner.
+ */
+
+import db from '@/lib/db/postgres';
+import crypto from 'crypto';
+
+// ============================================================================
+// Tool Definitions for Claude
+// ============================================================================
+
+export const BOOKING_TOOLS = [
+  {
+    name: 'list_services',
+    description:
+      'List the available services/session types that clients can book. Call this when someone asks about what sessions are available, pricing, or wants to know what they can book.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {},
+      required: [],
+    },
+  },
+  {
+    name: 'check_availability',
+    description:
+      'Check available time slots for a specific date. Call this when someone wants to book a session and needs to see available times. Returns open time slots.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        date: {
+          type: 'string',
+          description: 'The date to check availability for (YYYY-MM-DD format)',
+        },
+        service_id: {
+          type: 'string',
+          description: 'Optional service ID to get duration-appropriate slots',
+        },
+      },
+      required: ['date'],
+    },
+  },
+  {
+    name: 'create_booking',
+    description:
+      'Create a booking for a session. Call this when someone has selected a service, date, time, and provided their contact information. All fields must be confirmed with the user before calling.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        service_id: {
+          type: 'string',
+          description: 'The ID of the service to book',
+        },
+        date: {
+          type: 'string',
+          description: 'The date for the booking (YYYY-MM-DD format)',
+        },
+        time: {
+          type: 'string',
+          description: 'The time for the booking (HH:MM format, 24-hour)',
+        },
+        name: {
+          type: 'string',
+          description: "The client's full name",
+        },
+        email: {
+          type: 'string',
+          description: "The client's email address",
+        },
+        phone: {
+          type: 'string',
+          description: "The client's phone number (optional)",
+        },
+        notes: {
+          type: 'string',
+          description: 'Any notes or special requests from the client (optional)',
+        },
+      },
+      required: ['service_id', 'date', 'time', 'name', 'email'],
+    },
+  },
+  {
+    name: 'submit_inquiry',
+    description:
+      'Submit an inquiry or contact message when someone has questions that need practitioner follow-up, wants to discuss services before booking, or needs more information. Use this for general questions, consultation requests, or when booking is not immediately appropriate.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        name: {
+          type: 'string',
+          description: "The person's name (optional if they prefer to remain anonymous)",
+        },
+        email: {
+          type: 'string',
+          description: "The person's email for follow-up (strongly encouraged)",
+        },
+        phone: {
+          type: 'string',
+          description: "The person's phone number (optional)",
+        },
+        timezone: {
+          type: 'string',
+          description: "The person's timezone (optional, e.g., 'America/New_York')",
+        },
+        topic: {
+          type: 'string',
+          description:
+            'Brief topic or subject of the inquiry (e.g., "Pricing question", "First-time consultation")',
+        },
+        message: {
+          type: 'string',
+          description: 'The full message or question to send to the practitioner',
+        },
+      },
+      required: ['message'],
+    },
+  },
+];
+
+// ============================================================================
+// Tool Implementations
+// ============================================================================
+
+export interface ToolContext {
+  portalSlug: string;
+  practitionerId: string;
+}
+
+export interface ToolResult {
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}
+
+/**
+ * List available services for this practitioner
+ */
+export async function listServices(ctx: ToolContext): Promise<ToolResult> {
+  try {
+    const result = await db.query(
+      `SELECT
+        id,
+        name,
+        description,
+        duration_minutes,
+        price_cents,
+        category
+      FROM services
+      WHERE practitioner_id = $1 AND is_active = true
+      ORDER BY sort_order, name`,
+      [ctx.practitionerId]
+    );
+
+    const services = result.rows.map((row) => ({
+      id: row.id,
+      name: row.name,
+      description: row.description,
+      duration: row.duration_minutes,
+      price: row.price_cents ? `$${(row.price_cents / 100).toFixed(2)}` : 'Contact for pricing',
+      category: row.category,
+    }));
+
+    return {
+      success: true,
+      data: {
+        services,
+        count: services.length,
+      },
+    };
+  } catch (error) {
+    console.error('[BookingTools] listServices error:', error);
+    return {
+      success: false,
+      error: 'Failed to load services',
+    };
+  }
+}
+
+/**
+ * Check availability for a specific date
+ */
+export async function checkAvailability(
+  ctx: ToolContext,
+  params: { date: string; service_id?: string }
+): Promise<ToolResult> {
+  try {
+    const { date, service_id } = params;
+
+    // Validate date format
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+      return {
+        success: false,
+        error: 'Invalid date format. Please use YYYY-MM-DD format.',
+      };
+    }
+
+    // Check if date is in the past
+    const requestedDate = new Date(date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (requestedDate < today) {
+      return {
+        success: false,
+        error: 'Cannot check availability for past dates.',
+      };
+    }
+
+    // Get service duration
+    let duration = 60;
+    if (service_id) {
+      const serviceResult = await db.query(
+        `SELECT duration_minutes FROM services WHERE id = $1 AND practitioner_id = $2`,
+        [service_id, ctx.practitionerId]
+      );
+      if (serviceResult.rows.length > 0) {
+        duration = serviceResult.rows[0].duration_minutes;
+      }
+    }
+
+    // Get day of week (0 = Sunday)
+    const dayOfWeek = requestedDate.getDay();
+
+    // Get availability windows
+    const availabilityResult = await db.query(
+      `SELECT start_time, end_time
+       FROM practitioner_availability
+       WHERE practitioner_id = $1 AND day_of_week = $2 AND is_available = true
+       ORDER BY start_time`,
+      [ctx.practitionerId, dayOfWeek]
+    );
+
+    if (availabilityResult.rows.length === 0) {
+      return {
+        success: true,
+        data: {
+          date,
+          slots: [],
+          message: 'No availability set for this day.',
+        },
+      };
+    }
+
+    // Get existing bookings
+    const bookingsResult = await db.query(
+      `SELECT scheduled_start, scheduled_end
+       FROM sessions
+       WHERE practitioner_id = $1
+       AND DATE(scheduled_start) = $2
+       AND status NOT IN ('cancelled', 'no_show')`,
+      [ctx.practitionerId, date]
+    );
+
+    const bookedSlots = bookingsResult.rows.map((b) => ({
+      start: new Date(b.scheduled_start),
+      end: new Date(b.scheduled_end),
+    }));
+
+    // Generate available slots
+    const slots: Array<{ start: string; end: string }> = [];
+    const slotInterval = 30;
+    const now = new Date();
+
+    for (const window of availabilityResult.rows) {
+      const [startHour, startMin] = window.start_time.split(':').map(Number);
+      const [endHour, endMin] = window.end_time.split(':').map(Number);
+
+      let currentTime = startHour * 60 + startMin;
+      const windowEnd = endHour * 60 + endMin;
+
+      while (currentTime + duration <= windowEnd) {
+        const slotStart = `${String(Math.floor(currentTime / 60)).padStart(2, '0')}:${String(currentTime % 60).padStart(2, '0')}`;
+        const slotEndMinutes = currentTime + duration;
+        const slotEnd = `${String(Math.floor(slotEndMinutes / 60)).padStart(2, '0')}:${String(slotEndMinutes % 60).padStart(2, '0')}`;
+
+        const slotStartDate = new Date(`${date}T${slotStart}`);
+        const slotEndDate = new Date(`${date}T${slotEnd}`);
+
+        // Check for conflicts
+        const isBooked = bookedSlots.some(
+          (booking) =>
+            (slotStartDate >= booking.start && slotStartDate < booking.end) ||
+            (slotEndDate > booking.start && slotEndDate <= booking.end) ||
+            (slotStartDate <= booking.start && slotEndDate >= booking.end)
+        );
+
+        // Check if in the past
+        const isPast = slotStartDate < now;
+
+        if (!isBooked && !isPast) {
+          slots.push({ start: slotStart, end: slotEnd });
+        }
+
+        currentTime += slotInterval;
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        date,
+        slots,
+        count: slots.length,
+        duration_minutes: duration,
+      },
+    };
+  } catch (error) {
+    console.error('[BookingTools] checkAvailability error:', error);
+    return {
+      success: false,
+      error: 'Failed to check availability',
+    };
+  }
+}
+
+/**
+ * Create a booking
+ */
+export async function createBooking(
+  ctx: ToolContext,
+  params: {
+    service_id: string;
+    date: string;
+    time: string;
+    name: string;
+    email: string;
+    phone?: string;
+    notes?: string;
+  }
+): Promise<ToolResult> {
+  try {
+    const { service_id, date, time, name, email, phone, notes } = params;
+
+    // Validate required fields
+    if (!service_id || !date || !time || !name || !email) {
+      return {
+        success: false,
+        error: 'Missing required booking information.',
+      };
+    }
+
+    // Get service details
+    const serviceResult = await db.query(
+      `SELECT id, name, duration_minutes, price_cents
+       FROM services
+       WHERE id = $1 AND practitioner_id = $2 AND is_active = true`,
+      [service_id, ctx.practitionerId]
+    );
+
+    if (serviceResult.rows.length === 0) {
+      return {
+        success: false,
+        error: 'Service not found or no longer available.',
+      };
+    }
+
+    const service = serviceResult.rows[0];
+
+    // Calculate session times
+    const scheduledStart = new Date(`${date}T${time}`);
+    const scheduledEnd = new Date(
+      scheduledStart.getTime() + service.duration_minutes * 60 * 1000
+    );
+
+    // Check for conflicts
+    const conflictResult = await db.query(
+      `SELECT id FROM sessions
+       WHERE practitioner_id = $1
+       AND status NOT IN ('cancelled', 'no_show')
+       AND (
+         (scheduled_start <= $2 AND scheduled_end > $2)
+         OR (scheduled_start < $3 AND scheduled_end >= $3)
+         OR (scheduled_start >= $2 AND scheduled_end <= $3)
+       )`,
+      [ctx.practitionerId, scheduledStart.toISOString(), scheduledEnd.toISOString()]
+    );
+
+    if (conflictResult.rows.length > 0) {
+      return {
+        success: false,
+        error: 'This time slot is no longer available. Please choose another time.',
+      };
+    }
+
+    // Get or create client
+    let clientId: string;
+    const existingClient = await db.query(
+      `SELECT id FROM stellium_clients WHERE practitioner_id = $1 AND email = $2`,
+      [ctx.practitionerId, email]
+    );
+
+    if (existingClient.rows.length > 0) {
+      clientId = existingClient.rows[0].id;
+      await db.query(
+        `UPDATE stellium_clients
+         SET name = $1, phone = COALESCE($2, phone), updated_at = NOW()
+         WHERE id = $3`,
+        [name, phone, clientId]
+      );
+    } else {
+      clientId = crypto.randomUUID();
+      await db.query(
+        `INSERT INTO stellium_clients
+         (id, practitioner_id, name, email, phone, status, created_at)
+         VALUES ($1, $2, $3, $4, $5, 'active', NOW())`,
+        [clientId, ctx.practitionerId, name, email, phone || null]
+      );
+    }
+
+    // Create the session
+    const sessionId = crypto.randomUUID();
+    await db.query(
+      `INSERT INTO sessions
+       (id, practitioner_id, client_id, service_id, scheduled_start, scheduled_end, status, notes, price_cents, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, 'scheduled', $7, $8, NOW())`,
+      [
+        sessionId,
+        ctx.practitionerId,
+        clientId,
+        service_id,
+        scheduledStart.toISOString(),
+        scheduledEnd.toISOString(),
+        notes || null,
+        service.price_cents,
+      ]
+    );
+
+    // Update marketing contact
+    const existingContact = await db.query(
+      `SELECT id FROM marketing_contacts WHERE practitioner_id = $1 AND email = $2`,
+      [ctx.practitionerId, email]
+    );
+
+    if (existingContact.rows.length === 0) {
+      await db.query(
+        `INSERT INTO marketing_contacts
+         (id, practitioner_id, email, name, status, source, lead_score, created_at)
+         VALUES ($1, $2, $3, $4, 'converted', 'chat_booking', 100, NOW())`,
+        [crypto.randomUUID(), ctx.practitionerId, email, name]
+      );
+    } else {
+      await db.query(
+        `UPDATE marketing_contacts
+         SET status = 'converted', lead_score = GREATEST(lead_score, 100), updated_at = NOW()
+         WHERE id = $1`,
+        [existingContact.rows[0].id]
+      );
+    }
+
+    return {
+      success: true,
+      data: {
+        session_id: sessionId,
+        service_name: service.name,
+        date,
+        time,
+        duration_minutes: service.duration_minutes,
+        client_name: name,
+        client_email: email,
+        confirmation_message: `Your ${service.name} session has been booked for ${formatDateForDisplay(date)} at ${formatTimeForDisplay(time)}. You will receive a confirmation email shortly.`,
+      },
+    };
+  } catch (error) {
+    console.error('[BookingTools] createBooking error:', error);
+    return {
+      success: false,
+      error: 'Failed to create booking. Please try again.',
+    };
+  }
+}
+
+/**
+ * Submit an inquiry
+ */
+export async function submitInquiry(
+  ctx: ToolContext,
+  params: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    timezone?: string;
+    topic?: string;
+    message: string;
+  }
+): Promise<ToolResult> {
+  try {
+    const { name, email, phone, timezone, topic, message } = params;
+
+    if (!message || message.trim().length === 0) {
+      return {
+        success: false,
+        error: 'A message is required for the inquiry.',
+      };
+    }
+
+    // Create the inquiry
+    const inquiryId = crypto.randomUUID();
+    await db.query(
+      `INSERT INTO portal_inquiries
+       (id, portal_slug, practitioner_id, name, email, phone, timezone, topic, message, source, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'portal_chat', 'new', NOW())`,
+      [
+        inquiryId,
+        ctx.portalSlug,
+        ctx.practitionerId,
+        name || null,
+        email || null,
+        phone || null,
+        timezone || null,
+        topic || null,
+        message,
+      ]
+    );
+
+    // Also create/update marketing contact if email provided
+    if (email) {
+      const existingContact = await db.query(
+        `SELECT id FROM marketing_contacts WHERE practitioner_id = $1 AND email = $2`,
+        [ctx.practitionerId, email]
+      );
+
+      if (existingContact.rows.length === 0) {
+        await db.query(
+          `INSERT INTO marketing_contacts
+           (id, practitioner_id, email, name, status, source, lead_score, created_at)
+           VALUES ($1, $2, $3, $4, 'inquiry', 'chat_inquiry', 50, NOW())`,
+          [crypto.randomUUID(), ctx.practitionerId, email, name || 'Unknown']
+        );
+      } else {
+        await db.query(
+          `UPDATE marketing_contacts
+           SET lead_score = GREATEST(lead_score, 50), updated_at = NOW()
+           WHERE id = $1`,
+          [existingContact.rows[0].id]
+        );
+      }
+    }
+
+    return {
+      success: true,
+      data: {
+        inquiry_id: inquiryId,
+        confirmation_message: email
+          ? `Your message has been sent. ${name ? name + ', you' : 'You'} should receive a response at ${email} within 24-48 hours.`
+          : `Your message has been sent. Since no email was provided, please check back here or reach out again if you haven't heard back.`,
+      },
+    };
+  } catch (error) {
+    console.error('[BookingTools] submitInquiry error:', error);
+    return {
+      success: false,
+      error: 'Failed to submit inquiry. Please try again.',
+    };
+  }
+}
+
+// ============================================================================
+// Tool Dispatcher
+// ============================================================================
+
+/**
+ * Execute a tool by name with given parameters
+ */
+export async function executeTool(
+  toolName: string,
+  params: Record<string, unknown>,
+  ctx: ToolContext
+): Promise<ToolResult> {
+  switch (toolName) {
+    case 'list_services':
+      return listServices(ctx);
+    case 'check_availability':
+      return checkAvailability(ctx, params as { date: string; service_id?: string });
+    case 'create_booking':
+      return createBooking(
+        ctx,
+        params as {
+          service_id: string;
+          date: string;
+          time: string;
+          name: string;
+          email: string;
+          phone?: string;
+          notes?: string;
+        }
+      );
+    case 'submit_inquiry':
+      return submitInquiry(
+        ctx,
+        params as {
+          name?: string;
+          email?: string;
+          phone?: string;
+          timezone?: string;
+          topic?: string;
+          message: string;
+        }
+      );
+    default:
+      return {
+        success: false,
+        error: `Unknown tool: ${toolName}`,
+      };
+  }
+}
+
+// ============================================================================
+// Utilities
+// ============================================================================
+
+function formatDateForDisplay(dateStr: string): string {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+}
+
+function formatTimeForDisplay(timeStr: string): string {
+  const [hours, minutes] = timeStr.split(':').map(Number);
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours % 12 || 12;
+  return `${displayHours}:${String(minutes).padStart(2, '0')} ${ampm}`;
+}

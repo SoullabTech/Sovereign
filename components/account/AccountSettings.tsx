@@ -7,9 +7,9 @@ import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
   Link as LinkIcon, Download, Trash2, Check, ChevronRight, Eye, EyeOff,
   Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
-  Star, MapPin, Search
+  Star, MapPin, Search, ExternalLink, Globe
 } from 'lucide-react';
-import SafeLink from '@/components/debug/SafeLink';
+import Link from 'next/link';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import {
   getAccountSettings,
@@ -86,7 +86,16 @@ interface MemberSettings {
   };
 }
 
-type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data';
+type SettingsSection = 'profile' | 'account' | 'astrology' | 'maia' | 'data-privacy' | 'sovereignty' | 'notifications' | 'privacy' | 'membership' | 'connections' | 'data' | 'portals';
+
+interface PractitionerProject {
+  id: string;
+  slug: string;
+  name: string;
+  publicUrl: string;
+  previewUrl: string;
+  status: string;
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Constants
@@ -135,9 +144,10 @@ const CIRCLE_TIERS = {
   pioneer: { name: 'Pioneer', emoji: '⭐', color: 'text-purple-400' },
 };
 
-const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; color: string }[] = [
+const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; color: string; practitionerOnly?: boolean }[] = [
   { id: 'profile', label: 'Profile', icon: User, color: 'emerald' },
   { id: 'account', label: 'Account', icon: Lock, color: 'blue' },
+  { id: 'portals', label: 'Client Portals', icon: Globe, color: 'amber', practitionerOnly: true },
   { id: 'astrology', label: 'Birth Chart', icon: Star, color: 'violet' },
   { id: 'maia', label: 'MAIA Settings', icon: Brain, color: 'amber' },
   { id: 'data-privacy', label: 'Data & Privacy', icon: Eye, color: 'cyan' },
@@ -163,6 +173,10 @@ export function AccountSettings() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+
+  // Practitioner projects state
+  const [projects, setProjects] = useState<PractitionerProject[]>([]);
+  const [projectsLoading, setProjectsLoading] = useState(false);
 
   // Password change state
   const [showPasskey, setShowPasskey] = useState(false);
@@ -355,6 +369,20 @@ export function AccountSettings() {
         // Get sync status
         const counts = await getSyncStatus(memberId);
         setSyncCounts(counts);
+
+        // Load practitioner projects (if user is a practitioner)
+        try {
+          const projectsRes = await fetch(apiUrl('/api/practitioner/projects'), {
+            headers: { 'x-member-id': memberId }
+          });
+          if (projectsRes.ok) {
+            const projectsData = await projectsRes.json();
+            setProjects(projectsData.projects || []);
+          }
+          // 404 is expected for non-practitioners, ignore silently
+        } catch (e) {
+          console.log('[AccountSettings] Projects not available (non-practitioner)');
+        }
       } catch (err) {
         console.error('[AccountSettings] Load error:', err);
         setError('Failed to load settings');
@@ -1810,16 +1838,86 @@ export function AccountSettings() {
 
         {/* Stewardship Link */}
         <div className="mt-4 text-center">
-          <SafeLink
+          <Link
             href="/maia/stewardship"
             className="text-sm text-white/40 hover:text-white/60 transition-colors"
           >
             Why support matters →
-          </SafeLink>
+          </Link>
         </div>
       </div>
     );
   };
+
+  const renderPortals = () => (
+    <div className="space-y-6">
+      <p className="text-sm text-white/50 mb-4">
+        Quick access to your client-facing portal sites.
+      </p>
+
+      {projects.length === 0 ? (
+        <div className="p-6 bg-white/5 rounded-xl border border-white/10 text-center">
+          <Globe size={32} className="mx-auto mb-3 text-white/30" />
+          <p className="text-white/50">No client portals found</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {projects.map((project) => (
+            <div
+              key={project.id}
+              className="p-4 bg-gradient-to-br from-amber-500/10 to-amber-600/5 rounded-xl border border-amber-500/20"
+            >
+              <div className="flex items-center justify-between gap-4">
+                <div className="min-w-0">
+                  <div className="text-base font-medium text-amber-100 truncate">
+                    {project.name}
+                  </div>
+                  <div className="text-sm text-white/40 truncate">
+                    {project.publicUrl}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <a
+                    href={project.publicUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                             border border-white/20 text-sm text-white/80
+                             hover:bg-white/5 transition-colors"
+                  >
+                    <ExternalLink size={14} />
+                    <span>Open</span>
+                  </a>
+
+                  <a
+                    href={project.previewUrl}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                             bg-amber-500 text-black text-sm font-medium
+                             hover:bg-amber-400 transition-colors"
+                  >
+                    <Eye size={14} />
+                    <span>Preview</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Practitioner Dashboard Link */}
+      <div className="mt-4 pt-4 border-t border-white/10">
+        <a
+          href="/practitioner/dashboard"
+          className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors"
+        >
+          <span className="text-white/80">Go to Practitioner Dashboard</span>
+          <ChevronRight size={18} className="text-white/40" />
+        </a>
+      </div>
+    </div>
+  );
 
   const renderAstrology = () => (
     <div className="space-y-6">
@@ -2319,7 +2417,7 @@ export function AccountSettings() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-3"
           >
-            {SECTIONS.map(({ id, label, icon: Icon, color }, index) => {
+            {SECTIONS.filter(s => !s.practitionerOnly || projects.length > 0).map(({ id, label, icon: Icon, color }, index) => {
               // Color classes for each section
               const colorClasses: Record<string, { bg: string; border: string; icon: string; hover: string }> = {
                 emerald: { bg: 'from-emerald-500/25 to-emerald-600/15', border: 'border-emerald-500/25 group-hover:border-emerald-400/40', icon: 'text-emerald-400', hover: 'group-hover:from-emerald-500/5' },
@@ -2381,6 +2479,7 @@ export function AccountSettings() {
             {activeSection === 'notifications' && renderNotifications()}
             {activeSection === 'privacy' && renderPrivacy()}
             {activeSection === 'membership' && renderMembership()}
+            {activeSection === 'portals' && renderPortals()}
             {activeSection === 'connections' && renderConnections()}
             {activeSection === 'data' && renderData()}
           </motion.div>
