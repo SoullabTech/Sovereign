@@ -320,26 +320,44 @@ elementalalchemy.soullab.life {
 # Loralee Starweaver - Stellium Astrology Portal
 # ═══════════════════════════════════════════════════════════════════════════════
 loralee.soullab.life {
-    # Don't rewrite API routes, static assets, Next.js internals, or already-rewritten /portal paths
-    @static {
-        path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
+    # Handle root path - rewrite to portal without trailing slash
+    handle / {
+        rewrite * /portal/loralee
+        reverse_proxy maia:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
     }
 
-    # Rewrite root path to portal home (without trailing slash)
-    @root {
-        path /
+    # Handle /portal/* paths directly (already correct path)
+    handle /portal/* {
+        reverse_proxy maia:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
     }
-    rewrite @root /portal/loralee
 
-    # Rewrite other page paths to portal namespace (but not API/static/portal/root)
+    # Handle all other page paths - rewrite to portal namespace
     # loralee.soullab.life/admin → /portal/loralee/admin
     # loralee.soullab.life/services → /portal/loralee/services
     @pages {
-        not path / /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
+        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
     }
-    rewrite @pages /portal/loralee{uri}
+    handle @pages {
+        rewrite * /portal/loralee{uri}
+        reverse_proxy maia:3000 {
+            header_up Host {host}
+            header_up X-Real-IP {remote_host}
+            header_up X-Forwarded-For {remote_host}
+            header_up X-Forwarded-Proto {scheme}
+        }
+    }
 
-    # Reverse proxy to MAIA container
+    # Fallback for static assets and API routes - pass through unchanged
     reverse_proxy maia:3000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
