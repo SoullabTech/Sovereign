@@ -5100,7 +5100,7 @@ I'm not sure what I'm feeling yet.`;
                 <div className="space-y-3 pb-52 md:pb-32">
                 {/* Show all messages with proper scrolling - filter out greeting messages (shown in centered UI instead) */}
                 {messages
-                  .filter(m => !m.id.startsWith('greeting-'))
+                  .filter(m => !m.id?.startsWith('greeting-'))
                   .map((message, index) => {
                     const handleCopyMessage = async () => {
                       const textToCopy = (message.text ?? message.content ?? '').replace(/\*[^*]*\*/g, '').replace(/\([^)]*\)/gi, '').trim();
@@ -5125,7 +5125,7 @@ I'm not sure what I'm feeling yet.`;
 
                     return (
                     <motion.div
-                      key={message.id}
+                      key={message.id?.trim() || `msg-${message.role}-${message.timestamp ?? 'no-ts'}-${index}`}
                       initial={{ opacity: 0, y: 0 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 0 }}

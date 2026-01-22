@@ -59,6 +59,10 @@ export interface PractitionerClient {
   next_session?: string;
   total_revenue?: number;
 
+  // Portal access (client claiming chart access)
+  portal_email?: string;
+  portal_claimed_at?: string;
+
   // Timestamps
   created_at: string;
   updated_at: string;

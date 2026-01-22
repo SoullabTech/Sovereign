@@ -31,6 +31,7 @@ import {
 } from 'lucide-react';
 import { usePractitionerAuth } from '@/lib/auth/practitionerAuth';
 import type { PractitionerClient, PractitionerSession, ClientTimeline } from '@/lib/stellium/types';
+import { GenerateInviteButton } from '@/components/portal/GenerateInviteButton';
 
 const colors = {
   void: '#0D0B14',
@@ -571,6 +572,16 @@ export default function ClientProfilePage() {
               </div>
             </div>
           )}
+
+          {/* Portal Access */}
+          <div className="pt-4">
+            <GenerateInviteButton
+              slug={slug}
+              clientId={clientId}
+              clientName={client.preferred_name || client.name}
+              portalClaimed={!!client.portal_claimed_at}
+            />
+          </div>
 
           {/* Quick Actions */}
           <div className="space-y-2 pt-4">
