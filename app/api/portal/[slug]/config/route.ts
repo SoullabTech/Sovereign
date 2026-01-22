@@ -34,6 +34,7 @@ export async function GET(
         p.location,
         p.social_links,
         p.settings,
+        p.portal_status,
         mp.name as persona_name,
         mp.voice_style,
         mp.brand_colors
@@ -57,6 +58,7 @@ export async function GET(
       practitioner_member_id: practitioner.practitioner_member_id,
       practitioner_name: practitioner.practitioner_name,
       slug: practitioner.slug,
+      portal_status: practitioner.portal_status || 'draft',
       brand: {
         name: practitioner.business_name || practitioner.practitioner_name,
         tagline: practitioner.tagline || '',

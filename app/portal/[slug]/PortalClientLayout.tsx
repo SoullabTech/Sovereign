@@ -18,6 +18,7 @@ interface PortalConfig {
   practitioner_member_id?: string;
   practitioner_name: string;
   slug: string;
+  portal_status: 'draft' | 'live';
   brand: {
     name: string;
     tagline: string;
@@ -366,6 +367,34 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
             </AnimatePresence>
           </div>
         </header>
+
+        {/* Draft Mode Banner */}
+        {config.portal_status === 'draft' && (
+          <div
+            className="relative z-20 py-3 px-6 text-center"
+            style={{
+              backgroundColor: colors.stardust,
+              borderBottom: `1px solid ${colors.nebula}`,
+            }}
+          >
+            <p className="text-sm font-medium" style={{ color: colors.gold }}>
+              <span className="inline-block w-2 h-2 rounded-full mr-2" style={{ backgroundColor: colors.gold }} />
+              Private Preview
+              {isOwner && (
+                <span style={{ color: colors.muted }}> — Only visible to you. </span>
+              )}
+              {isOwner && (
+                <Link
+                  href={`/portal/${slug}/admin`}
+                  className="underline hover:no-underline ml-1"
+                  style={{ color: colors.violet }}
+                >
+                  Go live →
+                </Link>
+              )}
+            </p>
+          </div>
+        )}
 
         {/* Main Content */}
         <main className="relative z-10 max-w-6xl mx-auto px-6 lg:px-8 py-16">
