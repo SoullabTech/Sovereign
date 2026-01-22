@@ -320,10 +320,18 @@ elementalalchemy.soullab.life {
 # Loralee Starweaver - Stellium Astrology Portal
 # ═══════════════════════════════════════════════════════════════════════════════
 loralee.soullab.life {
-    # Rewrite all paths to portal namespace
+    # Don't rewrite API routes, static assets, or Next.js internals
+    @static {
+        path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
+    }
+
+    # Rewrite page paths to portal namespace (but not API/static)
     # loralee.soullab.life/admin → /portal/loralee/admin
     # loralee.soullab.life/services → /portal/loralee/services
-    rewrite * /portal/loralee{uri}
+    @pages {
+        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
+    }
+    rewrite @pages /portal/loralee{uri}
 
     # Reverse proxy to MAIA container
     reverse_proxy maia:3000 {
