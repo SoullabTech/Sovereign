@@ -40,7 +40,14 @@ export async function GET(request: NextRequest) {
     const practitioner = practitionerResult.rows?.[0];
 
     if (!practitioner) {
-      return NextResponse.json({ error: 'Practitioner not found' }, { status: 404 });
+      // Return structured response so UI can show helpful messaging
+      return NextResponse.json({
+        ok: false,
+        reason: 'NO_PRACTITIONER_LINK',
+        message: 'No practitioner record linked to this member.',
+        memberId,
+        projects: [],
+      });
     }
 
     // Build the project entry

@@ -1856,9 +1856,37 @@ export function AccountSettings() {
       </p>
 
       {projects.length === 0 ? (
-        <div className="p-6 bg-white/5 rounded-xl border border-white/10 text-center">
-          <Globe size={32} className="mx-auto mb-3 text-white/30" />
-          <p className="text-white/50">No client portals found</p>
+        <div className="p-6 bg-white/5 rounded-xl border border-white/10">
+          <div className="text-center mb-4">
+            <Globe size={32} className="mx-auto mb-3 text-white/30" />
+            <p className="text-white/50 font-medium">No client portals found</p>
+            <p className="text-sm text-white/30 mt-1">
+              Your member account may not be linked to a practitioner record yet.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2 justify-center">
+            <a
+              href="/api/practitioner/projects"
+              target="_blank"
+              rel="noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                       border border-white/20 text-sm text-white/60
+                       hover:bg-white/5 transition-colors"
+            >
+              <ExternalLink size={14} />
+              <span>Debug API</span>
+            </a>
+
+            <Link
+              href="/practitioners/signup"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg
+                       bg-amber-500 text-black text-sm font-medium
+                       hover:bg-amber-400 transition-colors"
+            >
+              <span>Link Practitioner Account</span>
+            </Link>
+          </div>
         </div>
       ) : (
         <div className="space-y-3">
@@ -2417,7 +2445,7 @@ export function AccountSettings() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-3"
           >
-            {SECTIONS.filter(s => !s.practitionerOnly || projects.length > 0).map(({ id, label, icon: Icon, color }, index) => {
+            {SECTIONS.map(({ id, label, icon: Icon, color }, index) => {
               // Color classes for each section
               const colorClasses: Record<string, { bg: string; border: string; icon: string; hover: string }> = {
                 emerald: { bg: 'from-emerald-500/25 to-emerald-600/15', border: 'border-emerald-500/25 group-hover:border-emerald-400/40', icon: 'text-emerald-400', hover: 'group-hover:from-emerald-500/5' },
