@@ -203,8 +203,35 @@ export const ACCESS_RULES: AccessRule[] = [
   // Commons curation (role-gated)
   { exact: '/maia/community/commons/review', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
 
-  // Lab Tools (all Pro)
-  { prefix: '/labtools', minTier: 'pro', notes: 'All lab tools require Pro' },
+  // ─────────────────────────────────────────────────────────────────
+  // Lab Tools - Tiered Access
+  // Personal tier: core self-work, identity, daily loop
+  // Pro tier: analytics, compute, audio, power tools
+  // Order matters: specific rules BEFORE the broad prefix fallback
+  // ─────────────────────────────────────────────────────────────────
+
+  // Lab Tools - Personal tier (core daily use)
+  { exact: '/labtools', minTier: 'personal', notes: 'Lab tools index' },
+  { exact: '/labtools/profile', minTier: 'personal', notes: 'Profile settings' },
+  { exact: '/labtools/settings', minTier: 'personal', notes: 'App settings' },
+  { exact: '/labtools/language', minTier: 'personal', notes: 'Language preferences' },
+  { exact: '/labtools/journal', minTier: 'personal', notes: 'Daily journaling' },
+  { exact: '/labtools/reflections', minTier: 'personal', notes: 'Reflection feed' },
+  { prefix: '/labtools/reflections/', minTier: 'personal', notes: 'Individual reflections' },
+  { exact: '/labtools/favorites', minTier: 'personal', notes: 'Saved items' },
+  { exact: '/labtools/downloads', minTier: 'personal', notes: 'Downloads (content-gated separately)' },
+  { exact: '/labtools/books', minTier: 'personal', notes: 'Book access (content-gated separately)' },
+  { exact: '/labtools/sovereignty', minTier: 'personal', notes: 'Data sovereignty - rights not perks' },
+  { exact: '/labtools/gifts', minTier: 'personal', notes: 'Gift redemption' },
+  { exact: '/labtools/beta-testing', minTier: 'personal', notes: 'Pioneer circle' },
+  { exact: '/labtools/voice', minTier: 'personal', notes: 'Voice settings' },
+  { exact: '/labtools/field-analytics', minTier: 'personal', notes: 'Field analytics' },
+
+  // Lab Tools - Admin only (before Pro fallback)
+  { prefix: '/labtools/admin', minTier: 'personal', rolesAnyOf: ['admin'], notes: 'Admin tools - role-gated' },
+
+  // Lab Tools - Pro tier (everything else)
+  { prefix: '/labtools', minTier: 'pro', notes: 'All other lab tools require Pro' },
 
   // ─────────────────────────────────────────────────────────────────
   // Legacy Redirects
@@ -214,10 +241,11 @@ export const ACCESS_RULES: AccessRule[] = [
   // ─────────────────────────────────────────────────────────────────
   // public: only redirects to public page, avoids auth wall on old links
   { exact: '/birth-chart', public: true, minTier: 'free', notes: '→ /patterns' },
-  // pro: labtools require auth, enforce here not at destination
-  { exact: '/journal', minTier: 'pro', notes: '→ /labtools/journal' },
-  { exact: '/voice', minTier: 'pro', notes: '→ /labtools/voice' },
-  { exact: '/language', minTier: 'pro', notes: '→ /labtools/language' },
+  // personal: these now match Personal tier labtools
+  { exact: '/journal', minTier: 'personal', notes: '→ /labtools/journal' },
+  { exact: '/language', minTier: 'personal', notes: '→ /labtools/language' },
+  // personal: voice settings
+  { exact: '/voice', minTier: 'personal', notes: '→ /labtools/voice' },
 
   // Consciousness Pro features
   { exact: '/consciousness/portals/admin', minTier: 'pro', rolesAnyOf: ['admin', 'steward'], notes: 'Portal admin' },

@@ -229,7 +229,17 @@ This reframes continuity as relational and ethical, not technical. The technical
 
 ---
 
-## 9) Session Recovery Checklist
+## 9) Canon Governance
+
+No capability, agent, or behavioral pattern may be added to MAIA that violates the MAIA Oath, even if it improves performance, engagement, or user satisfaction.
+
+The oath is the law. Everything else is implementation.
+
+See: `docs/canon/MAIA_OATH.md`
+
+---
+
+## 10) Session Recovery Checklist
 
 When Claude Code loses context, run through:
 

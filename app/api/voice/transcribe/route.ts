@@ -9,6 +9,8 @@ import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
 import { llamaService } from "../../_backend/src/services/memory/LlamaService";
 import { logger } from "../../_backend/src/utils/logger";
 import { v4 as uuidv4 } from "uuid";
+import { getEntitlements } from "@/lib/entitlements";
+import { getDailyUsage, incrementDailyUsage } from "@/lib/usage";
 
 // Skip during static export (Capacitor builds)
 
@@ -36,6 +38,43 @@ export async function POST(req: NextRequest) {
     if (!file || !userId) {
       return NextResponse.json(
         { success: false, error: "Missing file or userId" },
+        { status: 400 }
+      );
+    }
+
+    // Entitlement checks
+    const entitlements = await getEntitlements(userId);
+
+    if (!entitlements.features.voiceTranscription) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Voice transcription requires Personal tier",
+          upgradeRequired: true,
+        },
+        { status: 403 }
+      );
+    }
+
+    const usage = await getDailyUsage(userId, "voice");
+    const estimatedSeconds = Math.ceil(file.size / 16000); // rough PCM estimate
+
+    if (usage.seconds + estimatedSeconds > entitlements.limits.voiceSecondsPerDay) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Daily voice limit reached (${Math.floor(entitlements.limits.voiceSecondsPerDay / 60)} min/day). Resets at midnight.`,
+        },
+        { status: 429 }
+      );
+    }
+
+    if (estimatedSeconds > entitlements.limits.maxRecordingSeconds) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Recording too long. Max ${entitlements.limits.maxRecordingSeconds}s for your tier.`,
+        },
         { status: 400 }
       );
     }
@@ -133,6 +172,9 @@ export async function POST(req: NextRequest) {
           createdAt: new Date().toISOString()
         }
       });
+
+      // Track usage for quota enforcement
+      await incrementDailyUsage(userId, "voice", durationSeconds);
 
       logger.info("Voice transcription successful", {
         userId: userId.substring(0, 8) + '...',

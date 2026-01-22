@@ -25,6 +25,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **iOS / Capacitor pipeline**: `scripts/capacitor-patch-routes.sh`, `scripts/build-ios.sh`, `ios/*`
 - **Deployment & ops**: `docker-compose.production.yml`, `Caddyfile`, `scripts/deploy-production.sh`
 - **Canon**: `docs/canon/MAIA_CANON_v1.1.md`
+- **Oath**: `docs/canon/MAIA_OATH.md` — the irreducible standard
 
 ## Known recurring traps (read before debugging)
 
@@ -40,6 +41,7 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **Last fix applied**: Introduced `apiFetch()` with `x-member-id` for Capacitor; updated `OracleConversation.tsx` accordingly
 - **Next action**: Archive in Xcode and upload to TestFlight
 - **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
+- **State of the system**: Oath sealed. No new capabilities until continuity is observed in practice.
 
 ## Re-entry vow (for this session)
 
@@ -59,6 +61,8 @@ If this is not clear, re-read the Anchor and PROJECT_CONTEXT.md before proceedin
 ## Canon
 
 **[MAIA Canon v1.1](./docs/canon/MAIA_CANON_v1.1.md)** governs all changes. Before implementing any feature, verify alignment with the canon's prohibitions and structural principles.
+
+This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any change that violates the oath is invalid, regardless of technical merit.
 
 ## Deployment
 

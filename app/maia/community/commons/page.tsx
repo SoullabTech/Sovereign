@@ -127,6 +127,14 @@ export default function MAIACommunityCommonsPage() {
           type: 'practice',
           readTime: '10 min'
         },
+        {
+          icon: FileText,
+          label: 'MAIA-SOVEREIGN: An Ontological Architecture',
+          path: '/maia/community/content/whitepaper/ontological-architecture',
+          description: 'The philosophical foundations and governance mechanisms of a sovereign AI companion',
+          type: 'essay',
+          readTime: '20 min'
+        },
       ],
     },
     {

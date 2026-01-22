@@ -9,7 +9,7 @@ import {
   Mail, Clock, Crown, Sparkles, AlertTriangle, ArrowLeft, BookOpen,
   Star, MapPin, Search
 } from 'lucide-react';
-import Link from 'next/link';
+import SafeLink from '@/components/debug/SafeLink';
 import { GoogleConnectSection } from '@/components/settings/GoogleConnectSection';
 import {
   getAccountSettings,
@@ -145,7 +145,7 @@ const SECTIONS: { id: SettingsSection; label: string; icon: typeof User; color: 
   { id: 'notifications', label: 'Notifications', icon: Bell, color: 'rose' },
   { id: 'privacy', label: 'Privacy', icon: Shield, color: 'indigo' },
   { id: 'membership', label: 'Membership', icon: Crown, color: 'yellow' },
-  { id: 'connections', label: 'Connections', icon: Link, color: 'sky' },
+  { id: 'connections', label: 'Connections', icon: LinkIcon, color: 'sky' },
   { id: 'data', label: 'Your Data', icon: Download, color: 'slate' },
 ];
 
@@ -1810,12 +1810,12 @@ export function AccountSettings() {
 
         {/* Stewardship Link */}
         <div className="mt-4 text-center">
-          <Link
+          <SafeLink
             href="/maia/stewardship"
             className="text-sm text-white/40 hover:text-white/60 transition-colors"
           >
             Why support matters →
-          </Link>
+          </SafeLink>
         </div>
       </div>
     );

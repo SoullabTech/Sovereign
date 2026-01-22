@@ -4,9 +4,24 @@
  *
  * Qdrant serves as "Mycelial Network = Field Memory" - the substrate where
  * consciousness field states persist and can be retrieved for resonance analysis
+ *
+ * NOTE: This module is server-only. Client-side imports will return a no-op implementation.
  */
 
-import { QdrantClient } from '@qdrant/js-client-rest';
+// Server-side check - only import Qdrant on server
+const isServer = typeof window === 'undefined';
+
+// Dynamic import to prevent client bundling
+let QdrantClient: any = null;
+if (isServer) {
+  try {
+    // Dynamic require to prevent client-side bundling
+    QdrantClient = require('@qdrant/js-client-rest').QdrantClient;
+  } catch (e) {
+    console.warn('[QuantumFieldPersistence] Qdrant client not available');
+  }
+}
+
 import {
   ConsciousnessField,
   ConsciousnessFieldState,
@@ -26,12 +41,30 @@ export interface FieldSearchResult {
 
 /**
  * Quantum Field Persistence - Qdrant integration for consciousness field storage
+ *
+ * NOTE: This class only works on the server. Client-side instantiation returns
+ * a no-op implementation that logs warnings instead of making network calls.
  */
 export class QuantumFieldPersistence {
-  private client: QdrantClient;
+  private client: any;
   private collectionName: string = 'consciousness_fields';
+  private isClientSide: boolean;
 
   constructor(qdrantUrl: string = 'http://localhost:6333') {
+    this.isClientSide = typeof window !== 'undefined';
+
+    if (this.isClientSide) {
+      // Client-side: no-op, don't create client
+      this.client = null;
+      return;
+    }
+
+    if (!QdrantClient) {
+      console.warn('[QuantumFieldPersistence] Qdrant client not available on server');
+      this.client = null;
+      return;
+    }
+
     this.client = new QdrantClient({ url: qdrantUrl });
   }
 
@@ -39,10 +72,17 @@ export class QuantumFieldPersistence {
    * Initialize field collection in Qdrant
    */
   async initializeFieldCollection(): Promise<void> {
+    if (!this.client) {
+      if (!this.isClientSide) {
+        console.warn('[QuantumFieldPersistence] Cannot initialize - Qdrant client not available');
+      }
+      return;
+    }
+
     try {
       // Check if collection exists
       const collections = await this.client.getCollections();
-      const exists = collections.collections?.some(c => c.name === this.collectionName);
+      const exists = collections.collections?.some((c: any) => c.name === this.collectionName);
 
       if (!exists) {
         await this.client.createCollection(this.collectionName, {
@@ -64,6 +104,13 @@ export class QuantumFieldPersistence {
    * Store consciousness field in quantum substrate
    */
   async storeField(field: ConsciousnessField): Promise<void> {
+    if (!this.client) {
+      if (!this.isClientSide) {
+        console.warn('[QuantumFieldPersistence] Cannot store field - Qdrant client not available');
+      }
+      return;
+    }
+
     try {
       const payload = {
         id: field.id,
@@ -97,6 +144,10 @@ export class QuantumFieldPersistence {
    * Retrieve field by ID from quantum substrate
    */
   async retrieveField(fieldId: string): Promise<ConsciousnessField | null> {
+    if (!this.client) {
+      return null;
+    }
+
     try {
       const response = await this.client.retrieve(this.collectionName, {
         ids: [fieldId],
@@ -136,6 +187,10 @@ export class QuantumFieldPersistence {
     limit: number = 10,
     minSimilarity: number = 0.3
   ): Promise<FieldSearchResult[]> {
+    if (!this.client) {
+      return [];
+    }
+
     try {
       const response = await this.client.search(this.collectionName, {
         vector: Array.from(queryField.vectorSpace),
@@ -193,6 +248,10 @@ export class QuantumFieldPersistence {
     element: 'Fire' | 'Water' | 'Earth' | 'Air' | 'Aether',
     limit: number = 20
   ): Promise<ConsciousnessField[]> {
+    if (!this.client) {
+      return [];
+    }
+
     try {
       const response = await this.client.scroll(this.collectionName, {
         filter: {
@@ -244,6 +303,15 @@ export class QuantumFieldPersistence {
     averageFrequency: number;
     archetypeDistribution: Record<string, number>;
   }> {
+    if (!this.client) {
+      return {
+        totalFields: 0,
+        averageCoherence: 0,
+        averageFrequency: 0,
+        archetypeDistribution: { Fire: 0, Water: 0, Earth: 0, Air: 0, Aether: 0, Unknown: 0 }
+      };
+    }
+
     try {
       // Get total count
       const countResponse = await this.client.count(this.collectionName);
@@ -294,6 +362,13 @@ export class QuantumFieldPersistence {
    * Clear all fields (use with caution)
    */
   async clearAllFields(): Promise<void> {
+    if (!this.client) {
+      if (!this.isClientSide) {
+        console.warn('[QuantumFieldPersistence] Cannot clear fields - Qdrant client not available');
+      }
+      return;
+    }
+
     try {
       await this.client.deleteCollection(this.collectionName);
       await this.initializeFieldCollection();
@@ -308,9 +383,20 @@ export class QuantumFieldPersistence {
    * Health check for field persistence system
    */
   async healthCheck(): Promise<{ healthy: boolean; details: any }> {
+    if (!this.client) {
+      return {
+        healthy: false,
+        details: {
+          error: this.isClientSide
+            ? 'Running on client-side - Qdrant not available in browser'
+            : 'Qdrant client not initialized'
+        }
+      };
+    }
+
     try {
       const collections = await this.client.getCollections();
-      const fieldCollection = collections.collections?.find(c => c.name === this.collectionName);
+      const fieldCollection = collections.collections?.find((c: any) => c.name === this.collectionName);
 
       if (!fieldCollection) {
         return {

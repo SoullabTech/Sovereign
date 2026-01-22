@@ -59,12 +59,24 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('❌ TTS error:', error);
+    console.error('❌ [openai-tts] failed', {
+      message: error?.message,
+      name: error?.name,
+      status: error?.status,
+      code: error?.code,
+      type: error?.type,
+    });
+
+    // Log the key presence (not the key itself)
+    console.log('🔑 OPENAI_API_KEY present?', Boolean(process.env.OPENAI_API_KEY));
+    console.log('🔑 OPENAI_API_KEY length:', process.env.OPENAI_API_KEY?.length || 0);
 
     return NextResponse.json(
       {
         error: 'Speech synthesis failed',
-        details: error.message
+        details: error?.message || error?.response?.data || 'Unknown error',
+        status: error?.status,
+        code: error?.code,
       },
       { status: 500 }
     );

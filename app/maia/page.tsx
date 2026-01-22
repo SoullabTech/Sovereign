@@ -757,6 +757,23 @@ function MAIAPageContent() {
                   <span className="text-xs">Journal</span>
                 </motion.button>
 
+                {/* ✨ Capture Button - Mobile */}
+                <motion.button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('labAction', {
+                      detail: { action: 'capture-spirit' }
+                    }));
+                  }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg
+                           bg-[#D4B896]/10 hover:bg-[#D4B896]/20
+                           border border-[#D4B896]/30 hover:border-[#D4B896]/50
+                           text-[#D4B896] text-xs font-light transition-all flex-shrink-0"
+                  title="Capture the spirit of the last few turns"
+                >
+                  <Sparkles className="w-3 h-3" />
+                  <span className="text-xs">Capture</span>
+                </motion.button>
+
                 {/* Soullab Button - Mobile */}
                 <motion.button
                   onClick={() => setShowAcademySheet(true)}
@@ -933,6 +950,25 @@ function MAIAPageContent() {
                     ) : (
                       <span className="text-[10px] opacity-40">▾</span>
                     )}
+                  </motion.button>
+
+                  {/* ✨ Capture Button - Desktop (inside mode selector) */}
+                  <motion.button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('labAction', {
+                        detail: { action: 'capture-spirit' }
+                      }));
+                    }}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                             bg-[#D4B896]/10 hover:bg-[#D4B896]/20
+                             border border-[#D4B896]/30 hover:border-[#D4B896]/50
+                             text-[#D4B896] text-xs font-light transition-all"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    title="Capture the spirit of the last few turns"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Capture
                   </motion.button>
                 </div>
 

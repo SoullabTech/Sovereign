@@ -21,6 +21,14 @@ export async function synthesizeSpeech(params: {
 }) {
   const { text, voice = 'alloy', format = 'mp3', speed = 1.0, model } = params;
 
+  console.log('🔊 [openai-tts] request', {
+    model: model || DEFAULT_TTS_MODEL,
+    voice,
+    inputLength: text?.length ?? 0,
+    hasApiKey: Boolean(process.env.OPENAI_API_KEY),
+    keyLength: process.env.OPENAI_API_KEY?.length || 0,
+  });
+
   const response = await openai.audio.speech.create({
     model: model || DEFAULT_TTS_MODEL,
     input: text,
