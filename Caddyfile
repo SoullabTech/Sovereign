@@ -325,11 +325,17 @@ loralee.soullab.life {
         path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
     }
 
-    # Rewrite page paths to portal namespace (but not API/static/portal)
+    # Rewrite root path to portal home (without trailing slash)
+    @root {
+        path /
+    }
+    rewrite @root /portal/loralee
+
+    # Rewrite other page paths to portal namespace (but not API/static/portal/root)
     # loralee.soullab.life/admin → /portal/loralee/admin
     # loralee.soullab.life/services → /portal/loralee/services
     @pages {
-        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
+        not path / /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
     }
     rewrite @pages /portal/loralee{uri}
 
