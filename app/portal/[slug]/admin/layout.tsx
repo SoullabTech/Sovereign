@@ -1,6 +1,8 @@
 export async function generateStaticParams() {
-  return [{ slug: 'default' }];
+  return [{ slug: 'default' }, { slug: 'loralee' }];
 }
+
+export const dynamicParams = true;
 
 import PortalAdminClientLayout from './PortalAdminClientLayout';
 
