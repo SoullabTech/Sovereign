@@ -15,6 +15,7 @@ import EthosFooter from '@/components/shared/EthosFooter';
 import { betaSession } from '@/lib/auth/betaSession';
 import { biometricAuth } from '@/lib/auth/biometricAuth';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
+import { setPractitionerContext } from '@/lib/auth/practitionerAuth';
 import { api, ApiError } from '@/lib/api-client';
 import { apiUrl, apiBaseUrl } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
@@ -37,7 +38,7 @@ function SigninContent() {
   const [bioPlatformAvailable, setBioPlatformAvailable] = useState(false);
 
   // Biometric signin (username optional for discoverable credentials)
-  const [bioUsername] = useState('');
+  const [bioUsername, setBioUsername] = useState('');
 
   // Password visibility toggle
   const [showPasswordText, setShowPasswordText] = useState(false);
@@ -228,7 +229,7 @@ function SigninContent() {
     setIsLoading(true);
 
     try {
-      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null } } | null = null;
+      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null }; practitioner?: { id: string; slug: string; name: string } | null } | null = null;
 
       try {
         // Use apiUrl() for correct path - /api/members/signin (not /v1/)
@@ -309,6 +310,15 @@ function SigninContent() {
         }
 
         storeSession(user);
+
+        // Store practitioner context if user is a practitioner
+        if (data.practitioner) {
+          setPractitionerContext({
+            id: data.practitioner.id,
+            slug: data.practitioner.slug,
+            name: data.practitioner.name,
+          });
+        }
 
         const redirectPath = user.onboarded ? '/maia' : '/begin';
 
