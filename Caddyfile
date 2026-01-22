@@ -320,16 +320,16 @@ elementalalchemy.soullab.life {
 # Loralee Starweaver - Stellium Astrology Portal
 # ═══════════════════════════════════════════════════════════════════════════════
 loralee.soullab.life {
-    # Don't rewrite API routes, static assets, or Next.js internals
+    # Don't rewrite API routes, static assets, Next.js internals, or already-rewritten /portal paths
     @static {
-        path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
+        path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
     }
 
-    # Rewrite page paths to portal namespace (but not API/static)
+    # Rewrite page paths to portal namespace (but not API/static/portal)
     # loralee.soullab.life/admin → /portal/loralee/admin
     # loralee.soullab.life/services → /portal/loralee/services
     @pages {
-        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp
+        not path /api/* /_next/* /icons/* /manifest.json /favicon.ico /*.png /*.svg /*.jpg /*.webp /portal/*
     }
     rewrite @pages /portal/loralee{uri}
 
