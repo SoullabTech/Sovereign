@@ -5125,7 +5125,7 @@ I'm not sure what I'm feeling yet.`;
 
                     return (
                     <motion.div
-                      key={message.id?.trim() || `msg-${message.role}-${message.timestamp ?? 'no-ts'}-${index}`}
+                      key={message.id?.trim() || `msg-${message.role}-${typeof message.timestamp === 'string' ? message.timestamp : (message.timestamp?.toISOString?.() ?? 'no-ts')}-${index}`}
                       initial={{ opacity: 0, y: 0 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: 0 }}
