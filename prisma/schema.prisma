@@ -71,6 +71,9 @@ model User {
   creativityJourney       CreativityJourney?
   memberAchievements      MemberAchievement[]
 
+  // Reflection Capsules - Conversation Encapsulation
+  reflectionCapsules      ReflectionCapsule[]
+
   @@index([username])
   @@index([lastActiveAt])
 }
@@ -1561,4 +1564,58 @@ model MemberAchievement {
   @@unique([userId, achievementKey])
   @@index([userId])
   @@index([achievementType])
+}
+
+// ============================================================================
+// REFLECTION CAPSULES - CONVERSATION ENCAPSULATION
+// ============================================================================
+// Philosophy: MAIA does not store experience as the primary object.
+// MAIA witnesses experience and remembers what mattered.
+// Capsules are distilled artifacts that capture the spirit of a conversation.
+
+model ReflectionCapsule {
+  id        String   @id @default(cuid())
+  userId    String
+
+  // Source tracking
+  sourceType  String   // chat, voice, transcript, note, journal
+  sourceId    String?  // Optional reference to source
+
+  // Core content
+  title       String   @default("Untitled")
+  summary     String   @db.Text  // The "spirit" - 2-5 lines distilled essence
+
+  // Structured insights (JSONB)
+  goldLines   Json     @default("[]")  // Verbatim quotes that landed
+  decisions   Json     @default("[]")  // Array of { text: string }
+  nextSteps   Json     @default("[]")  // Array of { text: string, due?: string }
+  practices   Json     @default("[]")  // Array of { name: string, steps: string[] }
+  patterns    Json     @default("[]")  // Array of { name: string, description?: string }
+
+  // Elemental/consciousness signals
+  signals     Json?    // { element?, facet?, tone?, archetype?, intensity? }
+
+  // Organization
+  tags        Json     @default("[]")  // Array of strings
+
+  // Source context (collapsed, not primary)
+  sourceExcerpt String? @db.Text  // Short excerpt from original
+
+  // State management
+  draft       Boolean  @default(true)   // Drafts are captured but not yet "brought into the Lab"
+  pinned      Boolean  @default(false)  // Quick access
+  archived    Boolean  @default(false)  // Hidden from main feed
+
+  // Timestamps
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+  @@index([userId, archived])
+  @@index([userId, draft])
+  @@map("reflection_capsules")
 }

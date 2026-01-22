@@ -73,6 +73,12 @@ export default function LabToolsPage() {
       icon: '✍️',
       items: [
         {
+          icon: Sparkles,
+          label: 'Reflections',
+          path: '/labtools/reflections',
+          description: 'Distilled moments from conversations'
+        },
+        {
           icon: BookOpen,
           label: 'Journal',
           path: '/labtools/journal',

@@ -182,6 +182,18 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '📚',
       items: [
         {
+          icon: Sparkles,
+          label: 'Capture the Spirit',
+          action: () => onAction?.('capture-spirit'),
+          description: 'Distill what mattered from this conversation'
+        },
+        {
+          icon: Sparkles,
+          label: 'Reflections',
+          action: () => onNavigate('/labtools/reflections'),
+          description: 'Your distilled moments and insights'
+        },
+        {
           icon: Library,
           label: 'Personal Library',
           action: () => onNavigate('/library'),

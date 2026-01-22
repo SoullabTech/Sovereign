@@ -38,7 +38,7 @@ import { MotionState, CoherenceShift } from './motion/MotionOrchestrator';
 import { OracleResponse, ConversationContext as OracleConversationContext } from '@/lib/oracle-response';
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiUrl, apiFetch } from '@/lib/http/apiBase';
 import { VoiceState } from '@/lib/voice/voice-capture';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
@@ -77,6 +77,11 @@ import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/service
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
 import { useScribeMode } from '@/hooks/useScribeMode';
 import { BookPlus } from 'lucide-react';
+// Reflection Capsules - "Capture the Spirit"
+import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
+import CaptureSuggestionChip from '@/components/capsules/CaptureSuggestionChip';
+import { detectCaptureTrigger } from '@/lib/capsules/types';
+import type { CapsuleDTO } from '@/lib/capsules/types';
 import { TransformationalPresence, type PresenceState } from './nlp/TransformationalPresence';
 import { SessionTimer, SESSION_PRESETS } from '@/lib/session/SessionTimer';
 import { SessionTimeAwareness } from '@/components/session/SessionTimeAwareness';
@@ -420,6 +425,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
   const [journalSuggestionDismissed, setJournalSuggestionDismissed] = useState(false);
   const [breakthroughScore, setBreakthroughScore] = useState(0);
+
+  // ✨ CAPTURE THE SPIRIT: Reflection Capsules
+  const [showCapturePanel, setShowCapturePanel] = useState(false);
+  const [showCaptureSuggestion, setShowCaptureSuggestion] = useState(false);
+  const [captureSuggestionDismissed, setCaptureSuggestionDismissed] = useState(false);
+  const [capturedCapsule, setCapturedCapsule] = useState<CapsuleDTO | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [captureError, setCaptureError] = useState<string | null>(null);
 
   // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower)
   // This is separate from messages - history can be restored but greeting shows until activation
@@ -794,9 +807,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // setIsAudioPlaying is now set in audio.onplay callback below
 
       // Call OpenAI TTS with voice settings from account preferences
-      const response = await fetch(apiUrl('/api/voice/openai-tts'), {
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: text,
           voice: voiceSettings.voice,
@@ -1171,7 +1183,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       // Step 2: Check PostgreSQL for sovereign cross-device sync
       try {
-        const response = await fetch(apiUrl(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`));
+        const response = await apiFetch(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.messages && data.messages.length > 0) {
@@ -1255,9 +1267,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         // Save user + oracle exchange pairs
         if (msg.role === 'user' && (nextMsg.role === 'oracle' || nextMsg.role === 'assistant')) {
           // Non-blocking async save
-          fetch(apiUrl('/api/conversation/turns'), {
+          apiFetch('/api/conversation/turns', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               userMessage: msg.text,
               assistantMessage: nextMsg.text,
@@ -1544,6 +1555,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setShowJournalSuggestion(true);
     }
   }, [messages, showJournalSuggestion, journalSuggestionDismissed]);
+
+  // Detect capture trigger for "Capture the Spirit" suggestion
+  useEffect(() => {
+    if (messages.length < 4) return; // Need some conversation depth
+    if (showCaptureSuggestion || captureSuggestionDismissed || showCapturePanel) return;
+
+    // Check last MAIA message for capture triggers
+    const lastMaiaMessage = [...messages].reverse().find(msg => msg.role === 'oracle');
+    if (lastMaiaMessage) {
+      const content = lastMaiaMessage.text || lastMaiaMessage.content || '';
+      if (detectCaptureTrigger(content)) {
+        console.log('✨ [Capsule] Capture trigger detected, showing suggestion');
+        setShowCaptureSuggestion(true);
+      }
+    }
+  }, [messages, showCaptureSuggestion, captureSuggestionDismissed, showCapturePanel]);
 
   // Agent configuration with persistence
   const [agentConfig, setAgentConfig] = useState<AgentConfig>(() => {
@@ -2067,9 +2094,8 @@ I'm not sure what I'm feeling yet.`;
         sessionId
       });
 
-      const response = await fetch(apiUrl('/api/journal/save-conversation'), {
+      const response = await apiFetch('/api/journal/save-conversation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           messages: conversationMessages,
           userId,
@@ -2119,6 +2145,131 @@ I'm not sure what I'm feeling yet.`;
       setJournalSuggestionDismissed(true);
     }
   }, [userId, messages, sessionId]);
+
+  // ✨ Capture the Spirit - Create Reflection Capsule from conversation
+  const handleCaptureSpirit = useCallback(async () => {
+    console.log('✨ [Capsule] handleCaptureSpirit called', { userId, messageCount: messages.length });
+
+    if (!userId) {
+      toast.error('Please sign in to capture reflections');
+      console.error('❌ [Capsule] No userId provided');
+      return;
+    }
+
+    if (messages.length < 2) {
+      toast.error('Have a conversation first before capturing');
+      console.error('❌ [Capsule] Not enough messages:', messages.length);
+      return;
+    }
+
+    setShowCapturePanel(true);
+    setIsCapturing(true);
+    setCaptureError(null);
+    setCapturedCapsule(null);
+
+    try {
+      // Convert messages to the format expected by the capsule API
+      const conversationMessages = messages.slice(-16).map(msg => ({
+        role: msg.role === 'oracle' ? 'assistant' as const : 'user' as const,
+        content: msg.text || msg.content || '',
+        timestamp: typeof msg.timestamp === 'string' ? msg.timestamp : msg.timestamp?.toISOString?.() || new Date().toISOString(),
+      }));
+
+      console.log('📤 [Capsule] Sending request to /api/capsules/from-chat-window', {
+        messageCount: conversationMessages.length,
+      });
+
+      const response = await apiFetch('/api/capsules/from-chat-window', {
+        method: 'POST',
+        body: JSON.stringify({
+          messages: conversationMessages,
+          windowSize: 16,
+          tags: [],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || errorData.details || 'Failed to capture spirit');
+      }
+
+      const data = await response.json();
+      console.log('✅ [Capsule] Successfully captured:', data);
+
+      setCapturedCapsule(data.capsule);
+
+      // Track the capture
+      trackEvent('spirit_captured', {
+        userId,
+        sessionId,
+        messageCount: messages.length,
+        capsuleId: data.capsule.id,
+        title: data.capsule.title,
+      });
+    } catch (error: any) {
+      console.error('❌ [Capsule] Error capturing spirit:', error);
+      setCaptureError(error.message || 'Failed to capture. Please try again.');
+    } finally {
+      setIsCapturing(false);
+      setShowCaptureSuggestion(false);
+      setCaptureSuggestionDismissed(true);
+    }
+  }, [userId, messages, sessionId]);
+
+  // Update captured capsule (quick edits)
+  const handleUpdateCapsule = useCallback(async (updates: Partial<CapsuleDTO>) => {
+    if (!capturedCapsule) return;
+
+    try {
+      const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save changes');
+      }
+
+      const data = await response.json();
+      setCapturedCapsule(data.capsule);
+      toast.success('Changes saved');
+    } catch (error: any) {
+      console.error('Failed to update capsule:', error);
+      toast.error('Failed to save changes');
+    }
+  }, [capturedCapsule]);
+
+  // Bring capsule into the lab (mark as non-draft)
+  const handleBringCapsuleIntoLab = useCallback(async () => {
+    if (!capturedCapsule) return;
+
+    try {
+      const response = await apiFetch(`/api/capsules/${capturedCapsule.id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ draft: false }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save');
+      }
+
+      const data = await response.json();
+      setCapturedCapsule(data.capsule);
+
+      toast.success(
+        <div>
+          <div className="font-semibold">Brought into the Lab</div>
+          <div className="text-sm text-white/70">View in Reflections anytime</div>
+        </div>,
+        { duration: 4000 }
+      );
+
+      setShowCapturePanel(false);
+    } catch (error: any) {
+      console.error('Failed to bring into lab:', error);
+      toast.error('Failed to save. Please try again.');
+    }
+  }, [capturedCapsule]);
 
   // Handle conversation download
   const handleDownloadConversation = useCallback(() => {
@@ -2493,11 +2644,9 @@ I'm not sure what I'm feeling yet.`;
 
       let response: Response;
       try {
-        response = await fetch(fullApiUrl, {
+        // apiFetch() adds x-member-id header for Capacitor apps (cookies don't work cross-origin)
+        response = await apiFetch(apiEndpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', // IMPORTANT for cookie/session based auth
-          mode: 'cors',
           body: JSON.stringify({
           message: cleanedText,
           userId: userId || 'anonymous',
@@ -3581,9 +3730,8 @@ I'm not sure what I'm feeling yet.`;
       const fullContent = header + date + sessionInfo + separator + transcript;
 
       // Save to Obsidian vault
-      const response = await fetch(apiUrl('/api/obsidian/save-conversation'), {
+      const response = await apiFetch('/api/obsidian/save-conversation', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           transcript: fullContent,
           agentName: agentConfig.name,
@@ -3643,9 +3791,8 @@ I'm not sure what I'm feeling yet.`;
       console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, cleanText.substring(0, 100));
 
       // Call OpenAI TTS with voice settings from account preferences
-      const response = await fetch(apiUrl('/api/voice/openai-tts'), {
+      const response = await apiFetch('/api/voice/openai-tts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           text: cleanText,
           voice: voiceSettings.voice,
@@ -5196,10 +5343,36 @@ I'm not sure what I'm feeling yet.`;
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* ✨ Capture the Spirit Suggestion */}
+          <CaptureSuggestionChip
+            isVisible={showCaptureSuggestion && !showCapturePanel}
+            onCapture={handleCaptureSpirit}
+            onDismiss={() => {
+              setShowCaptureSuggestion(false);
+              setCaptureSuggestionDismissed(true);
+              console.log('✨ [Capsule] User dismissed capture suggestion');
+            }}
+          />
         </>
       )}
 
-
+      {/* ✨ Capture the Spirit Panel */}
+      <CaptureSpiritPanel
+        isOpen={showCapturePanel}
+        onClose={() => setShowCapturePanel(false)}
+        capsule={capturedCapsule}
+        isLoading={isCapturing}
+        error={captureError}
+        onSave={handleUpdateCapsule}
+        onBringIntoLab={handleBringCapsuleIntoLab}
+        onViewInLab={() => {
+          setShowCapturePanel(false);
+          if (capturedCapsule) {
+            window.location.href = `/labtools/reflections/${capturedCapsule.id}`;
+          }
+        }}
+      />
 
       {/* Analytics toggle */}
       {showAnalytics && (
@@ -5397,6 +5570,12 @@ I'm not sure what I'm feeling yet.`;
           if (action === 'element-discovery') {
             setShowElementDiscovery(true);
             setShowLabDrawer(false);
+            return;
+          }
+          // ✨ Capture the Spirit action
+          if (action === 'capture-spirit') {
+            setShowLabDrawer(false);
+            handleCaptureSpirit();
             return;
           }
           if (action === 'session-recap') {
