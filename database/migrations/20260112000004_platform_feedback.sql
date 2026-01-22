@@ -41,6 +41,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS platform_feedback_updated_at ON platform_feedback;
 CREATE TRIGGER platform_feedback_updated_at
   BEFORE UPDATE ON platform_feedback
   FOR EACH ROW

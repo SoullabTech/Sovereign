@@ -39,11 +39,15 @@ COMMENT ON COLUMN case_notes.content_enc_meta IS
 -- PHI ENCRYPTION STATUS TRACKING
 -- ============================================================================
 
--- Initialize status for Wave 2 columns
-INSERT INTO phi_encryption_status (table_name, column_name, status)
-VALUES
-  ('case_notes', 'content', 'pending')
-ON CONFLICT (table_name, column_name) DO NOTHING;
+-- Initialize status for Wave 2 columns (only if tracking table exists)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'phi_encryption_status') THEN
+    INSERT INTO phi_encryption_status (table_name, column_name, status)
+    VALUES ('case_notes', 'content', 'pending')
+    ON CONFLICT (table_name, column_name) DO NOTHING;
+  END IF;
+END $$;
 
 -- ============================================================================
 -- ENFORCEMENT (Phase 2B - run after backfill complete)

@@ -64,10 +64,10 @@ CREATE TABLE IF NOT EXISTS marketing_contacts (
     UNIQUE(practitioner_id, email)
 );
 
-CREATE INDEX idx_marketing_contacts_practitioner ON marketing_contacts(practitioner_id);
-CREATE INDEX idx_marketing_contacts_status ON marketing_contacts(status);
-CREATE INDEX idx_marketing_contacts_email ON marketing_contacts(email);
-CREATE INDEX idx_marketing_contacts_tags ON marketing_contacts USING GIN(tags);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_practitioner ON marketing_contacts(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_status ON marketing_contacts(status);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_email ON marketing_contacts(email);
+CREATE INDEX IF NOT EXISTS idx_marketing_contacts_tags ON marketing_contacts USING GIN(tags);
 
 
 -- ============================================
@@ -113,8 +113,8 @@ CREATE TABLE IF NOT EXISTS email_templates (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_email_templates_practitioner ON email_templates(practitioner_id);
-CREATE INDEX idx_email_templates_category ON email_templates(category);
+CREATE INDEX IF NOT EXISTS idx_email_templates_practitioner ON email_templates(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_email_templates_category ON email_templates(category);
 
 
 -- ============================================
@@ -166,9 +166,9 @@ CREATE TABLE IF NOT EXISTS marketing_campaigns (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_marketing_campaigns_practitioner ON marketing_campaigns(practitioner_id);
-CREATE INDEX idx_marketing_campaigns_status ON marketing_campaigns(status);
-CREATE INDEX idx_marketing_campaigns_type ON marketing_campaigns(type);
+CREATE INDEX IF NOT EXISTS idx_marketing_campaigns_practitioner ON marketing_campaigns(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_campaigns_status ON marketing_campaigns(status);
+CREATE INDEX IF NOT EXISTS idx_marketing_campaigns_type ON marketing_campaigns(type);
 
 
 -- ============================================
@@ -207,10 +207,10 @@ CREATE TABLE IF NOT EXISTS campaign_sends (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_campaign_sends_campaign ON campaign_sends(campaign_id);
-CREATE INDEX idx_campaign_sends_contact ON campaign_sends(contact_id);
-CREATE INDEX idx_campaign_sends_status ON campaign_sends(status);
-CREATE INDEX idx_campaign_sends_scheduled ON campaign_sends(scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_campaign_sends_campaign ON campaign_sends(campaign_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_sends_contact ON campaign_sends(contact_id);
+CREATE INDEX IF NOT EXISTS idx_campaign_sends_status ON campaign_sends(status);
+CREATE INDEX IF NOT EXISTS idx_campaign_sends_scheduled ON campaign_sends(scheduled_for);
 
 
 -- ============================================
@@ -252,8 +252,8 @@ CREATE TABLE IF NOT EXISTS lead_magnets (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_lead_magnets_practitioner ON lead_magnets(practitioner_id);
-CREATE INDEX idx_lead_magnets_status ON lead_magnets(status);
+CREATE INDEX IF NOT EXISTS idx_lead_magnets_practitioner ON lead_magnets(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_lead_magnets_status ON lead_magnets(status);
 
 
 -- ============================================
@@ -284,7 +284,7 @@ CREATE TABLE IF NOT EXISTS lead_magnet_submissions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_lead_magnet_submissions_magnet ON lead_magnet_submissions(lead_magnet_id);
+CREATE INDEX IF NOT EXISTS idx_lead_magnet_submissions_magnet ON lead_magnet_submissions(lead_magnet_id);
 
 
 -- ============================================
@@ -334,10 +334,10 @@ CREATE TABLE IF NOT EXISTS social_content (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_social_content_practitioner ON social_content(practitioner_id);
-CREATE INDEX idx_social_content_platform ON social_content(platform);
-CREATE INDEX idx_social_content_status ON social_content(status);
-CREATE INDEX idx_social_content_scheduled ON social_content(scheduled_for);
+CREATE INDEX IF NOT EXISTS idx_social_content_practitioner ON social_content(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_social_content_platform ON social_content(platform);
+CREATE INDEX IF NOT EXISTS idx_social_content_status ON social_content(status);
+CREATE INDEX IF NOT EXISTS idx_social_content_scheduled ON social_content(scheduled_for);
 
 
 -- ============================================
@@ -379,8 +379,8 @@ CREATE TABLE IF NOT EXISTS booking_funnels (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_booking_funnels_practitioner ON booking_funnels(practitioner_id);
-CREATE INDEX idx_booking_funnels_status ON booking_funnels(status);
+CREATE INDEX IF NOT EXISTS idx_booking_funnels_practitioner ON booking_funnels(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_booking_funnels_status ON booking_funnels(status);
 
 
 -- ============================================
@@ -423,8 +423,8 @@ CREATE TABLE IF NOT EXISTS transit_alerts (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_transit_alerts_practitioner ON transit_alerts(practitioner_id);
-CREATE INDEX idx_transit_alerts_status ON transit_alerts(status);
+CREATE INDEX IF NOT EXISTS idx_transit_alerts_practitioner ON transit_alerts(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_transit_alerts_status ON transit_alerts(status);
 
 
 -- ============================================
@@ -472,8 +472,8 @@ CREATE TABLE IF NOT EXISTS marketing_analytics (
     UNIQUE(practitioner_id, period_type, period_start)
 );
 
-CREATE INDEX idx_marketing_analytics_practitioner ON marketing_analytics(practitioner_id);
-CREATE INDEX idx_marketing_analytics_period ON marketing_analytics(period_type, period_start);
+CREATE INDEX IF NOT EXISTS idx_marketing_analytics_practitioner ON marketing_analytics(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_marketing_analytics_period ON marketing_analytics(period_type, period_start);
 
 
 -- ============================================
@@ -509,8 +509,8 @@ CREATE TABLE IF NOT EXISTS automation_workflows (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_automation_workflows_practitioner ON automation_workflows(practitioner_id);
-CREATE INDEX idx_automation_workflows_status ON automation_workflows(status);
+CREATE INDEX IF NOT EXISTS idx_automation_workflows_practitioner ON automation_workflows(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_automation_workflows_status ON automation_workflows(status);
 
 
 -- ============================================
@@ -541,10 +541,10 @@ CREATE TABLE IF NOT EXISTS workflow_enrollments (
     UNIQUE(workflow_id, contact_id)
 );
 
-CREATE INDEX idx_workflow_enrollments_workflow ON workflow_enrollments(workflow_id);
-CREATE INDEX idx_workflow_enrollments_contact ON workflow_enrollments(contact_id);
-CREATE INDEX idx_workflow_enrollments_status ON workflow_enrollments(status);
-CREATE INDEX idx_workflow_enrollments_next_action ON workflow_enrollments(next_action_at);
+CREATE INDEX IF NOT EXISTS idx_workflow_enrollments_workflow ON workflow_enrollments(workflow_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_enrollments_contact ON workflow_enrollments(contact_id);
+CREATE INDEX IF NOT EXISTS idx_workflow_enrollments_status ON workflow_enrollments(status);
+CREATE INDEX IF NOT EXISTS idx_workflow_enrollments_next_action ON workflow_enrollments(next_action_at);
 
 
 -- ============================================
@@ -579,8 +579,8 @@ CREATE TABLE IF NOT EXISTS content_calendar (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX idx_content_calendar_practitioner ON content_calendar(practitioner_id);
-CREATE INDEX idx_content_calendar_date ON content_calendar(scheduled_date);
+CREATE INDEX IF NOT EXISTS idx_content_calendar_practitioner ON content_calendar(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_content_calendar_date ON content_calendar(scheduled_date);
 
 
 -- ============================================
@@ -605,6 +605,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_lead_score ON campaign_sends;
 CREATE TRIGGER trigger_update_lead_score
     AFTER UPDATE ON campaign_sends
     FOR EACH ROW
@@ -645,6 +646,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_contact_email_stats ON campaign_sends;
 CREATE TRIGGER trigger_update_contact_email_stats
     AFTER INSERT OR UPDATE ON campaign_sends
     FOR EACH ROW
@@ -669,6 +671,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_campaign_metrics ON campaign_sends;
 CREATE TRIGGER trigger_update_campaign_metrics
     AFTER INSERT OR UPDATE ON campaign_sends
     FOR EACH ROW

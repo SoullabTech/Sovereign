@@ -137,6 +137,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS contribution_save_increment ON contribution_saves;
 CREATE TRIGGER contribution_save_increment
   AFTER INSERT ON contribution_saves
   FOR EACH ROW
@@ -153,6 +154,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS contribution_save_decrement ON contribution_saves;
 CREATE TRIGGER contribution_save_decrement
   AFTER DELETE ON contribution_saves
   FOR EACH ROW
@@ -169,6 +171,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS contribution_usage_increment ON contribution_usages;
 CREATE TRIGGER contribution_usage_increment
   AFTER INSERT ON contribution_usages
   FOR EACH ROW

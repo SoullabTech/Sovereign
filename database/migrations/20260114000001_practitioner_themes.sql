@@ -138,6 +138,18 @@ CREATE TABLE IF NOT EXISTS practitioner_clients (
   CONSTRAINT unique_practitioner_client_email UNIQUE (practitioner_id, email)
 );
 
+-- Add member_id column if it doesn't exist (for idempotency with existing tables)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'practitioner_clients' AND column_name = 'member_id'
+  ) THEN
+    ALTER TABLE practitioner_clients
+    ADD COLUMN member_id UUID REFERENCES members(id) ON DELETE SET NULL;
+  END IF;
+END $$;
+
 -- Indexes
 CREATE INDEX IF NOT EXISTS idx_practitioner_clients_practitioner_id ON practitioner_clients(practitioner_id);
 CREATE INDEX IF NOT EXISTS idx_practitioner_clients_member_id ON practitioner_clients(member_id);

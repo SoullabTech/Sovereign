@@ -297,6 +297,15 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'tags') THEN
     ALTER TABLE practitioner_clients ADD COLUMN tags JSONB NOT NULL DEFAULT '[]'::jsonb;
   END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'stripe_customer_id') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN stripe_customer_id VARCHAR(255);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'subscription_id') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN subscription_id VARCHAR(255);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'subscription_status') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN subscription_status VARCHAR(50) CHECK (subscription_status IS NULL OR subscription_status IN ('active', 'past_due', 'canceled'));
+  END IF;
 END $$;
 
 CREATE INDEX IF NOT EXISTS idx_clients_practitioner ON practitioner_clients(practitioner_id);

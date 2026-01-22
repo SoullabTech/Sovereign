@@ -202,31 +202,31 @@ ON CONFLICT (code) DO NOTHING;
 -- Indexes
 
 -- Practice sessions
-CREATE INDEX idx_practice_sessions_practitioner
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_practitioner
   ON practice_sessions(practitioner_id, started_at DESC);
 
-CREATE INDEX idx_practice_sessions_client
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_client
   ON practice_sessions(practitioner_id, client_alias);
 
-CREATE INDEX idx_practice_sessions_modalities
+CREATE INDEX IF NOT EXISTS idx_practice_sessions_modalities
   ON practice_sessions USING GIN(modalities_tagged);
 
 -- Transcript segments
-CREATE INDEX idx_practice_segments_session_time
+CREATE INDEX IF NOT EXISTS idx_practice_segments_session_time
   ON practice_transcript_segments(session_id, start_ms);
 
 -- Session insights
-CREATE INDEX idx_session_insights_session
+CREATE INDEX IF NOT EXISTS idx_session_insights_session
   ON session_insights(session_id, created_at DESC);
 
-CREATE INDEX idx_session_insights_type
+CREATE INDEX IF NOT EXISTS idx_session_insights_type
   ON session_insights(session_id, insight_type);
 
 -- Practitioner growth
-CREATE INDEX idx_practitioner_growth_practitioner
+CREATE INDEX IF NOT EXISTS idx_practitioner_growth_practitioner
   ON practitioner_growth(practitioner_id, created_at DESC);
 
-CREATE INDEX idx_practitioner_growth_unacknowledged
+CREATE INDEX IF NOT EXISTS idx_practitioner_growth_unacknowledged
   ON practitioner_growth(practitioner_id)
   WHERE acknowledged = FALSE;
 
@@ -239,16 +239,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS practice_sessions_updated_at ON practice_sessions;
 CREATE TRIGGER practice_sessions_updated_at
   BEFORE UPDATE ON practice_sessions
   FOR EACH ROW
   EXECUTE FUNCTION update_practice_session_timestamp();
 
+DROP TRIGGER IF EXISTS practitioner_growth_updated_at ON practitioner_growth;
 CREATE TRIGGER practitioner_growth_updated_at
   BEFORE UPDATE ON practitioner_growth
   FOR EACH ROW
   EXECUTE FUNCTION update_practice_session_timestamp();
 
+DROP TRIGGER IF EXISTS practitioner_insight_preferences_updated_at ON practitioner_insight_preferences;
 CREATE TRIGGER practitioner_insight_preferences_updated_at
   BEFORE UPDATE ON practitioner_insight_preferences
   FOR EACH ROW

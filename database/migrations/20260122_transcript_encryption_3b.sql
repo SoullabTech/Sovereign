@@ -75,6 +75,15 @@ COMMENT ON TRIGGER enforce_practice_transcript_enc ON practice_transcript_segmen
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'phi_encryption_status') THEN
+    -- Add stage column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'phi_encryption_status' AND column_name = 'stage') THEN
+      ALTER TABLE phi_encryption_status ADD COLUMN stage TEXT;
+    END IF;
+    -- Add updated_at column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'phi_encryption_status' AND column_name = 'updated_at') THEN
+      ALTER TABLE phi_encryption_status ADD COLUMN updated_at TIMESTAMPTZ DEFAULT NOW();
+    END IF;
+
     UPDATE phi_encryption_status
     SET status = 'enforced', stage = 'B', updated_at = NOW()
     WHERE table_name IN ('supervision_transcript_segments', 'practice_transcript_segments')

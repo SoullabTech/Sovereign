@@ -91,19 +91,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Drop old trigger and create for both INSERT and UPDATE
-DROP TRIGGER IF EXISTS trg_enforce_consent_revocation ON referral_requests;
-DROP TRIGGER IF EXISTS trg_sanitize_consent_state_upd ON referral_requests;
-DROP TRIGGER IF EXISTS trg_sanitize_consent_state_ins ON referral_requests;
+-- Only execute if referral_requests table exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'referral_requests') THEN
+    DROP TRIGGER IF EXISTS trg_enforce_consent_revocation ON referral_requests;
+    DROP TRIGGER IF EXISTS trg_sanitize_consent_state_upd ON referral_requests;
+    DROP TRIGGER IF EXISTS trg_sanitize_consent_state_ins ON referral_requests;
 
-CREATE TRIGGER trg_sanitize_consent_state_ins
-  BEFORE INSERT ON referral_requests
-  FOR EACH ROW
-  EXECUTE FUNCTION sanitize_consent_state();
+    CREATE TRIGGER trg_sanitize_consent_state_ins
+      BEFORE INSERT ON referral_requests
+      FOR EACH ROW
+      EXECUTE FUNCTION sanitize_consent_state();
 
-CREATE TRIGGER trg_sanitize_consent_state_upd
-  BEFORE UPDATE ON referral_requests
-  FOR EACH ROW
-  EXECUTE FUNCTION sanitize_consent_state();
+    CREATE TRIGGER trg_sanitize_consent_state_upd
+      BEFORE UPDATE ON referral_requests
+      FOR EACH ROW
+      EXECUTE FUNCTION sanitize_consent_state();
+  END IF;
+END $$;
 
 -- ============================================
 -- 3. ROUTING + CONTENT IMMUTABILITY
@@ -153,41 +159,54 @@ $$ LANGUAGE plpgsql;
 -- 4. PHYSICS-GRADE CHECK CONSTRAINT
 -- ============================================
 
--- Drop old constraint
-ALTER TABLE referral_requests
-  DROP CONSTRAINT IF EXISTS consent_required_for_identity;
+-- Only execute if referral_requests table exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'referral_requests') THEN
+    -- Drop old constraint
+    ALTER TABLE referral_requests
+      DROP CONSTRAINT IF EXISTS consent_required_for_identity;
 
--- New constraint: identity exists ONLY when shared
--- This is the "laws of physics" version
-ALTER TABLE referral_requests
-  ADD CONSTRAINT consent_required_for_identity CHECK (
-    -- Rule 1: name_shared requires consent_given
-    (client_name_shared = false OR client_consent_given = true)
-    AND
-    -- Rule 2: identity fields exist ONLY when BOTH flags are true
-    (
-      (client_name_shared = true AND client_consent_given = true)
-      OR
-      (client_name IS NULL AND client_contact IS NULL)
-    )
-  );
+    -- New constraint: identity exists ONLY when shared
+    -- This is the "laws of physics" version
+    ALTER TABLE referral_requests
+      ADD CONSTRAINT consent_required_for_identity CHECK (
+        -- Rule 1: name_shared requires consent_given
+        (client_name_shared = false OR client_consent_given = true)
+        AND
+        -- Rule 2: identity fields exist ONLY when BOTH flags are true
+        (
+          (client_name_shared = true AND client_consent_given = true)
+          OR
+          (client_name IS NULL AND client_contact IS NULL)
+        )
+      );
+  END IF;
+END $$;
 
 -- ============================================
 -- 5. SAFE VIEW (DEFENSE IN DEPTH)
 -- ============================================
 
--- Force all reads through this view for maximum safety
--- Even if someone writes a naive query, the default path is safe
-CREATE OR REPLACE VIEW safe_referral_requests AS
-SELECT rr.*
-FROM referral_requests rr
-JOIN practitioner_connections pc ON pc.id = rr.connection_id
-WHERE rr.sealed_at IS NULL
-  AND pc.status = 'accepted';
+-- Only execute if referral_requests table exists
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'referral_requests') THEN
+    -- Force all reads through this view for maximum safety
+    -- Even if someone writes a naive query, the default path is safe
+    DROP VIEW IF EXISTS safe_referral_requests;
+    CREATE VIEW safe_referral_requests AS
+    SELECT rr.*
+    FROM referral_requests rr
+    JOIN practitioner_connections pc ON pc.id = rr.connection_id
+    WHERE rr.sealed_at IS NULL
+      AND pc.status = 'accepted';
 
-COMMENT ON VIEW safe_referral_requests IS
-  'Defense-in-depth view: only unsealed referrals with active accepted connections. '
-  'Use this for inbox/sent queries instead of raw referral_requests table.';
+    COMMENT ON VIEW safe_referral_requests IS
+      'Defense-in-depth view: only unsealed referrals with active accepted connections. '
+      'Use this for inbox/sent queries instead of raw referral_requests table.';
+  END IF;
+END $$;
 
 -- ============================================
 -- UPDATED COMMENTS

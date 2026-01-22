@@ -138,13 +138,22 @@ CREATE INDEX IF NOT EXISTS idx_sessions_status ON sessions(practitioner_id, stat
 -- ============== STELLIUM CLIENTS (ALIAS VIEW) ==============
 -- Create a view for stellium_clients that maps to practitioner_clients
 
+-- Add phone column if not exists (for schema compatibility)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'practitioner_clients' AND column_name = 'phone') THEN
+    ALTER TABLE practitioner_clients ADD COLUMN phone VARCHAR(50);
+  END IF;
+END $$;
+
+DROP VIEW IF EXISTS stellium_clients;
 CREATE OR REPLACE VIEW stellium_clients AS
 SELECT
   id,
   practitioner_id,
   name,
   email,
-  birth_data->>'phone' as phone,
+  phone,
   status,
   created_at,
   updated_at
@@ -261,14 +270,17 @@ CREATE INDEX IF NOT EXISTS idx_claims_contact ON lead_magnet_claims(contact_id);
 
 -- ============== TRIGGERS ==============
 
+DROP TRIGGER IF EXISTS tr_services_updated_at ON services;
 CREATE TRIGGER tr_services_updated_at
   BEFORE UPDATE ON services
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_sessions_updated_at ON sessions;
 CREATE TRIGGER tr_sessions_updated_at
   BEFORE UPDATE ON sessions
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();
 
+DROP TRIGGER IF EXISTS tr_availability_updated_at ON practitioner_availability;
 CREATE TRIGGER tr_availability_updated_at
   BEFORE UPDATE ON practitioner_availability
   FOR EACH ROW EXECUTE FUNCTION update_practitioner_updated_at();

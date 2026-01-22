@@ -37,8 +37,8 @@ CREATE INDEX IF NOT EXISTS idx_rlm_audit_request_id ON rlm_audit_log(request_id)
 CREATE INDEX IF NOT EXISTS idx_rlm_audit_action ON rlm_audit_log(action, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_rlm_audit_errors ON rlm_audit_log(created_at DESC) WHERE action = 'error';
 
--- Cleanup old logs (keep 30 days)
-CREATE INDEX IF NOT EXISTS idx_rlm_audit_cleanup ON rlm_audit_log(created_at) WHERE created_at < NOW() - INTERVAL '30 days';
+-- Note: Cleanup of old logs should be done via scheduled job, not partial index
+-- (Partial indexes with NOW() are not valid - NOW() is not immutable)
 
 -- Grant permissions
 GRANT SELECT, INSERT ON rlm_audit_log TO soullab;

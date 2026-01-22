@@ -165,6 +165,9 @@ LEFT JOIN maia_turn_feedback f ON f.deliberation_id = d.id OR f.turn_id = d.turn
 WHERE f.id IS NOT NULL;
 
 -- View: Agent accuracy tracking (unnest votes and correlate with outcomes)
+-- Drop dependent views first, then this view (column names may have changed)
+DROP VIEW IF EXISTS prescient_dissent;
+DROP VIEW IF EXISTS agent_vote_outcomes;
 CREATE OR REPLACE VIEW agent_vote_outcomes AS
 SELECT
   v->>'member' AS agent,

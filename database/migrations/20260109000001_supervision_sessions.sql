@@ -109,40 +109,40 @@ CREATE TABLE IF NOT EXISTS supervision_audio_chunks (
 -- Indexes for performance
 
 -- Sessions by practitioner and status
-CREATE INDEX idx_supervision_sessions_practitioner
+CREATE INDEX IF NOT EXISTS idx_supervision_sessions_practitioner
   ON supervision_sessions(practitioner_id, started_at DESC);
 
-CREATE INDEX idx_supervision_sessions_case
+CREATE INDEX IF NOT EXISTS idx_supervision_sessions_case
   ON supervision_sessions(case_id, started_at DESC);
 
-CREATE INDEX idx_supervision_sessions_active
+CREATE INDEX IF NOT EXISTS idx_supervision_sessions_active
   ON supervision_sessions(practitioner_id)
   WHERE ended_at IS NULL;
 
 -- Transcript segments by session and time
-CREATE INDEX idx_supervision_segments_session_time
+CREATE INDEX IF NOT EXISTS idx_supervision_segments_session_time
   ON supervision_transcript_segments(session_id, start_ms);
 
-CREATE INDEX idx_supervision_segments_speaker
+CREATE INDEX IF NOT EXISTS idx_supervision_segments_speaker
   ON supervision_transcript_segments(session_id, speaker);
 
 -- Insights by session and type
-CREATE INDEX idx_supervision_insights_session
+CREATE INDEX IF NOT EXISTS idx_supervision_insights_session
   ON supervision_insights(session_id, created_at DESC);
 
-CREATE INDEX idx_supervision_insights_type
+CREATE INDEX IF NOT EXISTS idx_supervision_insights_type
   ON supervision_insights(session_id, insight_type);
 
 -- Jobs queue (for worker polling)
-CREATE INDEX idx_supervision_jobs_pending
+CREATE INDEX IF NOT EXISTS idx_supervision_jobs_pending
   ON supervision_jobs(status, priority, created_at)
   WHERE status = 'pending';
 
-CREATE INDEX idx_supervision_jobs_session
+CREATE INDEX IF NOT EXISTS idx_supervision_jobs_session
   ON supervision_jobs(session_id, job_type);
 
 -- Audio chunks for processing
-CREATE INDEX idx_supervision_chunks_unprocessed
+CREATE INDEX IF NOT EXISTS idx_supervision_chunks_unprocessed
   ON supervision_audio_chunks(session_id, chunk_index)
   WHERE is_processed = FALSE;
 
@@ -155,6 +155,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS supervision_sessions_updated_at ON supervision_sessions;
 CREATE TRIGGER supervision_sessions_updated_at
   BEFORE UPDATE ON supervision_sessions
   FOR EACH ROW

@@ -4,6 +4,14 @@
 --
 -- This matches the constraint added to ain_shape_telemetry
 
-ALTER TABLE conversation_memory_uses
-ADD CONSTRAINT conversation_memory_uses_session_id_nonempty
-CHECK (length(trim(session_id)) > 0);
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'conversation_memory_uses_session_id_nonempty'
+  ) THEN
+    ALTER TABLE conversation_memory_uses
+    ADD CONSTRAINT conversation_memory_uses_session_id_nonempty
+    CHECK (length(trim(session_id)) > 0);
+  END IF;
+END $$;

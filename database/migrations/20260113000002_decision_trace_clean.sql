@@ -169,6 +169,8 @@ FROM maia_decisions d
 LEFT JOIN maia_decision_feedback f ON f.decision_id = d.id;
 
 -- View: Prescient dissent (agents who voted for what user said was correct)
+-- Drop existing view if columns changed (from previous migration)
+DROP VIEW IF EXISTS prescient_dissent;
 CREATE OR REPLACE VIEW prescient_dissent AS
 SELECT
   d.id AS decision_id,

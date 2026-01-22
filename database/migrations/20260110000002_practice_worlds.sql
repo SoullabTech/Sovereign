@@ -316,18 +316,20 @@ FROM practice_worlds w WHERE w.code = 'parts_ifs'
 ON CONFLICT (world_id, code) DO NOTHING;
 
 -- Indexes
-CREATE INDEX idx_practitioner_worlds_practitioner ON practitioner_worlds(practitioner_id);
-CREATE INDEX idx_practitioner_worlds_enabled ON practitioner_worlds(practitioner_id) WHERE is_enabled = TRUE;
-CREATE INDEX idx_session_worlds_session ON session_worlds(session_id);
-CREATE INDEX idx_world_insight_types_world ON world_insight_types(world_id);
-CREATE INDEX idx_world_experiments_world ON world_experiments(world_id);
+CREATE INDEX IF NOT EXISTS idx_practitioner_worlds_practitioner ON practitioner_worlds(practitioner_id);
+CREATE INDEX IF NOT EXISTS idx_practitioner_worlds_enabled ON practitioner_worlds(practitioner_id) WHERE is_enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_session_worlds_session ON session_worlds(session_id);
+CREATE INDEX IF NOT EXISTS idx_world_insight_types_world ON world_insight_types(world_id);
+CREATE INDEX IF NOT EXISTS idx_world_experiments_world ON world_experiments(world_id);
 
 -- Update timestamp triggers
+DROP TRIGGER IF EXISTS practice_worlds_updated_at ON practice_worlds;
 CREATE TRIGGER practice_worlds_updated_at
   BEFORE UPDATE ON practice_worlds
   FOR EACH ROW
   EXECUTE FUNCTION update_practice_session_timestamp();
 
+DROP TRIGGER IF EXISTS practitioner_worlds_updated_at ON practitioner_worlds;
 CREATE TRIGGER practitioner_worlds_updated_at
   BEFORE UPDATE ON practitioner_worlds
   FOR EACH ROW

@@ -46,12 +46,17 @@ COMMENT ON COLUMN practice_transcript_segments.text_enc_meta IS 'Encryption meta
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'phi_encryption_status') THEN
+    -- Add stage column if it doesn't exist
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'phi_encryption_status' AND column_name = 'stage') THEN
+      ALTER TABLE phi_encryption_status ADD COLUMN stage TEXT;
+    END IF;
+
     INSERT INTO phi_encryption_status (table_name, column_name, status, stage)
     VALUES
-      ('supervision_transcript_segments', 'text', 'migrating', 'A'),
-      ('practice_transcript_segments', 'text', 'migrating', 'A')
+      ('supervision_transcript_segments', 'text', 'in_progress', 'A'),
+      ('practice_transcript_segments', 'text', 'in_progress', 'A')
     ON CONFLICT (table_name, column_name) DO UPDATE SET
-      status = 'migrating',
+      status = 'in_progress',
       stage = 'A',
       updated_at = NOW();
   END IF;
