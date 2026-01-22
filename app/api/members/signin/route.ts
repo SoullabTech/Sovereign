@@ -131,6 +131,18 @@ export async function POST(request: NextRequest) {
 
     console.log(`[MEMBERS] Sign in success: ${username} (${member.id}) tier=${member.tier} roles=${roles.join(',')}`);
 
+    // Check if member has a practitioner profile
+    let practitioner = null;
+    if (roles.includes('practitioner')) {
+      const practitionerResult = await query(
+        'SELECT id, slug, name FROM practitioners WHERE member_id = $1 LIMIT 1',
+        [member.id]
+      );
+      if (practitionerResult.rows.length > 0) {
+        practitioner = practitionerResult.rows[0];
+      }
+    }
+
     return NextResponse.json({
       success: true,
       member: {
@@ -140,7 +152,12 @@ export async function POST(request: NextRequest) {
         preferredName: member.preferred_name || member.name,
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step
-      }
+      },
+      practitioner: practitioner ? {
+        id: practitioner.id,
+        slug: practitioner.slug,
+        name: practitioner.name
+      } : null
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
