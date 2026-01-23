@@ -2,15 +2,19 @@
 /**
  * maia status - Reality check command
  * Shows: Docker health, client domains, ports, vault status
+ *
+ * Flags:
+ *   --local    Check localhost endpoints instead of production domains
  */
 
 import chalk from 'chalk';
 import { getAllClients, getActiveClients } from '../lib/registry.js';
 import { isDockerRunning, getContainerCount, getPortMappings, getContainers } from '../lib/docker.js';
-import { checkDomainHealth } from '../lib/health.js';
+import { checkDomainHealth, checkHealth } from '../lib/health.js';
 import { vaultExists, getClientFolders, getClientFolderStats, getClientsPath } from '../lib/obsidian.js';
 
 const SEPARATOR = '═'.repeat(62);
+const LOCAL_MODE = process.argv.includes('--local') || process.argv.includes('-l');
 
 function formatTime(date: Date): string {
   const now = new Date();
@@ -33,7 +37,8 @@ async function main() {
   });
 
   console.log(chalk.cyan(SEPARATOR));
-  console.log(chalk.cyan.bold('MAIA STATUS') + '                                       ' + chalk.dim(today));
+  const modeLabel = LOCAL_MODE ? chalk.blue(' [LOCAL]') : '';
+  console.log(chalk.cyan.bold('MAIA STATUS') + modeLabel + '                               ' + chalk.dim(today));
   console.log(chalk.cyan(SEPARATOR));
   console.log();
 
@@ -50,6 +55,46 @@ async function main() {
   }
   console.log();
 
+  // Local API Health (when in local mode)
+  let localHealthOk = true;
+  let localReadyOk = true;
+  let localReadyFallback = false;
+
+  if (LOCAL_MODE) {
+    console.log(chalk.yellow.bold('🏥 LOCAL API'));
+    const healthResult = await checkHealth('http://localhost/api/health');
+    const readyResult = await checkHealth('http://localhost/api/ready');
+
+    // Check if /api/health is ok
+    if (healthResult.healthy) {
+      console.log(chalk.green(`   ✓ /api/health    ok (${healthResult.latencyMs}ms)`));
+    } else {
+      localHealthOk = false;
+      console.log(chalk.red(`   ✗ /api/health    ${healthResult.error || 'failed'}`));
+    }
+
+    // Check /api/ready - but distinguish between "truly broken" and "fallback mode"
+    if (readyResult.healthy) {
+      console.log(chalk.green(`   ✓ /api/ready     ok (${readyResult.latencyMs}ms)`));
+    } else {
+      // Check if it's just running in fallback mode (not truly broken)
+      const readyData = readyResult.data as { critical?: string[]; dependencies?: Record<string, { status: string }> } | undefined;
+      const criticalMessages = readyData?.critical || [];
+      const hasFallback = criticalMessages.some((msg: string) => msg.toLowerCase().includes('fall back'));
+      const dbOk = readyData?.dependencies?.dbSchema?.status === 'ready';
+
+      if (hasFallback && dbOk) {
+        // It's degraded but functional - Ollama offline but falling back to Claude
+        localReadyFallback = true;
+        console.log(chalk.blue(`   ℹ /api/ready     ok (fallback mode, ${readyResult.latencyMs}ms)`));
+      } else {
+        localReadyOk = false;
+        console.log(chalk.yellow(`   ⚠ /api/ready     not ready (${readyResult.latencyMs}ms)`));
+      }
+    }
+    console.log();
+  }
+
   // Client Status
   console.log(chalk.yellow.bold('🌐 CLIENTS'));
   const clients = getAllClients();
@@ -63,14 +108,20 @@ async function main() {
       let statusColor = chalk.dim;
 
       if (config.status === 'active') {
-        // Check actual health
-        const health = await checkDomainHealth(config.domain);
-        if (health.healthy) {
-          statusIcon = '✓';
-          statusColor = chalk.green;
+        if (LOCAL_MODE) {
+          // In local mode, skip domain checks - just show registry status
+          statusIcon = '○';
+          statusColor = chalk.dim;
         } else {
-          statusIcon = '✗';
-          statusColor = chalk.red;
+          // Check actual health via production domain
+          const health = await checkDomainHealth(config.domain);
+          if (health.healthy) {
+            statusIcon = '✓';
+            statusColor = chalk.green;
+          } else {
+            statusIcon = '✗';
+            statusColor = chalk.red;
+          }
         }
       } else if (config.status === 'paused') {
         statusIcon = '⏸';
@@ -81,8 +132,8 @@ async function main() {
       }
 
       const domain = config.domain.padEnd(26);
-      const healthStatus = config.status === 'active' ? 'healthy' : config.status;
-      const status = healthStatus.padEnd(10);
+      const healthLabel = LOCAL_MODE ? config.status : (config.status === 'active' ? 'healthy' : config.status);
+      const status = healthLabel.padEnd(10);
       const lastUpdate = config.launched_at ? formatTime(new Date(config.launched_at)) : 'never';
 
       console.log(statusColor(`   ${statusIcon} ${domain}${status}${lastUpdate}`));
@@ -144,11 +195,23 @@ async function main() {
     issues.push('Start Docker: docker compose up -d');
   }
 
-  const activeClients = getActiveClients();
-  for (const [slug, config] of Object.entries(activeClients)) {
-    const health = await checkDomainHealth(config.domain);
-    if (!health.healthy) {
-      issues.push(`Check ${slug}: ${config.domain} is not responding`);
+  if (LOCAL_MODE) {
+    // Use cached results from earlier checks
+    if (!localHealthOk) {
+      issues.push('API not responding: check docker logs maia-sovereign');
+    }
+    if (!localReadyOk && !localReadyFallback) {
+      issues.push('API not ready: check /api/ready for missing deps');
+    }
+    // Don't warn about fallback mode - it's functional
+  } else {
+    // In production mode, check domain health
+    const activeClients = getActiveClients();
+    for (const [slug, config] of Object.entries(activeClients)) {
+      const health = await checkDomainHealth(config.domain);
+      if (!health.healthy) {
+        issues.push(`Check ${slug}: ${config.domain} is not responding`);
+      }
     }
   }
 

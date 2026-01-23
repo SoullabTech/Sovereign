@@ -7,6 +7,7 @@ export interface HealthResult {
   status: number;
   latencyMs: number;
   error?: string;
+  data?: Record<string, unknown>;
 }
 
 export async function checkHealth(url: string, timeoutMs: number = 5000): Promise<HealthResult> {
@@ -24,10 +25,20 @@ export async function checkHealth(url: string, timeoutMs: number = 5000): Promis
     clearTimeout(timeout);
     const latencyMs = Date.now() - start;
 
+    // Try to parse JSON response
+    let data: Record<string, unknown> | undefined;
+    try {
+      const text = await response.text();
+      data = JSON.parse(text);
+    } catch {
+      // Not JSON, that's fine
+    }
+
     return {
       healthy: response.ok,
       status: response.status,
       latencyMs,
+      data,
     };
   } catch (error) {
     const latencyMs = Date.now() - start;
