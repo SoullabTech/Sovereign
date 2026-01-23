@@ -56,7 +56,7 @@ async function anthropicCreateWithRetry<T>(createFn: () => Promise<T>): Promise<
 /**
  * Normalize message content to ensure it's valid for Anthropic
  */
-function normalizeMessageContent(content: any): string | Anthropic.ContentBlockParam[] {
+function normalizeMessageContent(content: any): string | Anthropic.ContentBlock[] {
   if (typeof content === 'string') return content;
   if (Array.isArray(content)) return content;
   return String(content ?? '');

@@ -23,16 +23,16 @@ function isAdminPasskey(passkey: string): boolean {
 }
 
 // Safe query that returns empty result on table/column errors
-async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; error?: string }> {
+async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: Record<string, unknown>[]; rowCount: number | null; error?: string }> {
   try {
     const result = await query(sql, params);
-    return { rows: result.rows };
+    return { rows: result.rows, rowCount: result.rowCount };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     // Log but don't throw - return empty result
     if (message.includes('does not exist') || message.includes('column')) {
       console.warn(`[MEMBERS] Query skipped (missing table/column): ${message}`);
-      return { rows: [], error: message };
+      return { rows: [], rowCount: 0, error: message };
     }
     throw error; // Re-throw unexpected errors
   }

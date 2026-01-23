@@ -8,6 +8,7 @@
 import { query } from '@/lib/db/postgres';
 import { getStripe, isStripeConfigured } from '@/lib/stripe/config';
 import { getTierPricingByTier, type ClientTier, type BillingInterval } from './tierPricing';
+export type { ClientTier, BillingInterval };
 import { v4 as uuid } from 'uuid';
 import type Stripe from 'stripe';
 

@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
     sqlQuery += ' ORDER BY created_at DESC';
 
     const results = await query(sqlQuery, params);
-    const decisions = results.rows || results;
+    const decisions = results;
 
     // Calculate analytics
     const decisionsWithFeedback = decisions.filter((d: any) =>

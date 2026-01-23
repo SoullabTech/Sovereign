@@ -410,7 +410,7 @@ function parseGeneratedContent(type: GenerationType, text: string): unknown {
     case 'social':
     case 'caption': {
       const contentMatch = text.match(/CONTENT:\s*([\s\S]+?)(?:HASHTAGS:|$)/);
-      const hashtagsMatch = text.match(/HASHTAGS:\s*(.+?)(?:\n\n|NOTES:|$)/s);
+      const hashtagsMatch = text.match(/HASHTAGS:\s*([\s\S]+?)(?:\n\n|NOTES:|$)/);
       const notesMatch = text.match(/NOTES:\s*([\s\S]+?)$/);
 
       const hashtags = hashtagsMatch?.[1]

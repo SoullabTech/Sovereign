@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
       {
         to,
         bodyText: message,
-        channel: 'sms',
+        messageId: `sms-${Date.now()}`,
+        practitionerId: practitionerId || 'system',
       },
       credentials
     );

@@ -28,15 +28,16 @@ async function queryWithTimeout<T>(
   sql: string,
   params?: unknown[],
   timeoutMs: number = DB_QUERY_TIMEOUT_MS
-): Promise<{ rows: T[]; rowCount: number }> {
+): Promise<{ rows: T[]; rowCount: number | null }> {
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => reject(new Error(`DB query timed out after ${timeoutMs}ms`)), timeoutMs);
   });
 
-  return Promise.race([
-    query<T>(sql, params),
+  const result = await Promise.race([
+    query(sql, params),
     timeoutPromise,
   ]);
+  return { rows: result.rows as T[], rowCount: result.rowCount };
 }
 
 // Health status types

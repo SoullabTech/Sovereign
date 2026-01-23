@@ -17,6 +17,7 @@ import {
   saveTierPricing,
   initializeDefaultPricing,
   type CreateTierPricingInput,
+  type TierPricing,
 } from '@/lib/practitioner/tierPricing';
 
 interface RouteParams {
@@ -171,7 +172,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     }
 
     // Save each pricing entry
-    const results = [];
+    const results: TierPricing[] = [];
     for (const entry of pricing) {
       const result = await saveTierPricing(practitioner.id, entry);
       results.push(result);

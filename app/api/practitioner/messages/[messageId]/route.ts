@@ -17,6 +17,7 @@ import {
   getMessage,
   markMessageRead,
   reviewSafetyConcern,
+  type ClientMessage,
 } from '@/lib/practitioner/messages';
 
 interface RouteParams {
@@ -73,7 +74,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const body = await request.json();
 
-    let message = null;
+    let message: ClientMessage | null = null;
 
     if (body.mark_read === true) {
       message = await markMessageRead(practitionerId, messageId);
