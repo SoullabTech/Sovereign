@@ -389,3 +389,4 @@ public/audiobook/
 # MAIA CLI runtime files (generated per-client configs)
 clients/runtime/
 scripts/maia-cli/node_modules/
+.local/
