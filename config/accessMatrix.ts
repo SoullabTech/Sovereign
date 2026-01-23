@@ -115,8 +115,13 @@ export const ACCESS_RULES: AccessRule[] = [
   // 3) PERSONAL TIER ($12/mo) - Core MAIA membership
   // -------------------------------------------------------------------------
 
-  // Dashboard
-  { prefix: '/dashboard', minTier: 'personal', notes: 'Full dashboard access' },
+  // Dashboard - Base accessible to all authenticated users (no rule needed, falls through as auth-only)
+  // /dashboard, /dashboard/settings, /dashboard/export - accessible if logged in
+
+  // Dashboard - Personal tier experiences
+  { prefix: '/dashboard/mentor', minTier: 'personal', notes: 'Mentor experiences' },
+  { prefix: '/dashboard/insights', minTier: 'personal', notes: 'Pattern insights' },
+  { prefix: '/dashboard/patterns', minTier: 'personal', notes: 'Pattern tracking' },
 
   // MAIA Interface (core)
   { exact: '/maia', minTier: 'free', notes: 'MAIA main interface - open to all authenticated users' },
@@ -194,6 +199,10 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/dashboard/beta', minTier: 'pro', notes: 'Beta analytics' },
   { exact: '/dashboard/beta-analytics', minTier: 'pro', notes: 'Beta analytics detailed' },
   { exact: '/dashboard/ops', minTier: 'pro', notes: 'Operations dashboard' },
+
+  // Dashboard catch-all - requires auth but no tier gate (settings, export, base dashboard)
+  // Must come AFTER specific dashboard/* rules since matchRule returns first prefix match
+  { prefix: '/dashboard', minTier: 'free', notes: 'Dashboard base requires auth' },
 
   // MAIA Pro features
   { exact: '/maia/realtime-monitor', minTier: 'pro', notes: 'Real-time monitoring' },

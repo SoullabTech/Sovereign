@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Settings, Bell, Shield, Palette, Volume2, Cog, ExternalLink, Eye } from 'lucide-react';
+import { Settings, Bell, Shield, Palette, Volume2, Cog, ExternalLink, Eye, Crown, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { useSession } from '@/lib/hooks/useSession';
 
 interface Project {
   id: string;
@@ -18,6 +19,7 @@ export default function SettingsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [projectsError, setProjectsError] = useState<string | null>(null);
+  const { tier, isPersonal, isPro } = useSession();
 
   useEffect(() => {
     async function loadProjects() {
@@ -616,6 +618,65 @@ export default function SettingsPage() {
               </div>
             </motion.div>
           )}
+
+          {/* Plan & Membership Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55 }}
+            className="relative lg:col-span-2"
+          >
+            {/* Multi-layered Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-jade-malachite/20 via-jade-sage/15 to-jade-shadow/25 rounded-xl" />
+
+            <div className="relative p-8 border border-jade-malachite/30 rounded-xl backdrop-blur-xl">
+              <div className="flex items-center gap-4 mb-8">
+                <Crown className="w-5 h-5 text-jade-malachite" />
+                <h3 className="text-lg font-extralight text-jade-jade tracking-[0.3em] uppercase">
+                  Membership
+                </h3>
+              </div>
+
+              {/* Current tier - clear label first, poetic subtitle after */}
+              <div className="mb-6">
+                <p className="text-sm text-jade-mineral mb-2">Current plan</p>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-lg
+                              bg-jade-sage/20 border border-jade-sage/30">
+                  <span className="text-jade-jade font-light">
+                    {isPro ? 'Stewardship' : isPersonal ? 'Personal Mentor' : 'Member'}
+                  </span>
+                </div>
+                <p className="text-xs text-jade-mineral/70 mt-2 italic">
+                  {isPro
+                    ? 'Serve others with advanced tools'
+                    : isPersonal
+                    ? 'Ongoing guidance, memory, and daily support'
+                    : 'Begin tracking & reflection'}
+                </p>
+              </div>
+
+              {/* Upgrade invitation (only show if not pro) */}
+              {!isPro && (
+                <div className="space-y-4">
+                  <p className="text-sm text-jade-mineral">
+                    {isPersonal
+                      ? 'Deepen into Stewardship to serve others with advanced tools.'
+                      : 'Deepen your practice with Personal Mentor guidance.'}
+                  </p>
+
+                  <Link
+                    href="/maia/membership"
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-lg
+                             bg-jade-malachite/20 border border-jade-malachite/40
+                             text-jade-jade hover:bg-jade-malachite/30 transition-colors"
+                  >
+                    <Sparkles className="w-4 h-4" />
+                    <span>Explore membership options</span>
+                  </Link>
+                </div>
+              )}
+            </div>
+          </motion.div>
 
           {/* Sacred Configuration Crystalline Activation */}
           <motion.div
