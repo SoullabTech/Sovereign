@@ -28,9 +28,10 @@ export async function GET(
   const isDev = process.env.NODE_ENV === 'development';
   if (isDev) {
     console.log('[Practitioner Auth] Dev bypass active for slug:', slug);
+    // Use deterministic UUIDs for dev mode (valid UUID format required by Postgres)
     const mockPractitioner = {
-      id: 'dev-practitioner-id',
-      member_id: 'dev-member-id',
+      id: '00000000-0000-0000-0000-000000000001',
+      member_id: '00000000-0000-0000-0000-000000000002',
       slug: slug || 'dev',
       name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Dev Practitioner',
       email: `${slug || 'dev'}@example.com`,
@@ -156,9 +157,10 @@ export async function GET(
       const authHeader = request.headers.get('x-member-id');
       console.log('[Practitioner Auth] Dev bypass: returning mock practitioner for slug:', slug);
 
+      // Use deterministic UUIDs for dev mode (valid UUID format required by Postgres)
       const mockPractitioner = {
-        id: authHeader || 'dev-practitioner-id',
-        member_id: authHeader || 'dev-member-id',
+        id: authHeader || '00000000-0000-0000-0000-000000000001',
+        member_id: authHeader || '00000000-0000-0000-0000-000000000002',
         slug: slug,
         name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Dev Practitioner',
         email: `${slug || 'dev'}@example.com`,
