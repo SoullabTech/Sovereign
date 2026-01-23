@@ -53,10 +53,13 @@ async function resetPassword(identifier: string, newPassword?: string) {
   console.log(`  Email:    ${member.email}`);
   console.log(`  Password: ${password}`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  // Capitalize first letter of username for display (matches signin form)
+  const displayUsername = member.username.charAt(0).toUpperCase() + member.username.slice(1);
+
   console.log('\n📋 Copy-paste for tester:\n');
   console.log(`Your Soullab password has been reset.`);
   console.log(`Sign in at: ${BASE_URL}/signin`);
-  console.log(`Username: ${member.username}`);
+  console.log(`Username: ${displayUsername}`);
   console.log(`Password: ${password}`);
   console.log(`\n(Please change your password after signing in)\n`);
 }
