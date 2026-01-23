@@ -66,6 +66,60 @@ const colors = {
   border: '#4A3D5C',
 };
 
+// Map signs to elements for elemental balance calculation
+const signToElement: Record<string, 'fire' | 'water' | 'earth' | 'air'> = {
+  Aries: 'fire', Leo: 'fire', Sagittarius: 'fire',
+  Cancer: 'water', Scorpio: 'water', Pisces: 'water',
+  Taurus: 'earth', Virgo: 'earth', Capricorn: 'earth',
+  Gemini: 'air', Libra: 'air', Aquarius: 'air',
+};
+
+// Transform BirthChartData to planets array for SacredHouseWheel
+function transformToPlanets(chartData: BirthChartData): Array<{ name: string; sign: string; house: number; degree: number }> {
+  const planets: Array<{ name: string; sign: string; house: number; degree: number }> = [];
+  const planetKeys = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn', 'uranus', 'neptune', 'pluto'] as const;
+
+  for (const key of planetKeys) {
+    const planet = chartData[key];
+    if (planet) {
+      planets.push({
+        name: key.charAt(0).toUpperCase() + key.slice(1),
+        sign: planet.sign,
+        house: planet.house,
+        degree: planet.degree,
+      });
+    }
+  }
+  return planets;
+}
+
+// Calculate elemental balance from chart data
+function calculateElementalBalance(chartData: BirthChartData): { fire: number; water: number; earth: number; air: number } {
+  const balance = { fire: 0, water: 0, earth: 0, air: 0 };
+  const planetKeys = ['sun', 'moon', 'mercury', 'venus', 'mars', 'jupiter', 'saturn'] as const;
+
+  for (const key of planetKeys) {
+    const planet = chartData[key];
+    if (planet) {
+      const element = signToElement[planet.sign];
+      if (element) {
+        balance[element] += key === 'sun' || key === 'moon' ? 2 : 1;
+      }
+    }
+  }
+
+  // Normalize to percentages
+  const total = balance.fire + balance.water + balance.earth + balance.air;
+  if (total > 0) {
+    balance.fire = Math.round((balance.fire / total) * 100);
+    balance.water = Math.round((balance.water / total) * 100);
+    balance.earth = Math.round((balance.earth / total) * 100);
+    balance.air = Math.round((balance.air / total) * 100);
+  }
+
+  return balance;
+}
+
 export default function PortalChartPage() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -336,8 +390,11 @@ export default function PortalChartPage() {
       >
         <div className="w-full max-w-xl">
           <SacredHouseWheel
-            birthChart={chartData}
-            onPlanetClick={(planet) => console.log('Planet clicked:', planet)}
+            planets={transformToPlanets(chartData)}
+            aspects={chartData.aspects.map(a => ({
+              ...a,
+              type: a.type as 'conjunction' | 'sextile' | 'square' | 'trine' | 'opposition',
+            }))}
           />
         </div>
       </motion.section>
@@ -356,7 +413,7 @@ export default function PortalChartPage() {
         <h2 className="font-display text-2xl tracking-wide mb-6 text-center" style={{ color: colors.starlight }}>
           Elemental Balance
         </h2>
-        <ElementalBalanceDisplay birthChart={chartData} />
+        <ElementalBalanceDisplay balance={calculateElementalBalance(chartData)} />
       </motion.section>
 
       {/* CTA to Book */}

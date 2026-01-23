@@ -133,8 +133,8 @@ export default function ServicesPage() {
         >
           {categories.map(category => (
             <button
-              key={category}
-              onClick={() => setSelectedCategory(category)}
+              key={category || 'uncategorized'}
+              onClick={() => setSelectedCategory(category || 'all')}
               className="px-5 py-2 rounded-full text-sm capitalize transition-all font-medium"
               style={{
                 backgroundColor: selectedCategory === category ? colors.gold : colors.stardust,

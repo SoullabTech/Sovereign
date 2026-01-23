@@ -242,7 +242,7 @@ function MessagesContent() {
           onBack={handleBackToInbox}
           onSendReply={handleSendReply}
           onSendQuickResponse={handleQuickResponse}
-          onReviewSafety={handleReviewSafety}
+          onSafetyAcknowledged={handleReviewSafety}
           isSending={isSending}
         />
       </div>

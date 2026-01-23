@@ -47,7 +47,6 @@ const isDev = process.env.NODE_ENV === 'development' ||
 
 // Mock data for local development when API is unavailable
 const DEV_MOCK_DASHBOARD: PractitionerDashboard = {
-  practitioner_id: 'dev-practitioner',
   total_clients: 12,
   active_clients: 8,
   sessions_this_week: 4,
@@ -61,12 +60,21 @@ const DEV_MOCK_DASHBOARD: PractitionerDashboard = {
       session_type: 'natal_reading',
       scheduled_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
       duration_minutes: 60,
+      location_type: 'video',
+      follow_up_sent: false,
+      paid: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       client: {
         id: 'mock-client-1',
         practitioner_id: 'dev-practitioner',
         name: 'Sarah Martinez',
         preferred_name: 'Sarah',
-        sun_sign: 'Aquarius',
+        status: 'active',
+        total_sessions: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        key_placements: { sun_sign: 'Aquarius' },
       },
     },
     {
@@ -77,17 +85,27 @@ const DEV_MOCK_DASHBOARD: PractitionerDashboard = {
       session_type: 'transit_reading',
       scheduled_at: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
       duration_minutes: 45,
+      location_type: 'video',
+      follow_up_sent: false,
+      paid: false,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
       client: {
         id: 'mock-client-2',
         practitioner_id: 'dev-practitioner',
         name: 'James Kendrick',
         preferred_name: 'James',
-        sun_sign: 'Scorpio',
+        status: 'active',
+        total_sessions: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        key_placements: { sun_sign: 'Scorpio' },
       },
     },
-  ] as PractitionerSession[],
+  ],
   recent_sessions: [],
   clients_needing_follow_up: [],
+  draft_sessions: [],
 };
 
 function formatTime(dateString: string): string {

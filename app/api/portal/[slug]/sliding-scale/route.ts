@@ -146,7 +146,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       const access = await validatePortalAccess(body.token);
       if (access && access.practitionerId === practitionerId) {
         clientId = access.clientId;
-        portalTokenId = access.tokenId;
+        // portalTokenId comes from the token itself (not returned from validatePortalAccess)
 
         // Get client name from database
         const clientResult = await db.query(

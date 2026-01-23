@@ -67,13 +67,13 @@ export async function POST(request: NextRequest) {
         trainingResult = await trainVoice(content, persona.voice_patterns as VoicePatterns);
         break;
       case 'framework':
-        trainingResult = await trainFramework(content, persona.framework);
+        trainingResult = await trainFramework(content, persona.framework as unknown as Record<string, unknown>);
         break;
       case 'boundaries':
-        trainingResult = await trainBoundaries(content, persona.boundaries);
+        trainingResult = await trainBoundaries(content, persona.boundaries as unknown as Record<string, unknown>);
         break;
       case 'conversation':
-        trainingResult = await trainFromConversation(content, persona);
+        trainingResult = await trainFromConversation(content, persona as unknown as Record<string, unknown>);
         break;
       default:
         return NextResponse.json(

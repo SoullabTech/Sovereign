@@ -121,13 +121,11 @@ Keep the tone aligned with the practitioner's voice. Be concise but thorough.`;
     // Build the prep object
     const prep: MaiaSessionPrep = {
       summary: prepContent,
-      themes_to_watch: clientHistory.recurring_themes.slice(0, 5),
-      suggested_questions: extractQuestions(prepContent),
-      client_context: {
-        total_sessions: clientHistory.total_sessions,
-        recent_themes: clientHistory.recurring_themes.slice(0, 3),
-        last_session_date: clientHistory.recent_sessions[0]?.scheduled_at,
-      },
+      client_history: `Total sessions: ${clientHistory.total_sessions}`,
+      recent_themes: clientHistory.recurring_themes.slice(0, 5),
+      relevant_context: clientHistory.last_session_notes || '',
+      suggested_focus: extractQuestions(prepContent),
+      open_threads: clientHistory.open_threads,
       generated_at: new Date().toISOString(),
     };
 

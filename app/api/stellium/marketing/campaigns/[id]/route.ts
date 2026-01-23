@@ -36,9 +36,9 @@ export async function GET(
       );
     }
 
-    let stats = null;
+    let stats: Record<string, unknown> | null = null;
     if (includeStats) {
-      stats = await queryOne(
+      stats = await queryOne<Record<string, unknown>>(
         `SELECT
           COUNT(*) as total_sends,
           COUNT(*) FILTER (WHERE status = 'delivered') as delivered,
