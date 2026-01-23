@@ -38,6 +38,7 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { path: '', label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+  { path: '/stellium', label: 'Stellium Pro', icon: <Star className="w-5 h-5" />, badge: 'PRO' },
   { path: '/clients', label: 'Clients', icon: <Users className="w-5 h-5" /> },
   { path: '/sessions', label: 'Sessions', icon: <Calendar className="w-5 h-5" /> },
   { path: '/messages', label: 'Messages', icon: <MessageSquare className="w-5 h-5" /> },
