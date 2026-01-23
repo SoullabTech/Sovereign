@@ -1934,16 +1934,18 @@ export function AccountSettings() {
         </div>
       )}
 
-      {/* Practitioner Dashboard Link */}
-      <div className="mt-4 pt-4 border-t border-white/10">
-        <a
-          href="/practitioner/dashboard"
-          className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors"
-        >
-          <span className="text-white/80">Go to Practitioner Dashboard</span>
-          <ChevronRight size={18} className="text-white/40" />
-        </a>
-      </div>
+      {/* Practitioner Dashboard Link - only show if user has projects */}
+      {projects.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-white/10">
+          <a
+            href="/practitioner/dashboard"
+            className="flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-colors"
+          >
+            <span className="text-white/80">Go to Practitioner Dashboard</span>
+            <ChevronRight size={18} className="text-white/40" />
+          </a>
+        </div>
+      )}
     </div>
   );
 
@@ -2445,7 +2447,9 @@ export function AccountSettings() {
             exit={{ opacity: 0, x: -20 }}
             className="space-y-3"
           >
-            {SECTIONS.map(({ id, label, icon: Icon, color }, index) => {
+            {SECTIONS
+              .filter(({ practitionerOnly }) => !practitionerOnly || projects.length > 0)
+              .map(({ id, label, icon: Icon, color }, index) => {
               // Color classes for each section
               const colorClasses: Record<string, { bg: string; border: string; icon: string; hover: string }> = {
                 emerald: { bg: 'from-emerald-500/25 to-emerald-600/15', border: 'border-emerald-500/25 group-hover:border-emerald-400/40', icon: 'text-emerald-400', hover: 'group-hover:from-emerald-500/5' },
