@@ -447,7 +447,7 @@ function SigninContent() {
     setRecoveryStatus('sending');
 
     try {
-      const response = await fetch(apiUrl('/api/members/recover'), {
+      const response = await fetch(apiUrl('/api/members/reset-password'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: recoveryEmail.toLowerCase() }),
@@ -457,11 +457,11 @@ function SigninContent() {
         setRecoveryStatus('sent');
       } else {
         const data = await response.json();
-        setError(data.error || 'Failed to send recovery email');
+        setError(data.error || 'Failed to send reset email');
         setRecoveryStatus('idle');
       }
     } catch {
-      setError('Unable to process recovery request.');
+      setError('Unable to process reset request.');
       setRecoveryStatus('idle');
     }
   };
@@ -764,12 +764,12 @@ function SigninContent() {
             <div className="flex justify-center mb-4">
               <Mail className="w-10 h-10 text-teal-600" />
             </div>
-            <h2 className="text-lg font-semibold text-teal-900 text-center mb-3">Recover Your Account</h2>
+            <h2 className="text-lg font-semibold text-teal-900 text-center mb-3">Reset Your Password</h2>
 
             {recoveryStatus === 'sent' ? (
               <div className="text-center">
                 <div className="bg-emerald-100/60 rounded-xl p-4 mb-4">
-                  <p className="text-emerald-800">Check your email for recovery instructions.</p>
+                  <p className="text-emerald-800">Check your email for a password reset link.</p>
                 </div>
                 <button onClick={() => setShowRecovery(false)} className="text-teal-600 text-sm">
                   Back to Sign In
@@ -790,7 +790,7 @@ function SigninContent() {
                   disabled={recoveryStatus === 'sending' || !recoveryEmail}
                   className="w-full py-2 rounded-xl font-medium !bg-teal-600 !text-white hover:!bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-teal-400/40"
                 >
-                  {recoveryStatus === 'sending' ? 'Sending...' : 'Send Recovery Email'}
+                  {recoveryStatus === 'sending' ? 'Sending...' : 'Send Reset Link'}
                 </button>
                 <button type="button" onClick={() => setShowRecovery(false)} className="w-full text-sm text-teal-700/70">
                   Cancel
