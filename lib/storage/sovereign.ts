@@ -5,8 +5,8 @@
 // Types
 // ─────────────────────────────────────────────────────────────────────────────
 
-export type StorageMode = 'local' | 'cloud' | 'hybrid';
-export type DataType = 'conversations' | 'memories' | 'preferences' | 'journal';
+export type StorageMode = 'local' | 'cloud' | 'hybrid' | 'local_only' | 'both' | 'server_only';
+export type DataType = 'conversations' | 'memories' | 'preferences' | 'journal' | 'journals' | 'audio' | 'insights';
 
 export interface StorageDecision {
   allowServerStorage: boolean;
@@ -14,11 +14,22 @@ export interface StorageDecision {
   consentTimestamp?: string;
 }
 
+export interface DataTypeDetail {
+  saveLocal: boolean;
+  saveServer: boolean;
+}
+
 export interface ConsentSummary {
   mode: StorageMode;
   autoSync: boolean;
   sanctuaryDefault: boolean;
   dataTypes: Record<DataType, boolean>;
+  // Extended fields for AccountSettings
+  details?: Record<DataType, DataTypeDetail>;
+  localEnabled?: boolean;
+  serverEnabled?: boolean;
+  audioLocal?: boolean;
+  audioServer?: boolean;
 }
 
 export interface SyncState {
@@ -26,9 +37,20 @@ export interface SyncState {
   pending: number;
   syncing: boolean;
   error: string | null;
+  // Extended for AccountSettings
+  isSyncing: boolean;
+  lastSyncAt: Date | null;
+  pendingCount: number;
 }
 
-export const DEFAULT_STORAGE_CONSENT: ConsentSummary = {
+export interface SyncCounts {
+  local: number;
+  server: number;
+  pending: number;
+}
+
+// Extended defaults with local/server per-type flags for AccountSettings compatibility
+export const DEFAULT_STORAGE_CONSENT: ConsentSummary & Record<string, boolean> = {
   mode: 'local',
   autoSync: false,
   sanctuaryDefault: false,
@@ -37,7 +59,25 @@ export const DEFAULT_STORAGE_CONSENT: ConsentSummary = {
     memories: true,
     preferences: true,
     journal: true,
+    journals: true,
+    audio: true,
+    insights: true,
   },
+  // Per-type local/server defaults
+  conversationsLocal: true,
+  conversationsServer: false,
+  memoriesLocal: true,
+  memoriesServer: false,
+  preferencesLocal: true,
+  preferencesServer: false,
+  journalLocal: true,
+  journalServer: false,
+  journalsLocal: true,
+  journalsServer: false,
+  audioLocal: true,
+  audioServer: false,
+  insightsLocal: true,
+  insightsServer: false,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -58,11 +98,14 @@ export function setAutoSync(enabled: boolean): void {
   }
 }
 
-export function setDataTypeConsent(dataType: DataType, allowed: boolean): void {
+export function setDataTypeConsent(dataType: DataType, saveLocal: boolean, saveServer?: boolean): void {
   // Stub
   if (typeof window !== 'undefined') {
     const key = `maia_consent_${dataType}`;
-    localStorage.setItem(key, String(allowed));
+    localStorage.setItem(key, String(saveLocal));
+    if (saveServer !== undefined) {
+      localStorage.setItem(`${key}_server`, String(saveServer));
+    }
   }
 }
 
@@ -85,6 +128,9 @@ export function getConsentSummary(): ConsentSummary {
     memories: localStorage.getItem('maia_consent_memories') !== 'false',
     preferences: localStorage.getItem('maia_consent_preferences') !== 'false',
     journal: localStorage.getItem('maia_consent_journal') !== 'false',
+    journals: localStorage.getItem('maia_consent_journals') !== 'false',
+    audio: localStorage.getItem('maia_consent_audio') !== 'false',
+    insights: localStorage.getItem('maia_consent_insights') !== 'false',
   };
 
   return { mode, autoSync, sanctuaryDefault, dataTypes };
@@ -99,14 +145,17 @@ const defaultSyncState: SyncState = {
   pending: 0,
   syncing: false,
   error: null,
+  isSyncing: false,
+  lastSyncAt: null,
+  pendingCount: 0,
 };
 
 export function getSyncState(): SyncState {
   return { ...defaultSyncState };
 }
 
-export function getSyncStatus(): { status: 'idle' | 'syncing' | 'error'; message?: string } {
-  return { status: 'idle' };
+export function getSyncStatus(memberId?: string): SyncCounts {
+  return { local: 0, server: 0, pending: 0 };
 }
 
 export function subscribeSyncState(callback: (state: SyncState) => void): () => void {
@@ -115,7 +164,7 @@ export function subscribeSyncState(callback: (state: SyncState) => void): () => 
   return () => {};
 }
 
-export async function triggerSync(): Promise<{ success: boolean }> {
+export async function triggerSync(userId?: string): Promise<{ success: boolean }> {
   // Stub
   return { success: true };
 }

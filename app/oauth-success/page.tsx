@@ -18,6 +18,8 @@ function OAuthSuccessContent() {
   const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!searchParams) return;
+
     // Check for error state first (ok=0 means OAuth failed)
     const ok = searchParams.get('ok');
     const code = searchParams.get('code');
@@ -61,6 +63,7 @@ function OAuthSuccessContent() {
         provider,
         isNew,
         createdAt: new Date().toISOString(),
+        tier: 'free' as const,
       };
 
       // Store session using betaSession.setUser and additional localStorage keys

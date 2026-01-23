@@ -128,7 +128,7 @@ export interface ListCapsulesResult {
  * List capsules for a user with optional filters
  */
 export async function listCapsules(params: ListCapsulesParams): Promise<ListCapsulesResult> {
-  const { userId, query: queryParams = {} } = params;
+  const { userId, query: queryParams = {} as CapsuleListQuery } = params;
   const {
     q,
     archived,

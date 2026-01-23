@@ -7,7 +7,7 @@ interface HoloflowerProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'xxl';
   animate?: boolean;
   glowIntensity?: 'low' | 'medium' | 'high';
-  variant?: 'single' | 'spectrum';
+  variant?: 'single' | 'spectrum' | 'responsive';
   theme?: 'light' | 'dark'; // for light or dark backgrounds
   className?: string;
   customColor?: string; // for dynamic color changes based on mode

@@ -411,8 +411,4 @@ export function getRemedialMeasures(planet: AshtakavargaPlanet, bindus: number):
   return remedies[planet] || [];
 }
 
-// =============================================================================
-// EXPORTS
-// =============================================================================
-
-export type { BinduMatrix, SarvaAshtakavarga, TransitStrength, AshtakavargaProfile, AshtakavargaPlanet };
+// Types are exported inline above

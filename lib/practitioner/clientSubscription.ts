@@ -365,8 +365,10 @@ export async function handleSubscriptionCreated(
     : stripeSubscription.customer?.id;
 
   const status = stripeSubscription.status;
-  const currentPeriodStart = new Date(stripeSubscription.current_period_start * 1000).toISOString();
-  const currentPeriodEnd = new Date(stripeSubscription.current_period_end * 1000).toISOString();
+  // Use type assertion - these properties exist on Stripe Subscription objects
+  const sub = stripeSubscription as unknown as { current_period_start: number; current_period_end: number };
+  const currentPeriodStart = new Date(sub.current_period_start * 1000).toISOString();
+  const currentPeriodEnd = new Date(sub.current_period_end * 1000).toISOString();
 
   // UPSERT subscription record (idempotent - safe for Stripe retries)
   const result = await query<ClientSubscription>(
@@ -417,6 +419,8 @@ export async function handleSubscriptionUpdated(
   stripeSubscription: Stripe.Subscription,
   practitionerId: string
 ): Promise<void> {
+  // Use type assertion for period timestamps
+  const sub = stripeSubscription as unknown as { current_period_start: number; current_period_end: number };
   const result = await query(
     `UPDATE client_subscriptions
      SET status = $1,
@@ -426,8 +430,8 @@ export async function handleSubscriptionUpdated(
      WHERE stripe_subscription_id = $5 AND practitioner_id = $6`,
     [
       stripeSubscription.status,
-      new Date(stripeSubscription.current_period_start * 1000).toISOString(),
-      new Date(stripeSubscription.current_period_end * 1000).toISOString(),
+      new Date(sub.current_period_start * 1000).toISOString(),
+      new Date(sub.current_period_end * 1000).toISOString(),
       stripeSubscription.cancel_at_period_end,
       stripeSubscription.id,
       practitionerId,
@@ -455,11 +459,13 @@ export async function handlePaymentFailed(
   invoice: Stripe.Invoice,
   practitionerId: string
 ): Promise<void> {
-  if (!invoice.subscription) return;
+  // Use type assertion for subscription property
+  const inv = invoice as unknown as { subscription?: string | { id: string } };
+  if (!inv.subscription) return;
 
-  const subscriptionId = typeof invoice.subscription === 'string'
-    ? invoice.subscription
-    : invoice.subscription.id;
+  const subscriptionId = typeof inv.subscription === 'string'
+    ? inv.subscription
+    : inv.subscription.id;
 
   await query(
     `UPDATE client_subscriptions

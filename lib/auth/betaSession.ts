@@ -25,6 +25,11 @@ export interface BetaUser {
   tier_started_at?: string;
   subscriptionActive?: boolean;
   subscriptionExpiresAt?: string | null;
+  // OAuth flow fields
+  preferredName?: string;
+  onboardingStep?: string;
+  provider?: string;
+  isNew?: boolean;
 }
 
 export interface SessionState {
