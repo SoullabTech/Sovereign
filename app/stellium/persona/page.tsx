@@ -152,9 +152,9 @@ export default function PersonaPage() {
     },
   ];
 
-  const voicePatterns = persona.voice_patterns as Record<string, unknown> || {};
-  const framework = persona.framework as Record<string, unknown> || {};
-  const boundaries = persona.boundaries as Record<string, unknown> || {};
+  const voicePatterns = persona?.voice_patterns || {};
+  const framework = persona?.framework || {};
+  const boundaries = persona?.boundaries || {};
 
   return (
     <div className="space-y-6">

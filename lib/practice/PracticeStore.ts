@@ -337,7 +337,7 @@ export async function getTranscriptSegments(
       table: 'practice_transcript_segments',
       sessionId,
       practitionerId: opts?.practitionerId,
-    }) as PracticeTranscriptSegment[];
+    }) as unknown as PracticeTranscriptSegment[];
   }
 
   // Also check supervision_transcript_segments (for Practice mode in /supervision)
@@ -368,7 +368,7 @@ export async function getTranscriptSegments(
     table: 'supervision_transcript_segments',
     sessionId,
     practitionerId: opts?.practitionerId,
-  }) as PracticeTranscriptSegment[];
+  }) as unknown as PracticeTranscriptSegment[];
 }
 
 export async function getFullTranscript(
@@ -391,7 +391,7 @@ export async function getFullTranscript(
       table: 'practice_transcript_segments',
       sessionId,
       practitionerId,
-    }) as PracticeTranscriptSegment[];
+    }) as unknown as PracticeTranscriptSegment[];
   }
 
   // Also check supervision_transcript_segments
@@ -420,7 +420,7 @@ export async function getFullTranscript(
     table: 'supervision_transcript_segments',
     sessionId,
     practitionerId,
-  }) as PracticeTranscriptSegment[];
+  }) as unknown as PracticeTranscriptSegment[];
 }
 
 // Session Insights

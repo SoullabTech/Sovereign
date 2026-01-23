@@ -438,8 +438,4 @@ function getHouseOrdinal(house: number): string {
   return ordinals[house] || `${house}th`;
 }
 
-// =============================================================================
-// EXPORTS
-// =============================================================================
-
-export type { GocharaProfile, GocharaPosition, GocharaEffect };
+// Types are exported inline above

@@ -12,6 +12,14 @@ import { v4 as uuidv4 } from "uuid";
 import { getEntitlements } from "@/lib/entitlements";
 import { getDailyUsage, incrementDailyUsage } from "@/lib/usage";
 
+interface Memory {
+  id: number | string;
+  memory_type: string;
+  reference_id?: number;
+  content: string;
+  created_at: string;
+}
+
 // Skip during static export (Capacitor builds)
 
 // Check if OpenAI API key is valid
@@ -157,7 +165,7 @@ export async function POST(req: NextRequest) {
       await memoryStore.addMemory(
         userId,
         'voice',
-        voiceNoteId,
+        Number(voiceNoteId),
         transcript
       );
 
@@ -269,9 +277,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Retrieve voice note from database
-    const voiceNotes = await memoryStore.getMemories(userId, 1000);
+    const voiceNotes = await memoryStore.getMemories(userId, 1000) as Memory[];
     const voiceNote = voiceNotes.find(
-      note => note.memory_type === 'voice' && 
+      (note: Memory) => note.memory_type === 'voice' &&
       note.reference_id === parseInt(voiceNoteId.replace('voice_', ''))
     );
 

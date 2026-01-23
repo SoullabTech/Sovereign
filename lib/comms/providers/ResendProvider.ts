@@ -62,7 +62,7 @@ export class ResendProvider implements CommsProvider {
    * Verify API key is valid by making a test request
    */
   async verifyCredentials(credentials: Record<string, string>): Promise<boolean> {
-    const { api_key } = credentials as ResendCredentials;
+    const { api_key } = credentials as unknown as ResendCredentials;
 
     if (!api_key) {
       return false;
@@ -90,7 +90,7 @@ export class ResendProvider implements CommsProvider {
     payload: DeliveryPayload,
     credentials: Record<string, string>
   ): Promise<DeliveryResult> {
-    const { api_key, from_domain } = credentials as ResendCredentials;
+    const { api_key, from_domain } = credentials as unknown as ResendCredentials;
 
     if (!api_key) {
       return {

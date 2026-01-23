@@ -217,9 +217,9 @@ export default function SessionCard({
           </div>
 
           {/* Themes */}
-          {session.themes?.length > 0 && (
+          {(session.themes?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-1 mt-3">
-              {session.themes.slice(0, 4).map((theme, i) => (
+              {session.themes!.slice(0, 4).map((theme, i) => (
                 <span
                   key={i}
                   className="text-xs px-2 py-0.5 bg-gray-800/50 text-gray-400 rounded-full"

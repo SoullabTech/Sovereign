@@ -63,9 +63,9 @@ export default function ClientCard({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-200 truncate">{displayName}</p>
-            {client.themes?.length > 0 && (
+            {(client.themes?.length ?? 0) > 0 && (
               <p className="text-xs text-gray-500 truncate">
-                {client.themes.slice(0, 2).join(', ')}
+                {client.themes!.slice(0, 2).join(', ')}
               </p>
             )}
           </div>
@@ -132,9 +132,9 @@ export default function ClientCard({
               </div>
 
               {/* Themes */}
-              {client.themes?.length > 0 && (
+              {(client.themes?.length ?? 0) > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {client.themes.slice(0, 3).map((theme, i) => (
+                  {client.themes!.slice(0, 3).map((theme, i) => (
                     <span
                       key={i}
                       className="text-xs px-2 py-0.5 bg-gray-800/50 text-gray-400 rounded-full"
@@ -142,8 +142,8 @@ export default function ClientCard({
                       {theme}
                     </span>
                   ))}
-                  {client.themes.length > 3 && (
-                    <span className="text-xs text-gray-500">+{client.themes.length - 3}</span>
+                  {client.themes!.length > 3 && (
+                    <span className="text-xs text-gray-500">+{client.themes!.length - 3}</span>
                   )}
                 </div>
               )}

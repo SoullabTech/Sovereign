@@ -12,6 +12,9 @@ export interface StorageDecision {
   allowServerStorage: boolean;
   allowLocalStorage: boolean;
   consentTimestamp?: string;
+  // Aliases for components that use these names
+  saveServer?: boolean;
+  saveLocal?: boolean;
 }
 
 export interface DataTypeDetail {
@@ -50,7 +53,7 @@ export interface SyncCounts {
 }
 
 // Extended defaults with local/server per-type flags for AccountSettings compatibility
-export const DEFAULT_STORAGE_CONSENT: ConsentSummary & Record<string, boolean> = {
+export const DEFAULT_STORAGE_CONSENT: ConsentSummary = {
   mode: 'local',
   autoSync: false,
   sanctuaryDefault: false,
@@ -169,25 +172,43 @@ export async function triggerSync(userId?: string): Promise<{ success: boolean }
   return { success: true };
 }
 
-export async function getStorageDecision(userId: string): Promise<StorageDecision | null> {
+export async function getStorageDecision(dataTypeOrUserId: DataType | string): Promise<StorageDecision | null> {
   // Default to local-only storage
   return {
     allowServerStorage: false,
     allowLocalStorage: true,
+    saveServer: false,
+    saveLocal: true,
   };
 }
 
-export async function saveQuickJournal(data: {
+export interface QuickJournalOptions {
   userId: string;
-  content: string;
-  timestamp: string;
-}): Promise<{ success: boolean }> {
+  entryType?: 'dream' | 'day' | 'handwriting';
+  source?: 'quick_sheet' | 'voice' | 'scan' | 'handwriting_ocr' | 'handwriting_paste';
+  tags?: string[];
+  meta?: Record<string, unknown>;
+  audioBlob?: Blob;
+  audioDurationMs?: number;
+}
+
+export interface QuickJournalResult {
+  success: boolean;
+  id?: string;
+  local?: boolean;
+  server?: boolean;
+}
+
+export async function saveQuickJournal(
+  content: string,
+  options: QuickJournalOptions
+): Promise<QuickJournalResult> {
   // Stub - save to localStorage for now
+  const id = `journal_${options.userId}_${Date.now()}`;
   if (typeof window !== 'undefined') {
-    const key = `journal_${data.userId}_${Date.now()}`;
-    localStorage.setItem(key, JSON.stringify(data));
+    localStorage.setItem(id, JSON.stringify({ content, ...options, timestamp: new Date().toISOString() }));
   }
-  return { success: true };
+  return { success: true, id, local: true, server: false };
 }
 
 export async function updateStorageConsent(

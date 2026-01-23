@@ -58,7 +58,7 @@ export class TwilioProvider implements CommsProvider {
    * Verify Twilio credentials by checking account info
    */
   async verifyCredentials(credentials: Record<string, string>): Promise<boolean> {
-    const { account_sid, auth_token } = credentials as TwilioCredentials;
+    const { account_sid, auth_token } = credentials as unknown as TwilioCredentials;
 
     if (!account_sid || !auth_token) {
       return false;
@@ -85,7 +85,7 @@ export class TwilioProvider implements CommsProvider {
     payload: DeliveryPayload,
     credentials: Record<string, string>
   ): Promise<DeliveryResult> {
-    const { account_sid, auth_token, from_number } = credentials as TwilioCredentials;
+    const { account_sid, auth_token, from_number } = credentials as unknown as TwilioCredentials;
 
     if (!account_sid || !auth_token) {
       return {

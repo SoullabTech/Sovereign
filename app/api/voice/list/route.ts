@@ -6,6 +6,14 @@ import path from "path";
 import { memoryStore } from "../../_backend/src/services/memory/MemoryStore";
 import { logger } from "../../_backend/src/utils/logger";
 
+interface VoiceNote {
+  id: string | number;
+  transcript: string;
+  audio_path?: string;
+  created_at: string;
+  duration_seconds?: number;
+}
+
 // Force dynamic for Docker/dev builds - Next.js 15 doesn't support conditional exports
 
 /**
@@ -48,7 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Get voice notes directly
-    const voiceNotes = await memoryStore.getVoiceNotes(userId, 100);
+    const voiceNotes = await memoryStore.getVoiceNotes(userId, 100) as VoiceNote[];
 
     // Transform to API response format
     const formattedVoiceNotes = voiceNotes.map(voiceNote => ({

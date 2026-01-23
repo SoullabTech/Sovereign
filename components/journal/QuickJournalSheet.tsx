@@ -256,7 +256,7 @@ export function QuickJournalSheet({
         // Upload audio to server if user consents to server storage and we have audio
         if (recordedBlob && !isHandwriting) {
           const audioDecision = await getStorageDecision('audio');
-          if (audioDecision.saveServer) {
+          if (audioDecision?.saveServer && result.id) {
             try {
               const uploadResult = await uploadAudio(result.id);
               if (uploadResult.success) {
@@ -286,7 +286,7 @@ export function QuickJournalSheet({
           setSavedMessage(messages[activeTab]);
         }
 
-        onSaved?.(result.id);
+        if (result.id) onSaved?.(result.id);
 
         if (askMaia) {
           // Close sheet and send to MAIA

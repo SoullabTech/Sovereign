@@ -103,7 +103,7 @@ async function getThreadContext(
   const policy = await getEffectivePolicy(practitionerId, thread.client_id, thread.domain);
 
   // Get client info if clinical thread
-  let client = undefined;
+  let client: ThreadContext['client'] = undefined;
   if (thread.client_id) {
     const clientRow = await queryOne<{
       id: string;
@@ -118,7 +118,7 @@ async function getThreadContext(
 
     if (clientRow) {
       // Get case info if exists
-      let caseInfo = null;
+      let caseInfo: { spiral_stage: string; primary_element: string } | null = null;
       if (thread.case_id) {
         caseInfo = await queryOne<{
           spiral_stage: string;
@@ -340,7 +340,6 @@ export async function sendMessage(
       channel_type: message.channel_type,
       message_type: message.message_type || undefined,
       urgency: message.urgency,
-      used_suggestion_id: usedSuggestionId || undefined,
     }
   );
 

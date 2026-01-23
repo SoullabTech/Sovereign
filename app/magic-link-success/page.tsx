@@ -16,6 +16,7 @@ function MagicLinkSuccessContent() {
   const [message, setMessage] = useState('Signing you in...');
 
   useEffect(() => {
+    if (!searchParams) return;
     const memberId = searchParams.get('member_id');
     const username = searchParams.get('username');
     const name = searchParams.get('name');

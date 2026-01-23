@@ -1616,8 +1616,8 @@ export function AccountSettings() {
                 // Use shared defaults from storage system (single source of truth)
                 const localKey = `${id}Local` as keyof typeof DEFAULT_STORAGE_CONSENT;
                 const serverKey = `${id}Server` as keyof typeof DEFAULT_STORAGE_CONSENT;
-                const saveLocal = typeDetails?.saveLocal ?? DEFAULT_STORAGE_CONSENT[localKey];
-                const saveServer = typeDetails?.saveServer ?? DEFAULT_STORAGE_CONSENT[serverKey];
+                const saveLocal = typeDetails?.saveLocal ?? Boolean(DEFAULT_STORAGE_CONSENT[localKey]);
+                const saveServer = typeDetails?.saveServer ?? Boolean(DEFAULT_STORAGE_CONSENT[serverKey]);
                 const neitherEnabled = !saveLocal && !saveServer;
 
                 // Audio server is gated to paid members

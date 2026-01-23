@@ -137,6 +137,7 @@ export default function MaiaMentorPopup({ tier = 'personal' }: MaiaMentorPopupPr
 
   // Get context based on current path
   const getContext = (): MentorContext => {
+    if (!pathname) return defaultContext;
     // Exact match first
     if (mentorContexts[pathname]) {
       return mentorContexts[pathname];

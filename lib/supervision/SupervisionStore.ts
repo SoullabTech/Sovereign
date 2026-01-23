@@ -291,7 +291,7 @@ export async function getTranscript(
     table: 'supervision_transcript_segments',
     sessionId,
     practitionerId,
-  }) as TranscriptSegment[];
+  }) as unknown as TranscriptSegment[];
 }
 
 export async function getRecentTranscript(
@@ -313,7 +313,7 @@ export async function getRecentTranscript(
     table: 'supervision_transcript_segments',
     sessionId,
     practitionerId,
-  }) as TranscriptSegment[];
+  }) as unknown as TranscriptSegment[];
 }
 
 /**

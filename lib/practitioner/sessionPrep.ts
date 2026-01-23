@@ -348,7 +348,7 @@ export async function getEmergencyInfo(
   // SECURITY: Stage B - Decrypt from _enc columns, then strip them
   const decrypted = decryptEmergencyInfoRow(
     emergencyInfo,
-    { rowId: row.id, clientId },
+    { rowId: row.id, practitionerId },
     { preferEncrypted: true }
   );
   return sanitizeEmergencyInfoRow(decrypted);
@@ -462,7 +462,7 @@ export async function upsertEmergencyInfo(
   // SECURITY: Stage B - Decrypt from _enc columns, then strip them
   const decrypted = decryptEmergencyInfoRow(
     emergencyInfo,
-    { rowId: row.id, clientId },
+    { rowId: row.id, practitionerId },
     { preferEncrypted: true }
   );
   return sanitizeEmergencyInfoRow(decrypted);
