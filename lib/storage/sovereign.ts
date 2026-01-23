@@ -31,8 +31,21 @@ export interface ConsentSummary {
   details?: Record<DataType, DataTypeDetail>;
   localEnabled?: boolean;
   serverEnabled?: boolean;
+  // Per-type local/server flags
+  conversationsLocal?: boolean;
+  conversationsServer?: boolean;
+  memoriesLocal?: boolean;
+  memoriesServer?: boolean;
+  preferencesLocal?: boolean;
+  preferencesServer?: boolean;
+  journalLocal?: boolean;
+  journalServer?: boolean;
+  journalsLocal?: boolean;
+  journalsServer?: boolean;
   audioLocal?: boolean;
   audioServer?: boolean;
+  insightsLocal?: boolean;
+  insightsServer?: boolean;
 }
 
 export interface SyncState {

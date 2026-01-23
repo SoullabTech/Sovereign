@@ -98,7 +98,7 @@ const DEV_MOCK_CLIENTS: PractitionerClient[] = [
 export default function NewSessionPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitionerId, isLoading: authLoading } = usePractitionerAuth();
 
   const [clients, setClients] = useState<PractitionerClient[]>([]);

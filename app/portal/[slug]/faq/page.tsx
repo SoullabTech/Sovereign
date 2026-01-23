@@ -112,7 +112,7 @@ function FAQItem({ faq, isOpen, onToggle }: FAQItemProps) {
 
 export default function PortalFAQPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [faqs, setFaqs] = useState<PractitionerFAQ[]>([]);
   const [loading, setLoading] = useState(true);

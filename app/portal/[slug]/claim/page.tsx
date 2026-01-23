@@ -28,7 +28,7 @@ const colors = {
 export default function ClaimPage() {
   const router = useRouter();
   const params = useParams<{ slug: string }>();
-  const slug = params.slug;
+  const slug = params?.slug;
 
   const [code, setCode] = useState('');
   const [email, setEmail] = useState('');

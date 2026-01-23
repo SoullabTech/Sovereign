@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     console.log(`[MEMBERS] Sign in success: ${username} (${member.id}) tier=${member.tier} roles=${roles.join(',')}`);
 
     // Check if member has a practitioner profile
-    let practitioner = null;
+    let practitioner: { id: string; slug: string; name: string } | null = null;
     if (roles.includes('practitioner')) {
       const practitionerResult = await query(
         'SELECT id, slug, name FROM practitioners WHERE member_id = $1 LIMIT 1',

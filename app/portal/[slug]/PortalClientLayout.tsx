@@ -44,7 +44,7 @@ interface ChatMessage {
 export default function PortalLayout({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const pathname = usePathname();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   // Admin routes have their own layout - pass through without portal chrome
   const isAdminRoute = pathname?.includes('/admin');

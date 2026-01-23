@@ -114,7 +114,7 @@ export function getInitialInvites(tier: string = 'standard'): number {
  */
 export function isFoundingPasskey(passkey: string): boolean {
   const normalized = passkey.toUpperCase();
-  return inviteConfig.foundingPasskeys.includes(normalized);
+  return (inviteConfig.foundingPasskeys as readonly string[]).includes(normalized);
 }
 
 /**

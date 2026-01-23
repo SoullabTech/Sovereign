@@ -99,7 +99,7 @@ function formatShortDate(dateStr: string | null): string {
 export default function ContainerDetailPage() {
   const router = useRouter();
   const params = useParams<{ containerId: string }>();
-  const containerId = params.containerId;
+  const containerId = params?.containerId;
 
   const [memberId, setMemberId] = useState<string | null>(null);
   const [data, setData] = useState<ContainerData | null>(null);

@@ -30,7 +30,7 @@ const colors = {
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const params = useParams();
   const pathname = usePathname();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitioner, isLoading, error, isAuthenticated } = usePractitionerAuth();
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -225,7 +225,7 @@ export default function PractitionerAdminLayout({
   children: React.ReactNode;
 }) {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   return (
     <PractitionerAuthProvider slug={slug}>

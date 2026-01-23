@@ -15,7 +15,7 @@ function TestElementalContent() {
 
   useEffect(() => {
     // Check for passkey in URL params (from redirect)
-    const urlPasskey = searchParams.get('passkey');
+    const urlPasskey = searchParams?.get('passkey');
     if (urlPasskey) {
       setInitialPasskey(urlPasskey.toUpperCase());
     }

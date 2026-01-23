@@ -31,7 +31,7 @@ type PageStatus = 'loading' | 'ready' | 'no-pricing' | 'no-payments' | 'error' |
 export default function SubscribePage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [status, setStatus] = useState<PageStatus>('loading');
   const [pricing, setPricing] = useState<TierPricing[]>([]);

@@ -26,7 +26,7 @@ interface ThreadResponse {
 export default function CommsThreadPage() {
   const router = useRouter();
   const params = useParams();
-  const threadId = params.threadId as string;
+  const threadId = params?.threadId as string;
 
   const [threadData, setThreadData] = useState<ThreadResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);

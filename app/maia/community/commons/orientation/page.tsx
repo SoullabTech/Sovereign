@@ -24,7 +24,7 @@ interface MemberSession {
 function OrientationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
+  const returnTo = searchParams?.get('returnTo');
   const [member, setMember] = useState<MemberSession | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

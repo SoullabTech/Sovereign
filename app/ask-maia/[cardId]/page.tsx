@@ -25,7 +25,7 @@ import { AskMaiaCard } from '@/components/askMaia';
 import { AskMaiaCard as CardType, CardType as CardTypeEnum, AccessLevel } from '@/lib/askMaia/types';
 
 // Card type configuration
-const cardTypeConfig: Record<CardTypeEnum, { icon: React.ElementType; label: string; gradient: string }> = {
+const cardTypeConfig: Record<CardTypeEnum, { icon: React.ComponentType<{ className?: string }>; label: string; gradient: string }> = {
   daily_transmission: {
     icon: Sparkles,
     label: 'Daily Transmission',
@@ -59,7 +59,7 @@ const cardTypeConfig: Record<CardTypeEnum, { icon: React.ElementType; label: str
 };
 
 // Access level icons
-const accessLevelIcons: Record<AccessLevel, React.ElementType | null> = {
+const accessLevelIcons: Record<AccessLevel, React.ComponentType<{ className?: string }> | null> = {
   personal: null,
   practitioner: Crown,
   pro: Diamond,
@@ -68,7 +68,7 @@ const accessLevelIcons: Record<AccessLevel, React.ElementType | null> = {
 export default function CardDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const cardId = params.cardId as string;
+  const cardId = params?.cardId as string;
 
   const [card, setCard] = useState<CardType | null>(null);
   const [relatedCards, setRelatedCards] = useState<CardType[]>([]);

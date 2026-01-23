@@ -309,8 +309,8 @@ function clampStep(n: number): WizardStep {
 }
 
 function deepMerge<T>(base: T, patch: Partial<T>): T {
-  const out: Record<string, unknown> = Array.isArray(base)
-    ? [...(base as unknown[])]
+  const out = Array.isArray(base)
+    ? [...(base as unknown[])] as unknown as Record<string, unknown>
     : { ...(base as Record<string, unknown>) };
   for (const [k, v] of Object.entries(patch as Record<string, unknown>)) {
     if (v && typeof v === "object" && !Array.isArray(v)) {

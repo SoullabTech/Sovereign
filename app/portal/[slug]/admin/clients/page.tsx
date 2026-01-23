@@ -50,7 +50,7 @@ const statusOptions = [
 export default function ClientsPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitionerId } = usePractitionerAuth();
 
   const [clients, setClients] = useState<PractitionerClient[]>([]);

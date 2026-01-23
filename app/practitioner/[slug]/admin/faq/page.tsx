@@ -164,7 +164,7 @@ interface FAQFormData {
 export default function FAQManagementPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitionerId } = usePractitionerAuth();
 
   const [faqs, setFaqs] = useState<PractitionerFAQ[]>([]);

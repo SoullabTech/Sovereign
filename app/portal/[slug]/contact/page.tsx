@@ -74,8 +74,8 @@ const colors = {
 export default function ContactPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const token = searchParams.get('token');
+  const slug = params?.slug as string;
+  const token = searchParams?.get('token');
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

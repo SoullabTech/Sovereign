@@ -31,7 +31,7 @@ const colors = {
 
 export default function AdminSettingsPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitionerId, practitioner } = usePractitionerAuth();
 
   const [portalStatus, setPortalStatus] = useState<'draft' | 'live'>('draft');

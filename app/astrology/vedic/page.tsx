@@ -577,9 +577,9 @@ export default function VedicAstrologyPage() {
                       {/* Overall Tone */}
                       <div className={`
                         p-4 rounded-xl border
-                        ${gocharaProfile.overallTone === 'favorable'
+                        ${gocharaProfile.overallTone === 'excellent' || gocharaProfile.overallTone === 'good'
                           ? 'bg-emerald-900/20 border-emerald-700/30'
-                          : gocharaProfile.overallTone === 'challenging'
+                          : gocharaProfile.overallTone === 'challenging' || gocharaProfile.overallTone === 'difficult'
                           ? 'bg-amber-900/20 border-amber-700/30'
                           : 'bg-indigo-900/20 border-indigo-700/30'
                         }
@@ -653,13 +653,13 @@ export default function VedicAstrologyPage() {
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="text-3xl font-bold text-indigo-100">
-                            {ashtakavargaProfile.sarvaAshtakavarga.totalBindus}
+                            {ashtakavargaProfile.sarvaAshtakavarga.totalSarva}
                           </div>
                           <div className="text-sm text-indigo-400/70">
                             Total bindus across all houses
                             <br />
                             <span className="text-xs">
-                              Strong houses: {ashtakavargaProfile.sarvaAshtakavarga.strongHouses.join(', ') || 'None'}
+                              Strong houses: {ashtakavargaProfile.sarvaAshtakavarga.sarvaBindus.map((b, i) => b >= 28 ? i + 1 : null).filter(Boolean).join(', ') || 'None'}
                             </span>
                           </div>
                         </div>
@@ -872,9 +872,9 @@ function GocharaCard({ transit }: { transit: GocharaProfile['transits'][0] }) {
           )}
           <span className={`
             px-2 py-0.5 text-xs rounded
-            ${transit.effect === 'benefic'
+            ${transit.effect === 'excellent' || transit.effect === 'good'
               ? 'bg-emerald-500/20 text-emerald-300'
-              : transit.effect === 'malefic'
+              : transit.effect === 'challenging' || transit.effect === 'difficult'
               ? 'bg-amber-500/20 text-amber-300'
               : 'bg-indigo-500/20 text-indigo-300'
             }
@@ -935,7 +935,7 @@ function AshtakavargaCard({
       </div>
 
       <div className="text-xs text-indigo-400/60 mb-2">
-        House {transit.house} • {transit.strength.charAt(0).toUpperCase() + transit.strength.slice(1)} strength
+        House {transit.transitHouse} • {transit.strength.charAt(0).toUpperCase() + transit.strength.slice(1)} strength
       </div>
 
       <div className="text-sm text-indigo-300/70">

@@ -68,7 +68,7 @@ const colors = {
 
 export default function PortalChartPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [birthData, setBirthData] = useState<BirthData | null>(null);
   const [chartData, setChartData] = useState<BirthChartData | null>(null);

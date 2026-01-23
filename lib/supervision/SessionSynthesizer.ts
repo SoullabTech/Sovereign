@@ -186,7 +186,7 @@ export async function synthesizeSession(
         goldLines.push({
           speaker: gl.speaker || 'unknown',
           text: gl.text,
-          timestampMs: undefined
+          timestampMs: 0
         });
       }
     });

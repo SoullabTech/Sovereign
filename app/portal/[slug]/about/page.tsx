@@ -45,7 +45,7 @@ interface Testimonial {
 
 export default function AboutPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [profile, setProfile] = useState<PractitionerProfile | null>(null);
   const [testimonials, setTestimonials] = useState<Testimonial[]>([]);

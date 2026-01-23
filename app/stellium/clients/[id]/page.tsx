@@ -30,7 +30,7 @@ import { usePractitionerContext } from '@/lib/auth/practitionerAuth';
 export default function ClientDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const clientId = params.id as string;
+  const clientId = params?.id as string;
   const { practitionerId, isLoading: authLoading } = usePractitionerContext();
 
   const [client, setClient] = useState<PractitionerClient | null>(null);

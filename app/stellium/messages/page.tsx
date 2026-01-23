@@ -53,12 +53,12 @@ interface ThreadData {
 function MessagesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const clientIdParam = searchParams.get('client');
+  const clientIdParam = searchParams?.get('client');
 
   const [activeTab, setActiveTab] = useState<'inbox' | 'settings'>(
     clientIdParam ? 'inbox' : 'inbox'
   );
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(clientIdParam);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(clientIdParam ?? null);
 
   // Inbox state
   const [inboxData, setInboxData] = useState<InboxData | null>(null);

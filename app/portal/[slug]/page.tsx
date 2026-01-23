@@ -63,7 +63,7 @@ interface HomeData {
 
 export default function PortalHomePage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);

@@ -237,7 +237,7 @@ export class TTSSovereigntyMonitor {
       const repoData = await repoResponse.json();
 
       // Fetch latest release
-      let latestRelease = null;
+      let latestRelease: { tag_name: string; published_at: string } | null = null;
       try {
         const releaseResponse = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, {
           headers: {

@@ -14,8 +14,8 @@ import { CheckCircle, AlertCircle } from 'lucide-react';
 export default function SubscribeSuccessPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const sessionId = searchParams.get('session_id');
+  const slug = params?.slug as string;
+  const sessionId = searchParams?.get('session_id');
 
   // Guard: show different UX if arrived without a checkout session
   if (!sessionId) {

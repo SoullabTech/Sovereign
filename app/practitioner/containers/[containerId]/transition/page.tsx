@@ -38,7 +38,7 @@ const TRANSITIONS: Record<string, { label: string; to: string; description: stri
 export default function ContainerTransitionPage() {
   const router = useRouter();
   const params = useParams<{ containerId: string }>();
-  const containerId = params.containerId;
+  const containerId = params?.containerId;
 
   const [memberId, setMemberId] = useState<string | null>(null);
   const [currentStatus, setCurrentStatus] = useState<string | null>(null);

@@ -358,7 +358,7 @@ export async function seedCardsIfEmpty(): Promise<boolean> {
   }
 
   // Import seed cards dynamically to avoid circular dependencies
-  const { seedCardsData } = await import('./seedCards');
-  await seedCards(seedCardsData);
+  const { SEED_CARDS } = await import('./seedCards');
+  await seedCards(SEED_CARDS);
   return true;
 }

@@ -45,8 +45,8 @@ interface PortalConfig {
 export default function BookingPage() {
   const params = useParams();
   const searchParams = useSearchParams();
-  const slug = params.slug as string;
-  const preselectedService = searchParams.get('service');
+  const slug = params?.slug as string;
+  const preselectedService = searchParams?.get('service');
 
   const [step, setStep] = useState<'service' | 'datetime' | 'details' | 'confirm'>('service');
   const [services, setServices] = useState<Service[]>([]);

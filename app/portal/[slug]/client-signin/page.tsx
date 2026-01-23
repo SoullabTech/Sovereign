@@ -28,7 +28,7 @@ const colors = {
 export default function ClientSigninPage() {
   const router = useRouter();
   const params = useParams<{ slug: string }>();
-  const slug = params.slug;
+  const slug = params?.slug;
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

@@ -34,7 +34,8 @@ export interface Entitlements {
 export async function getEntitlements(userId: string): Promise<Entitlements> {
   // TODO: replace with real lookup from members table or Stripe
   // For now, default to 'personal' for all authenticated users
-  const tier: Tier = 'personal';
+  // Using Tier cast to allow future tier lookup logic
+  const tier = 'personal' as Tier;
 
   if (tier === 'pro') {
     return {

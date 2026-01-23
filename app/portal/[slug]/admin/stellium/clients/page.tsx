@@ -45,7 +45,7 @@ const SIGN_ELEMENTS: Record<string, string> = {
 export default function ClientLibraryPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const basePath = `/portal/${slug}/admin/stellium`;
 
   const { practitionerId, isLoading: authLoading } = usePractitionerAuth();

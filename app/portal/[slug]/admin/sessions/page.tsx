@@ -505,7 +505,7 @@ function SessionRow({ session, onClick, onSendReminder }: SessionRowProps) {
 export default function SessionsPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitionerId, isLoading: authLoading } = usePractitionerAuth();
 
   const [sessions, setSessions] = useState<PractitionerSession[]>([]);

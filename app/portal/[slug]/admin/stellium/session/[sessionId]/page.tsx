@@ -69,8 +69,8 @@ const DEFAULT_CHECKLIST = [
 export default function SessionPrepPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
-  const sessionId = params.sessionId as string;
+  const slug = params?.slug as string;
+  const sessionId = params?.sessionId as string;
   const basePath = `/portal/${slug}/admin/stellium`;
 
   const { practitionerId, isLoading: authLoading } = usePractitionerAuth();

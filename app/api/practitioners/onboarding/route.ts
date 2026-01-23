@@ -25,6 +25,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    if (!pool) {
+      return NextResponse.json(
+        { error: "Database not available" },
+        { status: 503 }
+      );
+    }
+
     const result = await pool.query(
       `SELECT
         p.id,
@@ -76,6 +83,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "practitionerId required" },
         { status: 400 }
+      );
+    }
+
+    if (!pool) {
+      return NextResponse.json(
+        { error: "Database not available" },
+        { status: 503 }
       );
     }
 

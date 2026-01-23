@@ -200,7 +200,7 @@ function QuickActionCard({
 export default function AdminDashboard() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitioner, practitionerId, isLoading: authLoading, error: authError } = usePractitionerAuth();
 
   const [dashboard, setDashboard] = useState<PractitionerDashboard | null>(null);

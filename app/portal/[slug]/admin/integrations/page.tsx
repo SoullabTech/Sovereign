@@ -50,7 +50,7 @@ interface EmailIntegration {
 
 export default function IntegrationsPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const { practitionerId, isLoading: authLoading } = usePractitionerAuth();
 
   const [integration, setIntegration] = useState<EmailIntegration | null>(null);

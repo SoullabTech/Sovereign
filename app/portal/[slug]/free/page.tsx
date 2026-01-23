@@ -46,7 +46,7 @@ const typeIcons: Record<string, React.ReactNode> = {
 
 export default function FreeResourcesPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [leadMagnets, setLeadMagnets] = useState<LeadMagnet[]>([]);
   const [loading, setLoading] = useState(true);

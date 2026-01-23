@@ -318,7 +318,7 @@ class CommunityApiService {
         coherence: 0.50
       },
       recentActivity: [
-        { type: 'info', user: 'System', action: 'Database unavailable', category: 'System', time: 'now' }
+        { type: 'post', user: 'System', action: 'Database unavailable', category: 'System', time: 'now' }
       ],
       lastUpdated: new Date().toISOString()
     };

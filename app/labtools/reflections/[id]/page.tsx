@@ -16,7 +16,7 @@ import type { CapsuleDTO, CapsuleUpdateInput } from '@/lib/capsules/types';
 export default function CapsuleDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const id = params?.id as string;
 
   const [capsule, setCapsule] = useState<CapsuleDTO | null>(null);
   const [loading, setLoading] = useState(true);

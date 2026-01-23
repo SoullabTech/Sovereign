@@ -77,7 +77,7 @@ interface ChartData {
 export default function MyChartPage() {
   const params = useParams<{ slug: string }>();
   const router = useRouter();
-  const slug = params.slug;
+  const slug = params?.slug;
 
   const [data, setData] = useState<ChartData | null>(null);
   const [loading, setLoading] = useState(true);

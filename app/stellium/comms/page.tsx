@@ -43,7 +43,7 @@ function CommsInboxContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const initialDomain = (searchParams.get('domain') as CommsDomain | 'all') || 'all';
+  const initialDomain = (searchParams?.get('domain') as CommsDomain | 'all') || 'all';
 
   const [inboxData, setInboxData] = useState<InboxResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -81,7 +81,7 @@ function CommsInboxContent() {
 
   // Update URL when filter changes
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams?.toString() || '');
     if (activeFilter === 'all') {
       params.delete('domain');
     } else {

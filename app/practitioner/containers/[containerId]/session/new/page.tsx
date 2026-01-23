@@ -12,7 +12,7 @@ import { getDevMemberId, withMemberHeader } from '@/lib/practitioner/memberClien
 export default function NewSessionPage() {
   const router = useRouter();
   const params = useParams<{ containerId: string }>();
-  const containerId = params.containerId;
+  const containerId = params?.containerId;
 
   const [memberId, setMemberId] = useState<string | null>(null);
   const [startsAt, setStartsAt] = useState<string>('');

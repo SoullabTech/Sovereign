@@ -61,7 +61,7 @@ function formatRelativeDate(dateStr: string): string {
 function ContainersListContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const initialStatus = searchParams.get('status') || 'active';
+  const initialStatus = searchParams?.get('status') || 'active';
 
   const [memberId, setMemberId] = useState<string | null>(null);
   const [practiceId, setPracticeId] = useState<string | null>(null);

@@ -58,7 +58,7 @@ export default function StelliumProLayout({
   const params = useParams();
   const pathname = usePathname();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const basePath = `/portal/${slug}/admin/stellium`;
 
   const isActive = (path: string) => {

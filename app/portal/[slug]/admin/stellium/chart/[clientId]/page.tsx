@@ -75,8 +75,8 @@ interface ChartData {
 export default function ChartViewPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
-  const clientId = params.clientId as string;
+  const slug = params?.slug as string;
+  const clientId = params?.clientId as string;
   const basePath = `/portal/${slug}/admin/stellium`;
 
   const { practitionerId, isLoading: authLoading } = usePractitionerAuth();

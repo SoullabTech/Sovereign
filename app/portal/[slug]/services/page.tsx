@@ -26,7 +26,7 @@ interface Service {
 
 export default function ServicesPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);

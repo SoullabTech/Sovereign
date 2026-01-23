@@ -89,8 +89,8 @@ function InfoRow({ icon, label, value }: InfoRowProps) {
 export default function ClientProfilePage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
-  const clientId = params.id as string;
+  const slug = params?.slug as string;
+  const clientId = params?.id as string;
   const { practitionerId } = usePractitionerAuth();
 
   const [client, setClient] = useState<PractitionerClient | null>(null);

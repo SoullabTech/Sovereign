@@ -12,7 +12,7 @@ import { XCircle, ArrowLeft } from 'lucide-react';
 
 export default function SubscribeCancelPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
 
   return (
     <main className="min-h-screen bg-gray-950 flex items-center justify-center p-6">

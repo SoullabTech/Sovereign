@@ -43,9 +43,9 @@ function AuthDebugContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const redirectReason = searchParams.get('reason');
-  const redirectNext = searchParams.get('next');
-  const incidentId = searchParams.get('rid');
+  const redirectReason = searchParams?.get('reason');
+  const redirectNext = searchParams?.get('next');
+  const incidentId = searchParams?.get('rid');
 
   useEffect(() => {
     // Read localStorage

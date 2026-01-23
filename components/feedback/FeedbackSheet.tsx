@@ -23,7 +23,7 @@ type FeedbackCategory =
 
 interface FeedbackOption {
   id: FeedbackCategory;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   label: string;
   description: string;
   placeholder: string;

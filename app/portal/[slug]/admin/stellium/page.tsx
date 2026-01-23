@@ -120,7 +120,7 @@ const isDev = process.env.NODE_ENV === 'development' ||
 export default function StelliumProDashboard() {
   const params = useParams();
   const router = useRouter();
-  const slug = params.slug as string;
+  const slug = params?.slug as string;
   const basePath = `/portal/${slug}/admin/stellium`;
 
   const { practitioner, practitionerId, isLoading: authLoading } = usePractitionerAuth();
