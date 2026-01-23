@@ -16,6 +16,31 @@ import { calculateCurrentTransits, type TransitPositions } from '@/lib/astrology
 
 export const dynamic = 'force-dynamic';
 
+const isDev = process.env.NODE_ENV === 'development';
+
+// Mock data for development when transit calculator fails
+const DEV_MOCK_RESPONSE = {
+  timestamp: new Date().toISOString(),
+  planets: [
+    { planet: 'Sun', glyph: '☉', longitude: 303.5, sign: 'Aquarius', signGlyph: '♒', degree: 3.5 },
+    { planet: 'Moon', glyph: '☽', longitude: 197.2, sign: 'Libra', signGlyph: '♎', degree: 17.2 },
+    { planet: 'Mercury', glyph: '☿', longitude: 298.1, sign: 'Capricorn', signGlyph: '♑', degree: 28.1 },
+    { planet: 'Venus', glyph: '♀', longitude: 335.8, sign: 'Pisces', signGlyph: '♓', degree: 5.8 },
+    { planet: 'Mars', glyph: '♂', longitude: 102.4, sign: 'Cancer', signGlyph: '♋', degree: 12.4 },
+    { planet: 'Jupiter', glyph: '♃', longitude: 75.3, sign: 'Gemini', signGlyph: '♊', degree: 15.3 },
+    { planet: 'Saturn', glyph: '♄', longitude: 347.8, sign: 'Pisces', signGlyph: '♓', degree: 17.8 },
+    { planet: 'Uranus', glyph: '♅', longitude: 57.2, sign: 'Taurus', signGlyph: '♉', degree: 27.2 },
+    { planet: 'Neptune', glyph: '♆', longitude: 359.4, sign: 'Pisces', signGlyph: '♓', degree: 29.4 },
+    { planet: 'Pluto', glyph: '♇', longitude: 303.8, sign: 'Aquarius', signGlyph: '♒', degree: 3.8 },
+  ],
+  moonPhase: { phase: 'Waning Crescent', illumination: 23, emoji: '🌘' },
+  retrogrades: ['Mars'],
+  keyAspects: [
+    { planet1: 'Sun', glyph1: '☉', aspect: 'conjunction', aspectGlyph: '☌', planet2: 'Pluto', glyph2: '♇', orb: 0.3 },
+    { planet1: 'Saturn', glyph1: '♄', aspect: 'conjunction', aspectGlyph: '☌', planet2: 'Neptune', glyph2: '♆', orb: 1.6 },
+  ],
+};
+
 // Zodiac signs in order
 const SIGNS = [
   'Aries', 'Taurus', 'Gemini', 'Cancer', 'Leo', 'Virgo',
@@ -267,6 +292,13 @@ export async function GET() {
     return NextResponse.json(response);
   } catch (error) {
     console.error('[Cosmic Weather] Error:', error);
+
+    // Dev bypass: return mock data when transit calculator fails
+    if (isDev) {
+      console.log('[Cosmic Weather] Using mock data for development');
+      return NextResponse.json(DEV_MOCK_RESPONSE);
+    }
+
     return NextResponse.json(
       { error: 'Failed to calculate cosmic weather' },
       { status: 500 }

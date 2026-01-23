@@ -175,12 +175,15 @@ export class ClinicalSupervisionEngine {
 
     const processingTimeMs = Date.now() - startTime;
 
+    // Strip DeepSeek thinking blocks (they use <think>...</think>)
+    const cleanContent = result.content.replace(/<think>[\s\S]*?<\/think>/g, '').trim();
+
     // Estimate significance based on content length and keywords
-    const significance = this.estimateSignificance(result.content, insightType);
+    const significance = this.estimateSignificance(cleanContent, insightType);
 
     return {
       insightType,
-      content: result.content,
+      content: cleanContent,
       significance,
       processingTimeMs,
       modelUsed: result.source === 'local-model' ? 'deepseek-r1:latest' : result.source

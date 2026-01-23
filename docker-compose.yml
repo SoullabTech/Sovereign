@@ -54,6 +54,8 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
+      # Embedding mode: queue jobs for async processing by embed-worker
+      MAIA_EMBEDDINGS_MODE: queue
 
       # NOTE: DATABASE_URL, POSTGRES_PASSWORD, API keys, etc. are in .env.docker
       # DO NOT add them here - let env_file provide them

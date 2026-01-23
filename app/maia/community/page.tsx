@@ -417,7 +417,7 @@ export default function CommunityBBSPage() {
               <PersonalThresholdInvitation
                 context={(thresholdType as 'community_engagement') || 'community_engagement'}
                 variant="card"
-                onLearnMore={() => router.push('/maia/membership')}
+                onLearnMore={() => router.push('/membership')}
                 onDismiss={() => setThresholdDismissed(true)}
               />
             )}

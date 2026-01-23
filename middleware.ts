@@ -112,6 +112,19 @@ export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // ---------------------------------------------------------------------
+  // DEV BYPASS: Skip auth for practitioner APIs in development
+  // This allows testing practitioner features without database/auth setup
+  // ---------------------------------------------------------------------
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev && (pathname.startsWith('/api/stellium') || pathname.startsWith('/api/notifications'))) {
+    const response = NextResponse.next();
+    response.headers.set('x-access-tier', 'pro');
+    response.headers.set('x-access-roles', 'practitioner');
+    response.headers.set('x-access-authed', 'true');
+    return response;
+  }
+
+  // ---------------------------------------------------------------------
   // CORS: Handle OPTIONS preflight requests
   // API routes have their own OPTIONS handlers with proper CORS headers
   // Non-API routes get a simple 204 response

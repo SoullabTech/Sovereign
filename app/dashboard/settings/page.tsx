@@ -665,7 +665,7 @@ export default function SettingsPage() {
                   </p>
 
                   <Link
-                    href="/maia/membership"
+                    href="/membership"
                     className="inline-flex items-center gap-2 px-6 py-3 rounded-lg
                              bg-jade-malachite/20 border border-jade-malachite/40
                              text-jade-jade hover:bg-jade-malachite/30 transition-colors"

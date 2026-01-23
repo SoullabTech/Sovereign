@@ -17,6 +17,7 @@ import {
   getTranscript
 } from '@/lib/supervision/SupervisionStore';
 import { analyzeSession } from '@/lib/supervision/ClinicalSupervisionEngine';
+import { runSessionSynthesis } from '@/lib/supervision/SessionSynthesizer';
 
 interface StopSessionRequest {
   sessionId: string;
@@ -104,6 +105,10 @@ export async function POST(request: NextRequest) {
         if (transcript.length <= 100) {
           try {
             const insights = await analyzeSession(body.sessionId, transcript);
+
+            // Generate session essence (Fathom-like summary)
+            const essence = await runSessionSynthesis(body.sessionId);
+
             await updateSession(body.sessionId, { processing_status: 'complete' });
 
             return NextResponse.json({
@@ -112,18 +117,31 @@ export async function POST(request: NextRequest) {
                 id: session.id,
                 endedAt: session.ended_at,
                 processingStatus: 'complete',
-                transcriptSegments: transcript.length
+                transcriptSegments: transcript.length,
+                hasEssence: !!essence
               },
               insights: insights.map(i => ({
                 type: i.insight_type,
                 content: i.content,
                 significance: i.significance
-              }))
+              })),
+              essence: essence ? {
+                title: essence.title,
+                coreInsight: essence.coreInsight,
+                themes: essence.themes
+              } : null
             });
           } catch (analysisError) {
             console.error('Analysis error (non-fatal):', analysisError);
             // Continue - analysis will be retried via job queue
           }
+        } else {
+          // For longer sessions, also queue the synthesis job
+          await enqueueJob({
+            sessionId: body.sessionId,
+            jobType: 'generate_summary',
+            priority: 6 // Run after other analysis jobs complete
+          });
         }
       } else {
         console.log(`⚠️ [SUPERVISION] No transcript segments for session ${session.id}`);

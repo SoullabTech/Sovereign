@@ -20,9 +20,33 @@ export async function GET(
   if (process.env.CAPACITOR_BUILD) {
     return NextResponse.json({ stub: true });
   }
-  try {
-    const { slug } = params;
 
+  const { slug } = params;
+
+  // DEV BYPASS: Return mock practitioner in development mode
+  // This allows testing the admin UI without a database connection
+  const isDev = process.env.NODE_ENV === 'development';
+  if (isDev) {
+    console.log('[Practitioner Auth] Dev bypass active for slug:', slug);
+    const mockPractitioner = {
+      id: 'dev-practitioner-id',
+      member_id: 'dev-member-id',
+      slug: slug || 'dev',
+      name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Dev Practitioner',
+      email: `${slug || 'dev'}@example.com`,
+      modality: 'astrology',
+      brand: {
+        name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Dev Practice',
+        tagline: 'Evolutionary Astrology',
+      },
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    return NextResponse.json({ practitioner: mockPractitioner });
+  }
+
+  try {
     if (!slug) {
       return NextResponse.json(
         { error: 'Practitioner slug is required' },
@@ -124,6 +148,33 @@ export async function GET(
     });
   } catch (error) {
     console.error('[Practitioner Auth] Error:', error);
+
+    // Dev bypass: return mock practitioner when database is unavailable
+    const isDev = process.env.NODE_ENV === 'development';
+    if (isDev) {
+      const { slug } = params;
+      const authHeader = request.headers.get('x-member-id');
+      console.log('[Practitioner Auth] Dev bypass: returning mock practitioner for slug:', slug);
+
+      const mockPractitioner = {
+        id: authHeader || 'dev-practitioner-id',
+        member_id: authHeader || 'dev-member-id',
+        slug: slug,
+        name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Dev Practitioner',
+        email: `${slug || 'dev'}@example.com`,
+        modality: 'astrology',
+        brand: {
+          name: slug ? slug.charAt(0).toUpperCase() + slug.slice(1) : 'Dev Practice',
+          tagline: 'Development Mode',
+        },
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      return NextResponse.json({ practitioner: mockPractitioner });
+    }
+
     return NextResponse.json(
       { error: 'Failed to authenticate' },
       { status: 500 }

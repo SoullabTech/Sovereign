@@ -57,6 +57,66 @@ interface DashboardData {
   sessions_this_week: number;
 }
 
+// Mock data for local development when API is unavailable
+const DEV_MOCK_DASHBOARD: DashboardData = {
+  upcoming_sessions: [
+    {
+      id: 'mock-session-1',
+      practitioner_id: 'mock-practitioner',
+      client_id: 'mock-client-1',
+      status: 'scheduled',
+      session_type: 'natal_reading',
+      scheduled_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(), // 2 hours from now
+      duration_minutes: 60,
+      client: {
+        id: 'mock-client-1',
+        practitioner_id: 'mock-practitioner',
+        name: 'Sarah Martinez',
+        preferred_name: 'Sarah',
+        sun_sign: 'Aquarius',
+      },
+    },
+    {
+      id: 'mock-session-2',
+      practitioner_id: 'mock-practitioner',
+      client_id: 'mock-client-2',
+      status: 'scheduled',
+      session_type: 'transit_reading',
+      scheduled_at: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(), // 5 hours from now
+      duration_minutes: 45,
+      client: {
+        id: 'mock-client-2',
+        practitioner_id: 'mock-practitioner',
+        name: 'James Kendrick',
+        preferred_name: 'James',
+        sun_sign: 'Scorpio',
+      },
+    },
+    {
+      id: 'mock-session-3',
+      practitioner_id: 'mock-practitioner',
+      client_id: 'mock-client-3',
+      status: 'scheduled',
+      session_type: 'solar_return',
+      scheduled_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 days from now
+      duration_minutes: 90,
+      client: {
+        id: 'mock-client-3',
+        practitioner_id: 'mock-practitioner',
+        name: 'Lisa Park',
+        sun_sign: 'Taurus',
+      },
+    },
+  ] as PractitionerSession[],
+  recent_clients: [],
+  total_clients: 12,
+  sessions_this_week: 4,
+};
+
+// Dev bypass check - works on both server and client
+const isDev = process.env.NODE_ENV === 'development' ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
 export default function StelliumProDashboard() {
   const params = useParams();
   const router = useRouter();
@@ -87,7 +147,13 @@ export default function StelliumProDashboard() {
       setDashboard(data);
     } catch (err) {
       console.error('[StelliumPro] Error:', err);
-      setError('Failed to load dashboard');
+      // Dev bypass: use mock data when API unavailable
+      if (isDev) {
+        console.log('[StelliumPro] Using mock data for development');
+        setDashboard(DEV_MOCK_DASHBOARD);
+      } else {
+        setError('Failed to load dashboard');
+      }
     } finally {
       setLoading(false);
     }

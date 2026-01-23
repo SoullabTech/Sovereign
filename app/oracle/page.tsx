@@ -286,7 +286,7 @@ export default function OracleConsultationPage() {
               <PersonalThresholdInvitation
                 context="oracle_frequency"
                 isDayMode={false}
-                onLearnMore={() => router.push('/maia/membership')}
+                onLearnMore={() => router.push('/membership')}
                 onDismiss={handleDismissThreshold}
                 variant="card"
               />

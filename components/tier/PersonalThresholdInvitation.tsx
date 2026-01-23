@@ -76,7 +76,7 @@ export default function PersonalThresholdInvitation({
       onLearnMore();
     } else {
       // Default: navigate to membership page
-      router.push('/maia/membership');
+      router.push('/membership');
     }
   };
 

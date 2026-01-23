@@ -59,6 +59,28 @@ const colors = {
   dim: '#9A8FB8',
 };
 
+// Dev bypass check - works on both server and client
+const isDev = process.env.NODE_ENV === 'development' ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
+// Mock data for local development
+const DEV_MOCK_WEATHER: CosmicWeatherData = {
+  timestamp: new Date().toISOString(),
+  planets: [
+    { planet: 'Sun', glyph: '☉', sign: 'Aquarius', signGlyph: '♒', degree: 3.5 },
+    { planet: 'Moon', glyph: '☽', sign: 'Libra', signGlyph: '♎', degree: 17.2 },
+    { planet: 'Mercury', glyph: '☿', sign: 'Capricorn', signGlyph: '♑', degree: 28.1 },
+    { planet: 'Venus', glyph: '♀', sign: 'Pisces', signGlyph: '♓', degree: 5.8 },
+    { planet: 'Mars', glyph: '♂', sign: 'Cancer', signGlyph: '♋', degree: 12.4 },
+  ],
+  moonPhase: { phase: 'Waning Crescent', illumination: 0.23, emoji: '🌘' },
+  retrogrades: ['Mars'],
+  keyAspects: [
+    { planet1: 'Sun', glyph1: '☉', aspect: 'square', aspectGlyph: '□', planet2: 'Mars', glyph2: '♂', orb: 1.2 },
+    { planet1: 'Venus', glyph1: '♀', aspect: 'trine', aspectGlyph: '△', planet2: 'Jupiter', glyph2: '♃', orb: 2.5 },
+  ],
+};
+
 export function CosmicWeatherWidget() {
   const [weather, setWeather] = useState<CosmicWeatherData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -73,8 +95,15 @@ export function CosmicWeatherWidget() {
       setWeather(data);
       setError(null);
     } catch (err) {
-      setError('Could not load cosmic weather');
       console.error('[CosmicWeather] Error:', err);
+      // Dev bypass: use mock data when API unavailable
+      if (isDev) {
+        console.log('[CosmicWeather] Using mock data for development');
+        setWeather(DEV_MOCK_WEATHER);
+        setError(null);
+      } else {
+        setError('Could not load cosmic weather');
+      }
     } finally {
       setLoading(false);
     }

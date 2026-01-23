@@ -262,7 +262,7 @@ export default function StewardshipPage() {
             gesture — it&apos;s the design.
           </p>
           <button
-            onClick={() => router.push('/maia/membership')}
+            onClick={() => router.push('/membership')}
             className="px-6 py-3 rounded-lg bg-[#5a7a6f] hover:bg-[#4a6a5f] text-white text-[13px] font-medium tracking-wide transition-all hover:scale-[1.01] active:scale-[0.99]"
           >
             View membership options

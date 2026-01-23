@@ -96,6 +96,8 @@ services:
       # WebAuthn/Passkey configuration - must match the domain users access
       WEBAUTHN_RP_ID: "soullab.life"
       WEBAUTHN_ORIGIN: "https://soullab.life"
+      # Embedding mode: queue jobs for async processing by embed-worker
+      MAIA_EMBEDDINGS_MODE: queue
 
     # Schema gate: refuse to boot if required migrations are missing
     command: ["./scripts/entrypoint.sh"]
@@ -147,6 +149,8 @@ services:
       PORT: "3001"
       # CORS origins for API (comma-separated)
       CORS_ORIGINS: "https://soullab.life,https://www.soullab.life,https://loralee.soullab.life,https://chart.soullab.life"
+      # Embedding mode: queue jobs for async processing by embed-worker
+      MAIA_EMBEDDINGS_MODE: queue
 
     healthcheck:
       test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/v1/health',(r)=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))\""]

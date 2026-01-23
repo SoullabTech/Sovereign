@@ -236,7 +236,7 @@ export default function ContributePage() {
               You can browse contributions freely, but Personal or Pro membership is required to submit offerings to the Commons.
             </p>
             <button
-              onClick={() => router.push('/maia/membership')}
+              onClick={() => router.push('/membership')}
               className="px-4 py-2.5 rounded-lg text-[13px] tracking-wide transition-colors"
               style={{ backgroundColor: '#8a7a5a', color: 'white' }}
               onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#7a6a4a'}

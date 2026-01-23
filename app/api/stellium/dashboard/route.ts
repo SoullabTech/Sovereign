@@ -18,6 +18,80 @@ import {
 import { getPersona, generatePersonaPrompt } from '@/lib/stellium/personas';
 import { getTierPricing } from '@/lib/practitioner/tierPricing';
 
+const isDev = process.env.NODE_ENV === 'development';
+
+// Mock data for development when database is unavailable
+const DEV_MOCK_RESPONSE = {
+  today: {
+    date: new Date().toISOString().split('T')[0],
+    sessionsToday: 2,
+    sessionsThisWeek: 4,
+    pendingFollowUps: 1,
+  },
+  clients: { total: 12, active: 8, new_this_month: 2 },
+  sessions: { this_week: 4, this_month: 14, completed: 52 },
+  upcomingSessions: [
+    {
+      id: 'mock-session-1',
+      practitioner_id: 'dev-practitioner',
+      client_id: 'mock-client-1',
+      status: 'scheduled',
+      session_type: 'natal_reading',
+      scheduled_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      duration_minutes: 60,
+      client: {
+        id: 'mock-client-1',
+        practitioner_id: 'dev-practitioner',
+        name: 'Sarah Martinez',
+        preferred_name: 'Sarah',
+        sun_sign: 'Aquarius',
+      },
+    },
+    {
+      id: 'mock-session-2',
+      practitioner_id: 'dev-practitioner',
+      client_id: 'mock-client-2',
+      status: 'scheduled',
+      session_type: 'transit_reading',
+      scheduled_at: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+      duration_minutes: 45,
+      client: {
+        id: 'mock-client-2',
+        practitioner_id: 'dev-practitioner',
+        name: 'James Kendrick',
+        preferred_name: 'James',
+        sun_sign: 'Scorpio',
+      },
+    },
+    {
+      id: 'mock-session-3',
+      practitioner_id: 'dev-practitioner',
+      client_id: 'mock-client-3',
+      status: 'scheduled',
+      session_type: 'solar_return',
+      scheduled_at: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+      duration_minutes: 90,
+      client: {
+        id: 'mock-client-3',
+        practitioner_id: 'dev-practitioner',
+        name: 'Lisa Park',
+        sun_sign: 'Taurus',
+      },
+    },
+  ],
+  actionItems: [],
+  persona: null,
+  onboarding: {
+    isComplete: false,
+    steps: [
+      { id: 'add-client', title: 'Add your first client', description: 'Invite someone to your practice', completed: true, href: '/stellium/clients' },
+      { id: 'connect-stripe', title: 'Connect payments', description: 'Set up Stripe to receive payments', completed: false, href: '/stellium/settings?tab=payouts' },
+      { id: 'set-pricing', title: 'Set your pricing', description: 'Configure subscription tiers', completed: false, href: '/stellium/settings?tab=pricing' },
+      { id: 'train-maia', title: 'Train your MAIA', description: 'Teach MAIA your voice and approach', completed: false, href: '/stellium/persona' },
+    ],
+  },
+};
+
 interface OnboardingStatus {
   isComplete: boolean;
   steps: {
@@ -236,6 +310,13 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error('[Stellium Dashboard API] Error:', error);
+
+    // Dev bypass: return mock data when database unavailable
+    if (isDev) {
+      console.log('[Stellium Dashboard API] Using mock data for development');
+      return NextResponse.json(DEV_MOCK_RESPONSE);
+    }
+
     return NextResponse.json(
       { error: 'Failed to load dashboard' },
       { status: 500 }

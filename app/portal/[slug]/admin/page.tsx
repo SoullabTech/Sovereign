@@ -41,6 +41,55 @@ const colors = {
   error: '#D98B8B',
 };
 
+// Dev bypass check - works on both server and client
+const isDev = process.env.NODE_ENV === 'development' ||
+  (typeof window !== 'undefined' && window.location.hostname === 'localhost');
+
+// Mock data for local development when API is unavailable
+const DEV_MOCK_DASHBOARD: PractitionerDashboard = {
+  practitioner_id: 'dev-practitioner',
+  total_clients: 12,
+  active_clients: 8,
+  sessions_this_week: 4,
+  sessions_this_month: 14,
+  upcoming_sessions: [
+    {
+      id: 'mock-session-1',
+      practitioner_id: 'dev-practitioner',
+      client_id: 'mock-client-1',
+      status: 'scheduled',
+      session_type: 'natal_reading',
+      scheduled_at: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+      duration_minutes: 60,
+      client: {
+        id: 'mock-client-1',
+        practitioner_id: 'dev-practitioner',
+        name: 'Sarah Martinez',
+        preferred_name: 'Sarah',
+        sun_sign: 'Aquarius',
+      },
+    },
+    {
+      id: 'mock-session-2',
+      practitioner_id: 'dev-practitioner',
+      client_id: 'mock-client-2',
+      status: 'scheduled',
+      session_type: 'transit_reading',
+      scheduled_at: new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString(),
+      duration_minutes: 45,
+      client: {
+        id: 'mock-client-2',
+        practitioner_id: 'dev-practitioner',
+        name: 'James Kendrick',
+        preferred_name: 'James',
+        sun_sign: 'Scorpio',
+      },
+    },
+  ] as PractitionerSession[],
+  recent_sessions: [],
+  clients_needing_follow_up: [],
+};
+
 function formatTime(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
@@ -186,7 +235,13 @@ export default function AdminDashboard() {
       setDashboard(mapDashboardResponse(data, practitionerId || ''));
     } catch (err) {
       console.error('[Dashboard] Error:', err);
-      setError('Failed to load dashboard');
+      // Dev bypass: use mock data when API unavailable
+      if (isDev) {
+        console.log('[Dashboard] Using mock data for development');
+        setDashboard(DEV_MOCK_DASHBOARD);
+      } else {
+        setError('Failed to load dashboard');
+      }
     } finally {
       setLoading(false);
     }

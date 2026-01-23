@@ -6,7 +6,7 @@
  * Minimal footer for support/membership surfaces.
  * Signals transparency without cluttering product screens.
  *
- * Used on: /maia/membership, /patrons, /maia/stewardship, /maia/privacy
+ * Used on: /membership, /patrons, /maia/stewardship, /maia/privacy
  */
 
 import Link from 'next/link';

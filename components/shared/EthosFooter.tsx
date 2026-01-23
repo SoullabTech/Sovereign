@@ -25,7 +25,7 @@ interface EthosFooterProps {
 }
 
 export default function EthosFooter({
-  learnMoreHref = '/maia/membership',
+  learnMoreHref = '/membership',
   showLearnMore = false,
   isDayMode = false,
   className = '',

@@ -311,6 +311,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/api/practitioner/sessions', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Session management' },
   { prefix: '/api/practitioner/containers', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Container management' },
   { prefix: '/api/stellium', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Stellium API' },
+  { prefix: '/api/notifications', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Notification APIs (SMS/Email)' },
   { exact: '/api/commons/contributions/review-queue', minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review queue' },
   { regex: /^\/api\/commons\/contributions\/[^/]+\/review$/, minTier: 'pro', rolesAnyOf: ['curator', 'steward', 'admin'], notes: 'Review action' },
 
