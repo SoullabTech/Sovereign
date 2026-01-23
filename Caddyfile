@@ -71,7 +71,7 @@ soullab.life {
             Access-Control-Allow-Origin "capacitor://localhost"
             Access-Control-Allow-Credentials "true"
             Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
             Access-Control-Max-Age "86400"
         }
         # Ionic origin
@@ -82,7 +82,7 @@ soullab.life {
             Access-Control-Allow-Origin "ionic://localhost"
             Access-Control-Allow-Credentials "true"
             Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
             Access-Control-Max-Age "86400"
         }
         # Localhost origin (dev)
@@ -93,7 +93,7 @@ soullab.life {
             Access-Control-Allow-Origin "{header.Origin}"
             Access-Control-Allow-Credentials "true"
             Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
             Access-Control-Max-Age "86400"
         }
         # Null origin (WebKit edge case - some Capacitor/WKWebView contexts)
@@ -104,7 +104,7 @@ soullab.life {
             Access-Control-Allow-Origin "null"
             Access-Control-Allow-Credentials "true"
             Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID"
+            Access-Control-Allow-Headers "Content-Type, Authorization, X-API-Key, X-User-ID, X-Request-ID, X-Member-Id, X-Maia-Tier, X-Maia-Roles"
             Access-Control-Max-Age "86400"
         }
         respond "" 204
