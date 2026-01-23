@@ -385,3 +385,7 @@ public/audiobook/
 # Capacitor build patch files (temporary during iOS builds)
 .capacitor-route-patches.json
 .capacitor-dynamic-routes.txt
+
+# MAIA CLI runtime files (generated per-client configs)
+clients/runtime/
+scripts/maia-cli/node_modules/

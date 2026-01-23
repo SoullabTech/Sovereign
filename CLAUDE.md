@@ -66,24 +66,40 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 
 ## Infrastructure (Single Source of Truth)
 
-### What we DO NOT use
+**⚠️ STOP — READ THIS BEFORE ANY INFRASTRUCTURE ASSUMPTIONS ⚠️**
+
+### What we DO NOT use (NEVER assume these)
+- **NOT EC2** — The server is NOT an AWS EC2 instance
+- **NOT Nginx** — We use Caddy, NOT Nginx
 - **No managed hosting platforms** (Vercel, Netlify, Heroku) — we control deployment
 - **No managed databases** (Supabase, PlanetScale, Neon) — PostgreSQL is self-hosted
 - **No CDN/proxy middlemen** (Cloudflare) doing MITM on traffic
 
 ### What we DO use
-- **Production (public)**: Self-managed server at `35.167.91.24` running Docker + **Caddy** (auto TLS)
-- **Local dev/sovereignty compute**: M4 Mac Docker Server for local consciousness computing
-- **Reverse proxy**: Caddy (NOT Nginx)
+- **Production server**: `32.217.63.121` — Docker + **Caddy** (auto TLS)
+- **Domain**: `maia.soullab.life` (and `soullab.life`, `api.soullab.life`)
+- **Local development**: M4 Mac running Docker for local dev and consciousness computing
+- **Reverse proxy**: **Caddy** (handles auto-SSL via Let's Encrypt)
 - **Database**: Self-hosted PostgreSQL (NOT Supabase)
+- **Containers**: Docker and docker-compose
 
-### Deployment
-- Infrastructure: Docker + Caddy (reverse proxy with auto-SSL via Let's Encrypt)
+### Server IPs (Route 53)
+- `32.217.63.121` — Main MAIA server (soullab.life, maia.soullab.life, api.soullab.life)
+- `35.167.91.24` — loralee.soullab.life only (separate project)
+
+### Local Development
+- App runs on `localhost:3000`
+- Docker containers managed locally
+- Check local status: `docker ps` and `curl http://localhost:3000`
+
+### Production Deployment
+- Server: `32.217.63.121` (self-managed, NOT EC2)
+- Stack: Docker + Caddy
 - Deployment script: `./scripts/deploy-production.sh`
 - Production compose: `docker-compose.production.yml`
 - **Deploy command**:
   ```bash
-  ssh -i ~/.ssh/maia-sovereign-key.pem ubuntu@35.167.91.24 "cd /opt/maia && git pull && ./scripts/deploy-production.sh update"
+  ssh -i ~/.ssh/maia-sovereign-key.pem ubuntu@32.217.63.121 "cd /opt/maia && git pull && ./scripts/deploy-production.sh update"
   ```
 
 ### Why This Architecture
