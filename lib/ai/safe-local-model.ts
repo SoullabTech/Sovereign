@@ -73,12 +73,16 @@ export async function safeGenerateWithLocalModel(params: SafeLocalModelParams): 
       meta
     });
 
-    if (response && typeof response === 'string' && response.trim().length > 0) {
+    // generateWithLocalModel returns { text: string, provider: ProviderMeta }
+    const content = response?.text;
+    if (content && typeof content === 'string' && content.trim().length > 0) {
       return {
-        content: response.trim(),
+        content: content.trim(),
         source: 'local-model',
         successful: true,
         metadata: {
+          provider: response.provider?.provider,
+          model: response.provider?.model,
           processingTime: Date.now() - startTime,
           timestamp: new Date().toISOString()
         }
@@ -314,4 +318,66 @@ export function getLocalModelInstanceStatus(): {
   return {
     initialized: localModelInitialized
   };
+}
+
+// =============================================================================
+// PRESENCE FALLBACK (for offline / server-unreachable)
+// =============================================================================
+
+/**
+ * Arguments for building a safe local response (presence mode)
+ */
+export interface SafeLocalArgs {
+  input: string;
+  mode?: 'support' | 'clarity' | 'vent';
+  preferredName?: string;
+  threadSummary?: string;
+}
+
+/**
+ * Build a warm, present response for offline/fallback scenarios.
+ * These templates provide genuine presence without requiring server/LLM.
+ *
+ * Used by lib/offline/presenceFallback.ts
+ */
+export function buildSafeLocalResponse(args: SafeLocalArgs): string {
+  const name = args.preferredName ? `${args.preferredName}, ` : '';
+  const mode = args.mode ?? 'support';
+  const input = args.input.toLowerCase();
+
+  // Detect emotional content for richer responses
+  const isEmotional = /feel|emotion|heart|love|pain|joy|grief|angry|sad|happy|anxious|scared|worried|overwhelmed/.test(input);
+  const isQuestion = args.input.includes('?');
+  const isGreeting = /^(hello|hi|hey|good morning|good evening)/i.test(args.input.trim());
+
+  // Mode-specific responses
+  if (mode === 'vent') {
+    if (isEmotional) {
+      return `${name}I'm here. Let it out \u2014 whatever you're carrying, you don't have to carry alone. What feels most charged right now?`;
+    }
+    return `${name}I'm here. Let it out \u2014 what's the one thing that feels most charged right now?`;
+  }
+
+  if (mode === 'clarity') {
+    if (isQuestion) {
+      return `${name}Let's get one clean thread. What would "clear" look like for you \u2014 and what's tangling it up right now?`;
+    }
+    return `${name}Let's get one clean thread. What feels most confusing or tangled right now \u2014 and what would "clear" look like?`;
+  }
+
+  // Support mode (default)
+  if (isGreeting) {
+    return `${name}I'm here with you. What would feel most useful right now \u2014 support, clarity, or just a place to vent?`;
+  }
+
+  if (isEmotional) {
+    return `${name}I hear the depth in what you're sharing. What feels most important to honor right now?`;
+  }
+
+  if (isQuestion) {
+    return `${name}That's a thoughtful question. I'm present with you \u2014 what aspect feels most significant?`;
+  }
+
+  // Default supportive presence
+  return `${name}I'm with you. What would feel most useful right now \u2014 support, clarity, or just a place to vent?`;
 }

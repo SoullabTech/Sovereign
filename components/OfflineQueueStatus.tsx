@@ -3,7 +3,12 @@
 import React from 'react';
 import { useOfflineMutationQueue } from '../lib/offline/mutation-queue';
 
-export function OfflineQueueStatus() {
+interface OfflineQueueStatusProps {
+  /** Whether presence fallback mode is currently active */
+  isPresenceMode?: boolean;
+}
+
+export function OfflineQueueStatus({ isPresenceMode }: OfflineQueueStatusProps = {}) {
   const { metrics, queue } = useOfflineMutationQueue();
   const [isOnline, setIsOnline] = React.useState(true);
   const [showDetails, setShowDetails] = React.useState(false);
@@ -22,6 +27,20 @@ export function OfflineQueueStatus() {
       window.removeEventListener('offline', handleOnline);
     };
   }, []);
+
+  // Show presence mode indicator when offline (even without pending mutations)
+  if (!isOnline || isPresenceMode) {
+    return (
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-amber-600/90 text-white px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+          </svg>
+          <span className="text-sm font-medium">Presence Mode</span>
+        </div>
+      </div>
+    );
+  }
 
   if (metrics.pending === 0 && metrics.failed === 0) {
     return null; // Nothing to show

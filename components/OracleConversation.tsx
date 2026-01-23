@@ -39,6 +39,7 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
@@ -2674,6 +2675,36 @@ I'm not sure what I'm feeling yet.`;
         origin: typeof window !== 'undefined' ? window.location.origin : 'unknown',
       });
 
+      // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
+      if (!isProbablyOnline()) {
+        console.log('[OracleConversation] Offline detected - using presence fallback');
+        const fallbackText = generatePresenceFallback({
+          userText: cleanedText,
+          mode: 'support',
+          preferredName: userName || undefined,
+        });
+
+        // Add the fallback response as an oracle message
+        const fallbackMessage: ConversationMessage = {
+          id: `fallback-${Date.now()}`,
+          role: 'oracle',
+          text: fallbackText,
+          timestamp: new Date().toISOString(),
+          element: 'aether',
+          metadata: { isFallback: true, reason: 'offline' },
+        };
+
+        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        setIsResponding(false);
+        setMaiaResponseText(fallbackText);
+
+        // Speak the fallback if voice is enabled
+        if (!showChatInterface && voiceEnabled && maiaReady) {
+          speakWithMaiaVoice(fallbackText);
+        }
+        return;
+      }
+
       let response: Response;
       try {
         // apiFetch() adds x-member-id header for Capacitor apps (cookies don't work cross-origin)
@@ -2745,8 +2776,33 @@ I'm not sure what I'm feeling yet.`;
       });
       } catch (fetchError) {
         // Network-level errors (CORS, network unreachable, etc.)
-        console.error('[fetch] network error:', fetchError);
-        throw fetchError;
+        // NETWORK ERROR FALLBACK: Use presence mode instead of failing
+        console.log('[OracleConversation] Network error - using presence fallback:', fetchError);
+        const fallbackText = generatePresenceFallback({
+          userText: cleanedText,
+          mode: 'support',
+          preferredName: userName || undefined,
+        });
+
+        // Add the fallback response as an oracle message
+        const fallbackMessage: ConversationMessage = {
+          id: `fallback-${Date.now()}`,
+          role: 'oracle',
+          text: fallbackText,
+          timestamp: new Date().toISOString(),
+          element: 'aether',
+          metadata: { isFallback: true, reason: 'network_error' },
+        };
+
+        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        setIsResponding(false);
+        setMaiaResponseText(fallbackText);
+
+        // Speak the fallback if voice is enabled
+        if (!showChatInterface && voiceEnabled && maiaReady) {
+          speakWithMaiaVoice(fallbackText);
+        }
+        return;
       }
 
       clearTimeout(timeoutId);
@@ -2754,7 +2810,32 @@ I'm not sure what I'm feeling yet.`;
       if (!response.ok) {
         const errorText = await response.text().catch(() => '(no body)');
         console.error('[fetch] non-OK response:', response.status, errorText);
-        throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`);
+
+        // SERVER ERROR FALLBACK: Use presence mode instead of showing error
+        console.log('[OracleConversation] Server error - using presence fallback');
+        const fallbackText = generatePresenceFallback({
+          userText: cleanedText,
+          mode: 'support',
+          preferredName: userName || undefined,
+        });
+
+        const fallbackMessage: ConversationMessage = {
+          id: `fallback-${Date.now()}`,
+          role: 'oracle',
+          text: fallbackText,
+          timestamp: new Date().toISOString(),
+          element: 'aether',
+          metadata: { isFallback: true, reason: 'server_error', status: response.status },
+        };
+
+        setMessages(prev => appendMessageCapped(prev, fallbackMessage, MAX_DISPLAY_MESSAGES));
+        setIsResponding(false);
+        setMaiaResponseText(fallbackText);
+
+        if (!showChatInterface && voiceEnabled && maiaReady) {
+          speakWithMaiaVoice(fallbackText);
+        }
+        return;
       }
 
       // Check if streaming response (voice mode)

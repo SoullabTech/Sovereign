@@ -5,9 +5,13 @@
  * as they arrive, creating natural conversational flow.
  *
  * Flow: User message → Stream connection → Audio chunks arrive → Queue & play seamlessly
+ *
+ * OFFLINE FALLBACK: When network is unavailable, provides warm presence responses
+ * generated entirely on-device (no server required).
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
@@ -147,6 +151,25 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       error: null
     });
 
+    // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
+    if (!isProbablyOnline()) {
+      console.log('[StreamingVoice] Offline detected - using presence fallback');
+      const fallbackText = generatePresenceFallback({
+        userText: message,
+        mode: 'support',
+      });
+
+      // Simulate a complete response (no audio in fallback mode)
+      setState(prev => ({
+        ...prev,
+        isStreaming: false,
+        currentText: fallbackText,
+        fullResponse: fallbackText,
+      }));
+      onComplete?.(fallbackText);
+      return;
+    }
+
     try {
       const response = await fetch('/api/voice/stream-conversation', {
         method: 'POST',
@@ -256,13 +279,21 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         return;
       }
 
-      const errorMessage = e instanceof Error ? e.message : 'Unknown error';
+      // NETWORK ERROR FALLBACK: Server unreachable, use presence mode
+      console.log('[StreamingVoice] Network error - using presence fallback:', e);
+      const fallbackText = generatePresenceFallback({
+        userText: message,
+        mode: 'support',
+      });
+
       setState(prev => ({
         ...prev,
         isStreaming: false,
-        error: errorMessage
+        currentText: fallbackText,
+        fullResponse: fallbackText,
+        error: null, // Don't show error - we have a graceful fallback
       }));
-      onError?.(errorMessage);
+      onComplete?.(fallbackText);
     }
   }, [voice, element, onTextChunk, onComplete, onError, playNextChunk]);
 
