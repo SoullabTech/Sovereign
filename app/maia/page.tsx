@@ -840,10 +840,10 @@ function MAIAPageContent() {
               </div>
             </div>
 
-            {/* Desktop: Traditional layout - centered navigation */}
-            <div className="hidden md:flex items-center justify-center max-w-7xl mx-auto px-4">
+            {/* Desktop: Scrollable navigation for narrow windows */}
+            <div className="hidden md:block w-full overflow-x-auto scrollbar-hide">
               {/* All navigation controls grouped together */}
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <button
                   onClick={() => setShowChatInterface(!showChatInterface)}
