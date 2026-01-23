@@ -261,8 +261,9 @@ export const ACCESS_RULES: AccessRule[] = [
   { prefix: '/caseload', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Caseload requires Pro + practitioner role' },
 
   // Practitioner portal admin (owner-gated at API level)
-  { exact: '/practitioner/dashboard', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Practitioner dashboard' },
-  { prefix: '/practitioner/', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Practitioner admin routes' },
+  // Note: Page-level code handles auth; API routes enforce practitioner role
+  { exact: '/practitioner/dashboard', minTier: 'free', notes: 'Practitioner dashboard - page handles auth' },
+  { prefix: '/practitioner/', minTier: 'free', notes: 'Practitioner routes - API enforces access' },
   { prefix: '/practitioners/', minTier: 'pro', notes: 'Practitioner onboarding/signup' },
 
   // Partner program
