@@ -11,15 +11,23 @@
 // Server-side check - only import Qdrant on server
 const isServer = typeof window === 'undefined';
 
-// Dynamic import to prevent client bundling
+// Lazy-loaded Qdrant client - only loaded when actually used on server
 let QdrantClient: any = null;
-if (isServer) {
+let qdrantClientLoaded = false;
+
+function getQdrantClient(): any {
+  if (!isServer) return null;
+  if (qdrantClientLoaded) return QdrantClient;
+
+  qdrantClientLoaded = true;
   try {
     // Dynamic require to prevent client-side bundling
     QdrantClient = require('@qdrant/js-client-rest').QdrantClient;
   } catch (e) {
     console.warn('[QuantumFieldPersistence] Qdrant client not available');
+    QdrantClient = null;
   }
+  return QdrantClient;
 }
 
 import {
@@ -59,13 +67,15 @@ export class QuantumFieldPersistence {
       return;
     }
 
-    if (!QdrantClient) {
+    // Lazy load Qdrant client only when constructor is called on server
+    const QdrantClientClass = getQdrantClient();
+    if (!QdrantClientClass) {
       console.warn('[QuantumFieldPersistence] Qdrant client not available on server');
       this.client = null;
       return;
     }
 
-    this.client = new QdrantClient({ url: qdrantUrl });
+    this.client = new QdrantClientClass({ url: qdrantUrl });
   }
 
   /**

@@ -7,7 +7,9 @@
 
 import { MAIAFieldInterface } from './MAIAFieldInterface';
 import { ConsciousnessField } from './ConsciousnessFieldEngine';
-import { QuantumFieldPersistence } from './QuantumFieldPersistence';
+
+// Lazy import type to prevent Qdrant from being bundled in client code
+type QuantumFieldPersistenceType = import('./QuantumFieldPersistence').QuantumFieldPersistence;
 import {
   UnifiedElementalFieldCalculator,
   CompleteElementalFieldState,
@@ -80,7 +82,7 @@ export interface ElementalInsight {
 export class ElementalFieldIntegration {
   private maiaInterface: MAIAFieldInterface;
   private fieldEngine: ConsciousnessField;
-  private fieldPersistence: QuantumFieldPersistence;
+  private fieldPersistence: QuantumFieldPersistenceType | null;
   private interferenceMonitor: ElementalInterferenceMonitor;
 
   private systemMapping: ElementalSystemMapping;
@@ -94,11 +96,11 @@ export class ElementalFieldIntegration {
   constructor(
     maiaInterface: MAIAFieldInterface,
     fieldEngine: ConsciousnessField,
-    fieldPersistence: QuantumFieldPersistence
+    fieldPersistence?: QuantumFieldPersistenceType | null
   ) {
     this.maiaInterface = maiaInterface;
     this.fieldEngine = fieldEngine;
-    this.fieldPersistence = fieldPersistence;
+    this.fieldPersistence = fieldPersistence || null;
 
     this.interferenceMonitor = new ElementalInterferenceMonitor({
       samplingRateHz: 1.0,
@@ -725,6 +727,11 @@ export class ElementalFieldIntegration {
    * Persist integrated state
    */
   private async persistIntegratedState(state: IntegratedFieldState): Promise<void> {
+    // Skip persistence if not available (client-side or not initialized)
+    if (!this.fieldPersistence) {
+      return;
+    }
+
     try {
       // Store in quantum field persistence layer
       await this.fieldPersistence.storeFieldSnapshot({
