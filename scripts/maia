@@ -1,0 +1,74 @@
+#!/bin/bash
+#
+# MAIA CLI - ADHD-Friendly Business Management
+#
+# Usage:
+#   maia status              Show system health and client overview
+#   maia new-client <slug>   Create a new client
+#   maia up <slug>           Bring client stack up
+#   maia down <slug>         Bring client stack down
+#   maia focus <slug>        Deep-dive into a client
+#   maia doctor              Run system diagnostics
+#
+# Philosophy: One command, one source of truth, one pipeline.
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CLI_DIR="$SCRIPT_DIR/maia-cli"
+
+# Check if maia-cli dependencies are installed
+if [ ! -d "$CLI_DIR/node_modules" ]; then
+    echo "Installing maia-cli dependencies..."
+    (cd "$CLI_DIR" && npm install --silent)
+fi
+
+COMMAND="${1:-status}"
+shift 2>/dev/null || true
+
+case "$COMMAND" in
+    status)
+        npx tsx "$CLI_DIR/commands/status.ts" "$@"
+        ;;
+    new-client|new)
+        npx tsx "$CLI_DIR/commands/new-client.ts" "$@"
+        ;;
+    up)
+        npx tsx "$CLI_DIR/commands/up.ts" "$@"
+        ;;
+    down)
+        npx tsx "$CLI_DIR/commands/down.ts" "$@"
+        ;;
+    focus)
+        npx tsx "$CLI_DIR/commands/focus.ts" "$@"
+        ;;
+    doctor|diag|diagnostics)
+        npx tsx "$CLI_DIR/commands/doctor.ts" "$@"
+        ;;
+    help|-h|--help)
+        echo ""
+        echo "MAIA CLI - ADHD-Friendly Business Management"
+        echo ""
+        echo "Commands:"
+        echo "  status              Show system health and client overview"
+        echo "  new-client <slug>   Create a new client"
+        echo "  up <slug>           Bring client stack up"
+        echo "  down <slug>         Bring client stack down"
+        echo "  focus <slug>        Deep-dive into a client"
+        echo "  doctor              Run system diagnostics"
+        echo ""
+        echo "Examples:"
+        echo "  maia                    # Same as 'maia status'"
+        echo "  maia new-client acme    # Create new client 'acme'"
+        echo "  maia up loralee         # Start loralee's stack"
+        echo "  maia focus oldhead      # Show oldhead details"
+        echo ""
+        echo "Philosophy: One command, one source of truth, one pipeline."
+        echo ""
+        ;;
+    *)
+        echo "Unknown command: $COMMAND"
+        echo "Run 'maia help' for usage information."
+        exit 1
+        ;;
+esac
