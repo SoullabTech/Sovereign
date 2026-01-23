@@ -229,7 +229,7 @@ function SigninContent() {
     setIsLoading(true);
 
     try {
-      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null }; practitioner?: { id: string; slug: string; name: string } | null } | null = null;
+      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null }; practitioner?: { id: string; slug: string; name: string } | null; needsPasswordChange?: boolean } | null = null;
 
       try {
         // Use apiUrl() for correct path - /api/members/signin (not /v1/)
@@ -320,7 +320,12 @@ function SigninContent() {
           });
         }
 
-        const redirectPath = user.onboarded ? '/maia' : '/begin';
+        let redirectPath = user.onboarded ? '/maia' : '/begin';
+
+        // If beta tester needs to change default password, add query param
+        if (data.needsPasswordChange && user.onboarded) {
+          redirectPath = '/maia?changePassword=true';
+        }
 
         // Skip passkey prompt - users can enable later in settings
         router.push(redirectPath);
