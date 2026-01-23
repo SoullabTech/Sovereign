@@ -129,7 +129,10 @@
     "android:consciousness": "npm run consciousness:android && npx cap open android",
     "deploy:all-platforms": "npm run consciousness:deploy",
     "maia-notes:promote": "npx tsx scripts/maia-notes/promote.ts",
-    "maia-notes:status": "curl -s http://localhost:3000/api/admin/maia-notes/status | jq"
+    "maia-notes:status": "curl -s http://localhost:3000/api/admin/maia-notes/status | jq",
+    "maia": "bash scripts/maia",
+    "maia:status": "bash scripts/maia status",
+    "maia:doctor": "bash scripts/maia doctor"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.3",

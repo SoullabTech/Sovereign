@@ -282,6 +282,26 @@ services:
       POSTGRES_DB: maia_consciousness
       POSTGRES_USER: soullab
 
+    # Performance tuning for pgvector workloads
+    command:
+      - postgres
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=1536MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - work_mem=64MB
+      - -c
+      - max_parallel_workers_per_gather=2
+      - -c
+      - max_parallel_maintenance_workers=2
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
+
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # Only extensions init - schema owned by Prisma + migrate service
