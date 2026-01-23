@@ -597,7 +597,7 @@ export default function AstrologyPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-navy-900">
+      <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-maia-navy-900">
         {/* Soft spiral unfurling */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8, rotate: -180 }}
@@ -623,7 +623,7 @@ export default function AstrologyPage() {
 
   if (!chartData || !hasBirthData) {
     return (
-      <div className="min-h-screen bg-navy-900 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-screen bg-maia-navy-900 flex items-center justify-center relative overflow-hidden">
         {/* Back to MAIA */}
         <Link
           href="/maia"
@@ -669,7 +669,7 @@ export default function AstrologyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-navy-900 relative overflow-hidden">
+    <div className="min-h-screen bg-maia-navy-900 relative overflow-hidden">
       {/* Fixed Navigation Header */}
       <div className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
         <Link
