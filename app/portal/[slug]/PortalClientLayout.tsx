@@ -480,18 +480,30 @@ export default function PortalLayout({ children }: { children: React.ReactNode }
               style={{ borderColor: colors.stardust, color: colors.dim }}
             >
               <p>&copy; {new Date().getFullYear()} {config.brand.name}</p>
-              <p className="mt-2 md:mt-0">
-                Crafted with starlight by{' '}
-                <a
-                  href="https://soullab.life"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline hover:no-underline"
-                  style={{ color: colors.violet }}
-                >
-                  Soullab
-                </a>
-              </p>
+              <div className="flex items-center gap-4 mt-2 md:mt-0">
+                {isOwner && (
+                  <Link
+                    href={`/portal/${slug}/admin`}
+                    className="flex items-center gap-1 hover:underline"
+                    style={{ color: colors.gold }}
+                  >
+                    <Settings className="w-3 h-3" />
+                    Admin
+                  </Link>
+                )}
+                <p>
+                  Crafted with starlight by{' '}
+                  <a
+                    href="https://soullab.life"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:no-underline"
+                    style={{ color: colors.violet }}
+                  >
+                    Soullab
+                  </a>
+                </p>
+              </div>
             </div>
           </div>
         </footer>
