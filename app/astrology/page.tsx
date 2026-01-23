@@ -720,8 +720,8 @@ export default function AstrologyPage() {
         {/* Header */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center mb-12">
-            <h1 className="text-4xl font-light tracking-wide text-dune-amber mb-2">Your Cosmic Blueprint</h1>
-            <p className="text-amber-200 text-sm tracking-wider">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
+            <h1 className="text-4xl font-light tracking-wide !text-amber-400 mb-2">Your Cosmic Blueprint</h1>
+            <p className="!text-amber-200 text-sm tracking-wider">Spiralogic Astrology: Elemental Pathways of Consciousness</p>
 
             {/* Zodiac System Toggle */}
             <div className="mt-6 flex flex-col items-center gap-2">
@@ -743,19 +743,19 @@ export default function AstrologyPage() {
           </div>
 
           {/* Archetypal Profile */}
-          <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl">
-            <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-4">Your Archetypal Profile</h2>
-            <p className="text-white/80 mb-6 text-sm tracking-wide">
+          <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 mb-12 shadow-xl text-white">
+            <h2 className="text-xl font-medium tracking-wide !text-amber-400 mb-4">Your Archetypal Profile</h2>
+            <p className="!text-white/80 mb-6 text-sm tracking-wide">
               The core archetypal energies shaping your soul's journey
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-black/30 border border-dune-spice-orange/30 rounded-lg p-4">
-                <h3 className="text-amber-300 font-semibold mb-2">The Seeker</h3>
-                <p className="text-white/80 text-sm">Sagittarius Sun energy driving philosophical expansion and truth-seeking</p>
+              <div className="bg-black/30 border border-dune-spice-orange/30 rounded-lg p-4 text-white">
+                <h3 className="!text-amber-300 font-semibold mb-2">The Seeker</h3>
+                <p className="!text-white/80 text-sm">Sagittarius Sun energy driving philosophical expansion and truth-seeking</p>
               </div>
-              <div className="bg-black/30 border border-dune-fremen-azure/30 rounded-lg p-4">
-                <h3 className="text-sky-300 font-semibold mb-2">The Mystic</h3>
-                <p className="text-white/80 text-sm">Pisces Moon connecting to emotional depth and universal compassion</p>
+              <div className="bg-black/30 border border-dune-fremen-azure/30 rounded-lg p-4 text-white">
+                <h3 className="!text-sky-300 font-semibold mb-2">The Mystic</h3>
+                <p className="!text-white/80 text-sm">Pisces Moon connecting to emotional depth and universal compassion</p>
               </div>
             </div>
           </div>
@@ -763,29 +763,29 @@ export default function AstrologyPage() {
           {/* Big Three */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {/* Sun */}
-            <div className="bg-black/40 backdrop-blur-md border border-dune-spice-orange/40 rounded-lg p-6 shadow-xl">
+            <div className="bg-black/40 backdrop-blur-md border border-dune-spice-orange/40 rounded-lg p-6 shadow-xl text-white">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dune-spice-orange to-dune-spice-deep flex items-center justify-center shadow-lg shadow-dune-spice-orange/30">
                   <span className="text-2xl">☉</span>
                 </div>
                 <div>
-                  <h3 className="text-dune-amber font-semibold">Sun · Core Identity</h3>
-                  <p className="text-sm text-white/80">Conscious Expression</p>
+                  <h3 className="!text-amber-400 font-semibold">Sun · Core Identity</h3>
+                  <p className="text-sm !text-white/80">Conscious Expression</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-2xl font-bold text-dune-spice-glow">
+                <p className="text-2xl font-bold !text-amber-300">
                   {chartData.sun.sign} · {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.facetName || 'The Explorer'}
                 </p>
-                <p className="text-sm text-white/70">
+                <p className="text-sm !text-white/70">
                   {chartData.sun.degree.toFixed(1)}° · House {chartData.sun.house}
                 </p>
-                <p className="text-sm text-dune-amber/80 italic mt-2">
+                <p className="text-sm !text-amber-200/80 italic mt-2">
                   {getZodiacArchetype(chartData.sun.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Archetypal essence'}
                 </p>
                 <Link
                   href={`/astrology/placements/sun`}
-                  className="text-sm text-dune-spice-orange hover:text-dune-spice-glow hover:underline inline-flex items-center gap-1"
+                  className="text-sm !text-orange-400 hover:!text-orange-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
                 </Link>
@@ -793,29 +793,29 @@ export default function AstrologyPage() {
             </div>
 
             {/* Moon */}
-            <div className="bg-black/40 backdrop-blur-md border border-dune-fremen-azure/50 rounded-lg p-6 shadow-xl">
+            <div className="bg-black/40 backdrop-blur-md border border-dune-fremen-azure/50 rounded-lg p-6 shadow-xl text-white">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dune-fremen-azure to-dune-ibad-blue flex items-center justify-center shadow-lg shadow-dune-fremen-azure/30">
                   <span className="text-2xl text-white">☽</span>
                 </div>
                 <div>
-                  <h3 className="text-dune-amber font-semibold">Moon · Emotional Truth</h3>
-                  <p className="text-sm text-white/80">Subconscious Landscape</p>
+                  <h3 className="!text-amber-400 font-semibold">Moon · Emotional Truth</h3>
+                  <p className="text-sm !text-white/80">Subconscious Landscape</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-2xl font-bold text-dune-spice-blue">
+                <p className="text-2xl font-bold !text-sky-300">
                   {chartData.moon.sign} · {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.facetName || 'The Mystic'}
                 </p>
-                <p className="text-sm text-white/70">
+                <p className="text-sm !text-white/70">
                   {chartData.moon.degree.toFixed(1)}° · House {chartData.moon.house}
                 </p>
-                <p className="text-sm text-dune-amber/80 italic mt-2">
+                <p className="text-sm !text-amber-200/80 italic mt-2">
                   {getZodiacArchetype(chartData.moon.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Emotional archetype'}
                 </p>
                 <Link
                   href={`/astrology/placements/moon`}
-                  className="text-sm text-dune-spice-blue hover:text-dune-fremen-azure hover:underline inline-flex items-center gap-1"
+                  className="text-sm !text-sky-400 hover:!text-sky-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
                 </Link>
@@ -823,29 +823,29 @@ export default function AstrologyPage() {
             </div>
 
             {/* Ascendant */}
-            <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 shadow-xl">
+            <div className="bg-black/40 backdrop-blur-md border border-dune-bene-gesserit-gold/40 rounded-lg p-6 shadow-xl text-white">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-dune-bene-gesserit-gold to-dune-sienna-rock flex items-center justify-center shadow-lg shadow-dune-bene-gesserit-gold/30">
                   <span className="text-2xl">⇡</span>
                 </div>
                 <div>
-                  <h3 className="text-dune-amber font-semibold">Ascendant · Life Portal</h3>
-                  <p className="text-sm text-white/80">How You Meet the World</p>
+                  <h3 className="!text-amber-400 font-semibold">Ascendant · Life Portal</h3>
+                  <p className="text-sm !text-white/80">How You Meet the World</p>
                 </div>
               </div>
               <div className="space-y-2">
-                <p className="text-2xl font-bold text-dune-bene-gesserit-gold">
+                <p className="text-2xl font-bold !text-yellow-300">
                   {chartData.ascendant.sign} · {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.facetName || 'The Sustainer'}
                 </p>
-                <p className="text-sm text-white/70">
+                <p className="text-sm !text-white/70">
                   {chartData.ascendant.degree.toFixed(1)}°
                 </p>
-                <p className="text-sm text-dune-amber/80 italic mt-2">
+                <p className="text-sm !text-amber-200/80 italic mt-2">
                   {getZodiacArchetype(chartData.ascendant.sign.toLowerCase())?.archetypes.mythological?.[0] || 'Rising energy'}
                 </p>
                 <Link
                   href={`/astrology/placements/ascendant`}
-                  className="text-sm text-dune-bene-gesserit-gold hover:text-dune-amber hover:underline inline-flex items-center gap-1"
+                  className="text-sm !text-yellow-400 hover:!text-yellow-300 hover:underline inline-flex items-center gap-1"
                 >
                   Explore deeper <Sparkles className="w-3 h-3" />
                 </Link>
