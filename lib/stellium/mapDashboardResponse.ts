@@ -8,7 +8,7 @@
  * This helper bridges the gap so portal and practitioner pages stay in sync.
  */
 
-import type { PractitionerDashboard, PractitionerClient } from '@/lib/stellium/types';
+import type { PractitionerDashboard, PractitionerClient, PractitionerSession, SessionStatus } from '@/lib/stellium/types';
 
 /**
  * Raw shape returned by /api/stellium/dashboard
@@ -89,18 +89,53 @@ export interface DashboardApiResponse {
  * @param practitionerId - Current practitioner's ID (for constructing client records)
  * @returns PractitionerDashboard compatible with portal + practitioner admin pages
  */
+/**
+ * Map raw API session to PractitionerSession
+ */
+function mapSession(
+  raw: NonNullable<DashboardApiResponse['upcomingSessions']>[number],
+  practitionerId: string
+): PractitionerSession {
+  return {
+    id: raw.id,
+    practitioner_id: raw.practitioner_id || practitionerId,
+    client_id: raw.client_id,
+    session_type: raw.session_type,
+    duration_minutes: raw.duration_minutes,
+    status: (raw.status || 'scheduled') as SessionStatus,
+    location_type: 'video',
+    scheduled_at: raw.scheduled_at,
+    follow_up_sent: false,
+    paid: false,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    client: raw.client ? {
+      id: raw.client.id,
+      practitioner_id: practitionerId,
+      name: raw.client.name,
+      preferred_name: raw.client.preferred_name,
+      status: 'active',
+      total_sessions: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } : undefined,
+  };
+}
+
 export function mapDashboardResponse(
   data: DashboardApiResponse,
   practitionerId: string
 ): PractitionerDashboard {
+  const mappedSessions = (data.upcomingSessions || []).map((s) => mapSession(s, practitionerId));
+
   return {
     total_clients: data.clients?.total ?? 0,
     active_clients: data.clients?.active ?? 0,
     sessions_this_week: data.sessions?.this_week ?? 0,
     sessions_this_month: data.sessions?.this_month ?? 0,
     revenue_this_month: data.sessions?.revenue_this_month,
-    upcoming_sessions: data.upcomingSessions || [],
-    recent_sessions: data.upcomingSessions?.slice(0, 5) || [],
+    upcoming_sessions: mappedSessions,
+    recent_sessions: mappedSessions.slice(0, 5),
     // Transform actionItems follow_ups to PractitionerClient shape for UI compatibility
     // Filter requires clientId to avoid dead links to /clients/undefined
     clients_needing_follow_up: (data.actionItems || [])

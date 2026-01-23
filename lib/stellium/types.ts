@@ -411,3 +411,85 @@ export interface Practitioner {
   created_at: string;
   updated_at: string;
 }
+
+// ============================================
+// SETTINGS TYPES
+// ============================================
+
+export interface PractitionerProfile {
+  id: string;
+  slug: string;
+  name: string;
+  email: string;
+  business_name?: string;
+  tagline?: string;
+  bio?: string;
+  status: string;
+}
+
+export interface SessionDefaults {
+  default_duration: number;
+  default_location_type: LocationType;
+  default_fee?: number;
+  booking_buffer_minutes: number;
+  cancellation_policy?: string;
+}
+
+export interface NotificationSettings {
+  email_new_booking: boolean;
+  email_cancellation: boolean;
+  email_reminder_24h: boolean;
+  email_follow_up: boolean;
+  sms_enabled: boolean;
+  sms_new_booking: boolean;
+  sms_reminder_1h: boolean;
+}
+
+export interface PracticeSettings {
+  timezone: string;
+  working_hours?: Record<string, { start: string; end: string }>;
+  blocked_dates?: string[];
+  accept_new_clients: boolean;
+  waitlist_enabled: boolean;
+}
+
+export interface PractitionerSettings {
+  profile: PractitionerProfile;
+  session_defaults: SessionDefaults;
+  notifications: NotificationSettings;
+  practice: PracticeSettings;
+}
+
+export interface UpdatePractitionerProfileInput {
+  name?: string;
+  email?: string;
+  business_name?: string;
+  tagline?: string;
+  bio?: string;
+}
+
+export interface UpdateSessionDefaultsInput {
+  default_duration?: number;
+  default_location_type?: LocationType;
+  default_fee?: number;
+  booking_buffer_minutes?: number;
+  cancellation_policy?: string;
+}
+
+export interface UpdateNotificationSettingsInput {
+  email_new_booking?: boolean;
+  email_cancellation?: boolean;
+  email_reminder_24h?: boolean;
+  email_follow_up?: boolean;
+  sms_enabled?: boolean;
+  sms_new_booking?: boolean;
+  sms_reminder_1h?: boolean;
+}
+
+export interface UpdatePracticeSettingsInput {
+  timezone?: string;
+  working_hours?: Record<string, { start: string; end: string }>;
+  blocked_dates?: string[];
+  accept_new_clients?: boolean;
+  waitlist_enabled?: boolean;
+}

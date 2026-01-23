@@ -318,7 +318,7 @@ export async function cancelSession(
     [sessionId, practitionerId, reason ? `\n\nCancellation reason: ${reason}` : '']
   );
 
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 // ============================================

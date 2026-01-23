@@ -305,7 +305,7 @@ export async function getContacts(
   );
 
   // Get paginated results
-  const contacts = await query<MarketingContact>(
+  const contactsResult = await query<MarketingContact>(
     `SELECT * FROM marketing_contacts
      WHERE ${whereClause}
      ORDER BY ${sortColumn} ${sortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS LAST
@@ -314,7 +314,7 @@ export async function getContacts(
   );
 
   return {
-    contacts,
+    contacts: contactsResult.rows,
     total: parseInt(countResult?.count || '0'),
   };
 }
@@ -482,10 +482,11 @@ export async function getEmailTemplates(
     params.push(options.status);
   }
 
-  return query<EmailTemplate>(
+  const result = await query<EmailTemplate>(
     `SELECT * FROM email_templates WHERE ${conditions.join(' AND ')} ORDER BY created_at DESC`,
     params
   );
+  return result.rows;
 }
 
 export async function createEmailTemplate(
@@ -567,7 +568,7 @@ export async function getCampaigns(
     params
   );
 
-  const campaigns = await query<MarketingCampaign>(
+  const campaignsResult = await query<MarketingCampaign>(
     `SELECT * FROM marketing_campaigns
      WHERE ${whereClause}
      ORDER BY created_at DESC
@@ -576,7 +577,7 @@ export async function getCampaigns(
   );
 
   return {
-    campaigns,
+    campaigns: campaignsResult.rows,
     total: parseInt(countResult?.count || '0'),
   };
 }
@@ -683,13 +684,14 @@ export async function getSocialContent(
     params.push(endDate);
   }
 
-  return query<SocialContent>(
+  const result = await query<SocialContent>(
     `SELECT * FROM social_content
      WHERE ${conditions.join(' AND ')}
      ORDER BY scheduled_for ASC NULLS LAST, created_at DESC
      LIMIT $${paramIndex++} OFFSET $${paramIndex}`,
     [...params, limit, offset]
   );
+  return result.rows;
 }
 
 export async function createSocialContent(
@@ -755,10 +757,11 @@ export async function getLeadMagnets(
     params.push(status);
   }
 
-  return query<LeadMagnet>(
+  const result = await query<LeadMagnet>(
     `SELECT * FROM lead_magnets WHERE ${conditions.join(' AND ')} ORDER BY created_at DESC`,
     params
   );
+  return result.rows;
 }
 
 export async function createLeadMagnet(
@@ -957,7 +960,7 @@ export async function getMarketingAnalytics(
   startDate: Date,
   endDate: Date
 ): Promise<MarketingAnalytics[]> {
-  return query<MarketingAnalytics>(
+  const result = await query<MarketingAnalytics>(
     `SELECT * FROM marketing_analytics
      WHERE practitioner_id = $1
        AND period_type = $2
@@ -966,4 +969,5 @@ export async function getMarketingAnalytics(
      ORDER BY period_start ASC`,
     [practitionerId, periodType, startDate, endDate]
   );
+  return result.rows;
 }

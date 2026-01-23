@@ -465,7 +465,7 @@ export async function archiveClient(
     [clientId, practitionerId]
   );
 
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 /**
@@ -482,7 +482,7 @@ export async function deleteClient(
     [clientId, practitionerId]
   );
 
-  return result.rowCount > 0;
+  return (result.rowCount ?? 0) > 0;
 }
 
 // ============================================
