@@ -56,6 +56,14 @@ const insightCollections: InsightCollection[] = [
     icon: '',
     articles: [
       {
+        id: 'presence-continuity',
+        title: '★ Presence Continuity and Personal Sovereignty',
+        description: 'FOUNDATIONAL PAPER: Why AI systems must remain relationally present even when infrastructure fails. Introduces the sovereignty ladder and the principle that the cloud is optional, not required.',
+        content: 'docs/papers/presence-continuity.md',
+        tags: ['sovereignty', 'presence', 'local-first', 'ethics', 'offline', 'trust', 'attachment-theory'],
+        relatedTechnologies: ['maia-oracle', 'consciousness-field']
+      },
+      {
         id: 'consciousness-evolution-framework',
         title: 'The Evolution of Human Consciousness',
         description: 'A comprehensive framework for understanding consciousness development from mechanistic to integral awareness',
