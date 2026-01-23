@@ -40,6 +40,11 @@ www.soullab.life {
     redir https://soullab.life{uri} permanent
 }
 
+# Redirect maia subdomain to apex
+maia.soullab.life {
+    redir https://soullab.life{uri} permanent
+}
+
 soullab.life {
     # ═══════════════════════════════════════════════════════════════════════════
     # CORS for API requests (iOS/Capacitor app support)
