@@ -26,9 +26,9 @@ export async function POST(request: NextRequest) {
     // Hash the new password with bcrypt
     const passwordHash = await hashPassword(newPassword);
 
-    // Update password in database
+    // Update password in database and mark as changed
     const result = await query(
-      'UPDATE members SET password_hash = $1, updated_at = NOW() WHERE id = $2 RETURNING id',
+      'UPDATE members SET password_hash = $1, password_changed_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING id',
       [passwordHash, memberId]
     );
 

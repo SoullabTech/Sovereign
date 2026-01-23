@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     // Find member by username (case-insensitive)
     const result = await query(
-      'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step, tier, roles FROM members WHERE LOWER(username) = LOWER($1)',
+      'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step, tier, roles, password_changed_at FROM members WHERE LOWER(username) = LOWER($1)',
       [username]
     );
 
@@ -143,6 +143,9 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Check if password change is needed (beta testers with NULL password_changed_at)
+    const needsPasswordChange = member.password_changed_at === null;
+
     return NextResponse.json({
       success: true,
       member: {
@@ -157,7 +160,8 @@ export async function POST(request: NextRequest) {
         id: practitioner.id,
         slug: practitioner.slug,
         name: practitioner.name
-      } : null
+      } : null,
+      needsPasswordChange
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';

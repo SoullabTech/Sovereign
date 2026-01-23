@@ -29,6 +29,7 @@ import { VoiceHelpSheet, TestFlightHelpSheet, HelpHubSheet } from '@/components/
 import { ShadowWorkSheet } from '@/components/consciousness/ShadowWorkSheet';
 import { AcademySheet } from '@/components/academy/AcademySheet';
 import FeedbackSheet from '@/components/feedback/FeedbackSheet';
+import PasswordChangeSheet from '@/components/auth/PasswordChangeSheet';
 import { useFeatureAccess, useSubscription, membershipUtils } from '@/hooks/useSubscription';
 import { PREMIUM_FEATURES, CONTRIBUTION_SUGGESTIONS, SEVA_PATHWAYS } from '@/lib/subscription/types';
 import type { ContributionCircle, SevaPathway } from '@/lib/subscription/types';
@@ -326,6 +327,7 @@ function MAIAPageContent() {
   const [showVoiceHelp, setShowVoiceHelp] = useState(false);
   const [showTestFlightHelp, setShowTestFlightHelp] = useState(false);
   const [showFeedbackSheet, setShowFeedbackSheet] = useState(false);
+  const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(false);
 
   // Framework selector state (long-press on Care/Note tabs)
   const [showFrameworkSelector, setShowFrameworkSelector] = useState(false);
@@ -415,6 +417,19 @@ function MAIAPageContent() {
 
     initializeUser();
   }, []);
+
+  // Check for password change request from signin redirect
+  useEffect(() => {
+    if (searchParams?.get('changePassword') === 'true') {
+      setShowPasswordChangeModal(true);
+      // Clean up URL after showing modal (remove query param)
+      const params = new URLSearchParams(searchParams.toString());
+      params.delete('changePassword');
+      const newQuery = params.toString();
+      const path = pathname ?? '/maia';
+      router.replace(newQuery ? `${path}?${newQuery}` : path, { scroll: false });
+    }
+  }, [searchParams, pathname, router]);
 
   // Load and listen for framework/lens changes
   useEffect(() => {
@@ -1379,6 +1394,14 @@ function MAIAPageContent() {
           onClose={() => setShowFeedbackSheet(false)}
           userName={explorerName}
           userId={explorerId}
+        />
+
+        {/* Password Change Sheet (beta tester upgrade) */}
+        <PasswordChangeSheet
+          isOpen={showPasswordChangeModal}
+          onClose={() => setShowPasswordChangeModal(false)}
+          memberId={explorerId}
+          memberName={explorerName}
         />
 
         </div>
