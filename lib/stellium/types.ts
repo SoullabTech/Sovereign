@@ -428,34 +428,37 @@ export interface PractitionerProfile {
 }
 
 export interface SessionDefaults {
-  default_duration: number;
+  default_duration_minutes: number;
   default_location_type: LocationType;
+  default_session_type: string;
   default_fee?: number;
-  booking_buffer_minutes: number;
+  buffer_between_sessions: number;
+  booking_advance_days: number;
   cancellation_policy?: string;
+  confirmation_template?: string;
+  follow_up_template?: string;
 }
 
 export interface NotificationSettings {
   email_new_booking: boolean;
-  email_cancellation: boolean;
-  email_reminder_24h: boolean;
-  email_follow_up: boolean;
-  sms_enabled: boolean;
-  sms_new_booking: boolean;
-  sms_reminder_1h: boolean;
+  email_booking_reminder: boolean;
+  email_follow_up_reminder: boolean;
+  email_payment_received: boolean;
+  reminder_hours_before: number;
+  follow_up_days_after: number;
 }
 
 export interface PracticeSettings {
   timezone: string;
-  working_hours?: Record<string, { start: string; end: string }>;
-  blocked_dates?: string[];
-  accept_new_clients: boolean;
-  waitlist_enabled: boolean;
+  currency: string;
+  working_hours?: Record<string, { start: string; end: string } | null>;
+  booking_enabled: boolean;
+  payments_enabled: boolean;
 }
 
 export interface PractitionerSettings {
   profile: PractitionerProfile;
-  session_defaults: SessionDefaults;
+  sessionDefaults: SessionDefaults;
   notifications: NotificationSettings;
   practice: PracticeSettings;
 }
@@ -469,27 +472,30 @@ export interface UpdatePractitionerProfileInput {
 }
 
 export interface UpdateSessionDefaultsInput {
-  default_duration?: number;
+  default_duration_minutes?: number;
   default_location_type?: LocationType;
+  default_session_type?: string;
   default_fee?: number;
-  booking_buffer_minutes?: number;
+  buffer_between_sessions?: number;
+  booking_advance_days?: number;
   cancellation_policy?: string;
+  confirmation_template?: string;
+  follow_up_template?: string;
 }
 
 export interface UpdateNotificationSettingsInput {
   email_new_booking?: boolean;
-  email_cancellation?: boolean;
-  email_reminder_24h?: boolean;
-  email_follow_up?: boolean;
-  sms_enabled?: boolean;
-  sms_new_booking?: boolean;
-  sms_reminder_1h?: boolean;
+  email_booking_reminder?: boolean;
+  email_follow_up_reminder?: boolean;
+  email_payment_received?: boolean;
+  reminder_hours_before?: number;
+  follow_up_days_after?: number;
 }
 
 export interface UpdatePracticeSettingsInput {
   timezone?: string;
-  working_hours?: Record<string, { start: string; end: string }>;
-  blocked_dates?: string[];
-  accept_new_clients?: boolean;
-  waitlist_enabled?: boolean;
+  currency?: string;
+  working_hours?: Record<string, { start: string; end: string } | null>;
+  booking_enabled?: boolean;
+  payments_enabled?: boolean;
 }
