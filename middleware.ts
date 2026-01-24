@@ -184,6 +184,41 @@ export async function middleware(req: NextRequest) {
             { status: 401 }
           );
         }
+        // For Capacitor/mobile apps: Let page load, handle auth client-side
+        // This is necessary because iOS blocks cross-origin cookies
+        // Detection methods:
+        // 1. Origin contains capacitor:// or ionic://
+        // 2. User-Agent indicates iOS WKWebView (mobile app, not Safari)
+        // 3. Explicit x-capacitor-app header
+        const origin = req.headers.get('origin') || '';
+        const referer = req.headers.get('referer') || '';
+        const userAgent = req.headers.get('user-agent') || '';
+
+        // iOS WKWebView UA includes "Mobile" but NOT "Safari" (Safari includes both)
+        // Example WKWebView: Mozilla/5.0 (iPhone; ...) AppleWebKit/... Mobile/...
+        // Example Safari: Mozilla/5.0 (iPhone; ...) AppleWebKit/... Safari/...
+        const isIOSWebView =
+          userAgent.includes('Mobile') &&
+          !userAgent.includes('Safari') &&
+          (userAgent.includes('iPhone') || userAgent.includes('iPad'));
+
+        const isCapacitorRequest =
+          origin.includes('capacitor://') ||
+          origin.includes('ionic://') ||
+          referer.includes('capacitor://') ||
+          referer.includes('ionic://') ||
+          req.headers.get('x-capacitor-app') === 'true' ||
+          isIOSWebView;
+
+        if (isCapacitorRequest) {
+          // Let page load - client-side will check auth via localStorage
+          console.log(`[Middleware] Allowing unauthenticated page load for Capacitor: ${pathname} (WKWebView=${isIOSWebView})`);
+          const response = NextResponse.next();
+          response.headers.set('x-access-authed', 'false');
+          response.headers.set('x-access-capacitor-bypass', 'true');
+          return response;
+        }
+
         // Page routes redirect to sign in with incident stamp
         url.pathname = '/signin';
         url.searchParams.set('next', pathname);

@@ -129,7 +129,25 @@ function SigninContent() {
   useEffect(() => {
     async function checkServerSession() {
       try {
-        const res = await fetch('/api/auth/whoami', { credentials: 'include' });
+        // Build headers - include x-member-id for Capacitor/mobile apps
+        // (iOS blocks cross-origin cookies)
+        const headers: HeadersInit = {};
+        if (Capacitor.isNativePlatform()) {
+          try {
+            const betaUser = localStorage.getItem('beta_user');
+            if (betaUser) {
+              const userData = JSON.parse(betaUser);
+              if (userData.id) {
+                headers['x-member-id'] = userData.id;
+              }
+            }
+          } catch { /* ignore */ }
+        }
+
+        const res = await fetch(apiUrl('/api/auth/whoami'), {
+          credentials: 'include',
+          headers,
+        });
         const data = await res.json();
         if (data.authed) {
           // Server says we're authenticated - redirect to intended destination
@@ -851,7 +869,19 @@ function SigninContent() {
                 <button
                   type="submit"
                   disabled={magicLinkStatus === 'sending' || !magicLinkEmail}
-                  className="w-full py-2 rounded-xl bg-teal-600 text-white font-medium disabled:opacity-50"
+                  style={{
+                    width: '100%',
+                    padding: '12px 16px',
+                    borderRadius: 14,
+                    backgroundColor: '#0d9488',
+                    color: '#ffffff',
+                    fontSize: 16,
+                    fontWeight: 600,
+                    border: 'none',
+                    cursor: magicLinkStatus === 'sending' || !magicLinkEmail ? 'not-allowed' : 'pointer',
+                    opacity: magicLinkStatus === 'sending' || !magicLinkEmail ? 0.5 : 1,
+                    WebkitTextFillColor: '#ffffff',
+                  }}
                 >
                   {magicLinkStatus === 'sending' ? 'Sending...' : 'Send Magic Link'}
                 </button>

@@ -52,11 +52,52 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
     const sessionToken = await getSessionFromCookie();
     const hasCookie = !!sessionToken;
 
-    if (!sessionToken) {
+    // For Capacitor/mobile apps: Also check x-member-id header
+    // (iOS blocks cross-origin cookies, so we use header-based auth)
+    const memberIdHeader = request.headers.get('x-member-id');
+
+    if (!sessionToken && !memberIdHeader) {
       return NextResponse.json({
         authed: false,
         reason: 'no_cookie',
         debug: { hasCookie: false },
+      });
+    }
+
+    // If we have a member ID header but no cookie, look up member directly
+    if (!sessionToken && memberIdHeader) {
+      const memberResult = await query(
+        `SELECT
+           id, username, name, preferred_name, tier,
+           is_practitioner, onboarded, onboarding_step
+         FROM members
+         WHERE id = $1`,
+        [memberIdHeader]
+      );
+
+      if (memberResult.rows.length === 0) {
+        return NextResponse.json({
+          authed: false,
+          reason: 'member_not_found',
+          debug: { hasCookie: false },
+        });
+      }
+
+      const member = memberResult.rows[0];
+
+      console.log(`[WHOAMI] Authenticated via x-member-id header: ${member.username} (${Date.now() - startTime}ms)`);
+
+      return NextResponse.json({
+        authed: true,
+        memberId: member.id,
+        username: member.username,
+        name: member.name,
+        preferredName: member.preferred_name || member.name,
+        tier: member.tier || 'free',
+        isPractitioner: member.is_practitioner || false,
+        debug: {
+          hasCookie: false,
+        },
       });
     }
 
