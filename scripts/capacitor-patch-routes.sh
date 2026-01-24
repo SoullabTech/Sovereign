@@ -39,6 +39,7 @@ EXCLUDED_DYNAMIC_ROUTES=(
     "app/debug"  # useSearchParams without Suspense boundary
     "app/dashboard/export"  # uses cookies() with dynamic=error
     "app/birth-chart"  # force-dynamic not compatible with static export
+    "app/labtools/reflections/[id]"  # Client Component with dynamic params
 )
 
 RED='\033[0;31m'

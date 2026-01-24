@@ -1,29 +1,31 @@
 PODS:
-  - Capacitor (6.2.1):
+  - Capacitor (7.4.5):
     - CapacitorCordova
-  - CapacitorApp (6.0.3):
+  - CapacitorApp (7.1.1):
     - Capacitor
-  - CapacitorClipboard (6.0.3):
+  - CapacitorClipboard (7.0.3):
     - Capacitor
-  - CapacitorCommunityBluetoothLe (6.1.0):
+  - CapacitorCommunityBluetoothLe (7.3.0):
     - Capacitor
   - CapacitorCommunitySpeechRecognition (7.0.1):
     - Capacitor
-  - CapacitorCordova (6.2.1)
-  - CapacitorFilesystem (6.0.4):
+  - CapacitorCordova (7.4.5)
+  - CapacitorFilesystem (7.1.6):
     - Capacitor
-  - CapacitorHaptics (6.0.3):
+    - IONFilesystemLib (~> 1.0.1)
+  - CapacitorHaptics (7.0.3):
     - Capacitor
-  - CapacitorLocalNotifications (6.1.3):
+  - CapacitorLocalNotifications (7.0.4):
     - Capacitor
-  - CapacitorShare (6.0.4):
+  - CapacitorShare (7.0.3):
     - Capacitor
-  - CapacitorSplashScreen (6.0.4):
+  - CapacitorSplashScreen (7.0.4):
     - Capacitor
-  - CapacitorStatusBar (6.0.3):
+  - CapacitorStatusBar (7.0.4):
     - Capacitor
-  - LgiccCapacitorVoiceRecorder (6.0.11):
+  - CapacitorVoiceRecorder (7.0.6):
     - Capacitor
+  - IONFilesystemLib (1.0.1)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -38,7 +40,11 @@ DEPENDENCIES:
   - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
-  - "LgiccCapacitorVoiceRecorder (from `../../node_modules/@lgicc/capacitor-voice-recorder`)"
+  - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
+
+SPEC REPOS:
+  trunk:
+    - IONFilesystemLib
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -65,24 +71,25 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/splash-screen"
   CapacitorStatusBar:
     :path: "../../node_modules/@capacitor/status-bar"
-  LgiccCapacitorVoiceRecorder:
-    :path: "../../node_modules/@lgicc/capacitor-voice-recorder"
+  CapacitorVoiceRecorder:
+    :path: "../../node_modules/capacitor-voice-recorder"
 
 SPEC CHECKSUMS:
-  Capacitor: c95400d761e376be9da6be5a05f226c0e865cebf
-  CapacitorApp: a19ccb4f5f32d2534be5c6f524d5a9b614a1e8a7
-  CapacitorClipboard: 6479f3d5c20e5f985cb72e620e11f20a351777e2
-  CapacitorCommunityBluetoothLe: 0d4d197e0d0eadb84d4c3a6683768088253419d9
+  Capacitor: 12914e6f1b7835e161a74ebd19cb361efa37a7dd
+  CapacitorApp: 63b237168fc869e758481dba283315a85743ee78
+  CapacitorClipboard: 2a282bc14e8f47d430f2f9698ed95fbe25dcc21c
+  CapacitorCommunityBluetoothLe: 41f9dec8a4c16ab6b81e56402b6047fc19b4735d
   CapacitorCommunitySpeechRecognition: 3e03566c44c2bb3b52391a33d4518b1adbdeb38f
-  CapacitorCordova: 8d93e14982f440181be7304aa9559ca631d77fff
-  CapacitorFilesystem: 5b9aec35c0212bd0064e26d278c93e925864f212
-  CapacitorHaptics: 40f83026feeee9cfe36e89e9c98a3baaaf20c450
-  CapacitorLocalNotifications: 801867e687c42dd2b33c1e22e08f48e6738d2f72
-  CapacitorShare: 77ff779e3b7c6ae9fb5461e52cf7ef805d429491
-  CapacitorSplashScreen: ef140a8b1ea7244e0c245ce2dd4ce5251e7ab86a
-  CapacitorStatusBar: 149cde8f1328ec3aa6cbdd872a55137ae3f98b16
-  LgiccCapacitorVoiceRecorder: f32f74e7a68039b7fdeed973836efd179ee7e7b3
+  CapacitorCordova: 31bbe4466000c6b86d9b7f1181ee286cff0205aa
+  CapacitorFilesystem: 66f05ee0d8b1ccdc00d509091273a9b3b57c4a0b
+  CapacitorHaptics: ce15be8f287fa2c61c7d2d9e958885b90cf0bebc
+  CapacitorLocalNotifications: ba2a08bd92887b08f352e6b2db430575cef0cea3
+  CapacitorShare: a4f4f86eabd4b3ff52ba6a11b754713c6926a8d1
+  CapacitorSplashScreen: 000f7591d546907dda5cbb514bd6b6d9e6048cf8
+  CapacitorStatusBar: d0e0151c89c001a9c7125bac59ddedf76b664768
+  CapacitorVoiceRecorder: 9158861be982f32d411769723a4d813d6ce46135
+  IONFilesystemLib: 89258b8e3e85465da93127d25d7ce37f977e8a6f
 
-PODFILE CHECKSUM: fb2309f3c90a0611c308e3f3c8ffc1a41ade5c8c
+PODFILE CHECKSUM: be23e82465ebedca131dcabf9ab300214e6f209c
 
 COCOAPODS: 1.16.2
