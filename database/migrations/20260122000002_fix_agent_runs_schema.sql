@@ -4,6 +4,12 @@
 
 BEGIN;
 
+-- Create table if it doesn't exist (base schema)
+CREATE TABLE IF NOT EXISTS public.agent_runs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 -- Add all missing columns to agent_runs
 ALTER TABLE public.agent_runs
   ADD COLUMN IF NOT EXISTS session_id TEXT,

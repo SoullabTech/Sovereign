@@ -259,9 +259,13 @@ jobs:
       - name: Update monitoring
         continue-on-error: true
         run: |
-          curl -X POST "${{ secrets.MONITORING_WEBHOOK }}" \
-            -H "Content-Type: application/json" \
-            -d '{"text": "✅ MAIA Sovereign production deployment successful", "version": "${{ github.sha }}"}'
+          if [ -n "$MONITORING_WEBHOOK" ]; then
+            curl -X POST "$MONITORING_WEBHOOK" \
+              -H "Content-Type: application/json" \
+              -d '{"text": "✅ MAIA Sovereign production deployment successful", "version": "${{ github.sha }}"}'
+          fi
+        env:
+          MONITORING_WEBHOOK: ${{ secrets.MONITORING_WEBHOOK }}
 
       - name: Notify successful deployment
         uses: 8398a7/action-slack@v3

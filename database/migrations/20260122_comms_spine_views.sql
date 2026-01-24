@@ -224,7 +224,7 @@ JOIN comms_messages m ON m.thread_id = t.id
 JOIN practitioner_clients pc ON t.client_id = pc.id
 WHERE t.domain = 'clinical'
   AND t.thread_type IN ('between_session', 'session_prep', 'safety_followup')
-  AND m.created_at > COALESCE(pc.last_session, pc.created_at)
+  AND m.created_at > COALESCE(pc.last_session_at, pc.created_at)
 ORDER BY m.created_at DESC;
 
 COMMENT ON VIEW v_legacy_messages_since_last_session IS

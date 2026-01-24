@@ -218,7 +218,7 @@ SELECT
   cm.created_at
 FROM client_messages cm
 JOIN practitioner_clients pc ON cm.client_id = pc.id
-WHERE cm.created_at > COALESCE(pc.last_session, pc.created_at)
+WHERE cm.created_at > COALESCE(pc.last_session_at, pc.created_at)
 ORDER BY cm.created_at DESC;
 
 COMMENT ON VIEW v_messages_since_last_session IS 'Messages received since client last session - for session prep digest';
