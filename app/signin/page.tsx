@@ -9,12 +9,14 @@
 import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, ArrowRightLeft, Sparkles, Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowRightLeft, Sparkles, Eye, EyeOff, QrCode } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import EthosFooter from '@/components/shared/EthosFooter';
 import { betaSession } from '@/lib/auth/betaSession';
 import { biometricAuth } from '@/lib/auth/biometricAuth';
+import { unifiedBiometry } from '@/lib/auth/unifiedBiometry';
 import { deviceTrust } from '@/lib/auth/deviceTrust';
+import { QRLoginDisplay } from '@/components/auth/QRLoginDisplay';
 import { setPractitionerContext } from '@/lib/auth/practitionerAuth';
 import { api, ApiError } from '@/lib/api-client';
 import { apiUrl, apiBaseUrl } from '@/lib/http/apiBase';
@@ -69,19 +71,32 @@ function SigninContent() {
   // Passkey renewal modal (for users with old/invalid passkeys)
   const [showPasskeyRenewal, setShowPasskeyRenewal] = useState(false);
 
+  // QR Login for desktop
+  const [showQRLogin, setShowQRLogin] = useState(false);
+
   const biometricLabel = useMemo(() => biometricAuth.getBiometricName(), []);
 
   // Feature flags - cached once per render
   const nativeOAuthEnabled = getFeatureFlag('NATIVE_OAUTH');
+  const qrLoginEnabled = getFeatureFlag('QR_LOGIN');
+  const nativeBiometryEnabled = getFeatureFlag('NATIVE_BIOMETRY');
 
-  // Check biometric availability
+  // Check biometric availability (use unified biometry on native platforms)
   useEffect(() => {
     (async () => {
-      const avail = await biometricAuth.getAvailability();
-      setBioAvailable(avail.available);
-      setBioPlatformAvailable(avail.platformAvailable);
+      if (Capacitor.isNativePlatform() && nativeBiometryEnabled) {
+        // Use unified biometry for native platforms
+        const avail = await unifiedBiometry.getAvailability();
+        setBioAvailable(avail.available);
+        setBioPlatformAvailable(avail.available);
+      } else {
+        // Use WebAuthn for web browsers
+        const avail = await biometricAuth.getAvailability();
+        setBioAvailable(avail.available);
+        setBioPlatformAvailable(avail.platformAvailable);
+      }
     })();
-  }, []);
+  }, [nativeBiometryEnabled]);
 
   // Check for magic link errors, username prefill, and auth reason codes
   useEffect(() => {
@@ -184,16 +199,20 @@ function SigninContent() {
     localStorage.setItem('signup_completed', 'true');
   }
 
-  // Passkey sign-in (biometric)
+  // Passkey sign-in (biometric) - uses unified biometry on native platforms
   async function handlePasskeySignIn() {
     setError('');
     setIsLoading(true);
 
     try {
-      const res = await biometricAuth.authenticate(bioUsername || undefined);
+      // Use unified biometry on native platforms for real Face ID/Touch ID
+      const useNative = Capacitor.isNativePlatform() && nativeBiometryEnabled;
+      const res = useNative
+        ? await unifiedBiometry.authenticate(bioUsername || undefined)
+        : await biometricAuth.authenticate(bioUsername || undefined);
 
       if (!res.success) {
-        // Show dedicated renewal UI for domain mismatch errors
+        // Show dedicated renewal UI for domain mismatch errors (WebAuthn only)
         if (res.code === 'RPID_MISMATCH' || res.code === 'ORIGIN_MISMATCH') {
           setShowPasskeyRenewal(true);
           setIsLoading(false);
@@ -201,13 +220,17 @@ function SigninContent() {
         }
 
         // Provide helpful guidance based on error code
-        let errorMessage = res.error || 'Passkey sign-in failed';
+        let errorMessage = res.error || 'Biometric sign-in failed';
 
         if (res.code === 'CREDENTIAL_NOT_FOUND') {
           errorMessage = 'No passkey found for this account. Sign in with password, then enable Face ID/Touch ID in Settings.';
+        } else if (res.code === 'DEVICE_NOT_TRUSTED') {
+          errorMessage = 'This device is not trusted. Sign in with password first to enable biometric login.';
+        } else if (res.code === 'NO_MEMBER_ID') {
+          errorMessage = 'No account found. Sign in with password first.';
         } else if (res.code === 'CHALLENGE_EXPIRED' || res.code === 'CHALLENGE_INVALID') {
           errorMessage = 'Session expired. Please try again.';
-        } else if (res.code === 'USER_CANCELLED') {
+        } else if (res.code === 'USER_CANCELLED' || res.code === 'BIOMETRY_FAILED') {
           errorMessage = 'Sign-in was cancelled. Tap to try again.';
         }
 
@@ -234,7 +257,7 @@ function SigninContent() {
         }
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Passkey sign-in failed');
+      setError(e instanceof Error ? e.message : 'Biometric sign-in failed');
     } finally {
       setIsLoading(false);
     }
@@ -251,30 +274,50 @@ function SigninContent() {
 
       try {
         // Use apiUrl() for correct path - /api/members/signin (not /v1/)
-        const response = await fetch(apiUrl('/api/members/signin'), {
+        const signinUrl = apiUrl('/api/members/signin');
+        console.log('[SignIn] Attempting signin to:', signinUrl);
+
+        const response = await fetch(signinUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
+          mode: 'cors',
           body: JSON.stringify({ username: username.toLowerCase(), password }),
         });
 
+        console.log('[SignIn] Response status:', response.status);
+
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
+          console.warn('[SignIn] API error response:', response.status, errorData);
+
           if (response.status === 401) {
             setError('Invalid username or password.');
             setIsLoading(false);
             return;
           }
-          console.warn('[SignIn] API error:', response.status, errorData);
-          throw new Error(errorData.error || 'Sign in failed');
+          throw new Error(errorData.error || `Sign in failed (${response.status})`);
         }
 
         data = await response.json();
+        console.log('[SignIn] Signin successful, member:', data?.member?.username);
       } catch (err) {
-        if ((err as Error)?.message?.includes('Invalid username')) {
+        const errorMsg = (err as Error)?.message || String(err);
+        console.error('[SignIn] Fetch error:', errorMsg);
+
+        // Network/CORS errors on iOS - provide helpful message
+        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch') || errorMsg.includes('CORS')) {
+          setError('Network error. Check your connection and try again.');
+          setIsLoading(false);
+          return;
+        }
+
+        if (errorMsg.includes('Invalid username')) {
           return; // Already handled above
         }
-        console.warn('[SignIn] API error:', err);
+
+        // Re-throw to be caught by outer handler
+        throw err;
       }
 
       if (data) {
@@ -696,6 +739,18 @@ function SigninContent() {
           >
             <Mail className="w-5 h-5 text-teal-700/70" />
           </button>
+
+          {/* QR Code Login (desktop only) */}
+          {qrLoginEnabled && !Capacitor.isNativePlatform() && (
+            <button
+              type="button"
+              onClick={() => setShowQRLogin(true)}
+              title="Scan QR code with phone"
+              className="w-11 h-11 rounded-xl bg-white/30 hover:bg-white/50 border border-teal-200/30 flex items-center justify-center transition-all"
+            >
+              <QrCode className="w-5 h-5 text-teal-700/70" />
+            </button>
+          )}
 
           {/* Google */}
           <button
@@ -1143,6 +1198,23 @@ function SigninContent() {
             </p>
           </motion.div>
         </motion.div>
+      )}
+
+      {/* QR Login Modal */}
+      {showQRLogin && (
+        <QRLoginDisplay
+          onSuccess={(member) => {
+            storeSession({
+              id: member.id,
+              username: member.username,
+              name: member.name,
+              preferredName: member.preferredName,
+              onboarded: member.onboarded
+            });
+            router.push(member.onboarded ? '/maia' : '/begin');
+          }}
+          onClose={() => setShowQRLogin(false)}
+        />
       )}
 
       {/* API indicator */}
