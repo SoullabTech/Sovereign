@@ -12,6 +12,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import type { WhoamiResponse } from '@/app/api/auth/whoami/route';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface LocalStorageState {
   beta_user: any;
@@ -85,9 +86,8 @@ function AuthDebugContent() {
     // Fetch server state
     const fetchServerState = async () => {
       try {
-        const res = await fetch('/api/auth/whoami', {
-          credentials: 'include',
-        });
+        // Use apiFetch which automatically adds x-member-id for Capacitor apps
+        const res = await apiFetch('/api/auth/whoami');
         const data = await res.json();
         setServerState(data);
       } catch (e) {

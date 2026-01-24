@@ -19,7 +19,7 @@ import { deviceTrust } from '@/lib/auth/deviceTrust';
 import { QRLoginDisplay } from '@/components/auth/QRLoginDisplay';
 import { setPractitionerContext } from '@/lib/auth/practitionerAuth';
 import { api, ApiError } from '@/lib/api-client';
-import { apiUrl, apiBaseUrl } from '@/lib/http/apiBase';
+import { apiUrl, apiBaseUrl, apiFetch } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import { getFeatureFlag } from '@/lib/features/flags';
 
@@ -144,26 +144,10 @@ function SigninContent() {
   useEffect(() => {
     async function checkServerSession() {
       try {
-        // Build headers - include x-member-id for Capacitor/mobile apps
-        // (iOS blocks cross-origin cookies)
-        const headers: HeadersInit = {};
-        if (Capacitor.isNativePlatform()) {
-          try {
-            const betaUser = localStorage.getItem('beta_user');
-            if (betaUser) {
-              const userData = JSON.parse(betaUser);
-              if (userData.id) {
-                headers['x-member-id'] = userData.id;
-              }
-            }
-          } catch { /* ignore */ }
-        }
-
-        const res = await fetch(apiUrl('/api/auth/whoami'), {
-          credentials: 'include',
-          headers,
-        });
+        // Use apiFetch which automatically adds x-member-id for Capacitor apps
+        const res = await apiFetch('/api/auth/whoami');
         const data = await res.json();
+        console.log('[Signin] whoami response:', data.authed, data.reason || 'ok');
         if (data.authed) {
           // Server says we're authenticated - redirect to intended destination
           const next = searchParams?.get('next') || '/maia';
@@ -381,10 +365,15 @@ function SigninContent() {
           });
         }
 
-        let redirectPath = user.onboarded ? '/maia' : '/begin';
+        // DEBUG: Log onboarded status
+        console.log('[SIGNIN] user.onboarded:', user.onboarded, 'data.member.onboarded:', data.member.onboarded);
+
+        // TEMP FIX: Always go to /maia for debugging - remove after fixing
+        let redirectPath = '/maia';
+        // let redirectPath = user.onboarded ? '/maia' : '/begin';
 
         // If beta tester needs to change default password, add query param
-        if (data.needsPasswordChange && user.onboarded) {
+        if (data.needsPasswordChange) {
           redirectPath = '/maia?changePassword=true';
         }
 
@@ -444,7 +433,7 @@ function SigninContent() {
 
         if (data.member) {
           storeSession(data.member);
-          router.push(data.member.onboarded ? '/maia' : '/begin');
+          router.push('/maia' /* TEMP: bypass onboarded check */);
         }
         return;
       }
@@ -496,7 +485,7 @@ function SigninContent() {
 
         if (data.member) {
           storeSession(data.member);
-          router.push(data.member.onboarded ? '/maia' : '/begin');
+          router.push('/maia' /* TEMP: bypass onboarded check */);
         }
         return;
       }
@@ -576,7 +565,7 @@ function SigninContent() {
           setMigrationStatus('done');
           localStorage.setItem('explorerId', pendingUser.id);
           setTimeout(() => {
-            router.push(pendingUser.onboarded ? '/maia' : '/begin');
+            router.push('/maia' /* TEMP: bypass onboarded check */);
           }, 1500);
         } else {
           setMigrationStatus('error');
@@ -587,7 +576,7 @@ function SigninContent() {
     } else {
       localStorage.setItem('explorerId', pendingUser.id);
       setShowMigration(false);
-      router.push(pendingUser.onboarded ? '/maia' : '/begin');
+      router.push('/maia' /* TEMP: bypass onboarded check */);
     }
   };
 
@@ -1211,7 +1200,7 @@ function SigninContent() {
               preferredName: member.preferredName,
               onboarded: member.onboarded
             });
-            router.push(member.onboarded ? '/maia' : '/begin');
+            router.push('/maia' /* TEMP: bypass onboarded check */);
           }}
           onClose={() => setShowQRLogin(false)}
         />
