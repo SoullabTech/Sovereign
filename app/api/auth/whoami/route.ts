@@ -65,7 +65,8 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
     }
 
     // If we have a member ID header but no cookie, look up member directly
-    if (!sessionToken && memberIdHeader) {
+    // (Capacitor apps use header-based auth since iOS blocks cross-origin cookies)
+    if (memberIdHeader && !sessionToken) {
       const memberResult = await query(
         `SELECT
            id, username, name, preferred_name, tier,
@@ -101,6 +102,10 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
       });
     }
 
+    // At this point, sessionToken must exist (we returned early if it didn't)
+    // TypeScript doesn't narrow through complex conditionals, so we assert
+    const validSessionToken = sessionToken!;
+
     // Validate session
     const session = await getCurrentSession();
 
@@ -109,7 +114,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
       // Try to determine why
       const rawResult = await query(
         `SELECT revoked, expires_at FROM auth_sessions WHERE session_token = $1`,
-        [sessionToken]
+        [validSessionToken]
       );
 
       let reason: WhoamiReason = 'invalid_session';
@@ -127,7 +132,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
         reason,
         debug: {
           hasCookie: true,
-          cookieLength: sessionToken.length,
+          cookieLength: validSessionToken.length,
         },
       });
     }
@@ -148,7 +153,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
         reason: 'member_not_found',
         debug: {
           hasCookie: true,
-          cookieLength: sessionToken.length,
+          cookieLength: validSessionToken.length,
         },
       });
     }
@@ -167,7 +172,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
       expiresAt: session.expiresAt.toISOString(),
       debug: {
         hasCookie: true,
-        cookieLength: sessionToken.length,
+        cookieLength: validSessionToken.length,
       },
     };
 
