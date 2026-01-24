@@ -357,7 +357,7 @@ function SigninContent() {
           scopes: ['profile', 'email'],
           grantOfflineAccess: true,
         });
-        const result = await GoogleAuth.signIn();
+        const result = await GoogleAuth.signIn({ scopes: ['profile', 'email'] });
         const idToken = result.authentication?.idToken;
 
         if (!idToken) {
