@@ -87,7 +87,22 @@ function checkAndMigrateSession(): boolean {
 
   // Force sign-out if: version mismatch OR name looks like a UUID OR has local_* ID
   const hasLocalId = isPoisonedLocalId(explorerId) || isPoisonedLocalId(betaUserId);
-  const needsMigration = storedVersion !== String(SESSION_VERSION) || isLikelyUUID(currentName || '') || hasLocalId;
+  const versionMismatch = storedVersion !== String(SESSION_VERSION);
+  const nameIsUUID = isLikelyUUID(currentName || '');
+  const needsMigration = versionMismatch || nameIsUUID || hasLocalId;
+
+  // DEBUG: Log all values for iOS debugging
+  console.log('🔍 [MAIA] checkAndMigrateSession:', {
+    storedVersion,
+    expectedVersion: String(SESSION_VERSION),
+    versionMismatch,
+    currentName,
+    nameIsUUID,
+    explorerId: explorerId?.slice(0, 8) + '...',
+    betaUserId: betaUserId?.slice(0, 8) + '...',
+    hasLocalId,
+    needsMigration,
+  });
 
   if (hasLocalId) {
     console.warn('🚨 [MAIA] Detected poisoned local_* ID - forcing re-auth');
@@ -95,6 +110,7 @@ function checkAndMigrateSession(): boolean {
 
   if (needsMigration) {
     console.log('🔄 [MAIA] Session migration required - signing out user');
+    console.log('🔄 [MAIA] Reasons: versionMismatch=' + versionMismatch + ', nameIsUUID=' + nameIsUUID + ', hasLocalId=' + hasLocalId);
     // Clear session data but preserve permanent markers
     localStorage.removeItem('beta_user');
     localStorage.removeItem('explorerId');

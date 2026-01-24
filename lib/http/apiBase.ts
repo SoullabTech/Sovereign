@@ -56,10 +56,11 @@ export function apiUrl(path: string): string {
  * Call from console: window.__pingHealth?.()
  */
 export async function pingHealth(): Promise<void> {
-  const url = apiUrl('/api/health');
-  console.log('[ios-debug] pinging health endpoint:', url);
+  const url = '/api/health';
+  console.log('[ios-debug] pinging health endpoint:', apiUrl(url));
   try {
-    const r = await fetch(url, { method: 'GET', mode: 'cors', credentials: 'include' });
+    // Use apiFetch for consistent behavior on native
+    const r = await apiFetch(url, { method: 'GET' });
     const t = await r.text();
     console.log('[ios-debug] health response:', r.status, t.slice(0, 200));
     alert(`Health ${r.status}: ${t.slice(0, 200)}`);
@@ -187,11 +188,9 @@ export async function healIdentity(): Promise<HealedIdentity | null> {
 
     console.log('[healIdentity] Attempting to heal identity via:', queryParam);
 
-    const response = await fetch(apiUrl(`/api/members/profile?${queryParam}`), {
+    // Use apiFetch for consistent auth handling (adds x-member-id on native)
+    const response = await apiFetch(`/api/members/profile?${queryParam}`, {
       method: 'GET',
-      mode: 'cors',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
     });
 
     if (!response.ok) {
@@ -270,10 +269,25 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Enhanced fetch for API calls - automatically adds x-member-id header for Capacitor apps
+ * Check if we're running in a native Capacitor environment
+ */
+export function isNativeCapacitor(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    (window as any).Capacitor &&
+    (window as any).Capacitor.isNativePlatform?.()
+  );
+}
+
+/**
+ * Enhanced fetch for API calls - uses CapacitorHttp on native platforms
  *
- * For Capacitor/iOS apps, cookies with SameSite: 'lax' aren't sent cross-origin.
- * This wrapper adds the x-member-id header which the middleware accepts for auth.
+ * For Capacitor/iOS apps:
+ * - Uses CapacitorHttp directly to bypass Capacitor's fetch interceptor
+ * - Always adds x-member-id header for auth (cookies don't work cross-origin)
+ *
+ * For web:
+ * - Uses standard fetch with credentials: 'include'
  *
  * Usage:
  *   import { apiFetch } from '@/lib/http/apiBase';
@@ -287,7 +301,134 @@ export async function apiFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   const url = apiUrl(path);
+  const method = (options.method || 'GET').toUpperCase();
 
+  // For native Capacitor: use CapacitorHttp directly (bypasses fetch interceptor)
+  if (isNativeCapacitor()) {
+    return apiFetchNative(url, method, options);
+  }
+
+  // For web: use standard fetch
+  return apiFetchWeb(url, options);
+}
+
+/**
+ * Native Capacitor implementation using CapacitorHttp
+ * This bypasses the fetch interceptor and uses native iOS/Android networking
+ */
+async function apiFetchNative(
+  url: string,
+  method: string,
+  options: RequestInit
+): Promise<Response> {
+  // Dynamic import to avoid loading Capacitor on web
+  const { CapacitorHttp } = await import('@capacitor/core');
+
+  // Build headers object
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
+  // Copy existing headers
+  if (options.headers) {
+    const existingHeaders = options.headers as HeadersInit;
+    if (existingHeaders instanceof Headers) {
+      existingHeaders.forEach((value, key) => {
+        headers[key] = value;
+      });
+    } else if (Array.isArray(existingHeaders)) {
+      existingHeaders.forEach(([key, value]) => {
+        headers[key] = value;
+      });
+    } else {
+      Object.entries(existingHeaders).forEach(([key, value]) => {
+        if (value) headers[key] = value;
+      });
+    }
+  }
+
+  // ALWAYS add x-member-id for Capacitor (cookies don't work cross-origin)
+  const memberId = getValidMemberId();
+  if (memberId) {
+    headers['x-member-id'] = memberId;
+    console.log('[apiFetch/native] Using CapacitorHttp with x-member-id:', memberId.slice(0, 8) + '...');
+  } else {
+    console.warn('[apiFetch/native] No valid member ID - auth may fail. URL:', url);
+  }
+
+  // Parse body if it's a string (likely JSON)
+  let data: any = undefined;
+  if (options.body) {
+    if (typeof options.body === 'string') {
+      try {
+        data = JSON.parse(options.body);
+      } catch {
+        data = options.body;
+      }
+    } else {
+      data = options.body;
+    }
+  }
+
+  console.log(`[apiFetch/native] ${method} ${url}`);
+
+  try {
+    let nativeResponse;
+
+    // CapacitorHttp has different methods for different HTTP verbs
+    const requestOptions = {
+      url,
+      headers,
+      data,
+    };
+
+    switch (method) {
+      case 'GET':
+        nativeResponse = await CapacitorHttp.get(requestOptions);
+        break;
+      case 'POST':
+        nativeResponse = await CapacitorHttp.post(requestOptions);
+        break;
+      case 'PUT':
+        nativeResponse = await CapacitorHttp.put(requestOptions);
+        break;
+      case 'PATCH':
+        nativeResponse = await CapacitorHttp.patch(requestOptions);
+        break;
+      case 'DELETE':
+        nativeResponse = await CapacitorHttp.delete(requestOptions);
+        break;
+      default:
+        nativeResponse = await CapacitorHttp.request({ ...requestOptions, method });
+    }
+
+    console.log(`[apiFetch/native] Response status: ${nativeResponse.status}`);
+
+    // Convert CapacitorHttp response to standard Response object
+    // CapacitorHttp returns { status, headers, data }
+    const responseBody = typeof nativeResponse.data === 'string'
+      ? nativeResponse.data
+      : JSON.stringify(nativeResponse.data);
+
+    return new Response(responseBody, {
+      status: nativeResponse.status,
+      statusText: nativeResponse.status >= 200 && nativeResponse.status < 300 ? 'OK' : 'Error',
+      headers: new Headers(nativeResponse.headers || {}),
+    });
+  } catch (error) {
+    console.error('[apiFetch/native] Request failed:', error);
+    // Return a Response-like error so callers can handle it consistently
+    return new Response(JSON.stringify({ error: 'Network request failed', details: String(error) }), {
+      status: 0,
+      statusText: 'Network Error',
+    });
+  }
+}
+
+/**
+ * Web implementation using standard fetch
+ */
+async function apiFetchWeb(url: string, options: RequestInit): Promise<Response> {
   // Build headers - start with existing headers
   const headers = new Headers(options.headers);
 
@@ -296,27 +437,10 @@ export async function apiFetch(
     headers.set('Content-Type', 'application/json');
   }
 
-  // For Capacitor apps, add x-member-id header for auth
-  // (cookies with SameSite: 'lax' won't be sent cross-origin)
-  const isCapacitor =
-    typeof window !== 'undefined' &&
-    (window as any).Capacitor &&
-    (window as any).Capacitor.isNativePlatform?.();
-
-  if (isCapacitor) {
-    const memberId = getValidMemberId();
-    if (memberId) {
-      headers.set('x-member-id', memberId);
-      console.log('[apiFetch] Added x-member-id header for Capacitor:', memberId.slice(0, 8) + '...');
-    } else {
-      console.warn('[apiFetch] No valid member ID for Capacitor request - auth may fail');
-    }
-  }
-
   return fetch(url, {
     ...options,
     headers,
-    credentials: 'include', // Still include for non-Capacitor
+    credentials: 'include',
     mode: 'cors',
   });
 }

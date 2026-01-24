@@ -234,11 +234,16 @@ function SigninContent() {
 
         await trustThisDevice();
 
-        if (res.member.onboarded) {
-          router.push('/maia');
-        } else {
-          router.push('/begin');
-        }
+        // DEBUG: Log onboarded status for passkey signin
+        console.log('[SIGNIN/PASSKEY] member.onboarded:', res.member.onboarded);
+
+        // TEMP FIX: Always go to /maia for debugging - remove after fixing
+        router.push('/maia');
+        // if (res.member.onboarded) {
+        //   router.push('/maia');
+        // } else {
+        //   router.push('/begin');
+        // }
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Biometric sign-in failed');
