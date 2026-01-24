@@ -43,7 +43,7 @@ const config: CapacitorConfig = {
     'SharePlugin',
     'SplashScreenPlugin',
     'StatusBarPlugin',
-    'CapacitorVoiceRecorder'
+    'VoiceRecorder'
   ],
   plugins: {
     SplashScreen: {

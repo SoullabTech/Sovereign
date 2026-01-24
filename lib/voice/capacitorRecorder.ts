@@ -1,9 +1,9 @@
 // Native voice recording adapter for iOS/Android
-// Uses @lgicc/capacitor-voice-recorder for reliable native mic access
+// Uses capacitor-voice-recorder for reliable native mic access
 // Bypasses WKWebView media stack issues on iOS
 
 import { Capacitor } from '@capacitor/core';
-import { CapacitorVoiceRecorder } from '@lgicc/capacitor-voice-recorder';
+import { VoiceRecorder } from 'capacitor-voice-recorder';
 import { VoiceController } from './AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
 
@@ -66,13 +66,13 @@ export function isNativeApp(): boolean {
  */
 export async function canRecordNative(): Promise<{ available: boolean; status: PermissionStatus }> {
   try {
-    const result = await CapacitorVoiceRecorder.canRecord();
+    const result = await VoiceRecorder.hasAudioRecordingPermission();
     return {
-      available: result.status === 'GRANTED',
-      status: result.status as PermissionStatus
+      available: result.value === true,
+      status: result.value ? 'GRANTED' : 'DENIED'
     };
   } catch (error) {
-    console.error('[NativeRecorder] canRecord error:', error);
+    console.error('[NativeRecorder] hasAudioRecordingPermission error:', error);
     return { available: false, status: 'DENIED' };
   }
 }
@@ -88,17 +88,19 @@ export async function ensureNativeMicPermission(): Promise<void> {
     throw new Error('IOS_VOICE_NATIVE_DISABLED');
   }
 
-  const { status } = await CapacitorVoiceRecorder.canRecord();
-  console.log('[NativeRecorder] Current permission status:', status);
+  const permResult = await VoiceRecorder.hasAudioRecordingPermission();
+  console.log('[NativeRecorder] Current permission status:', permResult.value);
 
-  if (status === 'GRANTED') return;
+  if (permResult.value === true) return;
 
-  // Request permission (no options in this plugin version)
+  // Request permission
   console.log('[NativeRecorder] Requesting permission...');
   try {
-    const req = await CapacitorVoiceRecorder.requestPermission();
-    // If we get here, permission was granted (returns { isGranted: true })
-    console.log('[NativeRecorder] Permission granted:', req.isGranted);
+    const req = await VoiceRecorder.requestAudioRecordingPermission();
+    console.log('[NativeRecorder] Permission granted:', req.value);
+    if (!req.value) {
+      throw new Error('MIC_PERMISSION_DENIED');
+    }
   } catch (err: any) {
     // Permission denied
     console.error('[NativeRecorder] Permission denied:', err);
@@ -141,7 +143,7 @@ export async function startNativeRecording(): Promise<void> {
   console.log('[NativeRecorder] Permission verified, calling startRecording()...');
 
   // Step 3: Start recording
-  await CapacitorVoiceRecorder.startRecording();
+  await VoiceRecorder.startRecording();
   console.log('[NativeRecorder] ✅ Recording started successfully');
 }
 
@@ -151,7 +153,7 @@ export async function startNativeRecording(): Promise<void> {
  */
 export async function stopNativeRecording(): Promise<NativeVoiceStopResult> {
   console.log('[NativeRecorder] Stopping recording...');
-  const result = await CapacitorVoiceRecorder.stopRecording();
+  const result = await VoiceRecorder.stopRecording();
 
   // Return audio session to idle state after recording stops
   if (VoiceController.isNativeIOS()) {
@@ -159,33 +161,37 @@ export async function stopNativeRecording(): Promise<NativeVoiceStopResult> {
     await VoiceController.stopAllAudio();
   }
 
+  // New API: result.value contains { recordDataBase64, msDuration, mimeType }
+  const recordData = result.value;
+  const base64 = recordData.recordDataBase64 || '';
+  const msDuration = recordData.msDuration || 0;
+  const mimeType = recordData.mimeType || 'audio/wav';
+
   // DIAGNOSTIC: Log detailed info about captured audio
-  const hasDataUriPrefix = result.base64?.includes('base64,') || false;
+  const hasDataUriPrefix = base64.includes('base64,');
   console.log('[NativeRecorder] Raw result:', JSON.stringify({
-    hasMsDuration: 'msDuration' in result,
-    msDuration: result.msDuration,
-    hasBase64: 'base64' in result,
-    base64Length: result.base64?.length || 0,
+    hasMsDuration: msDuration > 0,
+    msDuration,
+    hasBase64: base64.length > 0,
+    base64Length: base64.length,
     hasDataUriPrefix,
-    base64Preview: result.base64?.substring(0, 50) || '(empty)',
-    hasSize: 'size' in result,
-    size: (result as any).size
+    base64Preview: base64.substring(0, 50) || '(empty)',
+    mimeType
   }));
 
-  // Plugin returns base64 + msDuration + size (wav by default)
-  const bytes = base64ToUint8Array(result.base64);
-  const mimeType = 'audio/wav';
+  // Plugin returns base64 + msDuration
+  const bytes = base64ToUint8Array(base64);
   // Cast to ArrayBuffer for Blob compatibility
   const blob = new Blob([bytes.buffer as ArrayBuffer], { type: mimeType });
 
   console.log('[NativeRecorder] Audio captured:', {
-    durationMs: result.msDuration,
-    base64Chars: result.base64?.length || 0,
+    durationMs: msDuration,
+    base64Chars: base64.length,
     blobBytes: blob.size,
     mimeType
   });
 
-  return { blob, mimeType, durationMs: result.msDuration };
+  return { blob, mimeType, durationMs: msDuration };
 }
 
 /**
@@ -193,7 +199,7 @@ export async function stopNativeRecording(): Promise<NativeVoiceStopResult> {
  */
 export async function isCurrentlyRecording(): Promise<boolean> {
   try {
-    const status = await CapacitorVoiceRecorder.getCurrentStatus();
+    const status = await VoiceRecorder.getCurrentStatus();
     return status.status === 'RECORDING';
   } catch {
     return false;
@@ -204,14 +210,14 @@ export async function isCurrentlyRecording(): Promise<boolean> {
  * Pause recording (if supported)
  */
 export async function pauseNativeRecording(): Promise<void> {
-  await CapacitorVoiceRecorder.pauseRecording();
+  await VoiceRecorder.pauseRecording();
 }
 
 /**
  * Resume recording (if supported)
  */
 export async function resumeNativeRecording(): Promise<void> {
-  await CapacitorVoiceRecorder.resumeRecording();
+  await VoiceRecorder.resumeRecording();
 }
 
 /**

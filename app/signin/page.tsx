@@ -351,7 +351,7 @@ function SigninContent() {
 
     try {
       if (Capacitor.isNativePlatform()) {
-        const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+        const { GoogleAuth } = await import('@southdevs/capacitor-google-auth');
         await GoogleAuth.initialize({
           clientId: process.env.NEXT_PUBLIC_GOOGLE_IOS_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_WEB_CLIENT_ID || '',
           scopes: ['profile', 'email'],
