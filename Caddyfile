@@ -133,8 +133,7 @@ soullab.life {
     }
 
     # API requests (non-streaming)
-    # NOTE: CORS headers are handled by Next.js API routes (lib/sovereign/http)
-    # Do NOT add CORS headers here - it causes "multiple origin" errors
+    # Add CORS headers for Capacitor/mobile app responses
     @api {
         path /api/*
     }
@@ -144,6 +143,28 @@ soullab.life {
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
             header_up X-Forwarded-Proto {scheme}
+        }
+        # Add CORS headers to responses for mobile origins
+        @api_capacitor {
+            header Origin capacitor://localhost
+        }
+        header @api_capacitor {
+            Access-Control-Allow-Origin "capacitor://localhost"
+            Access-Control-Allow-Credentials "true"
+        }
+        @api_ionic {
+            header Origin ionic://localhost
+        }
+        header @api_ionic {
+            Access-Control-Allow-Origin "ionic://localhost"
+            Access-Control-Allow-Credentials "true"
+        }
+        @api_null {
+            header Origin null
+        }
+        header @api_null {
+            Access-Control-Allow-Origin "null"
+            Access-Control-Allow-Credentials "true"
         }
     }
 
