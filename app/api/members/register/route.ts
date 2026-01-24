@@ -54,7 +54,8 @@ export async function POST(request: NextRequest) {
     }
 
     const normalizedPasskey = passkey.toUpperCase().trim();
-    const normalizedUsername = username.toLowerCase().trim();
+    // Preserve user's chosen casing for display, trim whitespace only
+    const cleanUsername = username.trim();
 
     // Validate passkey format for admin passkeys
     if (!isAdminPasskey(normalizedPasskey)) {
@@ -79,14 +80,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if username already taken
+    // Check if username already taken (case-insensitive)
     const existingUsername = await safeQuery(
-      'SELECT id FROM members WHERE username = $1',
-      [normalizedUsername]
+      'SELECT id FROM members WHERE LOWER(username) = LOWER($1)',
+      [cleanUsername]
     );
 
     if (existingUsername.rows.length > 0) {
-      console.log(`[MEMBERS] Username already taken: ${normalizedUsername}`);
+      console.log(`[MEMBERS] Username already taken: ${cleanUsername}`);
       return NextResponse.json(
         { error: 'Username already taken. Please choose a different one.' },
         { status: 409 }
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
        )
        VALUES ($1, $2, $3, $4, $5, 'test-elemental')
        RETURNING id, username, name, onboarded, onboarding_step, created_at`,
-      [normalizedPasskey, normalizedUsername, passwordHash, displayName, email]
+      [normalizedPasskey, cleanUsername, passwordHash, displayName, email]
     );
 
     if (result.error) {
@@ -157,7 +158,7 @@ export async function POST(request: NextRequest) {
     }
 
     const member = result.rows[0];
-    console.log(`[MEMBERS] Successfully registered: ${normalizedUsername} (${member.id})`);
+    console.log(`[MEMBERS] Successfully registered: ${cleanUsername} (${member.id})`);
 
     // Try to update invite status (optional - might fail if table missing)
     // Conditional WHERE prevents double-redemption race condition
