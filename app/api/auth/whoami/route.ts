@@ -14,6 +14,50 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSession, getSessionFromCookie } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
 
+// =============================================================================
+// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
+// =============================================================================
+
+const ALLOWED_ORIGINS = new Set([
+  'https://soullab.life',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'ionic://localhost',
+  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
+]);
+
+function getCorsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin');
+
+  let allowedOrigin: string;
+  if (origin === 'null') {
+    allowedOrigin = 'null';
+  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
+    allowedOrigin = origin;
+  } else {
+    allowedOrigin = 'https://soullab.life';
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
+
+/**
+ * CORS Preflight Handler
+ */
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 export type WhoamiReason =
   | 'no_cookie'
   | 'invalid_session'
@@ -46,6 +90,7 @@ export interface WhoamiResponse {
  */
 export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResponse>> {
   const startTime = Date.now();
+  const corsHeaders = getCorsHeaders(request);
 
   try {
     // Check if session cookie exists
@@ -61,7 +106,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
         authed: false,
         reason: 'no_cookie',
         debug: { hasCookie: false },
-      });
+      }, { headers: corsHeaders });
     }
 
     // If we have a member ID header but no cookie, look up member directly
@@ -81,7 +126,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
           authed: false,
           reason: 'member_not_found',
           debug: { hasCookie: false },
-        });
+        }, { headers: corsHeaders });
       }
 
       const member = memberResult.rows[0];
@@ -99,7 +144,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
         debug: {
           hasCookie: false,
         },
-      });
+      }, { headers: corsHeaders });
     }
 
     // At this point, sessionToken must exist (we returned early if it didn't)
@@ -134,7 +179,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
           hasCookie: true,
           cookieLength: validSessionToken.length,
         },
-      });
+      }, { headers: corsHeaders });
     }
 
     // Session valid - fetch member details
@@ -155,7 +200,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
           hasCookie: true,
           cookieLength: validSessionToken.length,
         },
-      });
+      }, { headers: corsHeaders });
     }
 
     const member = memberResult.rows[0];
@@ -179,7 +224,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
     // Log for monitoring (but not the session token itself)
     console.log(`[WHOAMI] Authenticated: ${member.username} (${Date.now() - startTime}ms)`);
 
-    return NextResponse.json(response);
+    return NextResponse.json(response, { headers: corsHeaders });
   } catch (error) {
     console.error('[WHOAMI] Error:', error);
     return NextResponse.json(
@@ -188,7 +233,7 @@ export async function GET(request: NextRequest): Promise<NextResponse<WhoamiResp
         reason: 'invalid_session',
         debug: { hasCookie: false },
       },
-      { status: 500 }
+      { status: 500, headers: corsHeaders }
     );
   }
 }
