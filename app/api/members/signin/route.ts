@@ -12,6 +12,50 @@ import { query } from '@/lib/db/postgres';
 import crypto from 'crypto';
 import { verifyPassword, hashPassword } from '@/lib/auth/passwordUtils';
 
+// =============================================================================
+// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
+// =============================================================================
+
+const ALLOWED_ORIGINS = new Set([
+  'https://soullab.life',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'ionic://localhost',
+  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
+]);
+
+function getCorsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin');
+
+  let allowedOrigin: string;
+  if (origin === 'null') {
+    allowedOrigin = 'null';
+  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
+    allowedOrigin = origin;
+  } else {
+    allowedOrigin = 'https://soullab.life';
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
+
+/**
+ * CORS Preflight Handler
+ */
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 function newSessionToken(): string {
   return crypto.randomBytes(32).toString('hex'); // 64 chars
 }
@@ -23,13 +67,15 @@ function sessionExpiresAt(days = 30): Date {
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
+
   try {
     const { username, password } = await request.json();
 
     if (!username || !password) {
       return NextResponse.json(
         { error: 'Username and password required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -45,7 +91,7 @@ export async function POST(request: NextRequest) {
       console.log(`[MEMBERS] Sign in failed: user not found - ${username}`);
       return NextResponse.json(
         { error: 'Invalid username or password' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -57,7 +103,7 @@ export async function POST(request: NextRequest) {
       console.log(`[MEMBERS] Sign in failed: wrong password - member=${member.id.slice(0, 8)}`);
       return NextResponse.json(
         { error: 'Invalid username or password' },
-        { status: 401 }
+        { status: 401, headers: corsHeaders }
       );
     }
 
@@ -162,13 +208,13 @@ export async function POST(request: NextRequest) {
         name: practitioner.name
       } : null,
       needsPasswordChange
-    });
+    }, { headers: corsHeaders });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[MEMBERS] Sign in error: ${message}`);
     return NextResponse.json(
       { error: 'Failed to sign in' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(request) }
     );
   }
 }
