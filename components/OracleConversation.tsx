@@ -38,7 +38,39 @@ import { MotionState, CoherenceShift } from './motion/MotionOrchestrator';
 import { OracleResponse, ConversationContext as OracleConversationContext } from '@/lib/oracle-response';
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
-import { apiUrl, apiFetch } from '@/lib/http/apiBase';
+import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+import { CapacitorHttp } from '@capacitor/core';
+
+/**
+ * Safe base64 to ArrayBuffer decoder that handles large strings
+ * atob() can fail on large base64 strings in some environments
+ */
+function base64ToArrayBuffer(b64: string): ArrayBuffer {
+  // Remove whitespace/newlines (some implementations insert them)
+  const clean = b64.replace(/\s/g, '');
+
+  // Convert in slices to avoid atob() exploding on large strings
+  const sliceSize = 1024 * 1024; // 1MB base64 chunks (safe)
+  const byteArrays: Uint8Array[] = [];
+
+  for (let offset = 0; offset < clean.length; offset += sliceSize) {
+    const chunk = clean.slice(offset, offset + sliceSize);
+    const binaryString = atob(chunk);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+    byteArrays.push(bytes);
+  }
+
+  const totalLen = byteArrays.reduce((sum, a) => sum + a.length, 0);
+  const merged = new Uint8Array(totalLen);
+  let pos = 0;
+  for (const a of byteArrays) {
+    merged.set(a, pos);
+    pos += a.length;
+  }
+
+  return merged.buffer;
+}
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
@@ -830,28 +862,128 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       setIsResponding(true);
 
-      // Call OpenAI TTS with voice settings from account preferences
-      const response = await apiFetch('/api/voice/openai-tts', {
-        method: 'POST',
-        body: JSON.stringify({
-          text: text,
-          voice: voiceSettings.voice,
-          speed: voiceSettings.speed,
-          model: voiceSettings.model
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to generate speech');
-      }
-
-      const audioBlob = await response.blob();
-
       // 🔥 iOS Safari Fix: Use Web Audio API decodeAudioData instead of HTMLAudioElement
       // HTMLAudioElement.play() requires a user gesture for EACH element on iOS
       // But AudioContext.decodeAudioData() works once the context is unlocked
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+      // Check if we're in Capacitor (CapacitorHttp doesn't handle binary blobs correctly)
+      const isCapacitor = typeof window !== 'undefined' &&
+                          (window as any).Capacitor?.isNativePlatform?.();
+
+      let audioBlob: Blob | null = null;
+      let arrayBuffer: ArrayBuffer | null = null;
+
+      // For Capacitor: Use native HTTP plugin directly to get binary data
+      // The fetch polyfill returns empty blobs for binary responses
+      if (isCapacitor) {
+        console.log('📱 [iOS] Using Capacitor native HTTP for TTS binary fetch');
+        const memberId = getValidMemberId();
+        const ttsUrl = apiUrl('/api/voice/openai-tts');
+
+        const nativeResponse = await CapacitorHttp.post({
+          url: ttsUrl,
+          headers: {
+            'Content-Type': 'application/json',
+            ...(memberId ? { 'x-member-id': memberId } : {}),
+          },
+          data: {
+            text: text,
+            voice: voiceSettings.voice,
+            speed: voiceSettings.speed,
+            model: voiceSettings.model
+          },
+          responseType: 'arraybuffer',
+        });
+
+        // Detailed logging to diagnose what we received
+        console.log('📱 [TTS] status:', nativeResponse.status);
+        console.log('📱 [TTS] headers:', JSON.stringify(nativeResponse.headers));
+
+        if (nativeResponse.status !== 200) {
+          console.error('📱 [TTS] Request failed with status:', nativeResponse.status);
+          throw new Error('Failed to generate speech');
+        }
+
+        // CapacitorHttp can return data in multiple formats depending on version/platform
+        const data: any = nativeResponse.data;
+        console.log('📱 [TTS] data typeof:', typeof data);
+        console.log('📱 [TTS] data isArray:', Array.isArray(data));
+
+        if (typeof data === 'string') {
+          console.log('📱 [TTS] base64 length:', data.length);
+          console.log('📱 [TTS] base64 head:', data.slice(0, 32));
+        }
+
+        // 1) Already an ArrayBuffer
+        if (data instanceof ArrayBuffer) {
+          arrayBuffer = data;
+          console.log('📱 [TTS] Data is ArrayBuffer, size:', arrayBuffer.byteLength);
+        }
+        // 2) Uint8Array
+        else if (data instanceof Uint8Array) {
+          arrayBuffer = data.buffer;
+          console.log('📱 [TTS] Data is Uint8Array, size:', arrayBuffer.byteLength);
+        }
+        // 3) Base64 string (most common on iOS) - use safe chunked decoder
+        else if (typeof data === 'string' && data.length > 0) {
+          console.log('📱 [TTS] Decoding base64 string with safe chunked decoder...');
+          try {
+            arrayBuffer = base64ToArrayBuffer(data);
+            console.log('📱 [TTS] Base64 decoded successfully, size:', arrayBuffer.byteLength);
+          } catch (decodeErr) {
+            console.error('📱 [TTS] Base64 decode failed:', decodeErr);
+            throw new Error('Failed to decode audio data');
+          }
+        }
+        // 4) Some platforms return { data: number[] }
+        else if (data && Array.isArray(data.data)) {
+          console.log('📱 [TTS] Data is { data: number[] }, length:', data.data.length);
+          arrayBuffer = new Uint8Array(data.data).buffer;
+        }
+        else {
+          console.error('📱 [TTS] Unexpected data shape:', typeof data, data);
+          throw new Error('Unexpected audio response format');
+        }
+
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error('No audio data received from TTS');
+        }
+
+        // Validate it looks like audio data (MP3 starts with ID3 or 0xFF)
+        const head = new Uint8Array(arrayBuffer.slice(0, 16));
+        console.log('📱 [TTS] first bytes:', Array.from(head));
+        const isMP3 = (head[0] === 0x49 && head[1] === 0x44 && head[2] === 0x33) || head[0] === 0xff;
+        if (!isMP3) {
+          console.warn('📱 [TTS] Data does not look like MP3; first bytes might be JSON error');
+          // Try to decode as text to see if it's an error message
+          try {
+            const textDecoder = new TextDecoder();
+            const possibleError = textDecoder.decode(arrayBuffer.slice(0, 200));
+            console.warn('📱 [TTS] Possible error payload:', possibleError);
+          } catch {}
+        }
+        console.log(`📱 [TTS] ArrayBuffer ready, size: ${arrayBuffer.byteLength}, looksLikeMP3: ${isMP3}`);
+      } else {
+        // Non-Capacitor: Use standard fetch
+        const response = await apiFetch('/api/voice/openai-tts', {
+          method: 'POST',
+          body: JSON.stringify({
+            text: text,
+            voice: voiceSettings.voice,
+            speed: voiceSettings.speed,
+            model: voiceSettings.model
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate speech');
+        }
+
+        audioBlob = await response.blob();
+        console.log(`🎵 Audio blob received: type=${audioBlob.type}, size=${audioBlob.size}`);
+      }
 
       if (isIOS && audioContextRef.current) {
         console.log('📱 [iOS] Using Web Audio API for playback');
@@ -861,8 +993,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           await audioContextRef.current.resume();
         }
 
-        // Convert blob to ArrayBuffer and decode
-        const arrayBuffer = await audioBlob.arrayBuffer();
+        // Get ArrayBuffer if we don't have it yet (non-Capacitor iOS path)
+        if (!arrayBuffer && audioBlob) {
+          arrayBuffer = await audioBlob.arrayBuffer();
+        }
+
+        if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+          throw new Error('No audio data to decode');
+        }
+
+        console.log(`📱 [iOS] ArrayBuffer size: ${arrayBuffer.byteLength}`);
+
+        // Validate we have actual audio data (MP3 starts with 0xFF 0xFB or ID3)
+        const header = new Uint8Array(arrayBuffer.slice(0, 4));
+        const headerHex = Array.from(header).map(b => b.toString(16).padStart(2, '0')).join(' ');
+        console.log(`📱 [iOS] Audio header bytes: ${headerHex}`);
+
         const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
 
         const duration = audioBuffer.duration;
@@ -925,6 +1071,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       } else {
         // Non-iOS: Use HTMLAudioElement (works fine on desktop browsers)
+        if (!audioBlob) {
+          throw new Error('No audio blob available for playback');
+        }
         const audioUrl = URL.createObjectURL(audioBlob);
         const audio = new Audio(audioUrl);
         audio.crossOrigin = 'anonymous';
@@ -999,6 +1148,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           });
         });
       }
+
+      // 🔥 CRITICAL: Reset states after successful audio playback (both iOS and non-iOS paths)
+      // Without this, the app gets stuck thinking audio is playing and won't resume listening
+      console.log('✅ Audio playback completed successfully, resetting states');
+      setIsAudioPlaying(false);
+      setIsResponding(false);
 
     } catch (err) {
       console.error('❌ OpenAI TTS error (no fallback - OpenAI TTS only):', err);
@@ -1418,8 +1573,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     const trackingUserName = userName || 'Anonymous User';
     userTracker.trackUserRegistration(trackingUserId, trackingUserName);
 
-    // Detect iOS for audio requirements
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    // Detect iOS for audio requirements (includes iPads in desktop mode)
+    const isIOS = (/iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     const isIOSSafari = isIOS && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
 
     // Enhanced Safari detection for audio unlock
