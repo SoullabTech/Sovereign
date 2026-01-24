@@ -315,8 +315,12 @@ jobs:
     permissions:
       contents: read
       packages: read
+      security-events: write
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
       - name: Compute lowercase image ref
         id: img
         shell: bash
@@ -339,6 +343,6 @@ jobs:
           output: 'trivy-results.sarif'
 
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@v2
+        uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: 'trivy-results.sarif'
