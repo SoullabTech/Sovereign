@@ -805,8 +805,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       rhythmTrackerRef.current?.onMAIAResponse();
 
       setIsResponding(true);
-      // 🔥 DON'T set isAudioPlaying here! It should only be true when audio ACTUALLY plays
-      // setIsAudioPlaying is now set in audio.onplay callback below
 
       // Call OpenAI TTS with voice settings from account preferences
       const response = await apiFetch('/api/voice/openai-tts', {
@@ -824,108 +822,162 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
 
       const audioBlob = await response.blob();
-      const audioUrl = URL.createObjectURL(audioBlob);
 
-      const audio = new Audio(audioUrl);
-      // Enable cross-origin for audio analysis
-      audio.crossOrigin = 'anonymous';
+      // 🔥 iOS Safari Fix: Use Web Audio API decodeAudioData instead of HTMLAudioElement
+      // HTMLAudioElement.play() requires a user gesture for EACH element on iOS
+      // But AudioContext.decodeAudioData() works once the context is unlocked
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-      // Play audio with proper loading and error handling
-      await new Promise<void>((resolve, reject) => {
-        let hasStarted = false;
-        let startTimeoutId: NodeJS.Timeout | null = null;
-        let playbackTimeoutId: NodeJS.Timeout | null = null;
+      if (isIOS && audioContextRef.current) {
+        console.log('📱 [iOS] Using Web Audio API for playback');
 
-        // Safety timeout - if audio doesn't start within 5s, fail fast
-        startTimeoutId = setTimeout(() => {
-          if (!hasStarted) {
-            audio.pause();
-            stopAudioAnalysis();
-            URL.revokeObjectURL(audioUrl);
-            reject(new Error('Audio failed to start within 5s'));
+        // Ensure AudioContext is running
+        if (audioContextRef.current.state === 'suspended') {
+          await audioContextRef.current.resume();
+        }
+
+        // Convert blob to ArrayBuffer and decode
+        const arrayBuffer = await audioBlob.arrayBuffer();
+        const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer);
+
+        const duration = audioBuffer.duration;
+        console.log(`✅ [iOS] Audio decoded, duration: ${duration.toFixed(1)}s`);
+
+        // Create source and connect to analyser for visualization
+        const source = audioContextRef.current.createBufferSource();
+        source.buffer = audioBuffer;
+
+        // Create analyser for visualization
+        if (!audioAnalyserRef.current) {
+          audioAnalyserRef.current = audioContextRef.current.createAnalyser();
+          audioAnalyserRef.current.fftSize = 256;
+          audioAnalyserRef.current.smoothingTimeConstant = 0.8;
+        }
+
+        source.connect(audioAnalyserRef.current);
+        audioAnalyserRef.current.connect(audioContextRef.current.destination);
+
+        // Start amplitude reading loop
+        const dataArray = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
+        let animationId: number | null = null;
+
+        const readAmplitude = () => {
+          if (!audioAnalyserRef.current) return;
+          audioAnalyserRef.current.getByteFrequencyData(dataArray);
+          let sum = 0;
+          for (let i = 0; i < dataArray.length; i++) {
+            sum += dataArray[i];
           }
-        }, 5000);
-
-        audio.onloadedmetadata = () => {
-          console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
-          console.log(`⏱️ [AUDIO] Expected playback: ${Math.round(audio.duration)}s for ${text.length} chars`);
-
-          // 🔥 FIX: Set playback timeout based on ACTUAL audio duration + 30s buffer
-          // This timeout only applies to playback, not TTS fetch
-          const playbackTimeout = (audio.duration + 30) * 1000;
-          console.log(`⏱️ [AUDIO] Setting playback timeout: ${playbackTimeout/1000}s`);
-          playbackTimeoutId = setTimeout(() => {
-            console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
-            audio.pause();
-            stopAudioAnalysis();
-            URL.revokeObjectURL(audioUrl);
-            reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
-          }, playbackTimeout);
+          const average = sum / dataArray.length / 255;
+          const scaledAmplitude = Math.min(1, average * 2.5);
+          setVoiceAmplitude(scaledAmplitude);
+          animationId = requestAnimationFrame(readAmplitude);
         };
 
-        audio.oncanplaythrough = () => {
-          console.log('✅ Audio can play through');
-        };
+        // Play with promise
+        await new Promise<void>((resolve, reject) => {
+          const playbackTimeout = setTimeout(() => {
+            console.error(`❌ [iOS] Playback timeout after ${duration + 30}s`);
+            if (animationId) cancelAnimationFrame(animationId);
+            setVoiceAmplitude(0);
+            reject(new Error('Audio playback timeout'));
+          }, (duration + 30) * 1000);
 
-        audio.onplay = () => {
-          console.log('▶️ Audio started playing');
-          hasStarted = true;
-          if (startTimeoutId) clearTimeout(startTimeoutId);
-          // 🔥 NOW set isAudioPlaying - audio is ACTUALLY playing
-          // This triggers the teal visualizer at the right moment
+          source.onended = () => {
+            console.log(`🔇 [iOS] MAIA finished speaking - ${duration.toFixed(1)}s`);
+            clearTimeout(playbackTimeout);
+            if (animationId) cancelAnimationFrame(animationId);
+            setVoiceAmplitude(0);
+            resolve();
+          };
+
+          // Start playback
           setIsAudioPlaying(true);
-          // Start real-time audio analysis
-          startAudioAnalysis(audio);
-        };
-
-        // Debug: Track if audio gets paused unexpectedly
-        audio.onpause = () => {
-          if (!audio.ended) {
-            console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s (NOT ended yet!)`);
-          }
-        };
-
-        audio.onended = () => {
-          const playedDuration = audio.currentTime;
-          const totalDuration = audio.duration;
-          console.log(`🔇 MAIA finished speaking (audio.onended) - played ${playedDuration.toFixed(1)}s of ${totalDuration.toFixed(1)}s`);
-          stopAudioAnalysis();
-          // 🔥 DON'T set isAudioPlaying/isResponding here!
-          // Let the caller handle state changes with proper cooldown timing
-          // to prevent mic from restarting before echo suppression window
-          URL.revokeObjectURL(audioUrl);
-          if (startTimeoutId) clearTimeout(startTimeoutId);
-          if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-          resolve();
-        };
-
-        audio.onerror = (e) => {
-          console.error('❌ Audio playback error:', e);
-          stopAudioAnalysis();
-          // For errors, reset states immediately (no audio to echo)
-          setIsResponding(false);
-          setIsAudioPlaying(false);
-          setIsMicrophonePaused(false);
-          URL.revokeObjectURL(audioUrl);
-          if (startTimeoutId) clearTimeout(startTimeoutId);
-          if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-          reject(new Error('Audio playback failed'));
-        };
-
-        // Start playback
-        audio.play().catch(err => {
-          console.error('❌ Audio.play() failed:', err);
-          stopAudioAnalysis();
-          if (startTimeoutId) clearTimeout(startTimeoutId);
-          if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
-          reject(err);
+          readAmplitude();
+          source.start(0);
+          console.log('▶️ [iOS] Audio started playing via Web Audio API');
         });
-      });
+
+      } else {
+        // Non-iOS: Use HTMLAudioElement (works fine on desktop browsers)
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.crossOrigin = 'anonymous';
+
+        await new Promise<void>((resolve, reject) => {
+          let hasStarted = false;
+          let startTimeoutId: NodeJS.Timeout | null = null;
+          let playbackTimeoutId: NodeJS.Timeout | null = null;
+
+          startTimeoutId = setTimeout(() => {
+            if (!hasStarted) {
+              audio.pause();
+              stopAudioAnalysis();
+              URL.revokeObjectURL(audioUrl);
+              reject(new Error('Audio failed to start within 5s'));
+            }
+          }, 5000);
+
+          audio.onloadedmetadata = () => {
+            console.log('✅ Audio metadata loaded, duration:', audio.duration, 'seconds');
+            const playbackTimeout = (audio.duration + 30) * 1000;
+            playbackTimeoutId = setTimeout(() => {
+              console.error(`❌ [AUDIO] Playback timeout! Audio at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+              audio.pause();
+              stopAudioAnalysis();
+              URL.revokeObjectURL(audioUrl);
+              reject(new Error(`Audio playback timeout after ${playbackTimeout/1000}s`));
+            }, playbackTimeout);
+          };
+
+          audio.onplay = () => {
+            console.log('▶️ Audio started playing');
+            hasStarted = true;
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            setIsAudioPlaying(true);
+            startAudioAnalysis(audio);
+          };
+
+          audio.onpause = () => {
+            if (!audio.ended) {
+              console.warn(`⚠️ [AUDIO] Paused at ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            }
+          };
+
+          audio.onended = () => {
+            console.log(`🔇 MAIA finished speaking - ${audio.currentTime.toFixed(1)}s of ${audio.duration.toFixed(1)}s`);
+            stopAudioAnalysis();
+            URL.revokeObjectURL(audioUrl);
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            resolve();
+          };
+
+          audio.onerror = (e) => {
+            console.error('❌ Audio playback error:', e);
+            stopAudioAnalysis();
+            setIsResponding(false);
+            setIsAudioPlaying(false);
+            setIsMicrophonePaused(false);
+            URL.revokeObjectURL(audioUrl);
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            reject(new Error('Audio playback failed'));
+          };
+
+          audio.play().catch(err => {
+            console.error('❌ Audio.play() failed:', err);
+            stopAudioAnalysis();
+            if (startTimeoutId) clearTimeout(startTimeoutId);
+            if (playbackTimeoutId) clearTimeout(playbackTimeoutId);
+            reject(err);
+          });
+        });
+      }
 
     } catch (err) {
       console.error('❌ OpenAI TTS error (no fallback - OpenAI TTS only):', err);
-      // NO browser TTS fallback - we only use OpenAI TTS
-      // If OpenAI fails, stay silent rather than use robotic browser voice
       stopAudioAnalysis();
       setIsResponding(false);
       setIsAudioPlaying(false);
@@ -4184,8 +4236,8 @@ I'm not sure what I'm feeling yet.`;
 
   return (
     <div className="oracle-conversation min-h-screen bg-soul-background overflow-hidden">
-      {/* iOS Audio Enable Button - DISABLED - causing black screen */}
-      {false && needsIOSAudioPermission && (
+      {/* iOS Audio Enable Button - Required for TTS on iOS Safari */}
+      {needsIOSAudioPermission && (
         <div className="modal-backdrop fixed inset-0 bg-black/80 backdrop-blur flex items-center justify-center">
           <div className="max-w-md p-8 text-center">
             <button

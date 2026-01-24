@@ -438,7 +438,7 @@ export default function SignupPage() {
                 disabled={isLoading}
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.99 }}
-                className="w-full rounded-2xl border border-teal-400/40 bg-teal-600/90 px-4 py-3 text-white font-medium hover:bg-teal-500/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+                className="w-full rounded-2xl border border-teal-700 bg-teal-700 px-4 py-3 text-white font-medium hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
               >
                 {isLoading ? (
                   'Creating account...'
