@@ -218,7 +218,7 @@ jobs:
 
       - name: Notify deployment
         uses: 8398a7/action-slack@v3
-        if: always() && secrets.SLACK_WEBHOOK != ''
+        if: ${{ always() && secrets.SLACK_WEBHOOK != '' }}
         continue-on-error: true
         with:
           status: ${{ job.status }}
@@ -257,7 +257,7 @@ jobs:
           curl -f ${{ secrets.PRODUCTION_URL }}/api/health || exit 1
 
       - name: Update monitoring
-        if: secrets.MONITORING_WEBHOOK != ''
+        if: ${{ secrets.MONITORING_WEBHOOK != '' }}
         continue-on-error: true
         run: |
           curl -X POST "${{ secrets.MONITORING_WEBHOOK }}" \
@@ -266,7 +266,7 @@ jobs:
 
       - name: Notify successful deployment
         uses: 8398a7/action-slack@v3
-        if: secrets.SLACK_WEBHOOK != ''
+        if: ${{ secrets.SLACK_WEBHOOK != '' }}
         continue-on-error: true
         with:
           status: success
