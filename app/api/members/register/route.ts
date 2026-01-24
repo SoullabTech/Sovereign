@@ -16,6 +16,50 @@ import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
 
+// =============================================================================
+// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
+// =============================================================================
+
+const ALLOWED_ORIGINS = new Set([
+  'https://soullab.life',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'ionic://localhost',
+  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
+]);
+
+function getCorsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin');
+
+  let allowedOrigin: string;
+  if (origin === 'null') {
+    allowedOrigin = 'null';
+  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
+    allowedOrigin = origin;
+  } else {
+    allowedOrigin = 'https://soullab.life';
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
+
+/**
+ * CORS Preflight Handler
+ */
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 // Check if passkey is an admin passkey (always allowed)
 function isAdminPasskey(passkey: string): boolean {
   const adminPrefixes = ['SOULLAB-', 'MAIA-', 'PIONEER-', 'FOUNDING-'];
@@ -39,6 +83,8 @@ async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: R
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
+
   try {
     const body = await request.json();
     const { passkey, username, password, name, email, preferredName } = body;
@@ -49,7 +95,7 @@ export async function POST(request: NextRequest) {
       console.log('[MEMBERS] Missing required fields');
       return NextResponse.json(
         { error: 'Passkey, username, and password required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -62,7 +108,7 @@ export async function POST(request: NextRequest) {
       console.log(`[MEMBERS] Invalid passkey format: ${normalizedPasskey}`);
       return NextResponse.json(
         { error: 'Invalid passkey format. Contact support for a valid passkey.' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -76,7 +122,7 @@ export async function POST(request: NextRequest) {
       console.log(`[MEMBERS] Passkey already registered: ${normalizedPasskey}`);
       return NextResponse.json(
         { error: 'This passkey has already been used. If this is you, try signing in instead.' },
-        { status: 409 }
+        { status: 409, headers: corsHeaders }
       );
     }
 
@@ -90,7 +136,7 @@ export async function POST(request: NextRequest) {
       console.log(`[MEMBERS] Username already taken: ${cleanUsername}`);
       return NextResponse.json(
         { error: 'Username already taken. Please choose a different one.' },
-        { status: 409 }
+        { status: 409, headers: corsHeaders }
       );
     }
 
@@ -109,7 +155,7 @@ export async function POST(request: NextRequest) {
       if (invite.status !== 'pending') {
         return NextResponse.json(
           { error: `This invite has already been ${invite.status}` },
-          { status: 400 }
+          { status: 400, headers: corsHeaders }
         );
       }
 
@@ -118,7 +164,7 @@ export async function POST(request: NextRequest) {
         await safeQuery('UPDATE invites SET status = $1 WHERE id = $2 AND status = $3', ['expired', invite.id, 'pending']);
         return NextResponse.json(
           { error: 'This invite has expired. Please request a new one.' },
-          { status: 400 }
+          { status: 400, headers: corsHeaders }
         );
       }
 
@@ -145,7 +191,7 @@ export async function POST(request: NextRequest) {
       console.error(`[MEMBERS] Insert failed: ${result.error}`);
       return NextResponse.json(
         { error: 'Registration failed. Please try again or contact support.' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
 
@@ -153,7 +199,7 @@ export async function POST(request: NextRequest) {
       console.error('[MEMBERS] Insert returned no rows');
       return NextResponse.json(
         { error: 'Registration failed. Please try again.' },
-        { status: 500 }
+        { status: 500, headers: corsHeaders }
       );
     }
 
@@ -191,7 +237,7 @@ export async function POST(request: NextRequest) {
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
       }
-    });
+    }, { headers: corsHeaders });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -201,7 +247,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: 'Registration failed. Please try again or contact support.' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(request) }
     );
   }
 }

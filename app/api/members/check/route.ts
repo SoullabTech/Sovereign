@@ -15,6 +15,50 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 
+// =============================================================================
+// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
+// =============================================================================
+
+const ALLOWED_ORIGINS = new Set([
+  'https://soullab.life',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'ionic://localhost',
+  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
+]);
+
+function getCorsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin');
+
+  let allowedOrigin: string;
+  if (origin === 'null') {
+    allowedOrigin = 'null';
+  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
+    allowedOrigin = origin;
+  } else {
+    allowedOrigin = 'https://soullab.life';
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
+
+/**
+ * CORS Preflight Handler
+ */
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 // Check if passkey is an admin passkey (always allowed even without invites table)
 function isAdminPasskey(passkey: string): boolean {
   const adminPrefixes = ['SOULLAB-', 'MAIA-', 'PIONEER-', 'FOUNDING-'];
@@ -38,13 +82,15 @@ async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: R
 }
 
 export async function POST(request: NextRequest) {
+  const corsHeaders = getCorsHeaders(request);
+
   try {
     const { passkey } = await request.json();
 
     if (!passkey) {
       return NextResponse.json(
         { error: 'Passkey required' },
-        { status: 400 }
+        { status: 400, headers: corsHeaders }
       );
     }
 
@@ -67,7 +113,7 @@ export async function POST(request: NextRequest) {
         onboardingStep: member.onboarding_step,
         username: member.username,
         name: member.name
-      });
+      }, { headers: corsHeaders });
     }
 
     // Check if this is a valid invite passkey (new user with invite)
@@ -90,7 +136,7 @@ export async function POST(request: NextRequest) {
           isInvite: true,
           inviteStatus: invite.status,
           error: `This invite has already been ${invite.status}`
-        });
+        }, { headers: corsHeaders });
       }
 
       // Check if expired
@@ -100,7 +146,7 @@ export async function POST(request: NextRequest) {
           isInvite: true,
           inviteStatus: 'expired',
           error: 'This invite has expired'
-        });
+        }, { headers: corsHeaders });
       }
 
       // Valid invite - user can register with this passkey
@@ -111,7 +157,7 @@ export async function POST(request: NextRequest) {
         inviteStatus: 'valid',
         inviterName: invite.inviter_name,
         inviterUsername: invite.inviter_username,
-      });
+      }, { headers: corsHeaders });
     }
 
     // If invites table is missing OR no invite found, check if it's an admin passkey
@@ -123,7 +169,7 @@ export async function POST(request: NextRequest) {
         isInvite: true,  // Treat as valid invite
         inviteStatus: 'valid',
         isAdminPasskey: true,
-      });
+      }, { headers: corsHeaders });
     }
 
     // Unknown passkey
@@ -132,14 +178,14 @@ export async function POST(request: NextRequest) {
       exists: false,
       isInvite: false,
       error: 'Invalid passkey. Contact support for a valid passkey.'
-    });
+    }, { headers: corsHeaders });
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     console.error(`[MEMBERS] Check passkey error: ${message}`);
     return NextResponse.json(
       { error: 'Failed to check passkey. Please try again.' },
-      { status: 500 }
+      { status: 500, headers: getCorsHeaders(request) }
     );
   }
 }
