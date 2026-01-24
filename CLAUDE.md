@@ -76,31 +76,39 @@ This project is governed by the **[MAIA Oath](./docs/canon/MAIA_OATH.md)**. Any 
 - **No CDN/proxy middlemen** (Cloudflare) doing MITM on traffic
 
 ### What we DO use
-- **Production server**: `32.217.63.121` — Docker + **Caddy** (auto TLS)
-- **Domain**: `maia.soullab.life` (and `soullab.life`, `api.soullab.life`)
-- **Local development**: M4 Mac running Docker for local dev and consciousness computing
-- **Reverse proxy**: **Caddy** (handles auto-SSL via Let's Encrypt)
-- **Database**: Self-hosted PostgreSQL (NOT Supabase)
+- **Production**: Mac Studio running Docker + **Caddy** (auto TLS via Let's Encrypt)
+- **Domain**: `soullab.life` (apex), `api.soullab.life`, `oldhead.soullab.life`, etc.
+- **Reverse proxy**: **Caddy** in Docker container (`maia-caddy`)
+- **Database**: Self-hosted PostgreSQL in Docker (`maia-postgres`)
 - **Containers**: Docker and docker-compose
 
-### Server IPs (Route 53)
-- `32.217.63.121` — Main MAIA server (soullab.life, maia.soullab.life, api.soullab.life)
-- `35.167.91.24` — loralee.soullab.life only (separate project)
+### Production Stack (Local Mac Studio)
+All services run in Docker on the Mac Studio:
+- `maia-sovereign` — Main Next.js app (port 3000, Docker-internal only)
+- `maia-api` — API backend (port 3001, published)
+- `maia-caddy` — Reverse proxy (ports 80/443, published)
+- `maia-postgres` — PostgreSQL database
+- `maia-comms-worker` — Background worker
+- `maia-whisper` — Speech processing
+- `maia-rlm` — RLM service
 
-### Local Development
-- App runs on `localhost:3000`
-- Docker containers managed locally
-- Check local status: `docker ps` and `curl http://localhost:3000`
+### Check Production Status
+```bash
+docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+curl http://localhost/api/health          # via Caddy
+curl https://soullab.life/api/health      # external
+```
 
 ### Production Deployment
-- Server: `32.217.63.121` (self-managed, NOT EC2)
-- Stack: Docker + Caddy
-- Deployment script: `./scripts/deploy-production.sh`
-- Production compose: `docker-compose.production.yml`
-- **Deploy command**:
+- Stack: Docker + Caddy (local Mac Studio)
+- Compose file: `docker-compose.production.yml`
+- **Deploy command** (local):
   ```bash
-  ssh -i ~/.ssh/maia-sovereign-key.pem ubuntu@32.217.63.121 "cd /opt/maia && git pull && ./scripts/deploy-production.sh update"
+  cd ~/MAIA-SOVEREIGN
+  git pull
+  docker compose -f docker-compose.production.yml up -d --build
   ```
+- CI deploys are disabled (self-hosted runner not yet configured)
 
 ### Why This Architecture
 - No third party sits between users and their data

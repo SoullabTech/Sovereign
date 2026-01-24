@@ -1,46 +1,39 @@
 #!/bin/bash
 
-echo "🧪 Testing External Access to soullab.life"
-echo "==========================================="
+echo "Testing MAIA Sovereign Production Stack"
+echo "========================================"
 
-echo "1. Testing domain resolution..."
-nslookup soullab.life
+echo -e "\n1. Checking Docker containers..."
+docker ps --format "table {{.Names}}\t{{.Status}}" | head -12
 
-echo -e "\n2. Testing external IP access..."
-timeout 10 curl -s http://32.217.63.121/health 2>/dev/null
-if [ $? -eq 0 ]; then
-    echo "✅ External IP accessible!"
-    curl -s http://32.217.63.121/health
+echo -e "\n2. Testing local Caddy (http://localhost/api/health)..."
+RESP=$(curl -s -o /dev/null -w "%{http_code}" http://localhost/api/health 2>/dev/null)
+if [ "$RESP" = "200" ]; then
+    echo "   Local Caddy: HTTP $RESP"
 else
-    echo "❌ External IP not accessible - check port forwarding"
+    echo "   Local Caddy: HTTP $RESP (check if maia-caddy is running)"
 fi
 
-echo -e "\n3. Testing domain access..."
-timeout 10 curl -s http://soullab.life/health 2>/dev/null
-if [ $? -eq 0 ]; then
-    echo "✅ soullab.life accessible!"
-    curl -s http://soullab.life/health
+echo -e "\n3. Testing domain access (https://soullab.life/api/health)..."
+RESP=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 https://soullab.life/api/health 2>/dev/null)
+if [ "$RESP" = "200" ]; then
+    echo "   soullab.life: HTTP $RESP"
 else
-    echo "❌ soullab.life not accessible - check port forwarding"
+    echo "   soullab.life: HTTP $RESP (check DNS/router config)"
 fi
 
-echo -e "\n4. Local access (should work)..."
-curl -s http://192.168.4.210/health
-echo ""
-
-echo -e "\n5. Testing HTTPS access (bypasses ISP blocking)..."
-timeout 10 curl -k -s https://soullab.life/health 2>/dev/null
-if [ $? -eq 0 ]; then
-    echo "✅ HTTPS soullab.life accessible!"
-    curl -k -s https://soullab.life/health
+echo -e "\n4. Testing API subdomain (https://api.soullab.life/v1/health)..."
+RESP=$(curl -s -o /dev/null -w "%{http_code}" --connect-timeout 5 https://api.soullab.life/v1/health 2>/dev/null)
+if [ "$RESP" = "200" ]; then
+    echo "   api.soullab.life: HTTP $RESP"
 else
-    echo "❌ HTTPS soullab.life not accessible"
+    echo "   api.soullab.life: HTTP $RESP"
 fi
 
-echo -e "\n🎯 Share these URLs with testers:"
-echo "   🟢 RECOMMENDED: https://soullab.life/ (bypasses ISP blocking)"
-echo "   🟢 RECOMMENDED: https://soullab.life/labtools/"
-echo "   ⚠️  Note: Users will need to bypass certificate warnings"
-echo ""
-echo "   🔄 FALLBACK: http://soullab.life/"
-echo "   🔄 FALLBACK: http://soullab.life/labtools/"
+echo -e "\n5. TLS Certificate..."
+echo | openssl s_client -connect soullab.life:443 -servername soullab.life 2>/dev/null | openssl x509 -noout -subject -dates 2>/dev/null
+
+echo -e "\nShare these URLs with testers:"
+echo "   https://soullab.life/"
+echo "   https://soullab.life/labtools/"
+echo "   https://api.soullab.life/v1/health"
