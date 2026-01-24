@@ -1,220 +1,154 @@
+/**
+ * Password Sign In
+ *
+ * POST /api/members/signin
+ *
+ * Authenticates with username/password and creates a session.
+ * Returns session token for Safari/iOS header-based auth.
+ */
+
 export const dynamic = 'force-dynamic';
 
-/**
- * Sign in existing member
- * Validates username/password, creates server-side session, sets httpOnly cookie
- * Transparently upgrades legacy SHA256 hashes to bcrypt on successful login
- */
-
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { query } from '@/lib/db/postgres';
-import crypto from 'crypto';
-import { verifyPassword, hashPassword } from '@/lib/auth/passwordUtils';
+import { verifyPassword } from '@/lib/auth/passwordUtils';
+import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
+import { logAuthEvent } from '@/lib/security/authAudit';
+import {
+  checkRateLimit,
+  resetRateLimit,
+  getClientIP,
+  buildRateLimitHeaders
+} from '@/lib/auth/rateLimiter';
 
-// =============================================================================
-// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
-// =============================================================================
-
-const ALLOWED_ORIGINS = new Set([
-  'https://soullab.life',
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'capacitor://localhost',
-  'ionic://localhost',
-  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
-]);
-
-function getCorsHeaders(req: NextRequest): Record<string, string> {
-  const origin = req.headers.get('origin');
-
-  let allowedOrigin: string;
-  if (origin === 'null') {
-    allowedOrigin = 'null';
-  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
-    allowedOrigin = origin;
-  } else {
-    allowedOrigin = 'https://soullab.life';
-  }
-
-  return {
-    'Access-Control-Allow-Origin': allowedOrigin,
-    'Access-Control-Allow-Methods': 'POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
-    'Access-Control-Allow-Credentials': 'true',
-    'Vary': 'Origin',
-  };
-}
-
-/**
- * CORS Preflight Handler
- */
-export async function OPTIONS(req: NextRequest) {
-  return new NextResponse(null, {
-    status: 204,
-    headers: getCorsHeaders(req),
-  });
-}
-
-function newSessionToken(): string {
-  return crypto.randomBytes(32).toString('hex'); // 64 chars
-}
-
-function sessionExpiresAt(days = 30): Date {
-  const d = new Date();
-  d.setDate(d.getDate() + days);
-  return d;
-}
+const ENDPOINT = '/api/members/signin';
 
 export async function POST(request: NextRequest) {
-  const corsHeaders = getCorsHeaders(request);
+  const clientIP = getClientIP(request);
+  const userAgent = request.headers.get('user-agent') || undefined;
 
   try {
-    const { username, password } = await request.json();
+    // Rate limit
+    const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
+    if (!rateLimitResult.allowed) {
+      const headers = buildRateLimitHeaders(rateLimitResult);
+      return NextResponse.json(
+        { error: 'Too many attempts. Please try again later.' },
+        { status: 429, headers }
+      );
+    }
+
+    const body = await request.json();
+    const { username, password } = body;
 
     if (!username || !password) {
       return NextResponse.json(
         { error: 'Username and password required' },
-        { status: 400, headers: corsHeaders }
+        { status: 400 }
       );
     }
 
-    console.log(`[MEMBERS] Sign in attempt: ${username}`);
-
     // Find member by username (case-insensitive)
     const result = await query(
-      'SELECT id, passkey, username, password_hash, name, preferred_name, onboarded, onboarding_step, tier, roles, password_changed_at FROM members WHERE LOWER(username) = LOWER($1)',
+      `SELECT id, passkey, username, password_hash, name, preferred_name,
+              onboarded, onboarding_step, tier, subscription_active, subscription_expires_at,
+              has_webauthn, preferred_auth_method
+       FROM members
+       WHERE LOWER(username) = LOWER($1)`,
       [username]
     );
 
     if (result.rows.length === 0) {
-      console.log(`[MEMBERS] Sign in failed: user not found - ${username}`);
+      await logAuthEvent({
+        action: 'password_signin',
+        memberId: null,
+        result: 'failure',
+        errorMessage: 'User not found'
+      }, request);
+
       return NextResponse.json(
         { error: 'Invalid username or password' },
-        { status: 401, headers: corsHeaders }
+        { status: 401 }
       );
     }
 
     const member = result.rows[0];
 
-    // Verify password (auto-detects bcrypt vs legacy SHA256)
-    const { ok, needsUpgrade } = await verifyPassword(password, member.password_hash);
-    if (!ok) {
-      console.log(`[MEMBERS] Sign in failed: wrong password - member=${member.id.slice(0, 8)}`);
+    // Verify password
+    const isValid = await verifyPassword(password, member.password_hash);
+    if (!isValid) {
+      await logAuthEvent({
+        action: 'password_signin',
+        memberId: member.id,
+        result: 'failure',
+        errorMessage: 'Invalid password'
+      }, request);
+
       return NextResponse.json(
         { error: 'Invalid username or password' },
-        { status: 401, headers: corsHeaders }
+        { status: 401 }
       );
     }
 
-    // Transparently upgrade legacy SHA256 hash to bcrypt
-    // Race-safe: only upgrade if hash hasn't changed (concurrent login won't flap)
-    if (needsUpgrade) {
-      const bcryptHash = await hashPassword(password);
-      const upgradeResult = await query(
-        'UPDATE members SET password_hash = $1, last_sign_in = NOW() WHERE id = $2 AND password_hash = $3',
-        [bcryptHash, member.id, member.password_hash]
-      );
-      if (upgradeResult.rowCount === 1) {
-        console.log(`[MEMBERS] Upgraded password hash to bcrypt: member=${member.id.slice(0, 8)}`);
-      }
-      // rowCount=0 means another process already upgraded - that's fine
-    } else {
-      // Update last sign in only
-      await query(
-        'UPDATE members SET last_sign_in = NOW() WHERE id = $1',
-        [member.id]
-      );
+    // Reset rate limit on success
+    await resetRateLimit(clientIP, 'ip', ENDPOINT);
+
+    // Create session
+    let session;
+    try {
+      session = await createSession({
+        memberId: member.id,
+        ipAddress: clientIP,
+        userAgent
+      });
+      await setSessionCookie(session.sessionToken, session.expiresAt);
+    } catch (sessionError) {
+      console.error('[PasswordSignin] Failed to create session:', sessionError);
+      // Continue without session - still return member data
     }
 
-    // Create server-side session
-    const token = newSessionToken();
-    const expiresAt = sessionExpiresAt(30);
-
+    // Update last sign in
     await query(
-      `INSERT INTO auth_sessions (member_id, session_token, expires_at, revoked)
-       VALUES ($1, $2, $3, FALSE)`,
-      [member.id, token, expiresAt.toISOString()]
+      `UPDATE members SET last_sign_in = NOW() WHERE id = $1`,
+      [member.id]
     );
 
-    // Set httpOnly cookie (server-owned, not spoofable)
-    const cookieStore = await cookies();
-    cookieStore.set('maia_session', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      expires: expiresAt,
-    });
-
-    // Set tier cookie for middleware access checks
-    cookieStore.set('maia_tier', member.tier || 'free', {
-      httpOnly: false, // Readable by client for UI gating
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      expires: expiresAt,
-    });
-
-    // Set roles cookie for middleware access checks
-    const roles = Array.isArray(member.roles) ? member.roles : ['member'];
-    cookieStore.set('maia_roles', JSON.stringify(roles), {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      expires: expiresAt,
-    });
-
-    // Set member ID cookie for API calls
-    cookieStore.set('maia_member_id', member.id, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      expires: expiresAt,
-    });
-
-    console.log(`[MEMBERS] Sign in success: ${username} (${member.id}) tier=${member.tier} roles=${roles.join(',')}`);
-
-    // Check if member has a practitioner profile
-    let practitioner: { id: string; slug: string; name: string } | null = null;
-    if (roles.includes('practitioner')) {
-      const practitionerResult = await query(
-        'SELECT id, slug, name FROM practitioners WHERE member_id = $1 LIMIT 1',
-        [member.id]
-      );
-      if (practitionerResult.rows.length > 0) {
-        practitioner = practitionerResult.rows[0];
-      }
-    }
-
-    // Check if password change is needed (beta testers with NULL password_changed_at)
-    const needsPasswordChange = member.password_changed_at === null;
+    await logAuthEvent({
+      action: 'password_signin',
+      memberId: member.id,
+      result: 'success'
+    }, request);
 
     return NextResponse.json({
       success: true,
+      memberId: member.id,
       member: {
         id: member.id,
         username: member.username,
         name: member.name,
         preferredName: member.preferred_name || member.name,
         onboarded: member.onboarded,
-        onboardingStep: member.onboarding_step
+        onboardingStep: member.onboarding_step,
+        tier: member.tier || 'free',
+        subscriptionActive: member.subscription_active || false,
+        subscriptionExpiresAt: member.subscription_expires_at || null,
+        hasWebauthn: member.has_webauthn || false,
+        preferredAuthMethod: member.preferred_auth_method || 'password'
       },
-      practitioner: practitioner ? {
-        id: practitioner.id,
-        slug: practitioner.slug,
-        name: practitioner.name
-      } : null,
-      needsPasswordChange
-    }, { headers: corsHeaders });
+      session: session ? {
+        expiresAt: session.expiresAt.toISOString(),
+        // Include session token for Safari/iOS clients where cookies are blocked by ITP
+        // Client should store this in localStorage and send via x-session-token header
+        token: session.sessionToken
+      } : undefined
+    });
+
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`[MEMBERS] Sign in error: ${message}`);
+    console.error('[PasswordSignin] Error:', error);
+
     return NextResponse.json(
-      { error: 'Failed to sign in' },
-      { status: 500, headers: getCorsHeaders(request) }
+      { error: 'Sign in failed' },
+      { status: 500 }
     );
   }
 }

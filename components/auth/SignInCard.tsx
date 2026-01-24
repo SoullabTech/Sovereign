@@ -41,6 +41,16 @@ export function SignInCard({ onSuccess, redirectTo = '/maia' }: Props) {
   }, []);
 
   function handleSuccess(payload: unknown) {
+    // Store session token for Safari/iOS header-based auth (cookies blocked by ITP)
+    const data = payload as { session?: { token?: string }; member?: { id: string } };
+    if (data?.session?.token) {
+      localStorage.setItem('maia_session_token', data.session.token);
+      console.log('[SignInCard] Stored session token for header-based auth');
+    }
+    // Also store memberId for x-member-id header fallback
+    if (data?.member?.id) {
+      localStorage.setItem('memberId', data.member.id);
+    }
     onSuccess?.(payload);
     router.push(redirectTo);
   }

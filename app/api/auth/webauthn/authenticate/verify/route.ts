@@ -145,7 +145,10 @@ export async function POST(request: NextRequest) {
         preferredAuthMethod: 'webauthn'
       },
       session: session ? {
-        expiresAt: session.expiresAt.toISOString()
+        expiresAt: session.expiresAt.toISOString(),
+        // Include session token for Safari/iOS clients where cookies are blocked by ITP
+        // Client should store this in localStorage and send via x-session-token header
+        token: session.sessionToken
       } : undefined
     });
 

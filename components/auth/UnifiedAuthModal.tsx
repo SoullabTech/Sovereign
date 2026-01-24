@@ -45,6 +45,19 @@ export function UnifiedAuthModal({ mode, onSuccess }: Props) {
     })();
   }, []);
 
+  // Store session token for Safari/iOS before calling onSuccess
+  function storeSessionAndNotify(payload: unknown) {
+    const data = payload as { session?: { token?: string }; member?: { id: string } };
+    if (data?.session?.token) {
+      localStorage.setItem('maia_session_token', data.session.token);
+      console.log('[UnifiedAuthModal] Stored session token for header-based auth');
+    }
+    if (data?.member?.id) {
+      localStorage.setItem('memberId', data.member.id);
+    }
+    onSuccess?.(payload);
+  }
+
   async function trustThisDevice() {
     try {
       await deviceTrust.trustDevice(undefined, 'standard');
@@ -66,7 +79,7 @@ export function UnifiedAuthModal({ mode, onSuccess }: Props) {
 
       await trustThisDevice();
 
-      onSuccess?.(res);
+      storeSessionAndNotify(res);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Passkey sign-in failed');
     } finally {
@@ -106,7 +119,7 @@ export function UnifiedAuthModal({ mode, onSuccess }: Props) {
       // 3) Trust device (optional)
       await trustThisDevice();
 
-      onSuccess?.(data);
+      storeSessionAndNotify(data);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Signup failed');
     } finally {

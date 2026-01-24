@@ -48,6 +48,8 @@ export interface BiometricAuthResult {
   };
   session?: {
     expiresAt: string;
+    /** Session token for Safari/iOS header-based auth (when cookies blocked by ITP) */
+    token?: string;
   };
 }
 

@@ -184,7 +184,10 @@ function SigninContent() {
   }
 
   // Store session helper
-  function storeSession(user: { id: string; username: string; name: string; preferredName?: string; preferred_name?: string; onboarded: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null }) {
+  function storeSession(
+    user: { id: string; username: string; name: string; preferredName?: string; preferred_name?: string; onboarded: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null },
+    sessionToken?: string
+  ) {
     const displayName = user.preferredName || user.preferred_name || user.name || 'Friend';
     // IMPORTANT: Set memberId first - this is what apiFetch uses for native x-member-id header
     localStorage.setItem('memberId', user.id);
@@ -195,6 +198,12 @@ function SigninContent() {
     localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
     localStorage.setItem('maia_session_version', '2');
     localStorage.setItem('signup_completed', 'true');
+
+    // Store session token for Safari/iOS header-based auth (cookies blocked by ITP)
+    if (sessionToken) {
+      localStorage.setItem('maia_session_token', sessionToken);
+      console.log('[storeSession] Stored session token for header-based auth');
+    }
   }
 
   // Passkey sign-in (biometric) - uses unified biometry on native platforms
@@ -244,7 +253,7 @@ function SigninContent() {
           name: res.member.name,
           preferredName: res.member.preferredName,
           onboarded: res.member.onboarded
-        });
+        }, res.session?.token);
 
         await trustThisDevice();
 
@@ -324,12 +333,21 @@ function SigninContent() {
         localStorage.setItem('signup_completed', 'true');
       }
 
+      // Store session token for Safari/iOS header-based auth (cookies blocked by ITP)
+      if (data.session?.token) {
+        localStorage.setItem('maia_session_token', data.session.token);
+        console.log('[SignIn] Stored session token for header-based auth');
+      }
+
       // Navigate explicitly - use assign to ensure full navigation
       console.log("[SignIn] navigating to /maia");
       window.location.assign("/maia");
     } catch (err: any) {
       console.error("[SignIn] exception", err);
-      setError(err?.message || "Sign in threw an exception.");
+      const errMsg = err?.message || "Sign in threw an exception.";
+      setError(errMsg);
+      // Alert for debugging on iOS
+      alert(`🔑 Signin error: ${errMsg}`);
     } finally {
       setIsLoading(false);
     }
@@ -600,6 +618,61 @@ function SigninContent() {
             {error}
           </div>
         )}
+
+        {/* Debug Auth Panel (temporary) */}
+        <div className="mb-4 rounded-xl border border-gray-400/30 bg-black/20 p-3 text-xs text-gray-700">
+          <div className="font-semibold mb-2">Debug Auth (build 146)</div>
+          <div className="space-y-1 text-[11px]">
+            <div>isCapacitor: {String(Capacitor.isNativePlatform())}</div>
+            <div>memberId: {typeof window !== 'undefined' ? (localStorage.getItem('memberId') || '(none)') : '(server)'}</div>
+            <div>apiBase: {apiBaseUrl() || '(relative)'}</div>
+          </div>
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              className="rounded-lg bg-gray-600 px-3 py-1.5 text-white text-[10px] hover:bg-gray-500"
+              onClick={async () => {
+                try {
+                  const url = `${apiBaseUrl()}/api/health`;
+                  console.log('🧪 Testing:', url);
+                  const r = await fetch(url, { cache: 'no-store' });
+                  const t = await r.text();
+                  console.log('🧪 /api/health', r.status, t);
+                  alert(`/api/health: ${r.status}\n${t.slice(0, 100)}`);
+                } catch (e: any) {
+                  console.error('🧪 /api/health failed', e);
+                  alert(`/api/health failed: ${e?.message || String(e)}`);
+                }
+              }}
+            >
+              Test /api/health
+            </button>
+            <button
+              type="button"
+              className="rounded-lg bg-gray-600 px-3 py-1.5 text-white text-[10px] hover:bg-gray-500"
+              onClick={async () => {
+                try {
+                  const memberId = typeof window !== 'undefined' ? localStorage.getItem('memberId') : null;
+                  const url = `${apiBaseUrl()}/api/auth/whoami`;
+                  console.log('🧪 Testing:', url, 'memberId:', memberId);
+                  const r = await fetch(url, {
+                    method: 'GET',
+                    headers: memberId ? { 'x-member-id': memberId } : {},
+                    cache: 'no-store',
+                  });
+                  const t = await r.text();
+                  console.log('🧪 /api/auth/whoami', r.status, t);
+                  alert(`/api/auth/whoami: ${r.status}\n${t.slice(0, 100)}`);
+                } catch (e: any) {
+                  console.error('🧪 /api/auth/whoami failed', e);
+                  alert(`/api/auth/whoami failed: ${e?.message || String(e)}`);
+                }
+              }}
+            >
+              Test /api/auth/whoami
+            </button>
+          </div>
+        </div>
 
         {/* Primary: Password Sign-In */}
         <form onSubmit={handlePasswordSignIn} className="space-y-3">

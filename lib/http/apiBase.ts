@@ -272,6 +272,7 @@ export function clearAuthState(): void {
   localStorage.removeItem('explorerName');
   localStorage.removeItem('signup_completed');
   localStorage.removeItem('maia_session_version');
+  localStorage.removeItem('maia_session_token'); // Safari/iOS header-based auth
 }
 
 // Expose healIdentity for console debugging
@@ -321,15 +322,50 @@ export function isNativeCapacitor(): boolean {
 }
 
 /**
- * Enhanced fetch for API calls - uses CapacitorHttp on native platforms
+ * Check if browser is Safari (needs header-based auth due to ITP)
+ * Safari blocks cookies in cross-origin and third-party contexts
+ */
+export function isSafari(): boolean {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return false;
+
+  const ua = navigator.userAgent;
+  // Safari but not Chrome (Chrome on iOS reports Safari in UA)
+  const isSafariBrowser = /Safari/i.test(ua) && !/Chrome|CriOS|Chromium/i.test(ua);
+  // Also check for iOS WebView (WKWebView) which has same cookie restrictions
+  const isIOSWebView = /iPhone|iPad|iPod/i.test(ua) && !/Safari/i.test(ua);
+
+  return isSafariBrowser || isIOSWebView;
+}
+
+/**
+ * Get session token from localStorage (for header-based auth)
+ */
+function getSessionToken(): string | null {
+  if (typeof window === 'undefined') return null;
+
+  try {
+    // Check for session token (set during signin)
+    const sessionToken = localStorage.getItem('maia_session_token');
+    if (sessionToken) return sessionToken;
+
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Enhanced fetch for API calls - handles Safari ITP cookie blocking
  *
- * For Capacitor/iOS apps:
- * - Uses CapacitorHttp directly to bypass Capacitor's fetch interceptor
- * - Always adds x-member-id header for auth (cookies don't work cross-origin)
- * - Falls back to web fetch if no member ID (for unauthenticated requests like initial whoami)
+ * For Safari/iOS (cookies blocked by ITP):
+ * - Adds x-session-token header from localStorage
+ * - Falls back to x-member-id if no session token
  *
- * For web:
+ * For other browsers:
  * - Uses standard fetch with credentials: 'include'
+ *
+ * For Capacitor/iOS native:
+ * - Uses CapacitorHttp with x-member-id header
  *
  * Usage:
  *   import { apiFetch } from '@/lib/http/apiBase';
@@ -345,9 +381,49 @@ export async function apiFetch(
   const url = apiUrl(path);
   console.log('[apiFetch]', options.method || 'GET', url);
 
-  // Always use standard web fetch with the absolute URL
-  // apiBaseUrl() now guarantees https://soullab.life so this works everywhere
+  // Check if we need header-based auth (Safari or iOS)
+  const needsHeaderAuth = isSafari() || isNativeCapacitor();
+
+  if (needsHeaderAuth) {
+    return apiFetchWithHeaders(url, options);
+  }
+
+  // Standard web fetch with cookies
   return apiFetchWeb(url, options);
+}
+
+/**
+ * Fetch with header-based authentication (for Safari/iOS)
+ * Adds session token or member ID to headers when cookies won't work
+ */
+async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<Response> {
+  const headers = new Headers(options.headers);
+
+  // Ensure Content-Type is set for requests with body
+  if (options.body && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  // Add session token header (preferred - validates session is still active)
+  const sessionToken = getSessionToken();
+  if (sessionToken) {
+    headers.set('x-session-token', sessionToken);
+    console.log('[apiFetch/safari] Using x-session-token header');
+  } else {
+    // Fall back to member ID (legacy support)
+    const memberId = getValidMemberId();
+    if (memberId) {
+      headers.set('x-member-id', memberId);
+      console.log('[apiFetch/safari] Using x-member-id header:', memberId.slice(0, 8) + '...');
+    }
+  }
+
+  return fetch(url, {
+    ...options,
+    headers,
+    credentials: 'include', // Still try cookies, but headers are the real auth
+    mode: 'cors',
+  });
 }
 
 /**

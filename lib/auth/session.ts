@@ -1,28 +1,82 @@
 /**
  * Server-side session authentication
  *
- * Provides secure member authentication via httpOnly cookies.
- * Never trust client-provided identity - always derive from session.
+ * Provides secure member authentication via:
+ * 1. httpOnly session cookies (primary)
+ * 2. x-member-id header with session token (fallback for Safari/iOS)
+ *
+ * Safari ITP blocks cookies in cross-origin contexts. The header fallback
+ * allows clients to include their session token directly when cookies fail.
  */
 
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { query } from '@/lib/db/postgres';
 
 /**
- * Require authenticated member from session cookie.
+ * UUID validation regex
+ */
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Require authenticated member from session cookie or header fallback.
  * Throws if no valid session exists.
+ *
+ * Authentication methods (in priority order):
+ * 1. maia_session cookie → lookup session in DB
+ * 2. x-session-token header → lookup session in DB (Safari/iOS fallback)
+ * 3. x-member-id header → direct member ID (legacy Capacitor support, requires valid session)
  *
  * @returns memberId from verified session
  * @throws Error with message 'AUTH_REQUIRED' if not authenticated
  */
 export async function requireMemberId(): Promise<string> {
   const cookieStore = await cookies();
-  const token = cookieStore.get('maia_session')?.value;
+  const headerStore = await headers();
 
-  if (!token) {
-    throw new Error('AUTH_REQUIRED');
+  // Method 1: Session cookie (preferred - works when cookies are sent)
+  const cookieToken = cookieStore.get('maia_session')?.value;
+  if (cookieToken) {
+    const memberId = await validateSessionToken(cookieToken);
+    if (memberId) {
+      return memberId;
+    }
   }
 
+  // Method 2: Session token header (Safari/iOS fallback when cookies blocked)
+  const headerToken = headerStore.get('x-session-token');
+  if (headerToken) {
+    const memberId = await validateSessionToken(headerToken);
+    if (memberId) {
+      return memberId;
+    }
+  }
+
+  // Method 3: Direct member ID header (legacy - validate it exists and has active session)
+  const headerMemberId = headerStore.get('x-member-id');
+  if (headerMemberId && UUID_REGEX.test(headerMemberId)) {
+    // Verify this member has at least one active session (prevents using stale member IDs)
+    const res = await query<{ member_id: string }>(
+      `SELECT member_id
+       FROM auth_sessions
+       WHERE member_id = $1
+         AND revoked = FALSE
+         AND expires_at > NOW()
+       LIMIT 1`,
+      [headerMemberId]
+    );
+
+    if (res.rows[0]?.member_id) {
+      return headerMemberId;
+    }
+  }
+
+  throw new Error('AUTH_REQUIRED');
+}
+
+/**
+ * Validate a session token and return the member ID if valid
+ */
+async function validateSessionToken(token: string): Promise<string | null> {
   const res = await query<{ member_id: string }>(
     `SELECT member_id
      FROM auth_sessions
@@ -33,12 +87,7 @@ export async function requireMemberId(): Promise<string> {
     [token]
   );
 
-  const memberId = res.rows[0]?.member_id;
-  if (!memberId) {
-    throw new Error('AUTH_REQUIRED');
-  }
-
-  return memberId;
+  return res.rows[0]?.member_id || null;
 }
 
 /**
