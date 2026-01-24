@@ -30,6 +30,15 @@ interface MigrationPreview {
 }
 
 function SigninContent() {
+  console.log('[SIGNIN] ===== COMPONENT RENDER START =====');
+
+  // Log on first render for debugging
+  useEffect(() => {
+    console.log("[SignIn] page loaded");
+    console.log("[SignIn] apiBaseUrl:", apiBaseUrl());
+    console.log("[SignIn] userAgent:", navigator.userAgent.slice(0, 80));
+  }, []);
+
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -138,28 +147,31 @@ function SigninContent() {
     }
   }, [searchParams]);
 
-  // Check if already authenticated via SERVER SESSION (not localStorage)
-  // This is the single source of truth - localStorage is just UI cache
-  const [checkingAuth, setCheckingAuth] = useState(true);
+  // NEVER block on native - always show form immediately
+  const [checkingAuth, setCheckingAuth] = useState(false);
+
   useEffect(() => {
-    async function checkServerSession() {
-      try {
-        // Use apiFetch which automatically adds x-member-id for Capacitor apps
-        const res = await apiFetch('/api/auth/whoami');
-        const data = await res.json();
-        console.log('[Signin] whoami response:', data.authed, data.reason || 'ok');
-        if (data.authed) {
-          // Server says we're authenticated - redirect to intended destination
-          const next = searchParams?.get('next') || '/maia';
-          router.replace(next);
-          return;
-        }
-      } catch (e) {
-        console.error('[Signin] Failed to check server session:', e);
-      }
-      setCheckingAuth(false);
+    const isNative = Capacitor.isNativePlatform();
+    console.log('[SIGNIN PAGE] Mounted, isNative:', isNative);
+
+    // NATIVE: Never do auth preflight
+    if (isNative) {
+      console.log('[SIGNIN PAGE] Native - form ready');
+      return;
     }
-    checkServerSession();
+
+    // WEB ONLY: Quick auth check (can fail safely)
+    setCheckingAuth(true);
+    fetch('/api/auth/whoami', { credentials: 'include' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.authed) {
+          router.replace(searchParams?.get('next') || '/maia');
+        } else {
+          setCheckingAuth(false);
+        }
+      })
+      .catch(() => setCheckingAuth(false));
   }, [router, searchParams]);
 
   // Trust device helper
@@ -174,6 +186,8 @@ function SigninContent() {
   // Store session helper
   function storeSession(user: { id: string; username: string; name: string; preferredName?: string; preferred_name?: string; onboarded: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null }) {
     const displayName = user.preferredName || user.preferred_name || user.name || 'Friend';
+    // IMPORTANT: Set memberId first - this is what apiFetch uses for native x-member-id header
+    localStorage.setItem('memberId', user.id);
     localStorage.setItem('beta_user', JSON.stringify(user));
     localStorage.setItem('explorerId', user.id);
     localStorage.setItem('explorerName', displayName);
@@ -252,145 +266,70 @@ function SigninContent() {
     }
   }
 
-  // Password sign-in
+  // Password sign-in - DETERMINISTIC VERSION
   async function handlePasswordSignIn(e: React.FormEvent) {
     e.preventDefault();
+    e.stopPropagation();
+
+    if (isLoading) return;
+
     setError('');
     setIsLoading(true);
 
     try {
-      let data: { member: { id: string; username: string; name: string; preferredName: string; onboarded: boolean; hasWebauthn?: boolean; tier?: 'free' | 'personal' | 'pro'; subscriptionActive?: boolean; subscriptionExpiresAt?: string | null }; practitioner?: { id: string; slug: string; name: string } | null; needsPasswordChange?: boolean } | null = null;
+      console.log("[SignIn] submit clicked");
+      console.log("[SignIn] url", window.location.href);
+      console.log("[SignIn] apiBaseUrl", apiBaseUrl());
+      console.log("[SignIn] username", username);
 
-      try {
-        // Use apiUrl() for correct path - /api/members/signin (not /v1/)
-        const signinUrl = apiUrl('/api/members/signin');
-        console.log('[SignIn] Attempting signin to:', signinUrl);
+      const res = await apiFetch("/api/members/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.toLowerCase(), password }),
+      });
 
-        const response = await fetch(signinUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          mode: 'cors',
-          body: JSON.stringify({ username: username.toLowerCase(), password }),
-        });
+      console.log("[SignIn] response status", res.status);
 
-        console.log('[SignIn] Response status:', response.status);
+      const text = await res.text();
+      console.log("[SignIn] response text", text);
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.warn('[SignIn] API error response:', response.status, errorData);
-
-          if (response.status === 401) {
-            setError('Invalid username or password.');
-            setIsLoading(false);
-            return;
-          }
-          throw new Error(errorData.error || `Sign in failed (${response.status})`);
-        }
-
-        data = await response.json();
-        console.log('[SignIn] Signin successful, member:', data?.member?.username);
-      } catch (err) {
-        const errorMsg = (err as Error)?.message || String(err);
-        console.error('[SignIn] Fetch error:', errorMsg);
-
-        // Network/CORS errors on iOS - provide helpful message
-        if (errorMsg.includes('NetworkError') || errorMsg.includes('Failed to fetch') || errorMsg.includes('CORS')) {
-          setError('Network error. Check your connection and try again.');
-          setIsLoading(false);
-          return;
-        }
-
-        if (errorMsg.includes('Invalid username')) {
-          return; // Already handled above
-        }
-
-        // Re-throw to be caught by outer handler
-        throw err;
-      }
-
-      if (data) {
-        const preferredName = data.member.preferredName || data.member.name || '';
-        const isUUID = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(preferredName);
-        const genericNames = ['user', 'guest', 'anonymous', 'explorer', 'test', 'admin'];
-        const isGeneric = genericNames.includes(preferredName.toLowerCase());
-        const capitalizedUsername = data.member.username
-          ? data.member.username.charAt(0).toUpperCase() + data.member.username.slice(1)
-          : '';
-        const validName = (isUUID || isGeneric)
-          ? (capitalizedUsername && !genericNames.includes(capitalizedUsername.toLowerCase()) ? capitalizedUsername : 'Friend')
-          : (preferredName || capitalizedUsername || 'Friend');
-
-        const user = {
-          id: data.member.id,
-          username: data.member.username,
-          name: validName,
-          preferredName: validName,
-          onboarded: data.member.onboarded,
-          tier: data.member.tier || 'free',
-          subscriptionActive: data.member.subscriptionActive || false,
-          subscriptionExpiresAt: data.member.subscriptionExpiresAt || null,
-        };
-
-        // Check for existing local data that could be migrated
-        const existingExplorerId = localStorage.getItem('explorerId');
-        const hasExistingData = existingExplorerId && existingExplorerId !== user.id;
-
-        if (hasExistingData) {
-          try {
-            const previewResponse = await fetch(apiUrl(`/api/members/migrate-data?oldUserId=${encodeURIComponent(existingExplorerId)}`));
-            if (previewResponse.ok) {
-              const preview = await previewResponse.json();
-              if (preview.totalRecords > 0) {
-                setMigrationPreview(preview);
-                setPendingUser({ id: user.id, onboarded: user.onboarded });
-                setShowMigration(true);
-                setIsLoading(false);
-                localStorage.setItem('beta_user', JSON.stringify(user));
-                localStorage.setItem('explorerName', validName);
-                localStorage.setItem('explorerPreferredName', validName);
-                localStorage.setItem('betaOnboardingComplete', user.onboarded ? 'true' : 'false');
-                localStorage.setItem('maia_session_version', '2');
-                return;
-              }
-            }
-          } catch {
-            // Continue with normal flow
-          }
-        }
-
-        storeSession(user);
-
-        // Store practitioner context if user is a practitioner
-        if (data.practitioner) {
-          setPractitionerContext({
-            id: data.practitioner.id,
-            slug: data.practitioner.slug,
-            name: data.practitioner.name,
-          });
-        }
-
-        // DEBUG: Log onboarded status
-        console.log('[SIGNIN] user.onboarded:', user.onboarded, 'data.member.onboarded:', data.member.onboarded);
-
-        // TEMP FIX: Always go to /maia for debugging - remove after fixing
-        let redirectPath = '/maia';
-        // let redirectPath = user.onboarded ? '/maia' : '/begin';
-
-        // If beta tester needs to change default password, add query param
-        if (data.needsPasswordChange) {
-          redirectPath = '/maia?changePassword=true';
-        }
-
-        // Skip passkey prompt - users can enable later in settings
-        router.push(redirectPath);
+      if (!res.ok) {
+        setError(text || `Sign in failed (${res.status})`);
         return;
       }
 
-      setError('Invalid username or password.');
-    } catch (err) {
-      console.error('Sign in error:', err);
-      setError('Something went wrong. Please try again.');
+      // Parse once we know it's ok
+      const data = text ? JSON.parse(text) : {};
+      console.log("[SignIn] parsed", data);
+
+      // Extract memberId from response
+      const memberId = data?.memberId || data?.member?.id || data?.id;
+      if (!memberId) {
+        setError("Signin succeeded but memberId missing in response.");
+        return;
+      }
+
+      // Store session data
+      localStorage.setItem("memberId", String(memberId));
+      localStorage.setItem("explorerId", String(memberId));
+      console.log("[SignIn] memberId saved:", localStorage.getItem("memberId"));
+
+      // Store full user data if available
+      if (data.member) {
+        const displayName = data.member.preferredName || data.member.name || data.member.username || 'Friend';
+        localStorage.setItem('beta_user', JSON.stringify(data.member));
+        localStorage.setItem('explorerName', displayName);
+        localStorage.setItem('explorerPreferredName', displayName);
+        localStorage.setItem('maia_session_version', '2');
+        localStorage.setItem('signup_completed', 'true');
+      }
+
+      // Navigate explicitly - use assign to ensure full navigation
+      console.log("[SignIn] navigating to /maia");
+      window.location.assign("/maia");
+    } catch (err: any) {
+      console.error("[SignIn] exception", err);
+      setError(err?.message || "Sign in threw an exception.");
     } finally {
       setIsLoading(false);
     }
@@ -666,7 +605,7 @@ function SigninContent() {
         <form onSubmit={handlePasswordSignIn} className="space-y-3">
           <input
             value={username}
-            onChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => { console.log('[INPUT] username:', e.target.value); setUsername(e.target.value); }}
             placeholder="Username"
             autoComplete="username"
             className="w-full rounded-xl bg-white/50 border border-teal-200/40 px-4 py-3 text-teal-900 placeholder:text-teal-600/50 outline-none focus:border-teal-400/60 focus:bg-white/60 transition-all"
@@ -1244,6 +1183,7 @@ function LoadingFallback() {
 }
 
 export default function SigninPage() {
+  console.log('[SIGNIN] ===== PAGE COMPONENT RENDER =====');
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4 py-8">
       <Suspense fallback={<LoadingFallback />}>

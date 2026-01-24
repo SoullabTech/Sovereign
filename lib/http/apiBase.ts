@@ -8,36 +8,33 @@
  *   NEXT_PUBLIC_API_BASE_URL=https://your-domain.com CAPACITOR_BUILD=1 npm run build
  */
 
+// Hard fallback for iOS/Capacitor - NEVER use relative /api on mobile
+const FALLBACK_API_BASE_URL = 'https://soullab.life';
+
 /**
  * Get the API base URL - bulletproof for Capacitor
  * Falls back to https://soullab.life if env var didn't inline
+ *
+ * CRITICAL: On iOS/Capacitor static builds, /api routes don't exist locally.
+ * We MUST detect iOS and force the real API URL, even if Capacitor.isNativePlatform() lies.
  */
 export function apiBaseUrl(): string {
-  // Next will inline NEXT_PUBLIC_* at build time for client bundles,
-  // but if it ends up empty for any reason, we hard-fallback for Capacitor.
-  const envBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
+  const env = (process.env.NEXT_PUBLIC_API_BASE_URL || "").trim();
 
-  // If the env var exists, trust it
-  if (envBase) return envBase.replace(/\/+$/, "");
+  // If env is set, always trust it.
+  if (env) return env.replace(/\/+$/, "");
 
-  // Capacitor iOS/Android fallback (prevents relative /api calls breaking)
-  const isCapacitor =
-    typeof window !== "undefined" &&
-    (window as any).Capacitor &&
-    (window as any).Capacitor.isNativePlatform?.();
-
-  if (isCapacitor) return "https://soullab.life";
-
-  // Web dev fallback: allow relative in browser
-  return "";
+  // Absolute fallback (do NOT allow empty)
+  // This ensures iOS, Capacitor, and any edge case always gets the real API
+  return "https://soullab.life";
 }
 
 // Legacy export for backwards compatibility
 export const API_BASE = apiBaseUrl();
 
-// [ios-debug] Log the resolved API_BASE at module load
+// Log the resolved API_BASE at module load
 if (typeof window !== 'undefined') {
-  console.log('[ios-debug] apiBaseUrl resolved:', apiBaseUrl() || '(relative)');
+  console.log('[apiBase] loaded, base:', apiBaseUrl());
 }
 
 /**
@@ -46,9 +43,9 @@ if (typeof window !== 'undefined') {
  * @returns Full URL if in Capacitor, otherwise the original path for web
  */
 export function apiUrl(path: string): string {
-  const base = apiBaseUrl();
-  if (!base) return path; // web relative ok
-  return `${base}${path.startsWith("/") ? path : `/${path}`}`;
+  const base = apiBaseUrl().replace(/\/+$/, "");
+  const p = path.startsWith("/") ? path : `/${path}`;
+  return `${base}${p}`;
 }
 
 /**
@@ -112,6 +109,19 @@ export function getValidMemberId(): string | null {
   if (typeof window === 'undefined') return null;
 
   try {
+    // Fast path: check direct memberId key first (set by storeSession)
+    const directId = localStorage.getItem('memberId');
+    if (directId && isValidMemberId(directId)) {
+      return directId;
+    }
+
+    // Also check explorerId (legacy key)
+    const explorerId = localStorage.getItem('explorerId');
+    if (explorerId && isValidMemberId(explorerId)) {
+      return explorerId;
+    }
+
+    // Fall back to beta_user JSON
     const betaUser = localStorage.getItem('beta_user');
     if (!betaUser) return null;
 
@@ -123,6 +133,7 @@ export function getValidMemberId(): string | null {
       // Clear the poisoned auth state
       localStorage.removeItem('beta_user');
       localStorage.removeItem('explorerId');
+      localStorage.removeItem('memberId');
       localStorage.removeItem('explorerName');
       localStorage.removeItem('signup_completed');
       return null;
@@ -256,6 +267,7 @@ export function clearAuthState(): void {
 
   console.warn('[auth] Clearing poisoned auth state');
   localStorage.removeItem('beta_user');
+  localStorage.removeItem('memberId');
   localStorage.removeItem('explorerId');
   localStorage.removeItem('explorerName');
   localStorage.removeItem('signup_completed');
@@ -270,13 +282,42 @@ if (typeof window !== 'undefined') {
 
 /**
  * Check if we're running in a native Capacitor environment
+ * Uses multiple detection methods because Capacitor.isNativePlatform() can lie
  */
 export function isNativeCapacitor(): boolean {
-  return (
-    typeof window !== 'undefined' &&
+  if (typeof window === 'undefined') return false;
+
+  // Check 1: Capacitor global exists and says native
+  const hasCapacitorNative =
     (window as any).Capacitor &&
-    (window as any).Capacitor.isNativePlatform?.()
-  );
+    (window as any).Capacitor.isNativePlatform?.();
+
+  if (hasCapacitorNative) return true;
+
+  // Check 2: iOS user agent (WKWebView) - THIS IS SUFFICIENT for iOS detection
+  // Even without Capacitor global (e.g., loading from web server in WKWebView)
+  const isIOSUserAgent =
+    typeof navigator !== 'undefined' &&
+    /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  // iOS user agent alone means we're on iOS - treat as native for API purposes
+  // This ensures apiFetch uses the correct API base even when Capacitor JS isn't loaded
+  if (isIOSUserAgent) {
+    console.log('[isNativeCapacitor] iOS detected via user agent');
+    return true;
+  }
+
+  // Check 3: URL indicates we're in a Capacitor context
+  const isCapacitorScheme =
+    window.location.protocol === 'capacitor:' ||
+    window.location.protocol === 'ionic:';
+
+  if (isCapacitorScheme) {
+    console.log('[isNativeCapacitor] Capacitor scheme detected');
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -285,6 +326,7 @@ export function isNativeCapacitor(): boolean {
  * For Capacitor/iOS apps:
  * - Uses CapacitorHttp directly to bypass Capacitor's fetch interceptor
  * - Always adds x-member-id header for auth (cookies don't work cross-origin)
+ * - Falls back to web fetch if no member ID (for unauthenticated requests like initial whoami)
  *
  * For web:
  * - Uses standard fetch with credentials: 'include'
@@ -301,14 +343,10 @@ export async function apiFetch(
   options: RequestInit = {}
 ): Promise<Response> {
   const url = apiUrl(path);
-  const method = (options.method || 'GET').toUpperCase();
+  console.log('[apiFetch]', options.method || 'GET', url);
 
-  // For native Capacitor: use CapacitorHttp directly (bypasses fetch interceptor)
-  if (isNativeCapacitor()) {
-    return apiFetchNative(url, method, options);
-  }
-
-  // For web: use standard fetch
+  // Always use standard web fetch with the absolute URL
+  // apiBaseUrl() now guarantees https://soullab.life so this works everywhere
   return apiFetchWeb(url, options);
 }
 
@@ -319,15 +357,17 @@ export async function apiFetch(
 async function apiFetchNative(
   url: string,
   method: string,
-  options: RequestInit
+  options: RequestInit,
+  memberId: string
 ): Promise<Response> {
   // Dynamic import to avoid loading Capacitor on web
   const { CapacitorHttp } = await import('@capacitor/core');
 
-  // Build headers object
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
+  // Build headers object - only set Content-Type when there's a body
+  const headers: Record<string, string> = {};
+  if (options.body) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   // Copy existing headers
   if (options.headers) {
@@ -347,13 +387,12 @@ async function apiFetchNative(
     }
   }
 
-  // ALWAYS add x-member-id for Capacitor (cookies don't work cross-origin)
-  const memberId = getValidMemberId();
+  // Add x-member-id only if we have one (signin happens before memberId exists)
   if (memberId) {
     headers['x-member-id'] = memberId;
     console.log('[apiFetch/native] Using CapacitorHttp with x-member-id:', memberId.slice(0, 8) + '...');
   } else {
-    console.warn('[apiFetch/native] No valid member ID - auth may fail. URL:', url);
+    console.log('[apiFetch/native] Using CapacitorHttp (no memberId yet):', method, url);
   }
 
   // Parse body if it's a string (likely JSON)
