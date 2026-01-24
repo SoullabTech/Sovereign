@@ -19,6 +19,50 @@ function generateCorrelationId(): string {
   return `req_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 8)}`;
 }
 
+// =============================================================================
+// CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
+// =============================================================================
+
+const ALLOWED_ORIGINS = new Set([
+  'https://soullab.life',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'capacitor://localhost',
+  'ionic://localhost',
+  'null', // WebKit sometimes reports this for file-like/Capacitor contexts
+]);
+
+function getCorsHeaders(req: NextRequest): Record<string, string> {
+  const origin = req.headers.get('origin');
+
+  let allowedOrigin: string;
+  if (origin === 'null') {
+    allowedOrigin = 'null';
+  } else if (origin && ALLOWED_ORIGINS.has(origin)) {
+    allowedOrigin = origin;
+  } else {
+    allowedOrigin = 'https://soullab.life';
+  }
+
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'GET,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Accept, X-Member-Id',
+    'Access-Control-Allow-Credentials': 'true',
+    'Vary': 'Origin',
+  };
+}
+
+/**
+ * CORS Preflight Handler
+ */
+export async function OPTIONS(req: NextRequest) {
+  return new NextResponse(null, {
+    status: 204,
+    headers: getCorsHeaders(req),
+  });
+}
+
 /**
  * GET /api/members/me
  *
@@ -36,9 +80,11 @@ function generateCorrelationId(): string {
  */
 export async function GET(request: NextRequest) {
   const correlationId = generateCorrelationId();
+  const corsHeaders = getCorsHeaders(request);
   const headers = {
     'X-Request-ID': correlationId,
     'X-Correlation-ID': correlationId,
+    ...corsHeaders,
   };
 
   // Static export: return stub response during pre-rendering
@@ -47,15 +93,36 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Get identity from session cookie only - server decides who you are
+    // Get identity from multiple sources (priority order):
+    // 1. Session cookie (web browsers)
+    // 2. x-member-id header (Capacitor/iOS apps where cookies don't work cross-origin)
+    // 3. id query param (legacy fallback)
     const session = await getCurrentSession();
-    const memberId = session?.memberId ?? null;
+    let memberId = session?.memberId ?? null;
+
+    // For Capacitor apps, accept x-member-id header (cookies don't work cross-origin)
+    if (!memberId) {
+      const memberIdHeader = request.headers.get('x-member-id');
+      if (memberIdHeader && isValidUUID(memberIdHeader)) {
+        memberId = memberIdHeader;
+        console.log(`[/api/members/me] Using x-member-id header: ${memberId.substring(0, 8)}...`);
+      }
+    }
+
+    // Legacy fallback: id query param
+    if (!memberId) {
+      const idParam = request.nextUrl.searchParams.get('id');
+      if (idParam && isValidUUID(idParam)) {
+        memberId = idParam;
+        console.log(`[/api/members/me] Using id query param: ${memberId.substring(0, 8)}...`);
+      }
+    }
 
     if (!memberId) {
       return NextResponse.json(
         {
-          error: 'Session required',
-          code: 'NO_SESSION',
+          error: 'Identity required',
+          code: 'NO_IDENTITY',
           correlationId,
           action: 'signin'
         },

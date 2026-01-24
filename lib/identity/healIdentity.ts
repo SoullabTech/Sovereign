@@ -11,6 +11,7 @@
  */
 
 import { EXPLORER_ID_KEY } from './explorerId';
+import { apiUrl } from '@/lib/http/apiBase';
 
 export type HealResult =
   | { status: 'healed'; memberId: string; changes: string[] }
@@ -193,11 +194,16 @@ export async function healIdentity(options?: {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-      const response = await fetch(`/api/members/me?id=${encodeURIComponent(localId)}`, {
+      // Use apiUrl() for Capacitor compatibility (relative URLs don't work in iOS WebView)
+      // Also send x-member-id header for Capacitor (cookies don't work cross-origin)
+      const response = await fetch(apiUrl(`/api/members/me`), {
         method: 'GET',
         signal: controller.signal,
+        credentials: 'include',
+        mode: 'cors',
         headers: {
           'Accept': 'application/json',
+          'x-member-id': localId, // For Capacitor where cookies fail
         },
       });
 
