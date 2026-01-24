@@ -798,6 +798,30 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const maiaSpeak = useCallback(async (text: string, elementHint?: Element) => {
     if (!text || typeof window === 'undefined') return;
 
+    // Check if we need to show audio permission prompt
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+    if (isIOS && !audioContextRef.current) {
+      console.warn('📱 [iOS] AudioContext not initialized - creating now');
+      try {
+        audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+      } catch (e) {
+        console.error('❌ Failed to create AudioContext:', e);
+      }
+    }
+
+    // Try to resume AudioContext if suspended (iOS requires user gesture)
+    if (audioContextRef.current?.state === 'suspended') {
+      console.log('📱 [iOS] AudioContext suspended, attempting resume...');
+      try {
+        await audioContextRef.current.resume();
+        console.log('✅ [iOS] AudioContext resumed:', audioContextRef.current.state);
+      } catch (e) {
+        console.warn('⚠️ [iOS] Could not resume AudioContext - user interaction may be required:', e);
+      }
+    }
+
     try {
       console.log(`🎵 Speaking with OpenAI ${voiceSettings.voice}:`, text.substring(0, 100));
 
@@ -1438,11 +1462,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('🔓 [OracleConversation] Safari audio unlock listeners added');
     }
 
-    // TEMPORARILY DISABLED - causing black screen overlay on desktop
-    // if (isIOS && !isIOSAudioEnabled) {
-    //   setNeedsIOSAudioPermission(true);
-    //   console.log('📱 iOS detected - audio permission needed', { isIOS, isIOSSafari });
-    // }
+    // iOS Audio Permission - Show on iOS devices only (not desktop Safari)
+    // This is required for TTS playback on iOS Safari/Chrome/PWA
+    if (isIOS && !isIOSAudioEnabled) {
+      setNeedsIOSAudioPermission(true);
+      console.log('📱 iOS detected - audio permission prompt shown', { isIOS, isIOSSafari });
+    }
 
     // Get oracle agent ID for memory persistence
     if (userId) {
@@ -2095,8 +2120,9 @@ I'm not sure what I'm feeling yet.`;
 
       setAudioEnabled(true);
       setIsIOSAudioEnabled(true);
+      setAudioUnlocked(true); // Critical for Safari TTS
       setNeedsIOSAudioPermission(false);
-      console.log('✅ Audio enabled successfully - permissions cleared');
+      console.log('✅ Audio enabled successfully - AudioContext state:', audioContextRef.current?.state);
 
       // Show success feedback
       toast.success('Audio enabled! MAIA is ready to speak.', {
