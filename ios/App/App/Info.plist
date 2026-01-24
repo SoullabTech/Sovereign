@@ -19,7 +19,7 @@
 	<key>CFBundleShortVersionString</key>
 	<string>1.1</string>
 	<key>CFBundleVersion</key>
-	<string>114</string>
+	<string>125</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
@@ -30,6 +30,10 @@
 	<string>MAIA accesses your photo library to import handwritten journal pages.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
 	<string>MAIA uses speech recognition to understand your voice for consciousness-computing conversations.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Some system libraries may reference Bluetooth APIs. MAIA does not use Bluetooth features.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Some system libraries may reference Bluetooth APIs. MAIA does not use Bluetooth features.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>

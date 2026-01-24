@@ -46,6 +46,10 @@ const config: CapacitorConfig = {
     'VoiceRecorder'
   ],
   plugins: {
+    // Enable native HTTP to bypass CORS in WKWebView
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
       launchShowDuration: 3000,
       backgroundColor: "#1A1513",
