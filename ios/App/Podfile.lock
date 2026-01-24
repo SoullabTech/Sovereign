@@ -1,9 +1,17 @@
 PODS:
+  - AppAuth (1.7.6):
+    - AppAuth/Core (= 1.7.6)
+    - AppAuth/ExternalUserAgent (= 1.7.6)
+  - AppAuth/Core (1.7.6)
+  - AppAuth/ExternalUserAgent (1.7.6):
+    - AppAuth/Core
   - Capacitor (7.4.5):
     - CapacitorCordova
   - CapacitorApp (7.1.1):
     - Capacitor
   - CapacitorClipboard (7.0.3):
+    - Capacitor
+  - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
   - CapacitorCommunityBluetoothLe (7.3.0):
     - Capacitor
@@ -25,12 +33,24 @@ PODS:
     - Capacitor
   - CapacitorVoiceRecorder (7.0.6):
     - Capacitor
+  - GoogleSignIn (6.2.4):
+    - AppAuth (~> 1.5)
+    - GTMAppAuth (~> 1.3)
+    - GTMSessionFetcher/Core (< 3.0, >= 1.1)
+  - GTMAppAuth (1.3.1):
+    - AppAuth/Core (~> 1.6)
+    - GTMSessionFetcher/Core (< 3.0, >= 1.5)
+  - GTMSessionFetcher/Core (2.3.0)
   - IONFilesystemLib (1.0.1)
+  - SouthdevsCapacitorGoogleAuth (0.0.1):
+    - Capacitor
+    - GoogleSignIn (~> 6.2.4)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorApp (from `../../node_modules/@capacitor/app`)"
   - "CapacitorClipboard (from `../../node_modules/@capacitor/clipboard`)"
+  - "CapacitorCommunityAppleSignIn (from `../../node_modules/@capacitor-community/apple-sign-in`)"
   - "CapacitorCommunityBluetoothLe (from `../../node_modules/@capacitor-community/bluetooth-le`)"
   - "CapacitorCommunitySpeechRecognition (from `../../node_modules/@capacitor-community/speech-recognition`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
@@ -41,9 +61,14 @@ DEPENDENCIES:
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CapacitorStatusBar (from `../../node_modules/@capacitor/status-bar`)"
   - CapacitorVoiceRecorder (from `../../node_modules/capacitor-voice-recorder`)
+  - "SouthdevsCapacitorGoogleAuth (from `../../node_modules/@southdevs/capacitor-google-auth`)"
 
 SPEC REPOS:
   trunk:
+    - AppAuth
+    - GoogleSignIn
+    - GTMAppAuth
+    - GTMSessionFetcher
     - IONFilesystemLib
 
 EXTERNAL SOURCES:
@@ -53,6 +78,8 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/app"
   CapacitorClipboard:
     :path: "../../node_modules/@capacitor/clipboard"
+  CapacitorCommunityAppleSignIn:
+    :path: "../../node_modules/@capacitor-community/apple-sign-in"
   CapacitorCommunityBluetoothLe:
     :path: "../../node_modules/@capacitor-community/bluetooth-le"
   CapacitorCommunitySpeechRecognition:
@@ -73,11 +100,15 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor/status-bar"
   CapacitorVoiceRecorder:
     :path: "../../node_modules/capacitor-voice-recorder"
+  SouthdevsCapacitorGoogleAuth:
+    :path: "../../node_modules/@southdevs/capacitor-google-auth"
 
 SPEC CHECKSUMS:
+  AppAuth: d4f13a8fe0baf391b2108511793e4b479691fb73
   Capacitor: 12914e6f1b7835e161a74ebd19cb361efa37a7dd
   CapacitorApp: 63b237168fc869e758481dba283315a85743ee78
   CapacitorClipboard: 2a282bc14e8f47d430f2f9698ed95fbe25dcc21c
+  CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
   CapacitorCommunityBluetoothLe: 41f9dec8a4c16ab6b81e56402b6047fc19b4735d
   CapacitorCommunitySpeechRecognition: 3e03566c44c2bb3b52391a33d4518b1adbdeb38f
   CapacitorCordova: 31bbe4466000c6b86d9b7f1181ee286cff0205aa
@@ -88,8 +119,12 @@ SPEC CHECKSUMS:
   CapacitorSplashScreen: 000f7591d546907dda5cbb514bd6b6d9e6048cf8
   CapacitorStatusBar: d0e0151c89c001a9c7125bac59ddedf76b664768
   CapacitorVoiceRecorder: 9158861be982f32d411769723a4d813d6ce46135
+  GoogleSignIn: 5651ce3a61e56ca864160e79b484cd9ed3f49b7a
+  GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
+  GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
   IONFilesystemLib: 89258b8e3e85465da93127d25d7ce37f977e8a6f
+  SouthdevsCapacitorGoogleAuth: 6488c21faed47c2cf72404bfbfc0fe0e9af766bc
 
-PODFILE CHECKSUM: be23e82465ebedca131dcabf9ab300214e6f209c
+PODFILE CHECKSUM: de6278cb8959f29a599ee1c2a99c0fb2fe7b403c
 
 COCOAPODS: 1.16.2
