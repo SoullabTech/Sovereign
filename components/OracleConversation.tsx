@@ -2700,7 +2700,7 @@ I'm not sure what I'm feeling yet.`;
 
         // Speak the fallback if voice is enabled
         if (!showChatInterface && voiceEnabled && maiaReady) {
-          speakWithMaiaVoice(fallbackText);
+          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
         }
         return;
       }
@@ -2800,7 +2800,7 @@ I'm not sure what I'm feeling yet.`;
 
         // Speak the fallback if voice is enabled
         if (!showChatInterface && voiceEnabled && maiaReady) {
-          speakWithMaiaVoice(fallbackText);
+          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
         }
         return;
       }
@@ -2833,7 +2833,7 @@ I'm not sure what I'm feeling yet.`;
         setMaiaResponseText(fallbackText);
 
         if (!showChatInterface && voiceEnabled && maiaReady) {
-          speakWithMaiaVoice(fallbackText);
+          handleSpeakMessage(fallbackText, `fallback-${Date.now()}`);
         }
         return;
       }

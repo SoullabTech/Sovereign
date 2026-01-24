@@ -116,30 +116,12 @@ soullab.life {
     }
 
     # SSE/Streaming endpoints - disable compression and buffering
+    # NOTE: CORS headers are handled by Next.js API routes
     @streaming {
         path /api/voice/stream-conversation
         path /api/*/stream*
     }
     handle @streaming {
-        # CORS for Capacitor
-        @stream_capacitor {
-            header Origin capacitor://localhost
-        }
-        header @stream_capacitor Access-Control-Allow-Origin "capacitor://localhost"
-        header @stream_capacitor Access-Control-Allow-Credentials "true"
-        # CORS for Ionic
-        @stream_ionic {
-            header Origin ionic://localhost
-        }
-        header @stream_ionic Access-Control-Allow-Origin "ionic://localhost"
-        header @stream_ionic Access-Control-Allow-Credentials "true"
-        # CORS for null origin (WebKit edge case)
-        @stream_null {
-            header Origin null
-        }
-        header @stream_null Access-Control-Allow-Origin "null"
-        header @stream_null Access-Control-Allow-Credentials "true"
-
         reverse_proxy maia:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
@@ -151,29 +133,12 @@ soullab.life {
     }
 
     # API requests (non-streaming)
+    # NOTE: CORS headers are handled by Next.js API routes (lib/sovereign/http)
+    # Do NOT add CORS headers here - it causes "multiple origin" errors
     @api {
         path /api/*
     }
     handle @api {
-        # CORS for Capacitor
-        @api_capacitor {
-            header Origin capacitor://localhost
-        }
-        header @api_capacitor Access-Control-Allow-Origin "capacitor://localhost"
-        header @api_capacitor Access-Control-Allow-Credentials "true"
-        # CORS for Ionic
-        @api_ionic {
-            header Origin ionic://localhost
-        }
-        header @api_ionic Access-Control-Allow-Origin "ionic://localhost"
-        header @api_ionic Access-Control-Allow-Credentials "true"
-        # CORS for null origin (WebKit edge case)
-        @api_null {
-            header Origin null
-        }
-        header @api_null Access-Control-Allow-Origin "null"
-        header @api_null Access-Control-Allow-Credentials "true"
-
         reverse_proxy maia:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
