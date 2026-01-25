@@ -85,7 +85,7 @@ export function SubscriptionProvider({ children }: { children: ReactNode }) {
     // Beta testers get full premium access (uses state for hydration-safe check)
     if (isBetaTester) return true;
     if (!user) return false;
-    return TIER_FEATURES[user.subscription.tier].includes(feature);
+    return TIER_FEATURES[user.subscription.tier]?.includes(feature) ?? false;
   }, [isBetaTester, user]);
 
   const requireSubscription = useCallback((feature: PremiumFeature): boolean => {
