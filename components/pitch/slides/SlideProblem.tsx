@@ -3,10 +3,9 @@
 import { motion } from 'framer-motion';
 
 const problems = [
-  { text: 'AI optimizes for engagement, not flourishing', delay: 0.2 },
-  { text: 'Therapy addresses pathology, not wisdom cultivation', delay: 0.4 },
-  { text: 'Apps extract attention as the product', delay: 0.6 },
-  { text: 'Your conversations disappear; your patterns don\'t accumulate', delay: 0.8 },
+  { text: 'Most AI learned from internet groupthink.', delay: 0.2 },
+  { text: 'We thought you deserved something richer.', delay: 0.5 },
+  { text: 'Something that speaks to mind, body, spirit, and emotions.', delay: 0.8 },
 ];
 
 export function SlideProblem() {
@@ -30,7 +29,7 @@ export function SlideProblem() {
         className="text-white text-4xl sm:text-5xl md:text-6xl font-light text-center mb-16 max-w-4xl"
         style={{ fontFamily: 'Crimson Pro, serif' }}
       >
-        We've outsourced our inner authority
+        You deserve better.
       </motion.h2>
 
       {/* Problem points */}

@@ -4,30 +4,27 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SlideOpening } from './slides/SlideOpening';
 import { SlideProblem } from './slides/SlideProblem';
-import { SlideMissing } from './slides/SlideMissing';
-import { SlideWhatMAIAIs } from './slides/SlideWhatMAIAIs';
-import { SlideHowItWorks } from './slides/SlideHowItWorks';
-import { SlideSovereignty } from './slides/SlideSovereignty';
-import { SlideFounder } from './slides/SlideFounder';
-import { SlideMoat } from './slides/SlideMoat';
-import { SlideTiers } from './slides/SlideTiers';
-import { SlideMarket } from './slides/SlideMarket';
-import { SlideTraction } from './slides/SlideTraction';
+import { SlideDifference } from './slides/SlideDifference';
+import { SlideWhatYouDo } from './slides/SlideWhatYouDo';
+import { SlideTrust } from './slides/SlideTrust';
+import { SlideWhyMe } from './slides/SlideWhyMe';
 import { SlideAsk } from './slides/SlideAsk';
+// Appendix slides
+import { SlideTiersAppendix } from './slides/SlideTiersAppendix';
+import { SlideMemberAppendix } from './slides/SlideMemberAppendix';
 
 const slides = [
+  // Main deck (7 slides)
   { id: 'opening', component: SlideOpening },
   { id: 'problem', component: SlideProblem },
-  { id: 'missing', component: SlideMissing },
-  { id: 'what-maia-is', component: SlideWhatMAIAIs },
-  { id: 'how-it-works', component: SlideHowItWorks },
-  { id: 'sovereignty', component: SlideSovereignty },
-  { id: 'founder', component: SlideFounder },
-  { id: 'moat', component: SlideMoat },
-  { id: 'tiers', component: SlideTiers },
-  { id: 'market', component: SlideMarket },
-  { id: 'traction', component: SlideTraction },
+  { id: 'difference', component: SlideDifference },
+  { id: 'what-you-do', component: SlideWhatYouDo },
+  { id: 'trust', component: SlideTrust },
+  { id: 'why-me', component: SlideWhyMe },
   { id: 'ask', component: SlideAsk },
+  // Appendix (2 slides)
+  { id: 'appendix-tiers', component: SlideTiersAppendix },
+  { id: 'appendix-member', component: SlideMemberAppendix },
 ];
 
 export function PitchDeck() {
@@ -133,20 +130,25 @@ export function PitchDeck() {
       {/* Navigation controls */}
       <div className="fixed bottom-0 left-0 right-0 p-6 flex items-center justify-between bg-gradient-to-t from-black/80 via-black/40 to-transparent">
         {/* Progress dots */}
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           {slides.map((slide, index) => (
-            <button
-              key={slide.id}
-              onClick={() => goToSlide(index)}
-              className={`h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide
-                  ? 'bg-amber-400 w-8'
-                  : index < currentSlide
-                  ? 'bg-amber-400/60 w-3'
-                  : 'bg-white/40 hover:bg-white/60 w-3'
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
+            <div key={slide.id} className="flex items-center gap-2">
+              {/* Separator before appendix */}
+              {index === 7 && (
+                <div className="w-px h-3 bg-white/20 mx-1" />
+              )}
+              <button
+                onClick={() => goToSlide(index)}
+                className={`h-3 rounded-full transition-all duration-300 ${
+                  index === currentSlide
+                    ? index >= 7 ? 'bg-purple-400 w-8' : 'bg-amber-400 w-8'
+                    : index < currentSlide
+                    ? index >= 7 ? 'bg-purple-400/60 w-3' : 'bg-amber-400/60 w-3'
+                    : 'bg-white/40 hover:bg-white/60 w-3'
+                }`}
+                aria-label={`Go to slide ${index + 1}${index >= 7 ? ' (appendix)' : ''}`}
+              />
+            </div>
           ))}
         </div>
 

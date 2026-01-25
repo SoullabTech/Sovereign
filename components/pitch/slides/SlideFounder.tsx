@@ -2,15 +2,6 @@
 
 import { motion } from 'framer-motion';
 
-const modalities = [
-  'Energy Healing',
-  'Bodywork',
-  'Hypnotherapy',
-  'Shamanic Journeywork',
-  'Jungian Archetypal Work',
-  'NLP',
-];
-
 export function SlideFounder() {
   return (
     <div className="h-screen flex flex-col items-center justify-center px-8 md:px-16 lg:px-24">
@@ -21,7 +12,7 @@ export function SlideFounder() {
         transition={{ duration: 0.5 }}
         className="text-amber-400/60 text-sm uppercase tracking-[0.3em] mb-8"
       >
-        35 Years of Integration
+        35 Years of Practice
       </motion.p>
 
       {/* Main headline */}
@@ -32,66 +23,56 @@ export function SlideFounder() {
         className="text-white text-4xl sm:text-5xl md:text-6xl font-light text-center mb-12"
         style={{ fontFamily: 'Crimson Pro, serif' }}
       >
-        Born from practice, not theory
+        Designed by someone who's been in the room
       </motion.h2>
 
-      {/* Credentials flow */}
+      {/* The story */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6, delay: 0.3 }}
-        className="flex flex-col items-center gap-4 mb-12"
+        className="max-w-2xl text-center space-y-6 mb-12"
       >
-        <div className="text-teal-200/80 text-xl">PhD Program — Clinical/Developmental Psychology</div>
-        <div className="text-white/30">↓</div>
-        <div className="text-teal-200/80 text-xl">Harvard Mind Body Institute — 2 Year Practicum</div>
-        <div className="text-white/30">↓</div>
-        <div className="text-amber-200/80 text-xl font-medium">35+ Years Private Practice</div>
+        <p className="text-white/70 text-xl font-light" style={{ fontFamily: 'Crimson Pro, serif' }}>
+          MAIA wasn't designed by engineers guessing what growth looks like.
+        </p>
+        <p className="text-teal-200/80 text-xl font-light" style={{ fontFamily: 'Crimson Pro, serif' }}>
+          She was shaped by decades of sitting with people —
+          <br />
+          through change, grief, awakening, and becoming.
+        </p>
       </motion.div>
 
-      {/* Modalities grid */}
+      {/* Credentials - quiet */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.6 }}
-        className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 max-w-3xl"
+        className="bg-white/5 backdrop-blur-sm rounded-2xl p-8 border border-white/10 max-w-2xl text-center"
       >
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {modalities.map((modality, index) => (
-            <motion.div
-              key={modality}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
-              className="text-white/70 text-center py-2"
-            >
-              {modality}
-            </motion.div>
+        <div className="space-y-3 text-white/60 mb-6">
+          <p>Harvard Mind Body Institute</p>
+          <p>35+ years private practice</p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2 text-white/50 text-sm">
+          {['Energy work', 'Depth psychology', 'Somatic practice', 'Archetypal work', 'CBT', 'NLP', 'Shamanic traditions'].map((mod, index) => (
+            <span key={mod}>
+              {mod}{index < 6 ? ' · ' : ''}
+            </span>
           ))}
         </div>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 1.4 }}
-          className="text-white/40 text-center mt-4 text-sm"
-        >
-          Not sequential — integrated. All elements of human experience unified.
-        </motion.p>
       </motion.div>
 
-      {/* Bottom insight */}
-      <motion.div
+      {/* The line */}
+      <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1.6 }}
-        className="mt-12 flex flex-col items-center"
+        transition={{ duration: 0.5, delay: 1 }}
+        className="mt-10 text-white/40 text-base"
+        style={{ fontFamily: 'Crimson Pro, serif' }}
       >
-        <div className="text-white/30 mb-4">↓</div>
-        <div className="text-amber-400 text-2xl font-medium">Spiralogic</div>
-        <div className="text-white/50 text-lg">25 years of framework development</div>
-        <div className="text-white/30 mt-4 mb-2">↓</div>
-        <div className="text-teal-400 text-2xl font-medium">MAIA</div>
-      </motion.div>
+        This isn't theory. It's lived practice.
+      </motion.p>
     </div>
   );
 }

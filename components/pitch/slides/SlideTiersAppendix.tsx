@@ -6,7 +6,7 @@ const tiers = [
   {
     name: 'Presence',
     price: 'Free',
-    description: 'Meet MAIA. Think out loud.',
+    description: 'Meet MAIA. Journal. Reflect. Everything in the moment.',
     color: 'text-white',
     bgColor: 'bg-white/5',
     borderColor: 'border-white/20',
@@ -15,7 +15,7 @@ const tiers = [
     name: 'Continuity',
     price: '$5–15/mo',
     priceNote: 'pay what feels right',
-    description: 'A longer conversation.',
+    description: 'MAIA remembers alongside you. Patterns across time.',
     color: 'text-teal-400',
     bgColor: 'bg-teal-400/10',
     borderColor: 'border-teal-400/30',
@@ -24,14 +24,14 @@ const tiers = [
   {
     name: 'Stewardship',
     price: '$35/mo',
-    description: 'For those who hold space for others.',
-    color: 'text-amber-400',
-    bgColor: 'bg-amber-400/10',
-    borderColor: 'border-amber-400/30',
+    description: 'For practitioners. Guardian Console. Client tools.',
+    color: 'text-purple-400',
+    bgColor: 'bg-purple-400/10',
+    borderColor: 'border-purple-400/30',
   },
 ];
 
-export function SlideTiers() {
+export function SlideTiersAppendix() {
   return (
     <div className="h-screen flex flex-col items-center justify-center px-8 md:px-16 lg:px-24">
       {/* Section label */}
@@ -39,9 +39,9 @@ export function SlideTiers() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="text-teal-400/60 text-sm uppercase tracking-[0.3em] mb-8"
+        className="text-purple-400/60 text-sm uppercase tracking-[0.3em] mb-8"
       >
-        Ways to Be Here
+        Appendix: Business Model
       </motion.p>
 
       {/* Main headline */}
@@ -88,11 +88,11 @@ export function SlideTiers() {
         transition={{ duration: 0.6, delay: 0.8 }}
         className="text-center"
       >
-        <p className="text-white/40 text-base">
-          <span className="text-amber-300">Pioneer</span> — $222 once, never again.
+        <p className="text-white/50 text-lg">
+          <span className="text-amber-300 font-medium">Pioneer</span> — $222 once, never again.
         </p>
-        <p className="text-white/25 text-sm mt-1">
-          A founding circle. A shared beginning.
+        <p className="text-white/30 text-sm mt-1">
+          Founding believers. Honored forever.
         </p>
       </motion.div>
     </div>

@@ -29,7 +29,7 @@ export function SlideMarket() {
         className="text-white text-4xl sm:text-5xl md:text-6xl font-light text-center mb-16"
         style={{ fontFamily: 'Crimson Pro, serif' }}
       >
-        Post-LMS, post-coaching, post-chatbot
+        Beyond tools. Into transformation.
       </motion.h2>
 
       {/* Market size cards */}

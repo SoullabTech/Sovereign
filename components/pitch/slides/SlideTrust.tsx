@@ -2,13 +2,7 @@
 
 import { motion } from 'framer-motion';
 
-const promises = [
-  { text: 'Your words belong to you.', emphasis: false },
-  { text: 'Your patterns serve only your life.', emphasis: true },
-  { text: 'You can leave anytime — with everything you\'ve made.', emphasis: false },
-];
-
-export function SlideSovereignty() {
+export function SlideTrust() {
   return (
     <div className="h-screen flex flex-col items-center justify-center px-8 md:px-16 lg:px-24 relative">
       {/* Background lock icon */}
@@ -25,7 +19,7 @@ export function SlideSovereignty() {
         transition={{ duration: 0.5 }}
         className="text-teal-400/60 text-sm uppercase tracking-[0.3em] mb-8"
       >
-        The Promise
+        Trust
       </motion.p>
 
       {/* Main headline */}
@@ -33,28 +27,33 @@ export function SlideSovereignty() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8 }}
-        className="text-white text-4xl sm:text-5xl md:text-6xl font-light text-center mb-16"
+        className="text-white text-5xl sm:text-6xl md:text-7xl font-light text-center mb-16"
         style={{ fontFamily: 'Crimson Pro, serif' }}
       >
         Yours. Always.
       </motion.h2>
 
-      {/* Promises */}
-      <div className="space-y-6 max-w-2xl">
-        {promises.map((promise, index) => (
-          <motion.p
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 + index * 0.15 }}
-            className={`text-xl md:text-2xl font-light text-center ${
-              promise.emphasis ? 'text-teal-200' : 'text-white/70'
-            }`}
-            style={{ fontFamily: 'Crimson Pro, serif' }}
-          >
-            {promise.text}
-          </motion.p>
-        ))}
+      {/* Two simple lines */}
+      <div className="space-y-6 max-w-2xl text-center">
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="text-white/70 text-xl md:text-2xl font-light"
+          style={{ fontFamily: 'Crimson Pro, serif' }}
+        >
+          Your words belong to you.
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.5 }}
+          className="text-teal-200/80 text-xl md:text-2xl font-light"
+          style={{ fontFamily: 'Crimson Pro, serif' }}
+        >
+          You can leave anytime — with everything.
+        </motion.p>
       </div>
 
       {/* Visual lock icon */}
@@ -62,7 +61,7 @@ export function SlideSovereignty() {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.8 }}
-        className="mt-12"
+        className="mt-16"
       >
         <div className="w-16 h-16 rounded-full border-2 border-teal-400/40 flex items-center justify-center">
           <svg className="w-8 h-8 text-teal-400/60" fill="none" viewBox="0 0 24 24" stroke="currentColor">

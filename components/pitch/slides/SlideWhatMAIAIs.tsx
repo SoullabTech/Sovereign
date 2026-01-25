@@ -5,24 +5,24 @@ import { motion } from 'framer-motion';
 const voices = [
   {
     name: 'Talk',
-    description: 'Peer presence. Short, real.',
-    example: '"Stuck. Where?"',
+    description: 'When you just need to say it.',
+    example: '"I\'m stuck."',
     color: 'text-amber-400',
     bgColor: 'bg-amber-400/10',
     borderColor: 'border-amber-400/30',
   },
   {
     name: 'Care',
-    description: 'Therapeutic holding. Pattern-naming, direct when needed.',
-    example: '"I notice you\'ve avoided this three times now."',
+    description: 'When you need help understanding.',
+    example: '"Help me see what keeps repeating."',
     color: 'text-teal-400',
     bgColor: 'bg-teal-400/10',
     borderColor: 'border-teal-400/30',
   },
   {
     name: 'Note',
-    description: 'Witnessing. Reflects without interpreting.',
-    example: '"You used \'trapped\' again. What do you notice?"',
+    description: 'When you need someone to listen.',
+    example: '"Just listen."',
     color: 'text-purple-400',
     bgColor: 'bg-purple-400/10',
     borderColor: 'border-purple-400/30',
@@ -50,7 +50,7 @@ export function SlideWhatMAIAIs() {
         className="text-white text-4xl sm:text-5xl md:text-6xl font-light text-center mb-16"
         style={{ fontFamily: 'Crimson Pro, serif' }}
       >
-        Three voices, one presence
+        Three ways to think out loud
       </motion.h2>
 
       {/* Voice cards */}
