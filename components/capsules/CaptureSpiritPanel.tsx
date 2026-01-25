@@ -133,7 +133,7 @@ export default function CaptureSpiritPanel({
             </div>
 
             {/* Content */}
-            <div className="p-4 pt-0 space-y-6">
+            <div className="p-4 pt-0 pb-40 space-y-6">
               {/* Loading State */}
               {isLoading && (
                 <div className="flex flex-col items-center justify-center py-16">

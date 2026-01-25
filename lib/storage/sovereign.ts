@@ -216,12 +216,54 @@ export async function saveQuickJournal(
   content: string,
   options: QuickJournalOptions
 ): Promise<QuickJournalResult> {
-  // Stub - save to localStorage for now
-  const id = `journal_${options.userId}_${Date.now()}`;
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(id, JSON.stringify({ content, ...options, timestamp: new Date().toISOString() }));
+  const localId = `journal_${options.userId}_${Date.now()}`;
+  let serverSuccess = false;
+  let serverId: string | undefined;
+
+  // Always try to save to server (PostgreSQL) for cross-device sync
+  try {
+    const response = await fetch('/api/journal/quick/list', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: options.userId,
+        entryType: options.entryType || 'day',
+        content,
+        tags: options.tags || [],
+        source: options.source || 'quick_sheet',
+        meta: options.meta,
+      }),
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      if (data.success && data.entryId) {
+        serverSuccess = true;
+        serverId = data.entryId;
+      }
+    }
+  } catch (err) {
+    console.warn('[sovereign] Server save failed, falling back to local:', err);
   }
-  return { success: true, id, local: true, server: false };
+
+  // Also save to localStorage for offline access / quick retrieval
+  if (typeof window !== 'undefined') {
+    const localEntry = {
+      id: serverId || localId,
+      content,
+      ...options,
+      timestamp: new Date().toISOString(),
+      synced: serverSuccess,
+    };
+    localStorage.setItem(serverId || localId, JSON.stringify(localEntry));
+  }
+
+  return {
+    success: serverSuccess || typeof window !== 'undefined',
+    id: serverId || localId,
+    local: true,
+    server: serverSuccess,
+  };
 }
 
 export async function updateStorageConsent(
