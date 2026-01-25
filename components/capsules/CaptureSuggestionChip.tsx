@@ -25,14 +25,18 @@ export default function CaptureSuggestionChip({
   return (
     <AnimatePresence>
       {isVisible && (
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 10, scale: 0.95 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="fixed top-24 left-1/2 transform -translate-x-1/2 z-40 max-w-sm"
+        <div
+          className="fixed inset-x-0 z-50 flex justify-center px-4"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
         >
-          <div className="bg-gradient-to-br from-[#D4B896]/20 to-[#D4B896]/10 backdrop-blur-xl rounded-2xl p-4 border border-[#D4B896]/30 shadow-2xl shadow-black/30">
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="w-full max-w-sm"
+          >
+            <div className="bg-gradient-to-br from-[#D4B896]/20 to-[#D4B896]/10 backdrop-blur-xl rounded-2xl p-4 border border-[#D4B896]/30 shadow-2xl shadow-black/30">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 w-10 h-10 bg-[#D4B896]/20 rounded-full flex items-center justify-center">
                 <Sparkles className="w-5 h-5 text-[#D4B896]" />
@@ -68,6 +72,7 @@ export default function CaptureSuggestionChip({
             </div>
           </div>
         </motion.div>
+      </div>
       )}
     </AnimatePresence>
   );

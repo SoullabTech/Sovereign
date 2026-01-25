@@ -39,7 +39,6 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
-import { CapacitorHttp } from '@capacitor/core';
 
 /**
  * Safe base64 to ArrayBuffer decoder that handles large strings
@@ -73,6 +72,7 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
 }
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
+import { VoiceController } from '@/lib/voice/AudioSessionManager';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
 // REMOVED FORMANT VOICE ENGINE - MAIA now speaks with OpenAI Alloy voice
@@ -660,6 +660,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const audioSourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
+  const iosWarmedAudioRef = useRef<HTMLAudioElement | null>(null); // Pre-warmed audio element for iOS Safari
   const isProcessingRef = useRef(false);
   const isRespondingRef = useRef(false);
   const isAudioPlayingRef = useRef(false);
@@ -872,6 +873,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       const isCapacitor = typeof window !== 'undefined' &&
                           (window as any).Capacitor?.isNativePlatform?.();
 
+      // 🔊 iOS Audio Session: Prepare for speaking (configures iOS audio session for playback)
+      // This is CRITICAL - without it, audio won't play through speakers on iOS
+      if (isCapacitor) {
+        console.log('📱 [iOS] Preparing audio session for speaking...');
+        const prepared = await VoiceController.prepareForSpeaking();
+        if (!prepared) {
+          console.error('❌ [iOS] Failed to prepare audio session for speaking');
+          await VoiceController.logDiagnostics();
+          // Continue anyway - might still work
+        } else {
+          console.log('✅ [iOS] Audio session ready for speaking');
+        }
+      }
+
       let audioBlob: Blob | null = null;
       let arrayBuffer: ArrayBuffer | null = null;
 
@@ -882,6 +897,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         const memberId = getValidMemberId();
         const ttsUrl = apiUrl('/api/voice/openai-tts');
 
+        // Dynamic import to avoid loading Capacitor on non-native platforms
+        const { CapacitorHttp } = await import('@capacitor/core');
         const nativeResponse = await CapacitorHttp.post({
           url: ttsUrl,
           headers: {
@@ -983,17 +1000,116 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         audioBlob = await response.blob();
         console.log(`🎵 Audio blob received: type=${audioBlob.type}, size=${audioBlob.size}`);
+
+        // Validate we got audio data, not an error response
+        if (audioBlob.type.includes('json') || audioBlob.size < 1000) {
+          const errorText = await audioBlob.text();
+          console.error('❌ [TTS] Got error response instead of audio:', errorText.slice(0, 300));
+          toast.error('Voice generation failed');
+          throw new Error('TTS returned error: ' + errorText.slice(0, 100));
+        }
       }
 
+      // Log which playback path we're taking
+      const isIOSSafari = isIOS && !isCapacitor;
+      console.log('🔍 [TTS] Playback path check:', { isIOS, isCapacitor, isIOSSafari, hasAudioContext: !!audioContextRef.current });
+
+      // iOS Safari (PWA/browser): Use Web Audio API directly - more reliable than HTMLAudioElement
+      if (isIOSSafari && audioBlob && audioContextRef.current) {
+        console.log('📱 [iOS Safari] Using Web Audio API (decodeAudioData) for playback');
+        console.log('📱 [iOS Safari] Blob type:', audioBlob.type, 'size:', audioBlob.size);
+
+        try {
+          // Ensure AudioContext is running
+          if (audioContextRef.current.state === 'suspended') {
+            console.log('📱 [iOS Safari] Resuming AudioContext...');
+            await audioContextRef.current.resume();
+            console.log('📱 [iOS Safari] AudioContext state:', audioContextRef.current.state);
+          }
+
+          // Convert blob to ArrayBuffer
+          const arrayBuffer = await audioBlob.arrayBuffer();
+          console.log('📱 [iOS Safari] ArrayBuffer size:', arrayBuffer.byteLength);
+
+          // Decode the audio
+          const audioBuffer = await audioContextRef.current.decodeAudioData(arrayBuffer.slice(0));
+          console.log('📱 [iOS Safari] Decoded! Duration:', audioBuffer.duration, 'sampleRate:', audioBuffer.sampleRate);
+
+          // Create source
+          const source = audioContextRef.current.createBufferSource();
+          source.buffer = audioBuffer;
+
+          // Create gain node for volume
+          const gainNode = audioContextRef.current.createGain();
+          gainNode.gain.value = 1.0;
+
+          // Connect: source -> gain -> destination
+          source.connect(gainNode);
+          gainNode.connect(audioContextRef.current.destination);
+
+          console.log('📱 [iOS Safari] Audio graph ready, starting playback...');
+          setIsAudioPlaying(true);
+
+          // Play using Web Audio API
+          await new Promise<void>((resolve, reject) => {
+            const duration = audioBuffer.duration;
+            const playbackTimeout = setTimeout(() => {
+              console.error('❌ [iOS Safari] Playback timeout');
+              setIsAudioPlaying(false);
+              setVoiceAmplitude(0);
+              reject(new Error('Playback timeout'));
+            }, (duration + 30) * 1000);
+
+            source.onended = () => {
+              console.log('🔇 [iOS Safari] Web Audio playback complete');
+              clearTimeout(playbackTimeout);
+              setIsAudioPlaying(false);
+              setVoiceAmplitude(0);
+              resolve();
+            };
+
+            // Amplitude simulation
+            const amplitudeInterval = setInterval(() => {
+              setVoiceAmplitude(0.3 + Math.random() * 0.4);
+            }, 100);
+
+            // Start playback
+            source.start(0);
+            console.log('▶️ [iOS Safari] Web Audio playback started!');
+
+            // Clean up amplitude simulation when done
+            source.onended = () => {
+              clearInterval(amplitudeInterval);
+              clearTimeout(playbackTimeout);
+              setIsAudioPlaying(false);
+              setVoiceAmplitude(0);
+              console.log('🔇 [iOS Safari] Playback complete');
+              resolve();
+            };
+          });
+
+          setIsResponding(false);
+          return;
+
+        } catch (webAudioErr: any) {
+          console.error('❌ [iOS Safari] Web Audio API failed:', webAudioErr.message);
+          toast.error('Voice playback failed', { duration: 4000 });
+          // Fall through to generic Web Audio API path
+        }
+      }
+
+      // Web Audio API path (Capacitor native iOS or fallback)
       if (isIOS && audioContextRef.current) {
         console.log('📱 [iOS] Using Web Audio API for playback');
 
         // Ensure AudioContext is running
         if (audioContextRef.current.state === 'suspended') {
+          console.log('📱 [iOS] AudioContext suspended, resuming...');
           await audioContextRef.current.resume();
+          console.log('📱 [iOS] AudioContext state after resume:', audioContextRef.current.state);
         }
 
-        // Get ArrayBuffer if we don't have it yet (non-Capacitor iOS path)
+        // Get ArrayBuffer if we don't have it yet (fallback from HTMLAudioElement failure)
         if (!arrayBuffer && audioBlob) {
           arrayBuffer = await audioBlob.arrayBuffer();
         }
@@ -1018,6 +1134,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         const source = audioContextRef.current.createBufferSource();
         source.buffer = audioBuffer;
 
+        // Create GainNode for volume control (iOS sometimes needs explicit gain)
+        const gainNode = audioContextRef.current.createGain();
+        gainNode.gain.value = 1.0; // Full volume
+
         // Create analyser for visualization
         if (!audioAnalyserRef.current) {
           audioAnalyserRef.current = audioContextRef.current.createAnalyser();
@@ -1025,8 +1145,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           audioAnalyserRef.current.smoothingTimeConstant = 0.8;
         }
 
-        source.connect(audioAnalyserRef.current);
+        // Audio chain: source -> gain -> analyser -> destination
+        source.connect(gainNode);
+        gainNode.connect(audioAnalyserRef.current);
         audioAnalyserRef.current.connect(audioContextRef.current.destination);
+
+        // iOS diagnostic logging
+        console.log('🔊 [iOS] Audio graph connected:', {
+          contextState: audioContextRef.current.state,
+          sampleRate: audioContextRef.current.sampleRate,
+          destination: audioContextRef.current.destination.numberOfInputs,
+          gainValue: gainNode.gain.value,
+        });
 
         // Start amplitude reading loop
         const dataArray = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
@@ -1062,11 +1192,51 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             resolve();
           };
 
-          // Start playback
-          setIsAudioPlaying(true);
-          readAmplitude();
-          source.start(0);
-          console.log('▶️ [iOS] Audio started playing via Web Audio API');
+          // Catch any errors during playback
+          source.onerror = (e) => {
+            console.error('❌ [iOS] Audio source error:', e);
+            clearTimeout(playbackTimeout);
+            if (animationId) cancelAnimationFrame(animationId);
+            setVoiceAmplitude(0);
+            toast.error('Audio playback error - check mute switch', { duration: 4000 });
+            reject(new Error('Audio source error'));
+          };
+
+          // Start playback - ensure AudioContext is running
+          const startPlayback = () => {
+            console.log('🎵 [iOS] Starting playback, context state:', audioContextRef.current?.state);
+            setIsAudioPlaying(true);
+            readAmplitude();
+            source.start(0);
+            console.log('▶️ [iOS] Audio started playing via Web Audio API');
+            console.log('📱 [iOS] If no sound: check iPhone silent switch (left side of device)');
+          };
+
+          if (audioContextRef.current?.state === 'suspended') {
+            console.warn('⚠️ [iOS] AudioContext still suspended before playback, forcing resume...');
+            audioContextRef.current.resume().then(startPlayback).catch((e) => {
+              console.error('❌ [iOS] Failed to resume AudioContext:', e);
+              toast.error('Cannot play audio - tap screen first', { duration: 3000 });
+              startPlayback(); // Try anyway
+            });
+          } else {
+            startPlayback();
+          }
+
+          // After 2 seconds, check if audio is actually producing output
+          setTimeout(() => {
+            if (audioAnalyserRef.current && animationId) {
+              const checkData = new Uint8Array(audioAnalyserRef.current.frequencyBinCount);
+              audioAnalyserRef.current.getByteFrequencyData(checkData);
+              const hasOutput = checkData.some(v => v > 0);
+              if (!hasOutput) {
+                console.warn('⚠️ [iOS] No audio output detected - check mute switch or volume');
+                toast('No audio output - check mute switch & volume', { icon: '🔇', duration: 4000 });
+              } else {
+                console.log('✅ [iOS] Audio output confirmed');
+              }
+            }
+          }, 2000);
         });
 
       } else {
@@ -1160,6 +1330,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       stopAudioAnalysis();
       setIsResponding(false);
       setIsAudioPlaying(false);
+      // Show user-visible error for debugging
+      toast.error('Voice playback failed - check iPhone mute switch & volume', { duration: 5000 });
     }
   }, [startAudioAnalysis, stopAudioAnalysis, voiceSettings]);
 
@@ -2236,18 +2408,43 @@ I'm not sure what I'm feeling yet.`;
       }
 
       // iOS Safari needs a user gesture to unlock audio
-      // Use multiple approaches for maximum compatibility
+      // CRITICAL: Create and warm up a reusable Audio element that we'll use for TTS
       let audioUnlocked = false;
 
-      // Approach 1: Play longer silent MP3 (better iOS compatibility)
+      // Approach 1: Create a REUSABLE audio element for iOS (key fix!)
+      // iOS Safari requires using the SAME audio element that was "unlocked" via user gesture
       try {
-        const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA');
-        silentAudio.volume = 0.001;
-        // Set playsInline attribute for iOS compatibility
-        silentAudio.setAttribute('playsinline', '');
-        const playPromise = silentAudio.play();
-        if (playPromise) {
-          await playPromise;
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIOS) {
+          console.log('📱 [iOS] Creating warmed audio element for later TTS use');
+
+          // Create the audio element we'll reuse for TTS
+          const warmedAudio = new Audio();
+          warmedAudio.setAttribute('playsinline', '');
+          warmedAudio.setAttribute('webkit-playsinline', '');
+          (warmedAudio as any).playsInline = true;
+          warmedAudio.preload = 'auto';
+          warmedAudio.volume = 1.0;
+
+          // Play a tiny silent sound to "unlock" this specific element
+          warmedAudio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+
+          await warmedAudio.play();
+          warmedAudio.pause();
+          warmedAudio.currentTime = 0;
+
+          // Store for later use in TTS playback
+          iosWarmedAudioRef.current = warmedAudio;
+          audioUnlocked = true;
+          console.log('✅ [iOS] Warmed audio element ready for TTS reuse');
+        } else {
+          // Non-iOS: just play silent audio normally
+          const silentAudio = new Audio('data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA');
+          silentAudio.volume = 0.001;
+          silentAudio.setAttribute('playsinline', '');
+          await silentAudio.play();
           audioUnlocked = true;
           console.log('✅ Silent MP3 audio played successfully');
         }
@@ -4660,7 +4857,34 @@ I'm not sure what I'm feeling yet.`;
               e.stopPropagation();
               console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted });
 
-              // Enable audio context first
+              // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY before any await
+              // iOS Safari requires audio element creation + play in the SAME synchronous event handler
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+              if (isIOS && !iosWarmedAudioRef.current) {
+                console.log('📱 [iOS] SYNC warming audio element on click');
+                try {
+                  const audio = new Audio();
+                  audio.setAttribute('playsinline', '');
+                  audio.setAttribute('webkit-playsinline', '');
+                  (audio as any).playsInline = true;
+                  audio.volume = 1.0;
+                  audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+                  // MUST call play() synchronously in the click handler
+                  audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    console.log('✅ [iOS] Audio element warmed and ready');
+                  }).catch(err => {
+                    console.warn('⚠️ [iOS] Warm play failed:', err);
+                  });
+                  iosWarmedAudioRef.current = audio;
+                } catch (err) {
+                  console.warn('⚠️ [iOS] Failed to create warmed audio:', err);
+                }
+              }
+
+              // Enable audio context (can be async now that audio element is warmed)
               await enableAudio();
 
               // Use isListening state instead of isMuted for accurate toggle
@@ -5457,11 +5681,10 @@ I'm not sure what I'm feeling yet.`;
                           {message.role === 'user' ? (userName || 'You') : assistantName}
                         </div>
                         <div className="flex items-center gap-1 text-xs text-maia-spice-400
-                                      opacity-100 sm:opacity-0 sm:group-hover:opacity-100
+                                      opacity-0 group-hover:opacity-100 group-active:opacity-100
                                       touch-manipulation transition-opacity">
                           <Copy className="w-3 h-3 text-maia-spice-400" />
-                          <span className="hidden sm:inline text-maia-spice-400">Click to copy</span>
-                          <span className="sm:hidden text-maia-spice-400">Tap to copy</span>
+                          <span className="text-maia-spice-400">Copy</span>
                         </div>
                       </div>
                       <div className="text-base sm:text-lg md:text-xl leading-relaxed break-words text-dune-amber" style={{ fontFamily: 'Spectral, Georgia, serif' }}>
@@ -5639,18 +5862,23 @@ I'm not sure what I'm feeling yet.`;
           ) : null}
 
 
-          {/* Journal Suggestion - Appears when breakthrough is detected */}
+          {/* Journal Suggestion - Appears when breakthrough is detected (only after activation) */}
           <AnimatePresence mode="wait">
-            {showJournalSuggestion && (
-              <motion.div
-                key="journal-suggestion"
-                initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                transition={{ duration: 0.2 }}
-                className="fixed top-24 left-1/2 transform -translate-x-1/2 z-below-nav max-w-sm"
+            {showJournalSuggestion && hasActivated && (
+              <div
+                key="journal-suggestion-wrapper"
+                className="fixed inset-x-0 z-50 flex justify-center px-4"
+                style={{ top: 'calc(env(safe-area-inset-top, 0px) + 6rem)' }}
               >
-                <div className="bg-gradient-to-br from-amber-500/20 to-gold-divine/20 backdrop-blur-xl rounded-2xl p-4 border border-amber-400/30 shadow-2xl">
+                <motion.div
+                  key="journal-suggestion"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.2 }}
+                  className="w-full max-w-sm"
+                >
+                  <div className="bg-gradient-to-br from-amber-500/20 to-gold-divine/20 backdrop-blur-xl rounded-2xl p-4 border border-amber-400/30 shadow-2xl">
                   <div className="flex items-start gap-3">
                     <div className="flex-shrink-0 w-10 h-10 bg-amber-400/20 rounded-full flex items-center justify-center">
                       <BookOpen className="w-5 h-5 text-amber-300" />
@@ -5688,12 +5916,13 @@ I'm not sure what I'm feeling yet.`;
                   </div>
                 </div>
               </motion.div>
+            </div>
             )}
           </AnimatePresence>
 
-          {/* ✨ Capture the Spirit Suggestion */}
+          {/* ✨ Capture the Spirit Suggestion - only show after activation, and not when journal suggestion is showing */}
           <CaptureSuggestionChip
-            isVisible={showCaptureSuggestion && !showCapturePanel}
+            isVisible={showCaptureSuggestion && !showCapturePanel && hasActivated && !showJournalSuggestion}
             onCapture={handleCaptureSpirit}
             onDismiss={() => {
               setShowCaptureSuggestion(false);
@@ -6000,6 +6229,28 @@ I'm not sure what I'm feeling yet.`;
                 console.log('⏸️ Cannot turn mic ON - MAIA is speaking');
                 return;
               }
+
+              // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY
+              const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+                            (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+              if (isIOS && !iosWarmedAudioRef.current) {
+                console.log('📱 [iOS] SYNC warming audio on toggle-microphone');
+                try {
+                  const audio = new Audio();
+                  audio.setAttribute('playsinline', '');
+                  audio.volume = 1.0;
+                  audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+                  audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    console.log('✅ [iOS] Audio warmed via toggle-microphone');
+                  }).catch(() => {});
+                  iosWarmedAudioRef.current = audio;
+                } catch (err) {
+                  console.warn('⚠️ [iOS] Warm failed:', err);
+                }
+              }
+
               setShowChatInterface(false);
               setIsMuted(false);
               enableAudio().then(() => {
