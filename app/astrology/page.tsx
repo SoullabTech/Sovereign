@@ -30,7 +30,7 @@ import { getOrCreateExplorerId } from '@/lib/identity/explorerId';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { getTooltip, CARD_COPY } from '@/lib/content/CrossSystemConvergenceCopy';
 import { useUserAuth } from '@/lib/hooks/useUserAuth';
-import { useSession } from '@/lib/hooks/useSession';
+// Tier checks removed for beta - all users have full access
 import { mapAudienceMode } from '@/lib/content/audienceMode';
 import ZodiacToggle, { type ZodiacSystem, type AyanamsaType } from '@/components/astrology/ZodiacToggle';
 import { calculateAyanamsa, tropicalToSidereal } from '@/lib/astrology/ayanamsaCalculator';
@@ -165,7 +165,8 @@ function chartDataToPlanets(chart: BirthChartData) {
 
 export default function AstrologyPage() {
   const router = useRouter();
-  const { isPersonal } = useSession();
+  // Beta: all users have full access
+  const isPersonal = true;
   const [chartData, setChartData] = useState<BirthChartData | null>(null);
   const [loading, setLoading] = useState(true);
   const [hasBirthData, setHasBirthData] = useState(false);
@@ -954,6 +955,14 @@ export default function AstrologyPage() {
                     ['conjunction', 'sextile', 'square', 'trine', 'opposition'].includes(a.type)
                   )}
                 transits={showTransits ? transitPositions : undefined}
+                missionLayerSettings={{
+                  showEmerging: false,
+                  showActive: false,
+                  showCompleted: false,
+                  showUrgent: false,
+                  showArchetypal: false,
+                  showTransits: showTransits,
+                }}
                 isDayMode={false}
                 layoutMode="traditional"
                 showAspects={true}
@@ -1184,7 +1193,6 @@ export default function AstrologyPage() {
             <h2 className="text-xl font-medium tracking-wide text-dune-amber mb-6 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-dune-spice-orange" />
               Major Aspects
-              {!isPersonal && <Lock className="w-4 h-4 text-dune-amber/60 ml-2" />}
             </h2>
             <p className="text-white/80 mb-6 text-sm tracking-wide">
               Archetypal dynamics between planetary energies in your chart
@@ -1473,7 +1481,6 @@ export default function AstrologyPage() {
                 <h2 className="text-lg font-semibold text-white/80">
                   Additional Wisdom Systems
                 </h2>
-                {!isPersonal && <Lock className="w-4 h-4 text-white/50" />}
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
