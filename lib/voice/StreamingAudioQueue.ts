@@ -9,7 +9,7 @@
  * THE BETWEEN (streaming text) → Split sentences → TTS per sentence → Queue → Play
  */
 
-import { VoiceFeedbackPrevention } from './voice-feedback-prevention';
+import { VoiceFeedbackPrevention, getIOSAudioContext, startIOSAudioKeepAlive } from './voice-feedback-prevention';
 
 export interface AudioQueueItem {
   audio: HTMLAudioElement;
@@ -68,6 +68,72 @@ export class StreamingAudioQueue {
   }
 
   /**
+   * Ensure AudioContext is ready (critical for iOS which suspends between chunks)
+   * Uses the shared iOS AudioContext so keep-alive pings the same context we use
+   */
+  private async ensureAudioContextReady(): Promise<void> {
+    // Use shared iOS AudioContext if available (so keep-alive works on the same context)
+    if (!this.audioContext) {
+      const sharedContext = getIOSAudioContext();
+      if (sharedContext) {
+        this.audioContext = sharedContext;
+        console.log('🔓 [StreamingQueue] Using shared iOS AudioContext');
+      } else {
+        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        console.log('🔓 [StreamingQueue] Created new AudioContext');
+      }
+      // Start keep-alive when we first get a context
+      startIOSAudioKeepAlive();
+    }
+    if (this.audioContext.state === 'suspended') {
+      console.log('🔓 [StreamingQueue] Resuming suspended AudioContext before chunk playback');
+      try {
+        await this.audioContext.resume();
+      } catch (e) {
+        console.warn('⚠️ [StreamingQueue] AudioContext resume failed:', e);
+      }
+    }
+  }
+
+  /**
+   * Attempt to play audio with retry logic for iOS unlock issues
+   */
+  private async attemptPlay(audio: HTMLAudioElement, retries = 3): Promise<boolean> {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        await this.ensureAudioContextReady();
+        await audio.play();
+        return true;
+      } catch (error: any) {
+        console.warn(`⚠️ [StreamingQueue] Play attempt ${attempt}/${retries} failed:`, error.name);
+
+        if (error.name === 'NotAllowedError') {
+          if (attempt < retries) {
+            // Wait with exponential backoff before retry
+            const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000);
+            console.log(`🔄 [StreamingQueue] Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+
+            // Try to resume AudioContext again
+            if (this.audioContext?.state === 'suspended') {
+              await this.audioContext.resume().catch(() => {});
+            }
+          } else {
+            // Final attempt failed - dispatch unlock event
+            if (typeof window !== 'undefined' && !this.audioUnlocked) {
+              window.dispatchEvent(new CustomEvent('maya-audio-unlock-needed'));
+            }
+          }
+        } else {
+          // Non-NotAllowedError - don't retry
+          break;
+        }
+      }
+    }
+    return false;
+  }
+
+  /**
    * Play the next audio chunk in the queue
    */
   private async playNext(): Promise<void> {
@@ -107,7 +173,7 @@ export class StreamingAudioQueue {
     // We control isAudioPlaying state directly via onComplete callback instead.
     // this.feedbackPrevention.registerAudioElement(item.audio);
 
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
       // 🔍 DEBUG: Track playback progress to detect unexpected cutoffs
       let playbackStarted = false;
       let expectedDuration = 0;
@@ -158,27 +224,17 @@ export class StreamingAudioQueue {
         this.playNext(); // Continue to next chunk even on error
       };
 
-      // Start playback with Safari unlock check
-      item.audio.play().catch(async (error) => {
-        // 🔥 FIX: Count failed plays
+      // Start playback with retry logic for iOS audio unlock issues
+      const playSucceeded = await this.attemptPlay(item.audio);
+
+      if (!playSucceeded) {
+        // All retries failed - count as failed and move on
         this.chunksPlayed++;
-        console.error(`❌ [StreamingQueue] Play failed for chunk #${this.chunksPlayed}:`, error);
-
-        // Check if this is a Safari NotAllowedError that requires audio unlock
-        if (error.name === 'NotAllowedError' && !this.audioUnlocked) {
-          console.log('🔓 [StreamingQueue] Detected NotAllowedError - Safari unlock may be needed');
-          console.log('🔓 [StreamingQueue] Audio unlock status:', this.audioUnlocked);
-
-          // Dispatch event to show unlock UI
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('maya-audio-unlock-needed'));
-          }
-        }
-
-        this.feedbackPrevention.unregisterAudioElement(item.audio);
+        console.error(`❌ [StreamingQueue] All play attempts failed for chunk #${this.chunksPlayed}`);
         resolve();
         this.playNext();
-      });
+      }
+      // If playback started, the onended/onerror handlers will call resolve() and playNext()
     });
   }
 
