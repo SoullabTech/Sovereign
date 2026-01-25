@@ -404,18 +404,15 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
     headers.set('Content-Type', 'application/json');
   }
 
-  // Add session token header (preferred - validates session is still active)
+  // Add session token header (required for server-side validation)
   const sessionToken = getSessionToken();
   if (sessionToken) {
     headers.set('x-session-token', sessionToken);
     console.log('[apiFetch/safari] Using x-session-token header');
   } else {
-    // Fall back to member ID (legacy support)
-    const memberId = getValidMemberId();
-    if (memberId) {
-      headers.set('x-member-id', memberId);
-      console.log('[apiFetch/safari] Using x-member-id header:', memberId.slice(0, 8) + '...');
-    }
+    // No session token - auth will fail on protected endpoints
+    // x-member-id alone is no longer accepted (security fix)
+    console.warn('[apiFetch/safari] No session token - user may need to re-authenticate');
   }
 
   return fetch(url, {
@@ -429,12 +426,12 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
 /**
  * Native Capacitor implementation using CapacitorHttp
  * This bypasses the fetch interceptor and uses native iOS/Android networking
+ * Note: Currently unused - apiFetchWithHeaders handles both Safari and native
  */
 async function apiFetchNative(
   url: string,
   method: string,
-  options: RequestInit,
-  memberId: string
+  options: RequestInit
 ): Promise<Response> {
   // Dynamic import to avoid loading Capacitor on web
   const { CapacitorHttp } = await import('@capacitor/core');
@@ -463,12 +460,15 @@ async function apiFetchNative(
     }
   }
 
-  // Add x-member-id only if we have one (signin happens before memberId exists)
-  if (memberId) {
-    headers['x-member-id'] = memberId;
-    console.log('[apiFetch/native] Using CapacitorHttp with x-member-id:', memberId.slice(0, 8) + '...');
+  // Add session token header (required for server-side validation)
+  const sessionToken = getSessionToken();
+  if (sessionToken) {
+    headers['x-session-token'] = sessionToken;
+    console.log('[apiFetch/native] Using CapacitorHttp with x-session-token');
   } else {
-    console.log('[apiFetch/native] Using CapacitorHttp (no memberId yet):', method, url);
+    // No session token - auth will fail on protected endpoints
+    // x-member-id alone is no longer accepted (security fix)
+    console.warn('[apiFetch/native] No session token - user may need to re-authenticate');
   }
 
   // Parse body if it's a string (likely JSON)

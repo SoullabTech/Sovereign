@@ -13,6 +13,13 @@ import { query } from '@/lib/db/postgres';
 import { randomBytes } from 'crypto';
 import { Resend } from 'resend';
 import { hashPassword } from '@/lib/auth/passwordUtils';
+import {
+  checkRateLimit,
+  getClientIP,
+  buildRateLimitHeaders
+} from '@/lib/auth/rateLimiter';
+
+const ENDPOINT = '/api/members/reset-password';
 
 // Lazy init Resend
 let resend: Resend | null = null;
@@ -35,6 +42,18 @@ function generateToken(): string {
 export async function POST(request: NextRequest) {
   if (process.env.CAPACITOR_BUILD === '1') {
     return NextResponse.json({ error: 'Not available in app build' }, { status: 503 });
+  }
+
+  const clientIP = getClientIP(request);
+
+  // Rate limit: 3 reset requests per 15 minutes per IP
+  const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
+  if (!rateLimitResult.allowed) {
+    const headers = buildRateLimitHeaders(rateLimitResult);
+    return NextResponse.json(
+      { error: 'Too many reset requests. Please try again later.' },
+      { status: 429, headers }
+    );
   }
 
   try {

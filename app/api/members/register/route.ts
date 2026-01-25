@@ -15,6 +15,13 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { hashPassword } from '@/lib/auth/passwordUtils';
+import {
+  checkRateLimit,
+  getClientIP,
+  buildRateLimitHeaders
+} from '@/lib/auth/rateLimiter';
+
+const ENDPOINT = '/api/members/register';
 
 // =============================================================================
 // CORS HELPERS - Required for Capacitor/mobile app cross-origin requests
@@ -84,8 +91,19 @@ async function safeQuery(sql: string, params: unknown[] = []): Promise<{ rows: R
 
 export async function POST(request: NextRequest) {
   const corsHeaders = getCorsHeaders(request);
+  const clientIP = getClientIP(request);
 
   try {
+    // Rate limit: 3 registrations per 10 minutes per IP
+    const rateLimitResult = await checkRateLimit(clientIP, 'ip', ENDPOINT);
+    if (!rateLimitResult.allowed) {
+      const headers = { ...corsHeaders, ...buildRateLimitHeaders(rateLimitResult) };
+      return NextResponse.json(
+        { error: 'Too many registration attempts. Please try again later.' },
+        { status: 429, headers }
+      );
+    }
+
     const body = await request.json();
     const { passkey, username, password, name, email, preferredName } = body;
 

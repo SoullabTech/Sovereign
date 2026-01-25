@@ -51,24 +51,9 @@ export async function requireMemberId(): Promise<string> {
     }
   }
 
-  // Method 3: Direct member ID header (legacy - validate it exists and has active session)
-  const headerMemberId = headerStore.get('x-member-id');
-  if (headerMemberId && UUID_REGEX.test(headerMemberId)) {
-    // Verify this member has at least one active session (prevents using stale member IDs)
-    const res = await query<{ member_id: string }>(
-      `SELECT member_id
-       FROM auth_sessions
-       WHERE member_id = $1
-         AND revoked = FALSE
-         AND expires_at > NOW()
-       LIMIT 1`,
-      [headerMemberId]
-    );
-
-    if (res.rows[0]?.member_id) {
-      return headerMemberId;
-    }
-  }
+  // Method 3 (x-member-id without session token) REMOVED for security.
+  // Previously accepted any valid member UUID if they had an active session,
+  // which allowed impersonation attacks. Use x-session-token header instead.
 
   throw new Error('AUTH_REQUIRED');
 }
