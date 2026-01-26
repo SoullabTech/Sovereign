@@ -561,9 +561,9 @@ export async function POST(req: NextRequest) {
 
         // ─── UPDATE SESSION PROSODY BASELINE ───
         // Conversation Prosody Memory: baseline drifts toward current delivery
-        const now = Date.now();
+        const baselineTs = Date.now();
         const prevBaseline = voiceSession.prosodyBaseline;
-        const dt = now - prevBaseline.updatedAt;
+        const dt = baselineTs - prevBaseline.updatedAt;
         const decay = dt > 60_000 ? 0.2 : 0; // 1+ min gap = loosen continuity
 
         // Store baseHints (pre-range), NOT prosodyHints (post-range).
@@ -574,7 +574,7 @@ export async function POST(req: NextRequest) {
           emphasis: baseHints.emphasis,
           // Continuity rises each turn, decays on gaps, caps at 1
           continuity: Math.max(0, Math.min(1, prevBaseline.continuity + 0.15 - decay)),
-          updatedAt: now,
+          updatedAt: baselineTs,
         };
 
         // Debug trace: only emits when VOICE_DEBUG_PROSODY=1 (no user content)
@@ -900,7 +900,12 @@ export async function POST(req: NextRequest) {
           timestamp: Date.now()
         });
       } finally {
-        controller.close();
+        // Guard against double-close (early returns may have already closed)
+        try {
+          controller.close();
+        } catch {
+          // Already closed — that's fine
+        }
       }
     }
   });
