@@ -86,7 +86,7 @@ export default function AccountPage() {
                      hover:bg-white/20 hover:border-white/30 transition-all
                      focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-950"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 text-white" />
             Return to MAIA
           </button>
 
@@ -98,7 +98,7 @@ export default function AccountPage() {
                        hover:bg-red-500/20 hover:border-red-500/30 transition-all
                        focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-400 focus-visible:ring-offset-2 focus-visible:ring-offset-teal-950"
             >
-              <LogOut className="w-4 h-4" />
+              <LogOut className="w-4 h-4 text-white" />
               Sign Out
             </button>
           )}

@@ -191,89 +191,66 @@ export default function AstrologyPage() {
     // Force night mode for Arrakis aesthetic
     setIsDayMode(false);
 
-    // Clear any example/demo data from localStorage to ensure fresh experience
-    const clearDemoData = () => {
-      // Check and clear birthChartData
-      const savedData = localStorage.getItem('birthChartData');
-      if (savedData) {
-        try {
-          const parsedData = JSON.parse(savedData);
-          // Clear if it's Kelly's demo data or has example flag
-          if (parsedData.location?.name?.includes('Kelly') || parsedData.isExample) {
-            localStorage.removeItem('birthChartData');
-            console.log('Cleared demo/example data from localStorage');
-          }
-        } catch (error) {
-          console.error('Error checking localStorage data:', error);
-        }
-      }
-
-      // Also check beta_user profile for demo data
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        try {
-          const userData = JSON.parse(betaUser);
-          if (userData.birthData?.location?.name?.includes('Kelly') || userData.birthData?.isExample) {
-            delete userData.birthData;
-            localStorage.setItem('beta_user', JSON.stringify(userData));
-            console.log('Cleared demo data from user profile');
-          }
-        } catch (error) {
-          console.error('Error checking user profile data:', error);
-        }
-      }
-    };
-    clearDemoData();
-
-    // Load saved birth data - check user profile FIRST (more persistent)
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let birthDataToLoad: any = null;
-
-    // Priority 1: Check user profile
-    try {
-      const betaUser = localStorage.getItem('beta_user');
-      if (betaUser) {
-        const userData = JSON.parse(betaUser);
-        if (userData.birthData) {
-          birthDataToLoad = userData.birthData;
-          console.log('✅ Loaded birth data from user profile');
-        }
-      }
-    } catch (error) {
-      console.error('Error loading from user profile:', error);
-    }
-
-    // Priority 2: Fallback to birthChartData if no profile data
-    if (!birthDataToLoad) {
-      const savedBirthData = localStorage.getItem('birthChartData');
-      if (savedBirthData) {
-        try {
-          birthDataToLoad = JSON.parse(savedBirthData);
-          console.log('✅ Loaded birth data from localStorage');
-        } catch (error) {
-          console.error('Error parsing birthChartData:', error);
-        }
-      }
-    }
-
-    // Only auto-load if this is intentionally a user's saved data
-    // Don't auto-load if it's example/demo data
-    if (birthDataToLoad && !birthDataToLoad.isExample) {
+    // Load birth data from centralized API (single source of truth)
+    const loadBirthData = async () => {
       try {
-        // Ensure house system is set (default to Porphyry if not present)
-        if (!birthDataToLoad.houseSystem) {
-          birthDataToLoad.houseSystem = 'porphyry';
-          console.log('Using default Porphyry house system');
+        // Priority 1: Fetch from centralized astrology API
+        const natalRes = await fetch('/api/astrology/natal');
+        const natalJson = await natalRes.json();
+
+        if (natalJson.success && natalJson.chart) {
+          console.log('✅ Loaded chart from centralized API');
+          setChartData(natalJson.chart);
+
+          // Also get birth data for display
+          const birthRes = await fetch('/api/astrology/birth-data');
+          const birthJson = await birthRes.json();
+          if (birthJson.success && birthJson.birthData) {
+            setBirthData({
+              date: birthJson.birthData.birthDate,
+              time: birthJson.birthData.birthTime,
+              location: {
+                name: birthJson.birthData.birthLocationName,
+                lat: birthJson.birthData.latitude,
+                lng: birthJson.birthData.longitude,
+              },
+              timezone: birthJson.birthData.timezone,
+              houseSystem: birthJson.birthData.houseSystem,
+            });
+          }
+          setShowWelcomeModal(true);
+          setLoading(false);
+          return;
         }
-        calculateChart(birthDataToLoad);
+
+        // Priority 2: Fallback to localStorage (migration period)
+        const savedBirthData = localStorage.getItem('birthChartData');
+        if (savedBirthData) {
+          try {
+            const birthDataToLoad = JSON.parse(savedBirthData);
+            if (birthDataToLoad && !birthDataToLoad.isExample) {
+              console.log('✅ Loaded birth data from localStorage (fallback)');
+              if (!birthDataToLoad.houseSystem) {
+                birthDataToLoad.houseSystem = 'porphyry';
+              }
+              calculateChart(birthDataToLoad);
+              return;
+            }
+          } catch (error) {
+            console.error('Error parsing localStorage birthChartData:', error);
+          }
+        }
+
+        // No birth data found - show setup prompt
+        console.log('ℹ️ No birth data found - redirecting to /astrology for setup');
+        setLoading(false);
       } catch (error) {
-        console.error('Failed to calculate chart:', error);
+        console.error('Error loading birth data:', error);
         setLoading(false);
       }
-    } else {
-      console.log('ℹ️ No saved birth data found - showing input form');
-      setLoading(false);
-    }
+    };
+
+    loadBirthData();
   }, []);
 
 
@@ -399,14 +376,12 @@ export default function AstrologyPage() {
     );
   }
 
-  // Birth data form - invitation to calculate chart
+  // No birth data - prompt to set up in /astrology
   if (!chartData) {
     return (
       <div className="min-h-screen relative overflow-hidden transition-all duration-1000"
         style={{
-          background: isDayMode
-            ? 'radial-gradient(circle at 50% 30%, #E8DCC8 0%, #D4C4B0 100%)'
-            : 'radial-gradient(ellipse at top, #1e3a5f 0%, #1a2947 20%, #15203a 40%, #0f1729 60%, #0a0f1e 80%, #050911 100%)'
+          background: 'radial-gradient(ellipse at top, #1e3a5f 0%, #1a2947 20%, #15203a 40%, #0f1729 60%, #0a0f1e 80%, #050911 100%)'
         }}>
 
         {/* Subtle constellation field */}
@@ -423,7 +398,7 @@ export default function AstrologyPage() {
               }}
               className="absolute rounded-full"
               style={{
-                backgroundColor: '#E7E2CF', // Starlight white
+                backgroundColor: '#E7E2CF',
                 width: Math.random() > 0.7 ? '2px' : '1px',
                 height: Math.random() > 0.7 ? '2px' : '1px',
                 left: `${Math.random() * 100}%`,
@@ -433,14 +408,26 @@ export default function AstrologyPage() {
           ))}
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-12 min-h-screen flex items-center">
-          <div className="w-full">
-            <BirthDataForm
-              onSubmit={calculateChart}
-              loading={loading}
-              isDayMode={isDayMode}
-            />
-          </div>
+        <div className="relative z-10 max-w-2xl mx-auto px-4 py-12 min-h-screen flex items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center p-8 bg-black/40 backdrop-blur-md border border-amber-900/40 rounded-xl"
+          >
+            <MiniHoloflower size={80} />
+            <h2 className="text-2xl font-serif text-amber-300 mt-6 mb-4">
+              Set Up Your Cosmic Blueprint
+            </h2>
+            <p className="text-stone-300 mb-6 leading-relaxed max-w-md">
+              Your Archetypal Journey awaits. First, enter your birth details in the Cosmic Blueprint to unlock your personalized consciousness map.
+            </p>
+            <a
+              href="/astrology"
+              className="inline-block px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-medium rounded-lg hover:from-amber-500 hover:to-orange-500 transition-all shadow-lg shadow-amber-900/30"
+            >
+              Go to Cosmic Blueprint
+            </a>
+          </motion.div>
         </div>
       </div>
     );
@@ -1971,11 +1958,11 @@ export default function AstrologyPage() {
 
               <button
                 onClick={() => setShowWelcomeModal(false)}
-                className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all backdrop-blur-md"
+                className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all backdrop-blur-md hover:bg-white/20"
                 style={{
-                  background: 'rgba(255, 255, 255, 0.1)',
-                  border: '1px solid rgba(212, 175, 55, 0.4)',
-                  color: '#E8D4BF',
+                  background: 'rgba(255, 255, 255, 0.15)',
+                  border: '1px solid rgba(212, 175, 55, 0.6)',
+                  color: '#F5EFE6',
                 }}
               >
                 Explore on my own

@@ -286,7 +286,6 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
           disabled={loading || !date || !time || !selectedLocation}
           whileHover={{ scale: loading ? 1 : 1.01 }}
           whileTap={{ scale: loading ? 1 : 0.99 }}
-          onClick={() => console.log('Button state:', { loading, date, time, selectedLocation })}
           className={`w-full py-4 font-serif text-lg transition-all duration-300 border
             ${loading || !date || !time || !selectedLocation
               ? 'opacity-40 cursor-not-allowed bg-orange-950/20 border-orange-900/20'

@@ -28,18 +28,75 @@ export default function SigninPage() {
 
     try {
       // Get stored users from registry
-      const usersJson = localStorage.getItem('beta_users');
+      let usersJson = localStorage.getItem('beta_users');
+
+      // Initialize default test users if no registry exists
       if (!usersJson) {
-        setError('No account found. Please check your credentials.');
-        setIsLoading(false);
-        return;
+        const defaultUsers: Record<string, {
+          id: string;
+          username: string;
+          name: string;
+          email: string;
+          password: string;
+          onboarded: boolean;
+          createdAt: string;
+        }> = {};
+
+        // Beta test users with their credentials
+        const betaUsersList = [
+          { username: 'kelly', name: 'Kelly', email: 'kelly@soullab.life', password: 'Mandala21' },
+          { username: 'nathan', name: 'Nathan Kane', email: 'Nathan.Kane@thermofisher.com', password: 'Mandala21' },
+          { username: 'jason', name: 'Jason Ruder', email: 'JHRuder@gmail.com', password: 'Mandala21' },
+          { username: 'travis', name: 'Travis Diamond', email: 'tcdiamond70@gmail.com', password: 'Mandala21' },
+          { username: 'andrea', name: 'Andrea Nezat', email: 'andreanezat@gmail.com', password: 'Mandala21' },
+          { username: 'justin', name: 'Justin Boucher', email: 'justin.boucher@gmail.com', password: 'Mandala21' },
+          { username: 'susan', name: 'Susan Bragg', email: 'phoenixrises123@gmail.com', password: 'Mandala21' },
+          { username: 'meagan', name: 'Meagan dAquin', email: 'mdaquin@gmail.com', password: 'Mandala21' },
+          { username: 'patrick', name: 'Patrick Koehn', email: 'plkoehn@gmail.com', password: 'Mandala21' },
+          { username: 'tamara', name: 'Tamara Moore', email: 'tamaramoorecolorado@gmail.com', password: 'Mandala21' },
+          { username: 'kristen', name: 'Kristen Nezat', email: 'Inhomesanctuary@gmail.com', password: 'Mandala21' },
+          { username: 'doug', name: 'Doug Foreman', email: 'dougaforeman@gmail.com', password: 'Mandala21' },
+          { username: 'augusten', name: 'Augusten Nezat', email: 'augustennezat@gmail.com', password: 'Mandala21' },
+          { username: 'sophie', name: 'Sophie Nezat', email: 'snezat27@sacredhearthamden.org', password: 'Mandala21' },
+        ];
+
+        betaUsersList.forEach(user => {
+          const fullUser = {
+            id: `user_${user.username}_default`,
+            username: user.username,
+            name: user.name,
+            email: user.email,
+            password: user.password,
+            onboarded: true,
+            createdAt: new Date().toISOString()
+          };
+
+          // Store with lowercase key for consistent lookup
+          defaultUsers[user.username.toLowerCase()] = fullUser;
+          // Also store by email for flexible login
+          defaultUsers[user.email.toLowerCase()] = fullUser;
+        });
+
+        localStorage.setItem('beta_users', JSON.stringify(defaultUsers));
+        usersJson = JSON.stringify(defaultUsers);
+        console.log('✅ Initialized default beta users in localStorage');
       }
 
       const users = JSON.parse(usersJson);
 
-      // Normalize username to lowercase for case-insensitive lookup
+      // Case-insensitive lookup: try exact match first, then normalized
       const normalizedUsername = username.toLowerCase();
-      const user = users[normalizedUsername];
+      let user = users[username] || users[normalizedUsername];
+
+      // If still not found, search all keys case-insensitively
+      if (!user) {
+        const matchingKey = Object.keys(users).find(
+          key => key.toLowerCase() === normalizedUsername
+        );
+        if (matchingKey) {
+          user = users[matchingKey];
+        }
+      }
 
       console.log('🔍 [Signin Debug]', {
         usernameEntered: username,
@@ -64,7 +121,8 @@ export default function SigninPage() {
       }
 
       if (user.password !== password) {
-        console.log('❌ Password mismatch:', { expected: user.password, entered: password });
+        // Note: Never log actual passwords - security risk
+        console.log('❌ Password mismatch for user:', user.username);
         setError('Incorrect password.');
         setIsLoading(false);
         return;

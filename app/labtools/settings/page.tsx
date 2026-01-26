@@ -95,7 +95,7 @@ export default function LabToolsSettingsPage() {
               onClick={() => router.push('/labtools')}
               className="flex items-center space-x-2 text-soul-textSecondary hover:text-soul-textPrimary transition-colors"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-5 w-5 text-gray-500" />
               <span>Back to LabTools</span>
             </button>
 

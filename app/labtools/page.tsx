@@ -31,7 +31,8 @@ import {
   Moon,
   CircleDot,
   Activity,
-  Network
+  Network,
+  Layers
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -129,6 +130,12 @@ export default function LabToolsPage() {
           description: 'Your cosmic spiral & soul blueprint'
         },
         {
+          icon: Layers,
+          label: 'Patterns',
+          path: '/patterns',
+          description: 'Meaning-making across psyche, body & time'
+        },
+        {
           icon: Globe,
           label: 'Language Tools',
           path: '/language',
@@ -221,7 +228,7 @@ export default function LabToolsPage() {
         {
           icon: Sparkles,
           label: 'Cosmic Blueprint',
-          path: '/birth-chart',
+          path: '/astrology',
           description: 'Your birth chart & astrology'
         },
         {

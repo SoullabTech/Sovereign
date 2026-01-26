@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Initialize Beta Users</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
+    h1 { color: #0d9488; }
+    .success { background: #d1fae5; padding: 12px; border-radius: 8px; margin: 10px 0; }
+    .info { background: #e0f2fe; padding: 12px; border-radius: 8px; margin: 10px 0; }
+    button { background: #0d9488; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #0f766e; }
+    .user-list { margin: 20px 0; }
+    .user-item { padding: 8px; border-bottom: 1px solid #e5e7eb; }
+    .user-item:last-child { border-bottom: none; }
+    .password { font-family: monospace; background: #f3f4f6; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Initialize Beta Users</h1>
+  <p>This will set up all beta tester accounts in localStorage for the signin flow.</p>
+
+  <button onclick="initializeBetaUsers()">Initialize Beta Users</button>
+
+  <div id="status"></div>
+
+  <h2>Test Users Credentials:</h2>
+  <div class="user-list" id="userList"></div>
+
+  <script>
+    // Beta test users with their passwords
+    const betaUsers = [
+      { username: 'kelly', name: 'Kelly', email: 'kelly@soullab.life', password: 'Mandala21' },
+      { username: 'nathan', name: 'Nathan Kane', email: 'Nathan.Kane@thermofisher.com', password: 'Mandala21' },
+      { username: 'jason', name: 'Jason Ruder', email: 'JHRuder@gmail.com', password: 'Mandala21' },
+      { username: 'travis', name: 'Travis Diamond', email: 'tcdiamond70@gmail.com', password: 'Mandala21' },
+      { username: 'andrea', name: 'Andrea Nezat', email: 'andreanezat@gmail.com', password: 'Mandala21' },
+      { username: 'justin', name: 'Justin Boucher', email: 'justin.boucher@gmail.com', password: 'Mandala21' },
+      { username: 'susan', name: 'Susan Bragg', email: 'phoenixrises123@gmail.com', password: 'Mandala21' },
+      { username: 'meagan', name: 'Meagan dAquin', email: 'mdaquin@gmail.com', password: 'Mandala21' },
+      { username: 'patrick', name: 'Patrick Koehn', email: 'plkoehn@gmail.com', password: 'Mandala21' },
+      { username: 'tamara', name: 'Tamara Moore', email: 'tamaramoorecolorado@gmail.com', password: 'Mandala21' },
+      { username: 'kristen', name: 'Kristen Nezat', email: 'Inhomesanctuary@gmail.com', password: 'Mandala21' },
+      { username: 'doug', name: 'Doug Foreman', email: 'dougaforeman@gmail.com', password: 'Mandala21' },
+      { username: 'augusten', name: 'Augusten Nezat', email: 'augustennezat@gmail.com', password: 'Mandala21' },
+      { username: 'sophie', name: 'Sophie Nezat', email: 'snezat27@sacredhearthamden.org', password: 'Mandala21' },
+    ];
+
+    function initializeBetaUsers() {
+      const betaUsersObj = {};
+
+      betaUsers.forEach(user => {
+        const fullUser = {
+          id: `user_${user.username}_${Date.now()}`,
+          username: user.username,
+          name: user.name,
+          email: user.email,
+          password: user.password,
+          onboarded: true,
+          createdAt: new Date().toISOString()
+        };
+
+        // Store with lowercase key for consistent lookup
+        betaUsersObj[user.username.toLowerCase()] = fullUser;
+
+        // Also store email variations for flexible login
+        betaUsersObj[user.email.toLowerCase()] = fullUser;
+      });
+
+      localStorage.setItem('beta_users', JSON.stringify(betaUsersObj));
+
+      document.getElementById('status').innerHTML = `
+        <div class="success">
+          <strong>Success!</strong> ${betaUsers.length} beta users initialized in localStorage.
+        </div>
+        <div class="info">
+          You can now sign in with any of the usernames below using password: <span class="password">Mandala21</span>
+        </div>
+      `;
+
+      displayUsers();
+    }
+
+    function displayUsers() {
+      const listHtml = betaUsers.map(u =>
+        `<div class="user-item">
+          <strong>${u.name}</strong><br>
+          Username: <span class="password">${u.username}</span> |
+          Email: <span class="password">${u.email}</span><br>
+          Password: <span class="password">${u.password}</span>
+        </div>`
+      ).join('');
+
+      document.getElementById('userList').innerHTML = listHtml;
+    }
+
+    // Display users on load
+    displayUsers();
+
+    // Check current state
+    const existing = localStorage.getItem('beta_users');
+    if (existing) {
+      const users = JSON.parse(existing);
+      const count = Object.keys(users).length;
+      document.getElementById('status').innerHTML = `
+        <div class="info">
+          Found ${count} existing user entries in localStorage.
+          Click the button to reinitialize with all beta testers.
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>

@@ -128,9 +128,11 @@ export type OracleStage =
   | 'complete';
 
 export class DreamWeaverEngine {
+  async initialize() { /* Stub initialization */ }
   async analyzeDream(_opts: any) { return {}; }
   async detectArchetypes(_content: string) { return {}; }
   async detectWisdomEmergence(_opts: any) { return {}; }
+  async analyzeWisdomEmergence(_content: string, _opts?: any) { return { level: 0, signals: [] }; }
   async analyzeShadowAspects(_content: string) { return {}; }
   async detectPatterns(_opts: any) { return {}; }
 

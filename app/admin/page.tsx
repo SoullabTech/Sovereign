@@ -99,7 +99,8 @@ export default function AdminPage() {
   const saveUsers = (updatedUsers: User[]) => {
     const betaUsers: { [key: string]: User } = {};
     updatedUsers.forEach(user => {
-      betaUsers[user.username] = user;
+      // Store with lowercase key for consistent lookup
+      betaUsers[user.username.toLowerCase()] = user;
     });
     localStorage.setItem('beta_users', JSON.stringify(betaUsers));
     setUsers(updatedUsers);
