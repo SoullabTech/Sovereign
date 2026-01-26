@@ -29,10 +29,23 @@ interface SilenceResponse {
   activation: number;
 }
 
+/** Move outcome event from relational stack telemetry */
+interface MoveOutcomeEvent {
+  tsOutcome: number;
+  tsMove: number;
+  moveIntent: string;
+  responseType: 'SPOKEN' | 'SILENCE';
+  activationAtMove: number;
+  activationAtOutcome?: number;
+  outcome?: 'SETTLED' | 'WARM_CONTINUE' | 'ESCALATED' | 'DISENGAGED' | 'UNKNOWN';
+  latencyToOutcomeMs?: number;
+}
+
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
   onComplete?: (fullResponse: string, relational?: RelationalMetadata) => void;
   onSilence?: (silence: SilenceResponse) => void;
+  onMoveOutcome?: (outcome: MoveOutcomeEvent) => void;
   onError?: (error: string) => void;
   voice?: string;
   speed?: number;
@@ -54,6 +67,8 @@ interface StreamingVoiceState {
   relational: RelationalMetadata | null;
   /** Last silence response details */
   lastSilence: SilenceResponse | null;
+  /** Last move outcome from previous turn (for telemetry/debug) */
+  lastMoveOutcome: MoveOutcomeEvent | null;
 }
 
 interface AudioQueueItem {
@@ -115,6 +130,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     onTextChunk,
     onComplete,
     onSilence,
+    onMoveOutcome,
     onError,
     voice = 'maya',
     speed = 1.0,
@@ -142,6 +158,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     isSilence: false,
     relational: null,
     lastSilence: null,
+    lastMoveOutcome: null,
   });
 
   // Audio queue and playback management
@@ -151,23 +168,45 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // ── POSTURE LOG (tuning trace) ──
+  // Ring buffer of last 20 posture events for diagnostic snapshots
+  const postureLogRef = useRef<Array<{
+    ts: number;
+    sessionId?: string;
+    mode?: string;
+    posture?: string;
+    brevity?: string;
+    reason?: string;
+    silenceIntent?: string;
+    totalMs?: number;
+  }>>([]);
+
+  const pushPostureLog = useCallback((entry: {
+    sessionId?: string;
+    mode?: string;
+    posture?: string;
+    brevity?: string;
+    reason?: string;
+    silenceIntent?: string;
+    totalMs?: number;
+  }) => {
+    postureLogRef.current.push({ ts: Date.now(), ...entry });
+    if (postureLogRef.current.length > 20) postureLogRef.current.shift();
+  }, []);
+
   /**
    * Play next audio chunk from queue
+   * Hardened: MIME validation, no sync recursion on play rejection
    */
   const playNextChunk = useCallback(() => {
-    // If currently playing, wait for current chunk to finish
-    if (isPlayingRef.current) {
-      return;
-    }
+    if (isPlayingRef.current) return;
 
-    // Queue empty - we're done playing
     if (audioQueueRef.current.length === 0) {
       console.log('[StreamingVoice] Queue empty, setting isPlaying=false');
       setState(prev => ({ ...prev, isPlaying: false }));
       return;
     }
 
-    // Sort by index to ensure correct order
     audioQueueRef.current.sort((a, b) => a.index - b.index);
 
     const chunk = audioQueueRef.current.shift();
@@ -181,37 +220,56 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       sentenceIndex: chunk.index
     }));
 
+    // Format hardening: validate MIME before creating Audio element
+    const safeFormat = (chunk.format || '').toLowerCase();
+    const mime =
+      safeFormat === 'wav' ? 'audio/wav'
+      : safeFormat === 'mp3' ? 'audio/mpeg'
+      : safeFormat === 'mpeg' ? 'audio/mpeg'
+      : safeFormat === 'ogg' ? 'audio/ogg'
+      : null;
+
+    // Safe advance helper: always schedule, never sync recurse
+    const advance = (delayMs = 50) => {
+      isPlayingRef.current = false;
+      currentAudioRef.current = null;
+      setTimeout(playNextChunk, delayMs);
+    };
+
     try {
-      // Create audio element from base64 data
-      const audioSrc = `data:audio/${chunk.format};base64,${chunk.audio}`;
+      if (!mime) {
+        console.warn('[StreamingVoice] Unsupported audio format:', chunk.format);
+        advance(0);
+        return;
+      }
+
+      const audioSrc = `data:${mime};base64,${chunk.audio}`;
       const audio = new Audio(audioSrc);
+      audio.preload = 'auto';
       currentAudioRef.current = audio;
 
       audio.onended = () => {
-        console.log('[StreamingVoice] Audio chunk ended, queue length:', audioQueueRef.current.length);
-        isPlayingRef.current = false;
-        currentAudioRef.current = null;
-        // Play next chunk or signal completion
-        setTimeout(playNextChunk, 50); // Small gap between chunks
+        console.log(
+          '[StreamingVoice] Audio chunk ended, queue length:',
+          audioQueueRef.current.length
+        );
+        advance(50);
       };
 
       audio.onerror = (e) => {
         console.error('[StreamingVoice] Audio playback error:', e);
-        isPlayingRef.current = false;
-        currentAudioRef.current = null;
-        // Try next chunk anyway
-        setTimeout(playNextChunk, 50);
+        advance(50);
       };
 
       audio.play().catch(e => {
+        // Never recurse synchronously; always schedule
         console.error('[StreamingVoice] Audio play failed:', e);
-        isPlayingRef.current = false;
-        playNextChunk();
+        advance(0);
       });
     } catch (e) {
       console.error('[StreamingVoice] Audio creation error:', e);
-      isPlayingRef.current = false;
-      playNextChunk();
+      // Schedule instead of direct recursion
+      advance(0);
     }
   }, []);
 
@@ -365,7 +423,34 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     console.log(`[StreamingVoice] Silence response: ${data.intent} for ${data.durationMs}ms`);
                     break;
 
-                  case 'complete':
+                  case 'move_outcome':
+                    // Telemetry: what happened from MAIA's last move
+                    const moveOutcome: MoveOutcomeEvent = {
+                      tsOutcome: data.tsOutcome,
+                      tsMove: data.tsMove,
+                      moveIntent: data.moveIntent,
+                      responseType: data.responseType,
+                      activationAtMove: data.activationAtMove,
+                      activationAtOutcome: data.activationAtOutcome,
+                      outcome: data.outcome,
+                      latencyToOutcomeMs: data.latencyToOutcomeMs,
+                    };
+                    setState(prev => ({
+                      ...prev,
+                      lastMoveOutcome: moveOutcome,
+                    }));
+                    onMoveOutcome?.(moveOutcome);
+                    // Dev log: one-liner summary
+                    const delta = moveOutcome.activationAtOutcome !== undefined
+                      ? (moveOutcome.activationAtOutcome - moveOutcome.activationAtMove).toFixed(2)
+                      : '?';
+                    console.log(
+                      `[StreamingVoice] Move outcome: ${moveOutcome.moveIntent} → ${moveOutcome.outcome} ` +
+                      `(Δ${delta}, ${moveOutcome.latencyToOutcomeMs}ms)`
+                    );
+                    break;
+
+                  case 'complete': {
                     // Extract relational metadata if present
                     const relationalMeta: RelationalMetadata | null = data.relational ? {
                       maiaMode: data.relational.maiaMode,
@@ -379,7 +464,29 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       relational: relationalMeta || prev.relational,
                     }));
                     onComplete?.(data.fullResponse, relationalMeta || undefined);
+
+                    // ── POSTURE TRACE (tuning log) ──
+                    const g = data.guidance;
+                    if (g) {
+                      pushPostureLog({
+                        sessionId: sessionIdRef.current,
+                        mode: data.mode,
+                        posture: g.posture,
+                        brevity: g.brevity,
+                        reason: g.reason,
+                        silenceIntent: data.silenceIntent,
+                        totalMs: data.timing?.totalMs,
+                      });
+
+                      console.log(
+                        `[MAIA][${sessionIdRef.current?.slice(-8) ?? '—'}] complete ` +
+                        `mode=${data.mode ?? '—'} posture=${g.posture} brevity=${g.brevity} ` +
+                        `reason=${g.reason ?? '—'} intent=${data.silenceIntent ?? '—'} ` +
+                        `t=${data.timing?.totalMs ?? '—'}ms`
+                      );
+                    }
                     break;
+                  }
 
                   case 'error':
                     setState(prev => ({
@@ -422,7 +529,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, element, onTextChunk, onComplete, onError, playNextChunk]);
+  }, [voice, element, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk]);
 
   /**
    * Stop streaming and playback
@@ -480,6 +587,19 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
+      }
+    };
+  }, []);
+
+  // ── DEVTOOLS DEBUG HELPER ──
+  // Call __maia_posture_log() in console to get last 20 posture events
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      (window as any).__maia_posture_log = () => postureLogRef.current.slice();
+    }
+    return () => {
+      if (typeof window !== 'undefined') {
+        delete (window as any).__maia_posture_log;
       }
     };
   }, []);
