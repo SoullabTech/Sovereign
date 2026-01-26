@@ -1,0 +1,132 @@
+{
+  "version": "1.0",
+  "defaultMode": "REGULATOR",
+  "modes": {
+    "REGULATOR": {
+      "tempoMultiplier": 0.6,
+      "minPauseBeforeSpeechMs": 800,
+      "maxPauseBeforeSpeechMs": 2000,
+      "silenceToleranceMs": 6000,
+      "allowNonResponse": true,
+      "maxUtteranceLength": "short",
+      "backchannelProbability": 0.15
+    },
+    "NAVIGATOR": {
+      "tempoMultiplier": 1.0,
+      "minPauseBeforeSpeechMs": 400,
+      "maxPauseBeforeSpeechMs": 800,
+      "silenceToleranceMs": 3000,
+      "allowNonResponse": false,
+      "maxUtteranceLength": "medium",
+      "backchannelProbability": 0.05
+    },
+    "MYTHOPOET": {
+      "tempoMultiplier": 0.75,
+      "minPauseBeforeSpeechMs": 1000,
+      "maxPauseBeforeSpeechMs": 3000,
+      "silenceToleranceMs": 8000,
+      "allowNonResponse": true,
+      "maxUtteranceLength": "long",
+      "backchannelProbability": 0.02
+    }
+  },
+  "transitions": {
+    "allowed": [
+      { "from": "REGULATOR", "to": "NAVIGATOR", "when": "explicit_request_for_clarity" },
+      { "from": "REGULATOR", "to": "MYTHOPOET", "when": "symbolic_language_emerges" },
+      { "from": "NAVIGATOR", "to": "REGULATOR", "when": "overwhelm_signals" },
+      { "from": "MYTHOPOET", "to": "REGULATOR", "when": "affect_intensifies" }
+    ],
+    "forbidden": [
+      { "from": "DEFAULT", "to": "MYTHOPOET", "why": "no_poetic_escalation_by_default" },
+      { "from": "NAVIGATOR", "to": "MYTHOPOET", "why": "no_flourish_after_structure" }
+    ]
+  },
+  "silence": {
+    "enabled": true,
+    "intents": ["REGULATORY", "REFLECTIVE", "BOUNDARY"]
+  },
+  "voiceEmbedding": {
+    "default": "NATF2",
+    "policy": "instrument_only"
+  },
+  "adaptiveScaling": {
+    "enabled": true,
+    "description": "Continuous affect-responsive modulation. Activation scalar 'a' in [0..1] where 0=calm, 1=activated.",
+
+    "inputs": {
+      "textProxies": {
+        "enabled": true,
+        "signals": [
+          { "name": "punctuationDensity", "weight": 0.15 },
+          { "name": "messageLengthBurst", "weight": 0.20 },
+          { "name": "urgencyMarkers", "weight": 0.25 },
+          { "name": "capsRatio", "weight": 0.10 },
+          { "name": "repetitionFrequency", "weight": 0.15 },
+          { "name": "cognitiveLoadMarkers", "weight": 0.15 }
+        ]
+      },
+      "audioSignals": {
+        "enabled": false,
+        "signals": [
+          { "name": "userSpeechRate", "weight": 0.30 },
+          { "name": "userIntensity", "weight": 0.25 },
+          { "name": "userPauseTiming", "weight": 0.20 },
+          { "name": "overlapFrequency", "weight": 0.15 },
+          { "name": "pitchVariability", "weight": 0.10 }
+        ]
+      }
+    },
+
+    "mapping": {
+      "method": "weighted_sigmoid",
+      "centerPoint": 0.5,
+      "steepness": 2.0,
+      "floor": 0.0,
+      "ceiling": 1.0
+    },
+
+    "blend": {
+      "description": "How parameters shift as activation (a) increases. maxDelta is always positive; direction handles sign.",
+      "tempoMultiplier": {
+        "direction": "inverse",
+        "maxDelta": 0.25,
+        "comment": "Higher activation → slower tempo (down 0.25 from mode base)"
+      },
+      "pauseBeforeSpeechMs": {
+        "direction": "direct",
+        "maxDelta": 800,
+        "comment": "Higher activation → longer pause (up to +800ms)"
+      },
+      "silenceToleranceMs": {
+        "direction": "direct",
+        "maxDelta": 3000,
+        "comment": "Higher activation → more silence allowed (up to +3000ms)"
+      },
+      "backchannelProbability": {
+        "direction": "inverse",
+        "maxDelta": 0.10,
+        "comment": "Higher activation → fewer backchannels"
+      },
+      "overrides": {
+        "REGULATOR": {
+          "tempoMultiplier": { "maxDelta": 0.18 },
+          "comment": "REGULATOR is already slow; don't slow it into molasses"
+        },
+        "NAVIGATOR": {
+          "pauseBeforeSpeechMs": { "maxDelta": 500 },
+          "comment": "NAVIGATOR users want clarity; don't over-pause"
+        }
+      }
+    },
+
+    "rateLimits": {
+      "description": "Hysteresis and smoothing to prevent jitter. Presence, not reactivity.",
+      "smoothingWindowMs": 2000,
+      "maxChangePerSecond": 0.15,
+      "hysteresisThreshold": 0.08,
+      "settleDurationMs": 1500,
+      "comment": "MAIA responds to trends, not spikes"
+    }
+  }
+}
