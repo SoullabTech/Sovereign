@@ -33,6 +33,72 @@ export interface TurnOutcomeEvent {
   intent?: SilenceIntent
 }
 
+// ============================================================================
+// GUIDANCE POSTURE
+// ============================================================================
+
+/** Guidance posture for relational response shaping */
+export type GuidancePosture = 'MOVE' | 'MIRROR' | 'MEET'
+
+/** Guidance signal computed from windowed stats */
+export interface GuidanceSignal {
+  posture: GuidancePosture
+  brevity: 'brief' | 'moderate' | 'expansive'
+  modeLockMs: number // 0 = no lock
+  speakBias: number // -1..+1, + favors speaking
+  reason: string // lightweight debug string
+}
+
+// ============================================================================
+// MOVE OUTCOME TRACKING (Soulfulness as Architecture)
+// ============================================================================
+
+/** What MAIA was trying to accomplish (Meet → Mirror → Move) */
+export type MoveIntent =
+  | 'MEET_REGULATE'   // Settling the nervous system
+  | 'MEET_BOUNDARY'   // Honoring a limit
+  | 'MIRROR_REFLECT'  // Reflecting back what was heard
+  | 'MOVE_NEXT_STEP'  // Offering a concrete next action
+  | 'MOVE_REFRAME'    // Offering a new perspective
+  | 'MOVE_CREATIVE'   // Sparking generative imagination
+
+/** How MAIA responded */
+export type MaiaResponseType = 'SPOKEN' | 'SILENCE'
+
+/** What happened after MAIA's move (classified on next user turn) */
+export type MoveOutcome =
+  | 'SETTLED'        // Activation dropped, user calmer
+  | 'WARM_CONTINUE'  // Engagement continues at same or lower activation
+  | 'ESCALATED'      // Activation rose, user more activated
+  | 'DISENGAGED'     // User went silent or left
+  | 'UNKNOWN'        // Not enough signal to classify
+
+/** Event recording MAIA's move and its outcome */
+export interface MoveOutcomeEvent {
+  /** Timestamp when MAIA completed the move */
+  ts: number
+  /** What MAIA was trying to do */
+  moveIntent: MoveIntent
+  /** How MAIA responded */
+  responseType: MaiaResponseType
+  /** Activation at time of move */
+  activationAtMove: number
+  /** Activation at next user turn (filled on outcome) */
+  activationAtOutcome?: number
+  /** Classified outcome (filled on outcome) */
+  outcome?: MoveOutcome
+  /** Latency until next user turn (ms) */
+  latencyToOutcomeMs?: number
+}
+
+/** Pending move awaiting outcome classification */
+export interface PendingMove {
+  ts: number
+  moveIntent: MoveIntent
+  responseType: MaiaResponseType
+  activationAtMove: number
+}
+
 /**
  * Relational stack state for voice sessions.
  * Mirrors the text session structure for unified governance.
@@ -45,6 +111,10 @@ export interface VoiceRelationalStack {
   silenceCount: number
   totalSilenceDurationMs: number
   modeDwellTimeMs: Record<MaiaMode, number>
+  /** Move awaiting outcome classification (set when MAIA completes a turn) */
+  pendingMove?: PendingMove
+  /** Mode lock expiration (prevents jitter) */
+  modeLockUntilTs?: number
 }
 
 /**
@@ -92,6 +162,8 @@ export interface MoshiVoiceSession {
     modeTransitionTimestamps: number[]
     /** Sum of backchannel probabilities (for expected rate calc) */
     backchannelProbabilitySum: number
+    /** Move outcomes (intent → outcome pairs for soulfulness tracking) */
+    moveOutcomes: MoveOutcomeEvent[]
   }
 }
 
@@ -212,6 +284,7 @@ export function createMoshiVoiceSession(connectionId: string): MoshiVoiceSession
       modeTransitions: 0,
       modeTransitionTimestamps: [],
       backchannelProbabilitySum: 0,
+      moveOutcomes: [],
     },
   }
 }
@@ -265,6 +338,20 @@ export function processTurn(
   const now = context.now ?? Date.now()
   const { relationalStack, timing } = session
 
+  // ── GUIDANCE POSTURE ──
+  // Compute stable posture signal from windowed stats
+  const guidance = computeGuidancePosture(session)
+
+  // Apply mode lock if guidance suggests it
+  if (guidance.modeLockMs > 0) {
+    const until = now + guidance.modeLockMs
+    // Only extend, never shorten
+    relationalStack.modeLockUntilTs = Math.max(
+      relationalStack.modeLockUntilTs ?? 0,
+      until
+    )
+  }
+
   // Update timing state
   if (context.userSpeechEndTime) {
     timing.lastUserSpeechEndMs = context.userSpeechEndTime
@@ -284,6 +371,44 @@ export function processTurn(
   )
   relationalStack.smoother = smootherState
 
+  // ── MOVE OUTCOME EMISSION ──
+  // If there's a pending move from MAIA's last turn, classify its outcome
+  // Uses smoothed activation for both move and outcome (comparable deltas)
+  if (relationalStack.pendingMove) {
+    const pending = relationalStack.pendingMove
+    const latencyMs = now - pending.ts
+    const activationNow = smootherState.lastActivation
+    const outcome = classifyMoveOutcome(
+      pending.activationAtMove,
+      activationNow,
+      latencyMs
+    )
+
+    // Record the completed move outcome event
+    const outcomeEvent: MoveOutcomeEvent = {
+      ts: now, // Outcome time, not move time
+      moveIntent: pending.moveIntent,
+      responseType: pending.responseType,
+      activationAtMove: pending.activationAtMove,
+      activationAtOutcome: activationNow,
+      outcome,
+      latencyToOutcomeMs: latencyMs,
+    }
+    session.tuning.moveOutcomes.push(outcomeEvent)
+
+    // Cap buffer (keep last 100 move outcomes)
+    if (session.tuning.moveOutcomes.length > 100) {
+      session.tuning.moveOutcomes.shift()
+    }
+
+    console.log(
+      `[Relational] Move outcome: ${pending.moveIntent} → ${outcome} (Δactivation: ${(activationNow - pending.activationAtMove).toFixed(2)}, latency: ${latencyMs}ms)`
+    )
+
+    // Clear pending move
+    relationalStack.pendingMove = undefined
+  }
+
   // Update dwell time for current mode
   const dwellDelta = now - session.lastActivity
   relationalStack.modeDwellTimeMs[relationalStack.currentMode] += dwellDelta
@@ -297,11 +422,16 @@ export function processTurn(
 
   // Silence decision
   // High activation + REGULATOR mode + allowNonResponse = prefer silence
-  const activationThreshold = 0.6
+  // Bias threshold based on guidance: speakBias > 0 raises threshold (favors speaking)
+  const baseActivationThreshold = 0.6
+  const biasedThreshold = Math.max(
+    0,
+    Math.min(1, baseActivationThreshold + guidance.speakBias * 0.15)
+  )
   const smoothedActivation = smootherState.lastActivation
   const shouldSilence =
     prosody.allowNonResponse &&
-    smoothedActivation > activationThreshold &&
+    smoothedActivation > biasedThreshold &&
     relationalStack.currentMode === 'REGULATOR'
 
   // Determine silence intent
@@ -457,6 +587,53 @@ export function computeTextActivation(text: string): number {
 }
 
 // ============================================================================
+// MOVE OUTCOME CLASSIFICATION
+// ============================================================================
+
+// Outcome classification thresholds (tunable)
+const SETTLED_DELTA = -0.15
+const ESCALATED_DELTA = 0.15
+const DISENGAGED_MS = 60_000
+
+/**
+ * Classify the outcome of MAIA's previous move based on user's next turn.
+ *
+ * @param activationAtMove - Activation when MAIA completed the move
+ * @param activationAtOutcome - Activation on next user turn
+ * @param latencyMs - Time between move and next user turn
+ * @returns Classified outcome
+ */
+export function classifyMoveOutcome(
+  activationAtMove: number,
+  activationAtOutcome: number,
+  latencyMs: number
+): MoveOutcome {
+  const delta = activationAtOutcome - activationAtMove
+
+  // Long silence = disengaged
+  if (latencyMs > DISENGAGED_MS) {
+    return 'DISENGAGED'
+  }
+
+  // Activation dropped significantly = settled
+  if (delta < SETTLED_DELTA) {
+    return 'SETTLED'
+  }
+
+  // Activation rose significantly = escalated
+  if (delta > ESCALATED_DELTA) {
+    return 'ESCALATED'
+  }
+
+  // Activation stayed roughly same = warm continue
+  if (Math.abs(delta) <= ESCALATED_DELTA) {
+    return 'WARM_CONTINUE'
+  }
+
+  return 'UNKNOWN'
+}
+
+// ============================================================================
 // MODE TRANSITIONS
 // ============================================================================
 
@@ -475,6 +652,16 @@ export function transitionMode(
 ): boolean {
   const { relationalStack } = session
   const fromMode = relationalStack.currentMode
+  const now = Date.now()
+
+  // Check mode lock (prevents jitter)
+  const lockUntil = relationalStack.modeLockUntilTs ?? 0
+  if (lockUntil > now) {
+    console.log(
+      `[Relational] Transition ${fromMode} → ${toMode} blocked by mode lock (${lockUntil - now}ms remaining)`
+    )
+    return false
+  }
 
   // Import transition checker
   // Note: We inline the logic here to avoid circular imports
@@ -498,7 +685,6 @@ export function transitionMode(
   }
 
   // Update dwell time before switching
-  const now = Date.now()
   const dwellDelta = now - session.lastActivity
   relationalStack.modeDwellTimeMs[fromMode] += dwellDelta
 
@@ -525,6 +711,59 @@ export function transitionMode(
 // ============================================================================
 // SILENCE RECORDING
 // ============================================================================
+
+/**
+ * Set a pending move for outcome tracking.
+ * Call this when MAIA completes a spoken or silence response.
+ *
+ * If there's already a pending move (user never responded), close it
+ * as DISENGAGED or UNKNOWN before setting the new one.
+ *
+ * @param session - The voice session
+ * @param moveIntent - What MAIA was trying to accomplish
+ * @param responseType - Whether MAIA spoke or was silent
+ * @param activation - Current activation at time of move
+ */
+export function setPendingMove(
+  session: MoshiVoiceSession,
+  moveIntent: MoveIntent,
+  responseType: MaiaResponseType,
+  activation: number
+): void {
+  const now = Date.now()
+
+  // Close any existing pending move that was never resolved
+  const existing = session.relationalStack.pendingMove
+  if (existing) {
+    const latencyMs = now - existing.ts
+    const outcomeEvent: MoveOutcomeEvent = {
+      ts: now,
+      moveIntent: existing.moveIntent,
+      responseType: existing.responseType,
+      activationAtMove: existing.activationAtMove,
+      activationAtOutcome: undefined,
+      outcome: latencyMs > DISENGAGED_MS ? 'DISENGAGED' : 'UNKNOWN',
+      latencyToOutcomeMs: latencyMs,
+    }
+    session.tuning.moveOutcomes.push(outcomeEvent)
+    if (session.tuning.moveOutcomes.length > 100) {
+      session.tuning.moveOutcomes.shift()
+    }
+    console.log(
+      `[Relational] Closing stale pending move: ${existing.moveIntent} → ${outcomeEvent.outcome} (latency: ${latencyMs}ms)`
+    )
+  }
+
+  session.relationalStack.pendingMove = {
+    ts: now,
+    moveIntent,
+    responseType,
+    activationAtMove: activation,
+  }
+  console.log(
+    `[Relational] Pending move set: ${moveIntent} (${responseType}, activation: ${activation.toFixed(2)})`
+  )
+}
 
 /**
  * Record a silence response in the session.
@@ -638,6 +877,98 @@ function computeModeTransitionsPer5mFromTimestamps(
   return timestamps.filter((ts) => ts >= windowStart).length
 }
 
+// ============================================================================
+// GUIDANCE POSTURE COMPUTATION
+// ============================================================================
+
+/**
+ * Find the dominant silence intent from counts.
+ */
+function dominantSilenceIntent(
+  counts: Record<SilenceIntent, number>
+): SilenceIntent | null {
+  let best: SilenceIntent | null = null
+  let bestVal = -1
+  ;(Object.keys(counts) as SilenceIntent[]).forEach((k) => {
+    const v = counts[k] ?? 0
+    if (v > bestVal) {
+      bestVal = v
+      best = k
+    }
+  })
+  return bestVal > 0 ? best : null
+}
+
+/**
+ * Compute a single stable posture signal per turn from windowed stats.
+ * Source of truth: turnOutcomes + modeTransitionTimestamps.
+ */
+export function computeGuidancePosture(session: MoshiVoiceSession): GuidanceSignal {
+  const now = Date.now()
+  const silenceRatioLast20 = computeRecentSilenceRatioFromOutcomes(
+    session.tuning.turnOutcomes,
+    20
+  )
+  const silenceIntentCountsLast20 = computeRecentSilenceIntentCountsFromOutcomes(
+    session.tuning.turnOutcomes,
+    20
+  )
+  const modeTransitionsPer5m = computeModeTransitionsPer5mFromTimestamps(
+    session.tuning.modeTransitionTimestamps,
+    now
+  )
+
+  const domIntent = dominantSilenceIntent(silenceIntentCountsLast20)
+
+  // Default: MEET (normal flow)
+  let posture: GuidancePosture = 'MEET'
+  let brevity: GuidanceSignal['brevity'] = 'moderate'
+  let modeLockMs = 0
+  let speakBias = 0
+  let reason = 'default_meet'
+
+  // Priority 1: jitter → MIRROR + lock mode
+  if (modeTransitionsPer5m > 4) {
+    posture = 'MIRROR'
+    brevity = 'brief'
+    modeLockMs = 60_000
+    speakBias = 0
+    reason = `mode_jitter_${modeTransitionsPer5m}_per5m`
+    return { posture, brevity, modeLockMs, speakBias, reason }
+  }
+
+  // Priority 2: over-silencing → MOVE/MEET depending on intent
+  if (silenceRatioLast20 > 0.25) {
+    if (domIntent === 'BOUNDARY') {
+      posture = 'MEET'
+      brevity = 'brief'
+      modeLockMs = 20_000
+      speakBias = 0.1
+      reason = `silence_high_boundary_${(silenceRatioLast20 * 100).toFixed(0)}pct`
+    } else {
+      // REGULATORY or REFLECTIVE (or unknown) → MOVE (bring speech back gently)
+      posture = 'MOVE'
+      brevity = 'brief'
+      modeLockMs = 20_000
+      speakBias = 0.3
+      reason = `silence_high_${domIntent ?? 'unknown'}_${(silenceRatioLast20 * 100).toFixed(0)}pct`
+    }
+    return { posture, brevity, modeLockMs, speakBias, reason }
+  }
+
+  // Stable & present → MEET
+  if (silenceRatioLast20 < 0.1 && modeTransitionsPer5m <= 2) {
+    posture = 'MEET'
+    brevity = 'moderate'
+    modeLockMs = 0
+    speakBias = 0
+    reason = 'stable_present'
+    return { posture, brevity, modeLockMs, speakBias, reason }
+  }
+
+  return { posture, brevity, modeLockMs, speakBias, reason }
+}
+
 /**
  * Get session metrics for success tracking.
  * Per canon: track silence frequency, duration, mode dwell time.
@@ -647,6 +978,9 @@ export function getSessionMetrics(session: MoshiVoiceSession) {
   const { relationalStack, metrics, tuning, createdAt, id } = session
   const now = Date.now()
   const sessionDurationMs = now - createdAt
+
+  // Guidance posture (single stable signal)
+  const guidance = computeGuidancePosture(session)
 
   // Windowed stats (for "signal not vibes" tuning)
   const silenceRatioLast20 = computeRecentSilenceRatioFromOutcomes(tuning.turnOutcomes, 20)
@@ -733,6 +1067,9 @@ export function getSessionMetrics(session: MoshiVoiceSession) {
       currentMode: relationalStack.currentMode,
       timeInCurrentModeMs,
     },
+
+    // Guidance posture (single stable signal for response shaping)
+    guidance,
   }
 }
 
