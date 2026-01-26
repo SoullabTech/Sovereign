@@ -50,22 +50,182 @@ import {
 } from '@/lib/voice/wisdom/MaiaWisdomProvider';
 import { renderWithPersonaPlex } from '@/lib/voice/personaplex/personaPlexClient';
 
+// Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
+// ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
+// OpenAI TTS is needed to speak Claude's text. Set TTS_OPENAI_FALLBACK=false to disable.
+const USE_OPENAI_FALLBACK = process.env.TTS_OPENAI_FALLBACK !== 'false';
+
 /**
- * Convert PersonaPlex PCM Float32 audio to WAV format for browser playback.
- * This allows the client to use standard HTMLAudioElement with data URLs.
+ * TTS with fallback: Try PersonaPlex first, fall back to OpenAI TTS on error.
+ * Returns { audio: base64, format: 'wav' | 'mp3', source: 'personaplex' | 'openai' }
  */
-function pcmF32ToWavBase64(pcmB64: string, sampleRate = 24000, channels = 1): string {
-  // Decode base64 -> bytes
+async function synthesizeWithFallback(
+  text: string,
+  options: {
+    mode: 'talk' | 'care' | 'note';
+    element?: string | null;
+    sanctuary: boolean;
+    speed: number;
+    brevity?: 'brief' | 'moderate' | 'expansive';
+    wisdomDirective?: string;
+    voice?: string;
+  }
+): Promise<{ audio: string; format: string; source: string } | null> {
+  // Try PersonaPlex first
+  try {
+    for await (const chunk of renderWithPersonaPlex({
+      text,
+      wisdomDirective: options.wisdomDirective,
+      mode: options.mode,
+      element: options.element,
+      sanctuary: options.sanctuary,
+      speed: options.speed,
+      brevity: options.brevity,
+    })) {
+      // Got a chunk - convert to WAV
+      const pcmBytes = Buffer.from(chunk.audioB64, 'base64').length;
+      if (pcmBytes < 100) {
+        console.warn(`[TTS] PersonaPlex returned very small audio (${pcmBytes}B), trying fallback`);
+        break; // Fall through to OpenAI
+      }
+      const wavB64 = pcmF32ToWavBase64(chunk.audioB64, 24000, 1);
+      console.log(`🎤 [TTS] PersonaPlex OK: ${pcmBytes}B PCM → ${Buffer.from(wavB64, 'base64').length}B WAV`);
+      return { audio: wavB64, format: 'wav', source: 'personaplex' };
+    }
+  } catch (e) {
+    console.warn(`[TTS] PersonaPlex failed: ${e instanceof Error ? e.message : e}`);
+  }
+
+  // Fallback to OpenAI TTS
+  if (!USE_OPENAI_FALLBACK) {
+    console.log('[TTS] OpenAI fallback disabled, returning null');
+    return null;
+  }
+
+  try {
+    console.log('[TTS] Falling back to OpenAI TTS...');
+    const openaiVoice = options.voice === 'maya' ? 'nova' : (options.voice || 'nova');
+    const response = await synthesizeSpeech({
+      text,
+      voice: openaiVoice,
+      format: 'mp3',
+      speed: options.speed,
+    });
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const audio = buffer.toString('base64');
+    console.log(`🔊 [TTS] OpenAI OK: ${buffer.length}B MP3`);
+    return { audio, format: 'mp3', source: 'openai' };
+  } catch (e) {
+    console.error(`[TTS] OpenAI fallback also failed: ${e instanceof Error ? e.message : e}`);
+    return null;
+  }
+}
+
+/**
+ * Sanitize text before sending to TTS.
+ * Removes metadata blocks, JSON fragments, and other non-speakable content.
+ * Defense-in-depth: even if ClaudeService filters, this guarantees clean input.
+ */
+function sanitizeForTts(input: string): string {
+  if (!input) return '';
+
+  let s = input;
+
+  // Remove full metadata blocks
+  s = s.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
+
+  // Remove JSON objects that sometimes leak as "sentences"
+  s = s.replace(/\{[\s\S]*?\}/g, '');
+
+  // Remove JSON arrays
+  s = s.replace(/\[[\s\S]*?\]/g, '');
+
+  // Remove orphan JSON fragments at start/end
+  s = s.replace(/^[\s\d,}\]]+/, '');
+  s = s.replace(/[\s\d,{\[]+$/, '');
+
+  // Collapse whitespace and trim
+  s = s.replace(/\s+/g, ' ').trim();
+
+  return s;
+}
+
+/**
+ * Convert PCM audio to WAV format for browser playback.
+ * Auto-detects Float32 vs Int16 format based on byte alignment.
+ *
+ * PersonaPlex may return either format:
+ * - Float32 PCM: 4 bytes per sample, values in [-1..1]
+ * - Int16 PCM: 2 bytes per sample, little-endian (like OpenAI's pcm format)
+ */
+function pcmToWavBase64(pcmB64: string, sampleRate = 24000, channels = 1): string {
   const bin = Buffer.from(pcmB64, 'base64');
 
-  // Interpret as Float32 PCM
-  const float32 = new Float32Array(bin.buffer, bin.byteOffset, Math.floor(bin.byteLength / 4));
+  // Auto-detect format based on byte alignment
+  // Float32 requires 4-byte alignment, Int16 requires 2-byte
+  const isFloat32 = bin.length % 4 === 0 && bin.length >= 4;
+  const isInt16 = bin.length % 2 === 0;
 
-  // Convert Float32 [-1..1] -> 16-bit PCM
+  let sampleCount: number;
+  let int16Samples: Int16Array;
+
+  if (isFloat32) {
+    // Float32 PCM: Convert to aligned buffer, then to Int16
+    const aligned = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) {
+      aligned[i] = bin[i];
+    }
+    const float32 = new Float32Array(aligned.buffer);
+    sampleCount = float32.length;
+
+    // Check if values look like Float32 (within [-1..1] range with variance)
+    let maxAbs = 0;
+    for (let i = 0; i < Math.min(100, sampleCount); i++) {
+      maxAbs = Math.max(maxAbs, Math.abs(float32[i]));
+    }
+
+    if (maxAbs > 2.0) {
+      // Values too large for Float32 range - probably Int16 misread as Float32
+      console.log(`[pcmToWav] Detected Int16 format (max sample ${maxAbs.toFixed(2)} > 2.0)`);
+      // Reinterpret as Int16
+      int16Samples = new Int16Array(bin.buffer, bin.byteOffset, Math.floor(bin.length / 2));
+      sampleCount = int16Samples.length;
+    } else {
+      // Valid Float32 - convert to Int16
+      console.log(`[pcmToWav] Float32 format (${sampleCount} samples, max ${maxAbs.toFixed(3)})`);
+      int16Samples = new Int16Array(sampleCount);
+      for (let i = 0; i < sampleCount; i++) {
+        const s = Math.max(-1, Math.min(1, float32[i]));
+        int16Samples[i] = s < 0 ? Math.round(s * 0x8000) : Math.round(s * 0x7fff);
+      }
+    }
+  } else if (isInt16) {
+    // Int16 PCM: Direct interpretation
+    console.log(`[pcmToWav] Int16 format (${bin.length / 2} samples)`);
+    int16Samples = new Int16Array(bin.buffer, bin.byteOffset, bin.length / 2);
+    sampleCount = int16Samples.length;
+  } else {
+    console.warn(`[pcmToWav] Unusual byte count ${bin.length}, treating as Int16`);
+    int16Samples = new Int16Array(Math.floor(bin.length / 2));
+    for (let i = 0; i < int16Samples.length; i++) {
+      int16Samples[i] = bin.readInt16LE(i * 2);
+    }
+    sampleCount = int16Samples.length;
+  }
+
+  // Sanity check
+  const durationMs = (sampleCount / sampleRate) * 1000;
+  if (sampleCount < 10) {
+    console.warn(`[pcmToWav] Very short audio: ${sampleCount} samples (${bin.length} bytes input)`);
+  } else {
+    console.log(`[pcmToWav] ${sampleCount} samples → ~${Math.round(durationMs)}ms`);
+  }
+
+  // Build WAV file
   const bytesPerSample = 2;
   const blockAlign = channels * bytesPerSample;
   const byteRate = sampleRate * blockAlign;
-  const dataSize = float32.length * bytesPerSample;
+  const dataSize = sampleCount * bytesPerSample;
 
   const buffer = Buffer.alloc(44 + dataSize);
   let o = 0;
@@ -89,16 +249,17 @@ function pcmF32ToWavBase64(pcmB64: string, sampleRate = 24000, channels = 1): st
   buffer.write('data', o); o += 4;
   buffer.writeUInt32LE(dataSize, o); o += 4;
 
-  // samples
-  for (let i = 0; i < float32.length; i++) {
-    const s = Math.max(-1, Math.min(1, float32[i]));
-    const int16 = s < 0 ? Math.round(s * 0x8000) : Math.round(s * 0x7fff);
-    buffer.writeInt16LE(int16, o);
+  // Write samples
+  for (let i = 0; i < sampleCount; i++) {
+    buffer.writeInt16LE(int16Samples[i], o);
     o += 2;
   }
 
   return buffer.toString('base64');
 }
+
+// Backwards compatibility alias
+const pcmF32ToWavBase64 = pcmToWavBase64;
 
 /**
  * MoveIntent: What MAIA is doing for the user (Meet → Mirror → Move).
@@ -252,11 +413,9 @@ export async function POST(req: NextRequest) {
 
         // ── EMIT MOVE OUTCOME (if a pending move was classified) ──
         // This tells the client what happened from MAIA's last turn
+        // Note: classifiedOutcome already has tsOutcome and tsMove - no extra timestamp needed
         if (turnDecision.classifiedOutcome) {
-          emit('move_outcome', {
-            ...turnDecision.classifiedOutcome,
-            timestamp: Date.now(),
-          });
+          emit('move_outcome', turnDecision.classifiedOutcome);
         }
 
         // Log the governance decision
@@ -393,34 +552,52 @@ export async function POST(req: NextRequest) {
 
           timer.mark('text_0_emitted');
 
-          // PersonaPlex render (keep SSE schema the same: emit a single audio payload)
+          // TTS render with fallback (PersonaPlex → OpenAI)
+          // Sanitize text to ensure no metadata/JSON fragments reach TTS
+          const safeThresholdText = sanitizeForTts(text);
           let thresholdAudioEmitted = false;
-          for await (const chunk of renderWithPersonaPlex({
-            text,
-            wisdomDirective,
+
+          if (!safeThresholdText) {
+            console.warn('[StreamConversation] Threshold text empty after sanitization, skipping TTS');
+          }
+
+          const thresholdTtsResult = safeThresholdText ? await synthesizeWithFallback(safeThresholdText, {
             mode: wisdomPayload?.mode ?? mode,
             element: wisdomPayload?.element ?? element ?? null,
             sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
             speed: relationalSpeed,
             brevity: guidance.brevity,
-          })) {
+            wisdomDirective,
+            voice: voice,
+          }) : null;
+
+          if (thresholdTtsResult) {
             timer.mark('tts_0_done');
+
+            const audioBytes = Buffer.from(thresholdTtsResult.audio, 'base64').length;
+            console.log(`🔊 [Audio-Threshold] ${audioBytes}B ${thresholdTtsResult.format.toUpperCase()} via ${thresholdTtsResult.source}`);
 
             emit('audio', {
               index: 0,
-              audio: pcmF32ToWavBase64(chunk.audioB64, 24000, 1),
-              format: 'wav',
+              audio: thresholdTtsResult.audio,
+              format: thresholdTtsResult.format,
               text,
               timestamp: Date.now(),
               mode: 'threshold',
+              source: thresholdTtsResult.source,
             });
             timer.mark('audio_0_emitted');
             thresholdAudioEmitted = true;
-            break; // keep 1 audio event per sentence for schema stability
           }
 
           if (!thresholdAudioEmitted) {
-            console.warn('[StreamConversation] PersonaPlex returned no audio for threshold path');
+            console.warn('[StreamConversation] TTS returned no audio for threshold path');
+            emit('tts_error', {
+              index: 0,
+              text,
+              error: 'TTS unavailable',
+              timestamp: Date.now(),
+            });
           }
 
           // Compute moveIntent for threshold path
@@ -518,32 +695,45 @@ export async function POST(req: NextRequest) {
             fullResponse += chunk.text + ' ';
             sentenceCount = chunk.index + 1;
 
-            // PersonaPlex per-sentence render (preserve concurrency; emit first audio chunk only)
+            // TTS per-sentence render with fallback (PersonaPlex → OpenAI)
             const chunkIndex = chunk.index;
             const chunkText = chunk.text;
 
+            // Sanitize text to ensure no metadata/JSON fragments reach TTS
+            const safeChunkText = sanitizeForTts(chunkText);
+
             const ttsPromise = (async () => {
-              let emitted = false;
-              for await (const pchunk of renderWithPersonaPlex({
-                text: chunkText,
-                wisdomDirective,
+              if (!safeChunkText) {
+                console.warn(`[StreamConversation] Sentence ${chunkIndex} empty after sanitization, skipping TTS`);
+                return;
+              }
+
+              const result = await synthesizeWithFallback(safeChunkText, {
                 mode: wisdomPayload?.mode ?? mode,
                 element: wisdomPayload?.element ?? element ?? null,
                 sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
                 speed: relationalSpeed,
                 brevity: guidance.brevity,
-              })) {
+                wisdomDirective,
+                voice: voice,
+              });
+
+              if (result) {
                 if (!firstAudioEmitted) {
                   timer.mark('tts_0_done');
                   firstAudioEmitted = true;
                 }
 
+                const audioBytes = Buffer.from(result.audio, 'base64').length;
+                console.log(`🔊 [Audio] Sentence ${chunkIndex}: ${audioBytes}B ${result.format.toUpperCase()} via ${result.source}`);
+
                 emit('audio', {
                   index: chunkIndex,
-                  audio: pcmF32ToWavBase64(pchunk.audioB64, 24000, 1),
-                  format: 'wav',
+                  audio: result.audio,
+                  format: result.format,
                   text: chunkText,
                   timestamp: Date.now(),
+                  source: result.source,
                 });
 
                 if (chunkIndex === 0) {
@@ -551,15 +741,18 @@ export async function POST(req: NextRequest) {
                 }
 
                 audioChunksEmitted++;
-                emitted = true;
-                break; // keep 1 audio event per sentence for schema stability
-              }
-
-              if (!emitted) {
-                console.warn(`[StreamConversation] PersonaPlex returned no audio for sentence index=${chunkIndex}`);
+              } else {
+                console.warn(`[StreamConversation] TTS returned no audio for sentence index=${chunkIndex}`);
+                // Emit tts_error event so client knows voice is unavailable
+                emit('tts_error', {
+                  index: chunkIndex,
+                  text: chunkText,
+                  error: 'TTS unavailable',
+                  timestamp: Date.now(),
+                });
               }
             })().catch(e => {
-              console.error('[StreamConversation] PersonaPlex error:', e);
+              console.error('[StreamConversation] TTS error:', e);
             });
 
             ttsPromises.push(ttsPromise);

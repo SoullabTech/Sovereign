@@ -180,19 +180,51 @@ export async function* renderWithPersonaPlex(
         if (done) break;
 
         buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop() || '';
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = JSON.parse(line.slice(6));
-            if (data.audio) {
+        // Split by double newline (SSE event boundary), keeping incomplete events in buffer
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          const lines = event.split('\n');
+          let eventType = '';
+          let eventData = '';
+
+          for (const line of lines) {
+            if (line.startsWith('event: ')) {
+              eventType = line.slice(7).trim();
+            } else if (line.startsWith('data: ')) {
+              eventData = line.slice(6);
+            }
+          }
+
+          if (!eventData) continue;
+
+          try {
+            const data = JSON.parse(eventData);
+
+            // Check for error events - throw to trigger fallback
+            if (eventType === 'error' || data.error) {
+              const errorMsg = data.error || 'PersonaPlex error';
+              console.error(`[PersonaPlex] SSE error: ${errorMsg}`);
+              throw new Error(errorMsg);
+            }
+
+            // Normalize field name: PersonaPlex sends `audio`, we expect `audioB64`
+            const audioB64 = data.audioB64 ?? data.audio;
+            if (audioB64) {
               yield {
-                audioB64: data.audio,
+                audioB64,
                 index: chunkIndex++,
                 transcript: data.transcript,
                 frameCount: data.frame_count,
               };
+            }
+          } catch (e) {
+            if (e instanceof SyntaxError) {
+              console.warn(`[PersonaPlex] Failed to parse SSE data: ${eventData.slice(0, 100)}`);
+            } else {
+              throw e; // Re-throw non-parse errors (like max-steps errors)
             }
           }
         }

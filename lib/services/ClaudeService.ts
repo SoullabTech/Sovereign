@@ -209,10 +209,27 @@ export class ClaudeService {
 
       // Sentence boundary detection regex
       const sentenceEndRegex = /[.!?]+[\s]+|[.!?]+$/;
+      // Track if we've entered the metadata block
+      let inMetadataBlock = false;
 
       for await (const event of stream) {
         if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
           buffer += event.delta.text;
+
+          // Check if we've entered or exited metadata block
+          if (buffer.includes('---SOUL_METADATA---')) {
+            inMetadataBlock = true;
+          }
+          if (buffer.includes('---END_METADATA---')) {
+            // Strip metadata block entirely and exit metadata mode
+            buffer = buffer.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
+            inMetadataBlock = false;
+          }
+
+          // Don't yield anything while in metadata block
+          if (inMetadataBlock) {
+            continue;
+          }
 
           // Check for complete sentences in buffer
           let match;
@@ -220,8 +237,16 @@ export class ClaudeService {
             const sentenceEnd = match.index + match[0].length;
             const sentence = buffer.slice(0, sentenceEnd).trim();
 
-            // Skip metadata blocks
+            // Skip metadata blocks (double-check)
             if (sentence.includes('---SOUL_METADATA---') || sentence.includes('---END_METADATA---')) {
+              buffer = buffer.slice(sentenceEnd);
+              continue;
+            }
+
+            // Skip JSON-like metadata fragments that leaked through
+            // These look like: {"name": "...", "intensity": ...}
+            if (/^\s*\{["\w\s:,.\-]+\}\s*$/.test(sentence) ||
+                /^\s*\[["\w\s:,.\-{}]+\]\s*$/.test(sentence)) {
               buffer = buffer.slice(sentenceEnd);
               continue;
             }

@@ -81,6 +81,39 @@ interface AudioQueueItem {
 const VOICE_SESSION_KEY = 'maia_voice_session_id';
 
 /**
+ * Sanitize text for display/speech - removes JSON metadata fragments
+ * that may leak through the streaming pipeline.
+ */
+function sanitizeForDisplay(input: string): string {
+  if (!input) return '';
+
+  let s = input;
+
+  // Strip obvious JSON fragments that leak into the text stream
+  // (catches chunks that start mid-object like `6}, {"name": "mild confusion"...`)
+  s = s.replace(/^\s*[\]\}\),\d]*\s*/g, '');
+  s = s.replace(/\{[\s\S]*?\}\s*$/g, ''); // trailing object fragment
+
+  // Remove complete JSON-like objects/arrays embedded in text
+  s = s.replace(/[\[\{][^[\]{}]*[\]\}]/g, (m) => {
+    // If it looks like JSON metadata, drop it
+    const looksJsony =
+      m.includes('"') && (m.includes(':') || m.includes('name') || m.includes('intensity'));
+    return looksJsony ? '' : m;
+  });
+
+  // Remove metadata delimiters if they leak
+  s = s.replace(/---SOUL_METADATA---[\s\S]*?---END_METADATA---/g, '');
+  s = s.replace(/---SOUL_METADATA---[\s\S]*/g, ''); // partial block at end
+  s = s.replace(/[\s\S]*---END_METADATA---/g, ''); // partial block at start
+
+  // Collapse whitespace
+  s = s.replace(/\s+/g, ' ').trim();
+
+  return s;
+}
+
+/**
  * Generate a stable session ID for relational stack continuity.
  * Uses crypto.randomUUID if available, otherwise falls back to timestamp + random.
  */
@@ -377,28 +410,39 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                 const data = JSON.parse(eventData);
 
                 switch (eventType) {
-                  case 'text':
+                  case 'text': {
+                    // Sanitize text to remove any leaked JSON metadata
+                    const cleanText = sanitizeForDisplay(data.text);
+                    if (!cleanText) break; // Skip empty/metadata-only chunks
                     setState(prev => ({
                       ...prev,
-                      currentText: data.text,
+                      currentText: cleanText,
                       sentenceIndex: data.index
                     }));
-                    onTextChunk?.(data.text, data.index);
+                    onTextChunk?.(cleanText, data.index);
                     break;
+                  }
 
-                  case 'audio':
-                    // Add to queue and start playing if not already
+                  case 'audio': {
+                    // Sanitize the display text for audio chunks too
+                    const cleanAudioText = sanitizeForDisplay(data.text);
+                    // Only queue audio if we have valid text (skip metadata-only audio)
+                    if (!cleanAudioText) {
+                      console.log('[StreamingVoice] Skipping audio chunk with no speakable text');
+                      break;
+                    }
                     audioQueueRef.current.push({
                       index: data.index,
                       audio: data.audio,
                       format: data.format,
-                      text: data.text
+                      text: cleanAudioText
                     });
                     // Start playback if not already playing
                     if (!isPlayingRef.current) {
                       playNextChunk();
                     }
                     break;
+                  }
 
                   case 'silence':
                     // MAIA chose intentional silence - this is NOT an error
