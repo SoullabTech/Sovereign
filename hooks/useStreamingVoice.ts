@@ -13,13 +13,32 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 
+/** Relational stack metadata from server */
+interface RelationalMetadata {
+  maiaMode: 'REGULATOR' | 'NAVIGATOR' | 'MYTHOPOET';
+  activation: number;
+  /** Prosody speed multiplier. Undefined when MAIA chose silence. */
+  prosodySpeed?: number;
+}
+
+/** Silence response from relational stack */
+interface SilenceResponse {
+  durationMs: number;
+  intent: 'REGULATORY' | 'REFLECTIVE' | 'BOUNDARY';
+  mode: string;
+  activation: number;
+}
+
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
-  onComplete?: (fullResponse: string) => void;
+  onComplete?: (fullResponse: string, relational?: RelationalMetadata) => void;
+  onSilence?: (silence: SilenceResponse) => void;
   onError?: (error: string) => void;
   voice?: string;
   speed?: number;
   element?: string;
+  /** Stable session ID for relational stack continuity. If not provided, one will be generated per hook instance. */
+  sessionId?: string;
 }
 
 interface StreamingVoiceState {
@@ -29,6 +48,12 @@ interface StreamingVoiceState {
   fullResponse: string;
   sentenceIndex: number;
   error: string | null;
+  /** True when MAIA chose intentional silence */
+  isSilence: boolean;
+  /** Relational stack metadata from last response */
+  relational: RelationalMetadata | null;
+  /** Last silence response details */
+  lastSilence: SilenceResponse | null;
 }
 
 interface AudioQueueItem {
@@ -38,8 +63,67 @@ interface AudioQueueItem {
   text: string;
 }
 
+const VOICE_SESSION_KEY = 'maia_voice_session_id';
+
+/**
+ * Generate a stable session ID for relational stack continuity.
+ * Uses crypto.randomUUID if available, otherwise falls back to timestamp + random.
+ */
+function generateSessionId(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return `voice-${crypto.randomUUID()}`;
+  }
+  return `voice-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+/**
+ * Get or create a persistent session ID.
+ * Stores in sessionStorage for continuity across page reloads.
+ * Falls back to memory-only if sessionStorage unavailable.
+ */
+function getOrCreateSessionId(providedId?: string): string {
+  // If explicitly provided, use that (and optionally store it)
+  if (providedId) {
+    try {
+      sessionStorage.setItem(VOICE_SESSION_KEY, providedId);
+    } catch {
+      // sessionStorage unavailable (SSR, private mode, etc.)
+    }
+    return providedId;
+  }
+
+  // Try to get existing from sessionStorage
+  try {
+    const existing = sessionStorage.getItem(VOICE_SESSION_KEY);
+    if (existing) return existing;
+  } catch {
+    // sessionStorage unavailable
+  }
+
+  // Generate new and try to persist
+  const created = generateSessionId();
+  try {
+    sessionStorage.setItem(VOICE_SESSION_KEY, created);
+  } catch {
+    // sessionStorage unavailable
+  }
+  return created;
+}
+
 export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
-  const { onTextChunk, onComplete, onError, voice = 'maya', speed = 1.0, element } = options;
+  const {
+    onTextChunk,
+    onComplete,
+    onSilence,
+    onError,
+    voice = 'maya',
+    speed = 1.0,
+    element,
+    sessionId: providedSessionId,
+  } = options;
+
+  // Stable session ID - persisted in sessionStorage for cross-reload continuity
+  const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
 
   const [state, setState] = useState<StreamingVoiceState>({
     isStreaming: false,
@@ -47,7 +131,10 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     currentText: '',
     fullResponse: '',
     sentenceIndex: 0,
-    error: null
+    error: null,
+    isSilence: false,
+    relational: null,
+    lastSilence: null,
   });
 
   // Audio queue and playback management
@@ -142,14 +229,17 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     }
     abortControllerRef.current = new AbortController();
 
-    setState({
+    setState(prev => ({
       isStreaming: true,
       isPlaying: false,
       currentText: '',
       fullResponse: '',
       sentenceIndex: 0,
-      error: null
-    });
+      error: null,
+      isSilence: false,
+      relational: prev.relational, // Preserve relational state across turns
+      lastSilence: null,
+    }));
 
     // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
     if (!isProbablyOnline()) {
@@ -180,7 +270,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           speed,
           element,
           conversationHistory,
-          sessionId: `stream-${Date.now()}`
+          sessionId: sessionIdRef.current, // Stable session ID for relational stack
         }),
         signal: abortControllerRef.current.signal
       });
@@ -245,13 +335,43 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     }
                     break;
 
-                  case 'complete':
+                  case 'silence':
+                    // MAIA chose intentional silence - this is NOT an error
+                    const silenceResponse: SilenceResponse = {
+                      durationMs: data.durationMs,
+                      intent: data.intent,
+                      mode: data.mode,
+                      activation: data.activation,
+                    };
                     setState(prev => ({
                       ...prev,
                       isStreaming: false,
-                      fullResponse: data.fullResponse
+                      isSilence: true,
+                      lastSilence: silenceResponse,
+                      relational: {
+                        maiaMode: data.mode,
+                        activation: data.activation,
+                        // prosodySpeed intentionally omitted for silence
+                      },
                     }));
-                    onComplete?.(data.fullResponse);
+                    onSilence?.(silenceResponse);
+                    console.log(`[StreamingVoice] Silence response: ${data.intent} for ${data.durationMs}ms`);
+                    break;
+
+                  case 'complete':
+                    // Extract relational metadata if present
+                    const relationalMeta: RelationalMetadata | null = data.relational ? {
+                      maiaMode: data.relational.maiaMode,
+                      activation: data.relational.activation,
+                      prosodySpeed: data.relational.prosodySpeed,
+                    } : null;
+                    setState(prev => ({
+                      ...prev,
+                      isStreaming: false,
+                      fullResponse: data.fullResponse,
+                      relational: relationalMeta || prev.relational,
+                    }));
+                    onComplete?.(data.fullResponse, relationalMeta || undefined);
                     break;
 
                   case 'error':
@@ -317,14 +437,17 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     audioQueueRef.current = [];
     isPlayingRef.current = false;
 
-    setState({
+    setState(prev => ({
       isStreaming: false,
       isPlaying: false,
       currentText: '',
       fullResponse: '',
       sentenceIndex: 0,
-      error: null
-    });
+      error: null,
+      isSilence: false,
+      relational: prev.relational, // Preserve relational state
+      lastSilence: null,
+    }));
   }, []);
 
   /**
@@ -358,6 +481,8 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     ...state,
     sendMessage,
     stop,
-    togglePause
+    togglePause,
+    /** Stable session ID for this conversation (for relational stack continuity) */
+    sessionId: sessionIdRef.current,
   };
 }

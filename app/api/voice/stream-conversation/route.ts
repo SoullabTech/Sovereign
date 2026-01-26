@@ -6,7 +6,12 @@
  * channeling responses through MAIA's essence, personality, and wisdom.
  * The system prompt establishes MAIA's identity - Claude never speaks as itself.
  *
- * Flow: User message → Threshold check → (fast-path OR Claude streaming) → TTS → Audio SSE
+ * Flow: User message → Relational Stack decision → Threshold check → (fast-path OR Claude streaming) → TTS → Audio SSE
+ *
+ * Relational Stack governs:
+ * 1. SILENCE responses (when speaking would intrude)
+ * 2. BACKCHANNEL responses (soft acknowledgments)
+ * 3. SPOKEN responses (with adaptive prosody)
  *
  * Latency optimization:
  * 1. Threshold fast-path bypasses LLM for minimal/fragile inputs
@@ -26,6 +31,50 @@ import {
   DEFAULT_MAIA_THRESHOLD_CONFIG,
   type ThresholdState,
 } from '@/lib/threshold';
+import {
+  createMoshiVoiceSession,
+  processTurn,
+  recordSilence,
+  type MoshiVoiceSession,
+  type TurnDecision,
+} from '@/lib/voice/moshi/MoshiSessionManager';
+import type { RelationalStackState } from '@/lib/consciousness/session/MAIASessionManager';
+import {
+  MaiaWisdomProvider,
+  type VoiceContextPayload,
+  type MaiaVoiceMode,
+} from '@/lib/voice/wisdom/MaiaWisdomProvider';
+
+// Session store for SSE connections (keyed by sessionId)
+// In production, this would be Redis or similar for horizontal scaling
+const voiceSessions = new Map<string, MoshiVoiceSession>();
+
+/**
+ * Get or create a voice session for this connection.
+ * Sessions are keyed by sessionId and expire after 30 minutes of inactivity.
+ */
+function getOrCreateVoiceSession(sessionId: string): MoshiVoiceSession {
+  const existing = voiceSessions.get(sessionId);
+  const now = Date.now();
+  const maxAge = 30 * 60 * 1000; // 30 minutes
+
+  if (existing && (now - existing.lastActivity) < maxAge) {
+    return existing;
+  }
+
+  // Clean up expired sessions periodically
+  if (voiceSessions.size > 100) {
+    for (const [id, session] of voiceSessions) {
+      if (now - session.lastActivity > maxAge) {
+        voiceSessions.delete(id);
+      }
+    }
+  }
+
+  const session = createMoshiVoiceSession(sessionId);
+  voiceSessions.set(sessionId, session);
+  return session;
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,6 +89,12 @@ interface StreamRequest {
   speed?: number;
   conversationHistory?: Array<{ role: string; content: string }>;
   thresholdState?: ThresholdState;  // Persisted threshold state across turns
+  /** Optional relational stack state from client (for cross-request continuity) */
+  relationalStackState?: Partial<RelationalStackState>;
+  /** MAIA voice mode: talk (peer), care (therapeutic), note (scribe) */
+  mode?: MaiaVoiceMode;
+  /** Sanctuary mode: presence-only, no memory retrieval or persistence */
+  sanctuary?: boolean;
 }
 
 /**
@@ -74,13 +129,24 @@ async function synthesizeSentence(
 
 export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
-  const { message, userId, sessionId, element, voice, speed, conversationHistory, thresholdState } = body;
+  const {
+    message,
+    userId,
+    sessionId,
+    element,
+    voice,
+    speed,
+    conversationHistory,
+    thresholdState,
+    mode = 'talk',
+    sanctuary = false,
+  } = body;
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer();
   timer.mark('request_received');
 
-  console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed });
+  console.log('🔊 [StreamConversation] Received voice settings:', { voice, speed, mode, sanctuary });
 
   if (!message?.trim()) {
     return new Response('Missing message', { status: 400 });
@@ -103,6 +169,95 @@ export async function POST(req: NextRequest) {
       emit('connected', { sessionId: sessionId || 'default', timestamp: Date.now() });
 
       try {
+        // ============ RELATIONAL STACK GOVERNANCE ============
+        // Get/create session and run governance gate FIRST
+        const effectiveSessionId = sessionId || 'default';
+        const voiceSession = getOrCreateVoiceSession(effectiveSessionId);
+
+        const turnDecision = processTurn(voiceSession, {
+          userText: message,
+          now: Date.now(),
+        });
+
+        timer.mark('relational_decision');
+
+        // Log the governance decision
+        console.log(`🧘 [Relational] Session ${effectiveSessionId}: ` +
+          `mode=${voiceSession.relationalStack.currentMode}, ` +
+          `activation=${voiceSession.relationalStack.smoother.lastActivation.toFixed(2)}, ` +
+          `shouldSpeak=${turnDecision.shouldSpeak}, ` +
+          `backchannel=${turnDecision.shouldBackchannel}`);
+
+        // If relational stack says SILENCE, return immediately
+        if (!turnDecision.shouldSpeak) {
+          recordSilence(voiceSession, turnDecision.nextPauseMs, turnDecision.silenceIntent!);
+
+          emit('silence', {
+            durationMs: turnDecision.nextPauseMs,
+            intent: turnDecision.silenceIntent,
+            mode: voiceSession.relationalStack.currentMode,
+            activation: voiceSession.relationalStack.smoother.lastActivation,
+            timestamp: Date.now(),
+          });
+
+          emit('complete', {
+            fullResponse: '', // Intentional silence
+            sentenceCount: 0,
+            audioChunksEmitted: 0,
+            timestamp: Date.now(),
+            mode: 'silence',
+            silenceIntent: turnDecision.silenceIntent,
+            timing: timer.summary(),
+          });
+
+          console.log(`[voice] SILENCE response: ${turnDecision.silenceIntent} for ${turnDecision.nextPauseMs}ms`);
+          controller.close();
+          return;
+        }
+
+        // Apply prosody as a multiplier on top of user preference.
+        // Clamp to keep TTS stable and avoid accidental extremes.
+        const baseSpeed = typeof speed === 'number' ? speed : 1.0;
+        const mult =
+          typeof turnDecision.prosody?.tempoMultiplier === 'number'
+            ? turnDecision.prosody.tempoMultiplier
+            : 1.0;
+
+        const relationalSpeedRaw = baseSpeed * mult;
+
+        // Conservative clamp; OpenAI TTS supports 0.25-4.0 but we stay tighter
+        const relationalSpeed = Math.min(1.5, Math.max(0.5, relationalSpeedRaw));
+
+        // ============ WISDOM FIELD RETRIEVAL ============
+        // Build full MAIA context from memory bundle + spiral state
+        // Sanctuary mode is a HARD WALL: no retrieval, no persistence
+        let wisdomPayload: VoiceContextPayload | null = null;
+        if (userId) {
+          try {
+            wisdomPayload = await MaiaWisdomProvider.buildVoiceContext({
+              userId,
+              sessionId: effectiveSessionId,
+              currentInput: message,
+              mode,
+              element: element as any,
+              sanctuary,
+              conversationHistory: conversationHistory || [],
+            });
+            timer.mark('wisdom_retrieved');
+
+            // Emit wisdom metadata (no content in sanctuary)
+            emit('wisdom', {
+              sanctuary: wisdomPayload.sanctuary,
+              mode: wisdomPayload.mode,
+              element: wisdomPayload.element,
+              metadata: wisdomPayload.metadata,
+              timestamp: Date.now(),
+            });
+          } catch (wisdomErr) {
+            console.warn('[StreamConversation] Wisdom retrieval failed (continuing):', wisdomErr);
+          }
+        }
+
         // ============ THRESHOLD FAST-PATH ============
         // Check if this input can be handled without LLM
         const currentThresholdState = thresholdState || createInitialThresholdState();
@@ -129,8 +284,8 @@ export async function POST(req: NextRequest) {
 
           timer.mark('text_0_emitted');
 
-          // Generate TTS and emit audio immediately
-          const audioResult = await synthesizeSentence(text, voice, speed);
+          // Generate TTS and emit audio immediately (using relational prosody speed)
+          const audioResult = await synthesizeSentence(text, voice, relationalSpeed);
           timer.mark('tts_0_done');
 
           if (audioResult) {
@@ -145,7 +300,7 @@ export async function POST(req: NextRequest) {
             timer.mark('audio_0_emitted');
           }
 
-          // Complete with updated threshold state
+          // Complete with updated threshold state + relational metadata
           emit('complete', {
             fullResponse: text,
             sentenceCount: 1,
@@ -154,6 +309,11 @@ export async function POST(req: NextRequest) {
             mode: 'threshold',
             thresholdState: thresholdResult.state,
             timing: timer.summary(),
+            relational: {
+              maiaMode: voiceSession.relationalStack.currentMode,
+              activation: voiceSession.relationalStack.smoother.lastActivation,
+              prosodySpeed: relationalSpeed,
+            },
           });
 
           console.log(`[voice] THRESHOLD fast-path: ${timer.summary()}`);
@@ -165,10 +325,22 @@ export async function POST(req: NextRequest) {
         const claudeService = getClaudeService();
         timer.mark('llm_starting');
 
+        // Build context with wisdom field integration
+        // When PersonaPlex is wired in, wisdomPayload.formatForPersonaPlex() provides the persona prompt
+        const wisdomDirective = wisdomPayload
+          ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
+          : undefined;
+
         const context = {
           element,
           conversationHistory,
-          userName: undefined
+          userName: undefined,
+          // Voice-specific context from wisdom field
+          voiceMode: mode,
+          sanctuary,
+          wisdomDirective,
+          memoryContext: wisdomPayload?.memoryDirective,
+          spiralContext: wisdomPayload?.spiralDirective,
         };
 
         let fullResponse = '';
@@ -205,9 +377,10 @@ export async function POST(req: NextRequest) {
             sentenceCount = chunk.index + 1;
 
             // Generate TTS for this sentence - emit audio as soon as it's ready
+            // Uses relational prosody speed for affect-responsive pacing
             const chunkIndex = chunk.index;
             const chunkText = chunk.text;
-            const ttsPromise = synthesizeSentence(chunkText, voice, speed).then(audioResult => {
+            const ttsPromise = synthesizeSentence(chunkText, voice, relationalSpeed).then(audioResult => {
               if (audioResult) {
                 // Mark timing for first audio
                 if (!firstAudioEmitted) {
@@ -248,9 +421,21 @@ export async function POST(req: NextRequest) {
               timestamp: Date.now(),
               thresholdState: thresholdResult.state,
               timing: timer.summary(),
+              relational: {
+                maiaMode: voiceSession.relationalStack.currentMode,
+                activation: voiceSession.relationalStack.smoother.lastActivation,
+                prosodySpeed: relationalSpeed,
+              },
+              // Wisdom field metadata (for debugging and PersonaPlex integration)
+              wisdom: wisdomPayload ? {
+                mode: wisdomPayload.mode,
+                element: wisdomPayload.element,
+                sanctuary: wisdomPayload.sanctuary,
+                metadata: wisdomPayload.metadata,
+              } : undefined,
             });
 
-            console.log(`[voice] LLM path: ${timer.summary()}`);
+            console.log(`[voice] LLM path: ${timer.summary()}${wisdomPayload?.sanctuary ? ' (sanctuary)' : ''}`);
           }
         }
 
