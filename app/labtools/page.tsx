@@ -27,7 +27,11 @@ import {
   Eye,
   Zap,
   Shield,
-  Star
+  Star,
+  Moon,
+  CircleDot,
+  Activity,
+  Network
 } from 'lucide-react';
 
 export default function LabToolsPage() {
@@ -75,6 +79,18 @@ export default function LabToolsPage() {
           label: 'Oracle Consultation',
           path: '/oracle',
           description: 'Divine guidance & insight'
+        },
+      ],
+    },
+    {
+      title: 'MIND-BODY LABS',
+      icon: '🧘',
+      items: [
+        {
+          icon: Network,
+          label: 'Mind-Body Laboratory',
+          path: '/labtools/mind-body',
+          description: 'Integrated consciousness tools across 7 levels of development'
         },
       ],
     },

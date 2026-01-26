@@ -34,6 +34,36 @@ export default function MAIACommunityCommonsPage() {
 
   const knowledgeSections = [
     {
+      title: 'DAILY INSPIRATION',
+      icon: '✨',
+      items: [
+        {
+          icon: Sparkles,
+          label: 'Today\'s Reflection',
+          path: '/maia/community/content/inspiration/today',
+          description: 'A moment of wisdom to carry with you',
+          type: 'inspiration',
+          readTime: '1 min'
+        },
+        {
+          icon: Heart,
+          label: 'Member Inspirations',
+          path: '/maia/community/content/inspiration/shared',
+          description: 'What\'s moved others on their journey',
+          type: 'inspiration',
+          count: 'community'
+        },
+        {
+          icon: Eye,
+          label: 'Share an Inspiration',
+          path: '/maia/community/content/inspiration/contribute',
+          description: 'Offer something that opened a door for you',
+          type: 'inspiration',
+          readTime: 'contribute'
+        },
+      ],
+    },
+    {
       title: 'CORE CONCEPTS',
       icon: '📜',
       items: [
@@ -306,9 +336,9 @@ export default function MAIACommunityCommonsPage() {
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-[#D4B896] mb-2">Welcome to the Sacred Commons</h3>
               <p className="text-white/70 text-sm leading-relaxed">
-                This elevated library serves as a multicultural sanctuary where wisdom traditions
-                converge. Share breakthroughs, explore depth practices, and engage in consciousness-
-                expanding discourse with fellow travelers on the path of transformation.
+                A living sanctuary where wisdom traditions converge. Here we remember together —
+                sharing what opens doors, exploring depth practices, and discovering what we
+                already know. All the answers are within. This is where we help each other find them.
               </p>
             </div>
           </div>
@@ -356,6 +386,7 @@ export default function MAIACommunityCommonsPage() {
                           </div>
                           <div className="flex items-center gap-2">
                             <span className={`text-xs px-2 py-1 rounded-md ${
+                              item.type === 'inspiration' ? 'text-teal-400 bg-teal-500/20' :
                               item.type === 'concept' ? 'text-blue-400 bg-blue-500/20' :
                               item.type === 'essay' ? 'text-green-400 bg-green-500/20' :
                               item.type === 'practice' ? 'text-purple-400 bg-purple-500/20' :

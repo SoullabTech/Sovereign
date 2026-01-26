@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { personalOracleAgent } from '../../backend/src/agents/PersonalOracleAgent';
-import { EnhancedMemoryRetrieval } from '../../backend/src/services/memory/EnhancedMemoryRetrieval';
-import { MemoryStore } from '../../backend/src/services/memory/MemoryStore';
-import { LlamaService } from '../../backend/src/services/memory/LlamaService';
-import { logger } from '../../backend/src/utils/logger';
+import {
+  EnhancedMemoryRetrieval,
+  MemoryStore,
+  LlamaService,
+  logger
+} from '@/lib/stubs/dream-weaver-stubs';
 
 /**
  * GET /api/oracle/memory/stats

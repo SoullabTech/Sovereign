@@ -2,8 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
-import { DreamWeaverEngine } from '@/app/api/backend/src/oracle/core/DreamWeaverEngine';
-import { DreamMemorySchema } from '@/app/api/backend/src/schemas/dreamMemory.schema';
+import { DreamWeaverEngine, DreamMemorySchema } from '@/lib/stubs/dream-weaver-stubs';
 
 const prisma = new PrismaClient();
 

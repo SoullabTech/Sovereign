@@ -13,7 +13,7 @@ import {
 import { getCognitiveProfile, type CognitiveProfile } from '@/lib/consciousness/cognitiveProfileService';
 import { enforceFieldSafety, type FieldSafetyDecision } from '@/lib/field/enforceFieldSafety';
 import { IPP_PARENTING_REPAIR_FLOW } from '@/lib/consciousness/intervention-flows';
-import { PARENTING_REPAIR_SYSTEM_PROMPT } from '../../../../backend/src/agents/prompts/parentingRepairPrompt';
+// Note: PARENTING_REPAIR_SYSTEM_PROMPT removed with backend - prompts now handled via LLM system prompts
 import {
   evaluateResponseAgainstAxioms,
   hasOpusRupture,

@@ -573,13 +573,9 @@ function MAIAPageContent() {
               </div>
             </div>
 
-            {/* Desktop: Traditional layout */}
-            <div className="hidden md:flex items-center justify-between max-w-7xl mx-auto px-4">
-              {/* Left: Logo removed - now in bottom center */}
-              <div></div>
-
-              {/* Center: Voice/Text toggle + Mode selector */}
-              <div className="flex items-center gap-3">
+            {/* Desktop: Scrollable carousel layout */}
+            <div className="hidden md:block mobile-carousel scrollbar-hide max-w-full mx-auto">
+              <div className="flex items-center justify-center gap-3 min-w-max px-4 py-1">
                 {/* Voice/Text Toggle */}
                 <button
                   onClick={() => setShowChatInterface(!showChatInterface)}
@@ -647,10 +643,7 @@ function MAIAPageContent() {
                     Scribe
                   </motion.button>
                 </div>
-              </div>
 
-              {/* Right: Journey + Commons + Labtools + Session + Sign Out */}
-              <div className="flex items-center gap-2">
                 {/* Journey Button */}
                 <Link href="/journey">
                   <motion.button

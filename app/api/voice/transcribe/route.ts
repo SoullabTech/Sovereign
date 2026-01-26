@@ -2,9 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
 import OpenAI from "openai";
-import { memoryStore } from "../../backend/src/services/memory/MemoryStore";
-import { llamaService } from "../../backend/src/services/memory/LlamaService";
-import { logger } from "../../backend/src/utils/logger";
+import { memoryStore, llamaService, logger } from "@/lib/stubs/dream-weaver-stubs";
 import { v4 as uuidv4 } from "uuid";
 
 // Check if OpenAI API key is valid

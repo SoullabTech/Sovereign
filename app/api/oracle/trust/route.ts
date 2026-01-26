@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { personalOracleAgent } from '../../backend/src/agents/PersonalOracleAgent';
-import { logger } from '../../backend/src/utils/logger';
+import { personalOracleAgent, logger } from '@/lib/stubs/dream-weaver-stubs';
 
 /**
  * GET /api/oracle/trust
