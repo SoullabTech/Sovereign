@@ -75,8 +75,10 @@ export type MoveOutcome =
 
 /** Event recording MAIA's move and its outcome */
 export interface MoveOutcomeEvent {
+  /** Timestamp when outcome was classified (user's next turn) */
+  tsOutcome: number
   /** Timestamp when MAIA completed the move */
-  ts: number
+  tsMove: number
   /** What MAIA was trying to do */
   moveIntent: MoveIntent
   /** How MAIA responded */
@@ -164,6 +166,8 @@ export interface MoshiVoiceSession {
     backchannelProbabilitySum: number
     /** Move outcomes (intent → outcome pairs for soulfulness tracking) */
     moveOutcomes: MoveOutcomeEvent[]
+    /** Last computed guidance (cached for consistency + metrics) */
+    lastGuidance?: GuidanceSignal
   }
 }
 
@@ -339,8 +343,11 @@ export function processTurn(
   const { relationalStack, timing } = session
 
   // ── GUIDANCE POSTURE ──
-  // Compute stable posture signal from windowed stats
-  const guidance = computeGuidancePosture(session)
+  // Compute stable posture signal from windowed stats (pass `now` for consistent timebase)
+  const guidance = computeGuidancePosture(session, now)
+
+  // Cache guidance for metrics + consistency
+  session.tuning.lastGuidance = guidance
 
   // Apply mode lock if guidance suggests it
   if (guidance.modeLockMs > 0) {
@@ -386,7 +393,8 @@ export function processTurn(
 
     // Record the completed move outcome event
     const outcomeEvent: MoveOutcomeEvent = {
-      ts: now, // Outcome time, not move time
+      tsOutcome: now,
+      tsMove: pending.ts,
       moveIntent: pending.moveIntent,
       responseType: pending.responseType,
       activationAtMove: pending.activationAtMove,
@@ -644,15 +652,17 @@ export function classifyMoveOutcome(
  * @param session - The voice session (mutated if transition allowed)
  * @param toMode - Target mode
  * @param trigger - Why the transition is being requested
+ * @param contextNow - Optional timestamp for consistent timebase (defaults to Date.now())
  */
 export function transitionMode(
   session: MoshiVoiceSession,
   toMode: MaiaMode,
-  trigger: string
+  trigger: string,
+  contextNow?: number
 ): boolean {
   const { relationalStack } = session
   const fromMode = relationalStack.currentMode
-  const now = Date.now()
+  const now = contextNow ?? Date.now()
 
   // Check mode lock (prevents jitter)
   const lockUntil = relationalStack.modeLockUntilTs ?? 0
@@ -737,7 +747,8 @@ export function setPendingMove(
   if (existing) {
     const latencyMs = now - existing.ts
     const outcomeEvent: MoveOutcomeEvent = {
-      ts: now,
+      tsOutcome: now,
+      tsMove: existing.ts,
       moveIntent: existing.moveIntent,
       responseType: existing.responseType,
       activationAtMove: existing.activationAtMove,
@@ -752,6 +763,8 @@ export function setPendingMove(
     console.log(
       `[Relational] Closing stale pending move: ${existing.moveIntent} → ${outcomeEvent.outcome} (latency: ${latencyMs}ms)`
     )
+    // Explicit clear before setting new (defensive)
+    session.relationalStack.pendingMove = undefined
   }
 
   session.relationalStack.pendingMove = {
@@ -902,19 +915,36 @@ function dominantSilenceIntent(
 /**
  * Compute a single stable posture signal per turn from windowed stats.
  * Source of truth: turnOutcomes + modeTransitionTimestamps.
+ *
+ * @param session - Voice session
+ * @param now - Current timestamp (for consistent timebase across all decisions)
  */
-export function computeGuidancePosture(session: MoshiVoiceSession): GuidanceSignal {
-  const now = Date.now()
+export function computeGuidancePosture(
+  session: MoshiVoiceSession,
+  now: number
+): GuidanceSignal {
+  const { relationalStack, tuning } = session
+
+  // If mode is locked, preserve last posture for stability (hold the shape)
+  const lockUntil = relationalStack.modeLockUntilTs ?? 0
+  if (lockUntil > now && tuning.lastGuidance) {
+    // Return cached guidance with updated reason
+    return {
+      ...tuning.lastGuidance,
+      reason: `locked_${tuning.lastGuidance.reason}`,
+    }
+  }
+
   const silenceRatioLast20 = computeRecentSilenceRatioFromOutcomes(
-    session.tuning.turnOutcomes,
+    tuning.turnOutcomes,
     20
   )
   const silenceIntentCountsLast20 = computeRecentSilenceIntentCountsFromOutcomes(
-    session.tuning.turnOutcomes,
+    tuning.turnOutcomes,
     20
   )
   const modeTransitionsPer5m = computeModeTransitionsPer5mFromTimestamps(
-    session.tuning.modeTransitionTimestamps,
+    tuning.modeTransitionTimestamps,
     now
   )
 
@@ -979,8 +1009,8 @@ export function getSessionMetrics(session: MoshiVoiceSession) {
   const now = Date.now()
   const sessionDurationMs = now - createdAt
 
-  // Guidance posture (single stable signal)
-  const guidance = computeGuidancePosture(session)
+  // Use cached guidance from last processTurn() call, or compute fresh if none
+  const guidance = tuning.lastGuidance ?? computeGuidancePosture(session, now)
 
   // Windowed stats (for "signal not vibes" tuning)
   const silenceRatioLast20 = computeRecentSilenceRatioFromOutcomes(tuning.turnOutcomes, 20)
