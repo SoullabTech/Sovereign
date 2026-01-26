@@ -10,6 +10,7 @@ import { SlideTrust } from './slides/SlideTrust';
 import { SlideWhyMe } from './slides/SlideWhyMe';
 import { SlideAsk } from './slides/SlideAsk';
 // Appendix slides
+import { SlideVision } from './slides/SlideVision';
 import { SlideTiersAppendix } from './slides/SlideTiersAppendix';
 import { SlideMemberAppendix } from './slides/SlideMemberAppendix';
 
@@ -22,7 +23,8 @@ const slides = [
   { id: 'trust', component: SlideTrust },
   { id: 'why-me', component: SlideWhyMe },
   { id: 'ask', component: SlideAsk },
-  // Appendix (2 slides)
+  // Appendix (3 slides)
+  { id: 'appendix-vision', component: SlideVision },
   { id: 'appendix-tiers', component: SlideTiersAppendix },
   { id: 'appendix-member', component: SlideMemberAppendix },
 ];

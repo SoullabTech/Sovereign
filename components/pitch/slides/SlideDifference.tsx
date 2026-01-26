@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 
-const sources = ['Jung', 'Campbell', 'CBT', 'Somatic work', 'Archetypal traditions'];
+const sources = ['Depth psychology', 'Somatics', 'Shadow & parts work', 'Personal alchemy'];
 
 export function SlideDifference() {
   return (
@@ -65,28 +65,41 @@ export function SlideDifference() {
         ))}
       </motion.div>
 
-      {/* Stats */}
+      {/* PFI */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.4, delay: 1.2 }}
+        className="text-white/60 text-lg mb-4"
+        style={{ fontFamily: 'Crimson Pro, serif' }}
+      >
+        Powered by <span className="text-teal-300">PFI</span> — Panconscious Field Intelligence.
+      </motion.p>
+
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, delay: 1.4 }}
         className="text-white/50 text-base mb-10"
       >
-        400 books. 27 frameworks. Curated, not scraped.
+        Deeply trained — so she can reflect whatever you need to explore.
       </motion.p>
 
       {/* Closing */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.6, delay: 1.5 }}
+        transition={{ duration: 0.6, delay: 1.6 }}
         className="text-center space-y-2"
       >
         <p className="text-white/60 text-xl" style={{ fontFamily: 'Crimson Pro, serif' }}>
-          She doesn't tell you who to be.
+          Not diagnosing what's wrong with you.
         </p>
-        <p className="text-teal-200 text-xl" style={{ fontFamily: 'Crimson Pro, serif' }}>
-          She helps you hear yourself more clearly.
+        <p className="text-white/60 text-xl" style={{ fontFamily: 'Crimson Pro, serif' }}>
+          Helping you explore what's true for you.
+        </p>
+        <p className="text-teal-200 text-xl mt-4" style={{ fontFamily: 'Crimson Pro, serif' }}>
+          All the answers are within.
         </p>
       </motion.div>
     </div>

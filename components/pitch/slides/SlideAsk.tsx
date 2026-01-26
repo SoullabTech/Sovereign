@@ -55,11 +55,22 @@ export function SlideAsk() {
         </motion.p>
       </div>
 
+      {/* The future */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 1 }}
+        className="text-teal-200 text-xl mb-8"
+        style={{ fontFamily: 'Crimson Pro, serif' }}
+      >
+        The future of consciousness AI.
+      </motion.p>
+
       {/* URL */}
       <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 1 }}
+        transition={{ duration: 0.5, delay: 1.3 }}
         className="text-white/50 text-2xl tracking-wide"
       >
         soullab.life

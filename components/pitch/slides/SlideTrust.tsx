@@ -33,7 +33,7 @@ export function SlideTrust() {
         Yours. Always.
       </motion.h2>
 
-      {/* Two simple lines */}
+      {/* Trust points */}
       <div className="space-y-6 max-w-2xl text-center">
         <motion.p
           initial={{ opacity: 0, y: 20 }}
@@ -42,17 +42,47 @@ export function SlideTrust() {
           className="text-white/70 text-xl md:text-2xl font-light"
           style={{ fontFamily: 'Crimson Pro, serif' }}
         >
-          Your words belong to you.
+          Your data stays on your device.
         </motion.p>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.5 }}
+          className="text-white/70 text-xl md:text-2xl font-light"
+          style={{ fontFamily: 'Crimson Pro, serif' }}
+        >
+          Sync to our protected cloud — only if you choose.
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.7 }}
           className="text-teal-200/80 text-xl md:text-2xl font-light"
           style={{ fontFamily: 'Crimson Pro, serif' }}
         >
-          You can leave anytime — with everything.
+          Local infrastructure. Military-grade protection.
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.9 }}
+          className="text-white/60 text-xl md:text-2xl font-light"
+          style={{ fontFamily: 'Crimson Pro, serif' }}
+        >
+          Works even if the internet goes down.
+        </motion.p>
+
+        <motion.p
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 1.1 }}
+          className="text-amber-400/70 text-lg font-light mt-4"
+          style={{ fontFamily: 'Crimson Pro, serif' }}
+        >
+          Not controlled by big AI.
         </motion.p>
       </div>
 
