@@ -43,6 +43,26 @@ import { TurnsStore } from '../memory/stores/TurnsStore';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 
+// 🌌 CRYSTAL PALACE: Field Awareness Integration
+import {
+  calculateFieldAwareness,
+  formatFieldAwarenessLog,
+  selectMinimalUtterance,
+  type FieldAwarenessResult,
+} from '../consciousness/FieldAwarenessService';
+import { soulprintMemory, updateSoulprint } from '../memory/soulprint';
+import {
+  searchWithResonance,
+  formatFieldReportForPrompt,
+  type FieldReport,
+} from '../consciousness/ResonanceField';
+
+// 🎭 CRYSTAL PALACE PHASE 3: Hybrid Response Router
+import {
+  generateHybridResponse,
+  isFieldResponsesEnabled,
+} from '../maia/HybridResponseRouter';
+
 // Mode-aware memory gating helpers
 function normalizeMode(mode: unknown): 'dialogue' | 'counsel' | 'scribe' {
   return mode === 'counsel' || mode === 'scribe' || mode === 'dialogue' ? mode : 'dialogue';
@@ -1380,6 +1400,39 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
       bloomMeta = undefined;
     }
 
+    // 🌌 CRYSTAL PALACE: Field Awareness Calculation (Phase 1 - Observability)
+    // Calculates unified elemental field from Soulprint + context without changing responses
+    let fieldAwareness: FieldAwarenessResult | null = null;
+    if (effectiveUserId) {
+      try {
+        const fieldStart = Date.now();
+        fieldAwareness = await calculateFieldAwareness(input, effectiveUserId, {
+          conversationHistory: conversationHistory?.map((t: any) => ({
+            role: t.role || 'user',
+            content: t.userMessage || t.content || ''
+          })),
+          relationshipMemory: (meta as any).relationshipMemory ? {
+            totalEncounters: (meta as any).relationshipMemory.totalEncounters,
+            relationshipPhase: (meta as any).relationshipMemory.relationshipPhase,
+            themes: (meta as any).relationshipMemory.themes || [],
+          } : undefined,
+          cognitiveProfile: cognitiveProfile ? {
+            rollingAverage: cognitiveProfile.rollingAverage,
+            recentScores: cognitiveProfile.recentScores || [],
+          } : undefined,
+          mode: (meta as any).mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
+        });
+
+        // Attach to meta for downstream use
+        (meta as any).fieldAwareness = fieldAwareness;
+
+        console.log(`🌌 [Field] ${formatFieldAwarenessLog(fieldAwareness)} (${Date.now() - fieldStart}ms)`);
+      } catch (err) {
+        console.warn('⚠️ [Field Awareness] Calculation failed (non-blocking):', err);
+        // Continue without field awareness - MAIA can still function
+      }
+    }
+
     // 🧠 MYTHIC ATLAS CLASSIFICATION (Bridge v1 - Semantic Anchoring)
     let atlasResult: AtlasResult | null = null;
 
@@ -1544,16 +1597,56 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     let consciousnessData: any = null;
 
     // Route to appropriate processing path
+    // 🎭 CRYSTAL PALACE PHASE 3: Try field-first response (if enabled)
+    let fieldResponseUsed = false;
+
     switch (processingProfile) {
       case 'FAST':
         rawResponse = await fastPathResponse(sessionId, input, conversationHistory, meta);
         break;
 
       case 'CORE':
+        // Try field-first for CORE path
+        if (isFieldResponsesEnabled() && effectiveUserId && fieldAwareness) {
+          const hybridResult = await generateHybridResponse(
+            input,
+            effectiveUserId,
+            fieldAwareness
+          );
+
+          if (hybridResult.source === 'field' && hybridResult.text) {
+            console.log(`🎭 [Crystal Palace] CORE using field response | ${hybridResult.reasoning}`);
+            rawResponse = hybridResult.text;
+            fieldResponseUsed = true;
+            (meta as any).fieldResponseUsed = true;
+            (meta as any).fieldResponseReasoning = hybridResult.reasoning;
+            break;
+          }
+          console.log(`🎭 [Crystal Palace] CORE fallback to LLM | ${hybridResult.reasoning}`);
+        }
         rawResponse = await corePathResponse(sessionId, input, conversationHistory, meta);
         break;
 
       case 'DEEP':
+        // Try field-first for DEEP path
+        if (isFieldResponsesEnabled() && effectiveUserId && fieldAwareness) {
+          const hybridResult = await generateHybridResponse(
+            input,
+            effectiveUserId,
+            fieldAwareness,
+            { minCoherence: 0.5 }  // Higher threshold for DEEP path
+          );
+
+          if (hybridResult.source === 'field' && hybridResult.text) {
+            console.log(`🎭 [Crystal Palace] DEEP using field response | ${hybridResult.reasoning}`);
+            rawResponse = hybridResult.text;
+            fieldResponseUsed = true;
+            (meta as any).fieldResponseUsed = true;
+            (meta as any).fieldResponseReasoning = hybridResult.reasoning;
+            break;
+          }
+          console.log(`🎭 [Crystal Palace] DEEP fallback to LLM | ${hybridResult.reasoning}`);
+        }
         const deepResult = await deepPathResponse(sessionId, input, conversationHistory, meta);
         rawResponse = deepResult.response;
         consciousnessData = deepResult.consciousnessData;
@@ -1869,6 +1962,35 @@ export async function getMaiaResponse(req: MaiaRequest): Promise<MaiaResponse> {
     // 🌀 SELFLET PHASE 2G: Strip internal marker before response leaves server
     // The marker is only for idempotency within the pipeline - never expose to clients
     text = text.replaceAll(SELFLET_MARKER, '');
+
+    // 🌌 CRYSTAL PALACE PHASE 2: Field-Informed Modulation
+    // Apply silence modulation if field awareness suggests holding space
+    if (fieldAwareness && effectiveUserId) {
+      // Silence modulation: If silence probability is high and response is too long
+      if (fieldAwareness.silenceProbability > 0.7 && text.length > 150) {
+        const originalLength = text.length;
+        const minimalUtterance = selectMinimalUtterance(fieldAwareness.dominantElement);
+        // Only replace if the minimal utterance is meaningfully shorter
+        if (minimalUtterance.length < text.length * 0.5) {
+          text = minimalUtterance;
+          console.log(`🌌 [Field Modulation] Silence probability ${fieldAwareness.silenceProbability.toFixed(2)} → minimal utterance (${originalLength} → ${text.length} chars)`);
+        }
+      }
+
+      // Update Soulprint with this interaction's field state
+      try {
+        await updateSoulprint({
+          userId: effectiveUserId,
+          element: fieldAwareness.dominantElement,
+          archetype: atlasResult?.archetype || 'maia',
+          phase: atlasResult?.phase ? `phase-${atlasResult.phase}` : undefined,
+          emotionalState: fieldAwareness.inputAnalysis.emotionalTone?.primary,
+        });
+        console.log(`🌌 [Soulprint] Updated: ${fieldAwareness.dominantElement} element, ${atlasResult?.archetype || 'maia'} archetype`);
+      } catch (soulprintErr) {
+        console.warn('⚠️ [Soulprint] Update failed (non-blocking):', soulprintErr);
+      }
+    }
 
     return {
       text,
