@@ -138,7 +138,8 @@ export function mapProsodyToSpeed(baseSpeed: number, hints: ProsodyHints): numbe
     case 'brisk':
       return Math.min(1.08, baseSpeed + 0.04);
     default:
-      return baseSpeed;
+      // Floor at 0.82 even for steady pace — below that sounds "slow and drunk"
+      return Math.max(0.82, baseSpeed);
   }
 }
 
