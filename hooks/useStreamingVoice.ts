@@ -52,6 +52,8 @@ interface StreamingVoiceOptions {
   element?: string;
   /** Stable session ID for relational stack continuity. If not provided, one will be generated per hook instance. */
   sessionId?: string;
+  /** Prosody range (0-3): 0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial */
+  prosodyRange?: 0 | 1 | 2 | 3;
 }
 
 interface StreamingVoiceState {
@@ -169,6 +171,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     speed = 1.0,
     element,
     sessionId: providedSessionId,
+    prosodyRange = 1,  // Default: Subtle
   } = options;
 
   // Stable session ID - persisted in sessionStorage for cross-reload continuity
@@ -369,6 +372,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           element,
           conversationHistory,
           sessionId: sessionIdRef.current, // Stable session ID for relational stack
+          prosodyRange,  // MAIA's prosody policy range (0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial)
         }),
         signal: abortControllerRef.current.signal
       });

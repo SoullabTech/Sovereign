@@ -19,6 +19,7 @@ interface MaiaSettings {
   voice: {
     openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
     speed: number;
+    prosodyRange: 0 | 1 | 2 | 3; // Presence Range: MAIA's prosody policy
   };
   memory: {
     enabled: boolean;
@@ -54,6 +55,7 @@ const DEFAULT_SETTINGS: MaiaSettings = {
   voice: {
     openaiVoice: 'shimmer',
     speed: 0.95,
+    prosodyRange: 1, // Subtle by default
   },
   memory: {
     enabled: true,
@@ -412,6 +414,53 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                     <span>Slower</span>
                     <span>Natural</span>
                     <span>Faster</span>
+                  </div>
+                </motion.div>
+
+                {/* Presence Range - MAIA's prosody policy */}
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.32 }}
+                  className="mt-4"
+                >
+                  <label className="flex items-center justify-between text-sm font-medium text-amber-200/80 mb-3">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} />
+                      Presence Range
+                    </div>
+                    <span className="text-xs text-white/60">
+                      {settings.voice.prosodyRange === 0 && 'Neutral'}
+                      {settings.voice.prosodyRange === 1 && 'Subtle'}
+                      {settings.voice.prosodyRange === 2 && 'Expressive'}
+                      {settings.voice.prosodyRange === 3 && 'Ceremonial'}
+                    </span>
+                  </label>
+                  <div className="flex gap-2">
+                    {([
+                      { v: 0 as const, label: '0' },
+                      { v: 1 as const, label: '1' },
+                      { v: 2 as const, label: '2' },
+                      { v: 3 as const, label: '3' },
+                    ]).map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() => updateSetting('voice.prosodyRange', o.v)}
+                        className={[
+                          'flex-1 rounded-lg px-3 py-2 text-sm transition',
+                          settings.voice.prosodyRange === o.v
+                            ? 'bg-amber-500/30 text-amber-200 border border-amber-500/50'
+                            : 'bg-black/20 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80',
+                        ].join(' ')}
+                        aria-pressed={settings.voice.prosodyRange === o.v}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="text-xs text-white/40 mt-2 text-center">
+                    0 = neutral · 1 = subtle · 2 = expressive · 3 = ceremonial
                   </div>
                 </motion.div>
 

@@ -8,6 +8,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { useStreamingVoice } from '@/hooks/useStreamingVoice';
+import { RelationalTelemetryPanel } from '@/components/dev/RelationalTelemetryPanel';
 import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
@@ -382,7 +383,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
   // Voice settings from account preferences (applies to TTS)
-  const [voiceSettings, setVoiceSettings] = useState({ voice: 'alloy', speed: 0.95, model: 'tts-1' as 'tts-1' | 'tts-1-hd' });
+  const [voiceSettings, setVoiceSettings] = useState({
+    voice: 'alloy',
+    speed: 0.95,
+    model: 'tts-1' as 'tts-1' | 'tts-1-hd',
+    prosodyRange: 1 as 0 | 1 | 2 | 3,  // Presence Range: 0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial
+  });
 
   // Member's preferred name for MAIA (bonding affordance)
   const assistantName = useAssistantName();
@@ -441,12 +447,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🌊 STREAMING VOICE MODE: Server-side sentence TTS for natural flow
   // When enabled, uses Sesame/ElevenLabs streaming instead of OpenAI TTS
+  // TEMP: Force-enabled for testing relational stack
   const [streamingVoiceMode, setStreamingVoiceMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('maia_streaming_voice');
-      return saved === 'true';
-    }
-    return false;
+    // Force true for testing - revert after validation
+    return true;
+    // Original:
+    // if (typeof window !== 'undefined') {
+    //   const saved = localStorage.getItem('maia_streaming_voice');
+    //   return saved === 'true';
+    // }
+    // return false;
   });
 
   const [showSettingsPanel, setShowSettingsPanel] = useState(false);
@@ -844,9 +854,11 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
 
-    // Try to resume AudioContext if suspended (iOS requires user gesture)
-    if (audioContextRef.current?.state === 'suspended') {
-      console.log('📱 [iOS] AudioContext suspended, attempting resume...');
+    // Try to resume AudioContext if suspended or interrupted (iOS requires user gesture)
+    // iOS can have 'interrupted' state when another app took audio focus
+    const contextState = audioContextRef.current?.state;
+    if (contextState === 'suspended' || contextState === 'interrupted') {
+      console.log(`📱 [iOS] AudioContext ${contextState}, attempting resume...`);
       try {
         await audioContextRef.current.resume();
         console.log('✅ [iOS] AudioContext resumed:', audioContextRef.current.state);
@@ -1102,9 +1114,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       if (isIOS && audioContextRef.current) {
         console.log('📱 [iOS] Using Web Audio API for playback');
 
-        // Ensure AudioContext is running
-        if (audioContextRef.current.state === 'suspended') {
-          console.log('📱 [iOS] AudioContext suspended, resuming...');
+        // Ensure AudioContext is running (handle both 'suspended' and 'interrupted' states)
+        if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+          console.log(`📱 [iOS] AudioContext ${audioContextRef.current.state}, resuming...`);
           await audioContextRef.current.resume();
           console.log('📱 [iOS] AudioContext state after resume:', audioContextRef.current.state);
         }
@@ -1212,9 +1224,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             console.log('📱 [iOS] If no sound: check iPhone silent switch (left side of device)');
           };
 
-          if (audioContextRef.current?.state === 'suspended') {
-            console.warn('⚠️ [iOS] AudioContext still suspended before playback, forcing resume...');
-            audioContextRef.current.resume().then(startPlayback).catch((e) => {
+          // iOS AudioContext can be 'suspended' OR 'interrupted' - both need resume()
+          const contextState = audioContextRef.current?.state;
+          if (contextState === 'suspended' || contextState === 'interrupted') {
+            console.warn(`⚠️ [iOS] AudioContext is ${contextState}, forcing resume...`);
+            audioContextRef.current.resume().then(() => {
+              console.log('✅ [iOS] AudioContext resumed, now state:', audioContextRef.current?.state);
+              startPlayback();
+            }).catch((e) => {
               console.error('❌ [iOS] Failed to resume AudioContext:', e);
               toast.error('Cannot play audio - tap screen first', { duration: 3000 });
               startPlayback(); // Try anyway
@@ -1374,7 +1391,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setVoiceSettings({
         voice: settings.voice.openaiVoice,
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1'
+        model: settings.voice.model || 'tts-1',
+        prosodyRange: settings.voice.prosodyRange ?? 1,
       });
     };
 
@@ -1401,10 +1419,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     fullResponse: streamingFullResponse,
     sendMessage: sendStreamingMessage,
     stop: stopStreamingVoice,
-    error: streamingVoiceError
+    error: streamingVoiceError,
+    lastMoveOutcome,
   } = useStreamingVoice({
     voice: voiceSettings.voice,
     speed: voiceSettings.speed,
+    prosodyRange: voiceSettings.prosodyRange,
     element: undefined, // Will be set dynamically per message
     onTextChunk: (text, index) => {
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
@@ -6555,6 +6575,9 @@ I'm not sure what I'm feeling yet.`;
           onClick={() => setShowLabDrawer(true)}
         />
       )}
+
+      {/* Dev-only Relational Telemetry Panel - shows move_outcome events */}
+      <RelationalTelemetryPanel lastMoveOutcome={lastMoveOutcome} />
 
     </div>
   );
