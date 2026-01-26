@@ -35,8 +35,12 @@ import {
   getOrCreateVoiceSession,
   processTurn,
   recordSilence,
+  setPendingMove,
+  computeGuidancePosture,
   type MoshiVoiceSession,
   type TurnDecision,
+  type MoveIntent as SessionMoveIntent,
+  type GuidanceSignal,
 } from '@/lib/voice/moshi/MoshiSessionManager';
 import type { RelationalStackState } from '@/lib/consciousness/session/MAIASessionManager';
 import {
@@ -94,6 +98,46 @@ function pcmF32ToWavBase64(pcmB64: string, sampleRate = 24000, channels = 1): st
   }
 
   return buffer.toString('base64');
+}
+
+/**
+ * MoveIntent: What MAIA is doing for the user (Meet → Mirror → Move).
+ * Computed from relational stack signals. Logged for tuning + UI legibility.
+ */
+type MoveIntent =
+  | 'MEET_REGULATE'     // settle, ground, de-escalate
+  | 'MEET_BOUNDARY'     // protect, contain, clarify limits
+  | 'MIRROR_REFLECT'    // name/reflect/hold meaning
+  | 'MOVE_NEXT_STEP'    // action, choice, next step
+  | 'MOVE_REFRAME'      // shift perspective / unlock stuckness
+  | 'MOVE_CREATIVE';    // mythopoetic synthesis / imaginative opening
+
+function deriveMoveIntent(args: {
+  maiaMode: 'REGULATOR' | 'NAVIGATOR' | 'MYTHOPOET';
+  activation: number;
+  silenceIntent?: 'REGULATORY' | 'REFLECTIVE' | 'BOUNDARY';
+  wisdomMode?: 'talk' | 'care' | 'note';
+  thresholdMode?: 'threshold' | 'llm' | 'silence';
+}): MoveIntent {
+  const { maiaMode, activation, silenceIntent, wisdomMode } = args;
+
+  // If MAIA chose silence, that IS the move.
+  if (silenceIntent === 'BOUNDARY') return 'MEET_BOUNDARY';
+  if (silenceIntent === 'REGULATORY') return 'MEET_REGULATE';
+  if (silenceIntent === 'REFLECTIVE') return 'MIRROR_REFLECT';
+
+  // Speech path: bias by archetype mode first
+  if (maiaMode === 'REGULATOR') return 'MEET_REGULATE';
+
+  if (maiaMode === 'NAVIGATOR') {
+    // If activation is low/moderate, suggest next step; if high, reframe first
+    return activation >= 0.65 ? 'MOVE_REFRAME' : 'MOVE_NEXT_STEP';
+  }
+
+  // MYTHOPOET
+  // If user is in "care" we can still mirror; otherwise open creativity
+  if (wisdomMode === 'care' && activation < 0.5) return 'MIRROR_REFLECT';
+  return 'MOVE_CREATIVE';
 }
 
 export const runtime = 'nodejs';
@@ -194,12 +238,26 @@ export async function POST(req: NextRequest) {
         const effectiveSessionId = sessionId || 'default';
         const voiceSession = getOrCreateVoiceSession(effectiveSessionId);
 
+        const now = Date.now();
         const turnDecision = processTurn(voiceSession, {
           userText: message,
-          now: Date.now(),
+          now,
         });
 
+        // Guidance was computed and cached by processTurn; grab it for complete events + PersonaPlex
+        const guidance: GuidanceSignal =
+          voiceSession.tuning.lastGuidance ?? computeGuidancePosture(voiceSession, now);
+
         timer.mark('relational_decision');
+
+        // ── EMIT MOVE OUTCOME (if a pending move was classified) ──
+        // This tells the client what happened from MAIA's last turn
+        if (turnDecision.classifiedOutcome) {
+          emit('move_outcome', {
+            ...turnDecision.classifiedOutcome,
+            timestamp: Date.now(),
+          });
+        }
 
         // Log the governance decision
         console.log(`🧘 [Relational] Session ${effectiveSessionId}: ` +
@@ -211,6 +269,14 @@ export async function POST(req: NextRequest) {
         // If relational stack says SILENCE, return immediately
         if (!turnDecision.shouldSpeak) {
           recordSilence(voiceSession, turnDecision.nextPauseMs, turnDecision.silenceIntent!);
+
+          // Compute moveIntent for silence
+          const silenceMoveIntent = deriveMoveIntent({
+            maiaMode: voiceSession.relationalStack.currentMode,
+            activation: voiceSession.relationalStack.smoother.lastActivation,
+            silenceIntent: turnDecision.silenceIntent,
+            thresholdMode: 'silence',
+          });
 
           emit('silence', {
             durationMs: turnDecision.nextPauseMs,
@@ -227,8 +293,24 @@ export async function POST(req: NextRequest) {
             timestamp: Date.now(),
             mode: 'silence',
             silenceIntent: turnDecision.silenceIntent,
+            moveIntent: silenceMoveIntent,
             timing: timer.summary(),
+            guidance: {
+              posture: guidance.posture,
+              brevity: guidance.brevity,
+              reason: guidance.reason,
+              modeLockMs: guidance.modeLockMs,
+              speakBias: guidance.speakBias,
+            },
           });
+
+          // Set pending move for outcome tracking on next user turn
+          setPendingMove(
+            voiceSession,
+            silenceMoveIntent as SessionMoveIntent,
+            'SILENCE',
+            voiceSession.relationalStack.smoother.lastActivation
+          );
 
           console.log(`[voice] SILENCE response: ${turnDecision.silenceIntent} for ${turnDecision.nextPauseMs}ms`);
           controller.close();
@@ -320,6 +402,7 @@ export async function POST(req: NextRequest) {
             element: wisdomPayload?.element ?? element ?? null,
             sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
             speed: relationalSpeed,
+            brevity: guidance.brevity,
           })) {
             timer.mark('tts_0_done');
 
@@ -340,6 +423,14 @@ export async function POST(req: NextRequest) {
             console.warn('[StreamConversation] PersonaPlex returned no audio for threshold path');
           }
 
+          // Compute moveIntent for threshold path
+          const thresholdMoveIntent = deriveMoveIntent({
+            maiaMode: voiceSession.relationalStack.currentMode,
+            activation: voiceSession.relationalStack.smoother.lastActivation,
+            wisdomMode: wisdomPayload?.mode,
+            thresholdMode: 'threshold',
+          });
+
           // Complete with updated threshold state + relational metadata
           emit('complete', {
             fullResponse: text,
@@ -348,13 +439,29 @@ export async function POST(req: NextRequest) {
             timestamp: Date.now(),
             mode: 'threshold',
             thresholdState: thresholdResult.state,
+            moveIntent: thresholdMoveIntent,
             timing: timer.summary(),
             relational: {
               maiaMode: voiceSession.relationalStack.currentMode,
               activation: voiceSession.relationalStack.smoother.lastActivation,
               prosodySpeed: relationalSpeed,
             },
+            guidance: {
+              posture: guidance.posture,
+              brevity: guidance.brevity,
+              reason: guidance.reason,
+              modeLockMs: guidance.modeLockMs,
+              speakBias: guidance.speakBias,
+            },
           });
+
+          // Set pending move for outcome tracking on next user turn
+          setPendingMove(
+            voiceSession,
+            thresholdMoveIntent as SessionMoveIntent,
+            'SPOKEN',
+            voiceSession.relationalStack.smoother.lastActivation
+          );
 
           console.log(`[voice] THRESHOLD fast-path: ${timer.summary()}`);
           controller.close();
@@ -424,6 +531,7 @@ export async function POST(req: NextRequest) {
                 element: wisdomPayload?.element ?? element ?? null,
                 sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
                 speed: relationalSpeed,
+                brevity: guidance.brevity,
               })) {
                 if (!firstAudioEmitted) {
                   timer.mark('tts_0_done');
@@ -463,17 +571,33 @@ export async function POST(req: NextRequest) {
             await Promise.all(ttsPromises);
             timer.mark('all_tts_done');
 
+            // Compute moveIntent for LLM path
+            const llmMoveIntent = deriveMoveIntent({
+              maiaMode: voiceSession.relationalStack.currentMode,
+              activation: voiceSession.relationalStack.smoother.lastActivation,
+              wisdomMode: wisdomPayload?.mode,
+              thresholdMode: 'llm',
+            });
+
             emit('complete', {
               fullResponse: fullResponse.trim(),
               sentenceCount,
               audioChunksEmitted,
               timestamp: Date.now(),
               thresholdState: thresholdResult.state,
+              moveIntent: llmMoveIntent,
               timing: timer.summary(),
               relational: {
                 maiaMode: voiceSession.relationalStack.currentMode,
                 activation: voiceSession.relationalStack.smoother.lastActivation,
                 prosodySpeed: relationalSpeed,
+              },
+              guidance: {
+                posture: guidance.posture,
+                brevity: guidance.brevity,
+                reason: guidance.reason,
+                modeLockMs: guidance.modeLockMs,
+                speakBias: guidance.speakBias,
               },
               // Wisdom field metadata (for debugging and PersonaPlex integration)
               wisdom: wisdomPayload ? {
@@ -483,6 +607,14 @@ export async function POST(req: NextRequest) {
                 metadata: wisdomPayload.metadata,
               } : undefined,
             });
+
+            // Set pending move for outcome tracking on next user turn
+            setPendingMove(
+              voiceSession,
+              llmMoveIntent as SessionMoveIntent,
+              'SPOKEN',
+              voiceSession.relationalStack.smoother.lastActivation
+            );
 
             console.log(`[voice] LLM path: ${timer.summary()}${wisdomPayload?.sanctuary ? ' (sanctuary)' : ''}`);
           }
