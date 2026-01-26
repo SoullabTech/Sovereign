@@ -558,9 +558,15 @@ export async function POST(req: NextRequest) {
         // Compute effective speed from hints + base relational speed
         const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
 
-        console.log(`🎭 [Prosody] range=${effectiveRange}, pace=${prosodyHints.pace}, ` +
-          `warmth=${prosodyHints.warmth}, emphasis=${prosodyHints.emphasis}, ` +
-          `intent=${prosodyHints.intentTag ?? '—'}, speed=${effectiveSpeed.toFixed(2)}`);
+        // Debug trace: only emits when VOICE_DEBUG_PROSODY=1 (no user content)
+        if (process.env.VOICE_DEBUG_PROSODY === '1') {
+          console.log('[voice][prosody]', {
+            range: effectiveRange,
+            base: baseHints,
+            scaled: prosodyHints,
+            speed: effectiveSpeed,
+          });
+        }
 
         // ============ THRESHOLD FAST-PATH ============
         // Check if this input can be handled without LLM

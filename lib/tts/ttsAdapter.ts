@@ -93,11 +93,23 @@ export function applyProsodyToText(text: string, hints: ProsodyHints): string {
     }
   }
 
+  // ─── GUARDRAILS ───
+  // Prevent over-shaping from causing weird punctuation
+
   // Clean up any double punctuation or excessive spaces we may have created
   t = t.replace(/\.\.\./g, '…');
   t = t.replace(/…\./g, '…');
   t = t.replace(/\.…/g, '…');
   t = t.replace(/\s{3,}/g, '  ');
+
+  // Cap consecutive newlines to 2 (prevent runaway paragraph breaks)
+  t = t.replace(/\n{3,}/g, '\n\n');
+
+  // Don't stack lead-ins: if original text already had a conversational starter,
+  // remove any duplicate we may have added
+  if (/^(okay|alright|mm|yeah)\b/i.test(text.trim())) {
+    t = t.replace(/^(Okay|Alright|Mm|Yeah)\.\n/i, '');
+  }
 
   return t;
 }
