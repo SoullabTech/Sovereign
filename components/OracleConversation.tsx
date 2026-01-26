@@ -387,7 +387,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     voice: 'alloy',
     speed: 0.95,
     model: 'tts-1' as 'tts-1' | 'tts-1-hd',
-    prosodyRange: 1 as 0 | 1 | 2 | 3,  // Presence Range: 0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial
+    prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,  // Range of Effect: 0=Neutral, 1=Subtle, 2=Expressive, 3=Deep, 4=Ceremonial
   });
 
   // Member's preferred name for MAIA (bonding affordance)

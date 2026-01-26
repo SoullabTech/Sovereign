@@ -52,8 +52,8 @@ interface StreamingVoiceOptions {
   element?: string;
   /** Stable session ID for relational stack continuity. If not provided, one will be generated per hook instance. */
   sessionId?: string;
-  /** Prosody range (0-3): 0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial */
-  prosodyRange?: 0 | 1 | 2 | 3;
+  /** Range of Effect (0-4): 0=Neutral, 1=Subtle, 2=Expressive, 3=Deep, 4=Ceremonial */
+  prosodyRange?: 0 | 1 | 2 | 3 | 4;
 }
 
 interface StreamingVoiceState {

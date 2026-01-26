@@ -49,12 +49,13 @@ import {
   type MaiaVoiceMode,
 } from '@/lib/voice/wisdom/MaiaWisdomProvider';
 import { renderWithPersonaPlex } from '@/lib/voice/personaplex/personaPlexClient';
+import { buildProsodyHints } from '@/lib/voice/prosody/buildProsodyHints';
+import { scaleProsody } from '@/lib/voice/prosody/scaleProsody';
 import {
-  buildProsodyPolicy,
-  applyProsodyToText,
-  type ProsodyRange,
-  type ProsodyPolicy,
-} from '@/lib/voice/prosody/prosodyPolicy';
+  applyProsodyToText as applyProsodyHintsToText,
+  mapProsodyToSpeed,
+} from '@/lib/tts/ttsAdapter';
+import type { ProsodyRange, ProsodyHints } from '@/src/types/voice';
 
 // Feature flag: enable OpenAI TTS fallback when PersonaPlex fails
 // ON by default - PersonaPlex is conversational AI (generates its own text), not TTS
@@ -326,7 +327,7 @@ interface StreamRequest {
   mode?: MaiaVoiceMode;
   /** Sanctuary mode: presence-only, no memory retrieval or persistence */
   sanctuary?: boolean;
-  /** Prosody range: how strongly MAIA's prosody policy shapes speech (0-3, default 1) */
+  /** Range of Effect: scales prosody intensity (0-4), default 1 */
   prosodyRange?: ProsodyRange;
 }
 
@@ -535,26 +536,31 @@ export async function POST(req: NextRequest) {
             ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
             : undefined;
 
-        // ============ PROSODY POLICY (MAIA's own voice shaping) ============
-        // Deterministic prosody from MAIA's relational state + user's range preference.
-        // This is NOT model-driven — MAIA decides, TTS executes.
-        const prosodyPolicy: ProsodyPolicy = buildProsodyPolicy(
-          {
-            mode: wisdomPayload?.mode ?? mode ?? null,
-            element: wisdomPayload?.element ?? element ?? null,
-            posture: guidance?.posture ?? null,
-            activation: voiceSession.relationalStack.smoother.lastActivation,
-            sanctuary: wisdomPayload?.sanctuary ?? sanctuary ?? null,
-          },
-          (prosodyRange as ProsodyRange) ?? 1
-        );
+        // ============ PROSODY HINTS (MAIA's semantic voice intent) ============
+        // MAIA decides delivery intent via ProsodyHints (semantic).
+        // TTS adapter translates hints to provider-specific controls.
+        // This is NOT model-driven — MAIA is the author of delivery.
+        const effectiveRange = (prosodyRange ?? 1) as ProsodyRange;
 
-        // Use policy speed (combines relational modulation + prosody range scaling)
-        // Policy speed already accounts for mode/activation/element/sanctuary
-        const effectiveSpeed = Math.min(1.5, Math.max(0.5, prosodyPolicy.speed * (relationalSpeed / 1.0)));
+        // Build base hints from relational state
+        const baseHints = buildProsodyHints({
+          activation: voiceSession.relationalStack.smoother.lastActivation,
+          mode: wisdomPayload?.mode ?? mode ?? 'talk',
+          sanctuary: wisdomPayload?.sanctuary ?? sanctuary ?? false,
+          brevity: guidance?.brevity ?? 'moderate',
+          posture: guidance?.posture ?? 'MEET',
+          element: wisdomPayload?.element ?? element ?? null,
+        });
 
-        console.log(`🎭 [Prosody] range=${prosodyPolicy.range}, speed=${effectiveSpeed.toFixed(2)}, ` +
-          `softness=${prosodyPolicy.softness.toFixed(2)}, emphasis=${prosodyPolicy.emphasis.toFixed(2)}`);
+        // Scale hints by user's Range of Effect preference
+        const prosodyHints: ProsodyHints = scaleProsody(baseHints, effectiveRange);
+
+        // Compute effective speed from hints + base relational speed
+        const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
+
+        console.log(`🎭 [Prosody] range=${effectiveRange}, pace=${prosodyHints.pace}, ` +
+          `warmth=${prosodyHints.warmth}, emphasis=${prosodyHints.emphasis}, ` +
+          `intent=${prosodyHints.intentTag ?? '—'}, speed=${effectiveSpeed.toFixed(2)}`);
 
         // ============ THRESHOLD FAST-PATH ============
         // Check if this input can be handled without LLM
@@ -583,8 +589,8 @@ export async function POST(req: NextRequest) {
           timer.mark('text_0_emitted');
 
           // TTS render with fallback (PersonaPlex → OpenAI)
-          // Apply prosody shaping BEFORE sanitization (prosody is MAIA's voice policy)
-          const shapedThresholdText = applyProsodyToText(text, prosodyPolicy);
+          // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+          const shapedThresholdText = applyProsodyHintsToText(text, prosodyHints);
           const safeThresholdText = sanitizeForTts(shapedThresholdText);
           let thresholdAudioEmitted = false;
 
@@ -617,11 +623,12 @@ export async function POST(req: NextRequest) {
               mode: 'threshold',
               source: thresholdTtsResult.source,
               prosody: {
-                range: prosodyPolicy.range,
+                range: effectiveRange,
+                pace: prosodyHints.pace,
+                warmth: prosodyHints.warmth,
+                emphasis: prosodyHints.emphasis,
+                intentTag: prosodyHints.intentTag,
                 speed: effectiveSpeed,
-                pauseMs: prosodyPolicy.pauseMs,
-                softness: prosodyPolicy.softness,
-                emphasis: prosodyPolicy.emphasis,
               },
             });
             timer.mark('audio_0_emitted');
@@ -737,8 +744,8 @@ export async function POST(req: NextRequest) {
             const chunkIndex = chunk.index;
             const chunkText = chunk.text;
 
-            // Apply prosody shaping BEFORE sanitization (prosody is MAIA's voice policy)
-            const shapedChunkText = applyProsodyToText(chunkText, prosodyPolicy);
+            // Apply prosody shaping BEFORE sanitization (prosody is MAIA's semantic intent)
+            const shapedChunkText = applyProsodyHintsToText(chunkText, prosodyHints);
             const safeChunkText = sanitizeForTts(shapedChunkText);
 
             const ttsPromise = (async () => {
@@ -774,11 +781,12 @@ export async function POST(req: NextRequest) {
                   timestamp: Date.now(),
                   source: result.source,
                   prosody: {
-                    range: prosodyPolicy.range,
+                    range: effectiveRange,
+                    pace: prosodyHints.pace,
+                    warmth: prosodyHints.warmth,
+                    emphasis: prosodyHints.emphasis,
+                    intentTag: prosodyHints.intentTag,
                     speed: effectiveSpeed,
-                    pauseMs: prosodyPolicy.pauseMs,
-                    softness: prosodyPolicy.softness,
-                    emphasis: prosodyPolicy.emphasis,
                   },
                 });
 

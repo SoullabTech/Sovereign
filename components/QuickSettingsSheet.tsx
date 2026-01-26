@@ -19,7 +19,7 @@ interface MaiaSettings {
   voice: {
     openaiVoice: 'alloy' | 'shimmer' | 'nova' | 'fable' | 'echo' | 'onyx';
     speed: number;
-    prosodyRange: 0 | 1 | 2 | 3; // Presence Range: MAIA's prosody policy
+    prosodyRange: 0 | 1 | 2 | 3 | 4; // Range of Effect: scales prosody (0-4)
   };
   memory: {
     enabled: boolean;
@@ -417,7 +417,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   </div>
                 </motion.div>
 
-                {/* Presence Range - MAIA's prosody policy */}
+                {/* Range of Effect - MAIA's prosody scaling */}
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -427,40 +427,41 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   <label className="flex items-center justify-between text-sm font-medium text-amber-200/80 mb-3">
                     <div className="flex items-center gap-2">
                       <Sparkles size={16} />
-                      Presence Range
+                      Range of Effect
                     </div>
                     <span className="text-xs text-white/60">
                       {settings.voice.prosodyRange === 0 && 'Neutral'}
                       {settings.voice.prosodyRange === 1 && 'Subtle'}
                       {settings.voice.prosodyRange === 2 && 'Expressive'}
-                      {settings.voice.prosodyRange === 3 && 'Ceremonial'}
+                      {settings.voice.prosodyRange === 3 && 'Deep'}
+                      {settings.voice.prosodyRange === 4 && 'Ceremonial'}
                     </span>
                   </label>
-                  <div className="flex gap-2">
-                    {([
-                      { v: 0 as const, label: '0' },
-                      { v: 1 as const, label: '1' },
-                      { v: 2 as const, label: '2' },
-                      { v: 3 as const, label: '3' },
-                    ]).map((o) => (
-                      <button
-                        key={o.v}
-                        type="button"
-                        onClick={() => updateSetting('voice.prosodyRange', o.v)}
-                        className={[
-                          'flex-1 rounded-lg px-3 py-2 text-sm transition',
-                          settings.voice.prosodyRange === o.v
-                            ? 'bg-amber-500/30 text-amber-200 border border-amber-500/50'
-                            : 'bg-black/20 text-white/60 border border-white/10 hover:bg-white/10 hover:text-white/80',
-                        ].join(' ')}
-                        aria-pressed={settings.voice.prosodyRange === o.v}
-                      >
-                        {o.label}
-                      </button>
-                    ))}
+                  <input
+                    type="range"
+                    min="0"
+                    max="4"
+                    step="1"
+                    value={settings.voice.prosodyRange}
+                    onChange={(e) => updateSetting('voice.prosodyRange', parseInt(e.target.value) as 0|1|2|3|4)}
+                    className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer
+                             [&::-webkit-slider-thumb]:appearance-none
+                             [&::-webkit-slider-thumb]:w-5
+                             [&::-webkit-slider-thumb]:h-5
+                             [&::-webkit-slider-thumb]:rounded-full
+                             [&::-webkit-slider-thumb]:bg-amber-500
+                             [&::-webkit-slider-thumb]:shadow-lg
+                             [&::-webkit-slider-thumb]:shadow-amber-500/40"
+                  />
+                  <div className="flex justify-between text-xs text-white/40 mt-2">
+                    <span>0</span>
+                    <span>1</span>
+                    <span>2</span>
+                    <span>3</span>
+                    <span>4</span>
                   </div>
-                  <div className="text-xs text-white/40 mt-2 text-center">
-                    0 = neutral · 1 = subtle · 2 = expressive · 3 = ceremonial
+                  <div className="text-xs text-white/50 mt-1 text-center">
+                    Scales how MAIA's voice lands — pacing, warmth, ceremony
                   </div>
                 </motion.div>
 
