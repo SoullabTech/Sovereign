@@ -68,6 +68,8 @@ export interface MoshiVoiceSession {
     activationHistory: number[]
     /** Tempo multiplier per turn (for pacing stats) */
     tempoHistory: number[]
+    /** Per-turn decision outcomes (ring buffer for windowed stats) */
+    turnOutcomes: ('SILENCE' | 'BACKCHANNEL' | 'SPEAK')[]
     /** Silence intent counts */
     silenceIntentCounts: Record<SilenceIntent, number>
     /** Silence duration per intent (ms) */
@@ -77,6 +79,64 @@ export interface MoshiVoiceSession {
     /** Sum of backchannel probabilities (for expected rate calc) */
     backchannelProbabilitySum: number
   }
+}
+
+// ============================================================================
+// SESSION REGISTRY
+// ============================================================================
+
+/**
+ * Session store for voice connections.
+ * In production, this would be Redis or similar for horizontal scaling.
+ */
+const voiceSessions = new Map<string, MoshiVoiceSession>()
+const SESSION_MAX_AGE_MS = 30 * 60 * 1000 // 30 minutes
+
+/**
+ * Get a voice session by ID.
+ * Returns null if session doesn't exist or has expired.
+ */
+export function getVoiceSessionById(sessionId: string): MoshiVoiceSession | null {
+  const session = voiceSessions.get(sessionId)
+  if (!session) return null
+
+  // Check if expired
+  if (Date.now() - session.lastActivity > SESSION_MAX_AGE_MS) {
+    voiceSessions.delete(sessionId)
+    return null
+  }
+
+  return session
+}
+
+/**
+ * Get or create a voice session.
+ * Handles expiration and cleanup.
+ */
+export function getOrCreateVoiceSession(sessionId: string): MoshiVoiceSession {
+  const existing = getVoiceSessionById(sessionId)
+  if (existing) return existing
+
+  // Clean up expired sessions periodically
+  if (voiceSessions.size > 100) {
+    const now = Date.now()
+    for (const [id, session] of voiceSessions) {
+      if (now - session.lastActivity > SESSION_MAX_AGE_MS) {
+        voiceSessions.delete(id)
+      }
+    }
+  }
+
+  const session = createMoshiVoiceSession(sessionId)
+  voiceSessions.set(sessionId, session)
+  return session
+}
+
+/**
+ * Get all active session IDs (for debugging/admin).
+ */
+export function getActiveSessionIds(): string[] {
+  return Array.from(voiceSessions.keys())
 }
 
 // ============================================================================
@@ -123,6 +183,7 @@ export function createMoshiVoiceSession(connectionId: string): MoshiVoiceSession
     tuning: {
       activationHistory: [],
       tempoHistory: [],
+      turnOutcomes: [],
       silenceIntentCounts: {
         REGULATORY: 0,
         REFLECTIVE: 0,
@@ -258,17 +319,28 @@ export function processTurn(
     tuning.tempoHistory.shift()
   }
 
+  // Record turn outcome in ring buffer (for windowed stats)
+  let turnOutcome: 'SILENCE' | 'BACKCHANNEL' | 'SPEAK'
   if (shouldSilence) {
     session.metrics.silenceResponses++
     relationalStack.silenceCount++
+    turnOutcome = 'SILENCE'
     // Record silence intent for tuning
     if (silenceIntent) {
       tuning.silenceIntentCounts[silenceIntent]++
     }
   } else if (shouldBackchannel) {
     session.metrics.backchannelCount++
+    turnOutcome = 'BACKCHANNEL'
   } else {
     session.metrics.spokenResponses++
+    turnOutcome = 'SPEAK'
+  }
+
+  // Add to ring buffer (cap at 200 for memory safety)
+  tuning.turnOutcomes.push(turnOutcome)
+  if (tuning.turnOutcomes.length > 200) {
+    tuning.turnOutcomes.shift()
   }
 
   return {
@@ -569,3 +641,93 @@ export function getSessionMetrics(session: MoshiVoiceSession) {
 
 /** Tuning payload type for external consumption */
 export type TuningMetrics = ReturnType<typeof getSessionMetrics>
+
+// ============================================================================
+// RED FLAG DETECTION
+// ============================================================================
+
+/**
+ * Red flags for tuning alerts.
+ * These indicate the relational stack may need threshold adjustments.
+ */
+export interface RelationalRedFlags {
+  /** Silence ratio > 30% in last 20 turns (over-silencing) */
+  silenceOver30Last20: boolean
+  /** More than 6 mode transitions in last 5 minutes (mode jitter) */
+  modeJitterOver6Per5m: boolean
+  /** Activation stuck below 0.1 for last 20 turns (under-detecting) */
+  lowActivationStuck: boolean
+  /** Activation stuck above 0.8 for last 20 turns (over-detecting) */
+  highActivationStuck: boolean
+}
+
+/**
+ * Compute windowed silence ratio from turn outcomes ring buffer.
+ * Uses actual per-turn outcomes for accurate "last N" calculation.
+ */
+function computeRecentSilenceRatio(session: MoshiVoiceSession, lastN = 20): number {
+  const outcomes = session.tuning.turnOutcomes
+  if (outcomes.length === 0) return 0
+
+  // Get last N outcomes
+  const window = outcomes.slice(-lastN)
+  const silenceCount = window.filter((o) => o === 'SILENCE').length
+
+  return silenceCount / window.length
+}
+
+/**
+ * Compute mode transitions per 5 minutes.
+ */
+function computeModeTransitionsPer5m(session: MoshiVoiceSession): number {
+  const durationMs = Math.max(1, Date.now() - session.createdAt)
+  const perMs = session.tuning.modeTransitions / durationMs
+  return perMs * 5 * 60 * 1000
+}
+
+/**
+ * Check if activation is stuck at extreme values.
+ */
+function checkActivationStuck(
+  session: MoshiVoiceSession,
+  lastN = 20
+): { low: boolean; high: boolean } {
+  const history = session.tuning.activationHistory
+  if (history.length < lastN) return { low: false, high: false }
+
+  const window = history.slice(-lastN)
+  const allLow = window.every((a) => a < 0.1)
+  const allHigh = window.every((a) => a > 0.8)
+
+  return { low: allLow, high: allHigh }
+}
+
+/**
+ * Get red flags for a session.
+ * Use these for tuning alerts and dashboard indicators.
+ */
+export function getRelationalRedFlags(session: MoshiVoiceSession): RelationalRedFlags {
+  const silenceRatio = computeRecentSilenceRatio(session, 20)
+  const transitionsPer5m = computeModeTransitionsPer5m(session)
+  const activationStuck = checkActivationStuck(session, 20)
+
+  const flags: RelationalRedFlags = {
+    silenceOver30Last20: silenceRatio > 0.3,
+    modeJitterOver6Per5m: transitionsPer5m > 6,
+    lowActivationStuck: activationStuck.low,
+    highActivationStuck: activationStuck.high,
+  }
+
+  // Log red flags when they fire (for immediate signal)
+  const activeFlags = Object.entries(flags)
+    .filter(([_, v]) => v)
+    .map(([k]) => k)
+
+  if (activeFlags.length > 0) {
+    console.warn(
+      `🚩 [Relational] Red flags for ${session.id}: ${activeFlags.join(', ')}`
+    )
+  }
+
+  return flags
+}

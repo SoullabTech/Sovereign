@@ -32,7 +32,7 @@ import {
   type ThresholdState,
 } from '@/lib/threshold';
 import {
-  createMoshiVoiceSession,
+  getOrCreateVoiceSession,
   processTurn,
   recordSilence,
   type MoshiVoiceSession,
@@ -44,36 +44,56 @@ import {
   type VoiceContextPayload,
   type MaiaVoiceMode,
 } from '@/lib/voice/wisdom/MaiaWisdomProvider';
-
-// Session store for SSE connections (keyed by sessionId)
-// In production, this would be Redis or similar for horizontal scaling
-const voiceSessions = new Map<string, MoshiVoiceSession>();
+import { renderWithPersonaPlex } from '@/lib/voice/personaplex/personaPlexClient';
 
 /**
- * Get or create a voice session for this connection.
- * Sessions are keyed by sessionId and expire after 30 minutes of inactivity.
+ * Convert PersonaPlex PCM Float32 audio to WAV format for browser playback.
+ * This allows the client to use standard HTMLAudioElement with data URLs.
  */
-function getOrCreateVoiceSession(sessionId: string): MoshiVoiceSession {
-  const existing = voiceSessions.get(sessionId);
-  const now = Date.now();
-  const maxAge = 30 * 60 * 1000; // 30 minutes
+function pcmF32ToWavBase64(pcmB64: string, sampleRate = 24000, channels = 1): string {
+  // Decode base64 -> bytes
+  const bin = Buffer.from(pcmB64, 'base64');
 
-  if (existing && (now - existing.lastActivity) < maxAge) {
-    return existing;
+  // Interpret as Float32 PCM
+  const float32 = new Float32Array(bin.buffer, bin.byteOffset, Math.floor(bin.byteLength / 4));
+
+  // Convert Float32 [-1..1] -> 16-bit PCM
+  const bytesPerSample = 2;
+  const blockAlign = channels * bytesPerSample;
+  const byteRate = sampleRate * blockAlign;
+  const dataSize = float32.length * bytesPerSample;
+
+  const buffer = Buffer.alloc(44 + dataSize);
+  let o = 0;
+
+  // RIFF header
+  buffer.write('RIFF', o); o += 4;
+  buffer.writeUInt32LE(36 + dataSize, o); o += 4;
+  buffer.write('WAVE', o); o += 4;
+
+  // fmt chunk
+  buffer.write('fmt ', o); o += 4;
+  buffer.writeUInt32LE(16, o); o += 4;          // PCM fmt chunk size
+  buffer.writeUInt16LE(1, o); o += 2;           // AudioFormat = 1 (PCM)
+  buffer.writeUInt16LE(channels, o); o += 2;
+  buffer.writeUInt32LE(sampleRate, o); o += 4;
+  buffer.writeUInt32LE(byteRate, o); o += 4;
+  buffer.writeUInt16LE(blockAlign, o); o += 2;
+  buffer.writeUInt16LE(16, o); o += 2;          // BitsPerSample
+
+  // data chunk
+  buffer.write('data', o); o += 4;
+  buffer.writeUInt32LE(dataSize, o); o += 4;
+
+  // samples
+  for (let i = 0; i < float32.length; i++) {
+    const s = Math.max(-1, Math.min(1, float32[i]));
+    const int16 = s < 0 ? Math.round(s * 0x8000) : Math.round(s * 0x7fff);
+    buffer.writeInt16LE(int16, o);
+    o += 2;
   }
 
-  // Clean up expired sessions periodically
-  if (voiceSessions.size > 100) {
-    for (const [id, session] of voiceSessions) {
-      if (now - session.lastActivity > maxAge) {
-        voiceSessions.delete(id);
-      }
-    }
-  }
-
-  const session = createMoshiVoiceSession(sessionId);
-  voiceSessions.set(sessionId, session);
-  return session;
+  return buffer.toString('base64');
 }
 
 export const runtime = 'nodejs';
@@ -258,6 +278,13 @@ export async function POST(req: NextRequest) {
           }
         }
 
+        // ============ WISDOM DIRECTIVE (computed once) ============
+        // Build once after wisdomPayload is known, reuse for threshold + LLM paths
+        const wisdomDirective =
+          wisdomPayload && !wisdomPayload.sanctuary
+            ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
+            : undefined;
+
         // ============ THRESHOLD FAST-PATH ============
         // Check if this input can be handled without LLM
         const currentThresholdState = thresholdState || createInitialThresholdState();
@@ -284,27 +311,40 @@ export async function POST(req: NextRequest) {
 
           timer.mark('text_0_emitted');
 
-          // Generate TTS and emit audio immediately (using relational prosody speed)
-          const audioResult = await synthesizeSentence(text, voice, relationalSpeed);
-          timer.mark('tts_0_done');
+          // PersonaPlex render (keep SSE schema the same: emit a single audio payload)
+          let thresholdAudioEmitted = false;
+          for await (const chunk of renderWithPersonaPlex({
+            text,
+            wisdomDirective,
+            mode: wisdomPayload?.mode ?? mode,
+            element: wisdomPayload?.element ?? element ?? null,
+            sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
+            speed: relationalSpeed,
+          })) {
+            timer.mark('tts_0_done');
 
-          if (audioResult) {
             emit('audio', {
               index: 0,
-              audio: audioResult.audio,
-              format: audioResult.format,
+              audio: pcmF32ToWavBase64(chunk.audioB64, 24000, 1),
+              format: 'wav',
               text,
               timestamp: Date.now(),
               mode: 'threshold',
             });
             timer.mark('audio_0_emitted');
+            thresholdAudioEmitted = true;
+            break; // keep 1 audio event per sentence for schema stability
+          }
+
+          if (!thresholdAudioEmitted) {
+            console.warn('[StreamConversation] PersonaPlex returned no audio for threshold path');
           }
 
           // Complete with updated threshold state + relational metadata
           emit('complete', {
             fullResponse: text,
             sentenceCount: 1,
-            audioChunksEmitted: audioResult ? 1 : 0,
+            audioChunksEmitted: thresholdAudioEmitted ? 1 : 0,
             timestamp: Date.now(),
             mode: 'threshold',
             thresholdState: thresholdResult.state,
@@ -325,12 +365,7 @@ export async function POST(req: NextRequest) {
         const claudeService = getClaudeService();
         timer.mark('llm_starting');
 
-        // Build context with wisdom field integration
-        // When PersonaPlex is wired in, wisdomPayload.formatForPersonaPlex() provides the persona prompt
-        const wisdomDirective = wisdomPayload
-          ? MaiaWisdomProvider.formatForPersonaPlex(wisdomPayload)
-          : undefined;
-
+        // Build context with wisdom field integration (wisdomDirective already computed above)
         const context = {
           element,
           conversationHistory,
@@ -376,13 +411,20 @@ export async function POST(req: NextRequest) {
             fullResponse += chunk.text + ' ';
             sentenceCount = chunk.index + 1;
 
-            // Generate TTS for this sentence - emit audio as soon as it's ready
-            // Uses relational prosody speed for affect-responsive pacing
+            // PersonaPlex per-sentence render (preserve concurrency; emit first audio chunk only)
             const chunkIndex = chunk.index;
             const chunkText = chunk.text;
-            const ttsPromise = synthesizeSentence(chunkText, voice, relationalSpeed).then(audioResult => {
-              if (audioResult) {
-                // Mark timing for first audio
+
+            const ttsPromise = (async () => {
+              let emitted = false;
+              for await (const pchunk of renderWithPersonaPlex({
+                text: chunkText,
+                wisdomDirective,
+                mode: wisdomPayload?.mode ?? mode,
+                element: wisdomPayload?.element ?? element ?? null,
+                sanctuary: wisdomPayload?.sanctuary ?? sanctuary,
+                speed: relationalSpeed,
+              })) {
                 if (!firstAudioEmitted) {
                   timer.mark('tts_0_done');
                   firstAudioEmitted = true;
@@ -390,10 +432,10 @@ export async function POST(req: NextRequest) {
 
                 emit('audio', {
                   index: chunkIndex,
-                  audio: audioResult.audio,
-                  format: audioResult.format,
+                  audio: pcmF32ToWavBase64(pchunk.audioB64, 24000, 1),
+                  format: 'wav',
                   text: chunkText,
-                  timestamp: Date.now()
+                  timestamp: Date.now(),
                 });
 
                 if (chunkIndex === 0) {
@@ -401,10 +443,17 @@ export async function POST(req: NextRequest) {
                 }
 
                 audioChunksEmitted++;
+                emitted = true;
+                break; // keep 1 audio event per sentence for schema stability
               }
-            }).catch(e => {
-              console.error('[StreamConversation] TTS error:', e);
+
+              if (!emitted) {
+                console.warn(`[StreamConversation] PersonaPlex returned no audio for sentence index=${chunkIndex}`);
+              }
+            })().catch(e => {
+              console.error('[StreamConversation] PersonaPlex error:', e);
             });
+
             ttsPromises.push(ttsPromise);
 
           } else if (chunk.type === 'done') {
