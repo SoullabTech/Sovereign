@@ -61,6 +61,22 @@ export interface MoshiVoiceSession {
     silenceResponses: number
     backchannelCount: number
   }
+
+  /** Tuning data (per-turn history for aggregates) */
+  tuning: {
+    /** Activation values per turn (for distribution stats) */
+    activationHistory: number[]
+    /** Tempo multiplier per turn (for pacing stats) */
+    tempoHistory: number[]
+    /** Silence intent counts */
+    silenceIntentCounts: Record<SilenceIntent, number>
+    /** Silence duration per intent (ms) */
+    silenceIntentDurationMs: Record<SilenceIntent, number>
+    /** Total mode transitions in session */
+    modeTransitions: number
+    /** Sum of backchannel probabilities (for expected rate calc) */
+    backchannelProbabilitySum: number
+  }
 }
 
 // ============================================================================
@@ -102,6 +118,23 @@ export function createMoshiVoiceSession(connectionId: string): MoshiVoiceSession
       spokenResponses: 0,
       silenceResponses: 0,
       backchannelCount: 0,
+    },
+
+    tuning: {
+      activationHistory: [],
+      tempoHistory: [],
+      silenceIntentCounts: {
+        REGULATORY: 0,
+        REFLECTIVE: 0,
+        BOUNDARY: 0,
+      },
+      silenceIntentDurationMs: {
+        REGULATORY: 0,
+        REFLECTIVE: 0,
+        BOUNDARY: 0,
+      },
+      modeTransitions: 0,
+      backchannelProbabilitySum: 0,
     },
   }
 }
@@ -210,9 +243,28 @@ export function processTurn(
   session.lastActivity = now
   session.metrics.totalTurns++
 
+  // Record tuning data (per-turn history)
+  const { tuning } = session
+  tuning.activationHistory.push(smoothedActivation)
+  tuning.tempoHistory.push(prosody.tempoMultiplier)
+  tuning.backchannelProbabilitySum += prosody.backchannelProbability
+
+  // Cap history arrays to prevent unbounded growth (keep last 500 turns)
+  const maxHistory = 500
+  if (tuning.activationHistory.length > maxHistory) {
+    tuning.activationHistory.shift()
+  }
+  if (tuning.tempoHistory.length > maxHistory) {
+    tuning.tempoHistory.shift()
+  }
+
   if (shouldSilence) {
     session.metrics.silenceResponses++
     relationalStack.silenceCount++
+    // Record silence intent for tuning
+    if (silenceIntent) {
+      tuning.silenceIntentCounts[silenceIntent]++
+    }
   } else if (shouldBackchannel) {
     session.metrics.backchannelCount++
   } else {
@@ -357,6 +409,9 @@ export function transitionMode(
   relationalStack.currentMode = toMode
   session.lastActivity = now
 
+  // Track transition for tuning metrics
+  session.tuning.modeTransitions++
+
   console.log(
     `[Relational] Transition ${fromMode} → ${toMode} (trigger: ${trigger})`
   )
@@ -380,6 +435,9 @@ export function recordSilence(
   session.relationalStack.totalSilenceDurationMs += durationMs
   session.lastActivity = Date.now()
 
+  // Track silence duration per intent for tuning
+  session.tuning.silenceIntentDurationMs[intent] += durationMs
+
   console.log(
     `[Relational] Silence recorded: ${durationMs}ms (${intent}), total: ${session.relationalStack.silenceCount}`
   )
@@ -390,15 +448,86 @@ export function recordSilence(
 // ============================================================================
 
 /**
+ * Compute percentile from sorted array.
+ */
+function percentile(sortedArr: number[], p: number): number {
+  if (sortedArr.length === 0) return 0
+  const idx = Math.ceil((p / 100) * sortedArr.length) - 1
+  return sortedArr[Math.max(0, idx)]
+}
+
+/**
+ * Compute mean of array.
+ */
+function mean(arr: number[]): number {
+  if (arr.length === 0) return 0
+  return arr.reduce((a, b) => a + b, 0) / arr.length
+}
+
+/**
+ * Build histogram buckets for [0, 1] values.
+ */
+function buildBuckets(arr: number[]): Record<string, number> {
+  const buckets: Record<string, number> = {
+    '0.0-0.2': 0,
+    '0.2-0.4': 0,
+    '0.4-0.6': 0,
+    '0.6-0.8': 0,
+    '0.8-1.0': 0,
+  }
+  for (const v of arr) {
+    if (v < 0.2) buckets['0.0-0.2']++
+    else if (v < 0.4) buckets['0.2-0.4']++
+    else if (v < 0.6) buckets['0.4-0.6']++
+    else if (v < 0.8) buckets['0.6-0.8']++
+    else buckets['0.8-1.0']++
+  }
+  return buckets
+}
+
+/**
  * Get session metrics for success tracking.
  * Per canon: track silence frequency, duration, mode dwell time.
+ * Extended with tuning payload for threshold optimization.
  */
 export function getSessionMetrics(session: MoshiVoiceSession) {
-  const { relationalStack, metrics, createdAt } = session
+  const { relationalStack, metrics, tuning, createdAt, id } = session
   const sessionDurationMs = Date.now() - createdAt
 
+  // Activation stats
+  const activationSorted = [...tuning.activationHistory].sort((a, b) => a - b)
+  const activationStats = {
+    mean: mean(tuning.activationHistory),
+    p50: percentile(activationSorted, 50),
+    p90: percentile(activationSorted, 90),
+    buckets: buildBuckets(tuning.activationHistory),
+  }
+
+  // Tempo stats
+  const tempoSorted = [...tuning.tempoHistory].sort((a, b) => a - b)
+  const tempoStats = {
+    mean: mean(tuning.tempoHistory),
+    p50: percentile(tempoSorted, 50),
+    p90: percentile(tempoSorted, 90),
+    min: tempoSorted[0] ?? 0,
+    max: tempoSorted[tempoSorted.length - 1] ?? 0,
+  }
+
+  // Backchannel expected vs actual
+  const backchannelExpectedRate =
+    metrics.totalTurns > 0
+      ? tuning.backchannelProbabilitySum / metrics.totalTurns
+      : 0
+  const backchannelActualRate =
+    metrics.totalTurns > 0
+      ? metrics.backchannelCount / metrics.totalTurns
+      : 0
+
   return {
+    sessionId: id,
     sessionDurationMs,
+
+    // Core decision outcomes
     totalTurns: metrics.totalTurns,
     spokenResponses: metrics.spokenResponses,
     silenceResponses: metrics.silenceResponses,
@@ -408,8 +537,35 @@ export function getSessionMetrics(session: MoshiVoiceSession) {
         ? metrics.silenceResponses / metrics.totalTurns
         : 0,
     totalSilenceDurationMs: relationalStack.totalSilenceDurationMs,
-    modeDwellTimeMs: { ...relationalStack.modeDwellTimeMs },
+
+    // Mode state
     currentMode: relationalStack.currentMode,
+    modeDwellTimeMs: { ...relationalStack.modeDwellTimeMs },
+    modeTransitions: tuning.modeTransitions,
+
+    // Activation distribution (key for tuning thresholds)
+    activation: activationStats,
+
+    // Tempo distribution (felt pacing)
+    tempoMultiplier: tempoStats,
+
+    // Silence intent breakdown
+    silenceIntents: {
+      counts: { ...tuning.silenceIntentCounts },
+      durationMs: { ...tuning.silenceIntentDurationMs },
+    },
+
+    // Backchannel tuning
+    backchannel: {
+      expectedRate: backchannelExpectedRate,
+      actualRate: backchannelActualRate,
+      delta: backchannelActualRate - backchannelExpectedRate,
+    },
+
+    // Current state snapshot
     currentActivation: relationalStack.smoother.lastActivation,
   }
 }
+
+/** Tuning payload type for external consumption */
+export type TuningMetrics = ReturnType<typeof getSessionMetrics>

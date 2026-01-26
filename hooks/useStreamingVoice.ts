@@ -125,6 +125,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   // Stable session ID - persisted in sessionStorage for cross-reload continuity
   const sessionIdRef = useRef<string>(getOrCreateSessionId(providedSessionId));
 
+  // If providedSessionId changes (e.g., joining existing thread), update the ref
+  useEffect(() => {
+    if (providedSessionId && providedSessionId !== sessionIdRef.current) {
+      sessionIdRef.current = getOrCreateSessionId(providedSessionId);
+    }
+  }, [providedSessionId]);
+
   const [state, setState] = useState<StreamingVoiceState>({
     isStreaming: false,
     isPlaying: false,
