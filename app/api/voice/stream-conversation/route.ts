@@ -542,7 +542,7 @@ export async function POST(req: NextRequest) {
         // This is NOT model-driven — MAIA is the author of delivery.
         const effectiveRange = (prosodyRange ?? 1) as ProsodyRange;
 
-        // Build base hints from relational state
+        // Build base hints from relational state + session baseline
         const baseHints = buildProsodyHints({
           activation: voiceSession.relationalStack.smoother.lastActivation,
           mode: wisdomPayload?.mode ?? mode ?? 'talk',
@@ -550,6 +550,7 @@ export async function POST(req: NextRequest) {
           brevity: guidance?.brevity ?? 'moderate',
           posture: guidance?.posture ?? 'MEET',
           element: wisdomPayload?.element ?? element ?? null,
+          baseline: voiceSession.prosodyBaseline, // Conversation Prosody Memory
         });
 
         // Scale hints by user's Range of Effect preference
@@ -558,6 +559,24 @@ export async function POST(req: NextRequest) {
         // Compute effective speed from hints + base relational speed
         const effectiveSpeed = mapProsodyToSpeed(relationalSpeed, prosodyHints);
 
+        // ─── UPDATE SESSION PROSODY BASELINE ───
+        // Conversation Prosody Memory: baseline drifts toward current delivery
+        const now = Date.now();
+        const prevBaseline = voiceSession.prosodyBaseline;
+        const dt = now - prevBaseline.updatedAt;
+        const decay = dt > 60_000 ? 0.2 : 0; // 1+ min gap = loosen continuity
+
+        // Store baseHints (pre-range), NOT prosodyHints (post-range).
+        // Baseline tracks MAIA's conversational posture, not member's amplification.
+        voiceSession.prosodyBaseline = {
+          warmth: baseHints.warmth,
+          pace: baseHints.pace,
+          emphasis: baseHints.emphasis,
+          // Continuity rises each turn, decays on gaps, caps at 1
+          continuity: Math.max(0, Math.min(1, prevBaseline.continuity + 0.15 - decay)),
+          updatedAt: now,
+        };
+
         // Debug trace: only emits when VOICE_DEBUG_PROSODY=1 (no user content)
         if (process.env.VOICE_DEBUG_PROSODY === '1') {
           console.log('[voice][prosody]', {
@@ -565,6 +584,7 @@ export async function POST(req: NextRequest) {
             base: baseHints,
             scaled: prosodyHints,
             speed: effectiveSpeed,
+            baseline: voiceSession.prosodyBaseline,
           });
         }
 

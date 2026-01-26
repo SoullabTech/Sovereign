@@ -26,6 +26,28 @@ import type {
 /** Turn decision outcome for ring buffer */
 export type TurnOutcome = 'SILENCE' | 'BACKCHANNEL' | 'SPEAK'
 
+// ============================================================================
+// PROSODY BASELINE (Conversation Prosody Memory)
+// ============================================================================
+
+/**
+ * Prosody baseline persisted per session.
+ * Prevents voice from "resetting" to neutral between turns.
+ * MAIA's voice has continuity within a conversation.
+ */
+export interface SessionProsodyBaseline {
+  /** Baseline warmth (drifts toward member's comfort) */
+  warmth: 'cool' | 'neutral' | 'warm' | 'very_warm';
+  /** Baseline pace (adjusts based on conversation rhythm) */
+  pace: 'slow' | 'steady' | 'brisk';
+  /** Baseline emphasis */
+  emphasis: 'minimal' | 'selective' | 'strong';
+  /** How "settled" the voice is (0..1). Higher = baseline sticks more. */
+  continuity: number;
+  /** Last update timestamp (for decay on long gaps) */
+  updatedAt: number;
+}
+
 /** Turn outcome event with timestamp and optional silence intent */
 export interface TurnOutcomeEvent {
   outcome: TurnOutcome
@@ -130,6 +152,9 @@ export interface MoshiVoiceSession {
 
   /** Relational stack for prosodic governance */
   relationalStack: VoiceRelationalStack
+
+  /** Prosody baseline for conversation continuity (Sesame-style voice memory) */
+  prosodyBaseline: SessionProsodyBaseline
 
   /** Audio timing state */
   timing: {
@@ -258,6 +283,15 @@ export function createMoshiVoiceSession(connectionId: string): MoshiVoiceSession
       },
     },
 
+    // Start with neutral baseline — continuity builds over turns
+    prosodyBaseline: {
+      warmth: 'neutral',
+      pace: 'steady',
+      emphasis: 'minimal',
+      continuity: 0,
+      updatedAt: now,
+    },
+
     timing: {
       lastUserSpeechEndMs: null,
       lastMaiaSpeechEndMs: null,
@@ -311,6 +345,8 @@ export interface TurnDecision {
   nextPauseMs: number
   /** If !shouldSpeak, the reason */
   silenceIntent?: SilenceIntent
+  /** If a pending move was classified this turn, the outcome event (for SSE emission) */
+  classifiedOutcome?: MoveOutcomeEvent
 }
 
 /**
@@ -381,6 +417,7 @@ export function processTurn(
   // ── MOVE OUTCOME EMISSION ──
   // If there's a pending move from MAIA's last turn, classify its outcome
   // Uses smoothed activation for both move and outcome (comparable deltas)
+  let classifiedOutcome: MoveOutcomeEvent | undefined
   if (relationalStack.pendingMove) {
     const pending = relationalStack.pendingMove
     const latencyMs = now - pending.ts
@@ -392,7 +429,7 @@ export function processTurn(
     )
 
     // Record the completed move outcome event
-    const outcomeEvent: MoveOutcomeEvent = {
+    classifiedOutcome = {
       tsOutcome: now,
       tsMove: pending.ts,
       moveIntent: pending.moveIntent,
@@ -402,7 +439,7 @@ export function processTurn(
       outcome,
       latencyToOutcomeMs: latencyMs,
     }
-    session.tuning.moveOutcomes.push(outcomeEvent)
+    session.tuning.moveOutcomes.push(classifiedOutcome)
 
     // Cap buffer (keep last 100 move outcomes)
     if (session.tuning.moveOutcomes.length > 100) {
@@ -512,6 +549,7 @@ export function processTurn(
     shouldBackchannel: !shouldSilence && shouldBackchannel,
     nextPauseMs: Math.round(nextPauseMs),
     silenceIntent,
+    classifiedOutcome,
   }
 }
 

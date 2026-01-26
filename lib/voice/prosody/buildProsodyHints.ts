@@ -18,13 +18,23 @@ import type {
   ProsodyEmphasis,
   ProsodyIntentTag,
 } from '@/src/types/voice';
+import type { SessionProsodyBaseline } from '@/lib/voice/moshi/MoshiSessionManager';
+
+/**
+ * Input for buildProsodyHints, extending ProsodyContext with optional baseline.
+ */
+export interface BuildProsodyHintsInput extends ProsodyContext {
+  /** Optional session baseline for conversation continuity */
+  baseline?: SessionProsodyBaseline;
+}
 
 /**
  * Build base prosody hints from MAIA's relational context.
+ * If a baseline is provided, blends it with current-turn hints for conversation continuity.
  * These are then scaled by the user's Range of Effect setting.
  */
-export function buildProsodyHints(ctx: ProsodyContext): ProsodyHints {
-  const { activation, mode, sanctuary, brevity, posture, element } = ctx;
+export function buildProsodyHints(ctx: BuildProsodyHintsInput): ProsodyHints {
+  const { activation, mode, sanctuary, brevity, posture, element, baseline } = ctx;
 
   // ─── ENERGY (from activation) ───
   const energy: ProsodyEnergy =
@@ -103,6 +113,44 @@ export function buildProsodyHints(ctx: ProsodyContext): ProsodyHints {
     intentTag = 'play';
   } else {
     intentTag = 'attune'; // Default: warm presence
+  }
+
+  // ─── BASELINE BLENDING (Conversation Prosody Memory) ───
+  // If we have a baseline, blend it with current-turn hints.
+  // Sanctuary overrides baseline (regulation beats continuity).
+  if (baseline && !sanctuary) {
+    // continuity 0..1 decides how much baseline "sticks"
+    // At 0 continuity, current turn dominates. At 0.75+, baseline dominates.
+    const stick = Math.min(0.75, 0.25 + 0.5 * baseline.continuity);
+
+    // Blend warmth: baseline sticks if continuity > 0.5
+    if (stick > 0.5 && baseline.warmth !== warmth) {
+      // Allow fast shifts downward (cooling), slow drift upward (warming)
+      const warmthOrder = ['cool', 'neutral', 'warm', 'very_warm'] as const;
+      const currentIdx = warmthOrder.indexOf(warmth);
+      const baselineIdx = warmthOrder.indexOf(baseline.warmth);
+      // If current is warmer than baseline, stick to baseline (slow warming)
+      // If current is cooler, allow immediate shift (fast cooling)
+      if (currentIdx > baselineIdx) {
+        warmth = baseline.warmth;
+      }
+    }
+
+    // Blend pace: baseline sticks if continuity > 0.5
+    if (stick > 0.5 && baseline.pace !== pace) {
+      const paceOrder = ['slow', 'steady', 'brisk'] as const;
+      const currentIdx = paceOrder.indexOf(pace);
+      const baselineIdx = paceOrder.indexOf(baseline.pace);
+      // Slow pace sticks more readily (settling)
+      if (baselineIdx < currentIdx) {
+        pace = baseline.pace;
+      }
+    }
+
+    // Blend emphasis: baseline sticks if continuity > 0.65
+    if (stick > 0.65 && baseline.emphasis !== emphasis) {
+      emphasis = baseline.emphasis;
+    }
   }
 
   return {
