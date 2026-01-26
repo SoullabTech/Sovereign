@@ -24,6 +24,15 @@ export function apiBaseUrl(): string {
   // If env is set, always trust it.
   if (env) return env.replace(/\/+$/, "");
 
+  // LOCAL DEVELOPMENT: Use relative paths (same-origin) for localhost
+  // This prevents cross-origin cookie issues when running dev server locally
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      return ''; // Same-origin API calls
+    }
+  }
+
   // Absolute fallback (do NOT allow empty)
   // This ensures iOS, Capacitor, and any edge case always gets the real API
   return "https://soullab.life";
