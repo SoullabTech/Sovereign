@@ -117,19 +117,26 @@ export async function* renderWithPersonaPlex(
     brevityDirective,
   ].filter(Boolean).join('\n');
 
+  // ── BREVITY → SPEED MICRO-MAPPING ──
+  // Brief/expansive = slightly slower for "careful presence"
+  // Not a lot — just enough to register as warmth.
+  const baseSpeed = req.speed ?? 1.0;
+  const speedBump =
+    brevity === 'brief' ? -0.05 :
+    brevity === 'expansive' ? -0.03 :
+    0;
+  const adjustedSpeed = Math.max(0.5, Math.min(2.0, baseSpeed + speedBump));
+
   // Build request payload for PersonaPlex service
   const payload: Record<string, unknown> = {
     text: req.text,
     voice_mode: req.mode,
     element: req.element,
     sanctuary: req.sanctuary,
-    speed: req.speed ?? 1.0,
+    speed: adjustedSpeed,
+    // Always include wisdom_directive (avoids "sometimes missing" persona wobble)
+    wisdom_directive: personaDirective || '',
   };
-
-  // Include combined persona directive (wisdom + brevity)
-  if (personaDirective) {
-    payload.wisdom_directive = personaDirective;
-  }
 
   // If sanctuary, log minimal info only
   if (req.sanctuary) {
