@@ -111,6 +111,12 @@ export function applyProsodyToText(text: string, hints: ProsodyHints): string {
     t = t.replace(/^(Okay|Alright|Mm|Yeah)\.\n/i, '');
   }
 
+  // ─── PRONUNCIATION FIXES ───
+  // OpenAI TTS pronounces "MAIA" as "MAY-ah" — we want "MY-ah"
+  // Substitute with phonetic spelling that TTS reads correctly
+  t = t.replace(/\bMAIA\b/g, 'Mya');
+  t = t.replace(/\bMaia\b/g, 'Mya');
+
   return t;
 }
 
