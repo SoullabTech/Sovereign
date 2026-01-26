@@ -23,12 +23,24 @@ import type {
 // SESSION STATE
 // ============================================================================
 
+/** Turn decision outcome for ring buffer */
+export type TurnOutcome = 'SILENCE' | 'BACKCHANNEL' | 'SPEAK'
+
+/** Turn outcome event with timestamp and optional silence intent */
+export interface TurnOutcomeEvent {
+  outcome: TurnOutcome
+  ts: number
+  intent?: SilenceIntent
+}
+
 /**
  * Relational stack state for voice sessions.
  * Mirrors the text session structure for unified governance.
  */
 export interface VoiceRelationalStack {
   currentMode: MaiaMode
+  /** When current mode started (for timeInCurrentModeMs) */
+  currentModeSinceTs: number
   smoother: ActivationSmootherState
   silenceCount: number
   totalSilenceDurationMs: number
@@ -68,14 +80,16 @@ export interface MoshiVoiceSession {
     activationHistory: number[]
     /** Tempo multiplier per turn (for pacing stats) */
     tempoHistory: number[]
-    /** Per-turn decision outcomes (ring buffer for windowed stats) */
-    turnOutcomes: ('SILENCE' | 'BACKCHANNEL' | 'SPEAK')[]
+    /** Per-turn decision outcomes with timestamps (ring buffer for windowed stats) */
+    turnOutcomes: TurnOutcomeEvent[]
     /** Silence intent counts */
     silenceIntentCounts: Record<SilenceIntent, number>
     /** Silence duration per intent (ms) */
     silenceIntentDurationMs: Record<SilenceIntent, number>
     /** Total mode transitions in session */
     modeTransitions: number
+    /** Mode transition timestamps (for per-5m calculation) */
+    modeTransitionTimestamps: number[]
     /** Sum of backchannel probabilities (for expected rate calc) */
     backchannelProbabilitySum: number
   }
@@ -157,6 +171,7 @@ export function createMoshiVoiceSession(connectionId: string): MoshiVoiceSession
 
     relationalStack: {
       currentMode: 'REGULATOR',
+      currentModeSinceTs: now,
       smoother: createSmootherState(),
       silenceCount: 0,
       totalSilenceDurationMs: 0,
@@ -195,6 +210,7 @@ export function createMoshiVoiceSession(connectionId: string): MoshiVoiceSession
         BOUNDARY: 0,
       },
       modeTransitions: 0,
+      modeTransitionTimestamps: [],
       backchannelProbabilitySum: 0,
     },
   }
@@ -320,26 +336,35 @@ export function processTurn(
   }
 
   // Record turn outcome in ring buffer (for windowed stats)
-  let turnOutcome: 'SILENCE' | 'BACKCHANNEL' | 'SPEAK'
+  const MAX_OUTCOMES = 20
   if (shouldSilence) {
     session.metrics.silenceResponses++
     relationalStack.silenceCount++
-    turnOutcome = 'SILENCE'
     // Record silence intent for tuning
     if (silenceIntent) {
       tuning.silenceIntentCounts[silenceIntent]++
     }
+    tuning.turnOutcomes.push({
+      outcome: 'SILENCE',
+      ts: now,
+      intent: silenceIntent,
+    })
   } else if (shouldBackchannel) {
     session.metrics.backchannelCount++
-    turnOutcome = 'BACKCHANNEL'
+    tuning.turnOutcomes.push({
+      outcome: 'BACKCHANNEL',
+      ts: now,
+    })
   } else {
     session.metrics.spokenResponses++
-    turnOutcome = 'SPEAK'
+    tuning.turnOutcomes.push({
+      outcome: 'SPEAK',
+      ts: now,
+    })
   }
 
-  // Add to ring buffer (cap at 200 for memory safety)
-  tuning.turnOutcomes.push(turnOutcome)
-  if (tuning.turnOutcomes.length > 200) {
+  // Cap ring buffer
+  if (tuning.turnOutcomes.length > MAX_OUTCOMES) {
     tuning.turnOutcomes.shift()
   }
 
@@ -479,10 +504,17 @@ export function transitionMode(
 
   // Apply transition
   relationalStack.currentMode = toMode
+  relationalStack.currentModeSinceTs = now
   session.lastActivity = now
 
   // Track transition for tuning metrics
   session.tuning.modeTransitions++
+  session.tuning.modeTransitionTimestamps.push(now)
+
+  // Cap timestamps array (keep last 50 for 5m window calculation)
+  if (session.tuning.modeTransitionTimestamps.length > 50) {
+    session.tuning.modeTransitionTimestamps.shift()
+  }
 
   console.log(
     `[Relational] Transition ${fromMode} → ${toMode} (trigger: ${trigger})`
@@ -557,6 +589,55 @@ function buildBuckets(arr: number[]): Record<string, number> {
   return buckets
 }
 
+// ============================================================================
+// WINDOWED STATS HELPERS
+// ============================================================================
+
+/**
+ * Compute silence ratio from turn outcomes ring buffer.
+ */
+function computeRecentSilenceRatioFromOutcomes(
+  outcomes: TurnOutcomeEvent[],
+  lastN = 20
+): number {
+  const slice = outcomes.slice(-lastN)
+  if (slice.length === 0) return 0
+  const silences = slice.filter((o) => o.outcome === 'SILENCE').length
+  return silences / slice.length
+}
+
+/**
+ * Compute silence intent counts from turn outcomes ring buffer.
+ */
+function computeRecentSilenceIntentCountsFromOutcomes(
+  outcomes: TurnOutcomeEvent[],
+  lastN = 20
+): Record<SilenceIntent, number> {
+  const slice = outcomes.slice(-lastN)
+  const counts: Record<SilenceIntent, number> = {
+    REGULATORY: 0,
+    REFLECTIVE: 0,
+    BOUNDARY: 0,
+  }
+  for (const o of slice) {
+    if (o.outcome === 'SILENCE' && o.intent) {
+      counts[o.intent]++
+    }
+  }
+  return counts
+}
+
+/**
+ * Compute mode transitions in last 5 minutes from timestamps.
+ */
+function computeModeTransitionsPer5mFromTimestamps(
+  timestamps: number[],
+  now: number
+): number {
+  const windowStart = now - 5 * 60 * 1000
+  return timestamps.filter((ts) => ts >= windowStart).length
+}
+
 /**
  * Get session metrics for success tracking.
  * Per canon: track silence frequency, duration, mode dwell time.
@@ -564,7 +645,14 @@ function buildBuckets(arr: number[]): Record<string, number> {
  */
 export function getSessionMetrics(session: MoshiVoiceSession) {
   const { relationalStack, metrics, tuning, createdAt, id } = session
-  const sessionDurationMs = Date.now() - createdAt
+  const now = Date.now()
+  const sessionDurationMs = now - createdAt
+
+  // Windowed stats (for "signal not vibes" tuning)
+  const silenceRatioLast20 = computeRecentSilenceRatioFromOutcomes(tuning.turnOutcomes, 20)
+  const silenceIntentCountsLast20 = computeRecentSilenceIntentCountsFromOutcomes(tuning.turnOutcomes, 20)
+  const modeTransitionsPer5m = computeModeTransitionsPer5mFromTimestamps(tuning.modeTransitionTimestamps, now)
+  const timeInCurrentModeMs = now - relationalStack.currentModeSinceTs
 
   // Activation stats
   const activationSorted = [...tuning.activationHistory].sort((a, b) => a - b)
@@ -636,6 +724,15 @@ export function getSessionMetrics(session: MoshiVoiceSession) {
 
     // Current state snapshot
     currentActivation: relationalStack.smoother.lastActivation,
+
+    // Windowed stats (the 3 numbers for "signal not vibes")
+    windowed: {
+      silenceRatioLast20,
+      silenceIntentCountsLast20,
+      modeTransitionsPer5m,
+      currentMode: relationalStack.currentMode,
+      timeInCurrentModeMs,
+    },
   }
 }
 
@@ -661,29 +758,6 @@ export interface RelationalRedFlags {
   highActivationStuck: boolean
 }
 
-/**
- * Compute windowed silence ratio from turn outcomes ring buffer.
- * Uses actual per-turn outcomes for accurate "last N" calculation.
- */
-function computeRecentSilenceRatio(session: MoshiVoiceSession, lastN = 20): number {
-  const outcomes = session.tuning.turnOutcomes
-  if (outcomes.length === 0) return 0
-
-  // Get last N outcomes
-  const window = outcomes.slice(-lastN)
-  const silenceCount = window.filter((o) => o === 'SILENCE').length
-
-  return silenceCount / window.length
-}
-
-/**
- * Compute mode transitions per 5 minutes.
- */
-function computeModeTransitionsPer5m(session: MoshiVoiceSession): number {
-  const durationMs = Math.max(1, Date.now() - session.createdAt)
-  const perMs = session.tuning.modeTransitions / durationMs
-  return perMs * 5 * 60 * 1000
-}
 
 /**
  * Check if activation is stuck at extreme values.
@@ -707,13 +781,14 @@ function checkActivationStuck(
  * Use these for tuning alerts and dashboard indicators.
  */
 export function getRelationalRedFlags(session: MoshiVoiceSession): RelationalRedFlags {
-  const silenceRatio = computeRecentSilenceRatio(session, 20)
-  const transitionsPer5m = computeModeTransitionsPer5m(session)
+  const now = Date.now()
+  const silenceRatioLast20 = computeRecentSilenceRatioFromOutcomes(session.tuning.turnOutcomes, 20)
+  const modeTransitionsPer5m = computeModeTransitionsPer5mFromTimestamps(session.tuning.modeTransitionTimestamps, now)
   const activationStuck = checkActivationStuck(session, 20)
 
   const flags: RelationalRedFlags = {
-    silenceOver30Last20: silenceRatio > 0.3,
-    modeJitterOver6Per5m: transitionsPer5m > 6,
+    silenceOver30Last20: silenceRatioLast20 > 0.3,
+    modeJitterOver6Per5m: modeTransitionsPer5m > 6,
     lowActivationStuck: activationStuck.low,
     highActivationStuck: activationStuck.high,
   }
