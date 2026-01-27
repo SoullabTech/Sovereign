@@ -33,7 +33,12 @@ const COOKIE_OPTIONS = {
 
 export async function GET(request: NextRequest) {
   const next = request.nextUrl.searchParams.get('next') || '/maia';
-  const baseUrl = request.nextUrl.origin;
+
+  // Use Host header to determine the correct base URL
+  // (request.nextUrl.origin returns internal Docker address like 0.0.0.0:3000)
+  const host = request.headers.get('host') || 'soullab.life';
+  const protocol = request.headers.get('x-forwarded-proto') || 'https';
+  const baseUrl = `${protocol}://${host}`;
 
   try {
     const cookieStore = await cookies();

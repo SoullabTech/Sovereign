@@ -264,7 +264,8 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/pfi-monitor', minTier: 'pro', notes: 'PFI monitoring' },
 
   // Stellium (Practice Management)
-  { prefix: '/stellium', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Stellium requires Pro + practitioner role' },
+  // TODO: Restore after testing: minTier: 'pro', rolesAnyOf: ['practitioner']
+  { prefix: '/stellium', minTier: 'free', notes: 'Stellium - temporarily open for testing' },
 
   // Caseload (Clinical Notes)
   { prefix: '/caseload', minTier: 'pro', rolesAnyOf: ['practitioner'], notes: 'Caseload requires Pro + practitioner role' },

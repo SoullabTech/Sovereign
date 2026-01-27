@@ -6868,12 +6868,13 @@ I'm not sure what I'm feeling yet.`;
         onClose={() => setShowAudioSettings(false)}
       />
 
-      {/* Voice HUD - In-conversation micro controls (visible when voice mode active) */}
+      {/* Voice HUD - DISABLED - Removed per user request
       <VoiceHUD
         isVisible={streamingVoiceMode && !showChatInterface && hasActivated}
         onInterrupt={handleVoiceInterrupt}
         isMaiaSpeaking={isAudioPlaying || isResponding}
       />
+      */}
 
       {/* 🧭 Therapeutic Framework Selector - Mode-specific (Counsel/Scribe)
           Now handled by FrameworkSelector component, accessed contextually */}

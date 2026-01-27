@@ -227,12 +227,10 @@ export async function middleware(req: NextRequest) {
         return NextResponse.redirect(url);
 
       case 'insufficient-tier':
-        // Redirect to upgrade page with incident stamp
-        url.pathname = '/maia/membership';
-        url.searchParams.set('upgrade', rule?.minTier || 'personal');
-        url.searchParams.set('next', pathname);
-        url.searchParams.set('rid', rid);
-        return NextResponse.redirect(url);
+        // For now, just allow access - tier gates disabled during development
+        // TODO: Re-enable tier gating when membership page is ready
+        console.log(`[Middleware] Tier gate bypassed for ${pathname} (required: ${rule?.minTier})`);
+        return NextResponse.next();
 
       case 'missing-role':
         // 403 Forbidden - user is authed but lacks role
