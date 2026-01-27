@@ -3,7 +3,7 @@
 # Capacitor Route Patcher
 # For static export builds (iOS/Capacitor):
 # 1. Temporarily moves app/api directory out of the way
-# 2. Patches dynamic pages with generateStaticParams
+# 2. Moves incompatible dynamic pages out of the build
 #
 # The iOS app doesn't need API routes - it calls the production server at soullab.life
 #
@@ -17,17 +17,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 API_BACKUP_DIR="$PROJECT_ROOT/.capacitor-api-backup"
 MIDDLEWARE_BACKUP="$PROJECT_ROOT/.capacitor-middleware-backup"
-DYNAMIC_PAGES_FILE="$PROJECT_ROOT/.capacitor-dynamic-pages.txt"
-DYNAMIC_ROUTES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-routes-backup"
-
-# Dynamic routes to exclude from static export (incompatible with output: export)
-# These are either:
-# - Client Components with dynamic params (can't have generateStaticParams)
-# - Server-rendered pages that need data from the server
-# Routes that have been removed from codebase - keeping array for future use
-EXCLUDED_DYNAMIC_ROUTES=(
-    # Add routes here if they cause "force-dynamic" errors during Capacitor builds
-)
+DYNAMIC_PAGES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-pages-backup"
+DYNAMIC_PAGES_MANIFEST="$PROJECT_ROOT/.capacitor-dynamic-pages.manifest"
+PATCHED_PAGES_FILE="$PROJECT_ROOT/.capacitor-patched-pages.txt"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -37,55 +29,6 @@ NC='\033[0m'
 log_info() { echo -e "${GREEN}[PATCH]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
-
-# Move excluded dynamic routes out of the way
-hide_dynamic_routes() {
-    log_info "Moving excluded dynamic routes out of the build..."
-
-    if [ -d "$DYNAMIC_ROUTES_BACKUP" ]; then
-        log_warn "Dynamic routes backup already exists, removing stale backup..."
-        rm -rf "$DYNAMIC_ROUTES_BACKUP"
-    fi
-    mkdir -p "$DYNAMIC_ROUTES_BACKUP"
-
-    for route in "${EXCLUDED_DYNAMIC_ROUTES[@]}"; do
-        local full_path="$PROJECT_ROOT/$route"
-        if [ -d "$full_path" ]; then
-            local backup_dir="$DYNAMIC_ROUTES_BACKUP/$route"
-            mkdir -p "$(dirname "$backup_dir")"
-            mv "$full_path" "$backup_dir"
-            log_info "  Moved $route → .capacitor-dynamic-routes-backup/"
-        else
-            log_warn "  Route not found: $route"
-        fi
-    done
-}
-
-# Restore excluded dynamic routes after build
-restore_dynamic_routes() {
-    log_info "Restoring excluded dynamic routes..."
-
-    if [ ! -d "$DYNAMIC_ROUTES_BACKUP" ]; then
-        log_warn "No dynamic routes backup found"
-        return 0
-    fi
-
-    for route in "${EXCLUDED_DYNAMIC_ROUTES[@]}"; do
-        local backup_path="$DYNAMIC_ROUTES_BACKUP/$route"
-        local restore_path="$PROJECT_ROOT/$route"
-        if [ -d "$backup_path" ]; then
-            if [ -d "$restore_path" ]; then
-                log_warn "  $route already exists, removing first..."
-                rm -rf "$restore_path"
-            fi
-            mkdir -p "$(dirname "$restore_path")"
-            mv "$backup_path" "$restore_path"
-            log_info "  Restored $route"
-        fi
-    done
-
-    rm -rf "$DYNAMIC_ROUTES_BACKUP"
-}
 
 # Move API routes out of the way - they can't work in static export anyway
 hide_api_routes() {
@@ -97,7 +40,7 @@ hide_api_routes() {
             rm -rf "$API_BACKUP_DIR"
         fi
         mv "$PROJECT_ROOT/app/api" "$API_BACKUP_DIR"
-        log_info "Moved app/api → .capacitor-api-backup"
+        log_info "Moved app/api -> .capacitor-api-backup"
     else
         log_warn "No app/api directory found"
     fi
@@ -129,7 +72,7 @@ hide_middleware() {
             rm -f "$MIDDLEWARE_BACKUP"
         fi
         mv "$PROJECT_ROOT/middleware.ts" "$MIDDLEWARE_BACKUP"
-        log_info "Moved middleware.ts → .capacitor-middleware-backup"
+        log_info "Moved middleware.ts -> .capacitor-middleware-backup"
     else
         log_warn "No middleware.ts found"
     fi
@@ -151,91 +94,190 @@ restore_middleware() {
     fi
 }
 
-# Add generateStaticParams to dynamic pages that don't have it
-patch_dynamic_pages() {
-    log_info "Patching dynamic pages with generateStaticParams..."
+# Two-phase exclusion of incompatible dynamic pages
+# Phase 1: Scan all pages and collect directories to exclude
+# Phase 2: Move all collected directories
+hide_incompatible_pages() {
+    log_info "Scanning for pages incompatible with static export..."
 
-    # Find all page.tsx files in paths with [param] segments (excluding api which is now moved)
-    local dynamic_pages=$(find "$PROJECT_ROOT/app" -path "*\[*\]*" -name "page.tsx" 2>/dev/null || true)
+    # Clean up any stale backup
+    if [ -d "$DYNAMIC_PAGES_BACKUP" ]; then
+        log_warn "Backup already exists, removing stale backup..."
+        rm -rf "$DYNAMIC_PAGES_BACKUP"
+    fi
+    mkdir -p "$DYNAMIC_PAGES_BACKUP"
 
-    if [ -z "$dynamic_pages" ]; then
-        log_info "No dynamic pages found to patch"
-        echo "" > "$DYNAMIC_PAGES_FILE"
+    # Temp file for collecting exclusions (format: page_dir|page_rel_dir)
+    local exclusion_file="$PROJECT_ROOT/.capacitor-exclusions.tmp"
+    > "$exclusion_file"
+
+    # Phase 1: Scan all dynamic page.tsx files
+    log_info "Phase 1: Identifying incompatible pages..."
+
+    find "$PROJECT_ROOT/app" -name "page.tsx" -type f 2>/dev/null | while IFS= read -r file; do
+        local rel_path="${file#$PROJECT_ROOT/}"
+
+        # Only care about dynamic routes (paths with [param])
+        case "$rel_path" in
+            *\[*\]*)
+                local page_dir="$(dirname "$file")"
+                local page_rel_dir="$(dirname "$rel_path")"
+
+                # Already has generateStaticParams? Skip - it's compatible
+                if grep -q "generateStaticParams" "$file" 2>/dev/null; then
+                    continue
+                fi
+
+                # Check if it's a Client Component
+                if head -5 "$file" 2>/dev/null | grep -qE "^['\"]use client['\"];?\s*$"; then
+                    # Client Component with dynamic params can't have generateStaticParams
+                    # Must exclude it
+                    log_warn "  Will exclude (client + dynamic): $rel_path"
+                    echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
+                    continue
+                fi
+
+                # Check if it uses cookies(), headers(), or force-dynamic
+                if grep -qE "(cookies\(|headers\(|export const dynamic.*=.*['\"]force-dynamic['\"])" "$file" 2>/dev/null; then
+                    log_warn "  Will exclude (dynamic API): $rel_path"
+                    echo "$page_dir|$page_rel_dir" >> "$exclusion_file"
+                    continue
+                fi
+
+                # Server Component without generateStaticParams - will be patched later
+                ;;
+        esac
+    done
+
+    # Deduplicate: sort by path and keep unique (longer paths come after shorter)
+    local unique_file="$PROJECT_ROOT/.capacitor-unique.tmp"
+    sort -t'|' -k1,1 -u "$exclusion_file" > "$unique_file" 2>/dev/null || true
+
+    # Clear manifest
+    > "$DYNAMIC_PAGES_MANIFEST"
+
+    # Phase 2: Move all collected directories
+    log_info "Phase 2: Moving incompatible pages out of build..."
+    local count=0
+
+    while IFS='|' read -r page_dir page_rel_dir; do
+        [ -z "$page_dir" ] && continue
+
+        # Skip if already moved (child of previously moved parent)
+        [ ! -d "$page_dir" ] && continue
+
+        local backup_path="$DYNAMIC_PAGES_BACKUP/$page_rel_dir"
+        mkdir -p "$(dirname "$backup_path")"
+        mv "$page_dir" "$backup_path"
+        echo "$page_rel_dir" >> "$DYNAMIC_PAGES_MANIFEST"
+        log_info "  Moved: $page_rel_dir"
+        count=$((count + 1))
+    done < "$unique_file"
+
+    # Cleanup temp files
+    rm -f "$exclusion_file" "$unique_file"
+    log_info "Excluded $count incompatible page directories"
+}
+
+# Restore excluded pages after build
+restore_incompatible_pages() {
+    log_info "Restoring excluded pages..."
+
+    if [ ! -f "$DYNAMIC_PAGES_MANIFEST" ]; then
+        log_warn "No pages manifest found"
         return 0
     fi
 
-    # Clear backup file
-    echo "" > "$DYNAMIC_PAGES_FILE"
+    local count=0
+    while IFS= read -r page_rel_dir; do
+        [ -z "$page_rel_dir" ] && continue
+
+        local backup_path="$DYNAMIC_PAGES_BACKUP/$page_rel_dir"
+        local restore_path="$PROJECT_ROOT/$page_rel_dir"
+
+        if [ -d "$backup_path" ]; then
+            mkdir -p "$(dirname "$restore_path")"
+            [ -d "$restore_path" ] && rm -rf "$restore_path"
+            mv "$backup_path" "$restore_path"
+            log_info "  Restored: $page_rel_dir"
+            count=$((count + 1))
+        fi
+    done < "$DYNAMIC_PAGES_MANIFEST"
+
+    # Cleanup
+    rm -rf "$DYNAMIC_PAGES_BACKUP"
+    rm -f "$DYNAMIC_PAGES_MANIFEST"
+    log_info "Restored $count page directories"
+}
+
+# Patch server components with generateStaticParams (those not excluded)
+patch_remaining_dynamic_pages() {
+    log_info "Patching remaining dynamic pages with generateStaticParams..."
+
+    > "$PATCHED_PAGES_FILE"
     local patched_count=0
 
-    for file in $dynamic_pages; do
-        # Skip if already has generateStaticParams
-        if grep -q "generateStaticParams" "$file"; then
-            continue
-        fi
-
-        # Skip Client Components - they can't have generateStaticParams
-        if head -5 "$file" | grep -qE "^['\"]use client['\"];?\s*$"; then
-            local rel_path="${file#$PROJECT_ROOT/}"
-            log_warn "  Skipping Client Component: $rel_path"
-            continue
-        fi
-
+    find "$PROJECT_ROOT/app" -name "page.tsx" -type f 2>/dev/null | while IFS= read -r file; do
         local rel_path="${file#$PROJECT_ROOT/}"
-        log_info "  Adding generateStaticParams: $rel_path"
 
-        # Record this file for revert
-        echo "$file" >> "$DYNAMIC_PAGES_FILE"
+        # Only care about dynamic routes
+        case "$rel_path" in
+            *\[*\]*)
+                # Already has generateStaticParams? Skip
+                if grep -q "generateStaticParams" "$file" 2>/dev/null; then
+                    continue
+                fi
 
-        # No 'use client' - prepend generateStaticParams
-        local temp_file=$(mktemp)
-        echo "// Added by capacitor-patch-routes.sh for static export" > "$temp_file"
-        echo "export function generateStaticParams() { return []; }" >> "$temp_file"
-        echo "" >> "$temp_file"
-        cat "$file" >> "$temp_file"
-        mv "$temp_file" "$file"
+                # Is Client Component? Should have been excluded, but skip just in case
+                if head -5 "$file" 2>/dev/null | grep -qE "^['\"]use client['\"];?\s*$"; then
+                    continue
+                fi
 
-        patched_count=$((patched_count + 1))
+                # Server Component - add generateStaticParams
+                log_info "  Adding generateStaticParams: $rel_path"
+                echo "$file" >> "$PATCHED_PAGES_FILE"
+
+                local temp_file=$(mktemp)
+                echo "// Added by capacitor-patch-routes.sh for static export" > "$temp_file"
+                echo "export function generateStaticParams() { return []; }" >> "$temp_file"
+                echo "" >> "$temp_file"
+                cat "$file" >> "$temp_file"
+                mv "$temp_file" "$file"
+                ;;
+        esac
     done
 
-    log_info "Patched $patched_count dynamic pages with generateStaticParams"
+    local count=$(wc -l < "$PATCHED_PAGES_FILE" 2>/dev/null | tr -d ' ' || echo "0")
+    log_info "Patched $count dynamic pages with generateStaticParams"
 }
 
 # Revert generateStaticParams patches
-revert_dynamic_pages() {
+revert_patched_pages() {
     log_info "Reverting generateStaticParams patches..."
 
-    if [ ! -f "$DYNAMIC_PAGES_FILE" ]; then
-        log_info "No dynamic pages backup file found"
+    if [ ! -f "$PATCHED_PAGES_FILE" ]; then
+        log_info "No patched pages file found"
         return 0
     fi
 
-    local files=$(cat "$DYNAMIC_PAGES_FILE" | grep -v "^$" || true)
+    local count=0
+    while IFS= read -r file; do
+        [ -z "$file" ] && continue
 
-    if [ -z "$files" ]; then
-        log_info "No dynamic pages to revert"
-        rm -f "$DYNAMIC_PAGES_FILE"
-        return 0
-    fi
-
-    for file in $files; do
         if [ -f "$file" ]; then
             local rel_path="${file#$PROJECT_ROOT/}"
             log_info "  Reverting: $rel_path"
 
-            # Remove the comment line and the export function line
-            # They could be at different positions depending on 'use client'
             local temp_file=$(mktemp)
             grep -v "^// Added by capacitor-patch-routes.sh for static export$" "$file" | \
-            grep -v "^export function generateStaticParams() { return \[\]; }$" > "$temp_file"
+            grep -v "^export function generateStaticParams() { return \[\]; }$" > "$temp_file" || true
             mv "$temp_file" "$file"
-        else
-            log_warn "  File not found: $file"
+            count=$((count + 1))
         fi
-    done
+    done < "$PATCHED_PAGES_FILE"
 
-    rm -f "$DYNAMIC_PAGES_FILE"
-    log_info "Dynamic page patches reverted"
+    rm -f "$PATCHED_PAGES_FILE"
+    log_info "Reverted $count patched pages"
 }
 
 # Main
@@ -243,23 +285,24 @@ case "${1:-}" in
     patch)
         hide_api_routes
         hide_middleware
-        hide_dynamic_routes
-        patch_dynamic_pages
+        hide_incompatible_pages
+        patch_remaining_dynamic_pages
         ;;
     revert)
         restore_api_routes
         restore_middleware
-        restore_dynamic_routes
-        revert_dynamic_pages
+        restore_incompatible_pages
+        revert_patched_pages
         ;;
     *)
         echo "Usage: $0 {patch|revert}"
         echo ""
         echo "Commands:"
         echo "  patch   - Prepare for Capacitor static export builds"
-        echo "           • Move app/api out of the way (iOS uses production API)"
-        echo "           • Move middleware.ts out of the way (not compatible with static export)"
-        echo "           • Add generateStaticParams to dynamic pages"
+        echo "           - Move app/api out of the way (iOS uses production API)"
+        echo "           - Move middleware.ts out of the way (not compatible with static export)"
+        echo "           - Exclude incompatible dynamic pages from the build"
+        echo "           - Add generateStaticParams to remaining dynamic pages"
         echo "  revert  - Restore original state after build"
         exit 1
         ;;
