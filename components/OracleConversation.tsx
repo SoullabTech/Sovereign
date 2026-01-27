@@ -1071,22 +1071,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     }
   }, []);
 
-  // 🛑 BARGE-IN INTERRUPT HANDLER - Called when user speaks while MAIA is speaking
-  const handleVoiceInterrupt = useCallback(() => {
-    console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA');
-
-    // Stop MAIA's voice stream and playback
-    stopStreamingVoice();
-
-    // Reset state flags immediately
-    isAudioPlayingRef.current = false;
-    isRespondingRef.current = false;
-    setIsResponding(false);
-    setIsAudioPlaying(false);
-
-    // Brief visual feedback
-    toast('✋ Interrupted', { duration: 1000 });
-  }, [stopStreamingVoice]);
+  // 🛑 BARGE-IN INTERRUPT HANDLER - Moved after useStreamingVoice hook (see ~line 1880)
 
   // ==================== VOICE SYNTHESIS (OpenAI Alloy TTS) ====================
   // MAIA speaks with clear, natural OpenAI Alloy voice
@@ -1862,6 +1847,24 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     prevStreamingPlayingRef.current = isStreamingPlaying;
     prevStreamingCompleteRef.current = streamingResponseComplete;
   }, [isStreamingPlaying, streamingResponseComplete, showChatInterface, streamingVoiceMode]);
+
+  // 🛑 BARGE-IN INTERRUPT HANDLER - Called when user speaks while MAIA is speaking
+  // NOTE: Must be defined AFTER useStreamingVoice hook which provides stopStreamingVoice
+  const handleVoiceInterrupt = useCallback(() => {
+    console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA');
+
+    // Stop MAIA's voice stream and playback
+    stopStreamingVoice();
+
+    // Reset state flags immediately
+    isAudioPlayingRef.current = false;
+    isRespondingRef.current = false;
+    setIsResponding(false);
+    setIsAudioPlaying(false);
+
+    // Brief visual feedback
+    toast('✋ Interrupted', { duration: 1000 });
+  }, [stopStreamingVoice]);
 
   // Sacred Lab Drawer and Voice Menu states now declared earlier (lines 159-160)
   // Listen for header lab drawer events

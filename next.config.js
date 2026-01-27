@@ -111,11 +111,10 @@ const nextConfig = {
       /Critical dependency: the request of a dependency is an expression/,
     ];
 
-    // Resolve aliases to prevent bundling issues
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      'undici': false,
-    };
+    // Handle undici in resolve.fallback instead of alias to avoid breaking Next.js internals
+    if (!isServer) {
+      config.resolve.fallback.undici = false;
+    }
 
     // 🔥 CRITICAL COMPONENT OPTIMIZATION - SacredLabDrawer & PFI System
     // Ensure SacredLabDrawer and core components are prioritized during builds
@@ -162,11 +161,11 @@ const nextConfig = {
     };
 
     // Add webpack alias for critical components to prevent import issues
-    config.resolve.alias = {
-      ...config.resolve.alias,
+    // Use Object.assign to avoid overwriting Next.js internal aliases
+    Object.assign(config.resolve.alias, {
       '@/components/SacredLabDrawer': require('path').resolve(__dirname, 'components/SacredLabDrawer.tsx'),
       '@/types/core-components': require('path').resolve(__dirname, 'types/core-components.ts'),
-    };
+    });
 
     return config;
   },

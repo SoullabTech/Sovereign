@@ -17,6 +17,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 API_BACKUP_DIR="$PROJECT_ROOT/.capacitor-api-backup"
 MIDDLEWARE_BACKUP="$PROJECT_ROOT/.capacitor-middleware-backup"
+PAGES_BACKUP_DIR="$PROJECT_ROOT/.capacitor-pages-backup"
 DYNAMIC_PAGES_BACKUP="$PROJECT_ROOT/.capacitor-dynamic-pages-backup"
 DYNAMIC_PAGES_MANIFEST="$PROJECT_ROOT/.capacitor-dynamic-pages.manifest"
 PATCHED_PAGES_FILE="$PROJECT_ROOT/.capacitor-patched-pages.txt"
@@ -30,67 +31,103 @@ log_info() { echo -e "${GREEN}[PATCH]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# Move API routes out of the way - they can't work in static export anyway
+# API routes - Next.js static export should skip them automatically
+# We no longer move them as it causes webpack trace errors
 hide_api_routes() {
-    log_info "Moving app/api out of the build (iOS uses production API)..."
+    log_info "Checking app/api routes (will be skipped by static export)..."
 
     if [ -d "$PROJECT_ROOT/app/api" ]; then
-        if [ -d "$API_BACKUP_DIR" ]; then
-            log_warn "Backup already exists, removing stale backup..."
-            rm -rf "$API_BACKUP_DIR"
-        fi
-        mv "$PROJECT_ROOT/app/api" "$API_BACKUP_DIR"
-        log_info "Moved app/api -> .capacitor-api-backup"
+        # Count routes for info
+        local count=$(find "$PROJECT_ROOT/app/api" -name "route.ts" | wc -l | tr -d ' ')
+        log_info "Found $count API routes - will be skipped during static export"
     else
         log_warn "No app/api directory found"
     fi
 }
 
-# Restore API routes after build
+# Restore API routes - no-op since we no longer move them
 restore_api_routes() {
-    log_info "Restoring app/api from backup..."
-
-    if [ -d "$API_BACKUP_DIR" ]; then
-        if [ -d "$PROJECT_ROOT/app/api" ]; then
-            log_warn "app/api already exists, removing it first..."
-            rm -rf "$PROJECT_ROOT/app/api"
-        fi
-        mv "$API_BACKUP_DIR" "$PROJECT_ROOT/app/api"
-        log_info "Restored app/api from backup"
-    else
-        log_warn "No backup found at $API_BACKUP_DIR"
-    fi
+    log_info "API routes not moved, nothing to restore"
 }
 
-# Move middleware out of the way - not compatible with static export
+# Replace middleware with a stub for static export
+# Moving it causes webpack trace errors - stub is safer
 hide_middleware() {
-    log_info "Moving middleware.ts out of the build (not compatible with static export)..."
+    log_info "Replacing middleware.ts with static-export stub..."
 
     if [ -f "$PROJECT_ROOT/middleware.ts" ]; then
         if [ -f "$MIDDLEWARE_BACKUP" ]; then
             log_warn "Middleware backup already exists, removing stale backup..."
             rm -f "$MIDDLEWARE_BACKUP"
         fi
-        mv "$PROJECT_ROOT/middleware.ts" "$MIDDLEWARE_BACKUP"
-        log_info "Moved middleware.ts -> .capacitor-middleware-backup"
+        # Backup original
+        cp "$PROJECT_ROOT/middleware.ts" "$MIDDLEWARE_BACKUP"
+
+        # Create stub middleware that does nothing
+        cat > "$PROJECT_ROOT/middleware.ts" << 'STUBEOF'
+/**
+ * Stub middleware for Capacitor static export builds.
+ * Real middleware is incompatible with output: 'export'.
+ * This file is auto-generated - do not edit.
+ */
+import { NextResponse } from 'next/server';
+
+export function middleware() {
+  return NextResponse.next();
+}
+
+// Empty matcher = middleware never runs
+export const config = {
+  matcher: [],
+};
+STUBEOF
+        log_info "Created middleware stub (original backed up)"
     else
         log_warn "No middleware.ts found"
     fi
 }
 
-# Restore middleware after build
+# Restore original middleware from backup
 restore_middleware() {
-    log_info "Restoring middleware.ts from backup..."
+    log_info "Restoring original middleware.ts from backup..."
 
     if [ -f "$MIDDLEWARE_BACKUP" ]; then
-        if [ -f "$PROJECT_ROOT/middleware.ts" ]; then
-            log_warn "middleware.ts already exists, removing it first..."
-            rm -f "$PROJECT_ROOT/middleware.ts"
-        fi
+        # Replace stub with original
         mv "$MIDDLEWARE_BACKUP" "$PROJECT_ROOT/middleware.ts"
         log_info "Restored middleware.ts from backup"
     else
         log_warn "No middleware backup found at $MIDDLEWARE_BACKUP"
+    fi
+}
+
+# Move pages/ directory out of build
+# Even without getInitialProps, pages/ directory conflicts with App Router static export
+# Next.js 15 with output:'export' expects .next/server/pages-manifest.json which isn't created
+hide_pages_dir() {
+    log_info "Moving pages/ out of the build (conflicts with App Router static export)..."
+
+    if [ -d "$PROJECT_ROOT/pages" ]; then
+        if [ -d "$PAGES_BACKUP_DIR" ]; then
+            log_warn "Pages backup already exists, removing stale backup..."
+            rm -rf "$PAGES_BACKUP_DIR"
+        fi
+        mv "$PROJECT_ROOT/pages" "$PAGES_BACKUP_DIR"
+        log_info "Moved pages/ -> .capacitor-pages-backup"
+    else
+        log_warn "No pages/ directory found"
+    fi
+}
+
+# Restore pages/ directory after build
+restore_pages_dir() {
+    log_info "Restoring pages/ from backup..."
+
+    if [ -d "$PAGES_BACKUP_DIR" ]; then
+        [ -d "$PROJECT_ROOT/pages" ] && rm -rf "$PROJECT_ROOT/pages"
+        mv "$PAGES_BACKUP_DIR" "$PROJECT_ROOT/pages"
+        log_info "Restored pages/ from backup"
+    else
+        log_warn "No pages backup found at $PAGES_BACKUP_DIR"
     fi
 }
 
@@ -285,12 +322,14 @@ case "${1:-}" in
     patch)
         hide_api_routes
         hide_middleware
+        hide_pages_dir
         hide_incompatible_pages
         patch_remaining_dynamic_pages
         ;;
     revert)
         restore_api_routes
         restore_middleware
+        restore_pages_dir
         restore_incompatible_pages
         revert_patched_pages
         ;;
