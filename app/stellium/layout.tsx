@@ -7,7 +7,7 @@
  * Provides navigation and context for all Stellium pages
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -55,6 +55,27 @@ export default function StelliumLayout({
   useEffect(() => {
     setMobileMenuOpen(false);
   }, [pathname]);
+
+  // Auto-refresh session cookies on mount
+  // This ensures tier/roles cookies are set even for users who signed in before the fix
+  const refreshSession = useCallback(async () => {
+    try {
+      const res = await fetch('/api/members/session', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) {
+        // Session invalid - redirect to signin
+        router.push('/signin?next=/stellium&reason=session_refresh_failed');
+      }
+    } catch (err) {
+      console.error('[Stellium] Session refresh failed:', err);
+    }
+  }, [router]);
+
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
 
   const isActive = (path: string) => {
     if (path === '/stellium') {
