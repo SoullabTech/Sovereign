@@ -41,7 +41,8 @@ import {
   Smile,
   ClipboardList,
   Briefcase,
-  Users
+  Users,
+  GraduationCap
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -181,6 +182,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       title: 'KNOWLEDGE BASE',
       icon: '📚',
       items: [
+        {
+          icon: GraduationCap,
+          label: 'Soullab Academy',
+          action: () => onAction?.('open-academy'),
+          description: 'Guided learning paths & wisdom domains'
+        },
         {
           icon: Sparkles,
           label: 'Capture the Spirit',

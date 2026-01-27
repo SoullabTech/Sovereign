@@ -805,19 +805,6 @@ function MAIAPageContent() {
                   <span className="text-xs">Capture</span>
                 </motion.button>
 
-                {/* Soullab Button - Mobile */}
-                <motion.button
-                  onClick={() => setShowAcademySheet(true)}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
-                  title="Soullab"
-                >
-                  <GraduationCap className="w-3 h-3" />
-                  <span className="text-xs">Soullab</span>
-                </motion.button>
-
                 {/* Guide Button - Mobile */}
                 <motion.button
                   onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
@@ -1070,21 +1057,6 @@ function MAIAPageContent() {
                   <span className="hidden sm:inline">Journal</span>
                 </motion.button>
 
-                {/* Soullab Button - Desktop */}
-                <motion.button
-                  onClick={() => setShowAcademySheet(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                           bg-maia-navy-800/40 hover:bg-maia-navy-800
-                           border border-maia-navy-700/40 hover:border-maia-navy-700
-                           text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  title="Soullab"
-                >
-                  <GraduationCap className="w-4 h-4" />
-                  <span className="hidden sm:inline">Soullab</span>
-                </motion.button>
-
                 {/* Feedback Button - Desktop */}
                 <motion.button
                   onClick={() => setShowFeedbackSheet(true)}
@@ -1333,6 +1305,11 @@ function MAIAPageContent() {
           onAction={(action) => {
             console.log('Lab action:', action);
             setShowLabDrawer(false);
+            // Handle academy action locally
+            if (action === 'open-academy') {
+              setShowAcademySheet(true);
+              return;
+            }
             // Dispatch event that OracleConversation can handle
             window.dispatchEvent(new CustomEvent('labAction', {
               detail: { action }
