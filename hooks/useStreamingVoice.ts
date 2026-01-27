@@ -379,9 +379,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     try {
       // Use apiFetch for iOS/Safari compatibility (adds x-session-token header)
+      console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation');
       const response = await apiFetch('/api/voice/stream-conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include', // Belt + suspenders: cookies AND token header
         body: JSON.stringify({
           message,
           voice,
@@ -398,6 +400,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         }),
         signal: abortControllerRef.current.signal,
       });
+      console.log('[StreamingVoice] Response status:', response.status);
 
       if (!response.ok) {
         throw new Error(`Stream request failed: ${response.status}`);
@@ -457,6 +460,10 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       console.log('[StreamingVoice] Skipping audio chunk with no speakable text');
                       break;
                     }
+                    // Debug: log first audio chunk
+                    if (audioQueueRef.current.length === 0) {
+                      console.log('[StreamingVoice] First audio chunk received, index:', data.index);
+                    }
                     audioQueueRef.current.push({
                       index: data.index,
                       audio: data.audio,
@@ -465,6 +472,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     });
                     // Start playback if not already playing
                     if (!isPlayingRef.current) {
+                      console.log('[StreamingVoice] Starting audio playback');
                       playNextChunk();
                     }
                     break;
@@ -521,6 +529,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     break;
 
                   case 'complete': {
+                    console.log('[StreamingVoice] ✅ Complete event received');
                     // Extract relational metadata if present
                     const relationalMeta: RelationalMetadata | null = data.relational ? {
                       maiaMode: data.relational.maiaMode,

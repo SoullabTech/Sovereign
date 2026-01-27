@@ -408,6 +408,9 @@ export async function apiFetch(
 async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<Response> {
   const headers = new Headers(options.headers);
 
+  // Debug: log resolved URL for iOS verification
+  console.log('[apiFetch/safari] Resolved URL:', url);
+
   // Ensure Content-Type is set for requests with body
   if (options.body && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
@@ -417,11 +420,11 @@ async function apiFetchWithHeaders(url: string, options: RequestInit): Promise<R
   const sessionToken = getSessionToken();
   if (sessionToken) {
     headers.set('x-session-token', sessionToken);
-    console.log('[apiFetch/safari] Using x-session-token header');
+    console.log('[apiFetch/safari] x-session-token present:', true);
   } else {
     // No session token - auth will fail on protected endpoints
     // x-member-id alone is no longer accepted (security fix)
-    console.warn('[apiFetch/safari] No session token - user may need to re-authenticate');
+    console.warn('[apiFetch/safari] x-session-token present:', false, '- user may need to re-authenticate');
   }
 
   return fetch(url, {
