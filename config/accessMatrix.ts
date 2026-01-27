@@ -296,6 +296,7 @@ export const ACCESS_RULES: AccessRule[] = [
   { exact: '/api/members/check', public: true, notes: 'Check member exists' },
   { exact: '/api/members/register', public: true, notes: 'Register member' },
   { exact: '/api/members/signin', public: true, notes: 'Sign in' },
+  { exact: '/api/auth/refresh-and-redirect', public: true, notes: 'Refresh session cookies and redirect' },
   { exact: '/api/practitioners/check', public: true, notes: 'Check practitioner status' },
   { exact: '/api/commons/contributions', public: true, notes: 'GET public contributions' },
   { exact: '/api/commons/contributions/orientation', public: true, notes: 'Orientation content' },
