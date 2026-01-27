@@ -320,6 +320,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           description: 'Get MAIA supervision on completed session'
         }] : []),
         {
+          icon: BookOpen,
+          label: 'View All Sessions',
+          action: () => onNavigate('/sessions'),
+          description: 'Browse past scribe sessions & transcripts'
+        },
+        {
           icon: Upload,
           label: 'Upload Files',
           action: () => onAction?.('upload'),

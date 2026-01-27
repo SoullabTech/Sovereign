@@ -488,7 +488,7 @@ export default function UnifiedJournalPage() {
                 ) : (
                   <div
                     className="bg-white border border-stone-200 rounded-xl p-4 hover:shadow-sm transition-all cursor-pointer"
-                    onClick={() => router.push(`/labtools/scribe/${entry.data.id}`)}
+                    onClick={() => router.push(`/sessions/${entry.data.id}`)}
                   >
                     <div className="flex items-start gap-3">
                       <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
