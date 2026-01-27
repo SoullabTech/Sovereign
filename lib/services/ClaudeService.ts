@@ -34,6 +34,9 @@ interface OracleContext {
   // Member spiral state injection
   userId?: string;            // user_id from user_relationship_context - enables spiral injection
   spiralInjection?: string;   // Pre-fetched spiral text (or fetched automatically if userId provided)
+  // Member preferences from account settings
+  conversationStyle?: string; // 'her' = short, 'classic' = balanced, 'adaptive' = context-aware
+  memoryDepth?: 'minimal' | 'moderate' | 'deep';
 }
 
 export class ClaudeService {
@@ -289,10 +292,10 @@ export class ClaudeService {
     const contentLevel = (context.userReadiness as any)?.currentLevel || 'companion';
     const daysActive = (context.userReadiness as any)?.daysActive || 0;
 
-    // Get conversation style preference
-    const conversationStyle = typeof window !== 'undefined'
-      ? localStorage.getItem('selected_voice') || 'classic'
-      : 'classic';
+    // Get conversation style preference - from context (server-side) or localStorage (client fallback)
+    const conversationStyle = context.conversationStyle
+      || (typeof window !== 'undefined' ? localStorage.getItem('selected_voice') : null)
+      || 'her';  // Default to 'her' for short, natural dialogue
 
     // Adapt approach based on user readiness WITHOUT apologizing or diminishing
     const readinessGuidance = this.getReadinessGuidance(readiness);

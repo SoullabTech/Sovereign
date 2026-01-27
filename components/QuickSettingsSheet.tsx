@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link } from 'lucide-react';
+import { X, Mic, Brain, Sparkles, Settings as SettingsIcon, Users, MessageSquare, Shield, Link, Hand } from 'lucide-react';
 import { GoogleConnectSection } from './settings/GoogleConnectSection';
 import { useState, useEffect } from 'react';
 import type { ArchetypeId } from '@/lib/services/archetypePreferenceService';
@@ -30,6 +30,11 @@ interface MaiaSettings {
   };
   archetype: ArchetypeId;
   conversationMode: ConversationMode;
+  /** Voice barge-in interrupt settings */
+  interrupt: {
+    enabled: boolean;
+    sensitivity: 'low' | 'normal' | 'high'; // Maps to debounce timing
+  };
 }
 
 const VOICE_OPTIONS = [
@@ -66,12 +71,42 @@ const DEFAULT_SETTINGS: MaiaSettings = {
   },
   archetype: 'AUTO' as ArchetypeId,
   conversationMode: 'her',
+  interrupt: {
+    enabled: true, // Default ON for voice-first users
+    sensitivity: 'normal', // 200ms debounce
+  },
 };
 
 export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps) {
   const [settings, setSettings] = useState<MaiaSettings>(DEFAULT_SETTINGS);
   const [userId, setUserId] = useState<string | null>(null);
+  const [streamingVoiceEnabled, setStreamingVoiceEnabled] = useState(false);
   // Removed: Supabase client (now using localStorage only for sovereign mode)
+
+  // Track streaming voice state reactively
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const read = () =>
+      setStreamingVoiceEnabled(localStorage.getItem('maia_streaming_voice') === 'true');
+
+    read(); // Initial read
+
+    // Listen for changes from this tab (custom event)
+    const onCustomEvent = () => read();
+    window.addEventListener('maia-streaming-voice-changed', onCustomEvent);
+
+    // Listen for changes from other tabs (storage event)
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'maia_streaming_voice') read();
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('maia-streaming-voice-changed', onCustomEvent);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   // Get userId from localStorage
   useEffect(() => {
@@ -474,12 +509,12 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                   <motion.button
                     onClick={() => {
                       if ('vibrate' in navigator) navigator.vibrate(5);
-                      const newValue = localStorage.getItem('maia_streaming_voice') !== 'true';
+                      const newValue = !streamingVoiceEnabled;
                       localStorage.setItem('maia_streaming_voice', String(newValue));
                       window.dispatchEvent(new CustomEvent('maia-streaming-voice-changed', { detail: { enabled: newValue } }));
                     }}
                     className={`w-full p-4 rounded-xl border transition-all ${
-                      typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
+                      streamingVoiceEnabled
                         ? 'border-cyan-500/50 bg-cyan-500/15'
                         : 'border-white/10 bg-black/20'
                     }`}
@@ -489,7 +524,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${
-                          typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
+                          streamingVoiceEnabled
                             ? 'bg-cyan-500/20 text-cyan-400'
                             : 'bg-white/5 text-white/40'
                         }`}>
@@ -497,8 +532,7 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                         </div>
                         <div className="text-left">
                           <div className={`text-sm font-medium ${
-                            typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
-                              ? 'text-cyan-300' : 'text-white/80'
+                            streamingVoiceEnabled ? 'text-cyan-300' : 'text-white/80'
                           }`}>
                             Streaming Voice (Beta)
                           </div>
@@ -508,18 +542,110 @@ export function QuickSettingsSheet({ isOpen, onClose }: QuickSettingsSheetProps)
                         </div>
                       </div>
                       <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
-                        typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true'
-                          ? 'bg-cyan-500' : 'bg-white/20'
+                        streamingVoiceEnabled ? 'bg-cyan-500' : 'bg-white/20'
                       }`}>
                         <motion.div
                           className="w-5 h-5 rounded-full bg-white shadow-md"
-                          animate={{ x: typeof window !== 'undefined' && localStorage.getItem('maia_streaming_voice') === 'true' ? 20 : 0 }}
+                          animate={{ x: streamingVoiceEnabled ? 20 : 0 }}
                           transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                         />
                       </div>
                     </div>
                   </motion.button>
                 </motion.div>
+
+                {/* Allow Interruption Toggle - Barge-in (only show when Streaming Voice is enabled) */}
+                {streamingVoiceEnabled && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.33 }}
+                >
+                  <motion.button
+                    onClick={() => updateSetting('interrupt.enabled', !settings.interrupt.enabled)}
+                    className={`w-full p-4 rounded-xl border transition-all ${
+                      settings.interrupt.enabled
+                        ? 'border-orange-500/50 bg-orange-500/15'
+                        : 'border-white/10 bg-black/20'
+                    }`}
+                    whileTap={{ scale: 0.98 }}
+                    whileHover={{ scale: 1.01 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <motion.div
+                          className={`p-2 rounded-lg ${
+                            settings.interrupt.enabled
+                              ? 'bg-orange-500/20 text-orange-400'
+                              : 'bg-white/5 text-white/40'
+                          }`}
+                          animate={settings.interrupt.enabled ? {
+                            scale: [1, 1.1, 1],
+                          } : {}}
+                          transition={{ duration: 0.3 }}
+                        >
+                          <Hand size={20} />
+                        </motion.div>
+                        <div className="text-left">
+                          <div className={`text-sm font-medium ${
+                            settings.interrupt.enabled ? 'text-orange-300' : 'text-white/80'
+                          }`}>
+                            Allow Interruption
+                          </div>
+                          <div className="text-xs text-white/50 mt-0.5">
+                            {settings.interrupt.enabled
+                              ? "Speak to interrupt MAIA while she's talking"
+                              : "MAIA will finish speaking before listening"}
+                          </div>
+                        </div>
+                      </div>
+                      {/* Toggle Switch */}
+                      <div className={`w-12 h-7 rounded-full p-1 transition-colors ${
+                        settings.interrupt.enabled ? 'bg-orange-500' : 'bg-white/20'
+                      }`}>
+                        <motion.div
+                          className="w-5 h-5 rounded-full bg-white shadow-md"
+                          animate={{ x: settings.interrupt.enabled ? 20 : 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+                        />
+                      </div>
+                    </div>
+                  </motion.button>
+
+                  {/* Sensitivity selector - only show when enabled */}
+                  {settings.interrupt.enabled && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mt-2 px-2"
+                    >
+                      <div className="text-xs text-white/50 mb-2">Sensitivity</div>
+                      <div className="grid grid-cols-3 gap-2">
+                        {(['low', 'normal', 'high'] as const).map((level) => (
+                          <motion.button
+                            key={level}
+                            onClick={() => updateSetting('interrupt.sensitivity', level)}
+                            className={`py-2 px-3 rounded-lg border text-xs transition-all ${
+                              settings.interrupt.sensitivity === level
+                                ? 'border-orange-500/50 bg-orange-500/15 text-orange-400'
+                                : 'border-white/10 bg-black/20 text-white/60'
+                            }`}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <span className="capitalize">{level}</span>
+                            <div className="text-[10px] opacity-60 mt-0.5">
+                              {level === 'low' && '300ms'}
+                              {level === 'normal' && '200ms'}
+                              {level === 'high' && '150ms'}
+                            </div>
+                          </motion.button>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </motion.div>
+                )}
 
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}

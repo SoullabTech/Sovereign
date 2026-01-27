@@ -9,7 +9,8 @@
  * THE BETWEEN (streaming text) → Split sentences → TTS per sentence → Queue → Play
  */
 
-import { VoiceFeedbackPrevention, getIOSAudioContext, startIOSAudioKeepAlive } from './voice-feedback-prevention';
+import { VoiceFeedbackPrevention } from './voice-feedback-prevention';
+import { ensureAudioReady, getAudioStatus } from './ios-audio-session';
 
 export interface AudioQueueItem {
   audio: HTMLAudioElement;
@@ -68,64 +69,75 @@ export class StreamingAudioQueue {
   }
 
   /**
-   * Ensure AudioContext is ready (critical for iOS which suspends between chunks)
-   * Uses the shared iOS AudioContext so keep-alive pings the same context we use
+   * Ensure AudioContext is ready before EVERY playback
+   *
+   * iOS rule: Resume AudioContext before EVERY play, not just first.
+   * iOS does not care about your assumptions.
    */
   private async ensureAudioContextReady(): Promise<void> {
-    // Use shared iOS AudioContext if available (so keep-alive works on the same context)
-    if (!this.audioContext) {
-      const sharedContext = getIOSAudioContext();
-      if (sharedContext) {
-        this.audioContext = sharedContext;
-        console.log('🔓 [StreamingQueue] Using shared iOS AudioContext');
-      } else {
-        this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        console.log('🔓 [StreamingQueue] Created new AudioContext');
-      }
-      // Start keep-alive when we first get a context
-      startIOSAudioKeepAlive();
-    }
-    if (this.audioContext.state === 'suspended') {
-      console.log('🔓 [StreamingQueue] Resuming suspended AudioContext before chunk playback');
-      try {
-        await this.audioContext.resume();
-      } catch (e) {
-        console.warn('⚠️ [StreamingQueue] AudioContext resume failed:', e);
-      }
+    // Log status BEFORE attempting playback (debugging iOS silent failures)
+    const statusBefore = getAudioStatus();
+    console.log('[iOS Audio] Before playback:', statusBefore);
+
+    // Use centralized iOS audio session manager
+    // This handles: resume, recreation, and keep-alive
+    this.audioContext = await ensureAudioReady();
+
+    // Log status AFTER to confirm we're running
+    const statusAfter = getAudioStatus();
+    console.log('[iOS Audio] After ensureAudioReady:', statusAfter);
+
+    if (statusAfter.state !== 'running') {
+      console.error('[iOS Audio] WARNING: AudioContext still not running after ensureAudioReady!');
     }
   }
 
   /**
    * Attempt to play audio with retry logic for iOS unlock issues
+   *
+   * Key: ensureAudioReady() is called before EVERY attempt, not just first.
    */
   private async attemptPlay(audio: HTMLAudioElement, retries = 3): Promise<boolean> {
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
+        // CRITICAL: Resume AudioContext before EVERY play attempt
+        // iOS does not care about your assumptions
         await this.ensureAudioContextReady();
+
+        // Set playsinline for iOS
+        audio.setAttribute('playsinline', 'true');
+        audio.setAttribute('webkit-playsinline', 'true');
+
         await audio.play();
+        console.log(`✅ [StreamingQueue] Play succeeded on attempt ${attempt}`);
         return true;
       } catch (error: any) {
-        console.warn(`⚠️ [StreamingQueue] Play attempt ${attempt}/${retries} failed:`, error.name);
+        const status = getAudioStatus();
+        console.warn(`⚠️ [StreamingQueue] Play attempt ${attempt}/${retries} failed:`, {
+          errorName: error.name,
+          errorMessage: error.message,
+          audioContextState: status.state,
+          unlocked: status.unlocked,
+          keepAlive: status.keepAliveActive,
+        });
 
-        if (error.name === 'NotAllowedError') {
+        if (error.name === 'NotAllowedError' || error.name === 'AbortError') {
           if (attempt < retries) {
             // Wait with exponential backoff before retry
-            const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000);
+            const delay = Math.min(100 * Math.pow(2, attempt - 1), 500);
             console.log(`🔄 [StreamingQueue] Retrying in ${delay}ms...`);
             await new Promise(resolve => setTimeout(resolve, delay));
-
-            // Try to resume AudioContext again
-            if (this.audioContext?.state === 'suspended') {
-              await this.audioContext.resume().catch(() => {});
-            }
+            // ensureAudioContextReady will be called again at top of loop
           } else {
-            // Final attempt failed - dispatch unlock event
-            if (typeof window !== 'undefined' && !this.audioUnlocked) {
+            // Final attempt failed
+            console.error(`❌ [StreamingQueue] All ${retries} play attempts failed`);
+            if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('maya-audio-unlock-needed'));
             }
           }
         } else {
-          // Non-NotAllowedError - don't retry
+          // Non-recoverable error - don't retry
+          console.error(`❌ [StreamingQueue] Non-recoverable error:`, error.name);
           break;
         }
       }

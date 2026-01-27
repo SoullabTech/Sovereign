@@ -3,10 +3,11 @@
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2 } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
+import { VoiceHUD } from './voice/VoiceHUD';
 import { useStreamingVoice } from '@/hooks/useStreamingVoice';
 import { RelationalTelemetryPanel } from '@/components/dev/RelationalTelemetryPanel';
 import { useAssistantName } from '@/hooks/useAssistantName';
@@ -16,6 +17,18 @@ import { ConversationalRhythm, type RhythmMetrics } from '@/lib/liquid/Conversat
 import { EnhancedVoiceMicButton } from './ui/EnhancedVoiceMicButton';
 import AdaptiveVoiceMicButton from './ui/AdaptiveVoiceMicButton';
 import { detectVoiceCommand, isOnlyModeSwitch, getModeConfirmation } from '@/lib/voice/VoiceCommandDetector';
+import {
+  matchVoiceCommand,
+  applySettingsDelta,
+  getModeSystemPrompt,
+  detectCrisis,
+  DEFAULT_MODE_STATE,
+  DEFAULT_SCRIBE_SESSION,
+  type ModeState,
+  type VoiceCommandResult,
+  type CrisisOverride,
+  type ScribeSessionState,
+} from '@/lib/voice/voiceCommands';
 import { QuickModeToggle } from './ui/QuickModeToggle';
 // import MaiaChatInterface from './chat/MaiaChatInterface'; // File doesn't exist
 import { EmergencyChatInterface } from './ui/EmergencyChatInterface';
@@ -109,7 +122,6 @@ import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousn
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
 import { useFieldProtocolIntegration } from '@/hooks/useFieldProtocolIntegration';
-import { useScribeMode } from '@/hooks/useScribeMode';
 import { BookPlus } from 'lucide-react';
 // Reflection Capsules - "Capture the Spirit"
 import CaptureSpiritPanel from '@/components/capsules/CaptureSpiritPanel';
@@ -216,6 +228,20 @@ function truncateHistoryForAPI(messages: ConversationMessage[], maxMessages: num
   }));
 }
 
+// Scribe session context for discussion mode
+interface ScribeSessionContext {
+  id: string;
+  title: string;
+  container: 'solo' | 'witness' | 'practitioner';
+  summary: {
+    short?: string;
+    long?: string;
+    themes?: string[];
+  } | null;
+  duration: number;
+  markerCount: number;
+}
+
 interface OracleConversationProps {
   userId?: string;
   userName?: string;
@@ -241,6 +267,9 @@ interface OracleConversationProps {
   onMessageAdded?: (message: ConversationMessage) => void;
   onSessionEnd?: (reason?: string) => void;
   initialAction?: string; // Action to trigger on mount (e.g., 'choose-guide', 'show-current-elder')
+  // Scribe session discussion mode
+  scribeSessionId?: string; // ID of scribe session to discuss
+  scribeSessionContext?: ScribeSessionContext; // Context for scoped discussion
 }
 
 interface ConversationMessage {
@@ -320,7 +349,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   onSessionActiveChange,
   onMessageAdded,
   onSessionEnd,
-  initialAction
+  initialAction,
+  scribeSessionId,
+  scribeSessionContext,
 }) => {
   // Listening mode for different conversation styles - MUST be defined early
   type ListeningMode = 'normal' | 'patient' | 'session';
@@ -382,12 +413,30 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
 
-  // Voice settings from account preferences (applies to TTS)
-  const [voiceSettings, setVoiceSettings] = useState({
-    voice: 'alloy',
-    speed: 0.95,
-    model: 'tts-1' as 'tts-1' | 'tts-1-hd',
-    prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,  // Range of Effect: 0=Neutral, 1=Subtle, 2=Expressive, 3=Deep, 4=Ceremonial
+  // Voice settings from account preferences (applies to TTS and MAIA behavior)
+  // Lazy initializer loads from localStorage immediately to avoid flash of default values
+  const [voiceSettings, setVoiceSettings] = useState(() => {
+    if (typeof window === 'undefined') {
+      return {
+        voice: 'alloy',
+        speed: 1.0,
+        model: 'tts-1' as const,
+        prosodyRange: 1 as 0 | 1 | 2 | 3 | 4,
+        archetype: 'AUTO' as string,
+        conversationMode: 'her' as string,
+        memoryDepth: 'moderate' as 'minimal' | 'moderate' | 'deep',
+      };
+    }
+    const settings = getAccountSettings();
+    return {
+      voice: settings.voice.openaiVoice,
+      speed: settings.voice.speed,
+      model: settings.voice.model || 'tts-1' as const,
+      prosodyRange: (settings.voice.prosodyRange ?? 1) as 0 | 1 | 2 | 3 | 4,
+      archetype: settings.archetype || 'AUTO',
+      conversationMode: settings.conversationMode || 'her',
+      memoryDepth: settings.memory?.depth || 'moderate',
+    };
   });
 
   // Member's preferred name for MAIA (bonding affordance)
@@ -501,12 +550,278 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return false;
   });
 
-  // Listen for sanctuary mode changes from QuickSettingsSheet
+  // 🛑 INTERRUPT SETTINGS: Voice barge-in behavior
+  const [interruptEnabled, setInterruptEnabled] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          return settings.interrupt?.enabled !== false; // Default true
+        }
+      } catch (e) {
+        console.warn('[Interrupt] Failed to load initial state:', e);
+      }
+    }
+    return true; // Default ON
+  });
+
+  const [interruptDebounceMs, setInterruptDebounceMs] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          const sensitivity = settings.interrupt?.sensitivity || 'normal';
+          return sensitivity === 'low' ? 300 : sensitivity === 'high' ? 150 : 200;
+        }
+      } catch (e) {
+        console.warn('[Interrupt] Failed to load debounce:', e);
+      }
+    }
+    return 200; // Default 200ms (normal)
+  });
+
+  // Threshold multiplier: higher = less sensitive (requires louder speech to trigger)
+  const [interruptThresholdMultiplier, setInterruptThresholdMultiplier] = useState(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('maia_settings');
+        if (saved) {
+          const settings = JSON.parse(saved);
+          const sensitivity = settings.interrupt?.sensitivity || 'normal';
+          return sensitivity === 'low' ? 1.35 : sensitivity === 'high' ? 1.1 : 1.2;
+        }
+      } catch (e) {
+        console.warn('[Interrupt] Failed to load threshold multiplier:', e);
+      }
+    }
+    return 1.2; // Default 1.2x (normal)
+  });
+
+  // 🎭 MAIA MODE STATE: Talk/Care/Scribe relational modes with sub-modes
+  // This controls MAIA's relational stance, not just conversation style
+  const [maiaMode, setMaiaMode] = useState<ModeState>(DEFAULT_MODE_STATE);
+
+  // Track last voice command result for acknowledgment handling
+  const lastVoiceCommandRef = useRef<VoiceCommandResult | null>(null);
+
+  // 🚨 CRISIS OVERRIDE: Safety boundary that interrupts any mode
+  // This takes precedence over all other voice commands and mode states
+  const crisisStateRef = useRef<CrisisOverride | null>(null);
+
+  // 📝 SCRIBE SESSION STATE: Track active scribe/witness sessions
+  const [scribeSession, setScribeSession] = useState<ScribeSessionState>(DEFAULT_SCRIBE_SESSION);
+
+  // Scribe API handlers
+  const startScribeSession = useCallback(async (container: 'solo' | 'witness' | 'practitioner') => {
+    try {
+      const res = await apiFetch('/api/scribe/start', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ container }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession({
+          isActive: true,
+          isPaused: false,
+          isAside: false,
+          container,
+          sessionId: data.session.id,
+          consentConfirmed: false,
+          transcriptEnabled: false,
+          sealed: true,
+        });
+        console.log(`📝 [SCRIBE] Session started: ${data.session.id} (${container})`);
+        return data;
+      }
+      console.error('[SCRIBE] Start failed:', data.error);
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Start error:', error);
+      return null;
+    }
+  }, []);
+
+  const confirmScribeConsent = useCallback(async (confirmed: boolean) => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch('/api/scribe/consent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          confirmed,
+          method: 'voice',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(prev => ({
+          ...prev,
+          consentConfirmed: confirmed,
+          isActive: confirmed, // If declined, session is no longer active
+        }));
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Consent error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  const pauseScribeSession = useCallback(async (pause: boolean) => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch('/api/scribe/pause', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          action: pause ? 'pause' : 'resume',
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(prev => ({ ...prev, isPaused: pause }));
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Pause error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  const markScribeMoment = useCallback(async (markerType?: string, note?: string) => {
+    if (!scribeSession.sessionId || !scribeSession.consentConfirmed) return null;
+    try {
+      const res = await apiFetch('/api/scribe/mark', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          markerType,
+          note,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        console.log(`📌 [SCRIBE] Marked: ${markerType || 'moment'}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Mark error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId, scribeSession.consentConfirmed]);
+
+  const stopScribeSession = useCallback(async () => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch('/api/scribe/stop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId: scribeSession.sessionId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(DEFAULT_SCRIBE_SESSION);
+        console.log(`✅ [SCRIBE] Session stopped: ${scribeSession.sessionId}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Stop error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  // Toggle transcript enabled/disabled
+  const setTranscriptEnabled = useCallback(async (enabled: boolean) => {
+    if (!scribeSession.sessionId) return null;
+    try {
+      const res = await apiFetch(`/api/scribe/sessions/${scribeSession.sessionId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcriptEnabled: enabled }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScribeSession(prev => ({ ...prev, transcriptEnabled: enabled }));
+        console.log(`📝 [SCRIBE] Transcript ${enabled ? 'enabled' : 'disabled'}`);
+        return data;
+      }
+      return null;
+    } catch (error) {
+      console.error('[SCRIBE] Transcript toggle error:', error);
+      return null;
+    }
+  }, [scribeSession.sessionId]);
+
+  // Toggle aside mode (private consultation without recording)
+  const toggleScribeAside = useCallback((enterAside: boolean) => {
+    if (!scribeSession.isActive) return;
+    setScribeSession(prev => ({ ...prev, isAside: enterAside }));
+    console.log(`📝 [SCRIBE] Aside mode ${enterAside ? 'entered' : 'exited'} - ${enterAside ? 'NOT recording' : 'now recording'}`);
+  }, [scribeSession.isActive]);
+
+  // Append transcript entry (only when transcript enabled + consent confirmed + not in aside)
+  const appendTranscriptEntry = useCallback(async (content: string, speaker: 'self' | 'other' | 'maia' = 'self') => {
+    if (!scribeSession.sessionId) return;
+    if (!scribeSession.isActive || !scribeSession.consentConfirmed) return;
+    if (!scribeSession.transcriptEnabled) return;
+    if (scribeSession.isPaused) return;
+    if (scribeSession.isAside) return; // Skip recording during aside (private consultation)
+
+    const trimmed = (content || '').trim();
+    if (!trimmed || trimmed.length < 5) return; // Skip very short utterances
+
+    try {
+      await apiFetch('/api/scribe/transcript', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: scribeSession.sessionId,
+          speaker,
+          content: trimmed,
+          spokenAt: new Date().toISOString(),
+        }),
+      });
+    } catch (error) {
+      console.error('[SCRIBE] Append transcript error:', error);
+    }
+  }, [scribeSession.sessionId, scribeSession.isActive, scribeSession.consentConfirmed, scribeSession.transcriptEnabled, scribeSession.isPaused, scribeSession.isAside]);
+
+  // Listen for settings changes from QuickSettingsSheet (sanctuary + interrupt)
   useEffect(() => {
-    const handleSettingsChange = (event: CustomEvent<{ sanctuary?: boolean }>) => {
+    const handleSettingsChange = (event: CustomEvent<{
+      sanctuary?: boolean;
+      interrupt?: { enabled?: boolean; sensitivity?: 'low' | 'normal' | 'high' };
+    }>) => {
+      // Handle sanctuary mode
       if (typeof event.detail?.sanctuary === 'boolean') {
         setIsSanctuary(event.detail.sanctuary);
         console.log(`🛡️ [Sanctuary] Mode ${event.detail.sanctuary ? 'ENABLED' : 'disabled'}`);
+      }
+
+      // Handle interrupt settings
+      if (event.detail?.interrupt) {
+        if (typeof event.detail.interrupt.enabled === 'boolean') {
+          setInterruptEnabled(event.detail.interrupt.enabled);
+          console.log(`🛑 [Interrupt] ${event.detail.interrupt.enabled ? 'ENABLED' : 'disabled'}`);
+        }
+        if (event.detail.interrupt.sensitivity) {
+          const sensitivity = event.detail.interrupt.sensitivity;
+          const debounce = sensitivity === 'low' ? 300 : sensitivity === 'high' ? 150 : 200;
+          const multiplier = sensitivity === 'low' ? 1.35 : sensitivity === 'high' ? 1.1 : 1.2;
+          setInterruptDebounceMs(debounce);
+          setInterruptThresholdMultiplier(multiplier);
+          console.log(`🛑 [Interrupt] Sensitivity: ${sensitivity} (${debounce}ms, ${multiplier}x threshold)`);
+        }
       }
     };
 
@@ -755,6 +1070,23 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       }
     }
   }, []);
+
+  // 🛑 BARGE-IN INTERRUPT HANDLER - Called when user speaks while MAIA is speaking
+  const handleVoiceInterrupt = useCallback(() => {
+    console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA');
+
+    // Stop MAIA's voice stream and playback
+    stopStreamingVoice();
+
+    // Reset state flags immediately
+    isAudioPlayingRef.current = false;
+    isRespondingRef.current = false;
+    setIsResponding(false);
+    setIsAudioPlaying(false);
+
+    // Brief visual feedback
+    toast('✋ Interrupted', { duration: 1000 });
+  }, [stopStreamingVoice]);
 
   // ==================== VOICE SYNTHESIS (OpenAI Alloy TTS) ====================
   // MAIA speaks with clear, natural OpenAI Alloy voice
@@ -1367,18 +1699,22 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     captureThreshold: 5
   });
 
-  // Scribe Mode Integration - Passive recording with active consultation
-  const {
-    isScribing,
-    currentSession: scribeSession,
-    startScribing,
-    stopScribing,
-    recordVoiceTranscript,
-    recordConsultation,
-    generateSynopsis,
-    downloadTranscript: downloadScribeTranscript,
-    getTranscriptForReview
-  } = useScribeMode();
+  // Scribe Mode - Derived aliases for compatibility with UI components
+  const isScribing = scribeSession.isActive;
+  const startScribing = useCallback(() => startScribeSession('witness'), [startScribeSession]);
+  const stopScribing = stopScribeSession;
+  const recordVoiceTranscript = useCallback((text: string) => appendTranscriptEntry(text, 'self'), [appendTranscriptEntry]);
+  const recordConsultation = useCallback((speaker: 'user' | 'oracle', text: string) => {
+    appendTranscriptEntry(text, speaker === 'oracle' ? 'maia' : 'self');
+  }, [appendTranscriptEntry]);
+  const generateSynopsis = useCallback(async () => null, []);
+  const downloadScribeTranscript = useCallback(() => {
+    console.log('[SCRIBE] Download not yet implemented - use Sessions Library');
+  }, []);
+  const getTranscriptForReview = useCallback((): string | null => {
+    if (!scribeSession.sessionId) return null;
+    return `[Transcript for session ${scribeSession.sessionId} - visit /sessions for full review]`;
+  }, [scribeSession.sessionId]);
 
   // 🌊 STREAMING VOICE: Server-side sentence TTS for natural conversational flow
   const [streamingResponseComplete, setStreamingResponseComplete] = useState(false);
@@ -1387,12 +1723,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     const loadVoiceSettings = () => {
       const settings = getAccountSettings();
-      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice);
+      console.log('🔊 [VoiceSettings] Loading from account:', settings.voice, settings.archetype, settings.conversationMode);
       setVoiceSettings({
         voice: settings.voice.openaiVoice,
         speed: settings.voice.speed,
         model: settings.voice.model || 'tts-1',
         prosodyRange: settings.voice.prosodyRange ?? 1,
+        archetype: settings.archetype || 'AUTO',
+        conversationMode: settings.conversationMode || 'her',
+        memoryDepth: settings.memory?.depth || 'moderate',
       });
     };
 
@@ -1424,7 +1763,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   } = useStreamingVoice({
     voice: voiceSettings.voice,
     speed: voiceSettings.speed,
+    model: voiceSettings.model,
     prosodyRange: voiceSettings.prosodyRange,
+    assistantName,  // Member's preferred name for MAIA
+    archetype: voiceSettings.archetype,
+    conversationMode: voiceSettings.conversationMode,
+    memoryDepth: voiceSettings.memoryDepth,
     element: undefined, // Will be set dynamically per message
     onTextChunk: (text, index) => {
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
@@ -2018,14 +2362,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setAgentConfig(newConfig);
       console.log('🎭 Conversation style updated:', newConfig.voice);
 
-      // Also reload voice settings from account settings (voice + speed + model)
+      // Also reload voice settings from account settings (all MAIA preferences)
       const settings = getAccountSettings();
       setVoiceSettings({
         voice: settings.voice.openaiVoice,
         speed: settings.voice.speed,
-        model: settings.voice.model || 'tts-1'
+        model: settings.voice.model || 'tts-1',
+        prosodyRange: settings.voice.prosodyRange ?? 1,
+        archetype: settings.archetype || 'AUTO',
+        conversationMode: settings.conversationMode || 'her',
+        memoryDepth: settings.memory?.depth || 'moderate',
       });
-      console.log('🔊 Voice settings reloaded:', settings.voice);
+      console.log('🔊 Voice settings reloaded:', settings.voice, settings.archetype, settings.conversationMode);
     };
 
     // Listen for storage events (from other tabs) and custom events (same tab)
@@ -3181,6 +3529,21 @@ I'm not sure what I'm feeling yet.`;
           // 🛡️ SANCTUARY MODE: Speaks freely - no memory retention
           sanctuary: isSanctuary,
 
+          // 🎭 MAIA RELATIONAL MODE: Talk/Care/Scribe with sub-modes
+          // This shapes MAIA's system prompt for relational attunement
+          // 🚨 Crisis override takes precedence over all modes
+          maiaMode: crisisStateRef.current?.detected ? {
+            mode: 'care',
+            subMode: 'crisis',
+            crisisLevel: crisisStateRef.current.level,
+            systemPromptModifier: crisisStateRef.current.systemPrompt || getModeSystemPrompt(maiaMode),
+          } : maiaMode.mode !== 'talk' ? {
+            mode: maiaMode.mode,
+            subMode: maiaMode.mode === 'care' ? maiaMode.careSubMode : undefined,
+            reflectionLens: maiaMode.mode === 'scribe' ? maiaMode.scribeReflectionLens : undefined,
+            systemPromptModifier: getModeSystemPrompt(maiaMode),
+          } : undefined,
+
           // 🧭 THERAPEUTIC FRAMEWORK: Mode-specific lens
           therapeuticFramework: realtimeMode === 'patient' ? getCounselFramework() : undefined,
           reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
@@ -3221,7 +3584,18 @@ I'm not sure what I'm feeling yet.`;
             } catch {
               return undefined;
             }
-          })()
+          })(),
+
+          // 📝 SCRIBE SESSION DISCUSSION: Context for scoped session discussions
+          // When discussing a past Scribe/Witness session, MAIA has access to the summary and themes
+          scribeSessionDiscussion: scribeSessionId && scribeSessionContext ? {
+            sessionId: scribeSessionId,
+            title: scribeSessionContext.title,
+            container: scribeSessionContext.container,
+            summary: scribeSessionContext.summary,
+            duration: scribeSessionContext.duration,
+            markerCount: scribeSessionContext.markerCount,
+          } : undefined,
         }),
         signal: controller.signal
       });
@@ -3328,6 +3702,13 @@ I'm not sure what I'm feeling yet.`;
           setIsAudioPlaying(true);
           setIsMicrophonePaused(true);
 
+          // 🔓 iOS FIX: Dispatch voice start to trigger iOS audio keep-alive
+          // This ensures the AudioContext stays active across all response chunks
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new Event('maya-voice-start'));
+            console.log('🔓 [STREAM] Dispatched maya-voice-start for iOS audio keep-alive');
+          }
+
           audioQueue = new StreamingAudioQueue({
             onPlayingChange: (isPlaying) => {
               // DON'T set isAudioPlaying here - causes false negatives between chunks
@@ -3344,6 +3725,12 @@ I'm not sure what I'm feeling yet.`;
               setIsAudioPlaying(false);
               // 🔥 isMicrophonePaused stays TRUE to block mic during cooldown
               // (ContinuousConversation checks: isSpeaking={isAudioPlaying || isMicrophonePaused})
+
+              // 🔓 iOS FIX: Dispatch voice end to allow keep-alive to manage context
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new Event('maya-voice-end'));
+                console.log('🔓 [STREAM] Dispatched maya-voice-end');
+              }
 
               // Resume mic after cooldown with auto-restart
               console.log(`⏳ [STREAM] Cooldown ${streamingCooldownMs}ms (mic paused)...`);
@@ -3992,7 +4379,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode]);
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
@@ -4033,7 +4420,204 @@ I'm not sure what I'm feeling yet.`;
     // 🌊 LIQUID AI - Track speech end with transcript for rhythm analysis
     rhythmTrackerRef.current?.onSpeechEnd(t);
 
-    // 🎤 VOICE COMMAND DETECTION - Check for mode switching commands
+    // 🚨 CRISIS DETECTION - Safety override that takes precedence over ALL modes
+    // This runs FIRST before any voice command matching
+    const crisisCheck = detectCrisis(t);
+    if (crisisCheck.detected) {
+      console.log(`🚨 [CRISIS] Level ${crisisCheck.level} detected:`, crisisCheck.trigger);
+      crisisStateRef.current = crisisCheck;
+
+      // Stop any ongoing MAIA speech immediately
+      stopStreamingVoice();
+      isAudioPlayingRef.current = false;
+      setIsAudioPlaying(false);
+
+      // Override mode to care (crisis is a hard override)
+      setMaiaMode(prev => ({
+        ...prev,
+        mode: 'care',
+        careSubMode: 'presence', // Crisis uses presence as base
+      }));
+
+      // Speak the crisis response script line by line
+      if (crisisCheck.responseScript && maiaReady && maiaSpeak && !isMuted) {
+        for (const line of crisisCheck.responseScript) {
+          await maiaSpeak(line);
+          // Small pause between lines for pacing
+          await new Promise(resolve => setTimeout(resolve, 800));
+        }
+      }
+
+      // The conversation will continue with crisis system prompt active
+      // Don't return - let the message go through with crisis context
+      // This allows MAIA to continue the safety conversation
+    }
+
+    // 🎭 COMPREHENSIVE VOICE COMMAND DETECTION (Talk/Care/Scribe modes, settings, actions)
+    const voiceCmd = matchVoiceCommand(t);
+    if (voiceCmd.matched) {
+      console.log(`🎙️ [VoiceCommand] Matched: ${voiceCmd.command}`);
+      lastVoiceCommandRef.current = voiceCmd;
+
+      // Apply mode changes (Talk/Care/Scribe)
+      if (voiceCmd.modeChange) {
+        setMaiaMode(prev => ({
+          ...prev,
+          ...voiceCmd.modeChange,
+        }));
+        console.log(`🎭 [Mode] Switching to:`, voiceCmd.modeChange);
+      }
+
+      // Apply settings delta (speed, prosody, sanctuary, etc.)
+      if (voiceCmd.settingsDelta) {
+        try {
+          const saved = localStorage.getItem('maia_settings');
+          const currentSettings = saved ? JSON.parse(saved) : {};
+          const newSettings = applySettingsDelta(currentSettings, voiceCmd.settingsDelta);
+          localStorage.setItem('maia_settings', JSON.stringify(newSettings));
+          window.dispatchEvent(new CustomEvent('maia-settings-changed', { detail: newSettings }));
+          console.log(`⚙️ [Settings] Applied delta:`, voiceCmd.settingsDelta);
+
+          // Update local voice settings state if speed/prosody changed
+          if (voiceCmd.settingsDelta.speed !== undefined || voiceCmd.settingsDelta.speedDelta !== undefined) {
+            setVoiceSettings(prev => ({
+              ...prev,
+              speed: newSettings.voice?.speed ?? prev.speed,
+            }));
+          }
+          if (voiceCmd.settingsDelta.prosodyRange !== undefined || voiceCmd.settingsDelta.prosodyDelta !== undefined) {
+            setVoiceSettings(prev => ({
+              ...prev,
+              prosodyRange: newSettings.voice?.prosodyRange ?? prev.prosodyRange,
+            }));
+          }
+
+          // Handle sanctuary toggle
+          if (voiceCmd.settingsDelta.sanctuary !== undefined) {
+            setIsSanctuary(voiceCmd.settingsDelta.sanctuary);
+          }
+
+          // Handle interrupt settings
+          if (voiceCmd.settingsDelta.interruptEnabled !== undefined) {
+            setInterruptEnabled(voiceCmd.settingsDelta.interruptEnabled);
+          }
+        } catch (e) {
+          console.error('[VoiceCommand] Failed to apply settings delta:', e);
+        }
+      }
+
+      // Handle actions
+      if (voiceCmd.action === 'pause') {
+        // Stop any ongoing speech
+        stopStreamingVoice();
+        isAudioPlayingRef.current = false;
+        setIsAudioPlaying(false);
+      } else if (voiceCmd.action === 'capture') {
+        // Trigger capture panel
+        setShowCapturePanel(true);
+      }
+
+      // 📝 Handle Scribe actions
+      if (voiceCmd.scribeAction) {
+        const { type, container, markerType, markerNote } = voiceCmd.scribeAction;
+
+        if (type === 'start' && container) {
+          const result = await startScribeSession(container);
+          if (result) {
+            // Acknowledgment will be spoken by the normal handler below
+            console.log(`📝 [SCRIBE] Started ${container} session, awaiting consent`);
+          }
+        } else if (type === 'pause') {
+          await pauseScribeSession(true);
+        } else if (type === 'resume') {
+          await pauseScribeSession(false);
+        } else if (type === 'stop') {
+          const result = await stopScribeSession();
+          if (result) {
+            console.log(`📝 [SCRIBE] Session saved with ${result.session?.markerCount || 0} markers`);
+          }
+        } else if (type === 'mark') {
+          await markScribeMoment(markerType, markerNote);
+        } else if (type === 'aside') {
+          // Toggle aside mode for private consultation without recording
+          if (scribeSession.isActive && scribeSession.consentConfirmed) {
+            toggleScribeAside(!scribeSession.isAside);
+            console.log(`📝 [SCRIBE] Aside ${!scribeSession.isAside ? 'entered' : 'exited'}`);
+          }
+        } else if (type === 'consent-yes') {
+          // Confirm consent for witness/couples mode
+          if (scribeSession.isActive && !scribeSession.consentConfirmed) {
+            await confirmScribeConsent(true);
+            console.log(`📝 [SCRIBE] Consent confirmed, now witnessing`);
+          }
+        } else if (type === 'consent-no') {
+          // Decline consent - mark declined in API and reset state
+          if (scribeSession.isActive) {
+            await confirmScribeConsent(false); // Mark as declined in DB
+            setScribeSession(DEFAULT_SCRIBE_SESSION); // Reset local state
+            console.log(`📝 [SCRIBE] Consent declined, session cancelled`);
+          }
+        } else if (type === 'transcript-on') {
+          // Enable full transcript
+          if (scribeSession.isActive) {
+            await setTranscriptEnabled(true);
+          }
+        } else if (type === 'transcript-off') {
+          // Disable transcript (summary only)
+          if (scribeSession.isActive) {
+            await setTranscriptEnabled(false);
+          }
+        }
+      }
+
+      // Handle Presence Bell and Repair for Third Chair
+      if (voiceCmd.action === 'presence-bell') {
+        // Mark as softening moment
+        if (scribeSession.isActive && scribeSession.consentConfirmed) {
+          await markScribeMoment('softening', 'Presence bell invoked');
+        }
+      } else if (voiceCmd.action === 'repair') {
+        // Mark as repair attempt
+        if (scribeSession.isActive && scribeSession.consentConfirmed) {
+          await markScribeMoment('repair', 'Repair prompt invoked');
+        }
+      }
+
+      // Handle acknowledgment
+      if (voiceCmd.acknowledgment !== 'silent' && voiceCmd.acknowledgmentText) {
+        if (voiceCmd.acknowledgment === 'brief' || voiceCmd.acknowledgment === 'conversational') {
+          // Speak the acknowledgment
+          if (maiaReady && maiaSpeak && !isMuted) {
+            await maiaSpeak(voiceCmd.acknowledgmentText);
+          }
+          toast.success(voiceCmd.acknowledgmentText, { duration: 2000 });
+        } else if (voiceCmd.acknowledgment === 'chime') {
+          // Just show toast (could add audio chime later)
+          toast(voiceCmd.acknowledgmentText || 'Acknowledged', { duration: 1500 });
+        }
+
+        // If this was a pure command (no additional content), return
+        // Check if transcript was just the command by seeing if it matched fully
+        const isStandaloneCommand = t.length < 50; // Simple heuristic - commands are short
+        if (isStandaloneCommand && !voiceCmd.action?.includes('reflect')) {
+          return;
+        }
+      }
+    }
+
+    // 📝 TRANSCRIPT CAPTURE: Append user speech to transcript if scribe session is active
+    // Skip control commands (scribe-*, presence-bell, repair, reflect)
+    const isScribeControl = voiceCmd.matched && (
+      voiceCmd.action?.startsWith('scribe-') ||
+      voiceCmd.action === 'presence-bell' ||
+      voiceCmd.action === 'repair' ||
+      voiceCmd.action === 'reflect'
+    );
+    if (!isScribeControl) {
+      await appendTranscriptEntry(t, 'self');
+    }
+
+    // 🎤 CONVERSATION STYLE COMMANDS (classic/walking/adaptive) - legacy system
     const commandResult = detectVoiceCommand(t);
     if (commandResult.detected && commandResult.mode) {
       console.log(`🔄 Voice command detected: switching to ${commandResult.mode} mode`);
@@ -4190,11 +4774,17 @@ I'm not sure what I'm feeling yet.`;
       }).catch(err => console.error('Failed to save voice user message:', err));
     }
 
-    // 📝 SCRIBE MODE: Record passively without MAIA response
-    if (isScribing) {
+    // 📝 SCRIBE MODE: Record passively without MAIA response (unless in aside mode)
+    if (isScribing && !scribeSession.isAside) {
       console.log('📝 [Scribe Mode] Recording voice transcript passively:', cleanedText.substring(0, 50) + '...');
       recordVoiceTranscript(cleanedText);
-      return; // Don't trigger MAIA response
+      return; // Don't trigger MAIA response when witnessing
+    }
+
+    // 💬 ASIDE MODE: Private consultation with MAIA (not recorded)
+    if (isScribing && scribeSession.isAside) {
+      console.log('💬 [Aside Mode] Private consultation (not recorded):', cleanedText.substring(0, 50) + '...');
+      // Continue to process and get MAIA response, but don't record
     }
 
     try {
@@ -4266,7 +4856,7 @@ I'm not sure what I'm feeling yet.`;
       setIsProcessing(false);
       setIsResponding(false);
     }
-  }, [handleTextMessage, isProcessing, isResponding, isAudioPlaying, messages, echoSuppressUntil, maiaReady, isMuted, sessionId, userId, oracleAgentId, onMessageAdded]);
+  }, [handleTextMessage, isProcessing, isResponding, isAudioPlaying, messages, echoSuppressUntil, maiaReady, isMuted, sessionId, userId, oracleAgentId, onMessageAdded, maiaSpeak, stopStreamingVoice, startScribeSession, pauseScribeSession, stopScribeSession, markScribeMoment, confirmScribeConsent, setTranscriptEnabled, appendTranscriptEntry, scribeSession]);
 
   // Clear all check-ins
   const clearCheckIns = useCallback(() => {
@@ -4742,7 +5332,7 @@ I'm not sure what I'm feeling yet.`;
         )}
       </AnimatePresence>
 
-      {/* Scribe Mode Recording Indicator */}
+      {/* Scribe Mode Recording Indicator - Red when witnessing, Blue when aside */}
       <AnimatePresence>
         {isScribing && (
           <motion.div
@@ -4751,28 +5341,68 @@ I'm not sure what I'm feeling yet.`;
             exit={{ opacity: 0, y: -20 }}
             className="fixed top-8 left-1/2 transform -translate-x-1/2 z-below-nav"
           >
-            <div className="bg-gradient-to-r from-jade-shadow/90 to-jade-night/90 backdrop-blur-xl rounded-full px-6 py-3 border border-jade-sage/50 shadow-2xl">
+            <div className={`backdrop-blur-xl rounded-2xl px-4 py-3 border shadow-2xl transition-colors duration-300 ${
+              scribeSession.isAside
+                ? 'bg-gradient-to-r from-blue-900/90 to-indigo-900/90 border-blue-400/50'
+                : scribeSession.isPaused
+                  ? 'bg-gradient-to-r from-amber-900/90 to-yellow-900/90 border-amber-400/50'
+                  : 'bg-gradient-to-r from-red-900/90 to-rose-900/90 border-red-400/50'
+            }`}>
               <div className="flex items-center gap-3">
+                {/* Recording indicator light */}
                 <motion.div
-                  animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.5, 1, 0.5]
+                  animate={scribeSession.isPaused || scribeSession.isAside ? {} : {
+                    scale: [1, 1.3, 1],
+                    opacity: [0.6, 1, 0.6]
                   }}
                   transition={{
-                    duration: 2,
+                    duration: 1.2,
                     repeat: Infinity,
                     ease: "easeInOut"
                   }}
-                  className="w-3 h-3 bg-jade-jade rounded-full shadow-[0_0_12px_rgba(168,203,180,0.8)]"
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                    scribeSession.isAside
+                      ? 'bg-blue-400 shadow-[0_0_12px_rgba(96,165,250,0.8)]'
+                      : scribeSession.isPaused
+                        ? 'bg-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.8)]'
+                        : 'bg-red-500 shadow-[0_0_16px_rgba(239,68,68,0.9)]'
+                  }`}
                 />
-                <div>
-                  <div className="text-jade-jade text-sm font-medium">📝 Scribe Mode Active</div>
-                  <div className="text-jade-mineral/70 text-xs">
-                    Recording session •
-                    {scribeSession?.voiceTranscripts?.length || 0} voice +
-                    {scribeSession?.consultationMessages?.length || 0} consultations
+
+                {/* Status text */}
+                <div className="flex-1">
+                  <div className={`text-sm font-medium ${
+                    scribeSession.isAside ? 'text-blue-300' : scribeSession.isPaused ? 'text-amber-300' : 'text-red-300'
+                  }`}>
+                    {scribeSession.isAside
+                      ? '💬 Aside Mode'
+                      : scribeSession.isPaused
+                        ? '⏸️ Paused'
+                        : '🔴 Witnessing'}
+                  </div>
+                  <div className={`text-xs ${
+                    scribeSession.isAside ? 'text-blue-400/70' : scribeSession.isPaused ? 'text-amber-400/70' : 'text-red-400/70'
+                  }`}>
+                    {scribeSession.isAside
+                      ? 'Private consultation • Not recording'
+                      : scribeSession.isPaused
+                        ? 'Session paused • Say "resume scribe"'
+                        : `${scribeSession.container} session active`}
                   </div>
                 </div>
+
+                {/* Aside toggle button */}
+                <button
+                  onClick={() => toggleScribeAside(!scribeSession.isAside)}
+                  className={`p-2 rounded-lg transition-colors ${
+                    scribeSession.isAside
+                      ? 'bg-blue-500/30 hover:bg-blue-500/50 text-blue-200'
+                      : 'bg-white/10 hover:bg-white/20 text-white/70'
+                  }`}
+                  title={scribeSession.isAside ? 'Return to witnessing' : 'Enter aside mode (private consultation)'}
+                >
+                  {scribeSession.isAside ? <Eye className="w-4 h-4" /> : <MessageCircle className="w-4 h-4" />}
+                </button>
               </div>
             </div>
           </motion.div>
@@ -4910,11 +5540,24 @@ I'm not sure what I'm feeling yet.`;
               // Use isListening state instead of isMuted for accurate toggle
               if (voiceMicRef.current) {
                 if (!isListening) {
-                  // SAFETY: Don't start mic while MAIA is speaking
+                  // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
                   if (isAudioPlayingRef.current || isRespondingRef.current) {
-                    console.log('⏸️ Cannot start mic - MAIA is still speaking');
-                    toast.error('Cannot start mic - MAIA is speaking');
-                    return;
+                    console.log('🛑 [INTERRUPT] User tapped while MAIA speaking - stopping playback');
+
+                    // Stop MAIA's voice stream and playback
+                    stopStreamingVoice();
+
+                    // Reset state flags immediately
+                    isAudioPlayingRef.current = false;
+                    isRespondingRef.current = false;
+                    setIsResponding(false);
+                    setIsAudioPlaying(false);
+
+                    // Brief visual feedback
+                    toast('✋ Interrupted', { duration: 1000 });
+
+                    // Small delay to let audio cleanup complete before starting mic
+                    await new Promise(resolve => setTimeout(resolve, 100));
                   }
                   // Start listening
                   console.log('[voice] startListening called', {
@@ -6075,6 +6718,13 @@ I'm not sure what I'm feeling yet.`;
         onClose={() => setShowAudioSettings(false)}
       />
 
+      {/* Voice HUD - In-conversation micro controls (visible when voice mode active) */}
+      <VoiceHUD
+        isVisible={streamingVoiceMode && !showChatInterface && hasActivated}
+        onInterrupt={handleVoiceInterrupt}
+        isMaiaSpeaking={isAudioPlaying || isResponding}
+      />
+
       {/* 🧭 Therapeutic Framework Selector - Mode-specific (Counsel/Scribe)
           Now handled by FrameworkSelector component, accessed contextually */}
 
@@ -6094,6 +6744,10 @@ I'm not sure what I'm feeling yet.`;
             onTranscript={handleVoiceTranscript}
             onRecordingStateChange={handleRecordingStateChange}
             onAudioLevelChange={handleAudioLevelChange}
+            onInterrupt={handleVoiceInterrupt}
+            interruptEnabled={interruptEnabled}
+            interruptDebounceMs={interruptDebounceMs}
+            interruptThresholdMultiplier={interruptThresholdMultiplier}
             isProcessing={isResponding}
             isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}

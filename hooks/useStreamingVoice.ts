@@ -49,11 +49,21 @@ interface StreamingVoiceOptions {
   onError?: (error: string) => void;
   voice?: string;
   speed?: number;
+  /** TTS quality: 'tts-1' (faster) or 'tts-1-hd' (richer) */
+  model?: 'tts-1' | 'tts-1-hd';
   element?: string;
   /** Stable session ID for relational stack continuity. If not provided, one will be generated per hook instance. */
   sessionId?: string;
   /** Range of Effect (0-4): 0=Neutral, 1=Subtle, 2=Expressive, 3=Deep, 4=Ceremonial */
   prosodyRange?: 0 | 1 | 2 | 3 | 4;
+  /** Member's preferred name for MAIA (passed to system prompt) */
+  assistantName?: string;
+  /** MAIA's archetype/presence mode */
+  archetype?: string;
+  /** Conversation style mode */
+  conversationMode?: string;
+  /** Memory depth preference */
+  memoryDepth?: 'minimal' | 'moderate' | 'deep';
 }
 
 interface StreamingVoiceState {
@@ -169,9 +179,14 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     onError,
     voice = 'maya',
     speed = 1.0,
+    model = 'tts-1',
     element,
     sessionId: providedSessionId,
     prosodyRange = 1,  // Default: Subtle
+    assistantName,
+    archetype,
+    conversationMode,
+    memoryDepth,
   } = options;
 
   // Stable session ID - persisted in sessionStorage for cross-reload continuity
@@ -369,10 +384,15 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           message,
           voice,
           speed,
+          model,  // TTS quality: tts-1 (faster) or tts-1-hd (richer)
           element,
           conversationHistory,
           sessionId: sessionIdRef.current, // Stable session ID for relational stack
           prosodyRange,  // MAIA's prosody policy range (0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial)
+          assistantName, // Member's preferred name for MAIA
+          archetype,     // MAIA's presence/archetype mode
+          conversationMode, // Conversation style
+          memoryDepth,   // Memory retrieval depth
         }),
         signal: abortControllerRef.current.signal
       });
@@ -577,7 +597,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, element, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk]);
+  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk]);
 
   /**
    * Stop streaming and playback

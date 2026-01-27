@@ -210,6 +210,8 @@ export interface QuickJournalResult {
   id?: string;
   local?: boolean;
   server?: boolean;
+  error?: string;
+  pendingSync?: boolean; // True if saved locally but server sync is pending
 }
 
 export async function saveQuickJournal(
@@ -219,12 +221,34 @@ export async function saveQuickJournal(
   const localId = `journal_${options.userId}_${Date.now()}`;
   let serverSuccess = false;
   let serverId: string | undefined;
+  let localSuccess = false;
+  let serverError: string | undefined;
 
-  // Always try to save to server (PostgreSQL) for cross-device sync
+  // Validate userId - don't save with placeholder IDs
+  if (!options.userId || options.userId === 'guest' || options.userId.startsWith('guest_')) {
+    console.warn('[sovereign] Cannot save journal - no valid userId. User may not be signed in.');
+    return {
+      success: false,
+      id: localId,
+      local: false,
+      server: false,
+      error: 'Please sign in to save your entries. They will be preserved across all your devices.',
+    };
+  }
+
+  // Always try to save to server (PostgreSQL) for cross-device sync and data durability
   try {
-    const response = await fetch('/api/journal/quick/list', {
+    // Use same-origin fetch for web, will work with Capacitor via apiFetch pattern
+    const apiBase = typeof window !== 'undefined' && window.location.origin.includes('localhost')
+      ? '' // Same-origin for localhost
+      : ''; // Same-origin for production too
+
+    const response = await fetch(`${apiBase}/api/journal/quick/list`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Member-Id': options.userId, // Include member ID header for auth
+      },
       body: JSON.stringify({
         userId: options.userId,
         entryType: options.entryType || 'day',
@@ -240,29 +264,57 @@ export async function saveQuickJournal(
       if (data.success && data.entryId) {
         serverSuccess = true;
         serverId = data.entryId;
+        console.log(`✅ [sovereign] ${options.entryType || 'journal'} saved to server:`, serverId);
+      } else {
+        serverError = data.error || 'Server returned unsuccessful response';
+        console.warn('[sovereign] Server response indicated failure:', data);
       }
+    } else {
+      serverError = `Server returned ${response.status}: ${response.statusText}`;
+      console.warn('[sovereign] Server save failed with status:', response.status);
     }
   } catch (err) {
+    serverError = err instanceof Error ? err.message : 'Network error';
     console.warn('[sovereign] Server save failed, falling back to local:', err);
   }
 
   // Also save to localStorage for offline access / quick retrieval
   if (typeof window !== 'undefined') {
-    const localEntry = {
-      id: serverId || localId,
-      content,
-      ...options,
-      timestamp: new Date().toISOString(),
-      synced: serverSuccess,
-    };
-    localStorage.setItem(serverId || localId, JSON.stringify(localEntry));
+    try {
+      const localEntry = {
+        id: serverId || localId,
+        content,
+        ...options,
+        timestamp: new Date().toISOString(),
+        synced: serverSuccess,
+        pendingSync: !serverSuccess, // Mark for later sync if server failed
+      };
+      localStorage.setItem(`qj_${serverId || localId}`, JSON.stringify(localEntry));
+      localSuccess = true;
+
+      // Also maintain an index of pending syncs
+      if (!serverSuccess) {
+        const pendingList = JSON.parse(localStorage.getItem('qj_pending_sync') || '[]');
+        pendingList.push(serverId || localId);
+        localStorage.setItem('qj_pending_sync', JSON.stringify(pendingList));
+        console.log('[sovereign] Entry added to pending sync queue');
+      }
+    } catch (localErr) {
+      console.error('[sovereign] localStorage save failed:', localErr);
+    }
   }
 
+  // Success requires EITHER server save OR local save
+  // But we report accurately about what actually succeeded
+  const overallSuccess = serverSuccess || localSuccess;
+
   return {
-    success: serverSuccess || typeof window !== 'undefined',
+    success: overallSuccess,
     id: serverId || localId,
-    local: true,
+    local: localSuccess,
     server: serverSuccess,
+    error: !overallSuccess ? (serverError || 'Both server and local storage failed') : undefined,
+    pendingSync: localSuccess && !serverSuccess,
   };
 }
 

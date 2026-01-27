@@ -931,6 +931,18 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`🌀 [FAST] Governor addendum applied: posture guidance injected`);
   }
 
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  const maiaModeAddendum = (meta as any)?.maiaModeAddendum as string | undefined;
+  if (maiaModeAddendum) {
+    console.log(`🎭 [FAST] MAIA mode addendum applied: relational mode guidance injected`);
+  }
+
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  const scribeSessionDiscussionAddendum = (meta as any)?.scribeSessionDiscussionAddendum as string | undefined;
+  if (scribeSessionDiscussionAddendum) {
+    console.log(`📝 [FAST] Scribe session discussion addendum applied: session context injected`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   const currentUserName = (meta as any)?.userName as string | undefined;
@@ -951,7 +963,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1151,6 +1163,10 @@ async function corePathResponse(
     reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
     // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
     governorAddendum: (meta as any)?.governorAddendum as string | undefined,
+    // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+    maiaModeAddendum: (meta as any)?.maiaModeAddendum as string | undefined,
+    // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+    scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
   };
 
   // Use MAIA wise prompt with conversation awareness
@@ -1185,6 +1201,20 @@ The person you are speaking with is named "${currentUserNameCore}".
     adaptivePrompt = adaptivePrompt + `\n\n👤 USER IDENTIFICATION:
 The current user has not provided their name. Address them as "friend" or "there" when needed.
 - Do NOT assume their name is Kelly (Kelly is the creator of Soullab, not this user)`;
+  }
+
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  const maiaModeAddendumCore = (meta as any)?.maiaModeAddendum as string | undefined;
+  if (maiaModeAddendumCore) {
+    console.log(`🎭 [CORE] MAIA mode addendum applied: relational mode guidance injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + maiaModeAddendumCore;
+  }
+
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  const scribeSessionDiscussionAddendumCore = (meta as any)?.scribeSessionDiscussionAddendum as string | undefined;
+  if (scribeSessionDiscussionAddendumCore) {
+    console.log(`📝 [CORE] Scribe session discussion addendum applied: session context injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + scribeSessionDiscussionAddendumCore;
   }
 
   // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
@@ -1627,6 +1657,10 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         reflectionLensAddendum: (meta as any)?.reflectionLensAddendum as string | undefined,
         // 🌀 DECISION GOVERNOR: Spiralogic posture constraints
         governorAddendum: (meta as any)?.governorAddendum as string | undefined,
+        // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+        maiaModeAddendum: (meta as any)?.maiaModeAddendum as string | undefined,
+        // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+        scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);

@@ -70,6 +70,10 @@ export interface MaiaContext {
   governorAddendum?: string;
   // 💫 RELATIONSHIP MODE: Depth of relationship (touch/continuity/stewardship)
   relationshipModeAddendum?: string;
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  maiaModeAddendum?: string;
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  scribeSessionDiscussionAddendum?: string;
 }
 
 /**
@@ -702,6 +706,18 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (context.relationshipModeAddendum) {
     adaptedPrompt += `\n\n${context.relationshipModeAddendum}`;
     console.log(`💫 [Relationship] Mode: ${context.relationshipModeAddendum.split('\n')[0]}`);
+  }
+
+  // 🎭 MAIA MODE: Voice command relational mode (Talk/Care/Scribe)
+  if (context.maiaModeAddendum) {
+    adaptedPrompt += `\n\n${context.maiaModeAddendum}`;
+    console.log(`🎭 [MAIA Mode] Relational mode guidance injected`);
+  }
+
+  // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
+  if (context.scribeSessionDiscussionAddendum) {
+    adaptedPrompt += `\n\n${context.scribeSessionDiscussionAddendum}`;
+    console.log(`📝 [Scribe Discussion] Session context injected`);
   }
 
   return adaptedPrompt.trim();

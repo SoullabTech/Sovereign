@@ -20,6 +20,14 @@ export interface ContinuousConversationProps {
   autoStart?: boolean; // Start listening immediately
   silenceThreshold?: number; // Silence detection threshold in ms (default 2000)
   vadSensitivity?: number; // Voice activity detection sensitivity 0-1
+  /** Called when user voice is detected while MAIA is speaking (barge-in interrupt) */
+  onInterrupt?: () => void;
+  /** Enable voice-activated interrupt (default: true) */
+  interruptEnabled?: boolean;
+  /** Debounce for interrupt detection in ms (default: 200) */
+  interruptDebounceMs?: number;
+  /** Threshold multiplier for interrupt detection (default: 1.2) - higher = less sensitive */
+  interruptThresholdMultiplier?: number;
 }
 
 export interface ContinuousConversationRef {
@@ -41,7 +49,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isSpeaking = false,
     autoStart = false, // Disabled to prevent infinite restart loops
     silenceThreshold = 8000, // 8s to capture full thoughts - generous buffer so user doesn't feel rushed
-    vadSensitivity = 0.3
+    vadSensitivity = 0.3,
+    onInterrupt,
+    interruptEnabled = true,
+    interruptDebounceMs = 200,
+    interruptThresholdMultiplier = 1.2,
   } = props;
 
   const [isListening, setIsListening] = useState(false);
@@ -98,6 +110,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const silenceStartTimeRef = useRef<number>(0); // When silence began
   const hasSpokenRef = useRef(false); // Track if user has spoken at all (to differentiate from background noise)
   const adaptiveSilenceThreshold = 3500; // 3.5 seconds - generous buffer for natural pauses and thinking
+
+  // 🛑 BARGE-IN INTERRUPT DETECTION - Detect user speech while MAIA is speaking
+  // NOTE: Voice-activated interrupt works on web browsers (uses separate MediaStream for audio monitoring)
+  // On native iOS, the audio level events come from the speech recognition plugin which is paused during
+  // MAIA speech, so voice-activated interrupt is limited. Users can always tap-to-interrupt on all platforms.
+  const interruptSpeechStartRef = useRef<number>(0); // When sustained speech began during MAIA playback
+  const hasTriggeredInterruptRef = useRef(false); // Prevent multiple interrupt triggers per MAIA turn
+  const onInterruptRef = useRef(onInterrupt); // Ref to avoid stale closure
+  onInterruptRef.current = onInterrupt;
 
   // Function refs to avoid temporal dead zone in useImperativeHandle
   const startListeningFnRef = useRef<() => void>();
@@ -507,6 +528,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       setIsRecording(false);
       isRecordingRef.current = false;
       isProcessingRef.current = false;
+
+      // 🛑 Reset interrupt detection for this new MAIA turn
+      hasTriggeredInterruptRef.current = false;
+      interruptSpeechStartRef.current = 0;
     }
   }, [isSpeaking]);
 
@@ -727,6 +752,37 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // 🌸 Call amplitude callback directly for holoflower visualization
       // Use ref instead of state to avoid triggering re-renders
       onAudioLevelChange?.(normalizedLevel, isRecordingRef.current);
+
+      // 🛑 BARGE-IN INTERRUPT DETECTION - Detect user speech while MAIA is speaking
+      // Only active when MAIA is speaking and interrupt is enabled
+      if (isSpeakingRef.current && interruptEnabled && !hasTriggeredInterruptRef.current) {
+        const interruptVoiceThreshold = vadSensitivity * interruptThresholdMultiplier;
+        const isSpeakingAboveThreshold = normalizedLevel > interruptVoiceThreshold;
+
+        if (isSpeakingAboveThreshold) {
+          // User started/continues speaking
+          if (interruptSpeechStartRef.current === 0) {
+            interruptSpeechStartRef.current = now;
+            console.log('🎤 [INTERRUPT] Potential barge-in detected, starting debounce timer...');
+          } else {
+            // Check if speech has been sustained long enough
+            const speechDuration = now - interruptSpeechStartRef.current;
+            if (speechDuration >= interruptDebounceMs) {
+              console.log(`🛑 [INTERRUPT] Barge-in confirmed after ${speechDuration}ms - interrupting MAIA`);
+              hasTriggeredInterruptRef.current = true;
+              interruptSpeechStartRef.current = 0;
+              // Call the interrupt handler
+              onInterruptRef.current?.();
+            }
+          }
+        } else {
+          // Speech dropped below threshold - reset debounce timer
+          if (interruptSpeechStartRef.current > 0) {
+            console.log('🔇 [INTERRUPT] Speech dropped, resetting debounce timer');
+            interruptSpeechStartRef.current = 0;
+          }
+        }
+      }
 
       // 🎯 ADAPTIVE SILENCE DETECTION - Detect when user stops speaking
       // Respect thinking pauses - only send after meaningful silence
@@ -1090,6 +1146,32 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
           // 🔥 CRITICAL: Call onAudioLevelChange to update OracleConversation visualizer
           onAudioLevelChange?.(displayLevel, isRecordingRef.current);
+
+          // 🛑 BARGE-IN INTERRUPT DETECTION (Native iOS) - Detect user speech while MAIA is speaking
+          if (isSpeakingRef.current && interruptEnabled && !hasTriggeredInterruptRef.current) {
+            // Native iOS threshold scales with multiplier (base 0.02, scaled by multiplier)
+            const interruptThreshold = 0.02 * interruptThresholdMultiplier;
+            const isSpeakingAboveThreshold = rawLevel > interruptThreshold;
+
+            if (isSpeakingAboveThreshold) {
+              if (interruptSpeechStartRef.current === 0) {
+                interruptSpeechStartRef.current = now;
+                console.log('🎤 [INTERRUPT Native] Potential barge-in detected...');
+              } else {
+                const speechDuration = now - interruptSpeechStartRef.current;
+                if (speechDuration >= interruptDebounceMs) {
+                  console.log(`🛑 [INTERRUPT Native] Barge-in confirmed after ${speechDuration}ms`);
+                  hasTriggeredInterruptRef.current = true;
+                  interruptSpeechStartRef.current = 0;
+                  onInterruptRef.current?.();
+                }
+              }
+            } else {
+              if (interruptSpeechStartRef.current > 0) {
+                interruptSpeechStartRef.current = 0;
+              }
+            }
+          }
 
           // 🔇 IMPROVED SILENCE DETECTION
           // Only start timer if ALL conditions met:

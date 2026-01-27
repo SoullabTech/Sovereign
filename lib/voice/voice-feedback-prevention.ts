@@ -5,8 +5,16 @@
 
 import { isNativeIOS, nativePlayBase64 } from './native-audio-player';
 import { arrayBufferToBase64 } from './audio-bytes';
+import {
+  ensureAudioReady,
+  getAudioContext,
+  getAudioStatus,
+  unlockAudioOnUserGesture,
+  startSessionKeepAlive,
+} from './ios-audio-session';
 
-// iOS Audio Unlock State
+// Legacy iOS Audio Unlock State (now delegated to ios-audio-session)
+// Kept for backward compatibility with existing code
 let iosAudioUnlocked = false;
 let iosAudioContext: AudioContext | null = null;
 
@@ -74,6 +82,8 @@ export async function unlockIOSAudio(): Promise<void> {
 /**
  * Ensure iOS audio is ready before playback
  * This is called BEFORE every audio.play() to keep iOS audio unlocked
+ *
+ * FIX: Now handles context being closed/killed by iOS between responses
  */
 export async function ensureIOSAudioReady(): Promise<void> {
   if (typeof window === 'undefined') return;
@@ -87,10 +97,18 @@ export async function ensureIOSAudioReady(): Promise<void> {
       console.log('🔓 [iOS Audio] Created new AudioContext');
     }
 
+    // FIX: Recreate if iOS killed the context (state === 'closed')
+    if (iosAudioContext.state === 'closed') {
+      console.log('🔓 [iOS Audio] Context was CLOSED by iOS - recreating');
+      iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      iosAudioUnlocked = false; // Need to re-unlock
+    }
+
     // Resume if suspended (iOS suspends after each audio ends!)
     if (iosAudioContext.state === 'suspended') {
+      console.log('🔓 [iOS Audio] Context suspended - attempting resume');
       await iosAudioContext.resume();
-      console.log('🔓 [iOS Audio] Resumed suspended AudioContext');
+      console.log('🔓 [iOS Audio] Resumed suspended AudioContext, state now:', iosAudioContext.state);
     }
 
     // CRITICAL: Play a silent buffer to "warm up" iOS audio before real playback
@@ -104,8 +122,19 @@ export async function ensureIOSAudioReady(): Promise<void> {
 
     // Mark as unlocked
     iosAudioUnlocked = true;
+
+    // Ensure keep-alive is running for this and subsequent chunks
+    startIOSAudioKeepAlive();
   } catch (e) {
     console.warn('🔓 [iOS Audio] Could not ensure audio ready:', e);
+    // Try to recreate context on failure
+    try {
+      iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      await iosAudioContext.resume();
+      console.log('🔓 [iOS Audio] Recreated context after failure');
+    } catch (recreateError) {
+      console.error('🔓 [iOS Audio] Failed to recreate context:', recreateError);
+    }
   }
 }
 
@@ -134,6 +163,8 @@ export function installIOSAudioUnlock(): void {
 
 // iOS Audio Keep-Alive - prevents AudioContext suspension
 let keepAliveInterval: NodeJS.Timeout | null = null;
+let keepAliveFailCount = 0;
+const MAX_KEEP_ALIVE_FAILURES = 3;
 
 /**
  * Start iOS audio keep-alive - plays silent sound every 2 seconds
@@ -142,33 +173,78 @@ let keepAliveInterval: NodeJS.Timeout | null = null;
  * NOTE: iOS WebView aggressively suspends AudioContext even during active
  * streaming playback. 2 seconds is more aggressive than the default 10s
  * to prevent dropouts between sentence chunks.
+ *
+ * FIX: Now restarts if context is deeply suspended (iOS kills it between responses)
  */
 export function startIOSAudioKeepAlive(): void {
   if (typeof window === 'undefined') return;
-  if (keepAliveInterval) return; // Already running
+
+  // Reset failure counter when explicitly starting
+  keepAliveFailCount = 0;
+
+  if (keepAliveInterval) {
+    console.log('🔓 [iOS Audio] Keep-alive already running, ensuring context is ready');
+    // Even if already running, ensure context is active NOW
+    ensureKeepAliveContextActive();
+    return;
+  }
 
   console.log('🔓 [iOS Audio] Starting keep-alive ping (every 2s)');
 
   keepAliveInterval = setInterval(async () => {
-    if (!iosAudioContext) return;
-
-    try {
-      // Resume if suspended
-      if (iosAudioContext.state === 'suspended') {
-        await iosAudioContext.resume();
-        console.log('🔓 [iOS Audio] Keep-alive resumed suspended context');
-      }
-
-      // Play silent buffer to keep iOS audio active
-      const buffer = iosAudioContext.createBuffer(1, 1, 22050);
-      const source = iosAudioContext.createBufferSource();
-      source.buffer = buffer;
-      source.connect(iosAudioContext.destination);
-      source.start(0);
-    } catch (e) {
-      // Silent fail - keep-alive is best effort
-    }
+    await ensureKeepAliveContextActive();
   }, 2000); // Every 2 seconds - iOS suspends aggressively between chunks
+}
+
+/**
+ * Ensure the keep-alive context is active - recreates if iOS killed it
+ */
+async function ensureKeepAliveContextActive(): Promise<void> {
+  try {
+    // If no context exists, create one
+    if (!iosAudioContext) {
+      console.log('🔓 [iOS Audio] Keep-alive: creating new AudioContext');
+      iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    }
+
+    // If context is closed (iOS killed it), recreate
+    if (iosAudioContext.state === 'closed') {
+      console.log('🔓 [iOS Audio] Keep-alive: context was CLOSED, recreating');
+      iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      iosAudioUnlocked = false; // Need to re-unlock
+    }
+
+    // Resume if suspended
+    if (iosAudioContext.state === 'suspended') {
+      await iosAudioContext.resume();
+      console.log('🔓 [iOS Audio] Keep-alive resumed suspended context');
+    }
+
+    // Play silent buffer to keep iOS audio active
+    const buffer = iosAudioContext.createBuffer(1, 1, 22050);
+    const source = iosAudioContext.createBufferSource();
+    source.buffer = buffer;
+    source.connect(iosAudioContext.destination);
+    source.start(0);
+
+    // Reset failure count on success
+    keepAliveFailCount = 0;
+  } catch (e) {
+    keepAliveFailCount++;
+    console.warn(`🔓 [iOS Audio] Keep-alive ping failed (${keepAliveFailCount}/${MAX_KEEP_ALIVE_FAILURES}):`, e);
+
+    // If we fail too many times, recreate the context entirely
+    if (keepAliveFailCount >= MAX_KEEP_ALIVE_FAILURES) {
+      console.log('🔓 [iOS Audio] Keep-alive: too many failures, recreating context');
+      try {
+        iosAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+        iosAudioUnlocked = false;
+        keepAliveFailCount = 0;
+      } catch (createError) {
+        console.error('🔓 [iOS Audio] Failed to recreate context:', createError);
+      }
+    }
+  }
 }
 
 /**
@@ -186,10 +262,12 @@ export function stopIOSAudioKeepAlive(): void {
 if (typeof window !== 'undefined') {
   installIOSAudioUnlock();
 
-  // Start keep-alive after first user interaction (when audio is unlocked)
+  // Start/ensure keep-alive on EVERY voice start (not just first!)
+  // iOS suspends AudioContext between responses, so we need to re-ensure on each
   window.addEventListener('maya-voice-start', () => {
+    console.log('🔓 [iOS Audio] Voice start event - ensuring keep-alive active');
     startIOSAudioKeepAlive();
-  }, { once: true });
+  }); // Removed { once: true } - we need this for EVERY response!
 }
 
 export class VoiceFeedbackPrevention {
@@ -484,9 +562,16 @@ export async function playAudioWithFeedbackPrevention(audio: HTMLAudioElement): 
     }
   }
 
-  // 🔓 iOS FIX (WebView path only): Ensure audio context is ready before playback
-  // This is NOT called for native iOS path - AVAudioPlayer handles its own session
-  await ensureIOSAudioReady();
+  // 🔓 iOS FIX (WebView path only): Ensure audio is ready BEFORE every playback
+  // This is the key fix - resume AudioContext before EVERY play, not just first
+  // iOS does not care about your assumptions.
+  const statusBefore = getAudioStatus();
+  console.log('[iOS Audio] Before playback:', statusBefore);
+
+  await ensureAudioReady();
+
+  const statusAfter = getAudioStatus();
+  console.log('[iOS Audio] After ensureAudioReady:', statusAfter);
 
   // Dispatch event before playing
   window.dispatchEvent(new Event('maya-voice-start'));
@@ -499,61 +584,46 @@ export async function playAudioWithFeedbackPrevention(audio: HTMLAudioElement): 
   return new Promise((resolve, reject) => {
     audio.addEventListener('ended', () => {
       prevention.unregisterAudioElement(audio);
+      window.dispatchEvent(new Event('maya-voice-end'));
       resolve();
     }, { once: true });
 
     audio.addEventListener('error', (error) => {
       prevention.unregisterAudioElement(audio);
+      window.dispatchEvent(new Event('maya-voice-end'));
       reject(error);
     }, { once: true });
 
-    // Enhanced error logging for iOS/iPhone Chrome debugging
-    audio.play().then(() => {
-      console.log('✅ [iOS Audio] audio.play() succeeded on first try');
-    }).catch(async (error) => {
-      console.error('❌ Audio playback failed:', {
-        errorName: error?.name,
-        errorMessage: error?.message,
-        audioSrc: audio.src?.substring(0, 50) + '...',
-        audioReadyState: audio.readyState,
-        audioNetworkState: audio.networkState,
-        audioError: audio.error,
-        userAgent: navigator.userAgent
-      });
-
-      // 🔓 iOS FIX: Try multiple unlock strategies
-      console.log('🔄 [iOS Audio] Attempting unlock strategies...');
-
-      // Strategy 1: Full unlock cycle
-      await unlockIOSAudio();
-
-      // Strategy 2: Wait a tick for iOS to process
-      await new Promise(r => setTimeout(r, 100));
-
-      // Strategy 3: Retry play
+    // Play with retry logic
+    const attemptPlay = async (attempt: number): Promise<void> => {
       try {
-        console.log('🔄 [iOS Audio] Retry attempt 1...');
+        // CRITICAL: Ensure audio ready before EVERY attempt
+        await ensureAudioReady();
         await audio.play();
-        console.log('✅ [iOS Audio] Retry 1 succeeded!');
-        return; // Success on retry
-      } catch (retryError1) {
-        console.warn('⚠️ [iOS Audio] Retry 1 failed:', retryError1);
+        console.log(`✅ [iOS Audio] audio.play() succeeded on attempt ${attempt}`);
+      } catch (error: any) {
+        const status = getAudioStatus();
+        console.error(`❌ [iOS Audio] Play attempt ${attempt} failed:`, {
+          errorName: error?.name,
+          errorMessage: error?.message,
+          audioContextState: status.state,
+          unlocked: status.unlocked,
+          keepAlive: status.keepAliveActive,
+        });
 
-        // Strategy 4: Create fresh audio element and try again
-        try {
-          console.log('🔄 [iOS Audio] Retry attempt 2 with fresh load...');
-          audio.load(); // Force reload
-          await new Promise(r => setTimeout(r, 50));
-          await audio.play();
-          console.log('✅ [iOS Audio] Retry 2 succeeded!');
-          return;
-        } catch (retryError2) {
-          console.error('❌ [iOS Audio] All retries failed:', retryError2);
+        if (attempt < 3 && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
+          // Wait and retry
+          const delay = Math.min(100 * Math.pow(2, attempt - 1), 500);
+          console.log(`🔄 [iOS Audio] Retrying in ${delay}ms...`);
+          await new Promise(r => setTimeout(r, delay));
+          return attemptPlay(attempt + 1);
         }
-      }
 
-      reject(error);
-    });
+        reject(error);
+      }
+    };
+
+    attemptPlay(1);
   });
 }
 

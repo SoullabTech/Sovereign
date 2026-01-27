@@ -253,7 +253,20 @@ export function QuickJournalSheet({
       });
 
       if (result.success) {
-        console.log(`[JournalSave] Saved: local=${result.local}, server=${result.server}`);
+        console.log(`[JournalSave] Saved: local=${result.local}, server=${result.server}, pendingSync=${result.pendingSync}`);
+
+        // Determine the save message based on what succeeded
+        let baseMessage: string;
+        if (result.server) {
+          // Server save succeeded - data is safe
+          baseMessage = activeTab === 'dream' ? 'Dream captured ✓' : activeTab === 'handwriting' ? 'Handwriting saved ✓' : 'Saved ✓';
+        } else if (result.local && result.pendingSync) {
+          // Local only - warn user that sync is pending
+          baseMessage = activeTab === 'dream' ? 'Dream saved locally (sync pending)' : 'Saved locally (sync pending)';
+          console.warn('[JournalSave] Server sync failed - entry saved locally only. Will retry sync later.');
+        } else {
+          baseMessage = activeTab === 'dream' ? 'Dream captured' : 'Saved';
+        }
 
         // Upload audio to server if user consents to server storage and we have audio
         if (recordedBlob && !isHandwriting) {
@@ -262,30 +275,25 @@ export function QuickJournalSheet({
             try {
               const uploadResult = await uploadAudio(result.id);
               if (uploadResult.success) {
-                setSavedMessage(activeTab === 'dream' ? 'Dream + audio captured ✓' : 'Saved with audio ✓');
+                setSavedMessage(baseMessage.replace('✓', '+ audio ✓'));
               } else if (uploadResult.error === 'PAID_FEATURE') {
                 // Paid feature - audio saved locally, server sync requires upgrade
-                setSavedMessage(activeTab === 'dream' ? 'Dream captured (local audio)' : 'Saved (local audio)');
+                setSavedMessage(baseMessage + ' (local audio)');
               } else {
                 // Other error - audio still saved locally
-                setSavedMessage(activeTab === 'dream' ? 'Dream captured (cloud audio pending)' : 'Saved (cloud audio pending)');
+                setSavedMessage(baseMessage + ' (audio pending)');
               }
             } catch (e: unknown) {
               console.error('Audio upload to server failed:', e);
               // Audio is still saved locally, so this is just a warning
-              setSavedMessage(activeTab === 'dream' ? 'Dream captured (cloud audio pending)' : 'Saved (cloud audio pending)');
+              setSavedMessage(baseMessage + ' (audio pending)');
             }
           } else {
             // Audio saved locally only
-            setSavedMessage(activeTab === 'dream' ? 'Dream + audio captured ✓' : 'Saved with audio ✓');
+            setSavedMessage(baseMessage.replace('✓', '+ audio ✓'));
           }
         } else {
-          const messages: Record<JournalType, string> = {
-            dream: 'Dream captured ✓',
-            day: 'Saved ✓',
-            handwriting: 'Handwriting saved ✓',
-          };
-          setSavedMessage(messages[activeTab]);
+          setSavedMessage(baseMessage);
         }
 
         if (result.id) onSaved?.(result.id);
@@ -307,8 +315,13 @@ export function QuickJournalSheet({
           }, 1200);
         }
       } else {
-        console.error('Failed to save journal entry');
-        setSaveError('Failed to save - check your storage settings');
+        console.error('Failed to save journal entry:', result.error);
+        // Show specific error message if available
+        if (result.error?.includes('sign in')) {
+          setSaveError(result.error);
+        } else {
+          setSaveError('Failed to save - please try again');
+        }
       }
     } catch (error) {
       console.error('Error saving journal entry:', error);

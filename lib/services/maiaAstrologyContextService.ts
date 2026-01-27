@@ -349,6 +349,11 @@ function formatAstrologyContextForMAIA(
   // Current sky (always available)
   context += '## Current Cosmic Weather\n';
 
+  // Moon phase
+  const moonPhase = getMoonPhase();
+  context += `**Current Moon Phase:** ${moonPhase.phase} (${moonPhase.percentage}% illuminated)\n`;
+  context += `- Emotional tone: ${moonPhase.meaning}\n\n`;
+
   const retrogradePlanets = currentTransits.filter(t => t.retrograde);
   if (retrogradePlanets.length > 0) {
     context += `**Currently Retrograde:** ${retrogradePlanets.map(p => p.planet).join(', ')}\n`;
@@ -359,6 +364,17 @@ function formatAstrologyContextForMAIA(
       context += `- ${h.description}\n`;
     }
   });
+
+  // Approaching significant transits (if we have birth chart)
+  if (birthChart) {
+    const approachingTransits = getApproachingTransits(birthChart, currentTransits);
+    if (approachingTransits.length > 0) {
+      context += '\n**Significant Transits Active/Approaching:**\n';
+      approachingTransits.forEach(t => {
+        context += `- ${t}\n`;
+      });
+    }
+  }
 
   // Today's Mayan energy
   if (todaysMayanSign) {
@@ -375,14 +391,55 @@ function formatAstrologyContextForMAIA(
       context += '*Note: Birth time unknown, house placements are approximate*\n\n';
     }
 
-    context += `**Core Placements:**\n`;
-    context += `- Sun: ${birthChart.sun.sign} (House ${birthChart.sun.house}) - Core identity\n`;
-    context += `- Moon: ${birthChart.moon.sign} (House ${birthChart.moon.house}) - Emotional nature\n`;
+    context += `**Core Placements (Personal Planets):**\n`;
+    context += `- Sun: ${birthChart.sun.sign} (House ${birthChart.sun.house}) - Core identity, vitality\n`;
+    context += `- Moon: ${birthChart.moon.sign} (House ${birthChart.moon.house}) - Emotional nature, inner needs\n`;
     context += `- Rising: ${birthChart.ascendant.sign} - How they meet the world\n`;
-    context += `- Mercury: ${birthChart.mercury.sign} (House ${birthChart.mercury.house}) - Communication style\n`;
-    context += `- Venus: ${birthChart.venus.sign} (House ${birthChart.venus.house}) - Love & values\n`;
-    context += `- Mars: ${birthChart.mars.sign} (House ${birthChart.mars.house}) - Action & desire\n`;
-    context += `- Chiron: ${birthChart.chiron.sign} (House ${birthChart.chiron.house}) - Core wound & healing gift\n\n`;
+    context += `- Mercury: ${birthChart.mercury.sign} (House ${birthChart.mercury.house}) - Mind, communication\n`;
+    context += `- Venus: ${birthChart.venus.sign} (House ${birthChart.venus.house}) - Love, values, pleasure\n`;
+    context += `- Mars: ${birthChart.mars.sign} (House ${birthChart.mars.house}) - Drive, action, desire\n\n`;
+
+    context += `**Outer Planets (Generational & Transpersonal Forces):**\n`;
+    context += `- Jupiter: ${birthChart.jupiter.sign} (House ${birthChart.jupiter.house}) - Expansion, faith, abundance\n`;
+    context += `- Saturn: ${birthChart.saturn.sign} (House ${birthChart.saturn.house}) - Structure, discipline, mastery through challenge\n`;
+    context += `- Uranus: ${birthChart.uranus.sign} (House ${birthChart.uranus.house}) - Liberation, awakening, sudden change\n`;
+    context += `- Neptune: ${birthChart.neptune.sign} (House ${birthChart.neptune.house}) - Transcendence, imagination, dissolution\n`;
+    context += `- Pluto: ${birthChart.pluto.sign} (House ${birthChart.pluto.house}) - Transformation, power, death/rebirth\n\n`;
+
+    context += `**Soul Purpose (Nodal Axis):**\n`;
+    context += `- North Node: ${birthChart.northNode.sign} (House ${birthChart.northNode.house}) - Soul's growth direction, what to develop\n`;
+    context += `- South Node: ${birthChart.southNode.sign} (House ${birthChart.southNode.house}) - Past life gifts & patterns to release\n\n`;
+
+    context += `**Healing & Feminine Archetypes:**\n`;
+    context += `- Chiron: ${birthChart.chiron.sign} (House ${birthChart.chiron.house}) - Core wound & healing gift\n`;
+    if (birthChart.lilith) context += `- Lilith: ${birthChart.lilith.sign} (House ${birthChart.lilith.house}) - Primal feminine, shadow integration\n`;
+    context += '\n';
+
+    // Elemental balance
+    const elementCounts = calculateElementalBalance(birthChart);
+    context += `**Elemental Temperament:**\n`;
+    context += `- Fire (${elementCounts.fire}): ${elementCounts.fire >= 4 ? 'Strong' : elementCounts.fire >= 2 ? 'Moderate' : 'Low'} - initiative, passion, spirit\n`;
+    context += `- Earth (${elementCounts.earth}): ${elementCounts.earth >= 4 ? 'Strong' : elementCounts.earth >= 2 ? 'Moderate' : 'Low'} - grounding, practicality, embodiment\n`;
+    context += `- Air (${elementCounts.air}): ${elementCounts.air >= 4 ? 'Strong' : elementCounts.air >= 2 ? 'Moderate' : 'Low'} - intellect, communication, connection\n`;
+    context += `- Water (${elementCounts.water}): ${elementCounts.water >= 4 ? 'Strong' : elementCounts.water >= 2 ? 'Moderate' : 'Low'} - emotion, intuition, depth\n`;
+    const dominant = Object.entries(elementCounts).sort((a, b) => b[1] - a[1])[0];
+    const weakest = Object.entries(elementCounts).sort((a, b) => a[1] - b[1])[0];
+    context += `- **Dominant:** ${dominant[0].charAt(0).toUpperCase() + dominant[0].slice(1)} | **Growth Edge:** ${weakest[0].charAt(0).toUpperCase() + weakest[0].slice(1)}\n\n`;
+
+    // Natal aspects
+    if (birthChart.aspects && birthChart.aspects.length > 0) {
+      context += '**Key Natal Aspects:**\n';
+      const significantAspects = birthChart.aspects.filter(a => {
+        const keyPlanets = ['sun', 'moon', 'mercury', 'venus', 'mars', 'saturn', 'chiron', 'northnode'];
+        return keyPlanets.includes(a.planet1.toLowerCase()) || keyPlanets.includes(a.planet2.toLowerCase());
+      }).slice(0, 10);
+
+      significantAspects.forEach(aspect => {
+        const aspectMeaning = getAspectMeaning(aspect.type);
+        context += `- ${aspect.planet1} ${aspect.type} ${aspect.planet2} (${aspect.orb.toFixed(1)}°) - ${aspectMeaning}\n`;
+      });
+      context += '\n';
+    }
 
     if (relevantPatterns.length > 0) {
       context += '**Relevant Patterns:**\n';
@@ -460,6 +517,156 @@ function getToneMeaning(tone: number): string {
 }
 
 // ==================== HELPERS ====================
+
+/**
+ * Calculate elemental balance from birth chart
+ */
+function calculateElementalBalance(chart: BirthChart): { fire: number; earth: number; air: number; water: number } {
+  const counts = { fire: 0, earth: 0, air: 0, water: 0 };
+
+  // Count elements from main planets
+  const planetsToCount = [
+    chart.sun, chart.moon, chart.mercury, chart.venus, chart.mars,
+    chart.jupiter, chart.saturn, chart.uranus, chart.neptune, chart.pluto
+  ];
+
+  planetsToCount.forEach(planet => {
+    if (planet?.sign) {
+      const element = getElement(planet.sign);
+      if (element in counts) {
+        counts[element as keyof typeof counts]++;
+      }
+    }
+  });
+
+  return counts;
+}
+
+/**
+ * Get psychological meaning of an aspect type
+ */
+function getAspectMeaning(type: string): string {
+  const meanings: Record<string, string> = {
+    conjunction: 'fusion, intensification',
+    opposition: 'polarity, balance through tension',
+    trine: 'natural flow, ease',
+    square: 'friction that catalyzes growth',
+    sextile: 'opportunity, cooperation',
+    quincunx: 'adjustment, integration needed',
+  };
+  return meanings[type] || 'dynamic interaction';
+}
+
+/**
+ * Calculate current moon phase
+ */
+function getMoonPhase(): { phase: string; meaning: string; percentage: number } {
+  const now = new Date();
+  const synodicMonth = 29.53059; // days
+
+  // Known new moon: January 11, 2024
+  const knownNewMoon = new Date('2024-01-11T11:57:00Z');
+  const daysSinceNewMoon = (now.getTime() - knownNewMoon.getTime()) / (1000 * 60 * 60 * 24);
+  const moonAge = daysSinceNewMoon % synodicMonth;
+  const percentage = (moonAge / synodicMonth) * 100;
+
+  let phase: string;
+  let meaning: string;
+
+  if (moonAge < 1.85) {
+    phase = 'New Moon';
+    meaning = 'new beginnings, setting intentions, introspection';
+  } else if (moonAge < 7.38) {
+    phase = 'Waxing Crescent';
+    meaning = 'building momentum, taking first steps, hope';
+  } else if (moonAge < 9.23) {
+    phase = 'First Quarter';
+    meaning = 'action, decisions, overcoming obstacles';
+  } else if (moonAge < 14.77) {
+    phase = 'Waxing Gibbous';
+    meaning = 'refinement, adjustment, almost there';
+  } else if (moonAge < 16.61) {
+    phase = 'Full Moon';
+    meaning = 'culmination, illumination, heightened emotions';
+  } else if (moonAge < 22.15) {
+    phase = 'Waning Gibbous';
+    meaning = 'gratitude, sharing wisdom, release begins';
+  } else if (moonAge < 24.00) {
+    phase = 'Last Quarter';
+    meaning = 'letting go, forgiveness, clearing';
+  } else {
+    phase = 'Waning Crescent';
+    meaning = 'surrender, rest, preparation for renewal';
+  }
+
+  return { phase, meaning, percentage: Math.round(percentage) };
+}
+
+/**
+ * Detect significant approaching transits (next 3 months)
+ */
+function getApproachingTransits(
+  birthChart: BirthChart,
+  currentTransits: CurrentTransit[]
+): string[] {
+  const approaching: string[] = [];
+
+  // Check outer planet transits to personal planets (these are the big ones)
+  const outerPlanets = ['Saturn', 'Uranus', 'Neptune', 'Pluto'];
+  const personalPoints = [
+    { name: 'Sun', pos: birthChart.sun },
+    { name: 'Moon', pos: birthChart.moon },
+    { name: 'Ascendant', pos: birthChart.ascendant },
+    { name: 'Venus', pos: birthChart.venus },
+    { name: 'Mars', pos: birthChart.mars },
+  ];
+
+  outerPlanets.forEach(outerName => {
+    const transit = currentTransits.find(t => t.planet === outerName);
+    if (!transit) return;
+
+    const transitDegree = getAbsoluteDegree(transit.sign, transit.degree);
+
+    personalPoints.forEach(personal => {
+      if (!personal.pos?.sign) return;
+      const natalDegree = getAbsoluteDegree(personal.pos.sign, personal.pos.degree);
+
+      // Check if within 5 degrees (approaching conjunction)
+      const diff = Math.abs(transitDegree - natalDegree);
+      const normalizedDiff = diff > 180 ? 360 - diff : diff;
+
+      if (normalizedDiff <= 5 && normalizedDiff > 0) {
+        const direction = transitDegree < natalDegree ? 'approaching' : 'in effect';
+        approaching.push(`${outerName} ${direction} conjunction to natal ${personal.name} - major ${getTransitTheme(outerName)} themes active`);
+      }
+
+      // Check opposition (within 5 degrees of 180)
+      if (Math.abs(normalizedDiff - 180) <= 5) {
+        approaching.push(`${outerName} opposing natal ${personal.name} - ${getTransitTheme(outerName)} tensions surfacing`);
+      }
+
+      // Check square (within 5 degrees of 90)
+      if (Math.abs(normalizedDiff - 90) <= 5) {
+        approaching.push(`${outerName} square natal ${personal.name} - ${getTransitTheme(outerName)} challenges catalyzing growth`);
+      }
+    });
+  });
+
+  return approaching.slice(0, 4); // Limit to most significant
+}
+
+/**
+ * Get theme for outer planet transits
+ */
+function getTransitTheme(planet: string): string {
+  const themes: Record<string, string> = {
+    Saturn: 'maturation, responsibility, restructuring',
+    Uranus: 'liberation, awakening, sudden change',
+    Neptune: 'dissolution, spirituality, confusion/clarity',
+    Pluto: 'transformation, power dynamics, death/rebirth',
+  };
+  return themes[planet] || 'significant life';
+}
 
 function getElement(sign: string): string {
   const fireSign = ['Aries', 'Leo', 'Sagittarius'];
