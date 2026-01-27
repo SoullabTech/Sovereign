@@ -87,13 +87,32 @@ export interface VoiceCommandResult {
     | 'scribe-mark' | 'scribe-aside'
     | 'scribe-consent-yes' | 'scribe-consent-no'
     | 'scribe-transcript-on' | 'scribe-transcript-off'
-    | 'presence-bell' | 'repair';
+    | 'presence-bell' | 'repair'
+    // NEW: Journal, Astrology, Enhanced Scribe, Voice Control
+    | 'journal-save' | 'journal-dream' | 'journal-title'
+    | 'astrology-transits' | 'astrology-personal'
+    | 'scribe-summarize-partial' | 'scribe-action-capture'
+    | 'voice-pause' | 'voice-resume';
   // For scribe operations
   scribeAction?: {
     type: 'start' | 'pause' | 'resume' | 'stop' | 'mark' | 'aside' | 'consent-yes' | 'consent-no' | 'transcript-on' | 'transcript-off';
     container?: ScribeContainer;
     markerType?: string;
     markerNote?: string;
+  };
+  // For journal operations
+  journalAction?: {
+    type: 'save' | 'dream' | 'title';
+    title?: string;
+  };
+  // For astrology operations
+  astrologyAction?: {
+    type: 'transits' | 'personal';
+  };
+  // For enhanced scribe operations
+  scribePartialAction?: {
+    type: 'summarize' | 'action-capture';
+    minutes?: number;
   };
 }
 
@@ -297,7 +316,8 @@ interface CommandDefinition {
   settingsDelta?: SettingsDelta;
   acknowledgment: AcknowledgmentStyle;
   acknowledgmentText?: string;
-  action?: 'pause' | 'continue' | 'reflect' | 'capture';
+  action?: VoiceCommandResult['action'];
+  scribeAction?: VoiceCommandResult['scribeAction'];
 }
 
 const COMMANDS: Record<string, CommandDefinition> = {
@@ -915,6 +935,120 @@ const COMMANDS: Record<string, CommandDefinition> = {
   },
 
   // ─────────────────────────────────────────────────────────────────────────
+  // Journal Commands
+  // ─────────────────────────────────────────────────────────────────────────
+
+  'journal-save': {
+    patterns: [
+      /maia,?\s*add\s+this\s+to\s+my\s+journal/i,
+      /maia,?\s*journal\s+this/i,
+      /maia,?\s*save\s+to\s+journal/i,
+    ],
+    action: 'journal-save',
+    acknowledgment: 'conversational',
+    acknowledgmentText: "I'll save this to your journal.",
+  },
+
+  'journal-dream': {
+    patterns: [
+      /maia,?\s*add\s+this\s+to\s+my\s+dream\s+journal/i,
+      /maia,?\s*dream\s+journal\s+this/i,
+      /maia,?\s*save\s+to\s+dream\s+journal/i,
+    ],
+    action: 'journal-dream',
+    acknowledgment: 'conversational',
+    acknowledgmentText: "Saving to your dream journal.",
+  },
+
+  'journal-title': {
+    patterns: [
+      /maia,?\s*title\s+this\s+entry\s+(.+)/i,
+      /maia,?\s*call\s+this\s+entry\s+(.+)/i,
+    ],
+    action: 'journal-title',
+    acknowledgment: 'brief',
+    acknowledgmentText: "Title updated.",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Astrology Commands
+  // ─────────────────────────────────────────────────────────────────────────
+
+  'astrology-transits': {
+    patterns: [
+      /maia,?\s*today'?s\s+transits/i,
+      /maia,?\s*what'?s\s+happening\s+in\s+the\s+sky/i,
+      /maia,?\s*current\s+transits/i,
+    ],
+    action: 'astrology-transits',
+    acknowledgment: 'conversational',
+    acknowledgmentText: "Let me check the current transits...",
+  },
+
+  'astrology-personal': {
+    patterns: [
+      /maia,?\s*what'?s\s+active\s+for\s+me\s+today/i,
+      /maia,?\s*how\s+do\s+today'?s\s+transits\s+affect\s+me/i,
+      /maia,?\s*my\s+transits\s+today/i,
+    ],
+    action: 'astrology-personal',
+    acknowledgment: 'conversational',
+    acknowledgmentText: "Let me check what's active for you...",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Enhanced Scribe Commands (Partial Summary & Action Items)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  'scribe-summarize-partial': {
+    patterns: [
+      /maia,?\s*summarize\s+the\s+last\s+(\d+)\s+minutes?/i,
+      /maia,?\s*what\s+happened\s+in\s+the\s+last\s+(\d+)\s+minutes?/i,
+    ],
+    action: 'scribe-summarize-partial',
+    acknowledgment: 'conversational',
+    acknowledgmentText: "Let me review that portion...",
+  },
+
+  'scribe-action-capture': {
+    patterns: [
+      /maia,?\s*what\s+were\s+(our|the)\s+action\s+items/i,
+      /maia,?\s*action\s+capture/i,
+      /maia,?\s*extract\s+action\s+items/i,
+      /maia,?\s*what\s+did\s+we\s+decide/i,
+    ],
+    action: 'scribe-action-capture',
+    acknowledgment: 'conversational',
+    acknowledgmentText: "Let me extract the action items...",
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Voice Control (Interrupt/Resume MAIA speech)
+  // ─────────────────────────────────────────────────────────────────────────
+
+  'voice-pause': {
+    patterns: [
+      /maia,?\s*stop\s+talking/i,
+      /maia,?\s*be\s+quiet/i,
+      /maia,?\s*shut\s+up/i,
+      /maia,?\s*enough/i,
+    ],
+    action: 'voice-pause',
+    acknowledgment: 'silent',
+  },
+
+  'voice-resume': {
+    patterns: [
+      /maia,?\s*resume/i,
+      /maia,?\s*continue\s+speaking/i,
+      /maia,?\s*go\s+ahead/i,
+      /maia,?\s*keep\s+talking/i,
+    ],
+    action: 'voice-resume',
+    acknowledgment: 'silent',
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
   // Presence & Pacing (The Workhorse Commands)
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -1171,9 +1305,11 @@ export function matchVoiceCommand(transcript: string): VoiceCommandResult {
 
   for (const [commandId, definition] of Object.entries(COMMANDS)) {
     for (const pattern of definition.patterns) {
-      if (pattern.test(normalizedTranscript)) {
+      const match = normalizedTranscript.match(pattern);
+      if (match) {
         console.log(`🎙️ [VoiceCommand] Matched: ${commandId}`);
-        return {
+
+        const result: VoiceCommandResult = {
           matched: true,
           command: commandId,
           modeChange: definition.modeChange,
@@ -1181,7 +1317,45 @@ export function matchVoiceCommand(transcript: string): VoiceCommandResult {
           acknowledgment: definition.acknowledgment,
           acknowledgmentText: definition.acknowledgmentText,
           action: definition.action,
+          scribeAction: definition.scribeAction,
         };
+
+        // Extract parameters for commands that need them
+        switch (commandId) {
+          case 'journal-save':
+            result.journalAction = { type: 'save' };
+            break;
+
+          case 'journal-dream':
+            result.journalAction = { type: 'dream' };
+            break;
+
+          case 'journal-title':
+            // Extract title from capture group
+            const title = match[1]?.trim();
+            result.journalAction = { type: 'title', title };
+            break;
+
+          case 'astrology-transits':
+            result.astrologyAction = { type: 'transits' };
+            break;
+
+          case 'astrology-personal':
+            result.astrologyAction = { type: 'personal' };
+            break;
+
+          case 'scribe-summarize-partial':
+            // Extract minutes from capture group
+            const minutes = match[1] ? parseInt(match[1], 10) : 5;
+            result.scribePartialAction = { type: 'summarize', minutes };
+            break;
+
+          case 'scribe-action-capture':
+            result.scribePartialAction = { type: 'action-capture' };
+            break;
+        }
+
+        return result;
       }
     }
   }

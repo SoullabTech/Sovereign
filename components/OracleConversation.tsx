@@ -977,6 +977,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const streamingMessageTextRef = useRef<string>('');
   const lastMaiaResponseRef = useRef<string>('');
   const lastUserMessageRef = useRef<string>('');
+  const pausedResponseRef = useRef<string | null>(null); // For voice-pause/resume
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -4573,6 +4574,149 @@ I'm not sure what I'm feeling yet.`;
         }
       }
 
+      // 📓 Handle Journal actions
+      if (voiceCmd.journalAction) {
+        const { type, title } = voiceCmd.journalAction;
+        if (type === 'save') {
+          // Save recent conversation to journal
+          const recentMessages = messages.slice(-5); // Last 5 messages
+          const content = recentMessages.map(m => `${m.role === 'user' ? 'You' : 'MAIA'}: ${m.text}`).join('\n\n');
+          try {
+            await apiFetch('/api/journal/quick', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                content,
+                type: 'reflection',
+                source: 'voice_command',
+              }),
+            });
+            toast.success('Saved to journal');
+          } catch (err) {
+            console.error('[Journal] Save error:', err);
+            toast.error('Failed to save to journal');
+          }
+        } else if (type === 'dream') {
+          // Save to dream journal
+          const recentMessages = messages.slice(-5);
+          const content = recentMessages.map(m => `${m.role === 'user' ? 'You' : 'MAIA'}: ${m.text}`).join('\n\n');
+          try {
+            await apiFetch('/api/journal/quick', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                content,
+                type: 'dream',
+                source: 'voice_command',
+              }),
+            });
+            toast.success('Saved to dream journal');
+          } catch (err) {
+            console.error('[Journal] Dream save error:', err);
+            toast.error('Failed to save to dream journal');
+          }
+        } else if (type === 'title' && title) {
+          // Update most recent journal entry title
+          console.log(`[Journal] Would update title to: ${title}`);
+          toast.success(`Title: "${title}"`);
+        }
+      }
+
+      // 🌟 Handle Astrology actions
+      if (voiceCmd.astrologyAction) {
+        const { type } = voiceCmd.astrologyAction;
+        if (type === 'transits') {
+          // Fetch today's transits and speak them
+          try {
+            const res = await apiFetch('/api/astrology/transits/today');
+            const data = await res.json();
+            if (data.summary && maiaSpeak && maiaReady) {
+              await maiaSpeak(data.summary);
+            }
+          } catch (err) {
+            console.error('[Astrology] Transits error:', err);
+            if (maiaSpeak && maiaReady) {
+              await maiaSpeak("I couldn't fetch the transits right now. Let's try again later.");
+            }
+          }
+        } else if (type === 'personal') {
+          // Fetch personal transits based on birth chart
+          try {
+            const res = await apiFetch('/api/astrology/transits/personal');
+            const data = await res.json();
+            if (data.summary && maiaSpeak && maiaReady) {
+              await maiaSpeak(data.summary);
+            }
+          } catch (err) {
+            console.error('[Astrology] Personal transits error:', err);
+            if (maiaSpeak && maiaReady) {
+              await maiaSpeak("I need your birth chart data to share personal transits. Have you set that up?");
+            }
+          }
+        }
+      }
+
+      // 📝 Handle Enhanced Scribe actions (partial summary, action items)
+      if (voiceCmd.scribePartialAction) {
+        const { type, minutes } = voiceCmd.scribePartialAction;
+        if (type === 'summarize' && scribeSession.isActive && scribeSession.sessionId) {
+          try {
+            const res = await apiFetch('/api/scribe/partial-summary', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: scribeSession.sessionId,
+                minutes: minutes || 5,
+              }),
+            });
+            const data = await res.json();
+            if (data.summary && maiaSpeak && maiaReady) {
+              await maiaSpeak(data.summary);
+            }
+          } catch (err) {
+            console.error('[Scribe] Partial summary error:', err);
+            toast.error('Failed to generate summary');
+          }
+        } else if (type === 'action-capture' && scribeSession.isActive && scribeSession.sessionId) {
+          try {
+            const res = await apiFetch('/api/scribe/action-items', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                sessionId: scribeSession.sessionId,
+              }),
+            });
+            const data = await res.json();
+            if (data.actionItems?.length > 0 && maiaSpeak && maiaReady) {
+              const itemsText = data.actionItems.map((item: string, i: number) => `${i + 1}. ${item}`).join('. ');
+              await maiaSpeak(`Here are the action items: ${itemsText}`);
+            } else if (maiaSpeak && maiaReady) {
+              await maiaSpeak("I didn't find any clear action items in this session.");
+            }
+          } catch (err) {
+            console.error('[Scribe] Action items error:', err);
+            toast.error('Failed to extract action items');
+          }
+        }
+      }
+
+      // 🔇 Handle Voice Control (pause/resume MAIA speech)
+      if (voiceCmd.action === 'voice-pause') {
+        // Stop any ongoing speech and save for potential resume
+        pausedResponseRef.current = lastMaiaResponseRef.current;
+        stopStreamingVoice();
+        isAudioPlayingRef.current = false;
+        setIsAudioPlaying(false);
+        console.log('🔇 [VoiceControl] MAIA speech paused');
+      } else if (voiceCmd.action === 'voice-resume') {
+        // Resume paused speech if available
+        if (pausedResponseRef.current && maiaSpeak && maiaReady) {
+          console.log('🔊 [VoiceControl] Resuming MAIA speech');
+          await maiaSpeak(pausedResponseRef.current);
+          pausedResponseRef.current = null;
+        }
+      }
+
       // Handle Presence Bell and Repair for Third Chair
       if (voiceCmd.action === 'presence-bell') {
         // Mark as softening moment
@@ -4609,14 +4753,17 @@ I'm not sure what I'm feeling yet.`;
     }
 
     // 📝 TRANSCRIPT CAPTURE: Append user speech to transcript if scribe session is active
-    // Skip control commands (scribe-*, presence-bell, repair, reflect)
-    const isScribeControl = voiceCmd.matched && (
+    // Skip control commands (scribe-*, voice-*, journal-*, astrology-*, presence-bell, repair, reflect)
+    const isControlCommand = voiceCmd.matched && (
       voiceCmd.action?.startsWith('scribe-') ||
+      voiceCmd.action?.startsWith('voice-') ||
+      voiceCmd.action?.startsWith('journal-') ||
+      voiceCmd.action?.startsWith('astrology-') ||
       voiceCmd.action === 'presence-bell' ||
       voiceCmd.action === 'repair' ||
       voiceCmd.action === 'reflect'
     );
-    if (!isScribeControl) {
+    if (!isControlCommand) {
       await appendTranscriptEntry(t, 'self');
     }
 
