@@ -83,8 +83,26 @@ export default function ReflectionDetailPage() {
       }
 
       const data = await response.json();
-      setCapsule(data);
-      setEditTitle(data.title);
+      // API returns { capsule }, but handle both formats for robustness
+      const capsuleData = data?.capsule ?? data;
+
+      // Normalize arrays to prevent future crashes from missing fields
+      const normalized: CapsuleDTO = {
+        ...capsuleData,
+        goldLines: capsuleData?.goldLines ?? [],
+        decisions: capsuleData?.decisions ?? [],
+        nextSteps: capsuleData?.nextSteps ?? [],
+        practices: capsuleData?.practices ?? [],
+        patterns: capsuleData?.patterns ?? [],
+        tags: capsuleData?.tags ?? [],
+      };
+
+      if (!normalized?.id) {
+        console.warn('[reflections] capsule payload missing id', data);
+      }
+
+      setCapsule(normalized);
+      setEditTitle(normalized?.title ?? '');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
