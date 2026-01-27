@@ -12,6 +12,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
+import { apiFetch } from '@/lib/http/apiBase';
 
 /** Relational stack metadata from server */
 interface RelationalMetadata {
@@ -377,7 +378,8 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     }
 
     try {
-      const response = await fetch('/api/voice/stream-conversation', {
+      // Use apiFetch for iOS/Safari compatibility (adds x-session-token header)
+      const response = await apiFetch('/api/voice/stream-conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -394,7 +396,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           conversationMode, // Conversation style
           memoryDepth,   // Memory retrieval depth
         }),
-        signal: abortControllerRef.current.signal
+        signal: abortControllerRef.current.signal,
       });
 
       if (!response.ok) {
