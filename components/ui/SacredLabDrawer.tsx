@@ -308,9 +308,10 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: isScribing ? MicOff : Mic,
           label: isScribing ? 'Stop Scribe & Download' : 'Start Scribe Mode',
           action: () => onAction?.('scribe-mode'),
+          doubleClickAction: () => onNavigate('/sessions'),
           description: isScribing
             ? 'Complete session and download transcript'
-            : 'Record client session passively with MAIA consultation',
+            : 'Record client session passively with MAIA consultation (double-tap for logs)',
           isActive: isScribing,
         },
         ...(hasScribeSession && !isScribing ? [{
@@ -479,6 +480,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
 
                         const Icon = item.icon;
                         const isComingSoon = item.badge === 'Coming Soon';
+                        const hasDoubleClick = !!(item as any).doubleClickAction;
                         return (
                           <motion.button
                             key={item.label}
@@ -488,6 +490,14 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
                                 if (!item.label.includes('Toggle') && !item.label.includes('Upload')) {
                                   onClose();
                                 }
+                              }
+                            }}
+                            onDoubleClick={(e) => {
+                              if (hasDoubleClick && !isComingSoon) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                (item as any).doubleClickAction();
+                                onClose();
                               }
                             }}
                             disabled={isComingSoon}
