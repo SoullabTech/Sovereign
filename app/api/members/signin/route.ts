@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { query } from '@/lib/db/postgres';
 import { verifyPassword } from '@/lib/auth/passwordUtils';
-import { createSession, setSessionCookie } from '@/lib/auth/serverSessions';
+import { createSession, setSessionCookie, setAccessCookies } from '@/lib/auth/serverSessions';
 import { logAuthEvent } from '@/lib/security/authAudit';
 import {
   checkRateLimit,
@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Find member by username (case-insensitive)
     const result = await query(
       `SELECT id, passkey, username, password_hash, name, preferred_name,
-              onboarded, onboarding_step, tier, subscription_active, subscription_expires_at,
+              onboarded, onboarding_step, tier, roles, subscription_active, subscription_expires_at,
               has_webauthn, preferred_auth_method
        FROM members
        WHERE LOWER(username) = LOWER($1)`,
@@ -102,6 +102,13 @@ export async function POST(request: NextRequest) {
         userAgent
       });
       await setSessionCookie(session.sessionToken, session.expiresAt);
+      // Set access cookies for middleware (tier, roles, member_id)
+      await setAccessCookies(
+        member.id,
+        member.tier || 'free',
+        member.roles || ['member'],
+        session.expiresAt
+      );
     } catch (sessionError) {
       console.error('[PasswordSignin] Failed to create session:', sessionError);
       // Continue without session - still return member data
@@ -130,6 +137,7 @@ export async function POST(request: NextRequest) {
         onboarded: member.onboarded,
         onboardingStep: member.onboarding_step,
         tier: member.tier || 'free',
+        roles: member.roles || ['member'],
         subscriptionActive: member.subscription_active || false,
         subscriptionExpiresAt: member.subscription_expires_at || null,
         hasWebauthn: member.has_webauthn || false,

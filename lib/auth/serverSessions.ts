@@ -229,6 +229,43 @@ export async function getSessionFromCookie(): Promise<string | null> {
 }
 
 /**
+ * Set access cookies (tier, roles, member_id)
+ * These are read by middleware for access control
+ */
+export async function setAccessCookies(
+  memberId: string,
+  tier: string,
+  roles: string[],
+  expiresAt: Date
+): Promise<void> {
+  const cookieStore = await cookies();
+  const cookieOptions = {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax' as const,
+    path: '/',
+    expires: expiresAt
+  };
+
+  // Member ID (for API routes)
+  cookieStore.set('maia_member_id', memberId, {
+    ...cookieOptions,
+    httpOnly: true,
+  });
+
+  // Tier (for middleware access checks)
+  cookieStore.set('maia_tier', tier || 'free', {
+    ...cookieOptions,
+    httpOnly: false, // Allow client to read for UI gating
+  });
+
+  // Roles (for middleware access checks)
+  cookieStore.set('maia_roles', JSON.stringify(roles || ['member']), {
+    ...cookieOptions,
+    httpOnly: false, // Allow client to read for UI gating
+  });
+}
+
+/**
  * Clear session cookie
  */
 export async function clearSessionCookie(): Promise<void> {
