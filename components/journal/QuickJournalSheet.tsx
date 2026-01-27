@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Mic, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, ChevronDown, ChevronUp, Square, Trash2, PenTool, Camera, Upload, Info } from 'lucide-react';
+import { X, Mic, Moon, Sun, Save, Sparkles, Loader2, Check, AlertCircle, ChevronDown, ChevronUp, Square, Trash2, PenTool, Camera, Upload, Info, BookOpen } from 'lucide-react';
 import { apiUrl } from '@/lib/http/apiBase';
 import { Capacitor } from '@capacitor/core';
 import HandwritingOCR from '@/lib/capacitor/HandwritingOCR';
@@ -37,6 +38,7 @@ export function QuickJournalSheet({
   onSaved,
   onAskMaia
 }: QuickJournalSheetProps) {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<JournalType>(defaultTab);
   const [content, setContent] = useState('');
   const [isSaving, setIsSaving] = useState(false);
@@ -876,6 +878,18 @@ export function QuickJournalSheet({
                   <span>Loading recent entries...</span>
                 </div>
               )}
+
+              {/* View All in Journal link */}
+              <button
+                onClick={() => {
+                  onClose();
+                  router.push('/labtools/journal');
+                }}
+                className="w-full mt-4 py-2 flex items-center justify-center gap-2 text-xs text-teal-400 hover:text-teal-300 hover:bg-teal-500/10 rounded-lg transition-colors"
+              >
+                <BookOpen className="w-3.5 h-3.5" />
+                <span>View All in Journal</span>
+              </button>
 
               {/* Subtle helper text */}
               <p className="text-center text-xs text-stone-500 mt-3">
