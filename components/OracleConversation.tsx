@@ -3,7 +3,7 @@
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff } from 'lucide-react';
+import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft } from 'lucide-react';
 // import { SimplifiedOrganicVoice, VoiceActivatedMaiaRef } from './ui/SimplifiedOrganicVoice'; // REPLACED with Whisper
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
@@ -118,6 +118,7 @@ import { DailyCheckin, type EmotionalState } from './checkin/DailyCheckin';
 import { ElementDiscovery } from './discovery/ElementDiscovery';
 import { WisdomCouncilPicker } from './wisdom/WisdomCouncilPicker';
 import { CurrentTeachingModal } from './wisdom/CurrentTeachingModal';
+import { consumeMaiaSeed, setReturnPath, getReturnPath, clearReturnPath, type ConsumedSeed } from '@/lib/maia/seedPrompt';
 import { ELDER_COUNCIL_TRADITIONS, type WisdomTradition } from '@/lib/consciousness/ElderCouncilService';
 import { ConversationStylePreference } from '@/lib/preferences/conversation-style-preference';
 import { detectJournalCommand, detectBreakthroughPotential } from '@/lib/services/conversationEssenceExtractor';
@@ -905,6 +906,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [showElementDiscovery, setShowElementDiscovery] = useState(false);
   const [showSessionRecap, setShowSessionRecap] = useState(false);
   const [sessionRecapData, setSessionRecapData] = useState<SessionRecapData | null>(null);
+
+  // Return loop state - for "Return to Guide/Academy" after seeded sessions
+  const [returnPath, setReturnPathState] = useState<{ path: string; label?: string } | null>(() => {
+    if (typeof window !== 'undefined') {
+      return getReturnPath();
+    }
+    return null;
+  });
   const [userCheckinState, setUserCheckinState] = useState<{ state: EmotionalState; intensity: number } | null>(null);
   const [enableVocabularyTooltips, setEnableVocabularyTooltips] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -997,6 +1006,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const onMessageAddedRef = useRef(onMessageAdded); // Store callback in ref to avoid infinite loop
   const activatingTimeoutRef = useRef<NodeJS.Timeout | null>(null); // Safety timeout for stuck activating state
   const handleCaptureSpiritRef = useRef<(() => void) | null>(null); // Ref for capture spirit handler (for event dispatch)
+  const didConsumeSeedRef = useRef(false); // One-shot guard for seed prompt consumption
+  const handleTextMessageRef = useRef<((text: string) => void) | null>(null); // Ref for seed prompt injection
+  const pendingSeedRef = useRef<ConsumedSeed | null>(null); // Store full seed until handler is ready
 
   // 🌊 LIQUID AI - Rhythm tracker instance
   const rhythmTrackerRef = useRef<ConversationalRhythm>(
@@ -1026,6 +1038,33 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // ==================== SEED PROMPT CONSUMER ====================
+  // One-shot consumption of seed prompts from Guide/Academy "Take to MAIA" buttons
+  // Uses ref guard to ensure we only process once, even with StrictMode double-mount
+  // Now supports rich payloads with source tracking for return-loop functionality
+  useEffect(() => {
+    if (didConsumeSeedRef.current) return;
+    didConsumeSeedRef.current = true;
+
+    const seed = consumeMaiaSeed();
+    if (seed) {
+      console.log('🌱 [SEED] Consumed seed from', seed.source || 'unknown source', ':', seed.prompt.slice(0, 50) + '...');
+
+      // If seed has return path, store it for the spiral return
+      if (seed.returnTo) {
+        setReturnPath(seed.returnTo, seed.sourceLabel);
+        setReturnPathState({ path: seed.returnTo, label: seed.sourceLabel });
+        console.log('🔄 [SEED] Return path set:', seed.returnTo, seed.sourceLabel ? `(${seed.sourceLabel})` : '');
+      }
+
+      // Store full seed in ref - will be processed by the effect below when handleTextMessage is ready
+      pendingSeedRef.current = seed;
+    }
+  }, []);
+
+  // Store handleTextMessage ref for seed injection (updated after handleTextMessage is defined)
+  // This effect is defined early but the actual ref assignment happens later via another effect
 
   // ==================== RECORDING STATE CALLBACK ====================
   // Sync isListening state from ContinuousConversation to parent
@@ -4385,6 +4424,25 @@ I'm not sure what I'm feeling yet.`;
     }
   }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode]);
 
+  // ==================== SEED PROMPT PROCESSOR ====================
+  // Process pending seed prompt once handleTextMessage is available
+  // This runs after handleTextMessage is defined and sends any pending seed
+  useEffect(() => {
+    // Store ref for potential future use
+    handleTextMessageRef.current = handleTextMessage;
+
+    // Process any pending seed (from Guide/Academy "Take to MAIA" buttons)
+    if (pendingSeedRef.current) {
+      const seed = pendingSeedRef.current;
+      pendingSeedRef.current = null; // Clear to prevent re-processing
+      console.log('🌱 [SEED] Sending seed to handleTextMessage:', seed.prompt.slice(0, 50) + '...');
+      // Small delay to ensure component is fully mounted and ready
+      setTimeout(() => {
+        handleTextMessage(seed.prompt);
+      }, 100);
+    }
+  }, [handleTextMessage]);
+
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
     console.log('🎤 handleVoiceTranscript called with:', transcript);
@@ -7370,6 +7428,40 @@ I'm not sure what I'm feeling yet.`;
           setShowWisdomCouncil(true);
         }}
       />
+
+      {/* Return Path Pill - shows when user came from Guide/Academy via seed prompt */}
+      {returnPath && !showLabDrawer && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          className="fixed bottom-24 left-4 z-50 flex items-center gap-1 px-3 py-2 rounded-full bg-amber-500/20 border border-amber-500/30 text-amber-100 text-[13px] font-medium backdrop-blur-sm shadow-lg"
+        >
+          <button
+            onClick={() => {
+              clearReturnPath();
+              setReturnPathState(null);
+              window.location.href = returnPath.path;
+            }}
+            className="flex items-center gap-2 px-1.5 py-0.5 hover:opacity-90 transition-opacity"
+          >
+            <CornerUpLeft className="w-4 h-4" />
+            <span>Return to {returnPath.label || 'Guide'}</span>
+          </button>
+
+          <button
+            aria-label="Dismiss return"
+            onClick={() => {
+              // Clear both state and storage - user chose not to return
+              clearReturnPath();
+              setReturnPathState(null);
+            }}
+            className="ml-1 p-1 rounded-full text-amber-100/60 hover:text-amber-100 hover:bg-amber-500/20 transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </motion.div>
+      )}
 
       {/* Floating Session Indicator - shows when session is active */}
       {sessionTimer && sessionTimer.isActive?.() && !showLabDrawer && (

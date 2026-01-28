@@ -183,6 +183,12 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '📚',
       items: [
         {
+          icon: BookOpen,
+          label: 'User Guide',
+          action: () => onNavigate('/maia/guide'),
+          description: 'Complete guide to MAIA, LabTools, Commons & Settings'
+        },
+        {
           icon: GraduationCap,
           label: 'Soullab Academy',
           action: () => onAction?.('open-academy'),

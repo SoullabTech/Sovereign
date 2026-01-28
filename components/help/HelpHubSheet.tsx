@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, HelpCircle, Mic, ClipboardCheck } from 'lucide-react';
+import { X, HelpCircle, Mic, ClipboardCheck, BookOpen } from 'lucide-react';
 
 type HelpHubSheetProps = {
   isOpen: boolean;
@@ -17,6 +18,13 @@ export default function HelpHubSheet({
   onOpenVoiceHelp,
   onOpenTestFlightHelp,
 }: HelpHubSheetProps) {
+  const router = useRouter();
+
+  const handleOpenGuide = () => {
+    onClose();
+    router.push('/maia/guide');
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -67,6 +75,29 @@ export default function HelpHubSheet({
               {/* Buttons */}
               <div className="px-5 pb-5">
                 <div className="grid grid-cols-1 gap-3">
+                  {/* User Guide - Primary CTA */}
+                  <button
+                    onClick={handleOpenGuide}
+                    className="group flex w-full items-center justify-between rounded-2xl border border-amber-500/30 bg-amber-500/20 px-4 py-4 text-left hover:bg-amber-500/25"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-amber-500/30 bg-amber-500/10">
+                        <BookOpen className="h-4 w-4 text-amber-300" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-semibold text-amber-50">
+                          User Guide
+                        </div>
+                        <div className="text-xs text-amber-100/70">
+                          Complete guide to MAIA, LabTools, Commons & Settings
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-amber-200/70 group-hover:text-amber-200">
+                      Open →
+                    </div>
+                  </button>
+
                   <button
                     onClick={() => {
                       onClose();
