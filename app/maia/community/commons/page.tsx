@@ -121,9 +121,9 @@ export default function MAIACommunityCommonsPage() {
       items: [
         {
           icon: Lightbulb,
-          label: 'Working with MAIA',
-          path: '/maia/community/content/guides/working-with-maia',
-          description: 'Your guide to conscious conversation and soul-tending',
+          label: 'User Guide',
+          path: '/maia/guide',
+          description: 'Complete guide to MAIA, LabTools, Commons & Settings',
           type: 'practice',
           readTime: '10 min'
         },

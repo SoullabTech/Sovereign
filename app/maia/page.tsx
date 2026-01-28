@@ -807,12 +807,12 @@ function MAIAPageContent() {
 
                 {/* Guide Button - Mobile */}
                 <motion.button
-                  onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
+                  onClick={() => router.push('/maia/guide')}
                   className="flex items-center gap-1 px-2 py-1 rounded-lg
                            bg-maia-navy-800/40 hover:bg-maia-navy-800
                            border border-maia-navy-700/40 hover:border-maia-navy-700
                            text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all flex-shrink-0"
-                  title="Guide"
+                  title="User Guide"
                 >
                   <Sparkles className="w-3 h-3" />
                   <span className="text-xs">Guide</span>
@@ -1015,14 +1015,14 @@ function MAIAPageContent() {
 
                 {/* Guide Button - Desktop */}
                 <motion.button
-                  onClick={() => router.push('/maia/community/content/guides/working-with-maia')}
+                  onClick={() => router.push('/maia/guide')}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg
                            bg-maia-navy-800/40 hover:bg-maia-navy-800
                            border border-maia-navy-700/40 hover:border-maia-navy-700
                            text-maia-ink-60 hover:text-maia-ink-100 text-xs font-light transition-all"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  title="Demo Guide"
+                  title="User Guide"
                 >
                   <Sparkles className="w-4 h-4" />
                   <span className="hidden sm:inline">Guide</span>
