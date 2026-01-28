@@ -9,7 +9,6 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { VoiceHUD } from './voice/VoiceHUD';
 import { useStreamingVoice } from '@/hooks/useStreamingVoice';
-import { RelationalTelemetryPanel } from '@/components/dev/RelationalTelemetryPanel';
 import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
@@ -7380,9 +7379,6 @@ I'm not sure what I'm feeling yet.`;
           onClick={() => setShowLabDrawer(true)}
         />
       )}
-
-      {/* Dev-only Relational Telemetry Panel - shows move_outcome events */}
-      <RelationalTelemetryPanel lastMoveOutcome={lastMoveOutcome} />
 
     </div>
   );

@@ -78,21 +78,21 @@ export class ConversationContext {
       switch (depth) {
         case 'opening':
           return {
-            maxTokens: 50, // ~8 words max for opening
-            depthGuidance: '\n\nCONVERSATION STATE: Opening. Keep response to 8 words maximum. Simple greeting only.',
-            responseStyle: 'minimal'
+            maxTokens: 200, // Allow full greeting responses
+            depthGuidance: '\n\nCONVERSATION STATE: Opening. Warm, natural greeting.',
+            responseStyle: 'brief'
           };
         case 'early':
           return {
-            maxTokens: 80, // ~15 words max for early conversation
-            depthGuidance: '\n\nCONVERSATION STATE: Early conversation. Maximum 15 words. Direct and curious.',
-            responseStyle: 'brief'
+            maxTokens: 400, // Allow 2-3 sentence responses
+            depthGuidance: '\n\nCONVERSATION STATE: Early conversation. 2-3 thoughtful sentences.',
+            responseStyle: 'measured'
           };
         case 'deeper':
           return {
-            maxTokens: 150, // ~25 words max for deeper conversation
-            depthGuidance: '\n\nCONVERSATION STATE: Deeper conversation. Maximum 25 words. Still brief, more textured.',
-            responseStyle: 'measured'
+            maxTokens: 800, // Allow fuller responses with depth
+            depthGuidance: '\n\nCONVERSATION STATE: Deeper conversation. Allow fuller responses with depth and nuance.',
+            responseStyle: 'full'
           };
         default:
           return this.getDepthConfig('classic');

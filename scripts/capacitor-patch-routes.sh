@@ -31,23 +31,35 @@ log_info() { echo -e "${GREEN}[PATCH]${NC} $1"; }
 log_warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 log_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 
-# API routes - Next.js static export should skip them automatically
-# We no longer move them as it causes webpack trace errors
+# API routes - must be moved out for static export
+# Routes with `force-dynamic` cause build failures during static export
 hide_api_routes() {
-    log_info "Checking app/api routes (will be skipped by static export)..."
+    log_info "Moving app/api routes out of the build for static export..."
 
     if [ -d "$PROJECT_ROOT/app/api" ]; then
-        # Count routes for info
+        if [ -d "$API_BACKUP_DIR" ]; then
+            log_warn "API backup already exists, removing stale backup..."
+            rm -rf "$API_BACKUP_DIR"
+        fi
         local count=$(find "$PROJECT_ROOT/app/api" -name "route.ts" | wc -l | tr -d ' ')
-        log_info "Found $count API routes - will be skipped during static export"
+        mv "$PROJECT_ROOT/app/api" "$API_BACKUP_DIR"
+        log_info "Moved $count API routes to .capacitor-api-backup"
     else
         log_warn "No app/api directory found"
     fi
 }
 
-# Restore API routes - no-op since we no longer move them
+# Restore API routes after static export build
 restore_api_routes() {
-    log_info "API routes not moved, nothing to restore"
+    log_info "Restoring app/api routes from backup..."
+
+    if [ -d "$API_BACKUP_DIR" ]; then
+        [ -d "$PROJECT_ROOT/app/api" ] && rm -rf "$PROJECT_ROOT/app/api"
+        mv "$API_BACKUP_DIR" "$PROJECT_ROOT/app/api"
+        log_info "Restored API routes from backup"
+    else
+        log_warn "No API backup found at $API_BACKUP_DIR"
+    fi
 }
 
 # Replace middleware with a stub for static export

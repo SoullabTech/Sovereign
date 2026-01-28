@@ -4,9 +4,16 @@ import OpenAI from 'openai';
 
 const DEFAULT_TTS_MODEL = process.env.OPENAI_TTS_MODEL || 'tts-1';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
+let _openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return _openai;
+}
 
 /**
  * The ONLY allowed OpenAI usage in this project: text-to-speech.
@@ -29,7 +36,7 @@ export async function synthesizeSpeech(params: {
     keyLength: process.env.OPENAI_API_KEY?.length || 0,
   });
 
-  const response = await openai.audio.speech.create({
+  const response = await getOpenAI().audio.speech.create({
     model: model || DEFAULT_TTS_MODEL,
     input: text,
     voice: voice as any,

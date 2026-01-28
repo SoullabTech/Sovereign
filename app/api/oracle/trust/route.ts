@@ -3,10 +3,25 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const revalidate = false;
-import { personalOracleAgent } from '../../_backend/src/agents/PersonalOracleAgent';
-import { logger } from '../../_backend/src/utils/logger';
 
-// Skip during static export (Capacitor builds)
+// Lazy import to avoid build-time OpenAI SDK instantiation
+let _personalOracleAgent: any = null;
+async function getPersonalOracleAgent() {
+  if (!_personalOracleAgent) {
+    const mod = await import('../../_backend/src/agents/PersonalOracleAgent');
+    _personalOracleAgent = mod.personalOracleAgent;
+  }
+  return _personalOracleAgent;
+}
+
+let _logger: any = null;
+async function getLogger() {
+  if (!_logger) {
+    const mod = await import('../../_backend/src/utils/logger');
+    _logger = mod.logger;
+  }
+  return _logger;
+}
 
 /**
  * GET /api/oracle/trust
@@ -20,7 +35,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
+
     if (!userId) {
       return NextResponse.json(
         { error: 'userId parameter is required' },
@@ -29,6 +44,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get oracle state including trust metrics
+    const personalOracleAgent = await getPersonalOracleAgent();
     const stateResponse = await personalOracleAgent.getOracleState(userId);
     
     if (!stateResponse.success) {
@@ -56,6 +72,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
+    const logger = await getLogger();
     logger.error('Failed to get trust metrics', {
       error: error instanceof Error ? error.message : 'Unknown error'
     });
@@ -93,6 +110,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Process feedback
+    const personalOracleAgent = await getPersonalOracleAgent();
     await personalOracleAgent.processOracleFeedback(userId, feedback);
 
     // Get updated state
@@ -105,6 +123,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
+    const logger = await getLogger();
     logger.error('Failed to process trust feedback', {
       error: error instanceof Error ? error.message : 'Unknown error'
     });

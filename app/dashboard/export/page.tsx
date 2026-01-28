@@ -1,7 +1,8 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Download, FileText, Calendar, Shield, Lock } from 'lucide-react';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
+import { Download, FileText, Calendar, Shield, Lock, Loader2 } from 'lucide-react';
 
 /**
  * Export page - Public preview with auth-gated action
@@ -9,9 +10,25 @@ import { getCurrentSession } from '@/lib/auth/serverSessions';
  * Unauthenticated users see an explanation of why export requires sign-in.
  * Authenticated users see the full export interface.
  */
-export default async function ExportPage() {
-  const session = await getCurrentSession();
-  const isAuthenticated = !!session;
+export default function ExportPage() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    // Check auth on mount by calling API
+    fetch('/api/auth/check')
+      .then(res => res.json())
+      .then(data => setIsAuthenticated(!!data.authenticated))
+      .catch(() => setIsAuthenticated(false));
+  }, []);
+
+  // Loading state
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center p-6">
+        <Loader2 className="w-8 h-8 text-neutral-400 animate-spin" />
+      </div>
+    );
+  }
 
   // Blocked state for unauthenticated users
   if (!isAuthenticated) {
@@ -59,13 +76,13 @@ export default async function ExportPage() {
               href="/maia/stewardship"
               className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
             >
-              Why support matters →
+              Why support matters
             </Link>
             <Link
               href="/maia/privacy"
               className="text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors"
             >
-              Privacy →
+              Privacy
             </Link>
           </div>
         </div>
@@ -203,10 +220,10 @@ export default async function ExportPage() {
               Data Privacy & Security
             </h4>
             <div className="text-sm text-amber-700 dark:text-amber-300 space-y-1">
-              <p>• All exported data is encrypted and anonymous</p>
-              <p>• Personal identifiers are removed or hashed</p>
-              <p>• Exports are available for 24 hours after generation</p>
-              <p>• Downloaded files are automatically deleted from our servers</p>
+              <p>All exported data is encrypted and anonymous</p>
+              <p>Personal identifiers are removed or hashed</p>
+              <p>Exports are available for 24 hours after generation</p>
+              <p>Downloaded files are automatically deleted from our servers</p>
             </div>
           </div>
         </div>

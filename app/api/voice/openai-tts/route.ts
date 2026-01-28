@@ -4,9 +4,16 @@ import OpenAI from "openai";
 export const runtime = "nodejs"; // important: TTS returns binary; avoid edge surprises
 export const dynamic = "force-dynamic";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+// Lazy initialization to avoid build-time errors when OPENAI_API_KEY is not set
+let _openai: OpenAI | null = null;
+function getOpenAI() {
+  if (!_openai) {
+    _openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  }
+  return _openai;
+}
 
 function jsonError(message: string, status = 500, extra?: Record<string, unknown>) {
   return new Response(JSON.stringify({ error: message, ...extra }), {
@@ -49,7 +56,7 @@ export async function POST(req: Request) {
 
     console.log(`[openai-tts:${requestId}] starting model=${model} voice=${voice} format=${format} chars=${text.length}`);
 
-    const speech = await openai.audio.speech.create({
+    const speech = await getOpenAI().audio.speech.create({
       model,
       voice: voice as any,
       input: text,
