@@ -1,8 +1,155 @@
-import { NextRequest } from 'next/server';
-import { getTranscriptSegments } from '@/lib/supervision/SupervisionStore';
+import { NextRequest, NextResponse } from 'next/server';
+import { getTranscriptSegments, addTranscriptSegment, getSession } from '@/lib/supervision/SupervisionStore';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+export const revalidate = false;
+
+// Whisper endpoint (local container)
+const WHISPER_URL = process.env.WHISPER_URL || 'http://maia-whisper:8000';
+
+interface WhisperResponse {
+  text: string;
+  segments?: Array<{
+    start: number;
+    end: number;
+    text: string;
+    confidence?: number;
+  }>;
+  language?: string;
+}
+
+/**
+ * POST - Receive audio chunk, transcribe via Whisper, store in database
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const formData = await request.formData();
+
+    const sessionId = formData.get('sessionId') as string;
+    const audioFile = formData.get('audio') as File | null;
+    const startMs = parseInt(formData.get('startMs') as string || '0', 10);
+    const endMs = parseInt(formData.get('endMs') as string || '0', 10);
+    const speaker = formData.get('speaker') as string || 'unknown';
+
+    if (!sessionId) {
+      return NextResponse.json({
+        success: false,
+        error: 'sessionId is required'
+      }, { status: 400 });
+    }
+
+    if (!audioFile || audioFile.size === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'audio file is required'
+      }, { status: 400 });
+    }
+
+    // Verify session exists and is active
+    const session = await getSession(sessionId);
+    if (!session) {
+      return NextResponse.json({
+        success: false,
+        error: 'Session not found'
+      }, { status: 404 });
+    }
+
+    if (session.ended_at) {
+      return NextResponse.json({
+        success: false,
+        error: 'Session has already ended'
+      }, { status: 400 });
+    }
+
+    // Prepare audio for Whisper
+    const audioBuffer = await audioFile.arrayBuffer();
+    const audioBlob = new Blob([audioBuffer], { type: audioFile.type });
+
+    // Send to local Whisper for transcription
+    const whisperFormData = new FormData();
+    whisperFormData.append('file', audioBlob, 'audio.webm');
+    whisperFormData.append('response_format', 'verbose_json');
+    whisperFormData.append('language', 'en');
+
+    let transcriptText = '';
+    let confidence = 0.9;
+    let language = 'en';
+
+    try {
+      const whisperResponse = await fetch(`${WHISPER_URL}/v1/audio/transcriptions`, {
+        method: 'POST',
+        body: whisperFormData,
+      });
+
+      if (whisperResponse.ok) {
+        const whisperResult: WhisperResponse = await whisperResponse.json();
+        transcriptText = whisperResult.text?.trim() || '';
+        language = whisperResult.language || 'en';
+
+        if (whisperResult.segments?.length) {
+          const totalConfidence = whisperResult.segments.reduce(
+            (sum, seg) => sum + (seg.confidence || 0.9),
+            0
+          );
+          confidence = totalConfidence / whisperResult.segments.length;
+        }
+      } else {
+        console.error('[TranscriptStream] Whisper error:', await whisperResponse.text());
+      }
+    } catch (whisperError) {
+      console.error('[TranscriptStream] Whisper connection error:', whisperError);
+      // Fall back to browser transcription if provided
+      transcriptText = formData.get('fallbackText') as string || '';
+    }
+
+    // Only store if we have text
+    if (transcriptText) {
+      const segment = await addTranscriptSegment({
+        sessionId,
+        speaker,
+        speakerConfidence: 0.8,
+        startMs,
+        endMs,
+        text: transcriptText,
+        transcriptionConfidence: confidence,
+      });
+
+      console.log(`📝 [TranscriptStream] Stored: "${transcriptText.slice(0, 50)}..."`);
+
+      return NextResponse.json({
+        success: true,
+        segment: {
+          id: segment.id,
+          text: transcriptText,
+          startMs,
+          endMs,
+          speaker,
+          confidence,
+          language,
+        }
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      segment: null,
+      message: 'No speech detected in this chunk'
+    });
+
+  } catch (error) {
+    console.error('🔴 [TranscriptStream] Error:', error);
+
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to process transcript chunk'
+    }, { status: 500 });
+  }
+}
+
+/**
+ * GET - SSE stream for receiving transcript updates
+ */
 
 // Backoff intervals (ms): start at 1s, back off when idle
 const INTERVALS = [1000, 2000, 3000, 5000];
