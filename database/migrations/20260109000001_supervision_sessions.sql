@@ -8,7 +8,8 @@ CREATE TABLE IF NOT EXISTS supervision_sessions (
   practitioner_id UUID,    -- Optional link to practitioners
   case_id UUID,            -- Optional link to cases
   session_type VARCHAR(30) CHECK (session_type IN (
-    'individual', 'group', 'peer', 'consultation', 'team_meeting'
+    'individual', 'group', 'peer', 'consultation', 'team_meeting',
+    'reading', 'scribe', 'live_scribe'
   )),
   title TEXT,
   started_at TIMESTAMPTZ DEFAULT NOW(),

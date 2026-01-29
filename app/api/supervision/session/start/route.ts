@@ -15,7 +15,7 @@ import { createSession, getActiveSession } from '@/lib/supervision/SupervisionSt
 interface StartSessionRequest {
   practitionerId?: string;
   caseId?: string;
-  sessionType?: 'individual' | 'group' | 'peer' | 'consultation' | 'team_meeting';
+  sessionType?: 'individual' | 'group' | 'peer' | 'consultation' | 'team_meeting' | 'reading' | 'scribe' | 'live_scribe';
   title?: string;
   metadata?: Record<string, unknown>;
 }
