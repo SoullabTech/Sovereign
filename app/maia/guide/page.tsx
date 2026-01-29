@@ -704,28 +704,28 @@ export default function MAIAGuidePage() {
             </div>
           )}
 
-          {/* Step Progress - clickable for completed/current steps */}
-          <div className="flex items-center gap-2 mb-6">
-            {FIRST_ENTRY_STEPS.map((step, idx) => (
-              <div key={step.id} className="flex items-center">
+          {/* Progress - minimal dots with current step label */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-1.5">
+              {FIRST_ENTRY_STEPS.map((step, idx) => (
                 <button
+                  key={step.id}
                   onClick={() => isStepReachable(idx) && setCurrentStep(idx)}
                   disabled={!isStepReachable(idx)}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-medium transition-all ${
-                    idx < currentStep
-                      ? 'bg-[#B8860B] text-[#0A1628] cursor-pointer hover:bg-[#CD853F]'
-                      : idx === currentStep
-                      ? 'bg-[#1E3A5F] text-[#E5E9F0] border-2 border-[#B8860B]'
-                      : 'bg-[#162640] text-[#A0AAB8]/40 cursor-not-allowed'
+                  className={`rounded-full transition-all ${
+                    idx === currentStep
+                      ? 'w-6 h-2 bg-[#B8860B]'
+                      : idx < currentStep
+                      ? 'w-2 h-2 bg-[#B8860B]/60 cursor-pointer hover:bg-[#B8860B]'
+                      : 'w-2 h-2 bg-[#1E3A5F]'
                   }`}
-                >
-                  {idx < currentStep ? <Check className="w-4 h-4" /> : idx + 1}
-                </button>
-                {idx < FIRST_ENTRY_STEPS.length - 1 && (
-                  <div className={`w-8 h-0.5 ${idx < currentStep ? 'bg-[#B8860B]' : 'bg-[#162640]'}`} />
-                )}
-              </div>
-            ))}
+                  aria-label={step.title}
+                />
+              ))}
+            </div>
+            <span className="text-[11px] text-[#A0AAB8]/60">
+              {FIRST_ENTRY_STEPS[currentStep].title}
+            </span>
           </div>
 
           {/* Current Step Card */}
