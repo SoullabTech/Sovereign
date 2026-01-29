@@ -8,10 +8,10 @@
  * - Tarot: The Mirror of the Soul - 78 cards of archetypal guidance
  * - Runes: The Elder Futhark - 24 symbols of ancestral knowledge
  *
- * Aesthetic: DUNE mysticism meets cosmic oracle chamber
+ * Aesthetic: MAIA night sky temple - deep navy with golden/sage accents
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -22,10 +22,6 @@ import {
   Hexagon,
   ArrowLeft
 } from 'lucide-react';
-import { betaSession } from '@/lib/auth/betaSession';
-import { hasContinuityAccess, type MemberTier } from '@/lib/auth/tierAccess';
-import PersonalThresholdInvitation from '@/components/tier/PersonalThresholdInvitation';
-import TierDebugPill from '@/components/dev/TierDebugPill';
 
 type DivinationMethod = 'iching' | 'tarot' | 'runes' | null;
 
@@ -34,10 +30,9 @@ interface OracleMethod {
   title: string;
   subtitle: string;
   description: string;
-  icon: any;
-  gradient: string;
-  borderGlow: string;
-  symbolPath: string;
+  icon: React.ComponentType<{ className?: string }>;
+  accentColor: string;
+  glowColor: string;
 }
 
 const ORACLE_METHODS: OracleMethod[] = [
@@ -47,9 +42,8 @@ const ORACLE_METHODS: OracleMethod[] = [
     subtitle: 'The Book of Changes',
     description: 'Cast the ancient hexagrams to understand cosmic currents. 64 pathways of wisdom await your question.',
     icon: Hexagon,
-    gradient: 'from-orange-800/30 via-amber-700/20 to-orange-700/30',
-    borderGlow: 'shadow-orange-600/40 border-orange-600/50',
-    symbolPath: 'M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z'
+    accentColor: 'text-maia-spice-400',
+    glowColor: 'rgba(245, 158, 11, 0.3)',
   },
   {
     id: 'tarot',
@@ -57,9 +51,8 @@ const ORACLE_METHODS: OracleMethod[] = [
     subtitle: 'The Mirror of the Soul',
     description: 'Journey through archetypal wisdom of 78 sacred cards. Each spread reveals hidden patterns shaping your path.',
     icon: Star,
-    gradient: 'from-amber-800/30 via-yellow-800/20 to-amber-700/30',
-    borderGlow: 'shadow-amber-600/40 border-amber-600/50',
-    symbolPath: 'M12 2 L15 8 L22 9 L17 14 L18 21 L12 18 L6 21 L7 14 L2 9 L9 8 Z'
+    accentColor: 'text-violet-400',
+    glowColor: 'rgba(139, 92, 246, 0.3)',
   },
   {
     id: 'runes',
@@ -67,109 +60,17 @@ const ORACLE_METHODS: OracleMethod[] = [
     subtitle: 'The Elder Futhark',
     description: 'Draw from 24 ancient Norse symbols. The runes speak of fate, will, and the hidden currents of wyrd.',
     icon: Moon,
-    gradient: 'from-slate-800/30 via-stone-700/20 to-slate-700/30',
-    borderGlow: 'shadow-slate-600/40 border-slate-500/50',
-    symbolPath: 'M12 4 L14 8 L12 12 L10 8 Z M12 12 L14 16 L12 20 L10 16 Z M8 8 L12 12 L16 8'
+    accentColor: 'text-maia-sage-400',
+    glowColor: 'rgba(20, 184, 166, 0.3)',
   }
 ];
-
-// Helper to get/set weekly reading count in localStorage
-const READING_COUNT_KEY = 'oracle_readings_this_week';
-const READING_WEEK_KEY = 'oracle_week_start';
-
-function getWeekStart(): string {
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
-  const dayOfWeek = d.getDay(); // 0=Sun
-  d.setDate(d.getDate() - dayOfWeek); // Sunday start
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function getReadingCount(): number {
-  if (typeof window === 'undefined') return 0;
-  const weekStart = localStorage.getItem(READING_WEEK_KEY);
-  const currentWeekStart = getWeekStart();
-
-  // Reset count if new week
-  if (weekStart !== currentWeekStart) {
-    localStorage.setItem(READING_WEEK_KEY, currentWeekStart);
-    localStorage.setItem(READING_COUNT_KEY, '0');
-    return 0;
-  }
-
-  return parseInt(localStorage.getItem(READING_COUNT_KEY) || '0', 10);
-}
-
-function incrementReadingCount(): void {
-  if (typeof window === 'undefined') return;
-  const currentWeekStart = getWeekStart();
-  localStorage.setItem(READING_WEEK_KEY, currentWeekStart);
-  const count = getReadingCount();
-  localStorage.setItem(READING_COUNT_KEY, String(count + 1));
-}
-
-// Dismissal persistence (per week)
-const DISMISS_KEY = 'oracle_threshold_dismissed_week';
-
-function getThresholdDismissed(): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(DISMISS_KEY) === getWeekStart();
-}
-
-function setThresholdDismissed(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(DISMISS_KEY, getWeekStart());
-}
 
 export default function OracleConsultationPage() {
   const router = useRouter();
   const [selectedMethod, setSelectedMethod] = useState<DivinationMethod>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  // Tier and reading tracking
-  const [tier, setTier] = useState<MemberTier>('free');
-  const [readingsThisWeek, setReadingsThisWeek] = useState(0);
-  const [thresholdDismissed, setDismissedState] = useState(false);
-
-  // Load user, reading count, and dismissal state
-  useEffect(() => {
-    const user = betaSession.getCurrentUser();
-    if (user?.tier) {
-      setTier(user.tier);
-    }
-
-    // Load persisted dismissal state
-    setDismissedState(getThresholdDismissed());
-
-    // Dev override: ?readings=5 to force threshold display
-    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const forceReadings = params.get('readings');
-      if (forceReadings) {
-        setReadingsThisWeek(parseInt(forceReadings, 10));
-        return;
-      }
-    }
-
-    setReadingsThisWeek(getReadingCount());
-  }, []);
-
-  const handleDismissThreshold = () => {
-    setThresholdDismissed();
-    setDismissedState(true);
-  };
-
-  const hasAccess = hasContinuityAccess({ tier });
-  const showThreshold = !hasAccess && readingsThisWeek >= 3 && !thresholdDismissed;
-
   const handleMethodSelect = (method: DivinationMethod) => {
-    // Track the reading
-    incrementReadingCount();
-    setReadingsThisWeek(prev => prev + 1);
-
     setIsTransitioning(true);
     setSelectedMethod(method);
 
@@ -179,25 +80,23 @@ export default function OracleConsultationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-950 via-amber-900 to-orange-950 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 relative overflow-hidden">
       {/* Atmospheric Particles */}
       <div className="fixed inset-0 pointer-events-none">
-        {[...Array(50)].map((_, i) => (
+        {[...Array(40)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-[#D4B896]/30 rounded-full"
+            className="absolute w-1 h-1 bg-maia-spice-400/20 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -40, 0],
-              x: [0, Math.random() * 20 - 10, 0],
-              opacity: [0.2, 0.6, 0.2],
-              scale: [1, 1.5, 1],
+              y: [0, -30, 0],
+              opacity: [0.1, 0.4, 0.1],
             }}
             transition={{
-              duration: 4 + Math.random() * 6,
+              duration: 5 + Math.random() * 5,
               repeat: Infinity,
               delay: Math.random() * 3,
               ease: 'easeInOut',
@@ -206,147 +105,99 @@ export default function OracleConsultationPage() {
         ))}
       </div>
 
-      {/* Atmospheric Glow */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/40 via-amber-950/10 to-transparent pointer-events-none" />
-
-      {/* Sacred geometry overlay */}
+      {/* Sacred geometry overlay - very subtle */}
       <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
         <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <circle cx="500" cy="500" r="450" fill="none" stroke="#D4B896" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="350" fill="none" stroke="#D4B896" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="250" fill="none" stroke="#D4B896" strokeWidth="0.5" strokeDasharray="8 8" />
-          <path d="M 500 50 L 866 250 L 866 750 L 500 950 L 134 750 L 134 250 Z" fill="none" stroke="#D4B896" strokeWidth="0.5" />
+          <circle cx="500" cy="500" r="400" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeDasharray="4 8" />
+          <circle cx="500" cy="500" r="300" fill="none" stroke="#14b8a6" strokeWidth="0.5" strokeDasharray="4 8" />
+          <circle cx="500" cy="500" r="200" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeDasharray="4 8" />
         </svg>
       </div>
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-5xl">
+        <div className="w-full max-w-4xl">
 
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: -30 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
           >
             <motion.div
-              className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full"
+              className="inline-flex items-center justify-center w-16 h-16 mb-6 rounded-full bg-maia-navy-800/60 border border-maia-spice-500/20"
               style={{
-                background: 'radial-gradient(circle, rgba(212, 184, 150, 0.15) 0%, rgba(61, 40, 23, 0.1) 100%)',
-                boxShadow: '0 0 40px rgba(212, 184, 150, 0.2), inset 0 0 20px rgba(212, 184, 150, 0.05)',
-              }}
-              animate={{
-                boxShadow: [
-                  '0 0 40px rgba(212, 184, 150, 0.2), inset 0 0 20px rgba(212, 184, 150, 0.05)',
-                  '0 0 60px rgba(212, 184, 150, 0.3), inset 0 0 30px rgba(212, 184, 150, 0.1)',
-                  '0 0 40px rgba(212, 184, 150, 0.2), inset 0 0 20px rgba(212, 184, 150, 0.05)',
-                ],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
+                boxShadow: '0 0 30px rgba(245, 158, 11, 0.15)',
               }}
             >
-              <Compass className="w-10 h-10 text-[#D4B896]" />
+              <Compass className="w-8 h-8 text-maia-spice-400" />
             </motion.div>
 
-            <h1 className="text-5xl md:text-6xl font-light tracking-wide mb-4 bg-gradient-to-r from-amber-200 via-[#D4B896] to-amber-300 bg-clip-text text-transparent"
-                style={{ textShadow: '0 0 40px rgba(212, 184, 150, 0.3)' }}>
+            <h1 className="text-4xl md:text-5xl font-light tracking-wide mb-4 text-maia-ink-100">
               Oracle Consultation
             </h1>
 
-            <p className="text-lg text-amber-200/60 max-w-3xl mx-auto font-light tracking-wider leading-relaxed">
+            <p className="text-base text-maia-ink-60 max-w-2xl mx-auto font-light leading-relaxed">
               Enter the Sanctum of Divination. Choose your oracle, ask your question, and receive wisdom from the ages.
             </p>
 
             {/* Dividing ornament */}
-            <div className="flex items-center justify-center gap-3 mt-8">
-              <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent" />
-              <Sparkles className="w-4 h-4 text-amber-500/50" />
-              <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent" />
+            <div className="flex items-center justify-center gap-3 mt-6">
+              <div className="w-12 h-px bg-gradient-to-r from-transparent via-maia-spice-500/30 to-transparent" />
+              <Sparkles className="w-3 h-3 text-maia-spice-500/40" />
+              <div className="w-12 h-px bg-gradient-to-r from-transparent via-maia-spice-500/30 to-transparent" />
             </div>
           </motion.div>
 
-          {/* Dev-only tier debug */}
-          <div className="mb-4 text-center">
-            <TierDebugPill
-              tier={tier}
-              hasAccess={hasAccess}
-              extra={{ readings: `${readingsThisWeek}/3`, showThreshold }}
-              hint="?readings=5 to force threshold"
-              scheme="dark"
-            />
-          </div>
-
-          {/* Threshold invitation for Free users who've consulted 3+ times this week */}
-          {showThreshold && (
-            <div className="mb-8">
-              <PersonalThresholdInvitation
-                context="oracle_frequency"
-                isDayMode={false}
-                onLearnMore={() => router.push('/membership')}
-                onDismiss={handleDismissThreshold}
-                variant="card"
-              />
-            </div>
-          )}
-
           {/* Oracle Method Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10">
             {ORACLE_METHODS.map((method, index) => {
               const Icon = method.icon;
 
               return (
                 <motion.button
                   key={method.id}
-                  initial={{ opacity: 0, y: 40 }}
+                  initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
                   onClick={() => handleMethodSelect(method.id)}
                   disabled={isTransitioning}
-                  className={`group relative p-8 rounded-2xl border bg-gradient-to-br ${method.gradient}
-                             backdrop-blur-xl transition-all duration-500 hover:scale-[1.02]
-                             ${method.borderGlow} hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed`}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="group relative p-6 rounded-xl bg-maia-navy-800/40 border border-maia-navy-700/50
+                             backdrop-blur-sm transition-all duration-300 hover:bg-maia-navy-800/60
+                             hover:border-maia-navy-600/50 disabled:opacity-50 disabled:cursor-not-allowed
+                             text-left"
+                  whileHover={{ y: -2, scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  style={{
+                    boxShadow: `0 0 0 rgba(0,0,0,0)`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.boxShadow = `0 8px 32px ${method.glowColor}`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.boxShadow = `0 0 0 rgba(0,0,0,0)`;
+                  }}
                 >
-                  {/* Glow effect on hover */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                       style={{
-                         background: 'radial-gradient(circle at center, rgba(251, 191, 36, 0.15) 0%, transparent 70%)',
-                       }} />
-
                   {/* Method Icon */}
-                  <div className="relative mb-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-900/20 group-hover:bg-amber-800/30 transition-all duration-500"
-                         style={{
-                           boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)',
-                         }}>
-                      <Icon className="w-8 h-8 text-amber-200/90" />
+                  <div className="mb-4">
+                    <div className={`inline-flex items-center justify-center w-12 h-12 rounded-lg bg-maia-navy-700/50 ${method.accentColor}`}>
+                      <Icon className="w-6 h-6" />
                     </div>
                   </div>
 
                   {/* Method Details */}
-                  <div className="relative">
-                    <h3 className="text-xl font-medium tracking-wide text-amber-100 mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-amber-100 group-hover:via-amber-200 group-hover:to-amber-100 group-hover:bg-clip-text transition-all duration-500">
-                      {method.title}
-                    </h3>
+                  <h3 className="text-lg font-medium text-maia-ink-100 mb-1">
+                    {method.title}
+                  </h3>
 
-                    <p className="text-[11px] text-amber-300/60 mb-4 font-light tracking-[0.2em] uppercase">
-                      {method.subtitle}
-                    </p>
+                  <p className={`text-[10px] ${method.accentColor} mb-3 font-light tracking-[0.15em] uppercase opacity-70`}>
+                    {method.subtitle}
+                  </p>
 
-                    <p className="text-amber-200/50 leading-relaxed text-[13px] tracking-wide">
-                      {method.description}
-                    </p>
-                  </div>
-
-                  {/* Mystical symbol watermark */}
-                  <svg className="absolute bottom-4 right-4 w-20 h-20 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500" viewBox="0 0 24 24">
-                    <path d={method.symbolPath} fill="currentColor" className="text-white" />
-                  </svg>
+                  <p className="text-maia-ink-60 text-sm leading-relaxed">
+                    {method.description}
+                  </p>
                 </motion.button>
               );
             })}
@@ -356,12 +207,12 @@ export default function OracleConsultationPage() {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="text-center mt-12"
+            transition={{ duration: 0.5, delay: 0.5 }}
+            className="text-center"
           >
             <button
               onClick={() => router.push('/maia')}
-              className="inline-flex items-center gap-2 text-amber-400/50 hover:text-amber-300 transition-colors text-sm"
+              className="inline-flex items-center gap-2 text-maia-ink-60 hover:text-maia-ink-80 transition-colors text-sm"
             >
               <ArrowLeft className="w-4 h-4" />
               Return to MAIA
@@ -378,16 +229,16 @@ export default function OracleConsultationPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-gradient-to-br from-amber-950/95 via-amber-900/95 to-orange-950/95 backdrop-blur-sm flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-maia-navy-950/95 backdrop-blur-sm flex items-center justify-center"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
               className="text-center"
             >
-              <Sparkles className="w-16 h-16 text-amber-400 mx-auto mb-4 animate-spin" style={{ animationDuration: '3s' }} />
-              <p className="text-2xl text-amber-200">Entering the Oracle...</p>
+              <Sparkles className="w-12 h-12 text-maia-spice-400 mx-auto mb-3 animate-pulse" />
+              <p className="text-xl text-maia-ink-80">Entering the Oracle...</p>
             </motion.div>
           </motion.div>
         )}

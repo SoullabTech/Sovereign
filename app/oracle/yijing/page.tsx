@@ -186,7 +186,7 @@ export default function YiJingSoulOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-amber-400/70 hover:text-amber-300 transition-colors"
+              className="flex items-center gap-2 text-maia-spice-500/70 hover:text-maia-spice-400 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm">Back to Oracle</span>

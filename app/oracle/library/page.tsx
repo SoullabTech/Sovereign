@@ -179,7 +179,7 @@ export default function LibraryPage() {
           <div className="flex items-center space-x-4">
             <button
               onClick={() => router.push('/oracle')}
-              className="p-2 text-gray-400 hover:text-white transition-colors"
+              className="p-2 text-maia-spice-500/70 hover:text-maia-spice-400 transition-colors"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>

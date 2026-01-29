@@ -12,7 +12,7 @@ import { z } from 'zod';
 // ENUMS & CONSTANTS
 // =============================================================================
 
-export const SOURCE_TYPES = ['chat', 'voice', 'transcript', 'note', 'journal'] as const;
+export const SOURCE_TYPES = ['chat', 'voice', 'transcript', 'note', 'journal', 'oracle'] as const;
 export type SourceType = (typeof SOURCE_TYPES)[number];
 
 export const ELEMENTS = ['fire', 'water', 'earth', 'air', 'aether'] as const;
@@ -117,6 +117,55 @@ export const CapsuleCreateFromChatWindowSchema = z.object({
   sourceId: z.string().optional(), // session_id reference
 });
 export type CapsuleCreateFromChatWindowInput = z.infer<typeof CapsuleCreateFromChatWindowSchema>;
+
+/**
+ * Oracle reading data for I Ching, Tarot, or Runes
+ */
+export const OracleReadingSchema = z.object({
+  oracleType: z.enum(['iching', 'tarot', 'runes']),
+  question: z.string().min(1),
+  spread: z.string().optional(),
+  // I Ching specific
+  hexagram: z.object({
+    number: z.number(),
+    name: z.string(),
+    keyword: z.string().optional(),
+  }).optional(),
+  changingLines: z.array(z.number()).optional(),
+  relatedHexagram: z.object({
+    number: z.number(),
+    name: z.string(),
+  }).optional(),
+  // Tarot specific
+  cards: z.array(z.object({
+    name: z.string(),
+    position: z.string(),
+    reversed: z.boolean().optional(),
+  })).optional(),
+  // Runes specific
+  runes: z.array(z.object({
+    name: z.string(),
+    position: z.string(),
+    merkstave: z.boolean().optional(),
+  })).optional(),
+  // Common
+  insight: z.string().optional(),
+  soulGuidance: z.string().optional(),
+});
+export type OracleReading = z.infer<typeof OracleReadingSchema>;
+
+/**
+ * Create a capsule from an oracle reading
+ */
+export const CapsuleCreateFromOracleSchema = z.object({
+  sourceType: z.literal('oracle'),
+  oracleReading: OracleReadingSchema,
+  title: z.string().optional(),
+  tags: z.array(z.string()).optional(),
+  signals: SignalsSchema.optional(),
+  draft: z.boolean().optional().default(false),
+});
+export type CapsuleCreateFromOracleInput = z.infer<typeof CapsuleCreateFromOracleSchema>;
 
 /**
  * Update an existing capsule

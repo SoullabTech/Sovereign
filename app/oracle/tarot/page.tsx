@@ -4,10 +4,10 @@
  * Tarot Oracle Experience
  *
  * The Mirror of the Soul - Interactive tarot reading with card animations
- * Aesthetic: Ancient temple meets mystical card reading
+ * Aesthetic: Night sky temple with sacred card mysticism
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,32 +15,57 @@ import {
   Sparkles,
   Moon,
   Star,
-  Heart,
-  Wand2,
-  Swords,
-  Coins,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  Loader2,
+  MessageCircle,
+  BookmarkPlus,
+  Check
 } from 'lucide-react';
 
 type SpreadType = 'three-card' | 'celtic-cross' | 'single-card';
 type ReadingPhase = 'question' | 'spread-selection' | 'drawing' | 'reveal' | 'interpretation';
 
-interface TarotCard {
-  name: string;
-  position: string;
-  reversed: boolean;
-  meaning: string;
+interface DrawnCard {
+  card: {
+    id: string;
+    name: string;
+    arcana: string;
+    suit?: string;
+    number?: number;
+    element?: string;
+    keywords: string[];
+    uprightMeaning: string;
+    reversedMeaning: string;
+    soulGuidance?: string;
+    symbolism?: string;
+    astrological?: string;
+  };
+  position: {
+    name: string;
+    description: string;
+  };
+  isReversed: boolean;
   interpretation: string;
-  keywords: string[];
-  suit?: string;
 }
 
 interface TarotReading {
-  cards: TarotCard[];
-  spreadName: string;
-  overallMessage: string;
-  advice: string;
+  query: string;
+  spread: {
+    name: string;
+    description: string;
+    cardCount: number;
+  };
+  drawnCards: DrawnCard[];
+  insight: string;
+  soulGuidance?: string;
+  ritual?: {
+    name: string;
+    duration: string;
+    materials: string[];
+    steps: string[];
+    intention: string;
+  };
 }
 
 const SPREAD_OPTIONS = [
@@ -50,7 +75,8 @@ const SPREAD_OPTIONS = [
     description: 'Quick guidance for today',
     positions: 1,
     icon: Star,
-    recommended: 'Daily insight'
+    recommended: 'Daily insight',
+    color: 'violet'
   },
   {
     id: 'three-card',
@@ -58,7 +84,8 @@ const SPREAD_OPTIONS = [
     description: 'Past, Present, Future',
     positions: 3,
     icon: Sparkles,
-    recommended: 'Most popular'
+    recommended: 'Most popular',
+    color: 'spice'
   },
   {
     id: 'celtic-cross',
@@ -66,7 +93,8 @@ const SPREAD_OPTIONS = [
     description: 'Comprehensive 10-card reading',
     positions: 10,
     icon: Moon,
-    recommended: 'Deep dive'
+    recommended: 'Deep dive',
+    color: 'sage'
   }
 ];
 
@@ -78,6 +106,9 @@ export default function TarotOraclePage() {
   const [reading, setReading] = useState<TarotReading | null>(null);
   const [revealedCards, setRevealedCards] = useState<number[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const handleQuestionSubmit = () => {
     if (question.trim()) {
@@ -88,7 +119,7 @@ export default function TarotOraclePage() {
   const handleSpreadSelect = (spreadId: SpreadType) => {
     setSelectedSpread(spreadId);
     setPhase('drawing');
-    // Start drawing animation after a brief moment
+    setError(null);
     setTimeout(() => {
       drawCards(spreadId);
     }, 1000);
@@ -96,9 +127,9 @@ export default function TarotOraclePage() {
 
   const drawCards = async (spreadType: SpreadType) => {
     setIsDrawing(true);
+    setError(null);
 
     try {
-      // Call the tarot API endpoint
       const response = await fetch('/api/oracle/tarot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -108,29 +139,37 @@ export default function TarotOraclePage() {
         })
       });
 
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+
       const data = await response.json();
 
-      if (data.reading) {
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      if (data.reading && data.reading.drawnCards && data.reading.drawnCards.length > 0) {
         setReading(data.reading);
         setPhase('reveal');
-        // Reveal cards one by one
-        revealCardsSequentially(data.reading.cards.length);
+        revealCardsSequentially(data.reading.drawnCards.length);
+      } else {
+        throw new Error('Invalid reading response - no cards returned');
       }
-    } catch (error) {
-      console.error('Failed to draw cards:', error);
+    } catch (err) {
+      console.error('Failed to draw cards:', err);
+      setError(err instanceof Error ? err.message : 'Failed to draw cards');
+      setPhase('question');
     } finally {
       setIsDrawing(false);
     }
   };
 
   const revealCardsSequentially = (cardCount: number) => {
-    const revealed: number[] = [];
+    setRevealedCards([]);
     for (let i = 0; i < cardCount; i++) {
       setTimeout(() => {
-        revealed.push(i);
-        setRevealedCards([...revealed]);
-
-        // Move to interpretation phase after last card
+        setRevealedCards(prev => [...prev, i]);
         if (i === cardCount - 1) {
           setTimeout(() => {
             setPhase('interpretation');
@@ -146,16 +185,57 @@ export default function TarotOraclePage() {
     setSelectedSpread(null);
     setReading(null);
     setRevealedCards([]);
+    setError(null);
+    setIsSaved(false);
+  };
+
+  const handleSaveToReflections = async () => {
+    if (!reading || isSaving || isSaved) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/capsules/from-oracle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sourceType: 'oracle',
+          oracleReading: {
+            oracleType: 'tarot',
+            question,
+            spread: reading.spread.name,
+            cards: reading.drawnCards.map(dc => ({
+              name: dc.card.name,
+              position: dc.position.name,
+              reversed: dc.isReversed,
+            })),
+            insight: reading.insight,
+            soulGuidance: reading.soulGuidance,
+          },
+          tags: ['tarot', 'oracle', reading.spread.name.toLowerCase().replace(/\s+/g, '-')],
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save reading');
+      }
+
+      setIsSaved(true);
+    } catch (err) {
+      console.error('Failed to save reading:', err);
+      setError('Failed to save reading to reflections');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-950 via-amber-900 to-orange-950 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 relative overflow-hidden">
       {/* Atmospheric Particles */}
       <div className="fixed inset-0 pointer-events-none">
         {[...Array(40)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-[#D4B896]/30 rounded-full"
+            className="absolute w-1 h-1 bg-violet-400/30 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
@@ -175,8 +255,17 @@ export default function TarotOraclePage() {
         ))}
       </div>
 
-      {/* Warm glow from below */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/40 via-amber-950/10 to-transparent pointer-events-none" />
+      {/* Atmospheric Glow */}
+      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-violet-950/20 via-maia-navy-900/10 to-transparent pointer-events-none" />
+
+      {/* Sacred geometry overlay */}
+      <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
+        <svg className="w-full h-full" viewBox="0 0 1000 1000">
+          <circle cx="500" cy="500" r="450" fill="none" stroke="#8b5cf6" strokeWidth="0.5" strokeDasharray="8 8" />
+          <circle cx="500" cy="500" r="350" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeDasharray="8 8" />
+          <circle cx="500" cy="500" r="250" fill="none" stroke="#8b5cf6" strokeWidth="0.5" strokeDasharray="8 8" />
+        </svg>
+      </div>
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-12">
@@ -190,22 +279,33 @@ export default function TarotOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-amber-400/70 hover:text-amber-300 transition-colors"
+              className="flex items-center gap-2 text-maia-spice-500/70 hover:text-maia-spice-400 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm">Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-amber-400" />
-              <h1 className="text-2xl font-light text-amber-200 tracking-wide">Tarot Oracle</h1>
+              <Star className="w-6 h-6 text-violet-400" />
+              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wide">Tarot Oracle</h1>
             </div>
 
-            <div className="w-24" /> {/* Spacer for centering */}
+            <div className="w-24" />
           </motion.div>
 
-          {/* Question Phase */}
+          {/* Error Display */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 p-4 bg-red-900/30 border border-red-500/40 rounded-lg text-red-200 text-center"
+            >
+              {error}
+            </motion.div>
+          )}
+
           <AnimatePresence mode="wait">
+            {/* Question Phase */}
             {phase === 'question' && (
               <motion.div
                 key="question"
@@ -227,30 +327,30 @@ export default function TarotOraclePage() {
                     }}
                     className="inline-block mb-6"
                   >
-                    <Star className="w-16 h-16 text-amber-400/80" />
+                    <Star className="w-16 h-16 text-violet-400/80" />
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-amber-100 mb-4">
+                  <h2 className="text-4xl font-bold text-maia-ink-100 mb-4">
                     Ask Your Question
                   </h2>
-                  <p className="text-amber-300/60 text-lg">
+                  <p className="text-maia-ink-60 text-lg">
                     The cards are listening. Speak from your heart.
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-900/30 via-amber-800/20 to-orange-900/30 backdrop-blur-xl border border-amber-600/30 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-gradient-to-br from-maia-navy-800/60 via-violet-900/20 to-maia-navy-850/60 backdrop-blur-xl border border-violet-500/30 rounded-2xl p-8 shadow-2xl">
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the cards?"
-                    className="w-full h-32 px-4 py-3 bg-amber-950/50 border border-amber-700/40 rounded-lg text-amber-100 placeholder-amber-500/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all resize-none"
+                    className="w-full h-32 px-4 py-3 bg-maia-navy-900/50 border border-maia-navy-700/40 rounded-lg text-maia-ink-100 placeholder-maia-ink-40 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all resize-none"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:from-amber-900/30 disabled:to-orange-900/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-maia-navy-800/50 disabled:to-maia-navy-800/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
                     Continue to Card Selection
@@ -268,10 +368,10 @@ export default function TarotOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-4xl font-bold text-amber-100 mb-4">
+                  <h2 className="text-4xl font-bold text-maia-ink-100 mb-4">
                     Choose Your Spread
                   </h2>
-                  <p className="text-amber-300/60 text-lg max-w-2xl mx-auto">
+                  <p className="text-maia-ink-60 text-lg max-w-2xl mx-auto">
                     Each spread offers a different perspective on your question
                   </p>
                 </div>
@@ -279,6 +379,31 @@ export default function TarotOraclePage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {SPREAD_OPTIONS.map((spread, index) => {
                     const Icon = spread.icon;
+                    const colorClasses = {
+                      violet: {
+                        gradient: 'from-maia-navy-800/60 via-violet-900/20 to-maia-navy-850/60',
+                        border: 'border-violet-500/30 hover:border-violet-400/50',
+                        icon: 'bg-violet-900/30 group-hover:bg-violet-800/40',
+                        iconColor: 'text-violet-400',
+                        badge: 'bg-violet-600/20 text-violet-300/80'
+                      },
+                      spice: {
+                        gradient: 'from-maia-navy-800/60 via-maia-spice-700/20 to-maia-navy-850/60',
+                        border: 'border-maia-spice-500/30 hover:border-maia-spice-400/50',
+                        icon: 'bg-maia-spice-900/30 group-hover:bg-maia-spice-800/40',
+                        iconColor: 'text-maia-spice-400',
+                        badge: 'bg-maia-spice-600/20 text-maia-spice-300/80'
+                      },
+                      sage: {
+                        gradient: 'from-maia-navy-800/60 via-maia-sage-700/20 to-maia-navy-850/60',
+                        border: 'border-maia-sage-500/30 hover:border-maia-sage-400/50',
+                        icon: 'bg-maia-sage-900/30 group-hover:bg-maia-sage-800/40',
+                        iconColor: 'text-maia-sage-400',
+                        badge: 'bg-maia-sage-600/20 text-maia-sage-300/80'
+                      }
+                    };
+                    const colors = colorClasses[spread.color as keyof typeof colorClasses];
+
                     return (
                       <motion.button
                         key={spread.id}
@@ -286,28 +411,28 @@ export default function TarotOraclePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleSpreadSelect(spread.id as SpreadType)}
-                        className="group p-6 bg-gradient-to-br from-amber-900/30 via-amber-800/20 to-orange-900/30 backdrop-blur-xl border border-amber-600/30 rounded-2xl hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-600/20 transition-all duration-300"
+                        className={`group p-6 bg-gradient-to-br ${colors.gradient} backdrop-blur-xl border ${colors.border} rounded-2xl hover:shadow-2xl transition-all duration-300`}
                         whileHover={{ y: -4, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex flex-col items-center text-center">
-                          <div className="w-16 h-16 rounded-full bg-amber-800/30 group-hover:bg-amber-700/40 flex items-center justify-center mb-4 transition-colors">
-                            <Icon className="w-8 h-8 text-amber-300" />
+                          <div className={`w-16 h-16 rounded-full ${colors.icon} flex items-center justify-center mb-4 transition-colors`}>
+                            <Icon className={`w-8 h-8 ${colors.iconColor}`} />
                           </div>
 
-                          <h3 className="text-xl font-bold text-amber-100 mb-2">
+                          <h3 className="text-xl font-bold text-maia-ink-100 mb-2">
                             {spread.name}
                           </h3>
 
-                          <span className="inline-block px-3 py-1 bg-amber-600/20 text-amber-300/80 text-xs rounded-full mb-3">
+                          <span className={`inline-block px-3 py-1 ${colors.badge} text-xs rounded-full mb-3`}>
                             {spread.recommended}
                           </span>
 
-                          <p className="text-amber-300/60 text-sm mb-3">
+                          <p className="text-maia-ink-60 text-sm mb-3">
                             {spread.description}
                           </p>
 
-                          <div className="text-amber-400/50 text-xs">
+                          <div className="text-maia-ink-40 text-xs">
                             {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
                           </div>
                         </div>
@@ -338,13 +463,13 @@ export default function TarotOraclePage() {
                   }}
                   className="mb-8"
                 >
-                  <Sparkles className="w-20 h-20 text-amber-400" />
+                  <Loader2 className="w-20 h-20 text-violet-400" />
                 </motion.div>
 
-                <h2 className="text-3xl font-bold text-amber-100 mb-4">
+                <h2 className="text-3xl font-bold text-maia-ink-100 mb-4">
                   Drawing the Cards...
                 </h2>
-                <p className="text-amber-300/60 text-lg">
+                <p className="text-maia-ink-60 text-lg">
                   The oracle speaks through sacred symbols
                 </p>
               </motion.div>
@@ -359,16 +484,19 @@ export default function TarotOraclePage() {
               >
                 {/* Cards Display */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-amber-100 text-center mb-8">
-                    {reading.spreadName}
+                  <h2 className="text-3xl font-bold text-maia-ink-100 text-center mb-2">
+                    {reading.spread.name}
                   </h2>
+                  <p className="text-maia-ink-60 text-center mb-8">
+                    {reading.spread.description}
+                  </p>
 
                   <div className={`grid gap-6 ${
-                    reading.cards.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' :
-                    reading.cards.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
+                    reading.drawnCards.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' :
+                    reading.drawnCards.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
                     'grid-cols-2 md:grid-cols-5'
                   }`}>
-                    {reading.cards.map((card, index) => (
+                    {reading.drawnCards.map((drawnCard, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, rotateY: 180 }}
@@ -379,27 +507,34 @@ export default function TarotOraclePage() {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="perspective-1000"
                       >
-                        <div className="bg-gradient-to-br from-amber-900/40 via-amber-800/30 to-orange-900/40 backdrop-blur-xl border border-amber-600/40 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl">
+                        <div className="bg-gradient-to-br from-maia-navy-800/60 via-violet-900/30 to-maia-navy-850/60 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl">
                           <div className="text-center mb-4">
-                            <div className="text-amber-500/60 text-xs uppercase tracking-wider mb-2">
-                              {card.position}
+                            <div className="text-violet-400/60 text-xs uppercase tracking-wider mb-2">
+                              {drawnCard.position.name}
                             </div>
-                            <h3 className="text-lg font-bold text-amber-100">
-                              {card.name}
-                              {card.reversed && <span className="text-red-400 ml-2">(R)</span>}
+                            <h3 className="text-lg font-bold text-maia-ink-100">
+                              {drawnCard.card.name}
+                              {drawnCard.isReversed && <span className="text-red-400 ml-2 text-sm">(Reversed)</span>}
                             </h3>
+                            {drawnCard.card.suit && (
+                              <div className="text-maia-ink-40 text-xs mt-1">
+                                {drawnCard.card.suit} {drawnCard.card.arcana}
+                              </div>
+                            )}
                           </div>
 
                           <div className="flex-1 flex items-center justify-center mb-4">
-                            <Star className="w-16 h-16 text-amber-400/30" />
+                            <div className="w-20 h-28 bg-gradient-to-br from-violet-900/40 to-purple-900/40 rounded-lg border border-violet-500/20 flex items-center justify-center">
+                              <Star className="w-10 h-10 text-violet-400/50" />
+                            </div>
                           </div>
 
                           <div className="space-y-2">
-                            <div className="flex flex-wrap gap-1">
-                              {card.keywords.slice(0, 3).map((keyword, i) => (
+                            <div className="flex flex-wrap gap-1 justify-center">
+                              {drawnCard.card.keywords.slice(0, 3).map((keyword, i) => (
                                 <span
                                   key={i}
-                                  className="px-2 py-1 bg-amber-700/20 text-amber-300/70 text-xs rounded"
+                                  className="px-2 py-1 bg-violet-900/30 text-violet-300/70 text-xs rounded"
                                 >
                                   {keyword}
                                 </span>
@@ -418,62 +553,154 @@ export default function TarotOraclePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="bg-gradient-to-br from-amber-900/30 via-amber-800/20 to-orange-900/30 backdrop-blur-xl border border-amber-600/30 rounded-2xl p-8 shadow-2xl"
+                    className="bg-gradient-to-br from-maia-navy-800/60 via-violet-900/20 to-maia-navy-850/60 backdrop-blur-xl border border-violet-500/30 rounded-2xl p-8 shadow-2xl"
                   >
                     <div className="flex items-center gap-3 mb-6">
-                      <BookOpen className="w-6 h-6 text-amber-400" />
-                      <h3 className="text-2xl font-bold text-amber-100">Oracle's Wisdom</h3>
+                      <BookOpen className="w-6 h-6 text-violet-400" />
+                      <h3 className="text-2xl font-bold text-maia-ink-100">Oracle's Wisdom</h3>
                     </div>
 
                     <div className="space-y-6">
+                      {/* Overall Insight */}
                       <div>
-                        <h4 className="text-amber-300/80 font-semibold mb-2">Overall Message:</h4>
-                        <p className="text-amber-200/70 leading-relaxed">
-                          {reading.overallMessage}
+                        <h4 className="text-violet-300/80 font-semibold mb-2">Overall Message:</h4>
+                        <p className="text-maia-ink-80 leading-relaxed">
+                          {reading.insight}
                         </p>
                       </div>
 
-                      <div>
-                        <h4 className="text-amber-300/80 font-semibold mb-2">Guidance:</h4>
-                        <p className="text-amber-200/70 leading-relaxed">
-                          {reading.advice}
-                        </p>
-                      </div>
+                      {/* Soul Guidance */}
+                      {reading.soulGuidance && (
+                        <div>
+                          <h4 className="text-violet-300/80 font-semibold mb-2">Soul Guidance:</h4>
+                          <p className="text-maia-ink-80 leading-relaxed">
+                            {reading.soulGuidance}
+                          </p>
+                        </div>
+                      )}
 
                       {/* Individual Card Interpretations */}
-                      <div className="border-t border-amber-700/30 pt-6 mt-6">
-                        <h4 className="text-amber-300/80 font-semibold mb-4">Card Details:</h4>
+                      <div className="border-t border-maia-navy-700/50 pt-6 mt-6">
+                        <h4 className="text-violet-300/80 font-semibold mb-4">Card Details:</h4>
                         <div className="space-y-4">
-                          {reading.cards.map((card, index) => (
-                            <div key={index} className="bg-amber-950/30 rounded-lg p-4">
-                              <h5 className="text-amber-200 font-semibold mb-2">
-                                {card.name} - {card.position}
+                          {reading.drawnCards.map((drawnCard, index) => (
+                            <div key={index} className="bg-maia-navy-900/50 rounded-lg p-4">
+                              <h5 className="text-maia-ink-100 font-semibold mb-1">
+                                {drawnCard.card.name} - {drawnCard.position.name}
                               </h5>
-                              <p className="text-amber-300/60 text-sm">
-                                {card.interpretation}
+                              <p className="text-maia-ink-40 text-xs mb-2">
+                                {drawnCard.position.description}
+                              </p>
+                              <p className="text-maia-ink-60 text-sm mb-2">
+                                {drawnCard.isReversed ? drawnCard.card.reversedMeaning : drawnCard.card.uprightMeaning}
+                              </p>
+                              <p className="text-maia-ink-80 text-sm">
+                                {drawnCard.interpretation}
                               </p>
                             </div>
                           ))}
                         </div>
                       </div>
+
+                      {/* Ritual Suggestion */}
+                      {reading.ritual && (
+                        <div className="border-t border-maia-navy-700/50 pt-6 mt-6">
+                          <h4 className="text-violet-300/80 font-semibold mb-4">Suggested Ritual: {reading.ritual.name}</h4>
+                          <div className="bg-maia-navy-900/50 rounded-lg p-4">
+                            <p className="text-maia-ink-60 text-sm mb-3">
+                              <span className="text-maia-ink-40">Duration:</span> {reading.ritual.duration}
+                            </p>
+                            <p className="text-maia-ink-60 text-sm mb-3">
+                              <span className="text-maia-ink-40">Materials:</span> {reading.ritual.materials.join(', ')}
+                            </p>
+                            <p className="text-maia-ink-80 text-sm italic">
+                              {reading.ritual.intention}
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-4 mt-8">
+                    <div className="flex flex-wrap gap-3 mt-8">
+                      <button
+                        onClick={handleSaveToReflections}
+                        disabled={isSaving || isSaved}
+                        className={`px-5 py-3 font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                          isSaved
+                            ? 'bg-maia-sage-600/80 text-white cursor-default'
+                            : 'bg-maia-navy-800/60 hover:bg-maia-navy-700/60 border border-violet-500/30 text-violet-400 hover:text-violet-300'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isSaved ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <BookmarkPlus className="w-5 h-5" />
+                        )}
+                        {isSaved ? 'Saved' : 'Save to Reflections'}
+                      </button>
                       <button
                         onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
                       >
                         <RefreshCw className="w-5 h-5" />
                         New Reading
                       </button>
                       <button
                         onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-amber-900/40 hover:bg-amber-800/50 text-amber-200 font-semibold rounded-lg transition-all duration-300"
+                        className="px-6 py-3 bg-maia-navy-800/60 hover:bg-maia-navy-700/60 border border-maia-navy-700/40 text-maia-ink-80 font-semibold rounded-lg transition-all duration-300"
                       >
                         Back to Oracle
                       </button>
                     </div>
+
+                    {/* MAIA Mentor Access */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.6 }}
+                      className="mt-8 pt-8 border-t border-maia-navy-700/50"
+                    >
+                      <div className="bg-gradient-to-br from-maia-navy-800/40 via-violet-900/10 to-maia-navy-850/40 backdrop-blur-xl border border-violet-500/20 rounded-xl p-6">
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-violet-500/20 flex items-center justify-center">
+                            <MessageCircle className="w-6 h-6 text-violet-400" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-lg font-semibold text-maia-ink-100 mb-2">Continue with MAIA</h4>
+                            <p className="text-maia-ink-60 text-sm mb-4">
+                              Want deeper insight into your cards? MAIA can help you understand the archetypal patterns,
+                              explore the symbolism, and connect this reading to your life situation.
+                            </p>
+                            <button
+                              onClick={() => {
+                                if (reading) {
+                                  sessionStorage.setItem('oracle_context', JSON.stringify({
+                                    type: 'tarot',
+                                    spread: reading.spread.name,
+                                    cards: reading.drawnCards.map(dc => ({
+                                      name: dc.card.name,
+                                      position: dc.position.name,
+                                      reversed: dc.isReversed
+                                    })),
+                                    insight: reading.insight,
+                                    question: question,
+                                    timestamp: new Date().toISOString()
+                                  }));
+                                }
+                                router.push('/maia');
+                              }}
+                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-500/80 to-purple-500/80 hover:from-violet-500 hover:to-purple-500 text-white font-medium rounded-lg shadow-lg shadow-violet-500/20 transition-all duration-300"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                              Discuss with MAIA
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
                   </motion.div>
                 )}
               </motion.div>
