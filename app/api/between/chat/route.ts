@@ -1,19 +1,6 @@
-// Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
 // backend: app/api/between/chat/route.ts
 
-/**
- * ROUTING INVARIANT:
- * Set originRoute + (optional) processingProfileOverride HERE at the HTTP boundary.
- * Do not infer these deeper in the stack.
- */
-
-// Force Node.js runtime (Edge runtime can't handle crypto, some libs)
-export const runtime = 'nodejs';
-
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import crypto from 'crypto';
 import { generateMaiaTurn, generateSimpleMaiaResponse } from '@/lib/consciousness/maiaOrchestrator';
 import {
@@ -22,25 +9,12 @@ import {
   type RuptureDetectionResult
 } from '@/lib/consultation/rupture-detection-middleware';
 import { getConversationHistory, initializeSessionTable, ensureSession, addConversationExchange } from '@/lib/sovereign/sessionManager';
-import { ensureSchemaReady } from '@/lib/db/schemaGate';
 import { loadRelationshipMemory } from '@/lib/memory/RelationshipMemoryService';
-import { inferAwarenessFromRelationship, type AwarenessLevel } from '@/lib/consciousness/awareness-levels';
 import { getWisdomPrimerForUser } from '@/lib/consciousness/WisdomFieldPrimer';
 import { developmentalMemory } from '@/lib/memory/DevelopmentalMemory';
 import { loadVoiceCanonRules } from '@/lib/voice/voiceCanon';
-import { buildEpistemicPathAddendum, type EpistemicPathSelection } from '@/lib/consciousness/epistemicPathPrompt';
-import { getFrameworkPromptAddendum, getReflectionLensAddendum, type TherapeuticFramework, type ReflectionLens } from '@/lib/consciousness/therapeuticFrameworks';
 import { renderVoice } from '@/lib/voice/voiceRenderer';
-import { calculateBirthChart, type BirthChart, type BirthData, type PlanetPosition } from '@/lib/astrology/ephemerisCalculator';
-import { calculateCurrentTransits, findTransitAspects, type TransitPositions, type AspectPattern } from '@/lib/astrology/transitCalculator';
 import { loadSelfletContext, processSelfletAfterResponse, ensureInitialSelflet, type SelfletLoadResult, type Element } from '@/lib/memory/selflet';
-import { validateSocraticResponse, type SocraticValidationResult } from '@/lib/validation/socraticValidator';
-import { makeCanonHeaders } from '@/lib/sovereign/http/canonHeaders';
-import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
-import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@/lib/sovereign/decisionGovernor';
-import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
-import { getCurrentSession } from '@/lib/auth/serverSessions';
-import { query } from '@/lib/db/postgres';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -97,204 +71,12 @@ function inferEmotionalShiftFromText(userText: string): { from?: string; to: str
   return undefined;
 }
 
-// ═══════════════════════════════════════════════════════════════
-// 🌟 ASTROLOGICAL CONTEXT BUILDER
-// ═══════════════════════════════════════════════════════════════
-
-interface BirthDataInput {
-  date?: string;
-  time?: string;
-  location?: {
-    lat: number;
-    lng: number;
-    name?: string;
-    timezone?: string;
-  };
-}
-
-/**
- * Format a planet position for display
- */
-function formatPlanetPosition(planet: string, pos: PlanetPosition, includeHouse: boolean = true): string {
-  const retrograde = pos.retrograde ? ' ℞' : '';
-  const house = includeHouse ? ` (House ${pos.house})` : '';
-  return `${planet}: ${pos.sign} ${pos.degree.toFixed(1)}°${retrograde}${house}`;
-}
-
-/**
- * Format an aspect for display
- */
-function formatAspect(aspect: AspectPattern): string {
-  const orb = aspect.orb < 1 ? '(exact)' : `(${aspect.orb.toFixed(1)}° orb)`;
-  const applying = aspect.applying ? 'applying' : 'separating';
-  return `Transit ${aspect.transitPlanet} ${aspect.aspectType} natal ${aspect.natalPlanet} ${orb} - ${applying}`;
-}
-
-/**
- * Build full astrological context with calculated natal chart and current transits.
- * This gives MAIA deep astrological awareness for personalized cosmic insights.
- */
-async function buildAstrologicalContextAddendum(birthData: BirthDataInput | undefined): Promise<string | null> {
-  if (!birthData?.date) return null;
-
-  const parts: string[] = [];
-  parts.push('🌟 ASTROLOGICAL CONTEXT');
-  parts.push('');
-
-  // Check if we have enough data for full chart calculation
-  const hasTime = !!birthData.time;
-  const hasLocation = birthData.location?.lat !== undefined && birthData.location?.lng !== undefined;
-  const canCalculateFullChart = hasTime && hasLocation;
-
-  if (canCalculateFullChart) {
-    try {
-      // Calculate natal chart
-      const chartData: BirthData = {
-        date: birthData.date,
-        time: birthData.time!,
-        location: {
-          lat: birthData.location!.lat,
-          lng: birthData.location!.lng,
-          timezone: birthData.location?.timezone || 'UTC',
-        },
-      };
-
-      const natalChart = await calculateBirthChart(chartData);
-      const currentTransits = await calculateCurrentTransits(new Date());
-      const transitAspects = findTransitAspects(currentTransits, natalChart);
-
-      // Format natal chart
-      parts.push('═══ NATAL CHART ═══');
-      parts.push('');
-      parts.push('☉ LUMINARIES & PERSONAL PLANETS:');
-      parts.push(formatPlanetPosition('Sun', natalChart.sun));
-      parts.push(formatPlanetPosition('Moon', natalChart.moon));
-      parts.push(formatPlanetPosition('Mercury', natalChart.mercury));
-      parts.push(formatPlanetPosition('Venus', natalChart.venus));
-      parts.push(formatPlanetPosition('Mars', natalChart.mars));
-      parts.push('');
-
-      parts.push('♃ SOCIAL PLANETS:');
-      parts.push(formatPlanetPosition('Jupiter', natalChart.jupiter));
-      parts.push(formatPlanetPosition('Saturn', natalChart.saturn));
-      parts.push('');
-
-      parts.push('♅ OUTER PLANETS (Generational):');
-      parts.push(formatPlanetPosition('Uranus', natalChart.uranus));
-      parts.push(formatPlanetPosition('Neptune', natalChart.neptune));
-      parts.push(formatPlanetPosition('Pluto', natalChart.pluto));
-      parts.push('');
-
-      parts.push('☊ LUNAR NODES & CHIRON:');
-      parts.push(formatPlanetPosition('North Node', natalChart.northNode));
-      parts.push(formatPlanetPosition('South Node', natalChart.southNode));
-      parts.push(formatPlanetPosition('Chiron', natalChart.chiron));
-      parts.push('');
-
-      parts.push('⬆ ANGLES:');
-      parts.push(`Ascendant (Rising): ${natalChart.ascendant.sign} ${natalChart.ascendant.degree.toFixed(1)}°`);
-      parts.push(`Midheaven (MC): ${natalChart.midheaven.sign} ${natalChart.midheaven.degree.toFixed(1)}°`);
-      parts.push('');
-
-      // Key natal aspects
-      const majorAspects = natalChart.aspects.filter(a =>
-        ['conjunction', 'opposition', 'square', 'trine'].includes(a.type) && a.orb < 5
-      );
-      if (majorAspects.length > 0) {
-        parts.push('⚝ KEY NATAL ASPECTS:');
-        majorAspects.slice(0, 8).forEach(a => {
-          const marker = a.exact ? '★' : '•';
-          parts.push(`${marker} ${a.planet1} ${a.type} ${a.planet2} (${a.orb.toFixed(1)}°)`);
-        });
-        parts.push('');
-      }
-
-      // Current transits
-      parts.push('═══ CURRENT TRANSITS ═══');
-      parts.push(`As of: ${new Date().toLocaleDateString()}`);
-      parts.push('');
-
-      // Filter to significant transits (outer planet aspects to personal planets)
-      const significantTransits = transitAspects.filter(a => {
-        const outerPlanets = ['Jupiter', 'Saturn', 'Uranus', 'Neptune', 'Pluto'];
-        const personalPlanets = ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars'];
-        const isOuter = outerPlanets.includes(a.transitPlanet);
-        const isPersonal = personalPlanets.includes(a.natalPlanet) ||
-                          a.natalPlanet === 'Sun' || a.natalPlanet === 'Moon';
-        return isOuter && isPersonal && a.orb < 5;
-      });
-
-      if (significantTransits.length > 0) {
-        parts.push('☍ ACTIVE TRANSITS TO NATAL CHART:');
-        significantTransits.slice(0, 6).forEach(t => {
-          parts.push(`• ${formatAspect(t)}`);
-        });
-        parts.push('');
-      } else {
-        parts.push('No major outer planet transits to personal planets currently active.');
-        parts.push('');
-      }
-
-    } catch (error) {
-      console.error('[Astrology] Chart calculation error:', error);
-      // Fall back to basic birth data
-      parts.push(`Birth Date: ${birthData.date}`);
-      parts.push(`Birth Time: ${birthData.time}`);
-      if (birthData.location?.name) {
-        parts.push(`Birth Location: ${birthData.location.name}`);
-      }
-      parts.push('');
-      parts.push('(Full chart calculation unavailable - use general astrological knowledge)');
-      parts.push('');
-    }
-  } else {
-    // No time or location - just provide basic info
-    parts.push(`Birth Date: ${birthData.date}`);
-    if (!hasTime) {
-      parts.push('Birth Time: Unknown');
-    }
-    if (!hasLocation) {
-      parts.push('Birth Location: Unknown');
-    }
-    parts.push('');
-    parts.push('Without birth time and location, focus on:');
-    parts.push('- Sun sign qualities and general planetary positions');
-    parts.push('- Avoid house placements, rising sign, or precise aspects');
-    parts.push('');
-  }
-
-  // Guidelines
-  parts.push('═══ INTEGRATION GUIDELINES ═══');
-  parts.push('• Offer astrological insights when the conversation touches on patterns, timing, or self-understanding');
-  parts.push('• Never lead with astrology unless asked specifically');
-  parts.push('• Frame transits as invitations and weather, not predictions or fate');
-  parts.push('• Connect archetypal patterns to their lived experience');
-  parts.push('• Use phrases like "archetypally speaking" or "through an astrological lens"');
-  parts.push('• Remember: astrology is pattern recognition, not fortune-telling');
-
-  return parts.join('\n');
-}
-
 const SAFE_MODE = process.env.MAIA_SAFE_MODE === 'true';
 const IS_PROD = process.env.NODE_ENV === 'production';
-const INCLUDE_PROVIDER_META = process.env.MAIA_INCLUDE_PROVIDER_META === '1';
 
 // Boot log: warn if simulation headers are enabled (helps debug unexpected behavior)
 if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
   console.warn('[Boot] ⚠️ MAIA_MEMORY_SIM_HEADERS=1 — simulation headers are ENABLED');
-}
-
-// 🚨 LOUD WARNING: Body ID trust is enabled in production
-// This allows clients to spoof userId - only for local Docker testing!
-if (IS_PROD && process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1') {
-  console.error('');
-  console.error('╔══════════════════════════════════════════════════════════════╗');
-  console.error('║  🚨 SECURITY WARNING: MAIA_TRUST_BODY_ID_IN_PROD=1           ║');
-  console.error('║  Client-supplied userId will be TRUSTED in production.       ║');
-  console.error('║  This enables userId spoofing — use ONLY for local testing!  ║');
-  console.error('║  If this is real production, REMOVE this env var immediately.║');
-  console.error('╚══════════════════════════════════════════════════════════════╝');
-  console.error('');
 }
 
 // Audit fingerprint secret - must be set in production for secure correlation
@@ -302,17 +84,10 @@ const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
   (IS_PROD ? '' : 'dev-only-secret'); // Dev fallback OK, prod requires real secret
 
-// Log warning at boot if missing (but don't throw - check inside handler instead)
+// Fail-closed: production MUST have fingerprint secret configured
 if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
-  console.error('🚨 WARNING: MAIA_AUDIT_FINGERPRINT_SECRET not set - will return 500 on requests');
-}
-
-// Helper to check required env vars inside handlers (avoids module-load crashes)
-function checkRequiredEnvVars(): { ok: true } | { ok: false; error: string } {
-  if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
-    return { ok: false, error: 'MAIA_AUDIT_FINGERPRINT_SECRET is required in production' };
-  }
-  return { ok: true };
+  console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+  throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -689,71 +464,19 @@ export async function POST(req: NextRequest) {
   const reqId = generateReqId();
   const startTime = Date.now();
 
-  // 🔒 Fail-closed: check required env vars INSIDE handler (no module-load crash)
-  const envCheck = checkRequiredEnvVars();
-  if (envCheck.ok === false) {
-    return NextResponse.json(
-      { error: envCheck.error, errorCode: 'MISSING_ENV_VAR' },
-      { status: 500 }
-    );
-  }
-
-  // 🛡️ SCHEMA GATE: Fail fast if required migrations are missing
-  try {
-    await ensureSchemaReady();
-  } catch (schemaErr: any) {
-    console.error('❌ [SchemaGate] DB schema behind code:', schemaErr.message);
-    return NextResponse.json(
-      {
-        error: 'DB_SCHEMA_BEHIND',
-        message: 'Database schema is behind code. Run migrations.',
-        details: schemaErr.message,
-        errorCode: 'SCHEMA_BEHIND',
-      },
-      { status: 503 }
-    );
-  }
-
   try {
     // Initialize database tables if needed
     await initializeSessionTable();
 
     const body = await req.json();
-    const { message, sessionId, mode: rawMode, userId: bodyUserId, userName, meta, sanctuary, localHour, epistemicPath, dominantElement, therapeuticFramework, reflectionLens, birthData } = body as {
+    const { message, sessionId, mode, userId: bodyUserId, userName, meta } = body as {
       message?: string;
       sessionId?: string;
-      mode?: 'dialogue' | 'counsel' | 'scribe' | 'normal' | 'patient' | 'session'; // Accept both naming conventions
+      mode?: 'dialogue' | 'counsel' | 'scribe';
       userId?: string;
       userName?: string;
       meta?: { explorerId?: string; sessionId?: string };
-      sanctuary?: boolean;
-      localHour?: number; // Client's local hour (0-23) for correct time-of-day greetings
-      epistemicPath?: EpistemicPathSelection; // 🧭 User-chosen epistemic path
-      dominantElement?: 'water' | 'fire' | 'earth' | 'air'; // User's elemental signature
-      therapeuticFramework?: 'auto' | 'jungian' | 'cbt' | 'somatic' | 'ifs' | 'relational' | 'humanistic' | 'existential';
-      reflectionLens?: 'auto' | 'jungian' | 'somatic' | 'relational' | 'narrative';
-      birthData?: { // 🌟 User's birth data for astrological context
-        date?: string;
-        time?: string;
-        location?: {
-          lat: number;
-          lng: number;
-          name?: string;
-          timezone?: string;
-        };
-      };
     };
-
-    // 🔄 MODE NORMALIZATION: Map client mode names to API mode names
-    // Client uses: normal/patient/session, API expects: dialogue/counsel/scribe
-    const mode = rawMode === 'patient' ? 'counsel'
-               : rawMode === 'session' ? 'scribe'
-               : rawMode === 'normal' ? 'dialogue'
-               : rawMode; // Pass through if already normalized
-
-    // 🔒 SANCTUARY MODE: Session-level memory exclusion (consent boundary)
-    // When true: no content retention, no patterns formed, no training data
-    const isSanctuary = sanctuary === true;
 
     // Voice Renderer request flags
     const voiceEngine = (body?.voiceEngine as 'local' | 'claude' | undefined) ?? 'local';
@@ -796,52 +519,25 @@ export async function POST(req: NextRequest) {
 
     // ✅ IDENTITY RESOLUTION: Server-authoritative in production, flexible in dev
     const explorerId = meta?.explorerId;
+    const devTrustBodyId = process.env.MAIA_DEV_TRUST_BODY_ID === '1';
 
-    // 🔐 TWO-KEY SAFETY: Trust body ID requires explicit opt-in
-    // In production, BOTH flags must be set to allow body ID trust (prevents accidental exposure)
-    const TRUST_BODY_ID =
-      process.env.MAIA_DEV_TRUST_BODY_ID === '1' &&
-      (!IS_PROD || process.env.MAIA_TRUST_BODY_ID_IN_PROD === '1');
-
-    // =========================================================================
-    // SERVER-SIDE IDENTITY: Validate session and derive identity server-side
-    // This prevents "Kelly" name bleed where stale localStorage sends wrong name
-    // =========================================================================
-    let authUserId: string | null = null;
-    let serverUserName = 'Friend'; // Safe fallback
-    try {
-      const serverSession = await getCurrentSession();
-      if (serverSession) {
-        authUserId = serverSession.memberId;
-        // Derive userName from database - never trust client-sent name
-        const memberResult = await query(
-          `SELECT name, preferred_name FROM members WHERE id = $1`,
-          [serverSession.memberId]
-        );
-        if (memberResult.rows.length > 0) {
-          const member = memberResult.rows[0];
-          serverUserName = member.preferred_name || member.name || 'Friend';
-        }
-      }
-    } catch (err) {
-      console.warn('[Chat API] Could not validate server session:', err);
-      // Graceful degradation - continue without server auth
-    }
+    // TODO: When auth is implemented, authUserId should come from verified session/token
+    const authUserId: string | null = null; // Placeholder for future auth integration
 
     let effectiveUserId: string;
     if (authUserId) {
       // ✅ Server-verified identity (future: from NextAuth, Clerk, etc.)
       effectiveUserId = authUserId;
-    } else if (TRUST_BODY_ID) {
-      // 🧪 Trust enabled (local dev OR explicit prod opt-in for testing)
+    } else if (IS_PROD) {
+      // 🔒 Production: Always session-scoped, never trust client body
+      effectiveUserId = `anon:${safeSessionId}`;
+    } else if (devTrustBodyId) {
+      // 🧪 Dev mode with trust enabled: Allow client-supplied IDs for testing
       effectiveUserId = explorerId
         ? explorerId
         : (typeof bodyUserId === 'string' && bodyUserId.trim().length > 0)
           ? bodyUserId.trim()
           : `anon:${safeSessionId}`;
-    } else if (IS_PROD) {
-      // 🔒 Production: Always session-scoped, never trust client body
-      effectiveUserId = `anon:${safeSessionId}`;
     } else {
       // 🔒 Dev mode without trust: Session-scoped (safe default)
       effectiveUserId = `anon:${safeSessionId}`;
@@ -853,7 +549,7 @@ export async function POST(req: NextRequest) {
     const selfletEligible = SELFLET_ALLOW_ANON || !isAnon;
 
     // 🔍 AUDIT: Structured identity resolution log (privacy-safe)
-    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : TRUST_BODY_ID ? 'dev-trusted' : 'dev-anon';
+    const identityMode = authUserId ? 'auth' : IS_PROD ? 'prod-anon' : devTrustBodyId ? 'dev-trusted' : 'dev-anon';
     logIdentityResolution(reqId, {
       mode: identityMode,
       explorerId,
@@ -871,7 +567,6 @@ export async function POST(req: NextRequest) {
       userId: effectiveUserId,      // 👈 explicit for downstream consumers
       sessionId: safeSessionId,
       reqId,                        // 👈 for audit correlation (cognitive events + logs)
-      sanctuary: isSanctuary,       // 🔒 session-level memory exclusion flag
     };
 
     // Log mode for debugging
@@ -879,34 +574,13 @@ export async function POST(req: NextRequest) {
     console.log('[Chat API] Effective userId:', effectiveUserId);
     console.log('[Chat API] 📦 Normalized meta:', normalizedMeta);
 
-    // 🌀 DECISION GOVERNOR: Spiralogic posture selection (preflight)
-    const decision = decisionPreflight(message);
-    (normalizedMeta as Record<string, unknown>).decision = decision;
-    console.log('[Chat API] 🧭 Decision Governor:', {
-      activeElement: decision.activeElement,
-      handoffEligibility: decision.handoffEligibility,
-      modeHint: decision.modeHint,
-      integrityFlags: Object.entries(decision.integrityFlags).filter(([, v]) => v).map(([k]) => k),
-    });
-
     // 💾 ENSURE SESSION EXISTS: Create or update session record for persistence
     await ensureSession(safeSessionId);
     console.log(`[Chat API] Session ensured: ${safeSessionId}`);
 
-    // 🏷️ NAME CHANGE DETECTION: Check if user wants to change what MAIA calls them
-    if (!effectiveUserId.startsWith('anon:')) {
-      const nameChangeResult = await processNameChangeIfDetected(message, effectiveUserId);
-      if (nameChangeResult.detected && nameChangeResult.updated) {
-        console.log(`[Chat API] 🏷️ Name change detected and updated: "${nameChangeResult.newName}"`);
-      }
-    }
-
     // 📚 LOAD CONVERSATION HISTORY: Get recent exchanges for continuity
     const conversationHistory = await getConversationHistory(safeSessionId, 20);
     console.log(`[Chat API] Loaded ${conversationHistory.length} conversation turns`);
-
-    // Add messageCount to meta for voice tier selection (Opus vs Sonnet)
-    (normalizedMeta as Record<string, unknown>).messageCount = conversationHistory.length;
 
     // 🧠 LOAD RELATIONSHIP MEMORY: Get relational context (skip for anonymous users)
     let relationshipMemory: Awaited<ReturnType<typeof loadRelationshipMemory>> | null = null;
@@ -928,21 +602,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 🎭 AWARENESS LEVEL: Infer developmental stage for voice tier selection
-    let awarenessLevel: AwarenessLevel = 1; // Default: Newcomer
-    if (relationshipMemory) {
-      awarenessLevel = inferAwarenessFromRelationship({
-        totalEncounters: relationshipMemory.totalEncounters,
-        relationshipDuration: relationshipMemory.relationshipDuration,
-        relationshipPhase: relationshipMemory.relationshipPhase,
-        trustLevel: relationshipMemory.trustLevel,
-        breakthroughCount: relationshipMemory.breakthroughs?.length || 0
-      });
-      console.log(`[Chat API] 🎭 Awareness level: ${awarenessLevel} (based on ${relationshipMemory.totalEncounters} encounters, phase: ${relationshipMemory.relationshipPhase})`);
-    }
-    // Add awarenessLevel to meta for Opus/Sonnet routing
-    (normalizedMeta as Record<string, unknown>).awarenessLevel = awarenessLevel;
-
     // 🔮 INJECT WISDOM FIELD: Load Spiralogic metaphysical canon
     let wisdomField: string | null = null;
     try {
@@ -958,6 +617,8 @@ export async function POST(req: NextRequest) {
     // 🌀 SELFLET CONTEXT: Load temporal identity awareness
     console.log('[Chat API] 🌀 SELFLET: Starting selflet context loading for:', effectiveUserId);
     let selfletContext: SelfletLoadResult | null = null;
+    // Phase 2I: Compute turn number once and reuse everywhere
+    const turnNumber = conversationHistory.length + 1;
     try {
       const currentThemes = relationshipMemory?.themes.map(t => t.theme) || [];
 
@@ -968,7 +629,13 @@ export async function POST(req: NextRequest) {
       }
 
       // Load selflet context for temporal awareness
-      const selfletLoad = await loadSelfletContext(effectiveUserId, currentThemes, message);
+      const selfletLoad = await loadSelfletContext(effectiveUserId, {
+        currentThemes,
+        userMessage: message,
+        sessionId: safeSessionId,
+        turnNumber,
+        // emotionalIntensity and contextMode can be added when orchestrator provides them
+      });
       selfletContext = selfletLoad;
 
       if (selfletLoad.promptInjection) {
@@ -979,7 +646,7 @@ export async function POST(req: NextRequest) {
       }
     } catch (err) {
       // Graceful degradation - selflet system is optional
-      console.error('[SELFLET ERROR] loadSelfletContext failed:', err);
+      console.log('[Chat API] Selflet context not available (tables may not exist)', err);
     }
 
     // 🔮 CANON BYPASS: Check if this is an identity/canon question
@@ -1188,35 +855,12 @@ export async function POST(req: NextRequest) {
         metrics: voiceOutput.metrics,
       };
 
-      // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
-      let socraticValidation: SocraticValidationResult | null = null;
-      try {
-        socraticValidation = validateSocraticResponse({
-          userMessage: message,
-          draft: outboundText,
-          element: inferElementFromText(message)?.toLowerCase(),
-        });
-
-        if (!socraticValidation.passes) {
-          console.warn(`⚠️ [Socratic Validator SAFE] Canon violation detected:`, {
-            decision: socraticValidation.decision,
-            ruptures: socraticValidation.ruptures.map(r => r.code),
-          });
-        }
-      } catch (err) {
-        console.error('[Socratic Validator SAFE] Validation failed (non-blocking):', err);
-      }
-
-      // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
-      if (isSanctuary) {
-        console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
-      } else {
-        await addConversationExchange(safeSessionId, message, outboundText, {
-          type: 'safe-mode',
-          mode: mode || 'dialogue',
-          userId: effectiveUserId,
-        });
-      }
+      // 💾 PERSIST CONVERSATION: Save to database
+      await addConversationExchange(safeSessionId, message, outboundText, {
+        type: 'safe-mode',
+        mode: mode || 'dialogue',
+        userId: effectiveUserId,
+      });
 
       // Audit: request complete (simple path)
       logRequestComplete(reqId, {
@@ -1229,17 +873,7 @@ export async function POST(req: NextRequest) {
         path: 'simple',
       });
 
-      // 🛡️ CANON HEADERS: Provenance stamps for all MAIA responses
-      const canonHeaders = makeCanonHeaders({
-        requestId: reqId,
-        pipeline: 'orchestrator.generateMaiaTurn',
-        source: 'direct',
-        mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
-        validation: socraticValidation,
-        repaired: false,
-      });
-
-      const response = NextResponse.json({
+      return withSessionCookie(NextResponse.json({
         message: outboundText,
         route: {
           endpoint: '/api/between/chat',
@@ -1255,66 +889,15 @@ export async function POST(req: NextRequest) {
           ...simpleResult.metadata,
           crystallization,
           voiceRenderer: voiceMetrics,
-          sanctuary: isSanctuary,  // 🔒 Sanctuary mode flag for UI verification
           ruptureDetection: ruptureDetection.ruptureDetected ? {
             detected: ruptureDetection.ruptureDetected,
             type: ruptureDetection.ruptureType,
             confidence: ruptureDetection.confidence,
             enhanced: ruptureProcessingResult?.consultationUsed || false
-          } : undefined,
-          // 🔮 Sovereignty auditing: actual provider info when enabled
-          ...(INCLUDE_PROVIDER_META && simpleResult.metadata?.provider ? {
-            sovereignty: {
-              provider: simpleResult.metadata.provider
-            }
-          } : {}),
-          // 🛡️ Canon validation result (for client observability)
-          socraticValidation: socraticValidation ? {
-            decision: socraticValidation.decision,
-            isGold: socraticValidation.isGold,
-            passes: socraticValidation.passes,
-          } : undefined,
+          } : undefined
         },
-      });
-
-      // Apply canon headers to response
-      Object.entries(canonHeaders).forEach(([key, value]) => {
-        response.headers.set(key, value);
-      });
-
-      return withSessionCookie(response, sessionCookie);
+      }), sessionCookie);
     }
-
-    // 🧭 EPISTEMIC PATH: Build path-specific addendum for system prompt
-    const effectivePath: EpistemicPathSelection = epistemicPath || 'auto';
-    const epistemicPathAddendum = buildEpistemicPathAddendum({
-      path: effectivePath,
-      dominantElement,
-    });
-
-    // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens addendums
-    const effectiveFramework = (therapeuticFramework as TherapeuticFramework) || 'auto';
-    const effectiveLens = (reflectionLens as ReflectionLens) || 'auto';
-    const therapeuticFrameworkAddendum = mode === 'counsel' ? getFrameworkPromptAddendum(effectiveFramework) : null;
-    const reflectionLensAddendum = mode === 'scribe' ? getReflectionLensAddendum(effectiveLens) : null;
-
-    // 🧘 LOG: Framework application status
-    if (mode === 'counsel') {
-      console.log(`🧘 [COUNSEL MODE] Framework: ${effectiveFramework}, Addendum applied: ${therapeuticFrameworkAddendum ? 'YES' : 'NO'}`);
-    }
-    if (mode === 'scribe') {
-      console.log(`🔮 [SCRIBE MODE] Lens: ${effectiveLens}, Addendum applied: ${reflectionLensAddendum ? 'YES' : 'NO'}`);
-    }
-
-    // 🌟 ASTROLOGICAL CONTEXT: User's birth data for personalized cosmic insights
-    const astrologicalContextAddendum = await buildAstrologicalContextAddendum(birthData);
-
-    // 🌀 DECISION GOVERNOR: Build addendum for system prompt injection
-    const governorAddendum = buildGovernorAddendum(decision);
-
-    // 💫 RELATIONSHIP MODE: Tier-based relationship depth
-    const relationshipResult = await buildRelationshipAddendumForUser(effectiveUserId);
-    const relationshipModeAddendum = relationshipResult?.addendum ?? null;
 
     // Use full fail-soft consciousness orchestrator
     const orchestratorResult = await generateMaiaTurn({
@@ -1327,21 +910,11 @@ export async function POST(req: NextRequest) {
         chatType: 'between-member',
         endpoint: '/api/between/chat',
         mode: mode || 'dialogue', // Pass mode (Talk/Care/Note) for appropriate system prompts
-        userName: serverUserName, // Server-derived, not client-sent (prevents "Kelly" name bleed)
-        localHour, // Client's local hour (0-23) for correct time-of-day greetings
+        userName: userName || 'Explorer',
         relationshipMemory, // ✅ Relational continuity
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
-        epistemicPathAddendum, // 🧭 User-chosen epistemic lens
-        therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
-        reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
-        astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
-        governorAddendum, // 🌀 Spiralogic posture constraints
-        relationshipModeAddendum, // 💫 Tier-based relationship depth
-      },
-      // Route/profile tracing for corpus callosum filtering
-      originRoute: '/api/between/chat',
-      processingProfileOverride: 'BETWEEN',
+      }
     });
 
     // 📊 AUDIT: Memory pipeline metrics (content-free)
@@ -1517,36 +1090,13 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
-    // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
-    let socraticValidation2: SocraticValidationResult | null = null;
-    try {
-      socraticValidation2 = validateSocraticResponse({
-        userMessage: message,
-        draft: outboundText2,
-        element: inferElementFromText(message)?.toLowerCase(),
-      });
-
-      if (!socraticValidation2.passes) {
-        console.warn(`⚠️ [Socratic Validator ORCH] Canon violation detected:`, {
-          decision: socraticValidation2.decision,
-          ruptures: socraticValidation2.ruptures.map(r => r.code),
-        });
-      }
-    } catch (err) {
-      console.error('[Socratic Validator ORCH] Validation failed (non-blocking):', err);
-    }
-
-    // 💾 PERSIST CONVERSATION: Save to database (unless Sanctuary mode)
-    if (isSanctuary) {
-      console.log('🛡️ [Sanctuary] Skipping conversation persistence - speak freely');
-    } else {
-      await addConversationExchange(safeSessionId, message, outboundText2, {
-        type: 'orchestrator',
-        mode: mode || 'dialogue',
-        userId: effectiveUserId,
-        layers: orchestratorResult.metadata?.consciousnessLayers?.successful || [],
-      });
-    }
+    // 💾 PERSIST CONVERSATION: Save to database
+    await addConversationExchange(safeSessionId, message, outboundText2, {
+      type: 'orchestrator',
+      mode: mode || 'dialogue',
+      userId: effectiveUserId,
+      layers: orchestratorResult.metadata?.consciousnessLayers?.successful || [],
+    });
 
     // Audit: request complete (orchestrator path)
     logRequestComplete(reqId, {
@@ -1563,6 +1113,8 @@ export async function POST(req: NextRequest) {
     const SELFLET_WRITE_ENABLED =
       process.env.MAIA_SELFLET_WRITE_ENABLED === '1' &&
       selfletEligible;
+
+    console.log('[SELFLET DEBUG] WRITE_ENABLED:', SELFLET_WRITE_ENABLED, 'surfacedMessageId:', selfletContext?.surfacedMessageId);
 
     if (SELFLET_WRITE_ENABLED) {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1587,6 +1139,9 @@ export async function POST(req: NextRequest) {
         // Phase 2C: Pass surfaced message info for delivery tracking
         surfacedSelfletMessageId: selfletContext?.surfacedMessageId,
         surfacedDeliveryContext: selfletContext?.surfacedDeliveryContext,
+        // Phase 2I: Session/turn for delivery gating
+        sessionId: safeSessionId,
+        turnNumber,
         // Derived consciousness signals (orchestrator + text inference fallback)
         currentElement: derivedElement,
         breakthroughDetected: derivedBreakthrough,
@@ -1605,19 +1160,11 @@ export async function POST(req: NextRequest) {
       relevanceThemes: selfletContext.surfacedDeliveryContext?.relevanceThemes,
       fromSelfletId: selfletContext.surfacedDeliveryContext?.fromSelfletId,
       surfacedAt: selfletContext.surfacedDeliveryContext?.surfacedAt,
+      // Phase 2K-b: delivery count for "Returning" badge
+      deliveryCount: selfletContext.surfacedDeliveryContext?.deliveryCount,
     } : undefined;
 
-    // 🛡️ CANON HEADERS: Provenance stamps for all MAIA responses
-    const canonHeaders2 = makeCanonHeaders({
-      requestId: reqId,
-      pipeline: 'orchestrator.generateMaiaTurn',
-      source: 'direct',
-      mode: isSanctuary ? 'SANCTUARY' : 'STANDARD',
-      validation: socraticValidation2,
-      repaired: false,
-    });
-
-    const response2 = NextResponse.json({
+    return withSessionCookie(NextResponse.json({
       message: outboundText2,
       consciousness: orchestratorResult.consciousness,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
@@ -1638,34 +1185,14 @@ export async function POST(req: NextRequest) {
         failSoftMode: true,
         crystallization,
         voiceRenderer: voiceMetrics2,
-        sanctuary: isSanctuary,  // 🔒 Sanctuary mode flag for UI verification
         ruptureDetection: ruptureDetection.ruptureDetected ? {
           detected: ruptureDetection.ruptureDetected,
           type: ruptureDetection.ruptureType,
           confidence: ruptureDetection.confidence,
           enhanced: ruptureProcessingResult?.consultationUsed || false
-        } : undefined,
-        // 🔮 Sovereignty auditing: actual provider info when enabled
-        ...(INCLUDE_PROVIDER_META && orchestratorResult.metadata?.provider ? {
-          sovereignty: {
-            provider: orchestratorResult.metadata.provider
-          }
-        } : {}),
-        // 🛡️ Canon validation result (for client observability)
-        socraticValidation: socraticValidation2 ? {
-          decision: socraticValidation2.decision,
-          isGold: socraticValidation2.isGold,
-          passes: socraticValidation2.passes,
-        } : undefined,
+        } : undefined
       }
-    });
-
-    // Apply canon headers to response
-    Object.entries(canonHeaders2).forEach(([key, value]) => {
-      response2.headers.set(key, value);
-    });
-
-    return withSessionCookie(response2, sessionCookie);
+    }), sessionCookie);
   } catch (err: any) {
     // Audit: request failed
     logRequestComplete(reqId, {

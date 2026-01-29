@@ -1,4 +1,0 @@
-sqlalchemy
-transformers>=4.44.2
-torchaudio
-torch

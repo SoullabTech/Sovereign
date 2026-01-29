@@ -1,4 +1,3 @@
-// @ts-nocheck
 /**
  * Sacred Lab Drawer - Contextual navigation for SOULLAB
  *
@@ -30,19 +29,7 @@ import {
   Mic,
   MicOff,
   MessageSquare,
-  Cpu,
-  Flame,
-  Droplets,
-  Mountain,
-  Wind,
-  Clock,
-  Target,
-  Sun,
-  Smile,
-  ClipboardList,
-  Briefcase,
-  Users,
-  GraduationCap
+  Cpu
 } from 'lucide-react';
 import { LanguageSelector } from '@/components/LanguageSelector';
 
@@ -61,9 +48,6 @@ interface SacredLabDrawerProps {
   isAudioPlaying?: boolean;
   showChatInterface?: boolean;
   voice?: 'alloy' | 'echo' | 'fable' | 'onyx' | 'nova' | 'shimmer';
-  // Session & Prompt props
-  sessionPhase?: 'opening' | 'exploration' | 'integration' | 'closure' | 'complete';
-  sessionMinutesRemaining?: number;
 }
 
 export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
@@ -75,73 +59,8 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
   isFieldRecording,
   isScribing,
   hasScribeSession,
-  sessionPhase,
-  sessionMinutesRemaining,
 }) => {
   const menuSections = [
-    {
-      title: 'SOUL PROMPTS & SESSION',
-      icon: '✨',
-      items: [
-        {
-          icon: Sparkles,
-          label: 'Soul Prompts',
-          action: () => onAction?.('open-prompt-picker'),
-          description: 'Elemental prompts to guide your inquiry'
-        },
-        {
-          icon: Clock,
-          label: sessionPhase ? `Session: ${sessionPhase}` : 'Session Arc',
-          action: () => onAction?.('show-session-arc'),
-          description: sessionMinutesRemaining
-            ? `${sessionMinutesRemaining}m remaining`
-            : 'View your session journey',
-          isActive: sessionPhase === 'exploration'
-        },
-        {
-          icon: Target,
-          label: 'Session Synthesis',
-          action: () => onAction?.('show-session-synthesis'),
-          description: 'Review patterns & invitation forward'
-        },
-        {
-          icon: Flame,
-          label: 'Prompt Library',
-          action: () => onNavigate('/labtools/prompts'),
-          description: 'Full library: Seeker → Practitioner → Alchemist'
-        },
-        {
-          icon: ClipboardList,
-          label: 'Session Recap',
-          action: () => onAction?.('session-recap'),
-          description: 'Summary of themes, insights & invitation'
-        },
-      ],
-    },
-    {
-      title: 'SELF-DISCOVERY',
-      icon: '🌱',
-      items: [
-        {
-          icon: Smile,
-          label: 'Daily Check-in',
-          action: () => onAction?.('daily-checkin'),
-          description: 'How are you arriving today?'
-        },
-        {
-          icon: Flame,
-          label: 'Element Discovery',
-          action: () => onAction?.('element-discovery'),
-          description: 'Find your dominant elemental nature'
-        },
-        {
-          icon: BookOpen,
-          label: 'Vocabulary Guide',
-          action: () => onAction?.('toggle-vocabulary-tooltips'),
-          description: 'Highlight soul terms with definitions'
-        },
-      ],
-    },
     {
       title: 'WISDOM COUNCIL',
       icon: '🌟',
@@ -149,7 +68,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Sparkles,
           label: 'Choose Your Guide',
-          action: () => onAction?.('choose-guide'),
+          action: () => onNavigate('/elder-council'),
           description: '39 wisdom traditions as harmonic frequencies'
         },
         {
@@ -183,24 +102,6 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
       icon: '📚',
       items: [
         {
-          icon: GraduationCap,
-          label: 'Soullab Academy',
-          action: () => onAction?.('open-academy'),
-          description: 'Guided learning paths & wisdom domains'
-        },
-        {
-          icon: Sparkles,
-          label: 'Capture the Spirit',
-          action: () => onAction?.('capture-spirit'),
-          description: 'Distill what mattered from this conversation'
-        },
-        {
-          icon: Sparkles,
-          label: 'Reflections',
-          action: () => onNavigate('/labtools/reflections'),
-          description: 'Your distilled moments and insights'
-        },
-        {
           icon: Library,
           label: 'Personal Library',
           action: () => onNavigate('/library'),
@@ -208,39 +109,15 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         },
         {
           icon: BookOpen,
-          label: 'Your Journal',
-          action: () => onNavigate('/labtools/journal'),
-          description: 'All entries, captures, and scribe sessions'
+          label: 'Soul Journal',
+          action: () => onNavigate('/journal'),
+          description: 'Capture your transformative moments'
         },
         {
           icon: FileText,
           label: 'Research Notes',
           action: () => onNavigate('/lab-notes'),
           description: 'Discoveries and investigations'
-        },
-      ],
-    },
-    {
-      title: 'PRACTITIONER',
-      icon: '⚕️',
-      items: [
-        {
-          icon: MessageSquare,
-          label: 'Client Comms',
-          action: () => onNavigate('/stellium/comms'),
-          description: 'Client messaging inbox (Stellium)'
-        },
-        {
-          icon: Briefcase,
-          label: 'Caseload',
-          action: () => onNavigate('/caseload'),
-          description: 'Manage client cases with MAIA consultation'
-        },
-        {
-          icon: Users,
-          label: 'Consult MAIA',
-          action: () => onAction?.('caseload-consult'),
-          description: 'Cross-caseload clinical consultation'
         },
       ],
     },
@@ -308,10 +185,9 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           icon: isScribing ? MicOff : Mic,
           label: isScribing ? 'Stop Scribe & Download' : 'Start Scribe Mode',
           action: () => onAction?.('scribe-mode'),
-          doubleClickAction: () => onNavigate('/sessions'),
           description: isScribing
             ? 'Complete session and download transcript'
-            : 'Record client session passively with MAIA consultation (double-tap for logs)',
+            : 'Record client session passively with MAIA consultation',
           isActive: isScribing,
         },
         ...(hasScribeSession && !isScribing ? [{
@@ -320,12 +196,6 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           action: () => onAction?.('review-with-maia'),
           description: 'Get MAIA supervision on completed session'
         }] : []),
-        {
-          icon: BookOpen,
-          label: 'View All Sessions',
-          action: () => onNavigate('/sessions'),
-          description: 'Browse past scribe sessions & transcripts'
-        },
         {
           icon: Upload,
           label: 'Upload Files',
@@ -480,24 +350,16 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
 
                         const Icon = item.icon;
                         const isComingSoon = item.badge === 'Coming Soon';
-                        const hasDoubleClick = !!(item as any).doubleClickAction;
                         return (
                           <motion.button
                             key={item.label}
                             onClick={() => {
                               if (!isComingSoon) {
+                                console.log('[SacredLabDrawer] Clicked:', item.label, 'onAction defined:', !!onAction);
                                 item.action();
                                 if (!item.label.includes('Toggle') && !item.label.includes('Upload')) {
                                   onClose();
                                 }
-                              }
-                            }}
-                            onDoubleClick={(e) => {
-                              if (hasDoubleClick && !isComingSoon) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                (item as any).doubleClickAction();
-                                onClose();
                               }
                             }}
                             disabled={isComingSoon}

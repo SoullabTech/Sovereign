@@ -1,13 +1,8 @@
 // @ts-nocheck - Prototype file, not type-checked
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
 import { healthDataImporter, type ParsedHealthData } from '@/lib/biometrics/HealthDataImporter';
-
-// Skip during static export (Capacitor builds)
 
 const prisma = new PrismaClient();
 

@@ -1,0 +1,12 @@
+export { SlideOpening } from './SlideOpening';
+export { SlideProblem } from './SlideProblem';
+export { SlideMissing } from './SlideMissing';
+export { SlideWhatMAIAIs } from './SlideWhatMAIAIs';
+export { SlideHowItWorks } from './SlideHowItWorks';
+export { SlideSovereignty } from './SlideSovereignty';
+export { SlideFounder } from './SlideFounder';
+export { SlideMoat } from './SlideMoat';
+export { SlideTiers } from './SlideTiers';
+export { SlideMarket } from './SlideMarket';
+export { SlideTraction } from './SlideTraction';
+export { SlideAsk } from './SlideAsk';

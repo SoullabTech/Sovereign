@@ -8,25 +8,24 @@ export interface TeenProfile {
   age: number;
   pronouns?: string;
   supportsNeeded?: string[];
-  supportNeeds?: string[];
   neurodivergentSupports?: string[];
+  // Additional teen profile properties
   isNeurodivergent?: boolean;
   hasEatingDisorder?: boolean;
   familyDynamics?: string;
+  supportNeeds?: string[];
 }
 
-export interface TeenAbuseResult {
-  isAbuse: boolean;
+export interface AbuseResult {
+  detected: boolean;
+  severity?: 'low' | 'medium' | 'high';
   type?: string;
-  severity?: string;
-  interventionMessage?: string;
   patterns?: string[];
 }
 
-export interface TeenEDResult {
-  isED: boolean;
-  severity?: string;
-  interventionMessage?: string;
+export interface EdResult {
+  detected: boolean;
+  severity?: 'low' | 'medium' | 'high' | 'crisis';
 }
 
 export interface TeenSafetyCheck {
@@ -36,48 +35,15 @@ export interface TeenSafetyCheck {
   isBurnout: boolean;
   needsSupport: boolean;
   supportType?: string;
-  // Extended properties for OracleConversation.tsx
+  // Extended safety check properties
   blockConversation?: boolean;
   isAbuse?: boolean;
   interventionMessage?: string;
-  abuseResult?: TeenAbuseResult;
+  abuseResult?: AbuseResult;
   crisisMode?: boolean;
-  edResult?: TeenEDResult;
+  edResult?: EdResult;
   scaffoldSuggestions?: string[];
   contextForAI?: string;
-}
-
-export interface TeenSupportResponse {
-  blockConversation?: boolean;
-  interventionMessage?: string;
-  crisisMode?: boolean;
-  scaffoldSuggestions?: string[];
-  contextForAI?: string;
-}
-
-export interface TeamAlertParams {
-  userId: string;
-  userName?: string;
-  age?: number;
-  crisisType?: string;
-  message?: string;
-  sessionId?: string;
-  timestamp?: Date;
-}
-
-/**
- * Alert the Soullab team about a critical situation (stub)
- */
-export async function alertSoullabTeam(
-  paramsOrUserId: TeamAlertParams | string,
-  safetyCheck?: TeenSafetyCheck,
-  context?: string
-): Promise<void> {
-  if (typeof paramsOrUserId === 'object') {
-    console.warn('[TEEN SAFETY] Alert triggered (stub):', paramsOrUserId);
-  } else {
-    console.warn('[TEEN SAFETY] Alert triggered (stub):', { userId: paramsOrUserId, safetyCheck, context });
-  }
 }
 
 export function performTeenSafetyCheck(
@@ -100,6 +66,15 @@ export function getTeenSystemPrompt(
   return '';
 }
 
+export interface TeenSupportResponse {
+  blockConversation?: boolean;
+  interventionMessage?: string;
+  crisisMode?: boolean;
+  scaffoldSuggestions?: string[];
+  contextForAI?: string;
+  response?: string;
+}
+
 export function generateTeenSupportResponse(
   message: string,
   safetyCheck: TeenSafetyCheck,
@@ -107,10 +82,9 @@ export function generateTeenSupportResponse(
 ): TeenSupportResponse {
   return {
     blockConversation: false,
-    interventionMessage: undefined,
     crisisMode: false,
     scaffoldSuggestions: [],
-    contextForAI: undefined
+    contextForAI: '',
   };
 }
 
@@ -123,4 +97,21 @@ export function getTeenResources(
   safetyCheck: TeenSafetyCheck
 ): Array<{title: string; description: string; url: string}> {
   return [];
+}
+
+export interface CrisisAlertPayload {
+  userId: string;
+  userName?: string;
+  age?: number;
+  crisisType: string;
+  message: string;
+  sessionId?: string;
+  timestamp?: Date;
+}
+
+export async function alertSoullabTeam(
+  payload: CrisisAlertPayload
+): Promise<void> {
+  // Stub - would alert team in production
+  console.warn('[Teen Safety] Alert would be sent:', payload);
 }

@@ -1,5 +1,4 @@
 // @ts-nocheck - Prototype file, not type-checked
-export const dynamic = 'force-dynamic';
 /**
  * CEREMONIAL CONSCIOUSNESS API
  *
@@ -11,8 +10,6 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import {
   CeremonialComputingInterface,
   CeremonialMode,
@@ -24,8 +21,6 @@ import {
   CeremonialResponse
 } from '@/lib/consciousness/ceremonial/CeremonialComputingInterface';
 import AetherConsciousnessInterface from '@/lib/consciousness/aether/AetherConsciousnessInterface';
-
-// Skip during static export (Capacitor builds)
 
 // Initialize ceremonial computing interface
 let ceremonialInitialized = false;

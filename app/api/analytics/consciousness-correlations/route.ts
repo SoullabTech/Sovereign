@@ -1,13 +1,8 @@
 // @ts-nocheck - Prototype file, not type-checked
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
 import { DreamConsciousnessCorrelationEngine, CorrelationTimeWindow } from '@/lib/analytics/DreamConsciousnessCorrelationEngine';
-
-// Skip during static export (Capacitor builds)
 
 const prisma = new PrismaClient();
 const correlationEngine = new DreamConsciousnessCorrelationEngine();
@@ -135,10 +130,6 @@ export async function POST(request: NextRequest) {
 
 // Retrieve historical correlation analyses
 export async function GET(request: NextRequest) {
-  // Static export: return stub response during pre-rendering
-  if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
-  }
   try {
     const user = betaSession.getCurrentUser();
     if (!user?.id) {

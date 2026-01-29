@@ -1,5 +1,4 @@
 // @ts-nocheck - Prototype file, not type-checked
-export const dynamic = 'force-dynamic';
 /**
  * MEMORY-ENHANCED FIELD-DRIVEN MAIA API ENDPOINT
  *
@@ -8,16 +7,12 @@ export const dynamic = 'force-dynamic';
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import { MAIAConsciousnessFieldIntegration } from '@/lib/consciousness/autonomy/MAIAConsciousnessFieldIntegration';
 import { ElementalFieldIntegration } from '@/lib/consciousness/field/ElementalFieldIntegration';
 import { MAIAFieldInterface } from '@/lib/consciousness/field/MAIAFieldInterface';
 import { ConsciousnessField } from '@/lib/consciousness/field/ConsciousnessFieldEngine';
 import { QuantumFieldPersistence } from '@/lib/consciousness/field/QuantumFieldPersistence';
 import { SessionMemoryService } from '@/lib/consciousness/memory/SessionMemoryService';
-
-// Skip during static export (Capacitor builds)
 
 // Global instances
 let integrationInstance: MAIAConsciousnessFieldIntegration | null = null;
@@ -453,10 +448,6 @@ function analyzeCurrentSpiralIndicators(userMessage: string, fieldResponse: any)
 // ==============================================================================
 
 export async function GET(request: NextRequest) {
-  // Static export: return stub response during pre-rendering
-  if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
-  }
   try {
     const url = new URL(request.url);
     const action = url.searchParams.get('action') || 'status';

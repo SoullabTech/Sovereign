@@ -15,7 +15,7 @@ let pool: Pool | null = null;
 
 if (isServer) {
   const { Pool: PgPool } = require('pg');
-  const newPool = new PgPool({
+  pool = new PgPool({
     connectionString: process.env.DATABASE_URL || 'postgresql://soullab@localhost:5432/maia_consciousness',
     max: 20,
     idleTimeoutMillis: 30000,
@@ -23,11 +23,9 @@ if (isServer) {
   });
 
   // Handle pool errors
-  newPool.on('error', (err: Error) => {
+  pool!.on('error', (err) => {
     console.error('❌ [POSTGRES] Unexpected pool error:', err);
   });
-
-  pool = newPool;
 }
 
 /**
@@ -265,36 +263,12 @@ export async function findMany<T extends QueryResultRow = any>(
   return result.rows;
 }
 
-/**
- * Helper: Execute query and return first row only
- * Like query() but returns T | null instead of QueryResult
- */
-export async function queryOne<T extends QueryResultRow = any>(
-  sql: string,
-  params: any[] = []
-): Promise<T | null> {
-  const result = await query<T>(sql, params);
-  return result.rows[0] || null;
-}
-
 // Export pool for advanced usage
 export { pool };
-
-// Aliases for backward compatibility
-// getOne/getMany expect (sql, params) unlike findOne/findMany which expect (table, column, value)
-export const getOne = queryOne;
-export async function getMany<T extends QueryResultRow = any>(
-  sql: string,
-  params: any[] = []
-): Promise<T[]> {
-  const result = await query<T>(sql, params);
-  return result.rows;
-}
 
 // Default export
 export default {
   query,
-  queryOne,
   transaction,
   testConnection,
   getPoolStats,
@@ -304,7 +278,5 @@ export default {
   softDelete,
   findOne,
   findMany,
-  getOne,
-  getMany,
   pool,
 };

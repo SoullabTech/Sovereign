@@ -1,22 +1,12 @@
 // @ts-nocheck - Prototype file, not type-checked
-// Production requires force-dynamic for per-user database access
-export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-
-export const revalidate = false;
 import { PrismaClient } from '@prisma/client';
 import { betaSession } from '@/lib/auth/betaSession';
-
-// Skip during static export (Capacitor builds)
 
 const prisma = new PrismaClient();
 
 // Dream Retrieval API - Get user's dreams with analysis and correlations
 export async function GET(request: NextRequest) {
-  // Static export: return stub response during pre-rendering
-  if (process.env.CAPACITOR_BUILD) {
-    return NextResponse.json({ stub: true });
-  }
   try {
     const user = betaSession.getCurrentUser();
     if (!user?.id) {

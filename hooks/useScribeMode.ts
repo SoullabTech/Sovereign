@@ -5,11 +5,22 @@
 
 import { useState, useCallback } from 'react';
 
+export interface ScribeSession {
+  id: string;
+  startedAt: Date;
+  transcript: string;
+  voiceTranscripts?: string[];
+  consultationMessages?: string[];
+}
+
 export interface ScribeModeState {
   isActive: boolean;
   transcript: string;
   isRecording: boolean;
   lastActivity?: Date;
+  // Aliases expected by OracleConversation
+  isScribing: boolean;
+  currentSession: ScribeSession | null;
 }
 
 export interface ScribeModeActions {
@@ -19,21 +30,17 @@ export interface ScribeModeActions {
   setTranscript: (text: string) => void;
   appendTranscript: (text: string) => void;
   clearTranscript: () => void;
-}
-
-// Extended interface with backward-compatible aliases for OracleConversation.tsx
-export interface ScribeModeHook extends ScribeModeState, ScribeModeActions {
-  // Aliases for backward compatibility
-  isScribing: boolean;
-  currentSession: any;
+  // Actions expected by OracleConversation
   startScribing: () => void;
   stopScribing: () => void;
   recordVoiceTranscript: (text: string) => void;
-  recordConsultation: (role: string, text: string) => void;
+  recordConsultation: (roleOrText: string, text?: string) => void;
   generateSynopsis: () => Promise<string>;
   downloadTranscript: () => void;
   getTranscriptForReview: () => string;
 }
+
+export interface ScribeModeHook extends ScribeModeState, ScribeModeActions {}
 
 /**
  * Hook for managing scribe mode functionality in OracleConversation.
@@ -80,12 +87,52 @@ export function useScribeMode(): ScribeModeHook {
     setLastActivity(new Date());
   }, []);
 
+  // Session management for OracleConversation compatibility
+  const currentSession: ScribeSession | null = isActive ? {
+    id: 'scribe-session',
+    startedAt: lastActivity || new Date(),
+    transcript,
+  } : null;
+
+  const recordVoiceTranscript = useCallback((text: string) => {
+    appendTranscript(text);
+  }, [appendTranscript]);
+
+  const recordConsultation = useCallback((roleOrText: string, text?: string) => {
+    const actualText = text ?? roleOrText;
+    const role = text ? roleOrText : 'consultation';
+    appendTranscript(`\n[${role}]: ${actualText}`);
+  }, [appendTranscript]);
+
+  const generateSynopsis = useCallback(async (): Promise<string> => {
+    return transcript ? `Synopsis: ${transcript.substring(0, 200)}...` : '';
+  }, [transcript]);
+
+  const downloadTranscript = useCallback(() => {
+    if (typeof window !== 'undefined' && transcript) {
+      const blob = new Blob([transcript], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `scribe-transcript-${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  }, [transcript]);
+
+  const getTranscriptForReview = useCallback((): string => {
+    return transcript;
+  }, [transcript]);
+
   return {
     // State
     isActive,
     transcript,
     isRecording,
     lastActivity,
+    // Aliases for OracleConversation
+    isScribing: isActive,
+    currentSession,
 
     // Actions
     toggleScribeMode,
@@ -94,26 +141,14 @@ export function useScribeMode(): ScribeModeHook {
     setTranscript,
     appendTranscript,
     clearTranscript,
-
-    // Backward-compatible aliases for OracleConversation.tsx
-    isScribing: isActive,
-    currentSession: null,
+    // Actions for OracleConversation
     startScribing: startScribe,
     stopScribing: stopScribe,
-    recordVoiceTranscript: appendTranscript,
-    recordConsultation: (role: string, text: string) => appendTranscript(`[${role}]: ${text}\n`),
-    generateSynopsis: async () => transcript,
-    downloadTranscript: () => {
-      // Simple download of transcript
-      const blob = new Blob([transcript], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `scribe-session-${Date.now()}.txt`;
-      a.click();
-      URL.revokeObjectURL(url);
-    },
-    getTranscriptForReview: () => transcript,
+    recordVoiceTranscript,
+    recordConsultation,
+    generateSynopsis,
+    downloadTranscript,
+    getTranscriptForReview,
   };
 }
 
