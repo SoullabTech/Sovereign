@@ -5661,7 +5661,11 @@ I'm not sure what I'm feeling yet.`;
                       ? '💬 Aside Mode'
                       : scribeSession.isPaused
                         ? '⏸️ Paused'
-                        : '🔴 Witnessing'}
+                        : scribeSession.container === 'solo'
+                          ? '🧘 1st Chair • Solo'
+                          : scribeSession.container === 'witness'
+                            ? '👁️ 2nd Chair • Witness'
+                            : '📋 3rd Chair • Practitioner'}
                   </div>
                   <div className={`text-xs ${
                     scribeSession.isAside ? 'text-blue-400/70' : scribeSession.isPaused ? 'text-amber-400/70' : 'text-red-400/70'
@@ -5670,7 +5674,11 @@ I'm not sure what I'm feeling yet.`;
                       ? 'Private consultation • Not recording'
                       : scribeSession.isPaused
                         ? 'Session paused • Say "resume scribe"'
-                        : `${scribeSession.container} session active`}
+                        : scribeSession.container === 'solo'
+                          ? 'Self-study • journaling'
+                          : scribeSession.container === 'witness'
+                            ? 'Observing • not responding'
+                            : 'Session notes • skill tracking'}
                   </div>
                 </div>
 
@@ -7255,11 +7263,31 @@ I'm not sure what I'm feeling yet.`;
               downloadScribeTranscript?.();
               setShowLabDrawer(false);
             } else {
-              // Start scribing
-              startScribing?.();
-              toast.success('Scribe Mode activated - Recording session passively');
+              // Start scribing (default to witness for backwards compatibility)
+              startScribeSession?.('witness');
+              toast.success('Scribe Mode activated - 2nd Chair Witness');
               setShowLabDrawer(false);
             }
+            return;
+          }
+
+          // 📝 SCRIBE MODE: Start with specific chair perspective
+          if (action === 'scribe-solo') {
+            startScribeSession?.('solo');
+            toast.success('🧘 1st Chair Solo - Self-study & journaling');
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'scribe-witness') {
+            startScribeSession?.('witness');
+            toast.success('👁️ 2nd Chair Witness - Observing session');
+            setShowLabDrawer(false);
+            return;
+          }
+          if (action === 'scribe-practitioner') {
+            startScribeSession?.('practitioner');
+            toast.success('📋 3rd Chair Practitioner - Session notes');
+            setShowLabDrawer(false);
             return;
           }
 
@@ -7281,6 +7309,7 @@ I'm not sure what I'm feeling yet.`;
         isFieldRecording={isFieldRecording}
         isScribing={isScribing}
         hasScribeSession={!!scribeSession}
+        scribeChair={scribeSession.container}
         isMuted={isMuted}
         isResponding={isResponding}
         isAudioPlaying={isAudioPlaying}

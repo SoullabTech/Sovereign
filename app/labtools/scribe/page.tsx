@@ -45,7 +45,7 @@ export default function ScribePage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sessionType: 'reading',
+          sessionType: 'live_scribe',
           title: `Live Scribe - ${new Date().toLocaleDateString()}`
         })
       });

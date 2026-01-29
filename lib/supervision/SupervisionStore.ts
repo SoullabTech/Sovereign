@@ -21,7 +21,7 @@ export interface SupervisionSession {
   id: string;
   practitioner_id: string | null;
   case_id: string | null;
-  session_type: 'individual' | 'group' | 'peer' | 'consultation' | 'team_meeting';
+  session_type: 'individual' | 'group' | 'peer' | 'consultation' | 'team_meeting' | 'reading' | 'scribe' | 'live_scribe';
   title: string | null;
   started_at: string;
   ended_at: string | null;
