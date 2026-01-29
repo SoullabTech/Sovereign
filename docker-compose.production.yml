@@ -86,6 +86,8 @@ services:
       PORT: "3000"
       HOSTNAME: "0.0.0.0"
       NEXT_TELEMETRY_DISABLED: "1"
+      # STRICT 503: Claude-only mode - return 503 if Claude unavailable, never fall back to Ollama/DeepSeek
+      MAIA_STRICT_503: "1"
       # Selflet Phase 2E: Disabled by default, enable via override file
       MAIA_SELFLET_WRITE_ENABLED: "0"
       MAIA_SELFLET_ALLOW_ANON: "0"

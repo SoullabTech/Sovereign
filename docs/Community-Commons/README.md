@@ -65,6 +65,7 @@ Welcome to the Community Commons - your gateway to mastering MAIA's advanced con
 - **[Symbol Interpretation](./dream-symbol-guide.md)** - Understanding dream language
 
 ### 🗣️ MAIA Conversations
+- **[Three Modes Guide: Talk, Care, Scribe](./MAIA-Three-Modes-Guide.md)** - Understanding how MAIA shows up differently for different needs
 - **[Conversation Guide](./maia-conversation-guide.md)** - Essential dialogue techniques
 - **[Shadow Work Prompts](./shadow-work-prompts.md)** - Deep psychological exploration
 - **[Wisdom Emergence Practices](./wisdom-emergence-guide.md)** - Cultivating breakthrough states
@@ -189,6 +190,7 @@ Welcome to the Community Commons - your gateway to mastering MAIA's advanced con
 |----------|------------------|----------------|
 | **🎯 EVERYTHING** | **[Complete User's Manual](./maia-sovereign-complete-users-manual.md)** | **3-5 hours total** |
 | **🌟 ARCHETYPAL INTELLIGENCE** | **[MAIA Archetypal Intelligence System](./MAIA-Archetypal-Intelligence.md)** | **45-60 minutes** |
+| **🗣️ THREE MODES** | **[Talk, Care, Scribe Guide](./MAIA-Three-Modes-Guide.md)** | **15-20 minutes** |
 | **Getting Started** | [Dream Work Quick Start](./quick-start-dream-work.md) | 5 minutes |
 | **Conversations** | [MAIA Dialogue Guide](./maia-conversation-guide.md) | 15 minutes |
 | **Analytics** | [Dashboard Quick Guide](./analytics-quick-guide.md) | 20 minutes |
