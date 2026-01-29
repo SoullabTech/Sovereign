@@ -4,7 +4,13 @@
  * Tarot Oracle Experience
  *
  * The Mirror of the Soul - Interactive tarot reading with card animations
- * Aesthetic: Night sky temple with sacred card mysticism
+ * Aesthetic: DUNE deep velvet - cinematic, archetypal, mythopoetic
+ *
+ * Features:
+ * - Spread selection with card preview
+ * - Sequential card reveal with dramatic turn
+ * - Physical card presence with shadows
+ * - Positional relationships
  */
 
 import { useState } from 'react';
@@ -229,41 +235,58 @@ export default function TarotOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 relative overflow-hidden">
-      {/* Atmospheric Particles */}
+    <div className="min-h-screen bg-gradient-to-b from-[#08060d] via-[#0d0a14] to-[#06050a] relative overflow-hidden">
+      {/* DUNE Deep Velvet - cinematic, theatrical darkness */}
       <div className="fixed inset-0 pointer-events-none">
-        {[...Array(40)].map((_, i) => (
+        {/* Velvet texture overlay */}
+        <div className="absolute inset-0 bg-gradient-radial from-violet-950/5 via-transparent to-transparent" style={{ backgroundPosition: 'center 30%' }} />
+
+        {/* Candlelight motes - slow, ethereal */}
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-violet-400/30 rounded-full"
+            className="absolute w-0.5 h-0.5 bg-violet-300/40 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${15 + Math.random() * 70}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -40, 0],
-              opacity: [0.2, 0.6, 0.2],
-              scale: [1, 1.5, 1],
+              y: [0, -30, 0],
+              opacity: [0.1, 0.4, 0.1],
+              scale: [1, 1.3, 1],
             }}
             transition={{
-              duration: 4 + Math.random() * 6,
+              duration: 10 + Math.random() * 8,
               repeat: Infinity,
-              delay: Math.random() * 3,
+              delay: Math.random() * 6,
               ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-      {/* Atmospheric Glow */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-violet-950/20 via-maia-navy-900/10 to-transparent pointer-events-none" />
+      {/* Vignette edge darkness - theatrical */}
+      <div className="fixed inset-0 pointer-events-none" style={{
+        background: 'radial-gradient(ellipse at center, transparent 30%, rgba(6,5,10,0.6) 100%)'
+      }} />
 
-      {/* Sacred geometry overlay */}
-      <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
-        <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <circle cx="500" cy="500" r="450" fill="none" stroke="#8b5cf6" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="350" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="250" fill="none" stroke="#8b5cf6" strokeWidth="0.5" strokeDasharray="8 8" />
+      {/* Bottom violet glow - like altar candlelight */}
+      <div className="fixed bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-violet-950/15 via-purple-950/5 to-transparent pointer-events-none" />
+
+      {/* Mystical star pattern - very subtle */}
+      <div className="fixed inset-0 flex items-center justify-center opacity-[0.02] pointer-events-none">
+        <svg className="w-[90vmin] h-[90vmin]" viewBox="0 0 100 100">
+          {/* Six-pointed star (Star of David / hexagram) */}
+          <polygon
+            points="50,10 61,35 90,35 67,52 78,80 50,63 22,80 33,52 10,35 39,35"
+            fill="none"
+            stroke="#8b5cf6"
+            strokeWidth="0.2"
+          />
+          {/* Inner circle */}
+          <circle cx="50" cy="50" r="20" fill="none" stroke="#a78bfa" strokeWidth="0.15" />
+          {/* Outer circle */}
+          <circle cx="50" cy="50" r="42" fill="none" stroke="#7c3aed" strokeWidth="0.15" />
         </svg>
       </div>
 
@@ -279,15 +302,19 @@ export default function TarotOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-maia-spice-500/70 hover:text-maia-spice-400 transition-colors"
+              className="flex items-center gap-2 text-violet-400/50 hover:text-violet-300/70 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm">Back to Oracle</span>
             </button>
 
-            <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-violet-400" />
-              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wide">Tarot Oracle</h1>
+            <div className="flex items-center gap-3">
+              {/* Stylized card icon */}
+              <svg className="w-6 h-6 text-violet-400/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="4" y="2" width="16" height="20" rx="2" />
+                <path d="M12 7 L12 17 M8 12 L16 12" strokeWidth="1" opacity="0.5" />
+              </svg>
+              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wider">Tarot Oracle</h1>
             </div>
 
             <div className="w-24" />
@@ -314,48 +341,75 @@ export default function TarotOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-2xl mx-auto"
               >
-                <div className="text-center mb-8">
+                <div className="text-center mb-10">
+                  {/* Three card backs as threshold symbol */}
                   <motion.div
-                    animate={{
-                      rotate: [0, 360],
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 20,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                    className="inline-block mb-6"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 1.2 }}
+                    className="inline-flex items-center gap-2 mb-8"
                   >
-                    <Star className="w-16 h-16 text-violet-400/80" />
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="relative"
+                        initial={{ rotateY: 0 }}
+                        animate={{ rotateY: [0, 5, 0] }}
+                        transition={{ duration: 4, repeat: Infinity, delay: i * 0.3 }}
+                      >
+                        <div className={`w-12 h-18 rounded-lg bg-gradient-to-br from-violet-900/60 to-purple-950/60 border border-violet-500/30 shadow-lg shadow-violet-900/30 ${i === 1 ? 'scale-110' : 'scale-95 opacity-70'}`} style={{ height: '4.5rem' }}>
+                          <div className="absolute inset-1 rounded border border-violet-400/20" />
+                          <Star className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 ${i === 1 ? 'text-violet-400/50' : 'text-violet-500/30'}`} />
+                        </div>
+                      </motion.div>
+                    ))}
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-maia-ink-100 mb-4">
-                    Ask Your Question
-                  </h2>
-                  <p className="text-maia-ink-60 text-lg">
-                    The cards are listening. Speak from your heart.
-                  </p>
+                  <motion.h2
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-4xl font-light text-maia-ink-100 mb-4 tracking-wide"
+                  >
+                    The Mirror of the Soul
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-violet-300/50 text-lg font-light"
+                  >
+                    What story does your psyche wish to tell?
+                  </motion.p>
                 </div>
 
-                <div className="bg-gradient-to-br from-maia-navy-800/60 via-violet-900/20 to-maia-navy-850/60 backdrop-blur-xl border border-violet-500/30 rounded-2xl p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="bg-gradient-to-br from-[#0d0a14]/80 via-violet-950/10 to-[#06050a]/80 backdrop-blur-xl border border-violet-500/20 rounded-2xl p-8 shadow-2xl shadow-violet-900/10"
+                >
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the cards?"
-                    className="w-full h-32 px-4 py-3 bg-maia-navy-900/50 border border-maia-navy-700/40 rounded-lg text-maia-ink-100 placeholder-maia-ink-40 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all resize-none"
+                    className="w-full h-32 px-5 py-4 bg-[#08060d]/60 border border-violet-900/30 rounded-xl text-maia-ink-100 placeholder-maia-ink-30 focus:outline-none focus:ring-1 focus:ring-violet-500/30 focus:border-violet-500/30 transition-all resize-none text-lg font-light"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 disabled:from-maia-navy-800/50 disabled:to-maia-navy-800/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-violet-700/70 to-purple-800/70 hover:from-violet-600/70 hover:to-purple-700/70 disabled:from-[#0d0a14]/50 disabled:to-[#0d0a14]/50 disabled:text-maia-ink-30 disabled:cursor-not-allowed text-violet-100 font-medium rounded-xl shadow-lg shadow-violet-900/20 transition-all duration-500 flex items-center justify-center gap-3 tracking-wide"
                   >
                     <Sparkles className="w-5 h-5" />
-                    Continue to Card Selection
+                    Choose Your Spread
                   </button>
-                </div>
+
+                  <p className="text-violet-400/25 text-xs text-center mt-5 tracking-wider uppercase">
+                    The 78 cards of the Rider-Waite tradition
+                  </p>
+                </motion.div>
               </motion.div>
             )}
 
@@ -367,72 +421,65 @@ export default function TarotOraclePage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
-                <div className="text-center mb-8">
-                  <h2 className="text-4xl font-bold text-maia-ink-100 mb-4">
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-light text-maia-ink-100 mb-4 tracking-wide">
                     Choose Your Spread
                   </h2>
-                  <p className="text-maia-ink-60 text-lg max-w-2xl mx-auto">
-                    Each spread offers a different perspective on your question
+                  <p className="text-violet-300/40 text-lg max-w-2xl mx-auto font-light">
+                    Each spread offers a different window into your question
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {SPREAD_OPTIONS.map((spread, index) => {
                     const Icon = spread.icon;
-                    const colorClasses = {
-                      violet: {
-                        gradient: 'from-maia-navy-800/60 via-violet-900/20 to-maia-navy-850/60',
-                        border: 'border-violet-500/30 hover:border-violet-400/50',
-                        icon: 'bg-violet-900/30 group-hover:bg-violet-800/40',
-                        iconColor: 'text-violet-400',
-                        badge: 'bg-violet-600/20 text-violet-300/80'
-                      },
-                      spice: {
-                        gradient: 'from-maia-navy-800/60 via-maia-spice-700/20 to-maia-navy-850/60',
-                        border: 'border-maia-spice-500/30 hover:border-maia-spice-400/50',
-                        icon: 'bg-maia-spice-900/30 group-hover:bg-maia-spice-800/40',
-                        iconColor: 'text-maia-spice-400',
-                        badge: 'bg-maia-spice-600/20 text-maia-spice-300/80'
-                      },
-                      sage: {
-                        gradient: 'from-maia-navy-800/60 via-maia-sage-700/20 to-maia-navy-850/60',
-                        border: 'border-maia-sage-500/30 hover:border-maia-sage-400/50',
-                        icon: 'bg-maia-sage-900/30 group-hover:bg-maia-sage-800/40',
-                        iconColor: 'text-maia-sage-400',
-                        badge: 'bg-maia-sage-600/20 text-maia-sage-300/80'
-                      }
-                    };
-                    const colors = colorClasses[spread.color as keyof typeof colorClasses];
 
                     return (
                       <motion.button
                         key={spread.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
+                        transition={{ delay: index * 0.15 }}
                         onClick={() => handleSpreadSelect(spread.id as SpreadType)}
-                        className={`group p-6 bg-gradient-to-br ${colors.gradient} backdrop-blur-xl border ${colors.border} rounded-2xl hover:shadow-2xl transition-all duration-300`}
+                        className="group p-6 bg-gradient-to-br from-[#0d0a14]/80 via-violet-950/10 to-[#06050a]/80 backdrop-blur-xl border border-violet-500/20 hover:border-violet-400/40 rounded-2xl hover:shadow-2xl hover:shadow-violet-900/20 transition-all duration-500"
                         whileHover={{ y: -4, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <div className="flex flex-col items-center text-center">
-                          <div className={`w-16 h-16 rounded-full ${colors.icon} flex items-center justify-center mb-4 transition-colors`}>
-                            <Icon className={`w-8 h-8 ${colors.iconColor}`} />
+                          {/* Card stack visualization */}
+                          <div className="relative w-16 h-20 mb-4">
+                            {[...Array(Math.min(spread.positions, 3))].map((_, i) => (
+                              <motion.div
+                                key={i}
+                                className="absolute w-10 h-14 bg-gradient-to-br from-violet-900/40 to-purple-950/40 border border-violet-500/30 rounded-lg shadow-md"
+                                style={{
+                                  left: `${50 - 20 + i * 8}%`,
+                                  top: `${i * 4}px`,
+                                  transform: `rotate(${(i - 1) * 8}deg)`,
+                                  zIndex: 3 - i
+                                }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: index * 0.15 + i * 0.1 }}
+                              >
+                                <Icon className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-violet-400/40" />
+                              </motion.div>
+                            ))}
                           </div>
 
-                          <h3 className="text-xl font-bold text-maia-ink-100 mb-2">
+                          <h3 className="text-xl font-light text-maia-ink-100 mb-2 tracking-wide group-hover:text-violet-200 transition-colors">
                             {spread.name}
                           </h3>
 
-                          <span className={`inline-block px-3 py-1 ${colors.badge} text-xs rounded-full mb-3`}>
+                          <span className="inline-block px-3 py-1 bg-violet-600/15 text-violet-300/60 text-xs rounded-full mb-3 tracking-wide">
                             {spread.recommended}
                           </span>
 
-                          <p className="text-maia-ink-60 text-sm mb-3">
+                          <p className="text-maia-ink-50 text-sm mb-3 font-light">
                             {spread.description}
                           </p>
 
-                          <div className="text-maia-ink-40 text-xs">
+                          <div className="text-violet-400/40 text-xs tracking-wide">
                             {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
                           </div>
                         </div>
@@ -440,6 +487,13 @@ export default function TarotOraclePage() {
                     );
                   })}
                 </div>
+
+                <button
+                  onClick={() => setPhase('question')}
+                  className="mt-8 mx-auto block text-violet-400/40 hover:text-violet-300/60 text-sm transition-colors"
+                >
+                  ← Back to question
+                </button>
               </motion.div>
             )}
 
