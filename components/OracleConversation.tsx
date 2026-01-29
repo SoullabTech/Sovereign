@@ -2633,6 +2633,79 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('🔬 [LabAction] Received from page:', action);
 
       // Route to appropriate handler
+      if (action === 'open-prompt-picker') {
+        console.log('🔬 [LabAction] Opening prompt picker');
+        setShowPromptPicker(true);
+        return;
+      }
+
+      if (action === 'show-session-arc') {
+        console.log('🔬 [LabAction] Show session arc - handled by FloatingSessionIndicator');
+        // Session arc is displayed via the FloatingSessionIndicator component
+        return;
+      }
+
+      if (action === 'show-session-synthesis') {
+        console.log('🔬 [LabAction] Generating session synthesis');
+        if (messages.length > 0) {
+          setSessionSynthesisData({
+            patterns: ['Pattern detection in progress...'],
+            invitation: 'Continue exploring what emerged in this conversation.',
+            savedToMemory: !isSanctuary,
+            durationMinutes: sessionTimer?.getElapsedMinutes?.() || undefined
+          });
+          setShowSessionSynthesis(true);
+        }
+        return;
+      }
+
+      if (action === 'session-recap') {
+        console.log('🔬 [LabAction] Generating session recap');
+        if (messages.length > 0) {
+          setSessionRecapData({
+            duration: sessionTimer?.getElapsedMinutes?.() || Math.floor(messages.length / 2),
+            messageCount: messages.length,
+            themes: ['Self-reflection', 'Growth'],
+            elements: {
+              fire: 0.3,
+              water: 0.5,
+              earth: 0.4,
+              air: 0.6,
+              aether: 0.2
+            },
+            invitation: 'Continue reflecting on what emerged today.'
+          });
+          setShowSessionRecap(true);
+        }
+        return;
+      }
+
+      if (action === 'daily-checkin') {
+        console.log('🔬 [LabAction] Opening daily check-in');
+        setShowDailyCheckin(true);
+        return;
+      }
+
+      if (action === 'element-discovery') {
+        console.log('🔬 [LabAction] Opening element discovery');
+        setShowElementDiscovery(true);
+        return;
+      }
+
+      if (action === 'toggle-vocabulary-tooltips') {
+        const newValue = !enableVocabularyTooltips;
+        setEnableVocabularyTooltips(newValue);
+        localStorage.setItem('maia.vocabularyTooltips', String(newValue));
+        console.log('🔬 [LabAction] Vocabulary tooltips:', newValue);
+        return;
+      }
+
+      if (action === 'choose-guide') {
+        console.log('🔬 [LabAction] Opening wisdom council');
+        setShowWisdomCouncil(true);
+        return;
+      }
+
       if (action === 'capture-spirit') {
         // Defer to allow state to settle after drawer close
         setTimeout(() => {
@@ -2642,12 +2715,15 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
             console.error('❌ [LabAction] handleCaptureSpirit not available');
           }
         }, 100);
+        return;
       }
+
+      console.log('🔬 [LabAction] Unhandled action:', action);
     };
 
     window.addEventListener('labAction', handleLabAction as EventListener);
     return () => window.removeEventListener('labAction', handleLabAction as EventListener);
-  }, []);
+  }, [messages.length, isSanctuary, sessionTimer, enableVocabularyTooltips]);
 
   // Listen for Inner Lands "Talk to MAIA" events
   useEffect(() => {
@@ -6994,8 +7070,10 @@ I'm not sure what I'm feeling yet.`;
           setShowLabDrawer(false);
         }}
         onAction={async (action) => {
+          console.log('[OracleConversation] onAction called:', action);
           // Soul Prompts & Session actions
           if (action === 'open-prompt-picker') {
+            console.log('[OracleConversation] Opening prompt picker');
             setShowPromptPicker(true);
             setShowLabDrawer(false);
             return;
