@@ -138,7 +138,7 @@ export function FrameworkSelector({ mode, isOpen, onClose }: FrameworkSelectorPr
           {/* Sheet */}
           <motion.div
             className="fixed bottom-0 left-0 right-0 bg-gradient-to-b from-[#1a1a2e] to-[#16162b]
-                     rounded-t-3xl z-[10000] max-h-[85vh] overflow-y-auto shadow-2xl
+                     rounded-t-3xl z-[10000] max-h-[85vh] flex flex-col shadow-2xl
                      border-t border-amber-500/10"
             style={{
               paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
@@ -152,22 +152,27 @@ export function FrameworkSelector({ mode, isOpen, onClose }: FrameworkSelectorPr
               stiffness: 250,
               mass: 0.8
             }}
-            drag="y"
-            dragConstraints={{ top: 0 }}
-            dragElastic={0.2}
-            onDragEnd={(e, { velocity }) => {
-              if (velocity.y > 500) {
-                if ('vibrate' in navigator) navigator.vibrate(8);
-                onClose();
-              }
-            }}
           >
-            {/* Drag handle */}
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-3 mb-4" />
+            {/* Drag handle - only this part is draggable to close */}
+            <motion.div
+              className="flex-shrink-0 cursor-grab active:cursor-grabbing touch-none"
+              drag="y"
+              dragConstraints={{ top: 0, bottom: 0 }}
+              dragElastic={0.3}
+              onDragEnd={(e, { velocity, offset }) => {
+                if (velocity.y > 300 || offset.y > 80) {
+                  if ('vibrate' in navigator) navigator.vibrate(8);
+                  onClose();
+                }
+              }}
+            >
+              <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mt-3 mb-2" />
+              <div className="h-4" /> {/* Extra touch target */}
+            </motion.div>
 
-            <div className="px-6 pb-6">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
+            {/* Header - fixed, not scrollable */}
+            <div className="flex-shrink-0 px-6 pb-4">
+              <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-light text-amber-50">
                     {title}
@@ -184,8 +189,16 @@ export function FrameworkSelector({ mode, isOpen, onClose }: FrameworkSelectorPr
                   <X size={20} />
                 </button>
               </div>
+            </div>
 
-              {/* Options */}
+            {/* Scrollable options area - iOS-friendly scrolling */}
+            <div
+              className="flex-1 overflow-y-auto overscroll-contain px-6 pb-6"
+              style={{
+                WebkitOverflowScrolling: 'touch',
+                touchAction: 'pan-y'
+              }}
+            >
               <div className="space-y-3">
                 {Object.values(options).map(config => renderOption(config))}
               </div>

@@ -380,15 +380,29 @@ function MAIAPageContent() {
         return;
       }
 
-      // Get or create persistent sessionId - this enables conversation continuity across reloads!
+      // Get or create persistent sessionId - resets daily for fresh conversations
       const existingSessionId = localStorage.getItem('maia_session_id');
-      if (existingSessionId) {
+      const lastSessionDate = localStorage.getItem('maia_session_date');
+      const todayDate = new Date().toDateString();
+
+      // Check if this is a new day - if so, start fresh
+      const isNewDay = lastSessionDate !== todayDate;
+
+      if (existingSessionId && !isNewDay) {
         setSessionId(existingSessionId);
         console.log('💫 [MAIA] Restored session:', existingSessionId);
       } else {
+        // New day or no session - create fresh session and clear old conversation
         const newSessionId = `session_${Date.now()}`;
         localStorage.setItem('maia_session_id', newSessionId);
+        localStorage.setItem('maia_session_date', todayDate);
         setSessionId(newSessionId);
+
+        // Clear old conversation from localStorage for clean slate
+        if (existingSessionId) {
+          localStorage.removeItem(`maia_conversation_${existingSessionId}`);
+          console.log('🌅 [MAIA] New day - cleared old conversation, starting fresh');
+        }
         console.log('✨ [MAIA] Created new session:', newSessionId);
       }
 
@@ -1578,106 +1592,6 @@ function MAIAPageContent() {
                       </div>
                     </div>
                   )}
-                </div>
-
-                {/* Divider */}
-                <div className="border-t border-amber-500/20 my-2" />
-
-                {/* Voice Settings Section */}
-                <div className="px-4 py-3 rounded-xl bg-cyan-500/5 border border-cyan-500/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <Volume2 className="w-5 h-5 text-cyan-400" />
-                    <span className="text-base text-cyan-400 font-medium">Voice Settings</span>
-                  </div>
-
-                  {/* Voice Selection */}
-                  <div className="mb-4">
-                    <label className="text-xs text-stone-400 mb-2 block">MAIA&apos;s Voice</label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {(['alloy', 'echo', 'fable', 'onyx', 'nova', 'shimmer'] as const).map((v) => (
-                        <button
-                          key={v}
-                          onClick={() => setSelectedVoice(v)}
-                          className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
-                            selectedVoice === v
-                              ? 'bg-amber-500/30 text-amber-200 border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
-                              : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
-                          }`}
-                        >
-                          {v.charAt(0).toUpperCase() + v.slice(1)}
-                          {selectedVoice === v && (
-                            <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-stone-500 mt-1.5">
-                      {selectedVoice === 'alloy' && '🔘 Neutral & balanced'}
-                      {selectedVoice === 'echo' && '🌊 Warm & expressive'}
-                      {selectedVoice === 'fable' && '📖 Storytelling quality'}
-                      {selectedVoice === 'nova' && '⭐ Bright & energetic'}
-                      {selectedVoice === 'shimmer' && '✨ Gentle & soothing'}
-                      {selectedVoice === 'onyx' && '🖤 Deep & resonant'}
-                    </p>
-                  </div>
-
-                  {/* Speed Control */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs text-stone-400">Speed</label>
-                      <span className="text-xs text-cyan-400 font-mono">{voiceSpeed.toFixed(2)}x</span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0.5"
-                      max="1.5"
-                      step="0.05"
-                      value={voiceSpeed}
-                      onChange={(e) => setVoiceSpeed(parseFloat(e.target.value))}
-                      className="w-full h-1.5 bg-stone-700/50 rounded-lg appearance-none cursor-pointer accent-cyan-500"
-                      style={{
-                        background: `linear-gradient(to right, rgb(6 182 212 / 0.5) 0%, rgb(6 182 212 / 0.5) ${((voiceSpeed - 0.5) / 1) * 100}%, rgb(87 83 78 / 0.5) ${((voiceSpeed - 0.5) / 1) * 100}%, rgb(87 83 78 / 0.5) 100%)`
-                      }}
-                    />
-                    <div className="flex justify-between text-[10px] text-stone-500 mt-1">
-                      <span>Slower</span>
-                      <span>Normal</span>
-                      <span>Faster</span>
-                    </div>
-                  </div>
-
-                  {/* Quality Toggle */}
-                  <div>
-                    <label className="text-xs text-stone-400 mb-2 block">Quality</label>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setVoiceModel('tts-1')}
-                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
-                          voiceModel === 'tts-1'
-                            ? 'bg-amber-500/30 text-amber-200 border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
-                            : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
-                        }`}
-                      >
-                        Standard
-                        {voiceModel === 'tts-1' && (
-                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => setVoiceModel('tts-1-hd')}
-                        className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all relative ${
-                          voiceModel === 'tts-1-hd'
-                            ? 'bg-amber-500/30 text-amber-200 border-2 border-amber-400 ring-2 ring-amber-400/40 shadow-[0_0_10px_rgba(251,191,36,0.3)]'
-                            : 'bg-stone-800/50 text-stone-400 border border-stone-700/50 hover:bg-stone-700/50'
-                        }`}
-                      >
-                        HD ✨
-                        {voiceModel === 'tts-1-hd' && (
-                          <span className="absolute -top-1 -right-1 w-2 h-2 bg-amber-400 rounded-full" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
                 </div>
 
                 {/* Divider */}

@@ -7,7 +7,7 @@
 'use client';
 
 import { Suspense, useState, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, ArrowRightLeft, Sparkles, Eye, EyeOff, QrCode } from 'lucide-react';
 import { Holoflower } from '@/components/ui/Holoflower';
 import EthosFooter from '@/components/shared/EthosFooter';
@@ -134,14 +134,14 @@ function SigninContent() {
     const usernameParam = getSearchParam('username');
     const reasonParam = getSearchParam('reason');
 
-    // Handle reason codes from middleware/auth redirects
+    // Handle reason codes from middleware/auth redirects - humanized messages
     if (reasonParam) {
       const reasonMessages: Record<string, string> = {
-        'no_session_cookie': 'Please sign in to continue.',
-        'invalid_session': 'Your session is invalid. Please sign in again.',
-        'expired_session': 'Your session has expired. Please sign in again.',
-        'revoked_session': 'Your session was ended. Please sign in again.',
-        'missing_credentials': 'Please enter your credentials to continue.',
+        'no_session_cookie': 'Let\'s get you signed in.',
+        'invalid_session': 'Something shifted. Sign in again to continue.',
+        'expired_session': 'Your session timed out. Welcome back.',
+        'revoked_session': 'Your session ended. Sign in to return.',
+        'missing_credentials': 'Enter your details below.',
       };
       const reasonError = reasonMessages[reasonParam];
       if (reasonError) {
@@ -150,11 +150,11 @@ function SigninContent() {
     }
 
     if (errorParam === 'invalid_token') {
-      setError('Your sign-in link has expired or is invalid. Try requesting a new one.');
+      setError('That link has expired. Request a fresh one below.');
     } else if (errorParam === 'no_token') {
-      setError('Invalid sign-in link. Try requesting a new one.');
+      setError('Hmm, that link didn\'t work. Try requesting another.');
     } else if (errorParam === 'verification_failed') {
-      setError('Something went wrong verifying your link. Try again or use password.');
+      setError('Couldn\'t verify that link. Try again or use your password.');
     }
 
     if (usernameParam) {
@@ -255,21 +255,21 @@ function SigninContent() {
           return;
         }
 
-        // Provide helpful guidance based on error code
-        let errorMessage = res.error || 'Biometric sign-in failed';
+        // Provide helpful guidance based on error code - humanized messages
+        let errorMessage = res.error || 'Let\'s try another way.';
 
         if (res.code === 'CREDENTIAL_NOT_FOUND') {
-          errorMessage = 'No passkey found for this account. Sign in with password, then enable Face ID/Touch ID in Settings.';
+          errorMessage = 'No passkey set up yet. Sign in with your password, then you can enable biometrics in Settings.';
         } else if (res.code === 'DEVICE_NOT_TRUSTED') {
-          errorMessage = 'This device is not trusted. Sign in with password first to enable biometric login.';
+          errorMessage = 'This device isn\'t recognized yet. Sign in with your password to set it up.';
         } else if (res.code === 'NO_MEMBER_ID') {
-          errorMessage = 'No account found. Sign in with password first.';
+          errorMessage = 'Sign in with your password first.';
         } else if (res.code === 'CHALLENGE_EXPIRED' || res.code === 'CHALLENGE_INVALID') {
-          errorMessage = 'Session expired. Please try again.';
+          errorMessage = 'That took too long. Give it another try.';
         } else if (res.code === 'USER_CANCELLED' || res.code === 'BIOMETRY_FAILED') {
-          errorMessage = 'Sign-in was cancelled. Tap to try again.';
+          errorMessage = 'Cancelled. Tap again when you\'re ready.';
         } else if (res.code === 'UNKNOWN' || res.code === 'UNKNOWN_ERROR') {
-          errorMessage = 'Something went wrong. Please try signing in with your password.';
+          errorMessage = 'Something didn\'t work. Try your password instead.';
         }
 
         setError(errorMessage);
@@ -613,19 +613,22 @@ function SigninContent() {
 
   return (
     <>
-      {/* Soullab Brand + Holoflower */}
+      {/* Soullab Brand + Holoflower - calm, unhurried presence */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="mb-10 z-10 relative flex flex-col items-center"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.2, ease: "easeOut" }}
+        className="mb-8 z-10 relative flex flex-col items-center"
       >
-        <h1 className="text-5xl font-extralight text-teal-900/70 tracking-[0.12em] mb-4">
+        <h1 className="text-5xl font-extralight text-teal-900/70 tracking-[0.12em] mb-6">
           Soullab
         </h1>
-        <div className="w-44 h-44 flex items-center justify-center">
-          <Holoflower size="xxl" glowIntensity="medium" animate={true} />
+        <div className="w-28 h-28 flex items-center justify-center animate-breathe">
+          <Holoflower size="lg" glowIntensity="low" animate={false} theme="light" />
         </div>
+        <p className="mt-4 text-sm text-teal-700/60 font-light tracking-wide">
+          Your space is waiting.
+        </p>
       </motion.div>
 
       {/* Main Card */}
@@ -641,69 +644,22 @@ function SigninContent() {
           border: '1px solid rgba(255, 255, 255, 0.4)',
         }}
       >
-        <div className="text-center mb-6">
-          <h1 className="text-xl font-light text-teal-900 tracking-tight">Welcome back</h1>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-500/30 bg-red-100/40 p-3 text-sm text-red-800">
-            {error}
-          </div>
-        )}
-
-        {/* Debug Auth Panel (temporary) */}
-        <div className="mb-4 rounded-xl border border-gray-400/30 bg-black/20 p-3 text-xs text-gray-700">
-          <div className="font-semibold mb-2">Debug Auth (build 146)</div>
-          <div className="space-y-1 text-[11px]">
-            <div>isCapacitor: {String(Capacitor.isNativePlatform())}</div>
-            <div>memberId: {typeof window !== 'undefined' ? (localStorage.getItem('memberId') || '(none)') : '(server)'}</div>
-            <div>apiBase: {apiBaseUrl() || '(relative)'}</div>
-          </div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="rounded-lg bg-gray-600 px-3 py-1.5 text-white text-[10px] hover:bg-gray-500"
-              onClick={async () => {
-                try {
-                  const url = `${apiBaseUrl()}/api/health`;
-                  console.log('🧪 Testing:', url);
-                  const r = await fetch(url, { cache: 'no-store' });
-                  const t = await r.text();
-                  console.log('🧪 /api/health', r.status, t);
-                  alert(`/api/health: ${r.status}\n${t.slice(0, 100)}`);
-                } catch (e: any) {
-                  console.error('🧪 /api/health failed', e);
-                  alert(`/api/health failed: ${e?.message || String(e)}`);
-                }
-              }}
-            >
-              Test /api/health
-            </button>
-            <button
-              type="button"
-              className="rounded-lg bg-gray-600 px-3 py-1.5 text-white text-[10px] hover:bg-gray-500"
-              onClick={async () => {
-                try {
-                  const memberId = typeof window !== 'undefined' ? localStorage.getItem('memberId') : null;
-                  const url = `${apiBaseUrl()}/api/auth/whoami`;
-                  console.log('🧪 Testing:', url, 'memberId:', memberId);
-                  const r = await fetch(url, {
-                    method: 'GET',
-                    headers: memberId ? { 'x-member-id': memberId } : {},
-                    cache: 'no-store',
-                  });
-                  const t = await r.text();
-                  console.log('🧪 /api/auth/whoami', r.status, t);
-                  alert(`/api/auth/whoami: ${r.status}\n${t.slice(0, 100)}`);
-                } catch (e: any) {
-                  console.error('🧪 /api/auth/whoami failed', e);
-                  alert(`/api/auth/whoami failed: ${e?.message || String(e)}`);
-                }
-              }}
-            >
-              Test /api/auth/whoami
-            </button>
-          </div>
+        {/* Reserved space for error messages - prevents layout shift */}
+        <div className="min-h-[52px] mb-2">
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-xl border border-amber-400/40 bg-amber-50/60 p-3 text-sm text-amber-900/80"
+              >
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Primary: Password Sign-In */}
@@ -1249,10 +1205,6 @@ function SigninContent() {
         />
       )}
 
-      {/* API indicator */}
-      <div className="fixed bottom-2 left-2 text-xs text-teal-900/30 font-mono">
-        {apiBaseUrl() || '(rel)'}
-      </div>
     </>
   );
 }
@@ -1260,21 +1212,28 @@ function SigninContent() {
 function LoadingFallback() {
   return (
     <>
-      <div className="mb-10 flex flex-col items-center">
-        <h1 className="text-5xl font-extralight text-teal-900/70 tracking-[0.12em] mb-4">
+      <div className="mb-8 flex flex-col items-center">
+        <h1 className="text-5xl font-extralight text-teal-900/70 tracking-[0.12em] mb-6">
           Soullab
         </h1>
-        <div className="w-44 h-44 flex items-center justify-center">
-          <Holoflower size="xxl" glowIntensity="medium" animate={true} />
+        <div className="w-28 h-28 flex items-center justify-center">
+          <Holoflower size="lg" glowIntensity="low" animate={false} theme="light" />
         </div>
+        <p className="mt-4 text-sm text-teal-700/60 font-light tracking-wide">
+          Your space is waiting.
+        </p>
       </div>
-      <div className="rounded-2xl p-6 border max-w-md w-full animate-pulse"
-        style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)' }}>
-        <div className="h-6 bg-teal-200/30 rounded w-32 mx-auto mb-4" />
-        <div className="space-y-3">
-          <div className="h-14 bg-teal-200/20 rounded-xl" />
-          <div className="h-10 bg-teal-200/20 rounded-xl" />
-          <div className="h-10 bg-teal-200/20 rounded-xl" />
+      <div className="rounded-3xl p-8 max-w-sm w-full"
+        style={{
+          background: 'linear-gradient(165deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.25))',
+          backdropFilter: 'blur(20px)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+          border: '1px solid rgba(255, 255, 255, 0.4)',
+        }}>
+        <div className="space-y-3 animate-pulse">
+          <div className="h-12 bg-teal-200/20 rounded-xl" />
+          <div className="h-12 bg-teal-200/20 rounded-xl" />
+          <div className="h-12 bg-teal-600/30 rounded-xl" />
         </div>
       </div>
     </>
@@ -1285,6 +1244,16 @@ export default function SigninPage() {
   console.log('[SIGNIN] ===== PAGE COMPONENT RENDER =====');
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#A0C4C7] to-[#7FB5B3] flex flex-col items-center justify-center px-4 py-8">
+      {/* Slow breathing animation for Holoflower */}
+      <style jsx global>{`
+        @keyframes breathe {
+          0%, 100% { transform: scale(1); opacity: 0.95; }
+          50% { transform: scale(1.04); opacity: 1; }
+        }
+        .animate-breathe {
+          animation: breathe 20s ease-in-out infinite;
+        }
+      `}</style>
       <Suspense fallback={<LoadingFallback />}>
         <SigninContent />
       </Suspense>

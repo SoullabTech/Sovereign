@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiUrl, apiBaseUrl, BUILD_STAMP } from '@/lib/http/apiBase';
+import { Capacitor } from '@capacitor/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Shield, Mic, Brain, Users, MessageSquare, Bell, Lock,
@@ -190,6 +191,9 @@ export function AccountSettings() {
   // Delete account state
   const [deleteConfirm, setDeleteConfirm] = useState('');
   const [deleting, setDeleting] = useState(false);
+
+  // Settings applied confirmation
+  const [settingsApplied, setSettingsApplied] = useState(false);
 
   // Profile edit state
   const [editName, setEditName] = useState('');
@@ -1174,89 +1178,94 @@ export function AccountSettings() {
         </div>
       </div>
 
-      {/* Voice Model */}
-      <div>
-        <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
-          <Mic size={16} />
-          Voice Model
-        </label>
-        <div className="grid grid-cols-3 gap-2">
-          {VOICE_OPTIONS.map((voice) => {
-            const isSelected = maiaSettings.voice?.openaiVoice === voice.id;
-            return (
-              <motion.button
-                key={voice.id}
-                onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
-                className={`py-3 px-3 rounded-xl border transition-all active:scale-95 relative ${
-                  isSelected
-                    ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
-                    : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
-                }`}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isSelected && (
-                  <div className="absolute top-1 right-1 text-amber-300">
-                    <Check size={12} />
-                  </div>
-                )}
-                <div className="text-lg mb-1">{voice.emoji}</div>
-                <div className="text-xs font-medium">{voice.name}</div>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
+      {/* Voice Settings - Web/PWA only, not available on native iOS */}
+      {!Capacitor.isNativePlatform() && (
+        <>
+          {/* Voice Model */}
+          <div>
+            <label className="flex items-center gap-2 text-sm font-medium text-amber-200/80 mb-3">
+              <Mic size={16} />
+              Voice Model
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {VOICE_OPTIONS.map((voice) => {
+                const isSelected = maiaSettings.voice?.openaiVoice === voice.id;
+                return (
+                  <motion.button
+                    key={voice.id}
+                    onClick={() => updateNestedMaiaSetting('voice.openaiVoice', voice.id)}
+                    className={`py-3 px-3 rounded-xl border transition-all active:scale-95 relative ${
+                      isSelected
+                        ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40 active:bg-amber-500/30'
+                        : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10 active:border-white/30'
+                    }`}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 text-amber-300">
+                        <Check size={12} />
+                      </div>
+                    )}
+                    <div className="text-lg mb-1">{voice.emoji}</div>
+                    <div className="text-xs font-medium">{voice.name}</div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Voice Speed */}
-      <div>
-        <label className="text-sm font-medium text-amber-200/80 mb-3 block">
-          Voice Speed: {maiaSettings.voice.speed.toFixed(2)}x
-        </label>
-        <input
-          type="range"
-          min="0.75"
-          max="1.25"
-          step="0.05"
-          value={maiaSettings.voice.speed}
-          onChange={(e) => updateNestedMaiaSetting('voice.speed', parseFloat(e.target.value))}
-          className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500"
-        />
-      </div>
+          {/* Voice Speed */}
+          <div>
+            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+              Voice Speed: {maiaSettings.voice.speed.toFixed(2)}x
+            </label>
+            <input
+              type="range"
+              min="0.75"
+              max="1.25"
+              step="0.05"
+              value={maiaSettings.voice.speed}
+              onChange={(e) => updateNestedMaiaSetting('voice.speed', parseFloat(e.target.value))}
+              className="w-full h-2 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-amber-500"
+            />
+          </div>
 
-      {/* Voice Quality */}
-      <div>
-        <label className="text-sm font-medium text-amber-200/80 mb-3 block">
-          Voice Quality
-        </label>
-        <div className="grid grid-cols-2 gap-2">
-          {([
-            { id: 'tts-1', name: 'Standard', desc: 'Faster response' },
-            { id: 'tts-1-hd', name: 'HD', desc: 'Richer, more natural' }
-          ] as const).map((quality) => {
-            const isSelected = maiaSettings.voice.model === quality.id;
-            return (
-              <motion.button
-                key={quality.id}
-                onClick={() => updateNestedMaiaSetting('voice.model', quality.id)}
-                className={`py-3 px-2 rounded-xl border transition-all active:scale-95 relative ${
-                  isSelected
-                    ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
-                    : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10'
-                }`}
-                whileTap={{ scale: 0.95 }}
-              >
-                {isSelected && (
-                  <div className="absolute top-1 right-1 text-amber-300">
-                    <Check size={12} />
-                  </div>
-                )}
-                <div className="text-sm font-medium">{quality.name}</div>
-                <div className="text-xs text-white/40">{quality.desc}</div>
-              </motion.button>
-            );
-          })}
-        </div>
-      </div>
+          {/* Voice Quality */}
+          <div>
+            <label className="text-sm font-medium text-amber-200/80 mb-3 block">
+              Voice Quality
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {([
+                { id: 'tts-1', name: 'Standard', desc: 'Faster response' },
+                { id: 'tts-1-hd', name: 'HD', desc: 'Richer, more natural' }
+              ] as const).map((quality) => {
+                const isSelected = maiaSettings.voice.model === quality.id;
+                return (
+                  <motion.button
+                    key={quality.id}
+                    onClick={() => updateNestedMaiaSetting('voice.model', quality.id)}
+                    className={`py-3 px-2 rounded-xl border transition-all active:scale-95 relative ${
+                      isSelected
+                        ? 'border-amber-400/70 bg-amber-500/20 text-amber-300 ring-2 ring-amber-400/40'
+                        : 'border-white/10 bg-black/20 text-white/60 active:bg-white/10'
+                    }`}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {isSelected && (
+                      <div className="absolute top-1 right-1 text-amber-300">
+                        <Check size={12} />
+                      </div>
+                    )}
+                    <div className="text-sm font-medium">{quality.name}</div>
+                    <div className="text-xs text-white/40">{quality.desc}</div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Memory Depth */}
       <div>
@@ -1382,6 +1391,36 @@ export function AccountSettings() {
           () => updateNestedMaiaSetting('display.vocabularyTooltips', !(maiaSettings.display?.vocabularyTooltips ?? true))
         )}
       </div>
+
+      {/* Apply Settings Button - confirms settings are saved */}
+      <motion.button
+        onClick={() => {
+          // Dispatch event to notify OracleConversation of settings change
+          window.dispatchEvent(new CustomEvent('maia-settings-applied', {
+            detail: { settings: maiaSettings }
+          }));
+          // Haptic feedback
+          if ('vibrate' in navigator) navigator.vibrate(10);
+          // Show confirmation
+          setSettingsApplied(true);
+          setTimeout(() => setSettingsApplied(false), 2000);
+        }}
+        className={`w-full py-3 rounded-xl font-medium transition-all ${
+          settingsApplied
+            ? 'bg-emerald-600 text-white'
+            : 'bg-amber-600 hover:bg-amber-500 active:bg-amber-700 text-white'
+        }`}
+        whileTap={{ scale: 0.98 }}
+      >
+        {settingsApplied ? (
+          <span className="flex items-center justify-center gap-2">
+            <Check size={18} />
+            Settings Applied
+          </span>
+        ) : (
+          'Apply Settings'
+        )}
+      </motion.button>
 
       {/* Build Info */}
       <div className="mt-6 pt-6 border-t border-white/10">
@@ -2517,6 +2556,16 @@ export function AccountSettings() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Build Info Footer - subtle version stamp */}
+      <div className="mt-12 pt-6 border-t border-white/5 text-center">
+        <p className="text-[10px] text-white/20 font-mono">
+          v1.1 ({BUILD_STAMP.commit}) • {BUILD_STAMP.timestamp.split('T')[0]}
+          {Capacitor.isNativePlatform() && (
+            <span className="ml-2">• {apiBaseUrl()}</span>
+          )}
+        </p>
+      </div>
 
       {/* Forgetting Ritual Modal */}
       <ForgettingRitual
