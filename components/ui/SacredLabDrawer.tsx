@@ -486,6 +486,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
                             key={item.label}
                             onClick={() => {
                               if (!isComingSoon) {
+                                console.log('[SacredLabDrawer] Clicked:', item.label, 'onAction defined:', !!onAction);
                                 item.action();
                                 if (!item.label.includes('Toggle') && !item.label.includes('Upload')) {
                                   onClose();
