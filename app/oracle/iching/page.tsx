@@ -4,12 +4,12 @@
  * I Ching Oracle Experience
  *
  * The Book of Changes - Traditional yarrow stalk divination
- * Aesthetic: Night sky temple with golden accents
+ * Aesthetic: DUNE amber field - vast, elemental, reverent
  *
  * Features:
  * - Yarrow stalk simulation (traditional method)
- * - Hexagram building line by line
- * - Trigram visualization
+ * - Brushstroke hexagram visualization
+ * - Trigram ring with yin-yang center
  * - Changing lines and transformation
  */
 
@@ -19,7 +19,6 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
-  Hexagon,
   BookOpen,
   RefreshCw,
   Loader2,
@@ -27,6 +26,7 @@ import {
   BookmarkPlus,
   Check
 } from 'lucide-react';
+import { HexagramDisplay, BaguaRing } from '@/components/oracle';
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
 
@@ -204,41 +204,58 @@ export default function IChingOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 relative overflow-hidden">
-      {/* Atmospheric Particles */}
+    <div className="min-h-screen bg-gradient-to-b from-[#0a0d14] via-[#0d1117] to-[#070a0f] relative overflow-hidden">
+      {/* DUNE Amber Field - vast desert atmosphere */}
       <div className="fixed inset-0 pointer-events-none">
-        {[...Array(40)].map((_, i) => (
+        {/* Horizontal amber glow bands - like distant dunes */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-amber-900/[0.03] to-transparent" style={{ top: '20%', height: '30%' }} />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-amber-800/[0.02] to-transparent" style={{ top: '50%', height: '25%' }} />
+
+        {/* Spice dust particles - slow, deliberate */}
+        {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-maia-spice-400/30 rounded-full"
+            className="absolute w-0.5 h-0.5 bg-amber-400/40 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${10 + Math.random() * 80}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -40, 0],
-              opacity: [0.2, 0.6, 0.2],
-              scale: [1, 1.5, 1],
+              y: [0, -60, 0],
+              x: [0, Math.random() * 20 - 10, 0],
+              opacity: [0.1, 0.5, 0.1],
             }}
             transition={{
-              duration: 4 + Math.random() * 6,
+              duration: 8 + Math.random() * 12,
               repeat: Infinity,
-              delay: Math.random() * 3,
+              delay: Math.random() * 5,
               ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-      {/* Atmospheric Glow */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-maia-spice-900/20 via-maia-navy-900/10 to-transparent pointer-events-none" />
+      {/* Bottom amber glow - like spice-touched sand */}
+      <div className="fixed bottom-0 left-0 right-0 h-80 bg-gradient-to-t from-amber-900/10 via-amber-950/5 to-transparent pointer-events-none" />
 
-      {/* Sacred geometry overlay */}
-      <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
-        <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <circle cx="500" cy="500" r="450" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="350" fill="none" stroke="#14b8a6" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="250" fill="none" stroke="#f59e0b" strokeWidth="0.5" strokeDasharray="8 8" />
+      {/* Bagua sacred geometry - very subtle */}
+      <div className="fixed inset-0 flex items-center justify-center opacity-[0.015] pointer-events-none">
+        <svg className="w-[80vmin] h-[80vmin]" viewBox="0 0 100 100">
+          {/* Outer octagon */}
+          <polygon
+            points="50,5 85,20 95,50 85,80 50,95 15,80 5,50 15,20"
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="0.3"
+          />
+          {/* Inner circles */}
+          <circle cx="50" cy="50" r="35" fill="none" stroke="#f59e0b" strokeWidth="0.2" />
+          <circle cx="50" cy="50" r="20" fill="none" stroke="#f59e0b" strokeWidth="0.2" />
+          {/* Cross lines */}
+          <line x1="50" y1="5" x2="50" y2="95" stroke="#f59e0b" strokeWidth="0.15" />
+          <line x1="5" y1="50" x2="95" y2="50" stroke="#f59e0b" strokeWidth="0.15" />
+          <line x1="15" y1="20" x2="85" y2="80" stroke="#f59e0b" strokeWidth="0.15" />
+          <line x1="85" y1="20" x2="15" y2="80" stroke="#f59e0b" strokeWidth="0.15" />
         </svg>
       </div>
 
@@ -260,9 +277,19 @@ export default function IChingOraclePage() {
               <span className="text-sm">Back to Oracle</span>
             </button>
 
-            <div className="flex items-center gap-2">
-              <Hexagon className="w-6 h-6 text-maia-spice-400" />
-              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wide">I Ching Oracle</h1>
+            <div className="flex items-center gap-3">
+              {/* Yin-Yang icon */}
+              <svg className="w-7 h-7" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="48" fill="none" stroke="currentColor" strokeWidth="2" className="text-amber-500/60" />
+                <path
+                  d="M50,2 A48,48 0 0,1 50,98 A24,24 0 0,0 50,50 A24,24 0 0,1 50,2"
+                  fill="currentColor"
+                  className="text-amber-500/60"
+                />
+                <circle cx="50" cy="26" r="6" fill="currentColor" className="text-[#0d1117]" />
+                <circle cx="50" cy="74" r="6" fill="currentColor" className="text-amber-500/60" />
+              </svg>
+              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wider">I Ching Oracle</h1>
             </div>
 
             <div className="w-24" />
@@ -289,52 +316,62 @@ export default function IChingOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-2xl mx-auto"
               >
-                <div className="text-center mb-8">
+                <div className="text-center mb-10">
+                  {/* Bagua ring as threshold symbol */}
                   <motion.div
-                    animate={{
-                      rotate: [0, 360],
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 20,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                    className="inline-block mb-6"
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 1.2, ease: 'easeOut' }}
+                    className="inline-block mb-8"
                   >
-                    <Hexagon className="w-16 h-16 text-maia-spice-400/80" />
+                    <BaguaRing size={140} className="opacity-70" />
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-maia-ink-100 mb-4">
-                    Consult the Book of Changes
-                  </h2>
-                  <p className="text-maia-ink-60 text-lg">
-                    The ancient wisdom of the I Ching awaits your question
-                  </p>
+                  <motion.h2
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-4xl font-light text-maia-ink-100 mb-4 tracking-wide"
+                  >
+                    The Book of Changes
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-amber-400/60 text-lg font-light"
+                  >
+                    What question do you bring to the oracle?
+                  </motion.p>
                 </div>
 
-                <div className="bg-gradient-to-br from-maia-navy-800/60 via-maia-spice-700/20 to-maia-navy-850/60 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="bg-gradient-to-br from-[#0d1117]/80 via-amber-950/10 to-[#070a0f]/80 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-8 shadow-2xl shadow-amber-900/10"
+                >
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What situation requires wisdom and guidance?"
-                    className="w-full h-32 px-4 py-3 bg-maia-navy-900/50 border border-maia-navy-700/40 rounded-lg text-maia-ink-100 placeholder-maia-ink-40 focus:outline-none focus:ring-2 focus:ring-maia-spice-500/50 focus:border-maia-spice-500/50 transition-all resize-none"
+                    className="w-full h-32 px-5 py-4 bg-[#0a0d14]/60 border border-amber-900/30 rounded-xl text-maia-ink-100 placeholder-maia-ink-30 focus:outline-none focus:ring-1 focus:ring-amber-500/30 focus:border-amber-500/30 transition-all resize-none text-lg font-light"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-maia-spice-600 to-maia-spice-700 hover:from-maia-spice-500 hover:to-maia-spice-600 disabled:from-maia-navy-800/50 disabled:to-maia-navy-800/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-amber-700/80 to-amber-800/80 hover:from-amber-600/80 hover:to-amber-700/80 disabled:from-[#0d1117]/50 disabled:to-[#0d1117]/50 disabled:text-maia-ink-30 disabled:cursor-not-allowed text-amber-100 font-medium rounded-xl shadow-lg shadow-amber-900/20 transition-all duration-500 flex items-center justify-center gap-3 tracking-wide"
                   >
                     <Sparkles className="w-5 h-5" />
                     Cast the Yarrow Stalks
                   </button>
 
-                  <p className="text-maia-ink-40 text-xs text-center mt-4">
-                    Using the traditional 50 yarrow stalk method
+                  <p className="text-amber-500/30 text-xs text-center mt-5 tracking-wider uppercase">
+                    Traditional 50 yarrow stalk method
                   </p>
-                </div>
+                </motion.div>
               </motion.div>
             )}
 
@@ -347,60 +384,76 @@ export default function IChingOraclePage() {
                 exit={{ opacity: 0 }}
                 className="max-w-3xl mx-auto"
               >
-                <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold text-maia-ink-100 mb-4">
+                <div className="text-center mb-16">
+                  <motion.h2
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="text-3xl font-light text-maia-ink-100 mb-3 tracking-wide"
+                  >
                     Casting the Hexagram
-                  </h2>
-                  <p className="text-maia-ink-60">
+                  </motion.h2>
+                  <motion.p
+                    animate={{ opacity: [0.4, 0.8, 0.4] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="text-amber-400/50 font-light"
+                  >
                     Building line {currentLineIndex + 1} of 6...
-                  </p>
+                  </motion.p>
                 </div>
 
                 {/* Hexagram Building Animation */}
                 <div className="flex flex-col items-center justify-center min-h-[400px]">
-                  {/* Yarrow stalk animation */}
+                  {/* Yarrow stalk casting indicator */}
                   {isCasting && (
                     <motion.div
-                      animate={{
-                        rotate: 360,
-                      }}
-                      transition={{
-                        duration: 2,
-                        repeat: Infinity,
-                        ease: 'linear',
-                      }}
-                      className="mb-12"
+                      className="mb-16 flex flex-col items-center"
                     >
-                      <Loader2 className="w-12 h-12 text-maia-spice-400" />
+                      {/* Yarrow stalks falling animation */}
+                      <div className="relative w-20 h-20 mb-4">
+                        {[...Array(6)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            className="absolute w-0.5 h-12 bg-amber-500/60 rounded-full origin-bottom"
+                            style={{ left: '50%', bottom: '50%' }}
+                            animate={{
+                              rotate: [i * 60, i * 60 + 360],
+                              opacity: [0.3, 0.8, 0.3],
+                            }}
+                            transition={{
+                              rotate: { duration: 8, repeat: Infinity, ease: 'linear' },
+                              opacity: { duration: 2, repeat: Infinity, delay: i * 0.3 },
+                            }}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-xs text-amber-500/40 tracking-widest uppercase">
+                        Dividing the stalks
+                      </span>
                     </motion.div>
                   )}
 
-                  {/* Hexagram lines building up */}
-                  <div className="space-y-4">
-                    {[...Array(6)].map((_, index) => {
-                      const lineIndex = 5 - index; // Build from bottom to top
-                      const line = hexagramLines[lineIndex];
-                      const isRevealed = lineIndex < hexagramLines.length;
+                  {/* Hexagram lines building up using new component */}
+                  <div className="relative">
+                    <HexagramDisplay
+                      lines={hexagramLines}
+                      size="lg"
+                      animate={true}
+                      showChanging={true}
+                    />
 
-                      return (
-                        <motion.div
-                          key={index}
-                          initial={{ opacity: 0, scale: 0.8 }}
-                          animate={{
-                            opacity: isRevealed ? 1 : 0.2,
-                            scale: isRevealed ? 1 : 0.8,
-                          }}
-                          transition={{ duration: 0.5 }}
-                          className="flex items-center justify-center gap-3"
-                        >
-                          {isRevealed && line ? (
-                            <HexagramLineDisplay line={line} />
-                          ) : (
-                            <div className="w-48 h-3 bg-maia-navy-800/50 rounded" />
-                          )}
-                        </motion.div>
-                      );
-                    })}
+                    {/* Placeholder lines for uncast positions */}
+                    {hexagramLines.length < 6 && (
+                      <div className="absolute inset-0 flex flex-col items-center justify-start">
+                        {[...Array(6 - hexagramLines.length)].map((_, i) => (
+                          <motion.div
+                            key={`placeholder-${i}`}
+                            className="w-40 h-1 bg-amber-900/20 rounded mb-7"
+                            animate={{ opacity: [0.1, 0.3, 0.1] }}
+                            transition={{ duration: 2, repeat: Infinity, delay: i * 0.2 }}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </motion.div>
@@ -416,76 +469,82 @@ export default function IChingOraclePage() {
               >
                 {/* Hexagram Display */}
                 <div className="mb-12">
-                  <div className="text-center mb-8">
-                    <h2 className="text-4xl font-bold text-maia-ink-100 mb-2">
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center mb-10"
+                  >
+                    <span className="text-amber-500/40 text-sm tracking-[0.3em] uppercase mb-2 block">
                       Hexagram {reading.hexagram.number}
-                    </h2>
-                    <h3 className="text-2xl text-maia-spice-400/80 mb-1">
+                    </span>
+                    <h2 className="text-4xl font-light text-maia-ink-100 mb-2 tracking-wide">
                       {reading.hexagram.name}
-                    </h3>
-                    <p className="text-maia-ink-60 text-lg">
+                    </h2>
+                    <p className="text-amber-400/60 text-lg font-light">
                       {reading.hexagram.keyword}
                     </p>
-                  </div>
+                  </motion.div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     {/* Primary Hexagram */}
-                    <div className="bg-gradient-to-br from-maia-navy-800/60 via-maia-spice-700/20 to-maia-navy-850/60 backdrop-blur-xl border border-maia-spice-500/30 rounded-xl p-8 shadow-xl">
-                      <h4 className="text-maia-spice-400/80 text-center mb-6 font-semibold">
+                    <motion.div
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-gradient-to-br from-[#0d1117]/80 via-amber-950/10 to-[#070a0f]/80 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-8 shadow-xl shadow-amber-900/10"
+                    >
+                      <h4 className="text-amber-400/60 text-center mb-8 font-medium tracking-wide text-sm uppercase">
                         Present Hexagram
                       </h4>
 
-                      <div className="space-y-3 mb-6">
-                        {reading.hexagram.lines.map((line, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, x: -20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="flex items-center justify-center"
-                          >
-                            <div className={`h-3 rounded transition-all ${
-                              line === '-------'
-                                ? 'w-48 bg-maia-spice-400'
-                                : 'w-48 flex gap-4'
-                            }`}>
-                              {line === '--- ---' && (
-                                <>
-                                  <div className="flex-1 bg-maia-spice-400 rounded" />
-                                  <div className="flex-1 bg-maia-spice-400 rounded" />
-                                </>
-                              )}
-                            </div>
-                            {reading.hexagram.changingLines?.includes(5 - index + 1) && (
-                              <Sparkles className="w-4 h-4 text-maia-spice-300 ml-3" />
-                            )}
-                          </motion.div>
-                        ))}
+                      {/* Enhanced Hexagram Display */}
+                      <div className="flex justify-center mb-8">
+                        <HexagramDisplay
+                          lines={hexagramLines}
+                          size="lg"
+                          animate={true}
+                          showChanging={true}
+                        />
                       </div>
 
-                      <div className="text-center space-y-2">
+                      <div className="text-center space-y-2 pt-4 border-t border-amber-900/20">
                         <div className="text-maia-ink-40 text-sm">
-                          Upper Trigram: {reading.hexagram.trigrams.upper}
+                          <span className="text-amber-500/40">Upper:</span> {reading.hexagram.trigrams.upper}
                         </div>
                         <div className="text-maia-ink-40 text-sm">
-                          Lower Trigram: {reading.hexagram.trigrams.lower}
+                          <span className="text-amber-500/40">Lower:</span> {reading.hexagram.trigrams.lower}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
 
                     {/* Transformed Hexagram (if changing lines exist) */}
                     {reading.hexagram.transformed && (
-                      <div className="bg-gradient-to-br from-maia-navy-800/60 via-maia-sage-700/20 to-maia-navy-850/60 backdrop-blur-xl border border-maia-sage-500/30 rounded-xl p-8 shadow-xl">
-                        <h4 className="text-maia-sage-400/80 text-center mb-6 font-semibold">
-                          Future Hexagram
+                      <motion.div
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.4 }}
+                        className="bg-gradient-to-br from-[#0d1117]/80 via-teal-950/10 to-[#070a0f]/80 backdrop-blur-xl border border-teal-500/20 rounded-2xl p-8 shadow-xl shadow-teal-900/10"
+                      >
+                        <h4 className="text-teal-400/60 text-center mb-8 font-medium tracking-wide text-sm uppercase">
+                          Transformation
                         </h4>
 
-                        <div className="text-center space-y-3">
-                          <Hexagon className="w-16 h-16 text-maia-sage-400/60 mx-auto" />
-                          <h5 className="text-2xl font-bold text-maia-ink-100">
+                        <div className="text-center space-y-4">
+                          {/* Arrow indicating change */}
+                          <motion.div
+                            animate={{ y: [0, 5, 0] }}
+                            transition={{ duration: 2, repeat: Infinity }}
+                            className="text-teal-400/40 mb-4"
+                          >
+                            <svg className="w-8 h-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            </svg>
+                          </motion.div>
+
+                          <h5 className="text-3xl font-light text-maia-ink-100">
                             {reading.hexagram.transformed.number}
                           </h5>
-                          <p className="text-maia-sage-400/80">
+                          <p className="text-teal-400/70 text-xl font-light">
                             {reading.hexagram.transformed.name}
                           </p>
                           <p className="text-maia-ink-40 text-sm">
@@ -493,12 +552,12 @@ export default function IChingOraclePage() {
                           </p>
                         </div>
 
-                        <div className="mt-6 p-4 bg-maia-navy-900/50 rounded-lg">
-                          <p className="text-maia-ink-60 text-sm text-center">
-                            The changing lines indicate transformation from the present to this future state
+                        <div className="mt-8 p-4 bg-[#0a0d14]/60 rounded-xl border border-teal-900/20">
+                          <p className="text-maia-ink-50 text-sm text-center font-light">
+                            The changing lines reveal the path from present to future
                           </p>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
                   </div>
                 </div>
@@ -512,38 +571,38 @@ export default function IChingOraclePage() {
                     className="space-y-6"
                   >
                     {/* Main Interpretation */}
-                    <div className="bg-gradient-to-br from-maia-navy-800/60 via-maia-spice-700/20 to-maia-navy-850/60 backdrop-blur-xl border border-maia-spice-500/30 rounded-2xl p-8 shadow-2xl">
-                      <div className="flex items-center gap-3 mb-6">
-                        <BookOpen className="w-6 h-6 text-maia-spice-400" />
-                        <h3 className="text-2xl font-bold text-maia-ink-100">Oracle's Wisdom</h3>
+                    <div className="bg-gradient-to-br from-[#0d1117]/80 via-amber-950/10 to-[#070a0f]/80 backdrop-blur-xl border border-amber-500/20 rounded-2xl p-8 shadow-2xl shadow-amber-900/10">
+                      <div className="flex items-center gap-3 mb-8">
+                        <BookOpen className="w-5 h-5 text-amber-500/60" />
+                        <h3 className="text-xl font-light text-maia-ink-100 tracking-wide">Oracle's Wisdom</h3>
                       </div>
 
-                      <div className="space-y-6">
+                      <div className="space-y-8">
                         <div>
-                          <h4 className="text-maia-spice-400/80 font-semibold mb-3">Interpretation:</h4>
-                          <p className="text-maia-ink-80 leading-relaxed">
+                          <h4 className="text-amber-400/50 font-medium mb-3 text-sm tracking-wide uppercase">Interpretation</h4>
+                          <p className="text-maia-ink-70 leading-relaxed font-light">
                             {reading.hexagram.interpretation}
                           </p>
                         </div>
 
-                        <div>
-                          <h4 className="text-maia-spice-400/80 font-semibold mb-3">Guidance:</h4>
-                          <p className="text-maia-ink-80 leading-relaxed">
+                        <div className="border-l-2 border-amber-500/20 pl-6">
+                          <h4 className="text-amber-400/50 font-medium mb-3 text-sm tracking-wide uppercase">Guidance</h4>
+                          <p className="text-maia-ink-70 leading-relaxed font-light">
                             {reading.guidance}
                           </p>
                         </div>
 
                         <div>
-                          <h4 className="text-maia-spice-400/80 font-semibold mb-3">Sacred Timing:</h4>
-                          <p className="text-maia-ink-80 leading-relaxed">
+                          <h4 className="text-amber-400/50 font-medium mb-3 text-sm tracking-wide uppercase">Sacred Timing</h4>
+                          <p className="text-maia-ink-70 leading-relaxed font-light">
                             {reading.sacredTiming}
                           </p>
                         </div>
 
                         {reading.archetypalTheme && (
-                          <div>
-                            <h4 className="text-maia-spice-400/80 font-semibold mb-3">Archetypal Theme:</h4>
-                            <p className="text-maia-ink-80 leading-relaxed">
+                          <div className="pt-4 border-t border-amber-900/20">
+                            <h4 className="text-amber-400/50 font-medium mb-3 text-sm tracking-wide uppercase">Archetypal Theme</h4>
+                            <p className="text-maia-ink-70 leading-relaxed font-light italic">
                               {reading.archetypalTheme}
                             </p>
                           </div>
@@ -553,12 +612,12 @@ export default function IChingOraclePage() {
 
                     {/* Ritual Suggestion */}
                     {reading.ritual && (
-                      <div className="bg-gradient-to-br from-maia-navy-800/40 via-maia-spice-700/10 to-maia-navy-850/40 backdrop-blur-xl border border-maia-spice-500/20 rounded-xl p-6">
-                        <h4 className="text-maia-spice-400/80 font-semibold mb-3 flex items-center gap-2">
-                          <Sparkles className="w-5 h-5" />
+                      <div className="bg-gradient-to-br from-[#0d1117]/60 via-amber-950/5 to-[#070a0f]/60 backdrop-blur-xl border border-amber-500/10 rounded-xl p-6">
+                        <h4 className="text-amber-400/50 font-medium mb-3 flex items-center gap-2 text-sm tracking-wide uppercase">
+                          <Sparkles className="w-4 h-4" />
                           Integration Ritual
                         </h4>
-                        <p className="text-maia-ink-60 text-sm leading-relaxed">
+                        <p className="text-maia-ink-50 text-sm leading-relaxed font-light">
                           {reading.ritual}
                         </p>
                       </div>
@@ -569,10 +628,10 @@ export default function IChingOraclePage() {
                       <button
                         onClick={handleSaveToReflections}
                         disabled={isSaving || isSaved}
-                        className={`px-5 py-3 font-semibold rounded-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                        className={`px-5 py-3 font-medium rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
                           isSaved
-                            ? 'bg-maia-sage-600/80 text-white cursor-default'
-                            : 'bg-maia-navy-800/60 hover:bg-maia-navy-700/60 border border-maia-spice-500/30 text-maia-spice-400 hover:text-maia-spice-300'
+                            ? 'bg-teal-600/60 text-teal-100 cursor-default'
+                            : 'bg-[#0d1117]/60 hover:bg-[#0d1117]/80 border border-amber-500/20 text-amber-400/70 hover:text-amber-300'
                         }`}
                       >
                         {isSaving ? (
@@ -586,14 +645,14 @@ export default function IChingOraclePage() {
                       </button>
                       <button
                         onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-maia-spice-600 to-maia-spice-700 hover:from-maia-spice-500 hover:to-maia-spice-600 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-700/70 to-amber-800/70 hover:from-amber-600/70 hover:to-amber-700/70 text-amber-100 font-medium rounded-xl shadow-lg shadow-amber-900/20 transition-all duration-300 flex items-center justify-center gap-2"
                       >
                         <RefreshCw className="w-5 h-5" />
                         New Reading
                       </button>
                       <button
                         onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-maia-navy-800/60 hover:bg-maia-navy-700/60 border border-maia-navy-700/40 text-maia-ink-80 font-semibold rounded-lg transition-all duration-300"
+                        className="px-6 py-3 bg-[#0d1117]/60 hover:bg-[#0d1117]/80 border border-amber-900/20 text-maia-ink-60 font-medium rounded-xl transition-all duration-300"
                       >
                         Back to Oracle
                       </button>
@@ -604,19 +663,19 @@ export default function IChingOraclePage() {
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.6 }}
-                      className="mt-8 pt-8 border-t border-maia-navy-700/50"
+                      className="mt-10 pt-8 border-t border-amber-900/20"
                     >
-                      <div className="bg-gradient-to-br from-maia-navy-800/40 via-maia-spice-700/10 to-maia-navy-850/40 backdrop-blur-xl border border-maia-spice-500/20 rounded-xl p-6">
+                      <div className="bg-gradient-to-br from-[#0d1117]/60 via-amber-950/5 to-[#070a0f]/60 backdrop-blur-xl border border-amber-500/10 rounded-2xl p-6">
                         <div className="flex items-start gap-4">
-                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-maia-spice-500/20 flex items-center justify-center">
-                            <MessageCircle className="w-6 h-6 text-maia-spice-400" />
+                          <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                            <MessageCircle className="w-5 h-5 text-amber-400/60" />
                           </div>
                           <div className="flex-1">
-                            <h4 className="text-lg font-semibold text-maia-ink-100 mb-2">
+                            <h4 className="text-lg font-light text-maia-ink-100 mb-2 tracking-wide">
                               Continue with MAIA
                             </h4>
-                            <p className="text-maia-ink-60 text-sm mb-4">
-                              Want deeper insight into your hexagram? MAIA can help you understand the nuances of changing lines, explore how this reading applies to your specific situation, and guide you through the wisdom of the I Ching.
+                            <p className="text-maia-ink-50 text-sm mb-4 font-light leading-relaxed">
+                              Seek deeper understanding of your hexagram. MAIA can illuminate the nuances of changing lines and help you apply this ancient wisdom to your present situation.
                             </p>
                             <button
                               onClick={() => {
@@ -633,7 +692,7 @@ export default function IChingOraclePage() {
                                 }
                                 router.push('/maia');
                               }}
-                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-maia-spice-500/80 to-maia-spice-600/80 hover:from-maia-spice-500 hover:to-maia-spice-600 text-white font-medium rounded-lg transition-all duration-300"
+                              className="inline-flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-amber-600/60 to-amber-700/60 hover:from-amber-500/60 hover:to-amber-600/60 text-amber-100 font-medium rounded-xl shadow-lg shadow-amber-900/20 transition-all duration-300"
                             >
                               <MessageCircle className="w-4 h-4" />
                               Discuss with MAIA
@@ -649,40 +708,6 @@ export default function IChingOraclePage() {
           </AnimatePresence>
         </div>
       </div>
-    </div>
-  );
-}
-
-// Component to display individual hexagram lines
-function HexagramLineDisplay({ line }: { line: HexagramLine }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className={`h-4 rounded transition-all ${
-        line.type === 'yang'
-          ? 'w-48 bg-maia-spice-400'
-          : 'w-48 flex gap-4'
-      }`}>
-        {line.type === 'yin' && (
-          <>
-            <div className="flex-1 bg-maia-spice-400 rounded" />
-            <div className="flex-1 bg-maia-spice-400 rounded" />
-          </>
-        )}
-      </div>
-      {line.changing && (
-        <motion.div
-          animate={{
-            scale: [1, 1.3, 1],
-            opacity: [0.5, 1, 0.5],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-          }}
-        >
-          <Sparkles className="w-5 h-5 text-maia-spice-300" />
-        </motion.div>
-      )}
     </div>
   );
 }

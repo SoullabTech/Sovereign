@@ -4,13 +4,13 @@
  * Runes Oracle Experience
  *
  * The Elder Futhark - Ancient Norse divination
- * Aesthetic: Night sky temple with teal/sage accents
+ * Aesthetic: DUNE earth/stone - stark, elemental, fate-bound
  *
  * Features:
  * - Rune bag drawing simulation
+ * - Stone-carved rune visualization
  * - Multiple spread options (single, three norns, etc.)
  * - Merkstave (reversed) interpretation
- * - Aett visualization
  */
 
 import { useState } from 'react';
@@ -19,15 +19,14 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
-  Moon,
   BookOpen,
   RefreshCw,
   Loader2,
-  Flame,
   MessageCircle,
   BookmarkPlus,
   Check
 } from 'lucide-react';
+import { RuneStone, RuneCastDisplay } from '@/components/oracle';
 
 type ReadingPhase = 'question' | 'spread-select' | 'casting' | 'reveal' | 'interpretation';
 
@@ -242,65 +241,69 @@ export default function RunesOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-maia-navy-950 via-maia-navy-900 to-maia-navy-950 relative overflow-hidden">
-      {/* Atmospheric Particles - cooler, mystical */}
+    <div className="min-h-screen bg-gradient-to-b from-[#0c0f14] via-[#0f1318] to-[#0a0c10] relative overflow-hidden">
+      {/* DUNE Earth/Stone atmosphere - raw, elemental */}
       <div className="fixed inset-0 pointer-events-none">
-        {[...Array(50)].map((_, i) => (
+        {/* Stone texture overlay - very subtle */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+        }} />
+
+        {/* Frost/ash particles - slow drift */}
+        {[...Array(25)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-maia-sage-400/30 rounded-full"
+            className="absolute w-0.5 h-0.5 bg-stone-400/30 rounded-full"
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${10 + Math.random() * 80}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -50, 0],
-              opacity: [0.1, 0.5, 0.1],
-              scale: [1, 1.5, 1],
+              y: [0, 80, 0],
+              x: [0, Math.random() * 30 - 15, 0],
+              opacity: [0.1, 0.4, 0.1],
             }}
             transition={{
-              duration: 5 + Math.random() * 7,
+              duration: 15 + Math.random() * 10,
               repeat: Infinity,
-              delay: Math.random() * 4,
+              delay: Math.random() * 8,
               ease: 'easeInOut',
             }}
           />
         ))}
       </div>
 
-      {/* Northern lights effect */}
-      <div className="fixed inset-0 pointer-events-none opacity-20">
+      {/* Subtle aurora/northern lights - very muted */}
+      <div className="fixed inset-0 pointer-events-none opacity-10">
         <motion.div
-          className="absolute top-0 left-0 right-0 h-64 bg-gradient-to-b from-maia-sage-500/30 via-cyan-500/10 to-transparent"
+          className="absolute top-0 left-0 right-0 h-40 bg-gradient-to-b from-teal-600/20 via-teal-900/5 to-transparent"
           animate={{
-            opacity: [0.1, 0.3, 0.1],
-            scaleY: [1, 1.2, 1],
+            opacity: [0.05, 0.15, 0.05],
           }}
           transition={{
-            duration: 8,
+            duration: 12,
             repeat: Infinity,
             ease: 'easeInOut',
           }}
         />
       </div>
 
-      {/* Atmospheric Glow */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-maia-sage-900/20 via-maia-navy-900/10 to-transparent pointer-events-none" />
+      {/* Bottom earth glow - like distant firelight */}
+      <div className="fixed bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-stone-900/10 via-stone-950/5 to-transparent pointer-events-none" />
 
-      {/* Runic circle pattern overlay */}
-      <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
-        <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <circle cx="500" cy="500" r="400" fill="none" stroke="#14b8a6" strokeWidth="0.5" />
-          <circle cx="500" cy="500" r="300" fill="none" stroke="#f59e0b" strokeWidth="0.5" />
-          <circle cx="500" cy="500" r="200" fill="none" stroke="#14b8a6" strokeWidth="0.5" />
-          {/* 8 lines radiating outward for the aettir */}
+      {/* Runic circle - very subtle */}
+      <div className="fixed inset-0 flex items-center justify-center opacity-[0.012] pointer-events-none">
+        <svg className="w-[70vmin] h-[70vmin]" viewBox="0 0 100 100">
+          {/* Single outer circle with runic divisions */}
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#78716c" strokeWidth="0.3" />
+          {/* 8 divisions for the aettir */}
           {[...Array(8)].map((_, i) => {
-            const angle = (i * 45 * Math.PI) / 180;
-            const x1 = 500 + Math.cos(angle) * 150;
-            const y1 = 500 + Math.sin(angle) * 150;
-            const x2 = 500 + Math.cos(angle) * 450;
-            const y2 = 500 + Math.sin(angle) * 450;
-            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#14b8a6" strokeWidth="0.3" />;
+            const angle = (i * 45 - 90) * (Math.PI / 180);
+            const x1 = 50 + Math.cos(angle) * 30;
+            const y1 = 50 + Math.sin(angle) * 30;
+            const x2 = 50 + Math.cos(angle) * 48;
+            const y2 = 50 + Math.sin(angle) * 48;
+            return <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#78716c" strokeWidth="0.2" />;
           })}
         </svg>
       </div>
@@ -317,15 +320,18 @@ export default function RunesOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-maia-spice-500/70 hover:text-maia-spice-400 transition-colors"
+              className="flex items-center gap-2 text-stone-500/70 hover:text-stone-400 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="text-sm">Back to Oracle</span>
             </button>
 
-            <div className="flex items-center gap-2">
-              <Moon className="w-6 h-6 text-maia-sage-400" />
-              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wide">Rune Oracle</h1>
+            <div className="flex items-center gap-3">
+              {/* Ansuz rune icon */}
+              <svg viewBox="0 0 24 24" className="w-6 h-6 text-teal-500/60" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M12 4 L12 20 M12 4 L18 10 M12 4 L6 10" />
+              </svg>
+              <h1 className="text-2xl font-light text-maia-ink-100 tracking-wider">Rune Oracle</h1>
             </div>
 
             <div className="w-24" />
@@ -352,57 +358,78 @@ export default function RunesOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-2xl mx-auto"
               >
-                <div className="text-center mb-8">
+                <div className="text-center mb-10">
+                  {/* Three rune stones as threshold symbol */}
                   <motion.div
-                    animate={{
-                      scale: [1, 1.1, 1],
-                      rotate: [0, 5, -5, 0],
-                    }}
-                    transition={{
-                      duration: 6,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                    className="inline-block mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 1 }}
+                    className="inline-flex items-end gap-2 mb-8"
                   >
-                    {/* Ansuz rune symbol */}
-                    <div className="w-20 h-20 flex items-center justify-center text-5xl text-maia-sage-400/80 font-bold">
-                      <svg viewBox="0 0 24 24" className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth="1.5">
-                        <path d="M12 4 L12 20 M12 4 L18 10 M12 4 L6 10" />
-                      </svg>
-                    </div>
+                    <motion.div
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, delay: 0 }}
+                    >
+                      <RuneStone rune="fehu" size="sm" animate={false} />
+                    </motion.div>
+                    <motion.div
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, delay: 0.5 }}
+                    >
+                      <RuneStone rune="ansuz" size="sm" animate={false} />
+                    </motion.div>
+                    <motion.div
+                      animate={{ y: [0, -3, 0] }}
+                      transition={{ duration: 4, repeat: Infinity, delay: 1 }}
+                    >
+                      <RuneStone rune="othala" size="sm" animate={false} />
+                    </motion.div>
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-maia-ink-100 mb-4">
-                    Consult the Elder Futhark
-                  </h2>
-                  <p className="text-maia-ink-60 text-lg">
+                  <motion.h2
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="text-4xl font-light text-maia-ink-100 mb-4 tracking-wide"
+                  >
+                    The Elder Futhark
+                  </motion.h2>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.7 }}
+                    className="text-teal-400/50 text-lg font-light">
                     The ancient Norse runes hold the secrets of wyrd and orlog
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-maia-navy-800/60 via-maia-sage-700/20 to-maia-navy-850/60 backdrop-blur-xl border border-maia-sage-500/30 rounded-2xl p-8 shadow-2xl">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.9 }}
+                  className="bg-gradient-to-br from-[#0f1318]/80 via-stone-950/10 to-[#0a0c10]/80 backdrop-blur-xl border border-stone-600/20 rounded-2xl p-8 shadow-2xl shadow-stone-900/10"
+                >
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the runes?"
-                    className="w-full h-32 px-4 py-3 bg-maia-navy-900/50 border border-maia-navy-700/40 rounded-lg text-maia-ink-100 placeholder-maia-ink-40 focus:outline-none focus:ring-2 focus:ring-maia-sage-500/50 focus:border-maia-sage-500/50 transition-all resize-none"
+                    className="w-full h-32 px-5 py-4 bg-[#0c0f14]/60 border border-stone-700/30 rounded-xl text-maia-ink-100 placeholder-maia-ink-30 focus:outline-none focus:ring-1 focus:ring-teal-500/30 focus:border-teal-500/30 transition-all resize-none text-lg font-light"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-maia-sage-600 to-maia-sage-700 hover:from-maia-sage-500 hover:to-maia-sage-600 disabled:from-maia-navy-800/50 disabled:to-maia-navy-800/50 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-stone-700/70 to-stone-800/70 hover:from-stone-600/70 hover:to-stone-700/70 disabled:from-[#0f1318]/50 disabled:to-[#0f1318]/50 disabled:text-maia-ink-30 disabled:cursor-not-allowed text-stone-200 font-medium rounded-xl shadow-lg shadow-stone-900/20 transition-all duration-500 flex items-center justify-center gap-3 tracking-wide"
                   >
                     <Sparkles className="w-5 h-5" />
                     Reach Into the Rune Bag
                   </button>
 
-                  <p className="text-maia-ink-40 text-xs text-center mt-4">
-                    Drawing from the 24 runes of the Elder Futhark
+                  <p className="text-stone-500/40 text-xs text-center mt-5 tracking-wider uppercase">
+                    The 24 runes of the Elder Futhark
                   </p>
-                </div>
+                </motion.div>
               </motion.div>
             )}
 
@@ -415,33 +442,36 @@ export default function RunesOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-3xl mx-auto"
               >
-                <div className="text-center mb-8">
-                  <h2 className="text-3xl font-bold text-maia-ink-100 mb-4">
+                <div className="text-center mb-10">
+                  <h2 className="text-3xl font-light text-maia-ink-100 mb-4 tracking-wide">
                     Choose Your Spread
                   </h2>
-                  <p className="text-maia-ink-60">
-                    Select how many runes to draw for your reading
+                  <p className="text-stone-400/50 font-light">
+                    How many runes shall speak to your question?
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {SPREADS.map((spread) => (
+                  {SPREADS.map((spread, index) => (
                     <motion.button
                       key={spread.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
                       onClick={() => handleSpreadSelect(spread)}
-                      className="group relative p-6 bg-gradient-to-br from-maia-navy-800/60 via-maia-sage-700/20 to-maia-navy-850/60 backdrop-blur-xl border border-maia-sage-500/30 rounded-xl hover:border-maia-sage-400/50 transition-all duration-300 text-left"
+                      className="group relative p-6 bg-gradient-to-br from-[#0f1318]/80 via-stone-950/10 to-[#0a0c10]/80 backdrop-blur-xl border border-stone-600/20 rounded-xl hover:border-teal-500/30 transition-all duration-300 text-left"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       <div className="flex items-start gap-4">
-                        <div className="flex items-center justify-center w-12 h-12 rounded-full bg-maia-sage-900/40 text-maia-sage-400 font-bold text-lg">
+                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-stone-800/40 text-teal-400/60 font-light text-lg border border-stone-700/30">
                           {spread.runeCount}
                         </div>
                         <div className="flex-1">
-                          <h3 className="text-xl font-semibold text-maia-ink-100 mb-1 group-hover:text-maia-sage-300">
+                          <h3 className="text-xl font-light text-maia-ink-100 mb-1 group-hover:text-teal-300 tracking-wide">
                             {spread.name}
                           </h3>
-                          <p className="text-maia-ink-60 text-sm">
+                          <p className="text-maia-ink-50 text-sm font-light">
                             {spread.description}
                           </p>
                         </div>
@@ -452,9 +482,9 @@ export default function RunesOraclePage() {
 
                 <button
                   onClick={() => setPhase('question')}
-                  className="mt-6 mx-auto block text-maia-ink-40 hover:text-maia-ink-60 text-sm transition-colors"
+                  className="mt-8 mx-auto block text-stone-500/50 hover:text-stone-400 text-sm transition-colors"
                 >
-                  Back to question
+                  ← Back to question
                 </button>
               </motion.div>
             )}
