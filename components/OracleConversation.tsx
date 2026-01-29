@@ -9,6 +9,7 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { VoiceHUD } from './voice/VoiceHUD';
 import { useStreamingVoice } from '@/hooks/useStreamingVoice';
+// RelationalTelemetryPanel removed - dev-only component
 import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
 import { RhythmHoloflower } from './liquid/RhythmHoloflower';
@@ -4511,12 +4512,22 @@ I'm not sure what I'm feeling yet.`;
       const seed = pendingSeedRef.current;
       pendingSeedRef.current = null; // Clear to prevent re-processing
       console.log('🌱 [SEED] Sending seed to handleTextMessage:', seed.prompt.slice(0, 50) + '...');
+
+      // Clear previous conversation for fresh start with seeded prompt
+      setMessages([]);
+      if (typeof window !== 'undefined' && sessionId) {
+        const storageKey = `maia_conversation_${sessionId}`;
+        localStorage.removeItem(storageKey);
+        console.log('🌱 [SEED] Cleared conversation for fresh start');
+      }
+      setHasActivated(true); // Skip welcome screen
+
       // Small delay to ensure component is fully mounted and ready
       setTimeout(() => {
         handleTextMessage(seed.prompt);
       }, 100);
     }
-  }, [handleTextMessage]);
+  }, [handleTextMessage, sessionId]);
 
   // Handle voice transcript from mic button
   const handleVoiceTranscript = useCallback(async (transcript: string) => {
@@ -5313,6 +5324,17 @@ I'm not sure what I'm feeling yet.`;
   const handleStartSession = useCallback((durationMinutes: number) => {
     console.log(`⏰ Starting ${durationMinutes}-minute session with temporal container`);
 
+    // 🧹 Clear previous conversation when starting a new session
+    console.log('🧹 Clearing previous conversation for fresh session start');
+    setMessages([]);
+    setHasActivated(false); // Reset to show welcome/greeting
+    // Clear localStorage for previous conversation
+    if (typeof window !== 'undefined' && sessionId) {
+      const storageKey = `maia_conversation_${sessionId}`;
+      localStorage.removeItem(storageKey);
+      console.log(`🧹 Cleared localStorage: ${storageKey}`);
+    }
+
     const timer = new SessionTimer({
       durationMinutes,
       onPhaseChange: (phase) => {
@@ -5425,8 +5447,15 @@ I'm not sure what I'm feeling yet.`;
     clearSession();
     setShowResumePrompt(false);
     setSavedSessionData(null);
+    // 🧹 Clear previous conversation messages
+    setMessages([]);
+    setHasActivated(false);
+    if (typeof window !== 'undefined' && sessionId) {
+      const storageKey = `maia_conversation_${sessionId}`;
+      localStorage.removeItem(storageKey);
+    }
     // Note: User will click header button to open session selector
-  }, []);
+  }, [sessionId]);
 
   // 🕯️ Ritual Handlers
   const handleDurationSelected = useCallback((durationMinutes: number) => {
@@ -7429,11 +7458,21 @@ I'm not sure what I'm feeling yet.`;
         isOpen={showPromptPicker}
         onClose={() => setShowPromptPicker(false)}
         onSelectPrompt={(promptText) => {
+          // Clear previous conversation for fresh start with new prompt
+          setMessages([]);
+          if (typeof window !== 'undefined' && sessionId) {
+            const storageKey = `maia_conversation_${sessionId}`;
+            localStorage.removeItem(storageKey);
+            console.log('🌟 [SoulPrompt] Cleared conversation for fresh start');
+          }
+
           // Frame as a reflection invitation so MAIA guides the user through it
           const framedPrompt = `I'd like to sit with this question: ${promptText}`;
           setDraftMessage(framedPrompt);
           setComposerDraft(framedPrompt);
           setShowPromptPicker(false);
+          setHasActivated(true); // Skip welcome screen
+
           // Focus the text input
           setTimeout(() => {
             textInputRef.current?.focus?.();
