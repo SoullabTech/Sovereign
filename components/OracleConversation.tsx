@@ -104,6 +104,31 @@ function getTimeGreeting(): string {
   return 'Good evening'; // Late night feels like evening
 }
 
+// 🎯 Deduplicate messages to prevent overlapping repeats from restore paths
+// Uses two-tier deduplication: by ID first, then by content+role as fallback
+// This handles temp-id vs server-id collisions (same message, different IDs)
+function dedupeMessages<T extends { id?: string; text?: string; role?: string }>(messages: T[]): T[] {
+  const seenIds = new Set<string>();
+  const seenContent = new Set<string>();
+  const out: T[] = [];
+
+  for (const m of messages) {
+    const id = m?.id ? String(m.id) : '';
+    const contentKey = `${m?.role || ''}:${(m?.text || '').slice(0, 100)}`;
+
+    // Skip if we've seen this exact ID
+    if (id && seenIds.has(id)) continue;
+
+    // Skip if we've seen this exact content+role combo (catches temp-id vs server-id dupes)
+    if (contentKey.length > 1 && seenContent.has(contentKey)) continue;
+
+    if (id) seenIds.add(id);
+    if (contentKey.length > 1) seenContent.add(contentKey);
+    out.push(m);
+  }
+  return out;
+}
+
 // Canon Wrap localStorage helpers (default-on for Care mode)
 const CANON_WRAP_KEY = 'maia.canonWrap.enabled';
 
@@ -345,6 +370,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [oracleAgentId, setOracleAgentId] = useState<string | null>(null);
   const [explorerId, setExplorerId] = useState<string>(''); // Stable cross-session identity
   const [showWelcome, setShowWelcome] = useState(true);
+  // 🎯 WELCOME SCREEN: Show branded greeting until user activates (taps holoflower or sends message)
+  const [hasActivated, setHasActivated] = useState(false);
   const [isReturningUser, setIsReturningUser] = useState(false);
   const [isSavingJournal, setIsSavingJournal] = useState(false);
   const [showJournalSuggestion, setShowJournalSuggestion] = useState(false); // Permanently disabled
@@ -674,8 +701,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         try {
           const parsedMessages = JSON.parse(localStored);
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-            console.log(`💾 [localStorage] Restored ${parsedMessages.length} messages instantly`);
-            setMessages(parsedMessages);
+            // 🎯 Dedupe to prevent overlapping repeats
+            const clean = dedupeMessages(parsedMessages);
+            console.log(`💾 [localStorage] Restored ${clean.length} messages (deduped from ${parsedMessages.length})`);
+            setMessages(clean);
+            // 🎯 FIX: Hide welcome overlay when restoring existing conversation
+            if (clean.length > 0) setHasActivated(true);
           }
         } catch (error) {
           console.error('💾 [localStorage] Failed to parse stored messages:', error);
@@ -691,15 +722,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
           const { success, messages: supabaseMessages } = await getMessagesBySession(sessionId, 100);
 
           if (success && supabaseMessages.length > 0) {
+            // 🎯 Dedupe to prevent overlapping repeats
+            const clean = dedupeMessages(supabaseMessages);
             // Only use Supabase messages if:
             // 1. localStorage was empty, OR
             // 2. Supabase has MORE messages than localStorage
-            if (!localStored || supabaseMessages.length > (JSON.parse(localStored || '[]').length)) {
-              console.log(`💾 [Supabase] Restored ${supabaseMessages.length} messages (cross-device sync)`);
-              setMessages(supabaseMessages);
+            if (!localStored || clean.length > (JSON.parse(localStored || '[]').length)) {
+              console.log(`💾 [Supabase] Restored ${clean.length} messages (deduped, cross-device sync)`);
+              setMessages(clean);
 
               // Update localStorage with Supabase data for faster next load
-              localStorage.setItem(storageKey, JSON.stringify(supabaseMessages.slice(-50)));
+              localStorage.setItem(storageKey, JSON.stringify(clean.slice(-50)));
+              // 🎯 FIX: Hide welcome overlay when restoring existing conversation
+              if (clean.length > 0) setHasActivated(true);
             }
           }
         } catch (error) {
@@ -713,6 +748,17 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
     restoreConversation();
   }, [sessionId, userId]);
+
+  // 🎯 BULLETPROOF: Sync hasActivated with reality — if messages exist, we're activated
+  useEffect(() => {
+    if (messages.length > 0 && !hasActivated) {
+      // Dev-only invariant warning to catch impossible states early
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[OracleConversation] invariant: messages exist but hasActivated is false — auto-fixing');
+      }
+      setHasActivated(true);
+    }
+  }, [messages.length, hasActivated]);
 
   // 💾 HYBRID PERSISTENCE: Save to localStorage (instant) + Supabase (async sync)
   useEffect(() => {
@@ -3011,9 +3057,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       {/* Branded Welcome Message - REMOVED for mobile optimization */}
 
-      {/* Claude-like Welcome Greeting - Shows when no messages yet */}
+      {/* Claude-like Welcome Greeting - Shows only when no messages exist (bulletproof gate) */}
       <AnimatePresence>
-        {messages.filter(m => !m.id.startsWith('greeting-')).length === 0 && !isProcessing && !isResponding && (
+        {messages.length === 0 && !hasActivated && !isProcessing && !isResponding && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
