@@ -749,7 +749,24 @@ function MAIAPageContent() {
                     )}
                   </motion.button>
 
-                  {/* Session Button - Inside mode selector, after Note */}
+                  {/* ✨ Capture Button - Mobile (after Scribe, before Session) */}
+                  <motion.button
+                    onClick={() => {
+                      window.dispatchEvent(new CustomEvent('labAction', {
+                        detail: { action: 'capture-spirit' }
+                      }));
+                    }}
+                    className="flex items-center gap-1 px-2 py-1 rounded-lg
+                             bg-[#D4B896]/10 hover:bg-[#D4B896]/20
+                             border border-[#D4B896]/30 hover:border-[#D4B896]/50
+                             text-[#D4B896] text-xs font-light transition-all flex-shrink-0"
+                    title="Capture the spirit of the last few turns"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    <span className="text-xs">Capture</span>
+                  </motion.button>
+
+                  {/* Session Button - Inside mode selector, after Capture */}
                   {!hasActiveSession ? (
                     <motion.button
                       onClick={() => setShowSessionSelector(true)}
@@ -800,23 +817,6 @@ function MAIAPageContent() {
                 >
                   <BookOpen className="w-3 h-3" />
                   <span className="text-xs">Journal</span>
-                </motion.button>
-
-                {/* ✨ Capture Button - Mobile */}
-                <motion.button
-                  onClick={() => {
-                    window.dispatchEvent(new CustomEvent('labAction', {
-                      detail: { action: 'capture-spirit' }
-                    }));
-                  }}
-                  className="flex items-center gap-1 px-2 py-1 rounded-lg
-                           bg-[#D4B896]/10 hover:bg-[#D4B896]/20
-                           border border-[#D4B896]/30 hover:border-[#D4B896]/50
-                           text-[#D4B896] text-xs font-light transition-all flex-shrink-0"
-                  title="Capture the spirit of the last few turns"
-                >
-                  <Sparkles className="w-3 h-3" />
-                  <span className="text-xs">Capture</span>
                 </motion.button>
 
                 {/* Guide Button - Mobile */}
@@ -984,7 +984,7 @@ function MAIAPageContent() {
                     )}
                   </motion.button>
 
-                  {/* ✨ Capture Button - Desktop (inside mode selector) */}
+                  {/* ✨ Capture Button - Desktop (after Scribe, before Session) */}
                   <motion.button
                     onClick={() => {
                       window.dispatchEvent(new CustomEvent('labAction', {
@@ -1002,30 +1002,30 @@ function MAIAPageContent() {
                     <Sparkles className="w-3.5 h-3.5" />
                     Capture
                   </motion.button>
-                </div>
 
-                {/* Session + Account Buttons */}
-                {/* Session Button */}
-                {!hasActiveSession ? (
-                  <motion.button
-                    onClick={() => setShowSessionSelector(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                             bg-maia-navy-800/40 hover:bg-maia-navy-800
-                             border border-maia-success/30 hover:border-maia-success/50
-                             text-maia-success text-xs font-light transition-all"
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <Clock className="w-4 h-4" />
-                    <span className="hidden sm:inline">Start Session</span>
-                  </motion.button>
-                ) : (
-                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
-                               bg-maia-navy-800/60 border border-maia-success/40 text-maia-success text-xs">
-                    <div className="w-2 h-2 rounded-full bg-maia-success animate-pulse" />
-                    <span className="hidden sm:inline">Session Active</span>
-                  </div>
-                )}
+                  {/* Session Button - Desktop (after Capture) */}
+                  {!hasActiveSession ? (
+                    <motion.button
+                      onClick={() => setShowSessionSelector(true)}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                               bg-maia-navy-800/40 hover:bg-maia-navy-800
+                               border border-maia-success/30 hover:border-maia-success/50
+                               text-maia-success text-xs font-light transition-all"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <Clock className="w-4 h-4" />
+                      <span className="hidden sm:inline">Start Session</span>
+                    </motion.button>
+                  ) : (
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg
+                                 bg-maia-navy-800/60 border border-maia-success/40 text-maia-success text-xs">
+                      <div className="w-2 h-2 rounded-full bg-maia-success animate-pulse" />
+                      <span className="hidden sm:inline">Session Active</span>
+                    </div>
+                  )
+                }
+                </div>
 
                 {/* Guide Button - Desktop */}
                 <motion.button
