@@ -609,7 +609,7 @@ export default function MAIAGuidePage() {
             onClick={handleBack}
             className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[#E5E9F0] hover:bg-[#1E3A5F]/40 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4 text-[#B8860B]" />
             Back to MAIA
           </button>
           <div className="flex items-center gap-2">
@@ -851,9 +851,9 @@ export default function MAIAGuidePage() {
               <button
                 key={cat}
                 onClick={() => handleCategoryChange(cat)}
-                className={`px-3 py-1.5 rounded-lg text-[12px] transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-medium transition-all ${
                   selectedTermCategory === cat
-                    ? 'bg-[#B8860B] text-[#0A1628] shadow-lg shadow-[#B8860B]/30'
+                    ? 'bg-[#B8860B] text-[#0A1628] border border-[#CD853F] shadow-lg shadow-[#B8860B]/40'
                     : 'bg-[#0F1D32] text-[#A0AAB8] border border-[#1E3A5F] hover:bg-[#1E3A5F]/50'
                 }`}
               >
