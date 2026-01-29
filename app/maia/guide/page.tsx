@@ -540,18 +540,18 @@ export default function MAIAGuidePage() {
       if (line.startsWith('**') && line.includes('**')) {
         const parts = line.split(/\*\*(.*?)\*\*/g);
         return (
-          <p key={i} className="text-[13px] text-stone-600 leading-relaxed">
+          <p key={i} className="text-[13px] text-[#C4A77D]/80 leading-relaxed">
             {parts.map((part, j) =>
-              j % 2 === 1 ? <strong key={j} className="text-stone-700">{part}</strong> : part
+              j % 2 === 1 ? <strong key={j} className="text-[#D4B896]">{part}</strong> : part
             )}
           </p>
         );
       }
       if (line.startsWith('- ')) {
-        return <li key={i} className="text-[13px] text-stone-600 ml-4">{line.substring(2)}</li>;
+        return <li key={i} className="text-[13px] text-[#C4A77D]/80 ml-4">{line.substring(2)}</li>;
       }
       if (line.trim() === '') return <div key={i} className="h-2" />;
-      return <p key={i} className="text-[13px] text-stone-600 leading-relaxed">{line}</p>;
+      return <p key={i} className="text-[13px] text-[#C4A77D]/80 leading-relaxed">{line}</p>;
     });
   };
 
@@ -593,13 +593,20 @@ export default function MAIAGuidePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#f8f7f5] via-[#f4f3f0] to-[#f0efec] print:bg-white">
+    <div className="min-h-screen bg-[#1A1008] print:bg-white">
+      {/* Ambient Background - Torchlight glow */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none print:hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#2C1810] via-[#1A1008] to-[#0D0804]" />
+        <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-[#D4A574]/8 rounded-full blur-[100px]" />
+        <div className="absolute bottom-1/3 right-1/4 w-[500px] h-[400px] bg-[#B8860B]/6 rounded-full blur-[120px]" />
+      </div>
+
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-[#f8f7f5]/95 backdrop-blur-sm border-b border-stone-200/60 print:hidden">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-[#2C1810]/95 backdrop-blur-sm border-b border-[#B8860B]/20 print:hidden">
+        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between relative">
           <button
             onClick={handleBack}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-stone-700 hover:bg-white/60 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-[13px] text-[#D4B896] hover:bg-[#B8860B]/10 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to MAIA
@@ -607,14 +614,14 @@ export default function MAIAGuidePage() {
           <div className="flex items-center gap-2">
             <button
               onClick={downloadAsTxt}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] border border-stone-300/60 bg-white/40 text-stone-700 hover:bg-white/80 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] border border-[#B8860B]/30 bg-[#2C1810]/60 text-[#D4B896] hover:bg-[#B8860B]/20 hover:border-[#B8860B]/50 transition-all"
             >
               <Download className="w-4 h-4" />
               Download
             </button>
             <button
               onClick={() => window.print()}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] border border-stone-300/60 bg-white/40 text-stone-700 hover:bg-white/80 transition-all"
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-[13px] border border-[#B8860B]/30 bg-[#2C1810]/60 text-[#D4B896] hover:bg-[#B8860B]/20 hover:border-[#B8860B]/50 transition-all"
             >
               <Printer className="w-4 h-4" />
               Print
@@ -623,23 +630,23 @@ export default function MAIAGuidePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto px-6 py-8" ref={contentRef}>
+      <main className="max-w-4xl mx-auto px-6 py-8 relative" ref={contentRef}>
         {/* Epigraph */}
         <div className="text-center mb-8">
-          <p className="text-[14px] italic text-stone-500">
+          <p className="text-[14px] italic text-[#C4A77D]/70" style={{ fontFamily: 'Georgia, serif' }}>
             "The way in is not a formula. It is a practice of presence."
           </p>
         </div>
 
         {/* Hero */}
         <div className="text-center mb-10">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-200/50 flex items-center justify-center print:hidden">
-            <Book className="w-8 h-8 text-amber-700" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-[#B8860B]/30 to-[#8B4513]/20 border border-[#B8860B]/30 flex items-center justify-center print:hidden">
+            <Book className="w-8 h-8 text-[#D4B896]" />
           </div>
-          <h1 className="text-2xl font-light mb-3 text-stone-800 tracking-wide">
+          <h1 className="text-2xl font-light mb-3 text-[#F5E6D3] tracking-wide" style={{ fontFamily: 'Georgia, serif' }}>
             MAIA User Guide
           </h1>
-          <p className="text-[15px] text-stone-500 max-w-xl mx-auto">
+          <p className="text-[15px] text-[#C4A77D]/70 max-w-xl mx-auto">
             Not documentation — orientation. A companion for your first entries and ongoing practice.
           </p>
         </div>
@@ -649,18 +656,18 @@ export default function MAIAGuidePage() {
         ═══════════════════════════════════════════════════════════════════ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <Compass className="w-5 h-5 text-amber-700" />
+            <div className="w-10 h-10 rounded-lg bg-[#B8860B]/20 border border-[#B8860B]/30 flex items-center justify-center">
+              <Compass className="w-5 h-5 text-[#D4B896]" />
             </div>
             <div>
-              <h2 className="text-[16px] font-medium text-stone-800">First Entry</h2>
-              <p className="text-[13px] text-stone-500">Beginning your practice</p>
+              <h2 className="text-[16px] font-medium text-[#F5E6D3]" style={{ fontFamily: 'Georgia, serif' }}>First Entry</h2>
+              <p className="text-[13px] text-[#C4A77D]/60">Beginning your practice</p>
             </div>
             <div className="ml-auto flex items-center gap-2">
               {firstEntryCompleted && (
                 <button
                   onClick={handleResetFirstEntry}
-                  className="text-[11px] text-stone-400 hover:text-stone-600 transition-colors"
+                  className="text-[11px] text-[#C4A77D]/50 hover:text-[#D4B896] transition-colors"
                 >
                   Restart
                 </button>
@@ -668,7 +675,7 @@ export default function MAIAGuidePage() {
               {!firstEntryCompleted && (
                 <button
                   onClick={() => setShowOverwhelmed(!showOverwhelmed)}
-                  className="p-2 rounded-lg text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                  className="p-2 rounded-lg text-[#C4A77D]/50 hover:text-[#D4B896] hover:bg-[#B8860B]/10 transition-colors"
                 >
                   <HelpCircle className="w-4 h-4" />
                 </button>
@@ -678,18 +685,18 @@ export default function MAIAGuidePage() {
 
           {/* Overwhelmed callout */}
           {showOverwhelmed && (
-            <div className="mb-6 p-4 rounded-xl bg-amber-50/80 border border-amber-200/60">
+            <div className="mb-6 p-4 rounded-xl bg-[#B8860B]/10 border border-[#B8860B]/30">
               <div className="flex items-start gap-3">
-                <div className="text-amber-600 mt-0.5">✧</div>
+                <div className="text-[#B8860B] mt-0.5">✧</div>
                 <div className="flex-1">
-                  <p className="text-[13px] text-stone-600 font-medium mb-2">If you're overwhelmed:</p>
-                  <ul className="text-[13px] text-stone-500 space-y-1">
+                  <p className="text-[13px] text-[#D4B896] font-medium mb-2">If you're overwhelmed:</p>
+                  <ul className="text-[13px] text-[#C4A77D]/70 space-y-1">
                     <li>• You can't do this wrong.</li>
                     <li>• Choose one door.</li>
                     <li>• One sentence is enough.</li>
                   </ul>
                 </div>
-                <button onClick={() => setShowOverwhelmed(false)} className="text-stone-400 hover:text-stone-600">
+                <button onClick={() => setShowOverwhelmed(false)} className="text-[#C4A77D]/50 hover:text-[#D4B896]">
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -705,34 +712,34 @@ export default function MAIAGuidePage() {
                   disabled={!isStepReachable(idx)}
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-medium transition-all ${
                     idx < currentStep
-                      ? 'bg-amber-500 text-white cursor-pointer hover:bg-amber-600'
+                      ? 'bg-[#B8860B] text-[#1A1008] cursor-pointer hover:bg-[#CD853F]'
                       : idx === currentStep
-                      ? 'bg-amber-100 text-amber-700 border-2 border-amber-400'
-                      : 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                      ? 'bg-[#B8860B]/20 text-[#D4B896] border-2 border-[#B8860B]'
+                      : 'bg-[#3D2B1F] text-[#C4A77D]/40 cursor-not-allowed'
                   }`}
                 >
                   {idx < currentStep ? <Check className="w-4 h-4" /> : idx + 1}
                 </button>
                 {idx < FIRST_ENTRY_STEPS.length - 1 && (
-                  <div className={`w-8 h-0.5 ${idx < currentStep ? 'bg-amber-400' : 'bg-stone-200'}`} />
+                  <div className={`w-8 h-0.5 ${idx < currentStep ? 'bg-[#B8860B]' : 'bg-[#3D2B1F]'}`} />
                 )}
               </div>
             ))}
           </div>
 
           {/* Current Step Card */}
-          <div ref={stepCardRef} className="border border-stone-200/60 rounded-xl bg-white/80 overflow-hidden">
+          <div ref={stepCardRef} className="border border-[#B8860B]/20 rounded-xl bg-gradient-to-br from-[#2C1810]/95 to-[#3D2B1F]/90 overflow-hidden">
             <div className="p-6">
-              <h3 className="text-[15px] font-medium text-stone-800 mb-4">
+              <h3 className="text-[15px] font-medium text-[#F5E6D3] mb-4" style={{ fontFamily: 'Georgia, serif' }}>
                 {FIRST_ENTRY_STEPS[currentStep].title}
               </h3>
-              <div className="prose prose-stone prose-sm">
+              <div className="prose prose-sm">
                 {renderContent(FIRST_ENTRY_STEPS[currentStep].content)}
               </div>
             </div>
 
             {FIRST_ENTRY_STEPS[currentStep].action && (
-              <div className="px-6 py-4 bg-stone-50/50 border-t border-stone-200/60">
+              <div className="px-6 py-4 bg-[#1A1008]/50 border-t border-[#B8860B]/20">
                 <button
                   onClick={() => {
                     const action = FIRST_ENTRY_STEPS[currentStep].action!;
@@ -744,8 +751,8 @@ export default function MAIAGuidePage() {
                   }}
                   className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-[13px] font-medium transition-all ${
                     FIRST_ENTRY_STEPS[currentStep].action?.type === 'maia'
-                      ? 'bg-amber-500 text-white hover:bg-amber-600'
-                      : 'bg-stone-800 text-white hover:bg-stone-900'
+                      ? 'bg-[#B8860B] text-[#1A1008] hover:bg-[#CD853F] shadow-lg shadow-[#B8860B]/30'
+                      : 'bg-[#D4B896]/20 text-[#D4B896] border border-[#D4B896]/30 hover:bg-[#D4B896]/30'
                   }`}
                 >
                   {FIRST_ENTRY_STEPS[currentStep].action?.type === 'maia' ? (
@@ -766,19 +773,19 @@ export default function MAIAGuidePage() {
 
           {/* After First Session - Return Loop */}
           {firstEntryCompleted && (
-            <div className="mt-6 p-5 rounded-xl bg-stone-50/80 border border-stone-200/60">
-              <h4 className="text-[13px] font-medium text-stone-700 mb-3">After your first session</h4>
-              <ul className="text-[12px] text-stone-500 space-y-2">
+            <div className="mt-6 p-5 rounded-xl bg-[#2C1810]/80 border border-[#B8860B]/20">
+              <h4 className="text-[13px] font-medium text-[#D4B896] mb-3">After your first session</h4>
+              <ul className="text-[12px] text-[#C4A77D]/70 space-y-2">
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
+                  <span className="text-[#B8860B] mt-0.5">•</span>
                   <span>Name one thing you noticed</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
+                  <span className="text-[#B8860B] mt-0.5">•</span>
                   <span>Choose one practice card below</span>
                 </li>
                 <li className="flex items-start gap-2">
-                  <span className="text-amber-500 mt-0.5">•</span>
+                  <span className="text-[#B8860B] mt-0.5">•</span>
                   <span>Return to this guide when you feel foggy</span>
                 </li>
               </ul>
@@ -791,12 +798,12 @@ export default function MAIAGuidePage() {
         ═══════════════════════════════════════════════════════════════════ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <Sun className="w-5 h-5 text-amber-700" />
+            <div className="w-10 h-10 rounded-lg bg-[#B8860B]/20 border border-[#B8860B]/30 flex items-center justify-center">
+              <Sun className="w-5 h-5 text-[#D4B896]" />
             </div>
             <div>
-              <h2 className="text-[16px] font-medium text-stone-800">Ways of Practice</h2>
-              <p className="text-[13px] text-stone-500">Paths of engagement</p>
+              <h2 className="text-[16px] font-medium text-[#F5E6D3]" style={{ fontFamily: 'Georgia, serif' }}>Ways of Practice</h2>
+              <p className="text-[13px] text-[#C4A77D]/60">Paths of engagement</p>
             </div>
           </div>
 
@@ -804,16 +811,16 @@ export default function MAIAGuidePage() {
             {PRACTICE_PATHS.map((path) => (
               <div
                 key={path.id}
-                className="border border-stone-200/60 rounded-xl bg-white/60 p-5 hover:bg-white/80 transition-all"
+                className="border border-[#B8860B]/20 rounded-xl bg-gradient-to-br from-[#2C1810]/95 to-[#3D2B1F]/90 p-5 hover:border-[#B8860B]/40 transition-all group"
               >
-                <h3 className="text-[14px] font-medium text-stone-800 mb-2">{path.title}</h3>
-                <p className="text-[12px] text-stone-500 mb-3">{path.forWhat}</p>
-                <p className="text-[12px] text-amber-700 bg-amber-50/80 px-3 py-2 rounded-lg mb-3">
+                <h3 className="text-[14px] font-medium text-[#F5E6D3] mb-2" style={{ fontFamily: 'Georgia, serif' }}>{path.title}</h3>
+                <p className="text-[12px] text-[#C4A77D]/60 mb-3">{path.forWhat}</p>
+                <p className="text-[12px] text-[#D4B896] bg-[#B8860B]/10 border border-[#B8860B]/20 px-3 py-2 rounded-lg mb-3">
                   <span className="font-medium">5 min:</span> {path.fiveMinutes}
                 </p>
                 <button
                   onClick={() => seedPractice(path.prompt, path.title)}
-                  className="flex items-center gap-2 text-[12px] text-amber-600 hover:text-amber-700 font-medium transition-colors"
+                  className="flex items-center gap-2 text-[12px] text-[#B8860B] hover:text-[#CD853F] font-medium transition-colors"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   Take to MAIA
@@ -828,12 +835,12 @@ export default function MAIAGuidePage() {
         ═══════════════════════════════════════════════════════════════════ */}
         <section className="mb-12">
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-amber-700" />
+            <div className="w-10 h-10 rounded-lg bg-[#B8860B]/20 border border-[#B8860B]/30 flex items-center justify-center">
+              <BookOpen className="w-5 h-5 text-[#D4B896]" />
             </div>
             <div>
-              <h2 className="text-[16px] font-medium text-stone-800">Living Terms</h2>
-              <p className="text-[13px] text-stone-500">A conceptual constellation</p>
+              <h2 className="text-[16px] font-medium text-[#F5E6D3]" style={{ fontFamily: 'Georgia, serif' }}>Living Terms</h2>
+              <p className="text-[13px] text-[#C4A77D]/60">A conceptual constellation</p>
             </div>
           </div>
 
@@ -845,8 +852,8 @@ export default function MAIAGuidePage() {
                 onClick={() => handleCategoryChange(cat)}
                 className={`px-3 py-1.5 rounded-lg text-[12px] transition-all ${
                   selectedTermCategory === cat
-                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                    : 'bg-white/60 text-stone-600 border border-stone-200/60 hover:bg-white'
+                    ? 'bg-[#B8860B] text-[#1A1008] shadow-lg shadow-[#B8860B]/30'
+                    : 'bg-[#2C1810]/80 text-[#C4A77D] border border-[#B8860B]/20 hover:bg-[#B8860B]/20'
                 }`}
               >
                 {cat.charAt(0).toUpperCase() + cat.slice(1)}
@@ -859,30 +866,30 @@ export default function MAIAGuidePage() {
             {LIVING_TERMS[selectedTermCategory]?.map((term) => (
               <div
                 key={term.term}
-                className="border border-stone-200/60 rounded-xl bg-white/60 overflow-hidden"
+                className="border border-[#B8860B]/20 rounded-xl bg-gradient-to-br from-[#2C1810]/95 to-[#3D2B1F]/90 overflow-hidden"
               >
                 <button
                   onClick={() => setExpandedTerm(expandedTerm === term.term ? null : term.term)}
-                  className="w-full flex items-center gap-3 p-4 text-left hover:bg-white/80 transition-colors"
+                  className="w-full flex items-center gap-3 p-4 text-left hover:bg-[#B8860B]/10 transition-colors"
                 >
                   <ChevronRight
-                    className={`w-4 h-4 text-stone-400 transition-transform duration-200 ${
+                    className={`w-4 h-4 text-[#B8860B] transition-transform duration-200 ${
                       expandedTerm === term.term ? 'rotate-90' : ''
                     }`}
                   />
-                  <span className="text-[14px] font-medium text-stone-700">{term.term}</span>
-                  <span className="text-[12px] text-stone-400 flex-1 truncate">{term.definition.split(' — ')[0]}</span>
+                  <span className="text-[14px] font-medium text-[#D4B896]" style={{ fontFamily: 'Georgia, serif' }}>{term.term}</span>
+                  <span className="text-[12px] text-[#C4A77D]/50 flex-1 truncate">{term.definition.split(' — ')[0]}</span>
                 </button>
 
                 {expandedTerm === term.term && (
                   <div className="px-4 pb-4 pt-0 pl-11 animate-in fade-in slide-in-from-top-2 duration-200">
-                    <p className="text-[13px] text-stone-600 mb-3">{term.definition}</p>
-                    <p className="text-[12px] text-amber-700 bg-amber-50/80 px-3 py-2 rounded-lg mb-3">
+                    <p className="text-[13px] text-[#C4A77D]/80 mb-3">{term.definition}</p>
+                    <p className="text-[12px] text-[#D4B896] bg-[#B8860B]/10 border border-[#B8860B]/20 px-3 py-2 rounded-lg mb-3">
                       <span className="font-medium">In practice:</span> {term.inPractice}
                     </p>
                     <button
                       onClick={() => seedTerm(term.prompt, term.term)}
-                      className="flex items-center gap-2 text-[12px] text-amber-600 hover:text-amber-700 font-medium transition-colors"
+                      className="flex items-center gap-2 text-[12px] text-[#B8860B] hover:text-[#CD853F] font-medium transition-colors"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                       Ask MAIA: "{term.prompt}"
@@ -898,7 +905,7 @@ export default function MAIAGuidePage() {
             REFERENCE SECTIONS - Traditional Accordion
         ═══════════════════════════════════════════════════════════════════ */}
         <section className="mb-12">
-          <h2 className="text-[11px] font-medium text-stone-500 tracking-[0.2em] uppercase mb-4">
+          <h2 className="text-[11px] font-medium text-[#B8860B]/70 tracking-[0.2em] uppercase mb-4">
             Reference
           </h2>
           <div className="space-y-3">
@@ -909,32 +916,32 @@ export default function MAIAGuidePage() {
               return (
                 <div
                   key={key}
-                  className="border border-stone-200/60 rounded-xl bg-white/60 overflow-hidden"
+                  className="border border-[#B8860B]/20 rounded-xl bg-gradient-to-br from-[#2C1810]/95 to-[#3D2B1F]/90 overflow-hidden"
                 >
                   <button
                     onClick={() => toggleSection(key)}
-                    className="w-full flex items-center gap-4 p-4 text-left hover:bg-white/80 transition-colors"
+                    className="w-full flex items-center gap-4 p-4 text-left hover:bg-[#B8860B]/10 transition-colors"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-stone-100 flex items-center justify-center">
-                      <Icon className="w-4 h-4 text-stone-600" />
+                    <div className="w-8 h-8 rounded-lg bg-[#B8860B]/15 border border-[#B8860B]/20 flex items-center justify-center">
+                      <Icon className="w-4 h-4 text-[#D4B896]" />
                     </div>
                     <div className="flex-1">
-                      <span className="text-[14px] font-medium text-stone-800">{section.title}</span>
-                      <span className="text-[12px] text-stone-400 ml-2">{section.description}</span>
+                      <span className="text-[14px] font-medium text-[#D4B896]" style={{ fontFamily: 'Georgia, serif' }}>{section.title}</span>
+                      <span className="text-[12px] text-[#C4A77D]/50 ml-2">{section.description}</span>
                     </div>
-                    <ChevronDown className={`w-4 h-4 text-stone-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-[#B8860B] transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
                   </button>
 
                   {isExpanded && (
-                    <div className="border-t border-stone-200/60">
+                    <div className="border-t border-[#B8860B]/20">
                       {section.subsections.map((sub, idx) => (
-                        <div key={sub.id} className={idx > 0 ? 'border-t border-stone-100' : ''}>
+                        <div key={sub.id} className={idx > 0 ? 'border-t border-[#B8860B]/10' : ''}>
                           <button
                             onClick={() => toggleSubsection(sub.id)}
-                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-stone-50/50"
+                            className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-[#B8860B]/10"
                           >
-                            <ChevronRight className={`w-3 h-3 text-stone-400 transition-transform ${expandedSubsection === sub.id ? 'rotate-90' : ''}`} />
-                            <span className="text-[13px] font-medium text-stone-700">{sub.title}</span>
+                            <ChevronRight className={`w-3 h-3 text-[#B8860B] transition-transform ${expandedSubsection === sub.id ? 'rotate-90' : ''}`} />
+                            <span className="text-[13px] font-medium text-[#D4B896]">{sub.title}</span>
                           </button>
                           {expandedSubsection === sub.id && (
                             <div className="px-4 pb-4 pl-10">
@@ -953,15 +960,15 @@ export default function MAIAGuidePage() {
 
         {/* Living Footer */}
         <div className="mt-12 text-center">
-          <div className="p-6 rounded-xl bg-amber-50/50 border border-amber-200/40 mb-6">
-            <p className="text-[14px] text-stone-600 italic">
+          <div className="p-6 rounded-xl bg-[#B8860B]/10 border border-[#B8860B]/20 mb-6">
+            <p className="text-[14px] text-[#D4B896] italic" style={{ fontFamily: 'Georgia, serif' }}>
               "This guide is not exhaustive. It grows as you do."
             </p>
           </div>
-          <p className="text-[13px] text-stone-400 mb-6">
+          <p className="text-[13px] text-[#C4A77D]/60 mb-6">
             Return when you're ready.
           </p>
-          <p className="text-[12px] text-stone-400">
+          <p className="text-[12px] text-[#C4A77D]/40">
             © {new Date().getFullYear()} Soullab. MAIA-SOVEREIGN is self-hosted, sovereign by design.
           </p>
         </div>
