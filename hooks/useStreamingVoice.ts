@@ -222,6 +222,44 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // 🔥 AUDIO WATCHDOG: Track if audio actually plays (not just received)
+  const audioEventsSeenRef = useRef(0);
+  const audioPlayedCountRef = useRef(0);
+  const audioWatchdogTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null); // Browser-safe type
+  const AUDIO_WATCHDOG_MS = 6000; // 6s after first audio event, if nothing played, force recovery
+
+  // 🔥 FORCE RECOVERY: Called when audio pipeline is broken (watchdog or play failure)
+  // This must clear ALL state that says "MAIA is speaking" - both in this hook AND externally
+  const forceRecoverFromFalseSpeaking = useCallback((errorMessage: string) => {
+    console.error('[StreamingVoice] 🚨 FORCE RECOVERY:', errorMessage);
+
+    // Clear this hook's state
+    audioQueueRef.current = [];
+    isPlayingRef.current = false;
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current.src = '';
+      currentAudioRef.current = null;
+    }
+
+    // Clear watchdog
+    if (audioWatchdogTimerRef.current) {
+      clearTimeout(audioWatchdogTimerRef.current);
+      audioWatchdogTimerRef.current = null;
+    }
+
+    // Reset state - this triggers onComplete with error info
+    setState(prev => ({
+      ...prev,
+      isStreaming: false,
+      isPlaying: false,
+      error: errorMessage,
+    }));
+
+    // Call onError so parent components (OracleConversation) can clear their speaking state too
+    onError?.(errorMessage);
+  }, [onError]);
+
   // ── POSTURE LOG (tuning trace) ──
   // Ring buffer of last 20 posture events for diagnostic snapshots
   const postureLogRef = useRef<Array<{
@@ -250,7 +288,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
   /**
    * Play next audio chunk from queue
-   * Hardened: MIME validation, no sync recursion on play rejection
+   * 🔥 HARDENED for iOS: Proper play() rejection handling with retry
    */
   const playNextChunk = useCallback(() => {
     if (isPlayingRef.current) return;
@@ -304,7 +342,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
       audio.onended = () => {
         console.log(
-          '[StreamingVoice] Audio chunk ended, queue length:',
+          '[StreamingVoice] ✅ Audio chunk ended, queue length:',
           audioQueueRef.current.length
         );
         advance(50);
@@ -315,17 +353,42 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         advance(50);
       };
 
-      audio.play().catch(e => {
-        // Never recurse synchronously; always schedule
-        console.error('[StreamingVoice] Audio play failed:', e);
-        advance(0);
-      });
+      // 🔥 iOS FIX: Proper play() with retry and failure recovery
+      const attemptPlay = async (retryCount = 0): Promise<void> => {
+        try {
+          await audio.play();
+          // ✅ Audio actually started playing!
+          audioPlayedCountRef.current++;
+          console.log('[StreamingVoice] ✅ Audio play STARTED, played count:', audioPlayedCountRef.current);
+          // Clear watchdog on first successful play - we're not stuck
+          if (audioPlayedCountRef.current === 1 && audioWatchdogTimerRef.current) {
+            clearTimeout(audioWatchdogTimerRef.current);
+            audioWatchdogTimerRef.current = null;
+            console.log('[StreamingVoice] 🐕 Watchdog cleared - audio is playing');
+          }
+        } catch (err: any) {
+          const errName = err?.name || 'UnknownError';
+          console.warn(`[StreamingVoice] audio.play() failed (attempt ${retryCount + 1}):`, errName, err?.message);
+
+          // iOS often fails first attempt after interruption - retry once
+          if (retryCount === 0 && (errName === 'NotAllowedError' || errName === 'AbortError')) {
+            console.log('[StreamingVoice] Retrying play on next animation frame...');
+            await new Promise(r => requestAnimationFrame(() => r(null)));
+            return attemptPlay(1);
+          }
+
+          // 🔥 Retry failed - FORCE RECOVERY, don't just "advance"
+          // If iOS is blocking playback, every chunk will fail - we need to bail completely
+          forceRecoverFromFalseSpeaking(`Audio playback blocked (${errName}). Tap to re-enable.`);
+        }
+      };
+
+      attemptPlay();
     } catch (e) {
       console.error('[StreamingVoice] Audio creation error:', e);
-      // Schedule instead of direct recursion
       advance(0);
     }
-  }, []);
+  }, [forceRecoverFromFalseSpeaking]);
 
   /**
    * Send a message and stream the response
@@ -341,6 +404,14 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       currentAudioRef.current = null;
     }
     isPlayingRef.current = false;
+
+    // 🔥 Reset audio watchdog counters
+    audioEventsSeenRef.current = 0;
+    audioPlayedCountRef.current = 0;
+    if (audioWatchdogTimerRef.current) {
+      clearTimeout(audioWatchdogTimerRef.current);
+      audioWatchdogTimerRef.current = null;
+    }
 
     // Cancel any existing request
     if (abortControllerRef.current) {
@@ -415,6 +486,10 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
       const decoder = new TextDecoder();
       let buffer = '';
+      // CRITICAL: Keep BOTH eventType and eventData outside the loop
+      // Large audio payloads (30KB+ base64) span multiple reader.read() calls
+      let eventType = '';
+      let eventData = '';
 
       while (true) {
         const { done, value } = await reader.read();
@@ -427,15 +502,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
         const lines = buffer.split('\n');
         buffer = lines.pop() || ''; // Keep incomplete line in buffer
 
-        let eventType = '';
-        let eventData = '';
+        for (const rawLine of lines) {
+          const line = rawLine.replace(/\r$/, ''); // Handle CRLF
 
-        for (const line of lines) {
-          if (line.startsWith('event:')) {
-            eventType = line.slice(6).trim();
-          } else if (line.startsWith('data:')) {
-            eventData = line.slice(5).trim();
-
+          // SSE event boundary: blank line means event is complete
+          if (line === '') {
             if (eventType && eventData) {
               try {
                 const data = JSON.parse(eventData);
@@ -455,26 +526,41 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                   }
 
                   case 'audio': {
-                    // Sanitize the display text for audio chunks too
-                    const cleanAudioText = sanitizeForDisplay(data.text);
-                    // Only queue audio if we have valid text (skip metadata-only audio)
-                    if (!cleanAudioText) {
-                      console.log('[StreamingVoice] Skipping audio chunk with no speakable text');
+                    // Validate audio data exists
+                    if (!data.audio) {
+                      console.warn('[StreamingVoice] Audio event missing audio data');
                       break;
                     }
-                    // Debug: log first audio chunk
-                    if (audioQueueRef.current.length === 0) {
-                      console.log('[StreamingVoice] First audio chunk received, index:', data.index);
+
+                    // 🔥 WATCHDOG: Track audio events seen and start timer on first event
+                    audioEventsSeenRef.current++;
+                    if (audioEventsSeenRef.current === 1) {
+                      console.log('[StreamingVoice] 🐕 Starting audio watchdog timer');
+                      // Start watchdog: if no audio played within N seconds, force recovery
+                      if (audioWatchdogTimerRef.current) clearTimeout(audioWatchdogTimerRef.current);
+                      audioWatchdogTimerRef.current = setTimeout(() => {
+                        if (audioEventsSeenRef.current > 0 && audioPlayedCountRef.current === 0) {
+                          // 🔥 Use shared recovery - clears ALL state including parent components
+                          forceRecoverFromFalseSpeaking(
+                            `Audio watchdog: ${audioEventsSeenRef.current} chunks received but nothing played`
+                          );
+                        }
+                      }, AUDIO_WATCHDOG_MS);
                     }
+
+                    // Sanitize the display text (but don't skip audio if text is empty)
+                    const cleanAudioText = sanitizeForDisplay(data.text || '');
+                    // Debug: log audio chunk
+                    console.log(`[StreamingVoice] 📥 Audio event #${audioEventsSeenRef.current}, index:`, data.index, 'format:', data.format, 'dataLen:', data.audio?.length);
                     audioQueueRef.current.push({
                       index: data.index,
                       audio: data.audio,
                       format: data.format,
-                      text: cleanAudioText
+                      text: cleanAudioText || '...'
                     });
                     // Start playback if not already playing
                     if (!isPlayingRef.current) {
-                      console.log('[StreamingVoice] Starting audio playback');
+                      console.log('[StreamingVoice] 🎵 Starting audio playback');
                       playNextChunk();
                     }
                     break;
@@ -587,12 +673,27 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     break;
                 }
               } catch (e) {
-                // Ignore parse errors for incomplete data
+                console.warn('[StreamingVoice] SSE parse error:', e, 'eventType:', eventType, 'dataLen:', eventData.length);
               }
 
+              // Reset ONLY after successfully processing the complete event
               eventType = '';
               eventData = '';
             }
+            continue; // Move to next line after blank line
+          }
+
+          // Accumulate event type
+          if (line.startsWith('event:')) {
+            eventType = line.slice(6).trim();
+            continue;
+          }
+
+          // Accumulate data (can be multi-line in SSE)
+          if (line.startsWith('data:')) {
+            const chunk = line.slice(5).trimStart();
+            eventData = eventData ? `${eventData}\n${chunk}` : chunk;
+            continue;
           }
         }
       }
@@ -618,7 +719,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }));
       onComplete?.(fallbackText);
     }
-  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk]);
+  }, [voice, speed, model, element, assistantName, archetype, conversationMode, memoryDepth, prosodyRange, onTextChunk, onComplete, onSilence, onMoveOutcome, onError, playNextChunk, forceRecoverFromFalseSpeaking]);
 
   /**
    * Stop streaming and playback
@@ -639,6 +740,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     // Clear queue
     audioQueueRef.current = [];
     isPlayingRef.current = false;
+
+    // 🔥 Clear watchdog on manual stop
+    if (audioWatchdogTimerRef.current) {
+      clearTimeout(audioWatchdogTimerRef.current);
+      audioWatchdogTimerRef.current = null;
+    }
 
     setState(prev => ({
       isStreaming: false,
@@ -676,6 +783,10 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }
       if (currentAudioRef.current) {
         currentAudioRef.current.pause();
+      }
+      // 🔥 Clear watchdog on unmount
+      if (audioWatchdogTimerRef.current) {
+        clearTimeout(audioWatchdogTimerRef.current);
       }
     };
   }, []);

@@ -98,6 +98,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isListeningRef = useRef(false); // Track isListening via ref to avoid stale closures
   const isRecordingRef = useRef(false); // Track isRecording via ref to avoid stale closures
   const persistentListeningRef = useRef(false); // Track persistentListening for Care/Scribe modes
+  const wantsContinuousConversationRef = useRef(false); // 🔥 FIX: Track if user wants continuous conversation (persists through MAIA responses)
   const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
@@ -125,8 +126,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   onInterruptRef.current = onInterrupt;
 
   // Function refs to avoid temporal dead zone in useImperativeHandle
-  const startListeningFnRef = useRef<() => void>();
-  const stopListeningFnRef = useRef<() => void>();
+  const startListeningFnRef = useRef<(options?: { forceOverride?: boolean }) => void>();
+  const stopListeningFnRef = useRef<(options?: { userExitMode?: boolean }) => void>();
   const toggleListeningFnRef = useRef<() => void>();
   const extendRecordingFnRef = useRef<() => void>();
 
@@ -568,14 +569,20 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // 🎤 Auto-restart native speech recognition when MAIA finishes speaking
   // This ensures the mic comes back on automatically for continuous conversation
   useEffect(() => {
-    if (!isSpeaking && isListeningRef.current && useNativeSpeechRef.current) {
+    // 🔥 FIX: Use wantsContinuousConversationRef instead of isListeningRef
+    // isListeningRef gets set to false when we stop for MAIA to respond
+    // wantsContinuousConversationRef persists until user explicitly exits voice mode
+    if (!isSpeaking && wantsContinuousConversationRef.current && useNativeSpeechRef.current) {
       console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 800ms...');
       isProcessingRef.current = false;
+      // 🔥 FIX: Reset restart counter when MAIA stops speaking - new conversational turn!
+      // This gives the user a fresh set of restart attempts to respond
+      consecutiveRestartCount.current = 0;
 
       const restartTimer = setTimeout(async () => {
         // Double-check conditions before restart
         // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
-        if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
+        if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
             // NOTE: Do NOT call VoiceController.prepareForListening() here!
             // The speech recognition plugin reconfigures audio session from .playback
@@ -1011,13 +1018,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastStartAttemptRef = useRef(0);
 
   // Start listening
-  const startListening = useCallback(async () => {
-    console.log('🎤 [ContinuousConversation] startListening called');
+  const startListening = useCallback(async (options?: { forceOverride?: boolean }) => {
+    console.log('🎤 [ContinuousConversation] startListening called', options?.forceOverride ? '(FORCE OVERRIDE)' : '');
     addDebug('🎤 startListening called');
 
     // 🛡️ CRASH PREVENTION: Debounce rapid taps (500ms minimum between attempts)
+    // Skip debounce for force overrides (user is interrupting MAIA)
     const now = Date.now();
-    if (now - lastStartAttemptRef.current < 500) {
+    if (!options?.forceOverride && now - lastStartAttemptRef.current < 500) {
       console.log('⏳ [ContinuousConversation] Debounced - too soon after last attempt');
       return;
     }
@@ -1041,10 +1049,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     addDebug(`Platform: ${platform}, native: ${shouldUseNative}`);
 
     // 🛡️ GUARD: Don't start listening if MAIA is speaking - prevents voice feedback loop
-    if (isSpeakingRef.current) {
+    // EXCEPTION: forceOverride allows bypassing this during user interrupt
+    if (isSpeakingRef.current && !options?.forceOverride) {
       console.log('🚫 [ContinuousConversation] BLOCKED: Cannot start listening while MAIA is speaking');
       isStartingRef.current = false;
       return;
+    }
+
+    // 🔥 FIX: If force override, clear speaking ref to prevent any other checks
+    if (options?.forceOverride && isSpeakingRef.current) {
+      console.log('⚡ [ContinuousConversation] Force override - clearing isSpeakingRef');
+      isSpeakingRef.current = false;
     }
 
     try {
@@ -1075,6 +1090,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // The listeningState listener is the SOURCE OF TRUTH for when mic is actually active
         setIsListening(true);
         isListeningRef.current = true;
+        wantsContinuousConversationRef.current = true; // 🔥 FIX: User started conversation, wants to continue after MAIA responds
         // NOTE: onRecordingStateChange will be called when listeningState: started fires
         console.log('📡 [Native] Permissions OK - waiting for mic to actually start...');
 
@@ -1128,6 +1144,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             console.log('📝 [Native] Partial:', transcript);
             addDebug(`🗣️ HEARD: "${transcript.slice(0, 40)}${transcript.length > 40 ? '...' : ''}"`);
             lastSpeechTime.current = Date.now();
+            lastHighAudioTimeRef.current = Date.now(); // Also update for fallback silence detection
             setIsRecording(true);
             isRecordingRef.current = true;
             hasSpokenRef.current = true;
@@ -1141,6 +1158,27 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // Accumulate transcript
             accumulatedTranscript.current = transcript;
+
+            // 🔥 FALLBACK SILENCE DETECTION: Reset timer on each partial
+            // If no partials for 2.5s after speech, auto-submit (audio levels may not fire on iOS)
+            if (nativeSilenceTimerRef.current) {
+              clearTimeout(nativeSilenceTimerRef.current);
+            }
+            nativeSilenceTimerRef.current = setTimeout(() => {
+              const finalTranscript = accumulatedTranscript.current.trim();
+              if (finalTranscript && !isProcessingRef.current && !isSpeakingRef.current) {
+                console.log('⏱️ [Native] Fallback silence timeout - auto-submitting:', finalTranscript);
+                addDebug('⏱️ Auto-submit (2.5s silence)');
+                accumulatedTranscript.current = '';
+                isProcessingRef.current = true;
+                setIsRecording(false);
+                isRecordingRef.current = false;
+                onTranscript(finalTranscript);
+                // Stop native recognition
+                NativeSpeechRecognition.stop().catch(() => {});
+              }
+              nativeSilenceTimerRef.current = null;
+            }, 2500); // 2.5s of no partials = end of speech
           } else {
             addDebug('⚠️ partialResults fired but no matches');
           }
@@ -1271,7 +1309,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // 🔥 FIX: Increment restart counter and check limit to prevent blinking loop
             consecutiveRestartCount.current++;
-            const MAX_NATIVE_RESTARTS = 3; // Only allow 3 auto-restarts before stopping
+            const MAX_NATIVE_RESTARTS = 5; // Allow 5 auto-restarts (~40 seconds) before stopping
 
             if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
               console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
@@ -1393,6 +1431,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // 🔥 FIX: Set isListeningRef BEFORE initializing audio monitoring
       // This prevents the audio level loop from immediately stopping
       isListeningRef.current = true;
+      wantsContinuousConversationRef.current = true; // 🔥 FIX: User started conversation, wants to continue after MAIA responds
 
       // Initialize audio monitoring
       const audioReady = await initializeAudioMonitoring();
@@ -1459,8 +1498,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   }, [initializeSpeechRecognition, initializeAudioMonitoring, onTranscript, onInterimTranscript, onRecordingStateChange, addDebug, ensureNativeSpeechReady]);
 
   // Stop listening
-  const stopListening = useCallback(async () => {
-    console.log('🛑 [ContinuousConversation] stopListening called');
+  // 🔥 FIX: userExitMode flag indicates user explicitly tapped holoflower to stop
+  // When true, we clear wantsContinuousConversationRef so auto-restart won't trigger
+  // When false/undefined (internal stop for transcript processing), we keep the ref so mic auto-restarts after MAIA
+  const stopListening = useCallback(async (options?: { userExitMode?: boolean }) => {
+    console.log('🛑 [ContinuousConversation] stopListening called', options?.userExitMode ? '(USER EXIT MODE)' : '(internal)');
+
+    // 🔥 FIX: Only clear wantsContinuousConversation when user explicitly exits voice mode
+    if (options?.userExitMode) {
+      console.log('🚪 [ContinuousConversation] User explicitly exited voice mode - clearing wantsContinuousConversationRef');
+      wantsContinuousConversationRef.current = false;
+    }
 
     // 🔥 CRITICAL: Process accumulated transcript BEFORE stopping
     // On iOS, the final transcript from native is often empty, so we must use accumulated partials
@@ -1625,8 +1673,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // Expose methods to parent via refs (avoids temporal dead zone)
   useImperativeHandle(ref, () => ({
-    startListening: () => startListeningFnRef.current?.(),
-    stopListening: () => stopListeningFnRef.current?.(),
+    startListening: (options?: { forceOverride?: boolean }) => startListeningFnRef.current?.(options),
+    stopListening: (options?: { userExitMode?: boolean }) => stopListeningFnRef.current?.(options),
     toggleListening: () => toggleListeningFnRef.current?.(),
     extendRecording: () => extendRecordingFnRef.current?.(),
     isListening,

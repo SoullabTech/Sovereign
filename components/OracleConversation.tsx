@@ -1900,10 +1900,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setStreamingResponseComplete(true);
     },
     onError: (error) => {
-      console.error('❌ [StreamingVoice] Error:', error);
+      // 🔥 FORCE RECOVERY: Called by useStreamingVoice when audio pipeline fails
+      // Must clear ALL speaking state including refs so mic can resume
+      console.error('❌ [StreamingVoice] Error - forcing full recovery:', error);
       setIsResponding(false);
       setIsAudioPlaying(false);
+      setIsMicrophonePaused(false);
       setStreamingResponseComplete(false);
+      // Clear refs too - these are what actually block the mic
+      isRespondingRef.current = false;
+      isAudioPlayingRef.current = false;
+      isMicrophonePausedRef.current = false;
+      // Resume mic after short delay
+      setTimeout(() => {
+        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+          console.log('🎤 [StreamingVoice] Resuming mic after force recovery');
+          setIsMuted(false);
+          voiceMicRef.current.startListening();
+        }
+      }, 500);
     }
   });
 
@@ -2621,9 +2636,21 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         console.log(`⏰ [${sessionId}] Recovery timer fired after ${timeSinceActivation}ms - CURRENT states: isProcessing: ${currentIsProcessing}, isResponding: ${currentIsResponding}, isAudioPlaying: ${currentIsAudioPlaying}`);
 
-        // If audio is still playing, states SHOULD be active - not stuck
-        if (currentIsAudioPlaying) {
+        // 🔥 FIX: Hard timeout of 45s even if isAudioPlaying is true
+        // No MAIA response should take 45+ seconds. If isAudioPlaying is stuck true
+        // without actually playing audio, we need to force reset.
+        const isHardTimeout = timeSinceActivation >= 45000;
+
+        // If audio is still playing AND we haven't hit hard timeout, states SHOULD be active
+        if (currentIsAudioPlaying && !isHardTimeout) {
           console.log(`✅ [${sessionId}] Audio still playing - states are working correctly, no recovery needed`);
+          return;
+        }
+
+        // Hard timeout triggered - audio state is stuck
+        if (currentIsAudioPlaying && isHardTimeout) {
+          console.warn(`🚨 [${sessionId}] HARD TIMEOUT: isAudioPlaying stuck true for ${Math.round(timeSinceActivation/1000)}s - forcing reset!`);
+          resetAllStates();
           return;
         }
 
@@ -5452,10 +5479,10 @@ I'm not sure what I'm feeling yet.`;
       audioRef.current = null;
     }
 
-    // Mute the microphone
+    // Mute the microphone - user emergency stop
     setIsMuted(true);
     if (voiceMicRef.current?.stopListening) {
-      voiceMicRef.current.stopListening();
+      voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: User-initiated emergency stop
     }
 
     // Reset all states
@@ -5464,7 +5491,7 @@ I'm not sure what I'm feeling yet.`;
     setIsMicrophonePaused(true);
     setCurrentlySpeakingId(undefined);
 
-    console.log('🛑 All MAIA systems stopped');
+    console.log('🛑 All MAIA systems stopped (emergency stop)');
   }, []);
 
   // ⏰ Session Timer Handlers
@@ -6010,8 +6037,10 @@ I'm not sure what I'm feeling yet.`;
               if (voiceMicRef.current) {
                 if (!isListening) {
                   // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
+                  let isInterrupt = false;
                   if (isAudioPlayingRef.current || isRespondingRef.current) {
                     console.log('🛑 [INTERRUPT] User tapped while MAIA speaking - stopping playback');
+                    isInterrupt = true;
 
                     // Stop MAIA's voice stream and playback
                     stopStreamingVoice();
@@ -6035,6 +6064,7 @@ I'm not sure what I'm feeling yet.`;
                     showChatInterface,
                     hasVoiceMicRef: !!voiceMicRef.current,
                     hasStartListening: !!voiceMicRef.current?.startListening,
+                    isInterrupt,
                   });
                   toast('🎤 Activating voice...', { duration: 2000 });
                   setIsMuted(false);
@@ -6054,8 +6084,9 @@ I'm not sure what I'm feeling yet.`;
                   }, 5000);
 
                   // Use setTimeout to ensure state is set before starting mic (user gesture pattern)
+                  // 🔥 FIX: Pass forceOverride when interrupting to bypass speaking check
                   try {
-                    await voiceMicRef.current.startListening();
+                    await voiceMicRef.current.startListening(isInterrupt ? { forceOverride: true } : undefined);
                     console.log('[voice] startListening resolved OK');
                     // Don't set isListening here - handleRecordingStateChange will do it when mic is confirmed
                   } catch (error: any) {
@@ -6097,11 +6128,11 @@ I'm not sure what I'm feeling yet.`;
                     toast.error(`🎤 Voice failed: ${name} - ${msg}`, { duration: 5000 });
                   }
                 } else {
-                  // Stop listening
-                  console.log('🔇 Stopping voice via holoflower...');
+                  // Stop listening - user explicitly exiting voice mode
+                  console.log('🔇 Stopping voice via holoflower (USER EXIT MODE)...');
                   setIsMuted(true);
-                  voiceMicRef.current.stopListening();
-                  console.log('✅ Voice stopped successfully');
+                  voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: Tell component this is user-initiated exit
+                  console.log('✅ Voice stopped successfully (user exit mode)');
                 }
               } else {
                 console.warn('⚠️ Voice ref not available');
@@ -7406,11 +7437,11 @@ I'm not sure what I'm feeling yet.`;
           }
           if (action === 'toggle-microphone') {
             if (!isMuted) {
-              // Turn mic OFF
+              // Turn mic OFF - user explicitly toggling off
               setIsMuted(true);
               if (voiceMicRef.current?.stopListening) {
-                voiceMicRef.current.stopListening();
-                console.log('🔇 Microphone OFF');
+                voiceMicRef.current.stopListening({ userExitMode: true }); // 🔥 FIX: User-initiated exit
+                console.log('🔇 Microphone OFF (user toggle)');
               }
             } else {
               // Turn mic ON - but only if MAIA isn't speaking
