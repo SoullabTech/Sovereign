@@ -108,6 +108,7 @@ import { generateGreeting, generateOnboardingGreeting, resolveDisplayName } from
 import { BrandedWelcome } from './BrandedWelcome';
 import { userTracker } from '@/lib/tracking/userActivityTracker';
 import { getCounselFramework, getScribeLens } from '@/lib/consciousness/therapeuticFrameworks';
+import type { IntegrityResult, LensConsent } from '@/lib/consciousness/integrityCheck';
 // import { ModeSwitcher } from './ui/ModeSwitcher'; // Removed - file doesn't exist
 import { SacredLabDrawer } from './ui/SacredLabDrawer';
 import PromptPicker from './prompts/PromptPicker';
@@ -296,6 +297,14 @@ interface ConversationMessage {
     }>;
   };
   turnId?: number;
+  // 🌀 INTEGRITY CHECK: Pass 3 pipeline result for lens switching UI
+  integrity?: IntegrityResult;
+  lensSwitchOptions?: {
+    stay: string;
+    switch: string;
+    blend: string;
+    switchTo: string;
+  } | null;
   // Pattern metadata for "Show why" drawer
   metadata?: {
     patterns?: Array<{
@@ -400,6 +409,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMounted, setIsMounted] = useState(false);
   const [draftMessage, setDraftMessage] = useState('');
   const [echoSuppressUntil, setEchoSuppressUntil] = useState<number>(0);
+
+  // 🌀 LENS CONSENT: Pending consent for next message (Stay/Switch/Blend ritual)
+  const [pendingLensConsent, setPendingLensConsent] = useState<{
+    consent: LensConsent;
+    switchTo?: string;
+  } | null>(null);
 
   // Voice/audio state
   const [isListening, setIsListening] = useState(false);
@@ -3664,8 +3679,14 @@ I'm not sure what I'm feeling yet.`;
           } : undefined,
 
           // 🧭 THERAPEUTIC FRAMEWORK: Mode-specific lens
-          therapeuticFramework: realtimeMode === 'patient' ? getCounselFramework() : undefined,
+          // If user consented to switch, use the new framework; otherwise use current
+          therapeuticFramework: pendingLensConsent?.consent === 'switch' && pendingLensConsent?.switchTo
+            ? pendingLensConsent.switchTo
+            : (realtimeMode === 'patient' ? getCounselFramework() : undefined),
           reflectionLens: realtimeMode === 'scribe' ? getScribeLens() : undefined,
+
+          // 🌀 LENS CONSENT: User's choice from Stay/Switch/Blend ritual (if any)
+          lensConsent: pendingLensConsent?.consent || null,
 
           // Canon Wrap (care-mode only)
           allowCanonWrap,
@@ -3794,6 +3815,9 @@ I'm not sure what I'm feeling yet.`;
       let element = 'aether'; // Default element, will be updated from metadata if available
       let opusAxioms: any = undefined; // Opus Axioms evaluation results
       let turnId: number | undefined = undefined; // Turn ID for feedback tracking
+      // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
+      let integrity: IntegrityResult | undefined = undefined;
+      let lensSwitchOptions: ConversationMessage['lensSwitchOptions'] = null;
 
       if (isStreaming) {
         // Handle streaming response (voice mode - fastest)
@@ -4109,6 +4133,13 @@ I'm not sure what I'm feeling yet.`;
         if (opusAxioms) {
           console.log(`🜔 Opus Axioms received: ${opusAxioms.isGold ? 'GOLD' : 'Standard'} | ${opusAxioms.passed}/8 passed`);
         }
+
+        // 🌀 INTEGRITY CHECK: Extract Pass 3 result for lens switching UI
+        integrity = responseData.integrity as IntegrityResult | undefined;
+        lensSwitchOptions = responseData.lensSwitchOptions as ConversationMessage['lensSwitchOptions'];
+        if (integrity?.decision === 'offer_switch') {
+          console.log(`🌀 [INTEGRITY] Lens switch offered: ${JSON.stringify(lensSwitchOptions)}`);
+        }
       }
 
       const apiTime = Date.now() - startTime;
@@ -4202,6 +4233,9 @@ I'm not sure what I'm feeling yet.`;
         source: 'maia',
         opusAxioms,
         turnId,
+        // 🌀 INTEGRITY CHECK: Pass 3 result for lens switching UI
+        integrity,
+        lensSwitchOptions,
         metadata: {
           wisdomRouting: wisdomRouting ? {
             activated: wisdomRouting.activated,
@@ -4488,6 +4522,13 @@ I'm not sure what I'm feeling yet.`;
 
       setIsProcessing(false);
 
+      // 🌀 LENS CONSENT: Clear pending consent after message is processed
+      // The consent was applied to this request, so reset for next message
+      if (pendingLensConsent) {
+        setPendingLensConsent(null);
+        console.log('🌀 [LENS CONSENT] Cleared pending consent after processing');
+      }
+
       // Only reset isResponding for text mode - voice mode handles this in onComplete
       if (!isVoiceStreaming) {
         setIsResponding(false);
@@ -4498,7 +4539,7 @@ I'm not sure what I'm feeling yet.`;
 
       setCurrentMotionState('idle');
     }
-  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode]);
+  }, [isProcessing, isAudioPlaying, isResponding, sessionId, userId, onMessageAdded, agentConfig, messages.length, showChatInterface, voiceEnabled, maiaReady, maiaMode, pendingLensConsent]);
 
   // ==================== SEED PROMPT PROCESSOR ====================
   // Process pending seed prompt once handleTextMessage is available
@@ -6701,6 +6742,48 @@ I'm not sure what I'm feeling yet.`;
                             setPatternDrawerOpen(true);
                           }}
                         />
+                      )}
+
+                      {/* 🌀 LENS SWITCH RITUAL: Stay/Switch/Blend buttons when integrity triggers offer_switch */}
+                      {message.role === 'oracle' && message.integrity?.decision === 'offer_switch' && message.lensSwitchOptions && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          <button
+                            onClick={() => {
+                              setPendingLensConsent({ consent: 'stay' });
+                              console.log('🌀 [LENS CONSENT] User chose: Stay');
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-full bg-dune-sand/20 text-dune-amber
+                                     hover:bg-dune-sand/30 transition-colors border border-dune-amber/30"
+                            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                          >
+                            {message.lensSwitchOptions.stay}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPendingLensConsent({
+                                consent: 'switch',
+                                switchTo: message.lensSwitchOptions?.switchTo
+                              });
+                              console.log('🌀 [LENS CONSENT] User chose: Switch to', message.lensSwitchOptions?.switchTo);
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-full bg-maia-spice-400/20 text-maia-spice-300
+                                     hover:bg-maia-spice-400/30 transition-colors border border-maia-spice-400/30"
+                            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                          >
+                            {message.lensSwitchOptions.switch}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setPendingLensConsent({ consent: 'blend' });
+                              console.log('🌀 [LENS CONSENT] User chose: Blend');
+                            }}
+                            className="px-3 py-1.5 text-xs rounded-full bg-soul-textSecondary/10 text-soul-textSecondary
+                                     hover:bg-soul-textSecondary/20 transition-colors border border-soul-textSecondary/30"
+                            style={{ fontFamily: 'Spectral, Georgia, serif' }}
+                          >
+                            {message.lensSwitchOptions.blend}
+                          </button>
+                        </div>
                       )}
                     </motion.div>
                     );

@@ -61,6 +61,12 @@ export interface MaiaContext {
   selfAwarenessDetail?: 'minimal' | 'standard' | 'comprehensive';
   // 🧭 EPISTEMIC PATH: User-chosen lens for how MAIA shapes responses
   epistemicPathAddendum?: string;
+  // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 of 3-pass pipeline)
+  spiralSnapshotAddendum?: string;
+  // 🌿 WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
+  wuxingSnapshotAddendum?: string;
+  // 🌉 BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
+  bridgeSnapshotAddendum?: string;
   // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lenses for Counsel/Scribe modes
   therapeuticFrameworkAddendum?: string;
   reflectionLensAddendum?: string;
@@ -676,6 +682,25 @@ IMPORTANT: If the user asks about something mentioned in the conversation above,
   if (context.epistemicPathAddendum) {
     adaptedPrompt += `\n\n${context.epistemicPathAddendum}`;
     console.log(`🧭 [Epistemic Path] Applied: ${context.epistemicPathAddendum.split('\n')[0]}`);
+  }
+
+  // 🌀 SPIRAL SNAPSHOT: Computed member spiral state (Pass 1 — comes BEFORE framework)
+  // This is the always-on substrate that anchors all Care Mode responses
+  if (context.spiralSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.spiralSnapshotAddendum}`;
+    console.log(`🌀 [Spiral Snapshot] Applied: computed state anchor injected`);
+  }
+
+  // 🌿 WU XING SNAPSHOT: Five Element state from BaZi + temporal Qi
+  if (context.wuxingSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.wuxingSnapshotAddendum}`;
+    console.log(`🌿 [Wu Xing Snapshot] Applied: Five Element state injected`);
+  }
+
+  // 🌉 BRIDGED SNAPSHOT: Spiral × Wu Xing combined awareness
+  if (context.bridgeSnapshotAddendum) {
+    adaptedPrompt += `\n\n${context.bridgeSnapshotAddendum}`;
+    console.log(`🌉 [Bridge Snapshot] Applied: Spiral × Wu Xing integrated`);
   }
 
   // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens for Counsel mode

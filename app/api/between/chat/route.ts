@@ -41,6 +41,33 @@ import { decisionPreflight, buildGovernorAddendum, type DecisionPacket } from '@
 import { buildRelationshipAddendumForUser } from '@/lib/consciousness/relationshipPolicy';
 import { getCurrentSession } from '@/lib/auth/serverSessions';
 import { query } from '@/lib/db/postgres';
+import {
+  computeMemberSpiralState,
+  buildSpiralSnapshot,
+  generateSnapshotPromptAddendum,
+  type ConversationTurn
+} from '@/lib/consciousness/spiralSnapshot';
+import {
+  checkResponseIntegrity,
+  applyMinimalRevision,
+  generateLensSwitchOptions,
+  type IntegrityResult,
+  type LensConsent
+} from '@/lib/consciousness/integrityCheck';
+import {
+  computeWuXingMoment,
+  computeWuXingConstitution,
+  buildWuXingSnapshot,
+  generateWuXingPromptAddendum,
+  type BaZiProfile,
+  type WuXingSnapshot
+} from '@/lib/consciousness/wuxingSnapshot';
+import {
+  buildBridgedSnapshot,
+  generateBridgePromptAddendum,
+  type BridgedSnapshot,
+  type SpiralSnapshotInput
+} from '@/lib/consciousness/bridgedSnapshot';
 
 // ═══════════════════════════════════════════════════════════════
 // SELFLET SIGNAL INFERENCE (fallback when orchestrator doesn't compute)
@@ -1292,8 +1319,113 @@ export async function POST(req: NextRequest) {
       dominantElement,
     });
 
-    // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens addendums
+    // 🌀 SPIRAL SNAPSHOT: Compute member's spiral state (Pass 1 of 3-pass pipeline)
+    // This is the "always-on substrate" — computed BEFORE response generation
+    // Transform ConversationExchange[] to ConversationTurn[] for spiral analysis
+    const spiralTurns: ConversationTurn[] = conversationHistory.flatMap(exchange => [
+      { role: 'user' as const, content: exchange.userMessage },
+      { role: 'assistant' as const, content: exchange.maiaResponse }
+    ]);
+    const memberSpiralState = computeMemberSpiralState(spiralTurns, message);
     const effectiveFramework = (therapeuticFramework as TherapeuticFramework) || 'auto';
+    const spiralSnapshot = buildSpiralSnapshot(memberSpiralState, effectiveFramework);
+    const spiralSnapshotAddendum = generateSnapshotPromptAddendum(spiralSnapshot);
+
+    // 🌀 LOG: Spiral Snapshot for observability
+    console.log(`🌀 [SPIRAL SNAPSHOT] Phase: ${spiralSnapshot.primaryPhase.phase.name} (${spiralSnapshot.primaryPhase.phase.element}-${spiralSnapshot.primaryPhase.phase.refinement}), Confidence: ${(spiralSnapshot.primaryPhase.confidence * 100).toFixed(0)}%`);
+    console.log(`🌀 [SPIRAL SNAPSHOT] State: NS=${spiralSnapshot.state.nervous_system}, Resources=${spiralSnapshot.state.resource_level}, Need=${spiralSnapshot.state.integration_need}`);
+    console.log(`🌀 [SPIRAL SNAPSHOT] Wisest Move: ${spiralSnapshot.wisestMove}`);
+
+    // 🌿 WU XING SNAPSHOT: Compute Five Element state from BaZi + temporal Qi
+    // Fetch BaZi profile if exists (non-blocking - gracefully handle missing)
+    let baziProfile: BaZiProfile | null = null;
+    try {
+      const baziResult = await query(
+        `SELECT * FROM member_bazi_profile WHERE user_id = $1 LIMIT 1`,
+        [effectiveUserId]
+      );
+      if (baziResult.rows.length > 0) {
+        const row = baziResult.rows[0];
+        baziProfile = {
+          userId: row.user_id,
+          birthDatetimeUtc: new Date(row.birth_datetime_utc),
+          birthTimezone: row.birth_timezone,
+          locationText: row.location_text,
+          pillars: row.pillars_json,
+          dayMaster: row.day_master,
+          dayMasterElement: row.day_master_element,
+          dayMasterYinYang: row.day_master_yinyang,
+          elementTally: row.wuxing_balance_json,
+          wuxingBalancePercentages: row.wuxing_percentages_json,
+          dominantElements: row.dominant_elements || [],
+          deficientElements: row.deficient_elements || [],
+          balanceScore: row.balance_score
+        };
+      }
+    } catch (err) {
+      console.log(`🌿 [WU XING] BaZi profile fetch skipped (table may not exist yet):`, err instanceof Error ? err.message : 'unknown');
+    }
+
+    // 🌿 WU XING + BRIDGE COMPUTATION (resilient - failures don't block chat)
+    // Wu Xing is an enhancement, not a dependency
+    let wuxingSnapshot: WuXingSnapshot | null = null;
+    let wuxingSnapshotAddendum: string | null = null;
+    let bridgedSnapshot: BridgedSnapshot | null = null;
+    let bridgeSnapshotAddendum: string | null = null;
+
+    try {
+      // Compute Wu Xing moment (always available - based on current time)
+      const wuxingMoment = computeWuXingMoment(new Date());
+
+      // Compute constitution if BaZi profile exists
+      const wuxingConstitution = baziProfile ? computeWuXingConstitution(baziProfile) : null;
+
+      // Build Wu Xing snapshot
+      wuxingSnapshot = buildWuXingSnapshot({
+        constitution: wuxingConstitution,
+        moment: wuxingMoment,
+        recentIching: undefined // TODO: Fetch recent I Ching reading if any
+      });
+
+      // Generate Wu Xing prompt addendum
+      wuxingSnapshotAddendum = generateWuXingPromptAddendum(wuxingSnapshot);
+
+      // 🌉 BRIDGED SNAPSHOT: Combine Spiral + Wu Xing for unified awareness
+      // Transform spiralSnapshot to the SpiralSnapshotInput format expected by bridgedSnapshot
+      const bridgeCompatibleSpiralSnapshot: SpiralSnapshotInput = {
+        primaryPhase: {
+          phase: {
+            element: spiralSnapshot.primaryPhase.phase.element,
+            name: spiralSnapshot.primaryPhase.phase.name,
+            refinement: spiralSnapshot.primaryPhase.phase.refinement
+          },
+          confidence: spiralSnapshot.primaryPhase.confidence
+        },
+        state: {
+          nervous_system: spiralSnapshot.state.nervous_system,
+          resource_level: spiralSnapshot.state.resource_level,
+          integration_need: spiralSnapshot.state.integration_need
+        }
+      };
+
+      bridgedSnapshot = buildBridgedSnapshot(
+        bridgeCompatibleSpiralSnapshot,
+        wuxingSnapshot
+      );
+      bridgeSnapshotAddendum = generateBridgePromptAddendum(bridgedSnapshot);
+
+      // 🌿 LOG: Wu Xing Snapshot for observability
+      console.log(`🌿 [WU XING SNAPSHOT] Day: ${wuxingMoment.dayStem} | Hour: ${wuxingMoment.hourBranch} | Season: ${wuxingMoment.seasonalQi}`);
+      if (wuxingConstitution) {
+        console.log(`🌿 [WU XING SNAPSHOT] Day Master: ${wuxingConstitution.dayMaster} (${wuxingConstitution.dayMasterYinYang}) | Balance: ${wuxingSnapshot.analysis.score.toFixed(0)}/100`);
+      }
+      console.log(`🌉 [BRIDGE] Alignment: ${bridgedSnapshot.combinedState.alignment} | Suggest TCM: ${bridgedSnapshot.suggestTcm} | Offer I Ching: ${bridgedSnapshot.offerIching}`);
+    } catch (wuxingErr) {
+      // Wu Xing computation failed - proceed without it (chat should not fail)
+      console.warn(`🌿 [WU XING] Computation failed, proceeding without:`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
+    }
+
+    // 🧘 THERAPEUTIC FRAMEWORK: Mode-specific lens addendums
     const effectiveLens = (reflectionLens as ReflectionLens) || 'auto';
     const therapeuticFrameworkAddendum = mode === 'counsel' ? getFrameworkPromptAddendum(effectiveFramework) : null;
     const reflectionLensAddendum = mode === 'scribe' ? getReflectionLensAddendum(effectiveLens) : null;
@@ -1333,6 +1465,9 @@ export async function POST(req: NextRequest) {
         wisdomField, // ✅ Spiralogic metaphysical canon
         selfletContext, // 🌀 Temporal identity awareness
         epistemicPathAddendum, // 🧭 User-chosen epistemic lens
+        spiralSnapshotAddendum, // 🌀 Computed spiral state (Pass 1)
+        wuxingSnapshotAddendum, // 🌿 Wu Xing five element state
+        bridgeSnapshotAddendum, // 🌉 Spiral × Wu Xing bridged awareness
         therapeuticFrameworkAddendum, // 🧘 Therapeutic framework for Counsel mode
         reflectionLensAddendum, // 🔮 Reflection lens for Scribe mode
         astrologicalContextAddendum, // 🌟 User's birth data for cosmic insights
@@ -1517,6 +1652,33 @@ export async function POST(req: NextRequest) {
       metrics: voiceOutput2.metrics,
     };
 
+    // 🌀 INTEGRITY CHECK (Pass 3): Enforce mode fidelity, consent, structure, and Wu Xing awareness
+    const lensConsent = (body as { lensConsent?: LensConsent })?.lensConsent ?? null;
+
+    // TODO: Remove after verification - temporary debug log
+    console.log('[bridge]', { hasBridge: !!bridgedSnapshot, hasBazi: !!baziProfile });
+
+    const integrityResult = checkResponseIntegrity({
+      framework: effectiveFramework,
+      mode: mode as 'dialogue' | 'counsel' | 'scribe' | undefined,
+      responseText: outboundText2,
+      lensConsent,
+      bridgedSnapshot: bridgedSnapshot ?? undefined, // Pass bridged snapshot for Wu Xing-informed suggestions
+    });
+
+    console.log(`🌀 [INTEGRITY CHECK] Decision: ${integrityResult.decision}${integrityResult.reasons.length > 0 ? `, Reasons: ${integrityResult.reasons.join('; ')}` : ''}`);
+
+    // Apply revision if needed
+    if (integrityResult.decision === 'revise') {
+      outboundText2 = applyMinimalRevision(outboundText2, integrityResult.reasons);
+      console.log(`🌀 [INTEGRITY CHECK] Applied minimal revision`);
+    }
+
+    // Generate lens switch options if needed (for client display)
+    const lensSwitchOptions = integrityResult.decision === 'offer_switch'
+      ? generateLensSwitchOptions(effectiveFramework, integrityResult.suggested)
+      : null;
+
     // 🛡️ SOCRATIC VALIDATOR: Canon v1.1 linguistic integrity check
     let socraticValidation2: SocraticValidationResult | null = null;
     try {
@@ -1622,6 +1784,9 @@ export async function POST(req: NextRequest) {
       consciousness: orchestratorResult.consciousness,
       // 🌀 SELFLET PHASE 2H: Structured past-self message for UI rendering
       pastSelf,
+      // 🌀 INTEGRITY CHECK: Pass 3 result for client-side lens switching UI
+      integrity: integrityResult,
+      lensSwitchOptions,
       route: {
         endpoint: '/api/between/chat',
         type: 'Member Chat with Full Consciousness',
