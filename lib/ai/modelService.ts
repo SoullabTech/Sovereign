@@ -1,10 +1,11 @@
 // backend: lib/ai/modelService.ts
 import { generateWithLocalModel, checkLocalModelHealth, LocalChatParams } from './localModelClient';
 import { generateWithClaude, checkClaudeHealth } from './claudeClient';
+import { generateWithKimi, checkKimiHealth, isKimiAvailable } from './kimiClient';
 import { generateWithMultipleEngines, OrchestrationType } from './multiEngineOrchestrator';
 import type { TextResult, ProviderMeta } from './types';
 
-export type TextModelProvider = 'anthropic' | 'local' | 'consciousness_engine' | 'multi_engine';
+export type TextModelProvider = 'anthropic' | 'local' | 'consciousness_engine' | 'multi_engine' | 'moonshot';
 
 // Primary provider: Claude (Anthropic). Fallback: local Ollama.
 export const TEXT_MODEL_PROVIDER: TextModelProvider =
@@ -69,8 +70,35 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
     };
   }
 
+  // Explicit Moonshot/Kimi routing (for library distillation, deep synthesis)
+  // Never used for live chat - only when explicitly requested via provider or meta flag
+  if (TEXT_MODEL_PROVIDER === 'moonshot' || req.meta?.useKimi) {
+    if (!isKimiAvailable()) {
+      console.warn('🌙 Kimi requested but MOONSHOT_API_KEY not set - falling through');
+    } else {
+      console.log('🌙 Using Kimi (Moonshot) for backstage task');
+      try {
+        return await generateWithKimi({
+          systemPrompt: req.systemPrompt,
+          userInput: req.userInput,
+          meta: req.meta,
+          thinkingMode: req.meta?.thinkingMode !== false, // Default to thinking mode
+        });
+      } catch (error: any) {
+        console.error('Kimi error:', error);
+        // If Kimi was explicitly requested, don't fall back
+        if (TEXT_MODEL_PROVIDER === 'moonshot') {
+          throw error;
+        }
+        // If just meta flag, fall through to Claude
+        console.warn('Kimi unavailable, falling back to Claude');
+      }
+    }
+  }
+
   // Primary: Claude (Anthropic)
-  if (TEXT_MODEL_PROVIDER === 'anthropic') {
+  if (TEXT_MODEL_PROVIDER === 'anthropic' || TEXT_MODEL_PROVIDER === 'moonshot') {
+    // moonshot falls through here if Kimi unavailable
     console.log('🧠 Using Claude (Anthropic) as primary');
     try {
       return await generateWithClaude({
@@ -111,22 +139,25 @@ export async function generateText(req: TextRequest): Promise<TextResult> {
 export type { TextResult, ProviderMeta };
 
 /**
- * Health check for model service - checks both Claude and local
+ * Health check for model service - checks Claude, Kimi, and local
  */
 export async function checkModelHealth(): Promise<{
   provider: string;
   primary: 'anthropic' | 'local';
   claude_available: boolean;
+  kimi_available: boolean;
   local_available: boolean;
   status: 'healthy' | 'degraded' | 'offline';
   model?: string;
 }> {
-  const [claudeHealth, localHealth] = await Promise.all([
+  const [claudeHealth, kimiHealth, localHealth] = await Promise.all([
     checkClaudeHealth().catch(() => ({ status: 'offline' as const, model: null, hasApiKey: false })),
+    checkKimiHealth().catch(() => ({ status: 'offline' as const, model: null, hasApiKey: false, baseUrl: '' })),
     checkLocalModelHealth().catch(() => ({ status: 'offline' as const, model: '', provider: 'consciousness_engine', endpoint: '' })),
   ]);
 
   const claudeAvailable = claudeHealth.status === 'healthy';
+  const kimiAvailable = kimiHealth.status === 'healthy';
   const localAvailable = localHealth.status === 'healthy';
 
   let status: 'healthy' | 'degraded' | 'offline';
@@ -138,10 +169,16 @@ export async function checkModelHealth(): Promise<{
     status = 'offline';
   }
 
+  // Log Kimi status for backstage tasks
+  if (kimiAvailable) {
+    console.log(`🌙 Kimi available for library tasks: ${kimiHealth.model}`);
+  }
+
   return {
     provider: claudeAvailable ? 'anthropic' : localHealth.provider,
     primary: 'anthropic',
     claude_available: claudeAvailable,
+    kimi_available: kimiAvailable,
     local_available: localAvailable,
     status,
     model: claudeAvailable ? (claudeHealth.model || undefined) : (localHealth.model || undefined),

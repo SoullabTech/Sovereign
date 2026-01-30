@@ -224,6 +224,13 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
           action: () => onNavigate('/lab-notes'),
           description: 'Discoveries and investigations'
         },
+        {
+          icon: BookOpen,
+          label: 'Ask Jeeves',
+          action: () => onNavigate('/maia/library'),
+          description: 'Deep research across your wisdom library',
+          badge: '✨ New'
+        },
       ],
     },
     {

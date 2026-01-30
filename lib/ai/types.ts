@@ -6,6 +6,7 @@ export type ProviderName =
   | 'consciousness_engine'
   | 'anthropic'
   | 'openai'
+  | 'moonshot'
   | 'multi_engine'
   | 'unknown';
 
