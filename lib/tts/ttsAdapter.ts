@@ -125,27 +125,30 @@ export function applyProsodyToText(text: string, hints: ProsodyHints): string {
  *
  * Keeps adjustments subtle — we want "presence", not chipmunk/sloth.
  * OpenAI TTS supports 0.25-4.0, but we stay in a tight band.
+ *
+ * UPDATED: Raised all floors to prevent slow-sounding speech.
+ * Natural conversational pace is 0.95-1.05.
  */
 export function mapProsodyToSpeed(baseSpeed: number, hints: ProsodyHints): number {
-  // Ritual intent always goes slow
+  // Ritual intent goes slightly slower (but not glacial)
   if (hints.intentTag === 'ritual') {
-    return Math.max(0.82, baseSpeed - 0.10);
+    return Math.max(0.92, baseSpeed - 0.06);
   }
 
-  // Regulate intent (settling) goes slightly slow
+  // Regulate intent (settling) - minimal adjustment
   if (hints.intentTag === 'regulate') {
-    return Math.max(0.85, baseSpeed - 0.07);
+    return Math.max(0.93, baseSpeed - 0.04);
   }
 
   // Pace-based adjustment
   switch (hints.pace) {
     case 'slow':
-      return Math.max(0.85, baseSpeed - 0.06);
+      return Math.max(0.93, baseSpeed - 0.04);
     case 'brisk':
-      return Math.min(1.08, baseSpeed + 0.04);
+      return Math.min(1.10, baseSpeed + 0.05);
     default:
-      // Floor at 0.82 even for steady pace — below that sounds "slow and drunk"
-      return Math.max(0.82, baseSpeed);
+      // Floor at 0.92 for natural conversational pace
+      return Math.max(0.92, baseSpeed);
   }
 }
 

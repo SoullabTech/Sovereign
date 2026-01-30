@@ -118,14 +118,13 @@ export async function* renderWithPersonaPlex(
   ].filter(Boolean).join('\n');
 
   // ── BREVITY → SPEED MICRO-MAPPING ──
-  // Brief/expansive = slightly slower for "careful presence"
-  // Not a lot — just enough to register as warmth.
+  // Minimal adjustments - warmth comes from content, not slowness
   const baseSpeed = req.speed ?? 1.0;
   const speedBump =
-    brevity === 'brief' ? -0.05 :
-    brevity === 'expansive' ? -0.03 :
+    brevity === 'brief' ? -0.02 :
+    brevity === 'expansive' ? -0.01 :
     0;
-  const adjustedSpeed = Math.max(0.5, Math.min(2.0, baseSpeed + speedBump));
+  const adjustedSpeed = Math.max(0.92, Math.min(1.15, baseSpeed + speedBump));
 
   // Build request payload for PersonaPlex service
   const payload: Record<string, unknown> = {

@@ -1849,9 +1849,44 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
       setMaiaResponseText(text);
     },
-    onComplete: (fullResponse) => {
-      console.log('✅ [StreamingVoice] Text stream complete, waiting for audio to finish...');
-      // Add the full response to messages
+    onComplete: (fullResponse, relational) => {
+      const audioChunks = relational?.audioChunksReceived ?? 0;
+      console.log(`✅ [StreamingVoice] Text stream complete (${audioChunks} audio chunks)`);
+
+      // 🚨 CRITICAL: TTS FAILURE RECOVERY
+      // If no audio chunks were received, TTS completely failed - don't wait for audio that won't come
+      if (audioChunks === 0) {
+        console.warn('⚠️ [StreamingVoice] TTS FAILED - no audio received. Resetting speaking state immediately.');
+        // Reset all speaking-related states so mic isn't blocked forever
+        setIsResponding(false);
+        setIsAudioPlaying(false);
+        setIsMicrophonePaused(false);
+        isRespondingRef.current = false;
+        isAudioPlayingRef.current = false;
+        isMicrophonePausedRef.current = false;
+        // Still add message for text display
+        const oracleMessage: ConversationMessage = {
+          id: `msg-${Date.now()}`,
+          role: 'oracle',
+          text: fullResponse,
+          timestamp: new Date(),
+          source: 'stream'
+        };
+        setMessages(prev => appendMessageCapped(prev, oracleMessage));
+        setMaiaResponseText('');
+        setStreamingResponseComplete(true);
+        // Resume mic after short delay
+        setTimeout(() => {
+          if (voiceMicRef.current?.startListening) {
+            console.log('🎤 [StreamingVoice] Resuming mic after TTS failure');
+            setIsMuted(false);
+            voiceMicRef.current.startListening();
+          }
+        }, 500);
+        return;
+      }
+
+      // Normal path: audio chunks received, waiting for playback to finish
       const oracleMessage: ConversationMessage = {
         id: `msg-${Date.now()}`,
         role: 'oracle',
@@ -3924,7 +3959,24 @@ I'm not sure what I'm feeling yet.`;
                     // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
                     const attemptMicRestart = (attempt: number) => {
                       if (attempt > 8) {
-                        console.log('⏸️ [STREAM] Gave up on mic restart after 8 attempts');
+                        console.log('⚠️ [STREAM] Mic restart failed after 8 attempts - forcing state reset');
+                        // 🔥 RECOVERY: Force reset all blocking states and try one more time
+                        setIsProcessing(false);
+                        setIsResponding(false);
+                        setIsAudioPlaying(false);
+                        setIsMicrophonePaused(false);
+                        isProcessingRef.current = false;
+                        isRespondingRef.current = false;
+                        isAudioPlayingRef.current = false;
+                        isMicrophonePausedRef.current = false;
+                        // Final attempt after forced reset
+                        setTimeout(() => {
+                          if (voiceMicRef.current?.startListening) {
+                            console.log('🎤 [STREAM] Final attempt after state reset...');
+                            setIsMuted(false);
+                            voiceMicRef.current.startListening();
+                          }
+                        }, 500);
                         return;
                       }
 
@@ -4454,7 +4506,24 @@ I'm not sure what I'm feeling yet.`;
                 // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
                 const attemptMicRestart = (attempt: number) => {
                   if (attempt > 8) {
-                    console.log('⏸️ [NON-STREAM] Gave up on mic restart after 8 attempts');
+                    console.log('⚠️ [NON-STREAM] Mic restart failed after 8 attempts - forcing state reset');
+                    // 🔥 RECOVERY: Force reset all blocking states and try one more time
+                    setIsProcessing(false);
+                    setIsResponding(false);
+                    setIsAudioPlaying(false);
+                    setIsMicrophonePaused(false);
+                    isProcessingRef.current = false;
+                    isRespondingRef.current = false;
+                    isAudioPlayingRef.current = false;
+                    isMicrophonePausedRef.current = false;
+                    // Final attempt after forced reset
+                    setTimeout(() => {
+                      if (voiceMicRef.current?.startListening) {
+                        console.log('🎤 [NON-STREAM] Final attempt after state reset...');
+                        setIsMuted(false);
+                        voiceMicRef.current.startListening();
+                      }
+                    }, 500);
                     return;
                   }
 
@@ -7195,10 +7264,11 @@ I'm not sure what I'm feeling yet.`;
             isSpeaking={isAudioPlaying || isMicrophonePaused}
             autoStart={false}
             silenceThreshold={
-              listeningMode === 'session' ? 999999 : // Session mode: never auto-send (effectively infinite)
-              listeningMode === 'patient' ? 10000 :   // Patient mode: 10 seconds (increased for full thoughts)
-              4000                                     // Normal mode: 4 seconds
+              listeningMode === 'session' ? 999999 : // Scribe mode: never auto-send (stay open to record)
+              listeningMode === 'patient' ? 45000 :   // Care mode: 45 seconds (deep patience for emotional processing)
+              8000                                     // Talk mode: 8 seconds (conversational)
             }
+            persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
           />
         </div>
       )}

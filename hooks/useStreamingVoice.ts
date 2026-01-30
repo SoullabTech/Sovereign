@@ -20,6 +20,8 @@ interface RelationalMetadata {
   activation: number;
   /** Prosody speed multiplier. Undefined when MAIA chose silence. */
   prosodySpeed?: number;
+  /** Number of audio chunks received. 0 means TTS failed - no speech available. */
+  audioChunksReceived?: number;
 }
 
 /** Silence response from relational stack */
@@ -529,20 +531,28 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                     break;
 
                   case 'complete': {
-                    console.log('[StreamingVoice] ✅ Complete event received');
-                    // Extract relational metadata if present
-                    const relationalMeta: RelationalMetadata | null = data.relational ? {
-                      maiaMode: data.relational.maiaMode,
-                      activation: data.relational.activation,
-                      prosodySpeed: data.relational.prosodySpeed,
-                    } : null;
+                    const audioChunksReceived = audioQueueRef.current.length + (isPlayingRef.current ? 1 : 0);
+                    console.log(`[StreamingVoice] ✅ Complete event received (${audioChunksReceived} audio chunks)`);
+
+                    // CRITICAL: If no audio chunks received, TTS completely failed
+                    if (audioChunksReceived === 0 && !state.isSilence) {
+                      console.warn('[StreamingVoice] ⚠️ TTS FAILED - no audio chunks received. Text response only.');
+                    }
+
+                    // Extract relational metadata if present, always include audio chunk count
+                    const relationalMeta: RelationalMetadata = {
+                      maiaMode: data.relational?.maiaMode ?? 'NAVIGATOR',
+                      activation: data.relational?.activation ?? 0.5,
+                      prosodySpeed: data.relational?.prosodySpeed,
+                      audioChunksReceived, // Always include so parent knows if TTS worked
+                    };
                     setState(prev => ({
                       ...prev,
                       isStreaming: false,
                       fullResponse: data.fullResponse,
-                      relational: relationalMeta || prev.relational,
+                      relational: relationalMeta,
                     }));
-                    onComplete?.(data.fullResponse, relationalMeta || undefined);
+                    onComplete?.(data.fullResponse, relationalMeta);
 
                     // ── POSTURE TRACE (tuning log) ──
                     const g = data.guidance;

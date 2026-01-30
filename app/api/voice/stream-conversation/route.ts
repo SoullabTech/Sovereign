@@ -497,8 +497,9 @@ export async function POST(req: NextRequest) {
         const relationalSpeedRaw = baseSpeed * mult;
 
         // Conservative clamp; OpenAI TTS supports 0.25-4.0 but we stay tighter
-        // Floor at 0.82 — below that, speech sounds "slow and drunk"
-        const relationalSpeed = Math.min(1.5, Math.max(0.82, relationalSpeedRaw));
+        // Floor at 0.92 — below that, speech sounds "slow and drunk"
+        // Ceiling at 1.15 to keep natural without rushing
+        const relationalSpeed = Math.min(1.15, Math.max(0.92, relationalSpeedRaw));
 
         // ============ WISDOM FIELD RETRIEVAL ============
         // Build full MAIA context from memory bundle + spiral state
