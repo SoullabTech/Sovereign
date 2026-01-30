@@ -129,17 +129,34 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // Auto-restart listening when Maya stops speaking, but with timeout to stop if no response
   const conversationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // DISABLED: Auto-restart causes echo loops - OracleConversation handles restart via startListening()
-  // useEffect(() => {
-  //   if (!isSpeaking && isListening && !isRecording && !isProcessing) {
-  //     console.log('🎤 Maya stopped speaking, restarting microphone...');
-  //     setTimeout(() => {
-  //       if (recognitionRef.current && isListening && !isRecording && !isSpeaking) {
-  //         recognitionRef.current.start();
-  //       }
-  //     }, 2000);
-  //   }
-  // }, [isSpeaking, isListening, isRecording, isProcessing]);
+  // Auto-restart listening when Maya stops speaking
+  // Uses 1.5s delay to allow echo suppression to settle
+  const prevIsSpeakingRef = useRef(isSpeaking);
+  useEffect(() => {
+    // Detect when MAIA stops speaking (was speaking, now not)
+    const wasSpeak = prevIsSpeakingRef.current;
+    prevIsSpeakingRef.current = isSpeaking;
+
+    if (wasSpeak && !isSpeaking && isListening && !isRecording && !isProcessing) {
+      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - auto-resuming mic in 1.5s');
+      setTimeout(() => {
+        // Re-check conditions after delay
+        if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+          try {
+            recognitionRef.current.start();
+            setIsRecording(true);
+            console.log('✅ [ContinuousConversation] Mic auto-resumed after MAIA speech');
+          } catch (err: any) {
+            if (!err?.message?.includes('already started')) {
+              console.warn('⚠️ [ContinuousConversation] Error auto-resuming mic:', err);
+            }
+          }
+        } else {
+          console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
+        }
+      }, 1500); // 1.5s delay for echo suppression
+    }
+  }, [isSpeaking, isListening, isRecording, isProcessing]);
 
   // Safari browser detection
   const isSafari = useCallback(() => {

@@ -486,7 +486,7 @@ export const ModernTextInput = forwardRef<HTMLTextAreaElement, ModernTextInputPr
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  className="w-8 h-8 rounded-full bg-gold-divine/20 text-gold-divine hover:bg-gold-divine/30 flex items-center justify-center transition-all duration-200 touch-manipulation"
+                  className="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 flex items-center justify-center transition-all duration-200 touch-manipulation"
                   title="Send message"
                 >
                   <Send className="w-4 h-4" />

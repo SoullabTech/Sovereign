@@ -46,12 +46,52 @@ function getDashaInfo(ruler: DashaRuler): MahadashaInfo {
   return MAHADASHA_SEQUENCE.find(m => m.ruler === ruler)!;
 }
 
-function formatDate(date: Date | string): string {
-  const d = typeof date === 'string' ? new Date(date) : date;
-  return d.toLocaleDateString('en-US', {
+function formatDate(date: Date): string {
+  return date.toLocaleDateString('en-US', {
     month: 'short',
     year: 'numeric',
   });
+}
+
+// Helper to ensure a value is a Date object (handles JSON-serialized dates)
+// Includes guard against invalid date strings from API
+function ensureDateValue(value: Date | string): Date {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (isNaN(d.getTime())) {
+    console.warn(`[DashaTimeline] Invalid date value: ${value}`);
+    return new Date(0); // Fallback to epoch rather than crash
+  }
+  return d;
+}
+
+// Normalize a DashaPeriod to ensure all dates are Date objects
+function normalizeDashaPeriod(p: DashaPeriod): DashaPeriod {
+  return {
+    ...p,
+    startDate: ensureDateValue(p.startDate),
+    endDate: ensureDateValue(p.endDate),
+    subPeriods: p.subPeriods?.map(sp => ({
+      ...sp,
+      startDate: ensureDateValue(sp.startDate),
+      endDate: ensureDateValue(sp.endDate),
+    })),
+  };
+}
+
+// Normalize entire profile to ensure all dates are Date objects
+function normalizeDashaProfile(profile: VimshottariDashaProfile): VimshottariDashaProfile {
+  return {
+    ...profile,
+    mahadashas: profile.mahadashas.map(normalizeDashaPeriod),
+    currentMahadasha: normalizeDashaPeriod(profile.currentMahadasha),
+    currentAntardasha: profile.currentAntardasha
+      ? {
+          ...profile.currentAntardasha,
+          startDate: ensureDateValue(profile.currentAntardasha.startDate),
+          endDate: ensureDateValue(profile.currentAntardasha.endDate),
+        }
+      : undefined,
+  };
 }
 
 function formatDuration(years: number): string {
@@ -70,7 +110,10 @@ export default function DashaTimeline({
   compact = false,
   profile: passedProfile,
 }: DashaTimelineProps) {
-  const [profile, setProfile] = useState<VimshottariDashaProfile | null>(passedProfile || null);
+  // Normalize passedProfile on initial render to ensure dates are Date objects
+  const [profile, setProfile] = useState<VimshottariDashaProfile | null>(
+    passedProfile ? normalizeDashaProfile(passedProfile) : null
+  );
   const [loading, setLoading] = useState(!passedProfile && !!birthDate);
   const [error, setError] = useState<string | null>(null);
   const [expandedPeriod, setExpandedPeriod] = useState<number | null>(null);
@@ -79,7 +122,7 @@ export default function DashaTimeline({
   // Fetch dasha profile if not passed and birth date is provided
   useEffect(() => {
     if (passedProfile) {
-      setProfile(passedProfile);
+      setProfile(normalizeDashaProfile(passedProfile));
       return;
     }
 
@@ -108,7 +151,7 @@ export default function DashaTimeline({
           throw new Error(result.error || 'Failed to calculate dasha');
         }
 
-        setProfile(result.data.profile);
+        setProfile(normalizeDashaProfile(result.data.profile));
         didAutoLoad.current = true;
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load dasha');
@@ -282,13 +325,16 @@ export default function DashaTimeline({
 }
 
 // Helper function to calculate progress through a period
+// Note: Dates are normalized when profile is loaded, so they're guaranteed to be Date objects
 function getProgress(period: DashaPeriod): number {
   const now = new Date();
-  if (now <= period.startDate) return 0;
-  if (now >= period.endDate) return 1;
+  const { startDate, endDate } = period;
 
-  const total = period.endDate.getTime() - period.startDate.getTime();
-  const elapsed = now.getTime() - period.startDate.getTime();
+  if (now <= startDate) return 0;
+  if (now >= endDate) return 1;
+
+  const total = endDate.getTime() - startDate.getTime();
+  const elapsed = now.getTime() - startDate.getTime();
 
   return elapsed / total;
 }
@@ -309,8 +355,10 @@ function DashaPeriodCard({
   const info = getDashaInfo(period.ruler);
   const graha = GRAHAS[period.ruler];
 
-  const startAge = Math.floor((period.startDate.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
-  const endAge = Math.floor((period.endDate.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  // Dates are normalized when profile is loaded, so they're guaranteed to be Date objects
+  const { startDate: periodStartDate, endDate: periodEndDate } = period;
+  const startAge = Math.floor((periodStartDate.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+  const endAge = Math.floor((periodEndDate.getTime() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
 
   return (
     <motion.div
@@ -335,7 +383,7 @@ function DashaPeriodCard({
               {graha.westernName} ({graha.name}) Mahadasha
             </div>
             <div className="text-xs text-indigo-400/60 mt-0.5">
-              Ages {startAge}–{endAge} • {formatDate(period.startDate)} – {formatDate(period.endDate)}
+              Ages {startAge}–{endAge} • {formatDate(periodStartDate)} – {formatDate(periodEndDate)}
             </div>
           </div>
         </div>
