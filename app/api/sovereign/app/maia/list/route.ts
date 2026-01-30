@@ -88,6 +88,11 @@ import { MemoryBundleService, type MemoryBundle } from '@/lib/memory/MemoryBundl
 import { resolveMemoryMode, type MemoryMode } from '@/lib/memory/MemoryGate';
 import { processNameChangeIfDetected } from '@/lib/consciousness/nameChangeDetection';
 
+// 🌿 Wu Xing (Five Elements) integration
+import { computeWuXingSnapshot, type WuXingSnapshot } from '@/lib/consciousness/wuxingSnapshot';
+import { createBridgedSnapshot, type BridgedSnapshot } from '@/lib/consciousness/bridgedSnapshot';
+import { pool } from '@/lib/db/postgres';
+
 // Import for build verification compatibility (not used in session-based implementation)
 // @ts-ignore
 import type { AetherConsciousnessInterface } from '@/lib/consciousness/aether/AetherConsciousnessInterface';
@@ -379,6 +384,76 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // 🌿 WU XING BRIDGE: Five Elements awareness (enhancement, not dependency)
+    let wuxingSnapshot: WuXingSnapshot | null = null;
+    let bridgedSnapshot: BridgedSnapshot | null = null;
+    let wuxingAddendum = '';
+
+    if (isRecognizedUser && !isSanctuary) {
+      try {
+        // Fetch BaZi profile if stored
+        let baziProfile = null;
+        try {
+          const baziResult = await pool.query(
+            `SELECT birth_datetime, birth_timezone, day_master, day_master_element,
+                    year_pillar, month_pillar, day_pillar, hour_pillar,
+                    element_counts, dominant_element, element_balance_score
+             FROM member_bazi_profile
+             WHERE member_id = $1`,
+            [effectiveUserId]
+          );
+          if (baziResult.rows.length > 0) {
+            baziProfile = baziResult.rows[0];
+          }
+        } catch (baziErr) {
+          console.log(`🌿 [WU XING] BaZi profile not found (optional enhancement)`);
+        }
+
+        // Compute Wu Xing snapshot (works with or without BaZi)
+        wuxingSnapshot = computeWuXingSnapshot({
+          constitution: baziProfile ? {
+            dayMasterElement: baziProfile.day_master_element,
+            elementCounts: baziProfile.element_counts,
+            dominantElement: baziProfile.dominant_element,
+          } : undefined,
+          currentMoment: new Date(),
+          timezone: timezone,
+        });
+
+        // Create bridged snapshot if we have spiral data
+        const spiralSnapshot = (meta as any)?.spiralSnapshot;
+        if (spiralSnapshot || wuxingSnapshot) {
+          bridgedSnapshot = createBridgedSnapshot(
+            spiralSnapshot || null,
+            wuxingSnapshot,
+            baziProfile
+          );
+
+          // Format Wu Xing addendum for prompt
+          if (bridgedSnapshot) {
+            const wx = bridgedSnapshot.wuxing;
+            const alignment = bridgedSnapshot.crossSystemInsights?.elementAlignment || 'unknown';
+            wuxingAddendum = `
+🌿 WU XING AWARENESS (Five Elements):
+- Dominant moment energy: ${wx?.momentElement || 'Earth'} (${wx?.momentPhase || 'stable'})
+${baziProfile ? `- Constitutional element: ${baziProfile.day_master_element} (Day Master)` : '- No birth chart on file (using moment energy only)'}
+- Element alignment: ${alignment}
+${bridgedSnapshot.crossSystemInsights?.practicalGuidance ? `- Guidance: ${bridgedSnapshot.crossSystemInsights.practicalGuidance}` : ''}
+
+Use this awareness to attune your tone and suggestions to the current elemental qualities.
+Wood = growth, vision, initiative | Fire = clarity, passion, connection
+Earth = stability, nourishment, integration | Metal = precision, release, boundaries
+Water = depth, reflection, wisdom`;
+          }
+        }
+
+        console.log(`🌿 [WU XING] Computed: ${wuxingSnapshot?.momentElement || 'none'} moment, ${baziProfile ? 'with' : 'without'} BaZi profile`);
+      } catch (wuxingErr) {
+        console.warn(`🌿 [WU XING] Computation failed (proceeding without):`, wuxingErr instanceof Error ? wuxingErr.message : 'unknown');
+        // Wu Xing is enhancement, not dependency - continue without it
+      }
+    }
+
     // 🎯 Use new three-tier processing system with voice integration
     orchestratorResult = await withTimeoutLabeled(
       'getMaiaResponse',
@@ -400,6 +475,9 @@ export async function POST(req: NextRequest) {
           fieldRouting: fieldSafety?.fieldRouting, // 🛡️ Pass field routing decision
           fieldWorkSafe: fieldSafety?.allowed ?? true, // 🛡️ Pass safety flag
           timezone, // 📅 User's browser timezone for temporal grounding
+          wuxingSnapshotAddendum: wuxingAddendum, // 🌿 Wu Xing elemental awareness (mapped to existing field)
+          wuxingSnapshot, // 🌿 Raw Wu Xing data for downstream processing
+          bridgedSnapshot, // 🌿 Combined Spiral × Wu Xing snapshot
           ...meta,
         },
       }),

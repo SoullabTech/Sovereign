@@ -949,6 +949,12 @@ This is a sanctuary session. The user has chosen NOT to have this conversation s
     console.log(`📝 [FAST] Scribe session discussion addendum applied: session context injected`);
   }
 
+  // 🌿 WU XING ADDENDUM: Five Elements elemental awareness
+  const wuxingSnapshotAddendum = (meta as any)?.wuxingSnapshotAddendum as string | undefined;
+  if (wuxingSnapshotAddendum) {
+    console.log(`🌿 [FAST] Wu Xing addendum applied: elemental awareness injected`);
+  }
+
   // 👤 USER IDENTIFICATION: Explicitly tell MAIA who the current user is
   // This prevents name contamination from system prompt examples that mention Kelly (the creator)
   const currentUserName = (meta as any)?.userName as string | undefined;
@@ -969,7 +975,7 @@ ${MAIA_LINEAGES_AND_FIELD}
 
 ${MAIA_CENTER_OF_GRAVITY}
 
-${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}
+${MAIA_RUNTIME_PROMPT}${userIdentification}${modeAdaptation}${timeAwareness}${cognitiveScaffolding}${relationshipContext}${selfletPromptBlock ? '\n\n' + selfletPromptBlock : ''}${sanctuaryInstruction}${wisdomInjection}${epistemicPathAddendum ? '\n\n' + epistemicPathAddendum : ''}${spiralSnapshotAddendum ? '\n\n' + spiralSnapshotAddendum : ''}${therapeuticFrameworkAddendum ? '\n\n' + therapeuticFrameworkAddendum : ''}${reflectionLensAddendum ? '\n\n' + reflectionLensAddendum : ''}${governorAddendum ? '\n\n' + governorAddendum : ''}${maiaModeAddendum ? '\n\n' + maiaModeAddendum : ''}${scribeSessionDiscussionAddendum ? '\n\n' + scribeSessionDiscussionAddendum : ''}${wuxingSnapshotAddendum ? '\n\n' + wuxingSnapshotAddendum : ''}
 
 Current context: Simple conversation turn - respond naturally and warmly.`;
 
@@ -1223,6 +1229,13 @@ The current user has not provided their name. Address them as "friend" or "there
   if (scribeSessionDiscussionAddendumCore) {
     console.log(`📝 [CORE] Scribe session discussion addendum applied: session context injected`);
     adaptivePrompt = adaptivePrompt + '\n\n' + scribeSessionDiscussionAddendumCore;
+  }
+
+  // 🌿 WU XING ADDENDUM: Five Elements elemental awareness
+  const wuxingSnapshotAddendumCore = (meta as any)?.wuxingSnapshotAddendum as string | undefined;
+  if (wuxingSnapshotAddendumCore) {
+    console.log(`🌿 [CORE] Wu Xing addendum applied: elemental awareness injected`);
+    adaptivePrompt = adaptivePrompt + '\n\n' + wuxingSnapshotAddendumCore;
   }
 
   // 🌟 WISDOM ROUTING: Detect if a wisdom agent should speak
@@ -1671,6 +1684,8 @@ Do NOT mention Bloom's Taxonomy explicitly. The scaffolding should feel organic 
         maiaModeAddendum: (meta as any)?.maiaModeAddendum as string | undefined,
         // 📝 SCRIBE SESSION DISCUSSION: Context for discussing a past session
         scribeSessionDiscussionAddendum: (meta as any)?.scribeSessionDiscussionAddendum as string | undefined,
+        // 🌿 WU XING: Five Elements elemental awareness
+        wuxingSnapshotAddendum: (meta as any)?.wuxingSnapshotAddendum as string | undefined,
       };
 
       const comprehensiveResult = buildMaiaComprehensivePrompt(input, repairedContext, effectiveHistory);
