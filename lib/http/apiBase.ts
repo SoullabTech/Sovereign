@@ -11,6 +11,13 @@
 // Hard fallback for iOS/Capacitor - NEVER use relative /api on mobile
 const FALLBACK_API_BASE_URL = 'https://soullab.life';
 
+// Build information stamp - populated during build or defaults
+export const BUILD_STAMP = {
+  commit: process.env.NEXT_PUBLIC_GIT_COMMIT || 'dev',
+  timestamp: process.env.NEXT_PUBLIC_BUILD_TIME || new Date().toISOString(),
+  version: process.env.NEXT_PUBLIC_VERSION || '1.1.0',
+};
+
 /**
  * Get the API base URL - bulletproof for Capacitor
  * Falls back to https://soullab.life if env var didn't inline
