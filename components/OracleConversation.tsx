@@ -7265,8 +7265,8 @@ I'm not sure what I'm feeling yet.`;
             autoStart={false}
             silenceThreshold={
               listeningMode === 'session' ? 999999 : // Scribe mode: never auto-send (stay open to record)
-              listeningMode === 'patient' ? 45000 :   // Care mode: 45 seconds (deep patience for emotional processing)
-              8000                                     // Talk mode: 8 seconds (conversational)
+              listeningMode === 'patient' ? 8000 :   // Care mode: 8 seconds (patience for emotional processing)
+              2000                                    // Talk mode: 2 seconds (natural conversation pace)
             }
             persistentListening={listeningMode === 'session' || listeningMode === 'patient'}
           />

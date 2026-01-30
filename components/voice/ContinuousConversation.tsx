@@ -28,6 +28,8 @@ export interface ContinuousConversationProps {
   interruptDebounceMs?: number;
   /** Threshold multiplier for interrupt detection (default: 1.2) - higher = less sensitive */
   interruptThresholdMultiplier?: number;
+  /** Keep listening active even during silence - for Care/Scribe modes (default: false) */
+  persistentListening?: boolean;
 }
 
 export interface ContinuousConversationRef {
@@ -48,12 +50,13 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isProcessing = false,
     isSpeaking = false,
     autoStart = false, // Disabled to prevent infinite restart loops
-    silenceThreshold = 8000, // 8s to capture full thoughts - generous buffer so user doesn't feel rushed
+    silenceThreshold = 12000, // 12s to capture full thoughts - extra generous for reflecting on MAIA's words
     vadSensitivity = 0.3,
     onInterrupt,
     interruptEnabled = true,
     interruptDebounceMs = 200,
     interruptThresholdMultiplier = 1.2,
+    persistentListening = false,
   } = props;
 
   const [isListening, setIsListening] = useState(false);
@@ -94,6 +97,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isSpeakingRef = useRef(false); // Track isSpeaking via ref to avoid stale closures
   const isListeningRef = useRef(false); // Track isListening via ref to avoid stale closures
   const isRecordingRef = useRef(false); // Track isRecording via ref to avoid stale closures
+  const persistentListeningRef = useRef(false); // Track persistentListening for Care/Scribe modes
   const recognitionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastSentRef = useRef<string>("");
   const lastSentTimeRef = useRef<number>(0); // Track when we last sent a transcript
@@ -109,7 +113,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
   const hasSpokenRef = useRef(false); // Track if user has spoken at all (to differentiate from background noise)
-  const adaptiveSilenceThreshold = 3500; // 3.5 seconds - generous buffer for natural pauses and thinking
+  const adaptiveSilenceThreshold = 5000; // 5 seconds - generous buffer for natural pauses and thinking
 
   // 🛑 BARGE-IN INTERRUPT DETECTION - Detect user speech while MAIA is speaking
   // NOTE: Voice-activated interrupt works on web browsers (uses separate MediaStream for audio monitoring)
@@ -130,7 +134,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const conversationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Auto-restart listening when Maya stops speaking
-  // Uses 1.5s delay to allow echo suppression to settle
+  // Uses 600ms delay for echo suppression (reduced from 1.5s for responsiveness)
   const prevIsSpeakingRef = useRef(isSpeaking);
   useEffect(() => {
     // Detect when MAIA stops speaking (was speaking, now not)
@@ -138,7 +142,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     prevIsSpeakingRef.current = isSpeaking;
 
     if (wasSpeak && !isSpeaking && isListening && !isRecording && !isProcessing) {
-      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - auto-resuming mic in 1.5s');
+      console.log('🎤 [ContinuousConversation] MAIA stopped speaking - auto-resuming mic in 600ms');
       setTimeout(() => {
         // Re-check conditions after delay
         if (recognitionRef.current && isListeningRef.current && !isRecordingRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
@@ -154,7 +158,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         } else {
           console.log('⏸️ [ContinuousConversation] Auto-resume blocked - conditions changed');
         }
-      }, 1500); // 1.5s delay for echo suppression
+      }, 600); // 600ms delay for echo suppression (reduced for responsiveness)
     }
   }, [isSpeaking, isListening, isRecording, isProcessing]);
 
@@ -383,6 +387,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       // Web Speech API times out after ~5-8 seconds of silence. If there's been no speech,
       // don't restart - let the user tap to restart when ready.
       //
+      // EXCEPTION: In Care/Scribe modes (persistentListening=true), always restart to stay open
+      //
       // CRITICAL: lastSpeechTime.current === 0 means NO speech was ever detected in this session
       // In that case, definitely don't restart - the mic timed out without any speech
       const hasEverSpoken = lastSpeechTime.current > 0;
@@ -390,13 +396,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
       const hasRecentSpeech = hasEverSpoken && timeSinceLastSpeech < 15000; // Was there speech in last 15 seconds?
       const hasAccumulatedTranscript = accumulatedTranscript.current.trim().length > 0;
 
-      if (!hasRecentSpeech && !hasAccumulatedTranscript) {
+      // In Care/Scribe modes, ALWAYS restart to stay open for the user
+      if (!hasRecentSpeech && !hasAccumulatedTranscript && !persistentListeningRef.current) {
         console.log('🔕 [onend] No recent speech detected (' + (hasEverSpoken ? Math.round(timeSinceLastSpeech/1000) + 's since last speech' : 'never spoke') + ') - stopping to prevent blink');
         console.log('   (User can tap mic to restart when ready to speak)');
         setIsListening(false);
         isListeningRef.current = false;
         onRecordingStateChange?.(false);
         return;
+      }
+
+      // Log if persistent mode is keeping us open
+      if (persistentListeningRef.current && !hasRecentSpeech && !hasAccumulatedTranscript) {
+        console.log('🎧 [onend] Persistent listening mode - staying open for Care/Scribe');
       }
 
       // Only restart if we're actively listening and not processing/speaking
@@ -483,6 +495,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // 🔥 CRITICAL: Sync isSpeaking SYNCHRONOUSLY (not in useEffect) to prevent race conditions
   // This ensures the guard in startListening() always has the latest value
   isSpeakingRef.current = isSpeaking;
+  persistentListeningRef.current = persistentListening; // Sync persistentListening for Care/Scribe modes
 
   useEffect(() => {
     isProcessingRef.current = isProcessing;
@@ -556,7 +569,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   // This ensures the mic comes back on automatically for continuous conversation
   useEffect(() => {
     if (!isSpeaking && isListeningRef.current && useNativeSpeechRef.current) {
-      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 1.5s...');
+      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 800ms...');
       isProcessingRef.current = false;
 
       const restartTimer = setTimeout(async () => {
@@ -583,7 +596,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         } else {
           console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
         }
-      }, 1500); // 1.5s delay for iOS audio session to release
+      }, 800); // 800ms delay for iOS audio session to release (reduced for responsiveness)
 
       return () => clearTimeout(restartTimer);
     }
@@ -1202,7 +1215,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (rawLevel < 0.01 && hasAnyTranscript && hasRecentSpeech) {
             // Start silence timer if not already running
             if (!nativeSilenceTimerRef.current) {
-              console.log('🔕 [Native] Silence detected after speech, starting 2.0s timer');
+              console.log('🔕 [Native] Silence detected after speech, starting 1.5s timer');
               nativeSilenceTimerRef.current = setTimeout(() => {
                 // Double-check we still have transcript
                 if (accumulatedTranscript.current.trim() && !isProcessingRef.current) {
@@ -1215,7 +1228,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   onTranscript(finalTranscript);
                 }
                 nativeSilenceTimerRef.current = null;
-              }, 2000); // 2.0s of silence = end of speech (increased from 1.2s to prevent truncation)
+              }, 1500); // 1.5s of silence = end of speech (balanced for responsiveness)
             }
           } else if (rawLevel >= 0.02) {
             // Clear silence timer if speech detected (higher threshold than silence)
@@ -1270,9 +1283,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             }
 
             // Auto-restart if still in listening mode
-            // 🔥 CRITICAL: Longer delay (1.5s) to allow iOS audio session to fully release after TTS
+            // 800ms delay for iOS audio session to release (reduced from 1.5s for responsiveness)
             if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-              console.log(`🔄 [Native] Will auto-restart in 1.5s... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
+              console.log(`🔄 [Native] Will auto-restart in 800ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
               setTimeout(async () => {
                 // Double-check conditions before restart
                 if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
@@ -1298,7 +1311,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   console.log('🚫 [Native] Conditions changed, not restarting');
                   consecutiveRestartCount.current = 0; // Reset on intentional stop
                 }
-              }, 1500); // 1.5 seconds - gives iOS audio session time to release
+              }, 800); // 800ms - iOS audio session release time (reduced for responsiveness)
             }
           }
         });
