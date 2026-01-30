@@ -221,8 +221,38 @@ function appendMessageCapped<T extends MsgWithId>(
 }
 
 // Helper to truncate conversation history for API calls
-function truncateHistoryForAPI(messages: ConversationMessage[], maxMessages: number = MAX_API_HISTORY): Array<{ role: string; content: string }> {
-  const recent = messages.slice(-maxMessages);
+// Merges historical messages (from previous sessions) with current session messages
+function truncateHistoryForAPI(
+  currentMessages: ConversationMessage[],
+  historicalMessages: ConversationMessage[] = [],
+  maxMessages: number = MAX_API_HISTORY
+): Array<{ role: string; content: string }> {
+  // Merge historical context with current session, prioritizing recent messages
+  // Deduplicate by message ID to avoid repeating the same content
+  const seenIds = new Set<string>();
+  const allMessages: ConversationMessage[] = [];
+
+  // Add historical messages first
+  for (const msg of historicalMessages) {
+    if (msg.id && !seenIds.has(msg.id)) {
+      seenIds.add(msg.id);
+      allMessages.push(msg);
+    }
+  }
+
+  // Add current session messages (may override/update historical)
+  for (const msg of currentMessages) {
+    if (msg.id && !seenIds.has(msg.id)) {
+      seenIds.add(msg.id);
+      allMessages.push(msg);
+    } else if (!msg.id) {
+      // Messages without ID always added
+      allMessages.push(msg);
+    }
+  }
+
+  // Take most recent messages up to limit
+  const recent = allMessages.slice(-maxMessages);
   return recent.map(msg => ({
     role: msg.role === 'oracle' ? 'assistant' : 'user',
     content: msg.text || msg.content || ''
@@ -863,8 +893,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   useEffect(() => {
     const handleNewConversation = () => {
       console.log('🆕 [New Conversation] Clearing history and resetting to welcome');
-      // Clear messages
+      // Clear messages (UI display)
       setMessages([]);
+      // Clear historical messages (API context) - truly fresh start
+      historicalMessagesRef.current = [];
       // Reset activation state to show welcome screen
       setHasActivated(false);
       // Clear localStorage for current session
@@ -986,6 +1018,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const streamingMessageTextRef = useRef<string>('');
   const lastMaiaResponseRef = useRef<string>('');
   const lastUserMessageRef = useRef<string>('');
+  // 💾 Historical messages for API context - separate from UI display
+  // UI stays clean on load, but MAIA has access to conversation history for context
+  const historicalMessagesRef = useRef<ConversationMessage[]>([]);
   const pausedResponseRef = useRef<string | null>(null); // For voice-pause/resume
   const voiceMicRef = useRef<ContinuousConversationRef>(null);
   const textInputRef = useRef<HTMLTextAreaElement>(null);
@@ -1964,28 +1999,26 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     return () => window.removeEventListener('resize', updateSize);
   }, []);
 
-  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Restore from localStorage + PostgreSQL
+  // 💾 SOVEREIGN CONVERSATION PERSISTENCE: Load history for MAIA context (but don't display)
+  // NOTE: We intentionally do NOT restore messages to the UI on page load.
+  // The UI should always start fresh with the greeting, giving the user a clean slate.
+  // MAIA still has access to conversation history through historicalMessagesRef for context.
+  // The persistence layer keeps localStorage in sync with PostgreSQL for continuity.
   useEffect(() => {
     if (typeof window === 'undefined' || !sessionId || !userId) return;
 
-    const restoreConversation = async () => {
+    const loadConversationHistory = async () => {
       const storageKey = `maia_conversation_${sessionId}`;
+      let loadedMessages: ConversationMessage[] = [];
 
-      // Step 1: Try localStorage first (instant restore for same device)
+      // Step 1: Try localStorage first (instant load for same device)
       const localStored = localStorage.getItem(storageKey);
-      let localMessageCount = 0;
-      console.log(`🎯 [GREETING DEBUG] localStorage check - storageKey: ${storageKey}, hasData: ${!!localStored}`);
       if (localStored) {
         try {
           const parsedMessages = JSON.parse(localStored);
           if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
-            // 🎯 DEBUG: Log what's being restored that might hide greeting
-            const nonGreetingMsgs = parsedMessages.filter((m: any) => !m.id?.startsWith('greeting-'));
-            console.log(`💾 [localStorage] Restored ${parsedMessages.length} messages instantly`);
-            console.log(`🎯 [GREETING DEBUG] Restoring ${nonGreetingMsgs.length} non-greeting messages - THIS WILL HIDE GREETING`);
-            console.log(`🎯 [GREETING DEBUG] First 3 restored IDs:`, parsedMessages.slice(0, 3).map((m: any) => m.id));
-            setMessages(parsedMessages);
-            localMessageCount = parsedMessages.length;
+            loadedMessages = parsedMessages;
+            console.log(`💾 [localStorage] Loaded ${loadedMessages.length} messages for MAIA context (UI starts fresh)`);
           }
         } catch (error) {
           console.error('💾 [localStorage] Failed to parse stored messages:', error);
@@ -1993,14 +2026,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         }
       }
 
-      // Step 2: Check PostgreSQL for sovereign cross-device sync
+      // Step 2: Check PostgreSQL for more recent/complete history
       try {
         const response = await apiFetch(`/api/conversation/turns?sessionId=${encodeURIComponent(sessionId)}&userId=${encodeURIComponent(userId)}`);
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.messages && data.messages.length > 0) {
-            // Convert PostgreSQL format to conversation message format
-            const pgMessages = data.messages.map((m: any) => ({
+            // Convert PostgreSQL format
+            const pgMessages: ConversationMessage[] = data.messages.map((m: any) => ({
               id: m.id || `pg-${Date.now()}-${Math.random()}`,
               role: m.role === 'assistant' ? 'oracle' : m.role,
               text: m.content,
@@ -2008,22 +2041,25 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
               source: 'restored'
             }));
 
-            // Only use PostgreSQL messages if more than localStorage
-            if (pgMessages.length > localMessageCount) {
-              console.log(`💾 [PostgreSQL] Restored ${pgMessages.length} messages (cross-device sync)`);
-              setMessages(pgMessages);
-              // Update localStorage with PostgreSQL data for faster next load
+            // Use PostgreSQL if it has more messages
+            if (pgMessages.length > loadedMessages.length) {
+              loadedMessages = pgMessages;
+              console.log(`💾 [PostgreSQL] Loaded ${pgMessages.length} messages for MAIA context`);
+              // Sync to localStorage for faster next load
               localStorage.setItem(storageKey, JSON.stringify(pgMessages.slice(-50)));
             }
           }
         }
       } catch (error) {
-        console.error('💾 [PostgreSQL] Failed to retrieve messages:', error);
-        // Don't block - localStorage restore already happened if available
+        console.error('💾 [PostgreSQL] Failed to load messages:', error);
       }
+
+      // Store in ref for MAIA API context (not displayed in UI)
+      historicalMessagesRef.current = loadedMessages;
+      console.log(`💾 [Context] MAIA has access to ${loadedMessages.length} historical messages`);
     };
 
-    restoreConversation();
+    loadConversationHistory();
   }, [sessionId, userId]);
 
   // 💾 SOVEREIGN PERSISTENCE: Save to localStorage (instant) + PostgreSQL (async sync)
@@ -3678,7 +3714,7 @@ I'm not sure what I'm feeling yet.`;
             depth: 0.7,
             quality: 'present'
           },
-          conversationHistory: truncateHistoryForAPI(nextMessagesForApi),
+          conversationHistory: truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current),
           sessionTimeContext: sessionTimer?.getTimeContext(), // ⏰ Temporal awareness for MAIA
           teenSupportContext: teenSystemPrompt ? {
             isTeenUser,
@@ -4515,6 +4551,7 @@ I'm not sure what I'm feeling yet.`;
 
       // Clear previous conversation for fresh start with seeded prompt
       setMessages([]);
+      historicalMessagesRef.current = []; // Clear API context too
       if (typeof window !== 'undefined' && sessionId) {
         const storageKey = `maia_conversation_${sessionId}`;
         localStorage.removeItem(storageKey);
@@ -5112,8 +5149,8 @@ I'm not sure what I'm feeling yet.`;
           voiceMicRef.current.stopListening();
         }
 
-        // Send via streaming voice system (truncated for performance)
-        const conversationHistory = truncateHistoryForAPI(nextMessagesForApi);
+        // Send via streaming voice system (includes historical context)
+        const conversationHistory = truncateHistoryForAPI(nextMessagesForApi, historicalMessagesRef.current);
         await sendStreamingMessage(cleanedText, conversationHistory);
 
         setIsProcessing(false);
@@ -5327,6 +5364,7 @@ I'm not sure what I'm feeling yet.`;
     // 🧹 Clear previous conversation when starting a new session
     console.log('🧹 Clearing previous conversation for fresh session start');
     setMessages([]);
+    historicalMessagesRef.current = []; // Clear API context too
     setHasActivated(false); // Reset to show welcome/greeting
     // Clear localStorage for previous conversation
     if (typeof window !== 'undefined' && sessionId) {
@@ -5449,6 +5487,7 @@ I'm not sure what I'm feeling yet.`;
     setSavedSessionData(null);
     // 🧹 Clear previous conversation messages
     setMessages([]);
+    historicalMessagesRef.current = []; // Clear API context too
     setHasActivated(false);
     if (typeof window !== 'undefined' && sessionId) {
       const storageKey = `maia_conversation_${sessionId}`;
@@ -7460,6 +7499,7 @@ I'm not sure what I'm feeling yet.`;
         onSelectPrompt={(promptText) => {
           // Clear previous conversation for fresh start with new prompt
           setMessages([]);
+          historicalMessagesRef.current = []; // Clear API context too
           if (typeof window !== 'undefined' && sessionId) {
             const storageKey = `maia_conversation_${sessionId}`;
             localStorage.removeItem(storageKey);
