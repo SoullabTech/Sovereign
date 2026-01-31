@@ -52,55 +52,97 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* 🔖 BUILD STAMP v5 + iOS Audio Unlock */}
+        {/* 🔖 BUILD STAMP v6 + PWA Audio Unlock */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
-            console.log('🔖 LAYOUT BUILD: v5');
+            console.log('🔖 LAYOUT BUILD: v6-PWA-FIX');
 
-            // 🔊 iOS AUDIO UNLOCK - create global audio element on first interaction
+            // Detect PWA mode
+            var isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                        window.navigator.standalone === true;
+            console.log('📱 PWA mode:', isPWA);
+
+            // 🔊 iOS/PWA AUDIO UNLOCK
             window.__maiaAudioUnlocked = false;
             window.__maiaGlobalAudio = null;
+            window.__maiaAudioContext = null;
 
             function unlockAudio() {
               if (window.__maiaAudioUnlocked) return;
-              console.log('🔓 [GLOBAL] Attempting iOS audio unlock...');
+              console.log('🔓 [GLOBAL] Attempting iOS/PWA audio unlock...');
 
+              // METHOD 1: Create and play Audio element SYNCHRONOUSLY
               try {
                 var audio = new Audio();
                 audio.setAttribute('playsinline', '');
                 audio.setAttribute('webkit-playsinline', '');
                 audio.playsInline = true;
+                audio.volume = 1.0;
+                // Tiny silent MP3
                 audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
-                audio.volume = 0.01;
-                audio.play().then(function() {
-                  audio.pause();
-                  audio.currentTime = 0;
-                  audio.volume = 1.0;
-                  window.__maiaGlobalAudio = audio;
-                  window.__maiaAudioUnlocked = true;
-                  console.log('✅ [GLOBAL] iOS audio unlocked!');
 
-                  // Show brief confirmation
-                  var toast = document.createElement('div');
-                  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
-                  toast.textContent = '🔊 Audio enabled';
-                  document.body.appendChild(toast);
-                  setTimeout(function(){ toast.remove(); }, 2000);
-                }).catch(function(e) {
-                  console.warn('⚠️ [GLOBAL] Audio unlock failed:', e);
-                });
+                // CRITICAL: Call play() synchronously in gesture handler
+                var playPromise = audio.play();
+
+                // Store immediately (don't wait for promise)
+                window.__maiaGlobalAudio = audio;
+
+                if (playPromise) {
+                  playPromise.then(function() {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    window.__maiaAudioUnlocked = true;
+                    console.log('✅ [GLOBAL] Audio element unlocked!');
+                  }).catch(function(e) {
+                    console.warn('⚠️ [GLOBAL] Audio play failed:', e.name, e.message);
+                  });
+                }
               } catch(e) {
-                console.warn('⚠️ [GLOBAL] Audio unlock error:', e);
+                console.warn('⚠️ [GLOBAL] Audio element error:', e);
               }
+
+              // METHOD 2: Also unlock AudioContext (needed for some browsers)
+              try {
+                var AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) {
+                  var ctx = new AC();
+                  window.__maiaAudioContext = ctx;
+                  if (ctx.state === 'suspended') {
+                    ctx.resume().then(function() {
+                      console.log('✅ [GLOBAL] AudioContext resumed');
+                    });
+                  }
+                  // Create silent oscillator to fully unlock
+                  var osc = ctx.createOscillator();
+                  var gain = ctx.createGain();
+                  gain.gain.value = 0.001;
+                  osc.connect(gain);
+                  gain.connect(ctx.destination);
+                  osc.start(0);
+                  osc.stop(ctx.currentTime + 0.1);
+                  console.log('✅ [GLOBAL] AudioContext unlocked');
+                }
+              } catch(e) {
+                console.warn('⚠️ [GLOBAL] AudioContext error:', e);
+              }
+
+              // Show confirmation
+              var toast = document.createElement('div');
+              toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
+              toast.textContent = '🔊 Audio enabled';
+              document.body.appendChild(toast);
+              setTimeout(function(){ toast.remove(); }, 2000);
 
               // Remove listeners after first attempt
               document.removeEventListener('click', unlockAudio, true);
               document.removeEventListener('touchstart', unlockAudio, true);
+              document.removeEventListener('touchend', unlockAudio, true);
             }
 
-            // Listen for first interaction
+            // Listen for first interaction - touchend is most reliable for PWA
             document.addEventListener('click', unlockAudio, true);
             document.addEventListener('touchstart', unlockAudio, true);
+            document.addEventListener('touchend', unlockAudio, true);
 
             console.log('🔓 [GLOBAL] Audio unlock listeners ready');
           })();
