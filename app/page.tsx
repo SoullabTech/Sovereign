@@ -8,23 +8,18 @@ export default function RootPage() {
   const [debugInfo, setDebugInfo] = useState<string>('Initializing...');
 
   useEffect(() => {
-    // REDIRECT LOOP GUARD: Prevent infinite redirects on first boot
-    // Uses sessionStorage (survives page reloads but not app restarts)
-    const bootKey = 'maia_root_redirect_done';
-    const alreadyBooted = sessionStorage.getItem(bootKey);
-
-    console.log('[ROOT PAGE] ===== ROUTING START =====');
-    console.log('[ROOT PAGE] sessionStorage bootKey:', alreadyBooted);
-    console.log('[ROOT PAGE] location:', window.location.href);
-    console.log('[ROOT PAGE] userAgent:', navigator.userAgent.slice(0, 80));
-
-    // If we've already done a redirect this session and we're BACK at root,
-    // something is looping. Break the loop by staying here.
-    if (alreadyBooted) {
-      console.warn('[ROOT PAGE] LOOP DETECTED - already redirected this session, staying put');
-      setDebugInfo(`Loop detected! Redirect already attempted to: ${alreadyBooted}. Check console for details.`);
+    // ONE-SHOT REDIRECT GUARD: Redirect once per app session, then become inert
+    // Uses sessionStorage (cleared on app restart, survives page reloads)
+    const onceKey = 'maia_root_redirect_once';
+    if (sessionStorage.getItem(onceKey) === '1') {
+      console.warn('[ROOT PAGE] Redirect guard tripped — refusing to redirect again this session');
+      setDebugInfo('Redirect already performed this session. Staying on root page.');
       return;
     }
+    sessionStorage.setItem(onceKey, '1');
+
+    console.log('[ROOT PAGE] ===== ROUTING START =====');
+    console.log('[ROOT PAGE] location:', window.location.href);
 
     // THREE-WAY ROUTING LOGIC:
     // 1. User currently authenticated (active session) → /maia
@@ -45,8 +40,7 @@ export default function RootPage() {
 
     // Case 1: User has ACTIVE SESSION - go straight to MAIA
     if (betaUser) {
-      console.log('[ROOT PAGE] → Redirecting to /maia (has betaUser)');
-      sessionStorage.setItem(bootKey, '/maia');
+      console.log('[NAV] / -> /maia (reason: active session)');
       router.replace('/maia');
       return;
     }
@@ -67,15 +61,13 @@ export default function RootPage() {
       );
 
     if (hasAnyMaiaData) {
-      console.log('[ROOT PAGE] → Redirecting to /welcome-back (has MAIA data)');
-      sessionStorage.setItem(bootKey, '/welcome-back');
+      console.log('[NAV] / -> /welcome-back (reason: returning user)');
       router.replace('/welcome-back');
       return;
     }
 
     // Case 3: Completely clean localStorage - brand new user
-    console.log('[ROOT PAGE] → Redirecting to /begin (fresh install)');
-    sessionStorage.setItem(bootKey, '/begin');
+    console.log('[NAV] / -> /begin (reason: fresh install)');
     router.replace('/begin');
   }, [router]);
 

@@ -357,10 +357,17 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       // By reusing the same element, we maintain the "unlocked" state.
       let audio = currentAudioRef.current;
       if (!audio) {
-        audio = new Audio();
-        audio.setAttribute('playsinline', '');
-        audio.setAttribute('webkit-playsinline', '');
-        (audio as any).playsInline = true;
+        // Try to use the globally unlocked audio element first (from layout.tsx)
+        if (typeof window !== 'undefined' && (window as any).__maiaGlobalAudio) {
+          audio = (window as any).__maiaGlobalAudio;
+          console.log('[StreamingVoice] 🎧 Using globally unlocked Audio element');
+        } else {
+          audio = new Audio();
+          audio.setAttribute('playsinline', '');
+          audio.setAttribute('webkit-playsinline', '');
+          (audio as any).playsInline = true;
+          console.log('[StreamingVoice] 🎧 Created new Audio element (no global available)');
+        }
         currentAudioRef.current = audio;
         console.log('[StreamingVoice] 🎧 Created reusable Audio element for iOS compatibility');
       }

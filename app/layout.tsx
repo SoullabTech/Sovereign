@@ -52,18 +52,57 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        {/* 🔖 BUILD STAMP v4 - proves new code reached device */}
+        {/* 🔖 BUILD STAMP v5 + iOS Audio Unlock */}
         <script dangerouslySetInnerHTML={{ __html: `
           (function(){
-            console.log('🔖 LAYOUT BUILD: v4-${Date.now()}');
-            var d=document.createElement('div');
-            d.id='build-v4';
-            d.style.cssText='position:fixed;top:0;left:0;right:0;background:red;color:white;padding:8px;text-align:center;font-size:14px;z-index:999999;font-weight:bold;';
-            d.textContent='BUILD v4 DEPLOYED';
-            document.addEventListener('DOMContentLoaded',function(){
-              document.body.appendChild(d);
-              setTimeout(function(){d.remove()},15000);
-            });
+            console.log('🔖 LAYOUT BUILD: v5');
+
+            // 🔊 iOS AUDIO UNLOCK - create global audio element on first interaction
+            window.__maiaAudioUnlocked = false;
+            window.__maiaGlobalAudio = null;
+
+            function unlockAudio() {
+              if (window.__maiaAudioUnlocked) return;
+              console.log('🔓 [GLOBAL] Attempting iOS audio unlock...');
+
+              try {
+                var audio = new Audio();
+                audio.setAttribute('playsinline', '');
+                audio.setAttribute('webkit-playsinline', '');
+                audio.playsInline = true;
+                audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+                audio.volume = 0.01;
+                audio.play().then(function() {
+                  audio.pause();
+                  audio.currentTime = 0;
+                  audio.volume = 1.0;
+                  window.__maiaGlobalAudio = audio;
+                  window.__maiaAudioUnlocked = true;
+                  console.log('✅ [GLOBAL] iOS audio unlocked!');
+
+                  // Show brief confirmation
+                  var toast = document.createElement('div');
+                  toast.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:12px 24px;border-radius:8px;z-index:99999;font-size:14px;';
+                  toast.textContent = '🔊 Audio enabled';
+                  document.body.appendChild(toast);
+                  setTimeout(function(){ toast.remove(); }, 2000);
+                }).catch(function(e) {
+                  console.warn('⚠️ [GLOBAL] Audio unlock failed:', e);
+                });
+              } catch(e) {
+                console.warn('⚠️ [GLOBAL] Audio unlock error:', e);
+              }
+
+              // Remove listeners after first attempt
+              document.removeEventListener('click', unlockAudio, true);
+              document.removeEventListener('touchstart', unlockAudio, true);
+            }
+
+            // Listen for first interaction
+            document.addEventListener('click', unlockAudio, true);
+            document.addEventListener('touchstart', unlockAudio, true);
+
+            console.log('🔓 [GLOBAL] Audio unlock listeners ready');
           })();
         `}} />
       </head>

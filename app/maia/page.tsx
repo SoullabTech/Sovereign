@@ -394,12 +394,12 @@ function MAIAPageContent() {
       // Check for session migration (forces re-auth if needed)
       const sessionCheck = checkAndMigrateSession();
       if (sessionCheck === 'fresh') {
-        console.log('🆕 [MAIA] Fresh install - redirecting to /begin for onboarding');
+        console.log('[NAV] /maia -> /begin (reason: fresh install)');
         router.replace('/begin');
         return;
       }
       if (sessionCheck === 'migrate') {
-        console.log('🔄 [MAIA] Session migration - redirecting to sign-in');
+        console.log('[NAV] /maia -> /signin (reason: session migration)');
         router.replace('/signin');
         return;
       }

@@ -129,6 +129,20 @@ export class iOSPlatformAdapter implements PlatformAdapter {
   private offlineQueue: ArchitectureUpdate[] = [];
 
   constructor() {
+    // BOOTSTRAP LATCH: Prevent multiple initialization in same session
+    // This protects against redirect loops or re-mounts triggering expensive native setup
+    if (typeof window !== 'undefined') {
+      if ((window as any).__MAIA_IOS_ADAPTER_BOOTSTRAPPED__) {
+        console.log('[BOOT] iOS adapter already initialized — skipping native setup');
+        // Still need to set up bridges for method calls, but skip the async setup
+        this.healthKit = this.createHealthKitBridge();
+        this.openBCI = this.createOpenBCIBridge();
+        this.siri = this.createSiriBridge();
+        return;
+      }
+      (window as any).__MAIA_IOS_ADAPTER_BOOTSTRAPPED__ = true;
+    }
+
     // Initialize native bridges
     this.healthKit = this.createHealthKitBridge();
     this.openBCI = this.createOpenBCIBridge();
