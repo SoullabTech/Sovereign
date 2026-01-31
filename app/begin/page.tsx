@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { Holoflower } from '@/components/ui/Holoflower';
@@ -7,7 +8,16 @@ import { Holoflower } from '@/components/ui/Holoflower';
 export default function BeginPage() {
   const router = useRouter();
 
+  // Log when /begin page loads for debugging redirect loops
+  useEffect(() => {
+    console.log('[BEGIN PAGE] ===== LOADED =====');
+    console.log('[BEGIN PAGE] location:', window.location.href);
+    console.log('[BEGIN PAGE] referrer:', document.referrer);
+    console.log('[BEGIN PAGE] sessionStorage bootKey:', sessionStorage.getItem('maia_root_redirect_done'));
+  }, []);
+
   const handleBeginJourney = () => {
+    console.log('[BEGIN PAGE] → Navigating to /test-elemental');
     router.push('/test-elemental');
   };
 
