@@ -1,6 +1,7 @@
 // @ts-nocheck
 // Oracle Conversation - Voice-synchronized sacred dialogue
 // 🔄 MOBILE-FIRST DEPLOYMENT - Oct 2 12:15PM - Compact input, hidden overlays, fixed scroll
+// 🔖 BUILD_STAMP: 2026-01-31_pwa_voice_v2
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2, MessageCircle, Eye, EyeOff, CornerUpLeft } from 'lucide-react';
@@ -409,6 +410,12 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   scribeSessionId,
   scribeSessionContext,
 }) => {
+  // 🔖 BUILD STAMP - visible proof of which code is running
+  useEffect(() => {
+    console.log('🔖 MAIA BUILD STAMP: 2026-01-31_pwa_voice_v2');
+    console.log('🎙️ PWA Voice State Machine: ENABLED');
+  }, []);
+
   // Listening mode for different conversation styles - MUST be defined early
   type ListeningMode = 'normal' | 'patient' | 'session';
   const [listeningMode, setListeningMode] = useState<ListeningMode>(initialMode);
@@ -6915,6 +6922,35 @@ I'm not sure what I'm feeling yet.`;
       </motion.div>
         </TransformationalPresence>
       </div>
+
+      {/* 🔧 PWA DEBUG STRIP - Shows state machine state on Safari PWA (remove after debugging) */}
+      {isPwaVoice && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: 8,
+            left: 8,
+            fontSize: 10,
+            zIndex: 99999,
+            padding: '4px 8px',
+            background: 'rgba(0,0,0,0.7)',
+            color: '#10b981',
+            borderRadius: 6,
+            fontFamily: 'monospace',
+            maxWidth: '180px'
+          }}
+        >
+          <div>PWA ✅ v2</div>
+          <div>State: {pwaVoice.state}</div>
+          <div style={{ fontSize: 9, color: '#6b7280' }}>
+            {pwaVoice.isListening && '🎤 '}
+            {pwaVoice.isThinkingOrSpeaking && '💭 '}
+            {pwaVoice.isMuted && '🔇 '}
+            {pwaVoice.isError && '❌ '}
+            {pwaVoice.needsTapToEnableAudio && '👆 TAP'}
+          </div>
+        </div>
+      )}
 
       {/* Shadow petal overlay */}
       {shadowPetals.length > 0 && (
