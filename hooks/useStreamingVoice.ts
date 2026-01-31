@@ -337,9 +337,10 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       : null;
 
     // Safe advance helper: always schedule, never sync recurse
+    // 🔥 iOS FIX: Do NOT null out currentAudioRef - we need to reuse the unlocked element
     const advance = (delayMs = 50) => {
       isPlayingRef.current = false;
-      currentAudioRef.current = null;
+      // currentAudioRef.current = null; // REMOVED - breaks iOS audio unlock
       setTimeout(playNextChunk, delayMs);
     };
 
@@ -449,10 +450,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     conversationHistory?: Array<{ role: string; content: string }>
   ) => {
     // Clear previous state
+    // 🔥 iOS FIX: Keep the audio element but clear its source - don't null it out
     audioQueueRef.current = [];
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
-      currentAudioRef.current = null;
+      currentAudioRef.current.src = ''; // Clear source but keep element
+      // currentAudioRef.current = null; // REMOVED - breaks iOS audio unlock
     }
     isPlayingRef.current = false;
 
