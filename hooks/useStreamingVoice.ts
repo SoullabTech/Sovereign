@@ -253,7 +253,8 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
       currentAudioRef.current.src = '';
-      currentAudioRef.current = null;
+      // 🔥 iOS FIX: Don't null out - keep the element for reuse (maintains unlock state)
+      // currentAudioRef.current = null;
     }
 
     // Clear watchdog
@@ -350,9 +351,23 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       }
 
       const audioSrc = `data:${mime};base64,${chunk.audio}`;
-      const audio = new Audio(audioSrc);
+
+      // 🔥 iOS Safari FIX: Reuse a single Audio element
+      // Safari only allows playback from Audio elements created during a user gesture.
+      // By reusing the same element, we maintain the "unlocked" state.
+      let audio = currentAudioRef.current;
+      if (!audio) {
+        audio = new Audio();
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        (audio as any).playsInline = true;
+        currentAudioRef.current = audio;
+        console.log('[StreamingVoice] 🎧 Created reusable Audio element for iOS compatibility');
+      }
+
+      // Update source (reusing element)
+      audio.src = audioSrc;
       audio.preload = 'auto';
-      currentAudioRef.current = audio;
 
       audio.onended = () => {
         console.log(
@@ -561,6 +576,13 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       console.warn('[StreamingVoice] Audio event missing audio data');
                       break;
                     }
+                    // 🔊 DEBUG: Log that we received audio from server
+                    console.log('🔊 [AUDIO DEBUG] Received audio chunk from server!', {
+                      index: data.index,
+                      format: data.format,
+                      audioLen: data.audio?.length,
+                      timestamp: new Date().toISOString()
+                    });
 
                     // 🔥 WATCHDOG: Track audio events seen and start timer on first event
                     audioEventsSeenRef.current++;
@@ -766,10 +788,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       abortControllerRef.current = null;
     }
 
-    // Stop current audio
+    // Stop current audio (but keep element for iOS reuse)
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
-      currentAudioRef.current = null;
+      currentAudioRef.current.src = '';
+      // Keep the element for iOS - don't null it out
     }
 
     // Clear queue
@@ -810,6 +833,40 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     }
   }, []);
 
+  /**
+   * 🔥 iOS Safari Audio Unlock - MUST be called from a user gesture (click/touch)
+   * Creates and warms the reusable Audio element so TTS playback works.
+   * Returns true if successful.
+   */
+  const unlockAudio = useCallback(async (): Promise<boolean> => {
+    console.log('[StreamingVoice] 🔓 Attempting iOS audio unlock...');
+    try {
+      // Create or get the reusable audio element
+      let audio = currentAudioRef.current;
+      if (!audio) {
+        audio = new Audio();
+        audio.setAttribute('playsinline', '');
+        audio.setAttribute('webkit-playsinline', '');
+        (audio as any).playsInline = true;
+        currentAudioRef.current = audio;
+      }
+
+      // Play a tiny silent audio to "unlock" this element
+      audio.src = 'data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4LjI5LjEwMAAAAAAAAAAAAAAA//tUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAASW5mbwAAAA8AAAACAAADhAAzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMzMz//////////////////////////////////////////////////////////////////8AAAAATGF2YzU4LjUyAAAAAAAAAAAAAAAAJAAAAAAAAAAAA4SQg5C0AAAAAAD/+9DEAAPH1sVGABGuEvKorHAiNbAAAAA0LS0tLS0tLVVVVVVVVVVVVVVVVVVVVQAAAAAVFRUVFRUVFRUVFRUVFRUVFRUAAAAAAAAlJSUlJSUlJSUlJSUlJSUlJSUlJQAAAAAAIiIiIiIiIiIiIiIiIiIiIiIAAAAAAAAAAAAA';
+      audio.volume = 0.01; // Very quiet
+      await audio.play();
+      audio.pause();
+      audio.currentTime = 0;
+      audio.volume = 1.0; // Restore volume for actual playback
+
+      console.log('[StreamingVoice] ✅ iOS audio unlocked successfully');
+      return true;
+    } catch (err) {
+      console.warn('[StreamingVoice] ❌ iOS audio unlock failed:', err);
+      return false;
+    }
+  }, []);
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -844,6 +901,8 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     sendMessage,
     stop,
     togglePause,
+    /** 🔥 iOS Safari: Call this from a user gesture to enable TTS playback */
+    unlockAudio,
     /** Stable session ID for this conversation (for relational stack continuity) */
     sessionId: sessionIdRef.current,
   };

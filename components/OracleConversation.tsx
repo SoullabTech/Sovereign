@@ -1931,6 +1931,7 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     stop: stopStreamingVoice,
     error: streamingVoiceError,
     lastMoveOutcome,
+    unlockAudio: unlockStreamingAudio,
   } = useStreamingVoice({
     voice: voiceSettings.voice,
     speed: voiceSettings.speed,
@@ -6236,6 +6237,15 @@ I'm not sure what I'm feeling yet.`;
 
               // Enable audio context (can be async now that audio element is warmed)
               await enableAudio();
+
+              // 🔥 iOS Safari: Unlock the streaming voice audio element
+              // This MUST be called from user gesture for TTS to work on iOS
+              try {
+                await unlockStreamingAudio();
+                console.log('✅ [iOS] Streaming audio unlocked');
+              } catch (err) {
+                console.warn('⚠️ [iOS] Streaming audio unlock failed:', err);
+              }
 
               // 🔥 FIX: Use isMuted as source of truth for toggle - isListening can desync on iOS
               // isMuted=true means user wants to be muted → tap means START listening
