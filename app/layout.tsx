@@ -51,6 +51,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* 🔖 BUILD STAMP v4 - proves new code reached device */}
+        <script dangerouslySetInnerHTML={{ __html: `
+          (function(){
+            console.log('🔖 LAYOUT BUILD: v4-${Date.now()}');
+            var d=document.createElement('div');
+            d.id='build-v4';
+            d.style.cssText='position:fixed;top:0;left:0;right:0;background:red;color:white;padding:8px;text-align:center;font-size:14px;z-index:999999;font-weight:bold;';
+            d.textContent='BUILD v4 DEPLOYED';
+            document.addEventListener('DOMContentLoaded',function(){
+              document.body.appendChild(d);
+              setTimeout(function(){d.remove()},15000);
+            });
+          })();
+        `}} />
+      </head>
       <body className={`${inter.className}`} suppressHydrationWarning>
         <FlagsDebug />
         <SubscriptionProvider>

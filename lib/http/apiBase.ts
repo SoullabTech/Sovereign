@@ -33,10 +33,23 @@ export function apiBaseUrl(): string {
 
   // LOCAL DEVELOPMENT: Use relative paths (same-origin) for localhost
   // This prevents cross-origin cookie issues when running dev server locally
+  // BUT: Capacitor uses capacitor://localhost which has hostname="localhost"
+  // so we must check the protocol first
   if (typeof window !== 'undefined') {
+    const protocol = window.location.protocol;
     const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return ''; // Same-origin API calls
+
+    // Capacitor/native uses capacitor:// or ionic:// or file:// protocol
+    // These MUST use absolute URLs to the real API server
+    if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') {
+      console.log('[apiBaseUrl] Native protocol detected:', protocol, '- using soullab.life');
+      return "https://soullab.life";
+    }
+
+    // Only use relative paths for actual localhost dev server (http:// or https://)
+    if ((protocol === 'http:' || protocol === 'https:') &&
+        (hostname === 'localhost' || hostname === '127.0.0.1')) {
+      return ''; // Same-origin API calls for local dev
     }
   }
 
@@ -299,41 +312,31 @@ if (typeof window !== 'undefined') {
 
 /**
  * Check if we're running in a native Capacitor environment
- * Uses multiple detection methods because Capacitor.isNativePlatform() can lie
+ *
+ * IMPORTANT: Do NOT use user agent detection here - it can't distinguish
+ * Safari PWA users from WKWebView in a native app. Safari users visiting
+ * soullab.life should be treated as web users, not native.
+ *
+ * For Safari ITP cookie issues, use isSafari() instead (separate concern).
  */
 export function isNativeCapacitor(): boolean {
   if (typeof window === 'undefined') return false;
 
-  // Check 1: Capacitor global exists and says native
-  const hasCapacitorNative =
-    (window as any).Capacitor &&
-    (window as any).Capacitor.isNativePlatform?.();
-
-  if (hasCapacitorNative) return true;
-
-  // Check 2: iOS user agent (WKWebView) - THIS IS SUFFICIENT for iOS detection
-  // Even without Capacitor global (e.g., loading from web server in WKWebView)
-  const isIOSUserAgent =
-    typeof navigator !== 'undefined' &&
-    /iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  // iOS user agent alone means we're on iOS - treat as native for API purposes
-  // This ensures apiFetch uses the correct API base even when Capacitor JS isn't loaded
-  if (isIOSUserAgent) {
-    console.log('[isNativeCapacitor] iOS detected via user agent');
+  // Check 1: Capacitor.isNativePlatform() is the authoritative check
+  // Only returns true when running inside an actual native Capacitor app
+  const cap = (window as any).Capacitor;
+  if (cap && typeof cap.isNativePlatform === 'function' && cap.isNativePlatform()) {
     return true;
   }
 
-  // Check 3: URL indicates we're in a Capacitor context
-  const isCapacitorScheme =
-    window.location.protocol === 'capacitor:' ||
-    window.location.protocol === 'ionic:';
-
-  if (isCapacitorScheme) {
-    console.log('[isNativeCapacitor] Capacitor scheme detected');
+  // Check 2: URL scheme indicates Capacitor context (file:// in WKWebView, capacitor://, ionic://)
+  const protocol = window.location.protocol;
+  if (protocol === 'capacitor:' || protocol === 'ionic:' || protocol === 'file:') {
+    console.log('[isNativeCapacitor] Native scheme detected:', protocol);
     return true;
   }
 
+  // NOT native - this includes Safari PWA users on iOS
   return false;
 }
 

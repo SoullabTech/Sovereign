@@ -92,3 +92,51 @@ export function extractEmotions(text: string): string[] {
   
   return emotions;
 }
+
+// ============================================================================
+// MAIA-native intent taxonomy (additive, backwards-compatible)
+// ============================================================================
+
+export type MaiaIntentNative = 'RECALL' | 'RESEARCH' | 'ACTION' | 'CARE' | 'MEANING';
+
+/**
+ * Backwards-compatible mapper:
+ * Converts existing intent taxonomy -> MAIA-native 5-type taxonomy.
+ * No changes to existing intent detection required.
+ */
+export function mapToMaiaNativeIntent(existingIntent: Intent | string, query: string): MaiaIntentNative {
+  const q = (query || '').toLowerCase();
+
+  // CARE overrides everything
+  const careSignals = ['overwhelmed', 'panic', 'anxious', 'worn out', 'exhausted', "can't", 'too much', 'help me calm'];
+  if (careSignals.some((t) => q.includes(t))) return 'CARE';
+
+  // RECALL signals
+  const recallSignals = ['where is', 'find', 'show me', 'what was', 'did we', 'remember', 'last time', 'earlier', 'previous'];
+  if (recallSignals.some((t) => q.includes(t))) return 'RECALL';
+
+  // ACTION signals
+  const actionSignals = ['fix', 'implement', 'add', 'remove', 'refactor', 'deploy', 'upgrade', 'write', 'create', 'change'];
+  const codeSignals = ['.ts', '.tsx', '.sql', 'docker', 'psql', 'migration', 'endpoint', 'alter table'];
+  if (actionSignals.some((t) => q.includes(t)) || codeSignals.some((t) => q.includes(t))) return 'ACTION';
+
+  // MEANING signals
+  const meaningSignals = ['what does this mean', 'symbol', 'archetype', 'shadow', 'pattern', 'myth', 'soul', 'interpret', 'why does this keep happening'];
+  if (meaningSignals.some((t) => q.includes(t))) return 'MEANING';
+
+  // Otherwise map existing -> native
+  switch (existingIntent) {
+    case 'planning':
+    case 'exploration':
+      return 'RESEARCH';
+    case 'guidance':
+      return 'MEANING';
+    case 'reassurance':
+      return 'CARE';
+    case 'explanation':
+      return 'RESEARCH';
+    case 'smalltalk':
+    default:
+      return 'RESEARCH';
+  }
+}
