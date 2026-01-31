@@ -498,6 +498,32 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   // TEMPORARILY DISABLED to debug crash
   const [isPwaVoice] = useState(false); // TEMP: was () => isSafariPWA()
 
+  // 🎤 PWA VOICE STUB - must be defined immediately after isPwaVoice
+  // to prevent minifier hoisting issues (ReferenceError crash)
+  const pwaVoice = {
+    state: 'IDLE' as const,
+    isListening: false,
+    isMuted: true,
+    isThinkingOrSpeaking: false,
+    isArming: false,
+    isMicWaking: false,
+    isHandoff: false,
+    isError: false,
+    isDisplayingText: false,
+    needsTapToEnableAudio: false,
+    audioPlayingConfirmed: () => {},
+    audioEnded: () => {},
+    ttsFailedOrSkipped: (_reason?: string) => {},
+    userWantsToStart: async () => {},
+    userWantsToStop: () => {},
+    clearAudioTimeout: () => {},
+    startHandoffTimer: () => {},
+    startDisplayTextTimer: () => {},
+    transition: () => {},
+    micConfirmed: () => {},
+    micStopped: () => {},
+  };
+
   // Voice settings from account preferences (applies to TTS and MAIA behavior)
   // Lazy initializer loads from localStorage immediately to avoid flash of default values
   const [voiceSettings, setVoiceSettings] = useState(() => {
@@ -1876,30 +1902,6 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       window.removeEventListener('maia-settings-changed', handleSettingsChange);
     };
   }, []);
-
-  // 🎤 PWA VOICE STATE MACHINE: TEMPORARILY DISABLED - causing ReferenceError crash
-  // TODO: Fix circular reference in usePWAVoiceStateMachine.ts
-  const pwaVoice = {
-    state: 'IDLE' as const,
-    isListening: false,
-    isMuted: true,
-    isThinkingOrSpeaking: false,
-    isArming: false,
-    isMicWaking: false,
-    isHandoff: false,
-    isError: false,
-    isDisplayingText: false,
-    needsTapToEnableAudio: false,
-    audioPlayingConfirmed: () => {},
-    audioEnded: () => {},
-    ttsFailedOrSkipped: () => {},
-    userWantsToStart: async () => {},
-    userWantsToStop: () => {},
-    clearAudioTimeout: () => {},
-    startHandoffTimer: () => {},
-    startDisplayTextTimer: () => {},
-    transition: () => {},
-  };
 
   // PWA playback signal handler - routes audio events to PWA state machine
   const handlePlaybackSignal = useCallback((signal: StreamingVoicePlaybackSignal) => {
