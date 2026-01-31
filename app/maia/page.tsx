@@ -100,7 +100,11 @@ function checkAndMigrateSession(): 'migrate' | 'fresh' | null {
 
   // FRESH INSTALL DETECTION: If there's NO session data at all, this is a fresh install.
   // The user needs to go through onboarding at /begin, NOT /signin.
-  const hasAnySessionData = betaUser || explorerId || signupCompleted;
+  // Check both explicit keys AND any maia/explorer/beta prefixed keys for extra safety.
+  const hasAnySessionData = betaUser || explorerId || signupCompleted ||
+    Object.keys(localStorage).some(k =>
+      k.startsWith('maia_') || k.startsWith('explorer') || k.startsWith('beta')
+    );
   if (!hasAnySessionData) {
     console.log('🆕 [MAIA] Fresh install detected - no session data, redirecting to /begin');
     return 'fresh';
