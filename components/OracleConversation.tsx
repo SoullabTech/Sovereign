@@ -8,7 +8,8 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 // import { WhisperVoiceRecognition } from './ui/WhisperVoiceRecognition'; // REPLACED with ContinuousConversation (uses browser Web Speech API)
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { VoiceHUD } from './voice/VoiceHUD';
-import { useStreamingVoice } from '@/hooks/useStreamingVoice';
+import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
+import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
 // RelationalTelemetryPanel removed - dev-only component
 import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
@@ -53,6 +54,21 @@ import { OracleResponse, ConversationContext as OracleConversationContext } from
 // import { useElementalVoice } from '@/hooks/useElementalVoice'; // DISABLED - was causing OpenAI Realtime browser errors
 import { mapResponseToMotion, enrichOracleResponse } from '@/lib/motion-mapper';
 import { apiUrl, apiFetch, getValidMemberId } from '@/lib/http/apiBase';
+
+/**
+ * Detect Safari PWA environment for PWA-specific voice handling
+ * PWA needs different voice state machine than iOS native
+ */
+function isSafariPWA(): boolean {
+  if (typeof window === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  const isSafari =
+    /Safari/.test(ua) && !/Chrome|CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  const isStandalone =
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
+    (navigator as any).standalone === true;
+  return isSafari && isStandalone;
+}
 
 /**
  * Safe base64 to ArrayBuffer decoder that handles large strings
@@ -458,6 +474,10 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const [isMuted, setIsMuted] = useState(true); // Start muted - user must tap holoflower to activate
   const [voiceAmplitude, setVoiceAmplitude] = useState(0);
   const [userVoiceState, setUserVoiceState] = useState<VoiceState | null>(null);
+
+  // 🎤 PWA VOICE STATE MACHINE: Separate, first-class voice loop for Safari PWA
+  // This provides confirmed transitions only - no "hopeful" state changes
+  const [isPwaVoice] = useState(() => isSafariPWA());
 
   // Voice settings from account preferences (applies to TTS and MAIA behavior)
   // Lazy initializer loads from localStorage immediately to avoid flash of default values
@@ -1132,8 +1152,20 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       console.log('✅ Mic is LIVE - orange dot should be visible');
       // 🎯 Mark as activated when user starts listening - hides welcome screen
       setHasActivated(true);
+      setIsMuted(false); // Sync isMuted with actual mic state
+
+      // 🎤 PWA STATE MACHINE: Signal confirmed mic start
+      // This is the ONLY place we should transition to LISTENING state
+      if (isPwaVoice) {
+        pwaVoice.micConfirmed();
+      }
+    } else {
+      // Mic stopped - ensure muted state is synced
+      if (isPwaVoice) {
+        pwaVoice.micStopped();
+      }
     }
-  }, []);
+  }, [isPwaVoice, pwaVoice]);
 
   // ==================== AUDIO LEVEL CALLBACK (THROTTLED) ====================
   // Prevent infinite render loop by throttling setState calls
@@ -1826,6 +1858,45 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
+  // 🎤 PWA VOICE STATE MACHINE: Initialize only for Safari PWA
+  // This provides a clean state machine with confirmed transitions
+  const pwaVoice = usePWAVoiceStateMachine({
+    enabled: isPwaVoice,
+    enableAudio: enableAudio, // Use existing enableAudio function
+    startMic: async () => {
+      if (voiceMicRef.current?.startListening) {
+        voiceMicRef.current.startListening();
+        return true;
+      }
+      return false;
+    },
+    stopMic: () => {
+      voiceMicRef.current?.stopListening?.();
+    },
+    onFlightEvent: (e) => {
+      console.log('🛩️ [PWA Voice]', e.event, `${e.fromState} → ${e.toState}`, e.detail || '');
+    },
+  });
+
+  // PWA playback signal handler - routes audio events to PWA state machine
+  const handlePlaybackSignal = useCallback((signal: StreamingVoicePlaybackSignal) => {
+    if (!isPwaVoice) return;
+
+    if (signal.type === 'AUDIO_PLAYING_CONFIRMED') {
+      pwaVoice.audioPlayingConfirmed();
+    } else if (signal.type === 'AUDIO_ENDED') {
+      pwaVoice.audioEnded();
+    } else if (signal.type === 'AUDIO_BLOCKED' || signal.type === 'AUDIO_FAILED') {
+      pwaVoice.ttsFailedOrSkipped(signal.reason);
+    }
+  }, [isPwaVoice, pwaVoice]);
+
+  // 🎤 PWA EFFECTIVE FLAGS: Use PWA state machine values on Safari PWA, original values otherwise
+  // This allows UI components to use a single set of flags regardless of platform
+  const effectiveIsListening = isPwaVoice ? pwaVoice.isListening : isListening;
+  const effectiveIsResponding = isPwaVoice ? pwaVoice.isThinkingOrSpeaking : isResponding;
+  const effectiveIsMuted = isPwaVoice ? pwaVoice.isMuted : isMuted;
+
   const {
     isStreaming: isStreamingVoice,
     isPlaying: isStreamingPlaying,
@@ -1845,6 +1916,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     conversationMode: voiceSettings.conversationMode,
     memoryDepth: voiceSettings.memoryDepth,
     element: undefined, // Will be set dynamically per message
+    // 🎤 PWA PLAYBACK SIGNALS: Route audio events to PWA state machine
+    onPlaybackSignal: handlePlaybackSignal,
     onTextChunk: (text, index) => {
       console.log(`🌊 [StreamingVoice] Text chunk ${index}:`, text.substring(0, 50) + '...');
       setMaiaResponseText(text);
@@ -4790,6 +4863,11 @@ I'm not sure what I'm feeling yet.`;
       return;
     }
 
+    // 🎤 PWA STATE MACHINE: Signal transcript received → transition to THINKING
+    if (isPwaVoice) {
+      pwaVoice.transcriptReceived(t);
+    }
+
     // 🔇 CRITICAL: Reject ALL transcripts when MAIA is speaking or processing
     // USE REFS for real-time values (state values can be stale in callbacks!)
     if (isAudioPlayingRef.current || isRespondingRef.current || isMicrophonePausedRef.current) {
@@ -6079,7 +6157,24 @@ I'm not sure what I'm feeling yet.`;
             onClick={async (e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted });
+              console.log('🌸 Holoflower clicked!', { voiceMicRef: !!voiceMicRef.current, isListening, isMuted, isPwaVoice, pwaState: isPwaVoice ? pwaVoice.state : 'N/A' });
+
+              // 🎤 PWA STATE MACHINE PATH: For Safari PWA, delegate to state machine
+              // PWA uses isMuted as source of truth (user intent), not isListening (technical state)
+              if (isPwaVoice) {
+                if (pwaVoice.isMuted) {
+                  // User wants to start speaking
+                  await pwaVoice.userWantsToStart();
+                } else {
+                  // User wants to stop
+                  pwaVoice.userWantsToStop();
+                  setIsMuted(true);
+                  setIsListening(false);
+                }
+                return; // PWA flow handled entirely by state machine
+              }
+
+              // === NON-PWA PATH (iOS native / other browsers) ===
 
               // 🔥 iOS FIX: Warm audio element SYNCHRONOUSLY before any await
               // iOS Safari requires audio element creation + play in the SAME synchronous event handler
@@ -6111,9 +6206,11 @@ I'm not sure what I'm feeling yet.`;
               // Enable audio context (can be async now that audio element is warmed)
               await enableAudio();
 
-              // Use isListening state instead of isMuted for accurate toggle
+              // 🔥 FIX: Use isMuted as source of truth for toggle - isListening can desync on iOS
+              // isMuted=true means user wants to be muted → tap means START listening
+              // isMuted=false means user is actively listening → tap means STOP listening
               if (voiceMicRef.current) {
-                if (!isListening) {
+                if (isMuted) {
                   // TAP-TO-INTERRUPT: If MAIA is speaking, stop her and start listening
                   let isInterrupt = false;
                   if (isAudioPlayingRef.current || isRespondingRef.current) {

@@ -44,12 +44,21 @@ interface MoveOutcomeEvent {
   latencyToOutcomeMs?: number;
 }
 
+/** PWA playback signal for confirmed audio state (used by PWA voice state machine) */
+export type StreamingVoicePlaybackSignal =
+  | { type: 'AUDIO_PLAYING_CONFIRMED' }
+  | { type: 'AUDIO_ENDED' }
+  | { type: 'AUDIO_FAILED'; reason: string }
+  | { type: 'AUDIO_BLOCKED'; reason: string };
+
 interface StreamingVoiceOptions {
   onTextChunk?: (text: string, index: number) => void;
   onComplete?: (fullResponse: string, relational?: RelationalMetadata) => void;
   onSilence?: (silence: SilenceResponse) => void;
   onMoveOutcome?: (outcome: MoveOutcomeEvent) => void;
   onError?: (error: string) => void;
+  /** PWA playback signal callback for confirmed audio states */
+  onPlaybackSignal?: (signal: StreamingVoicePlaybackSignal) => void;
   voice?: string;
   speed?: number;
   /** TTS quality: 'tts-1' (faster) or 'tts-1-hd' (richer) */
@@ -180,6 +189,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
     onSilence,
     onMoveOutcome,
     onError,
+    onPlaybackSignal,  // 🎤 PWA playback signals
     voice = 'maya',
     speed = 1.0,
     model = 'tts-1',
@@ -221,6 +231,10 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  // 🎤 PWA PLAYBACK SIGNALS: Stable ref to callback for confirmed audio states
+  const onPlaybackSignalRef = useRef(onPlaybackSignal);
+  onPlaybackSignalRef.current = onPlaybackSignal;
 
   // 🔥 AUDIO WATCHDOG: Track if audio actually plays (not just received)
   const audioEventsSeenRef = useRef(0);
@@ -345,11 +359,17 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           '[StreamingVoice] ✅ Audio chunk ended, queue length:',
           audioQueueRef.current.length
         );
+        // 🎤 PWA SIGNAL: If this is the LAST chunk, emit AUDIO_ENDED
+        if (audioQueueRef.current.length === 0) {
+          onPlaybackSignalRef.current?.({ type: 'AUDIO_ENDED' });
+        }
         advance(50);
       };
 
       audio.onerror = (e) => {
         console.error('[StreamingVoice] Audio playback error:', e);
+        // 🎤 PWA SIGNAL: Audio element error
+        onPlaybackSignalRef.current?.({ type: 'AUDIO_FAILED', reason: 'audio element error' });
         advance(50);
       };
 
@@ -360,6 +380,12 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           // ✅ Audio actually started playing!
           audioPlayedCountRef.current++;
           console.log('[StreamingVoice] ✅ Audio play STARTED, played count:', audioPlayedCountRef.current);
+
+          // 🎤 PWA SIGNAL: First successful play = CONFIRMED audio is working
+          if (audioPlayedCountRef.current === 1) {
+            onPlaybackSignalRef.current?.({ type: 'AUDIO_PLAYING_CONFIRMED' });
+          }
+
           // Clear watchdog on first successful play - we're not stuck
           if (audioPlayedCountRef.current === 1 && audioWatchdogTimerRef.current) {
             clearTimeout(audioWatchdogTimerRef.current);
@@ -376,6 +402,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
             await new Promise(r => requestAnimationFrame(() => r(null)));
             return attemptPlay(1);
           }
+
+          // 🎤 PWA SIGNAL: Audio blocked (Safari autoplay / interrupted session)
+          onPlaybackSignalRef.current?.({ type: 'AUDIO_BLOCKED', reason: errName });
 
           // 🔥 Retry failed - FORCE RECOVERY, don't just "advance"
           // If iOS is blocking playback, every chunk will fail - we need to bail completely
@@ -429,6 +458,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
       isSilence: false,
       relational: prev.relational, // Preserve relational state across turns
       lastSilence: null,
+      lastMoveOutcome: prev.lastMoveOutcome, // Preserve for telemetry
     }));
 
     // OFFLINE FALLBACK: Check if we're probably offline before attempting server call
@@ -540,6 +570,11 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
                       if (audioWatchdogTimerRef.current) clearTimeout(audioWatchdogTimerRef.current);
                       audioWatchdogTimerRef.current = setTimeout(() => {
                         if (audioEventsSeenRef.current > 0 && audioPlayedCountRef.current === 0) {
+                          // 🎤 PWA SIGNAL: Audio blocked (Safari autoplay failure - got chunks but none played)
+                          onPlaybackSignalRef.current?.({
+                            type: 'AUDIO_BLOCKED',
+                            reason: `watchdog: ${audioEventsSeenRef.current} chunks received but nothing played`
+                          });
                           // 🔥 Use shared recovery - clears ALL state including parent components
                           forceRecoverFromFalseSpeaking(
                             `Audio watchdog: ${audioEventsSeenRef.current} chunks received but nothing played`
