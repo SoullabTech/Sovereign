@@ -10,7 +10,8 @@ import { Paperclip, X, Copy, BookOpen, Clock, FlaskConical, Mic, MicOff, Volume2
 import { ContinuousConversation, ContinuousConversationRef } from './voice/ContinuousConversation';
 import { VoiceHUD } from './voice/VoiceHUD';
 import { useStreamingVoice, type StreamingVoicePlaybackSignal } from '@/hooks/useStreamingVoice';
-import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
+// TEMPORARILY DISABLED - causing ReferenceError crash
+// import { usePWAVoiceStateMachine, type PWAVoiceState } from '@/hooks/usePWAVoiceStateMachine';
 // RelationalTelemetryPanel removed - dev-only component
 import { useAssistantName } from '@/hooks/useAssistantName';
 import { SacredHoloflower } from './sacred/SacredHoloflower';
@@ -1876,25 +1877,29 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
     };
   }, []);
 
-  // 🎤 PWA VOICE STATE MACHINE: Initialize only for Safari PWA
-  // This provides a clean state machine with confirmed transitions
-  const pwaVoice = usePWAVoiceStateMachine({
-    enabled: isPwaVoice,
-    enableAudio: enableAudio, // Use existing enableAudio function
-    startMic: async () => {
-      if (voiceMicRef.current?.startListening) {
-        voiceMicRef.current.startListening();
-        return true;
-      }
-      return false;
-    },
-    stopMic: () => {
-      voiceMicRef.current?.stopListening?.();
-    },
-    onFlightEvent: (e) => {
-      console.log('🛩️ [PWA Voice]', e.event, `${e.fromState} → ${e.toState}`, e.detail || '');
-    },
-  });
+  // 🎤 PWA VOICE STATE MACHINE: TEMPORARILY DISABLED - causing ReferenceError crash
+  // TODO: Fix circular reference in usePWAVoiceStateMachine.ts
+  const pwaVoice = {
+    state: 'IDLE' as const,
+    isListening: false,
+    isMuted: true,
+    isThinkingOrSpeaking: false,
+    isArming: false,
+    isMicWaking: false,
+    isHandoff: false,
+    isError: false,
+    isDisplayingText: false,
+    needsTapToEnableAudio: false,
+    audioPlayingConfirmed: () => {},
+    audioEnded: () => {},
+    ttsFailedOrSkipped: () => {},
+    userWantsToStart: async () => {},
+    userWantsToStop: () => {},
+    clearAudioTimeout: () => {},
+    startHandoffTimer: () => {},
+    startDisplayTextTimer: () => {},
+    transition: () => {},
+  };
 
   // PWA playback signal handler - routes audio events to PWA state machine
   const handlePlaybackSignal = useCallback((signal: StreamingVoicePlaybackSignal) => {
