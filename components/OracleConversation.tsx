@@ -494,7 +494,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🎤 PWA VOICE STATE MACHINE: Separate, first-class voice loop for Safari PWA
   // This provides confirmed transitions only - no "hopeful" state changes
-  const [isPwaVoice] = useState(() => isSafariPWA());
+  // TEMPORARILY DISABLED to debug crash
+  const [isPwaVoice] = useState(false); // TEMP: was () => isSafariPWA()
 
   // Voice settings from account preferences (applies to TTS and MAIA behavior)
   // Lazy initializer loads from localStorage immediately to avoid flash of default values
