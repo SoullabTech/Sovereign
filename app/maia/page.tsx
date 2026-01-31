@@ -121,8 +121,9 @@ function checkAndMigrateSession(): 'migrate' | 'fresh' | null {
     return 'fresh';
   }
 
-  // Check for version mismatch (only if there IS session data)
-  const versionMismatch = storedVersion !== String(SESSION_VERSION);
+  // Check for version mismatch - ONLY if storedVersion actually exists
+  // null !== "2" is NOT a mismatch - it means version was never set (partial onboarding)
+  const versionMismatch = storedVersion !== null && storedVersion !== String(SESSION_VERSION);
   const nameIsUUID = isLikelyUUID(currentName || '');
   const needsMigration = versionMismatch || nameIsUUID;
 
@@ -391,17 +392,27 @@ function MAIAPageContent() {
     const initializeUser = async () => {
       setIsMounted(true);
 
-      // Check for session migration (forces re-auth if needed)
-      const sessionCheck = checkAndMigrateSession();
-      if (sessionCheck === 'fresh') {
-        console.log('🆕 [MAIA] Fresh install - redirecting to /begin for onboarding');
-        router.replace('/begin');
-        return;
-      }
-      if (sessionCheck === 'migrate') {
-        console.log('🔄 [MAIA] Session migration - redirecting to sign-in');
-        router.replace('/signin');
-        return;
+      // NATIVE: Skip session migration redirects - index.html handles routing
+      // This prevents redirect loops on iOS
+      const isNative = typeof window !== 'undefined' &&
+        (window.navigator.userAgent.includes('MAIA-Native') ||
+         (window as any).Capacitor?.isNativePlatform?.());
+
+      if (!isNative) {
+        // WEB ONLY: Check for session migration (forces re-auth if needed)
+        const sessionCheck = checkAndMigrateSession();
+        if (sessionCheck === 'fresh') {
+          console.log('[NAV] /maia -> /begin (reason: fresh)');
+          router.replace('/begin');
+          return;
+        }
+        if (sessionCheck === 'migrate') {
+          console.log('[NAV] /maia -> /signin (reason: migrate)');
+          router.replace('/signin');
+          return;
+        }
+      } else {
+        console.log('[MAIA] Native detected - skipping session migration redirects');
       }
 
       // Get or create persistent sessionId - resets daily for fresh conversations

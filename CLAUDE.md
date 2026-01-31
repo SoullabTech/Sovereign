@@ -34,14 +34,68 @@ AIN is the broader ontological and architectural framework: a view of intelligen
 - **"It forgot me" symptoms**: usually indicate localStorage or cookie loss after rebuilds or WebView resets — check `beta_user`.
 - **force-dynamic routes**: any route using `export const dynamic = 'force-dynamic'` must be listed in `EXCLUDED_DYNAMIC_ROUTES` for iOS builds.
 
+### iOS Native Redirect Loop (CRITICAL - Jan 31, 2026)
+
+**Symptom**: App rapidly flutters/flashes between pages on startup, never settling.
+
+**Root cause**: Multiple redirect scripts competing (layout.tsx, page.tsx, maia/page.tsx, index.html).
+
+**The fix**: **SINGLE REDIRECT AUTHORITY** for native iOS:
+
+1. **`ios/App/App/public/index.html`** is the ONLY place that redirects on native boot
+2. **`app/page.tsx`** must return early for native (no redirect)
+3. **`app/maia/page.tsx`** must skip `checkAndMigrateSession()` redirects for native
+4. **`app/layout.tsx`** must NOT have any redirect scripts in `<head>`
+
+**Critical details**:
+- `npx cap copy ios` OVERWRITES `index.html` — must re-apply redirect script AFTER cap copy
+- Use `.html` extension in redirects for Capacitor static serving (`/signin.html`, `/maia.html`)
+- One-shot guard with `sessionStorage` prevents fluttering even if page reloads
+
+**Build sequence**:
+```bash
+CAPACITOR_BUILD=1 npm run build
+npx cap copy ios
+# RE-APPLY index.html redirect script here (cap copy overwrites it)
+cat > ios/App/App/public/index.html << 'EOF'
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soullab</title>
+  <style>body { margin: 0; background: linear-gradient(to bottom right, #A0C4C7, #7FB5B3); min-height: 100vh; }</style>
+  <script>
+    (function() {
+      try {
+        var path = window.location.pathname || '/';
+        if (path !== '/' && path !== '/index.html') return;
+        var betaUser = localStorage.getItem('beta_user');
+        var memberId = localStorage.getItem('memberId');
+        var target = (betaUser && memberId) ? '/maia.html' : '/signin.html';
+        var key = '__maia_boot_redirect__';
+        if (sessionStorage.getItem(key) === target) return;
+        sessionStorage.setItem(key, target);
+        window.location.replace(target);
+      } catch (e) { window.location.replace('/signin.html'); }
+    })();
+  </script>
+</head>
+<body></body>
+</html>
+EOF
+# Then build/install
+xcodebuild -workspace ios/App/App.xcworkspace -scheme App ...
+```
+
 ## Current priority thread (update each session)
 
-- **Date**: 2026-01-22
-- **Current blocker**: Verifying iOS build after authentication fix
-- **Last fix applied**: Introduced `apiFetch()` with `x-member-id` for Capacitor; updated `OracleConversation.tsx` accordingly
-- **Next action**: Archive in Xcode and upload to TestFlight
+- **Date**: 2026-01-31
+- **Current blocker**: None - iOS native app working
+- **Last fix applied**: Single redirect authority pattern for iOS native (eliminated redirect loop/fluttering)
+- **Next action**: Upload build 750 to TestFlight for broader testing
 - **Underlying question**: How do we preserve continuity of identity and consent across rebuilds without compromising sovereignty?
-- **State of the system**: Oath sealed. No new capabilities until continuity is observed in practice.
+- **State of the system**: iOS native functional. Voice conversation working. Build 750 installed via direct device install.
 
 ## Re-entry vow (for this session)
 

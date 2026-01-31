@@ -51,6 +51,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* NATIVE iOS: Redirect handled by ios/App/App/public/index.html ONLY - do not duplicate here */}
+      </head>
       <body className={`${inter.className}`} suppressHydrationWarning>
         <FlagsDebug />
         <SubscriptionProvider>
