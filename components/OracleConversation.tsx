@@ -87,7 +87,6 @@ function base64ToArrayBuffer(b64: string): ArrayBuffer {
 import { isProbablyOnline, generatePresenceFallback } from '@/lib/offline/presenceFallback';
 import { VoiceState } from '@/lib/voice/voice-capture';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
-import { getStreamingCooldown, isIOSCapacitor } from '@/lib/voice/ios-audio-constants';
 // import { useMaiaVoice } from '@/hooks/useMaiaVoice'; // OLD TTS SYSTEM - replaced with WebRTC
 // REMOVED OPENAI HIJACKING - MAIA speaks FROM THE BETWEEN at /api/between/chat
 // REMOVED FORMANT VOICE ENGINE - MAIA now speaks with OpenAI Alloy voice
@@ -1934,34 +1933,55 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       prevComplete: prevStreamingCompleteRef.current
     });
 
-    // State cleanup when audio finishes - mic restart handled by ContinuousConversation via MaiaSpeakingState
-    const cleanupAfterAudio = () => {
-      console.log('🎤 [StreamingVoice] Audio finished - cleaning up state');
+    // Helper to restart mic with retry pattern
+    const restartMicWithRetry = () => {
+      console.log('🎤 [StreamingVoice] Audio finished - resuming microphone');
       setIsResponding(false);
       setIsAudioPlaying(false);
       setIsMicrophonePaused(false);
       setStreamingResponseComplete(false);
-      setIsMuted(false);
 
-      // 🎯 OPTIMISTIC LISTENING: Show "Listening" immediately when MAIA stops
-      // On iOS, the actual mic won't be ready for ~1200ms (audio session handoff)
-      // But the UI should feel responsive - show "Listening" now, mic catches up later
-      if (streamingVoiceMode && !showChatInterface) {
-        console.log('🎤 [Optimistic UI] Setting isListening=true immediately');
-        setIsListening(true);
-        setIsActivating(false); // Skip the "Activating..." flash
-      }
-      // NOTE: Actual mic restart is handled by ContinuousConversation.tsx via MaiaSpeakingState.scheduleMicRestart()
+      const attemptMicRestart = (attempt: number) => {
+        if (attempt > 5) {
+          console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
+          return;
+        }
+
+        console.log(`🎤 [StreamingVoice] Mic restart attempt ${attempt}...`);
+
+        if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
+          setIsMuted(false);
+          setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
+          // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
+          voiceMicRef.current.startListening();
+
+          setTimeout(() => {
+            if (voiceMicRef.current?.isListening) {
+              console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
+              // handleRecordingStateChange will set isListening and clear isActivating
+            } else {
+              console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
+              setIsActivating(false); // Clear activating on failure
+              setTimeout(() => attemptMicRestart(attempt + 1), 300);
+            }
+          }, 150);
+        } else {
+          console.log('⏸️ [StreamingVoice] Mic restart blocked - not in voice mode or ref unavailable');
+        }
+      };
+
+      setTimeout(() => attemptMicRestart(1), 300);
     };
 
     // Case 1: Audio was playing and just stopped, response is complete
     if (prevStreamingPlayingRef.current && !isStreamingPlaying && streamingResponseComplete) {
-      cleanupAfterAudio();
+      restartMicWithRetry();
     }
     // Case 2: Response just completed and audio is already not playing (TTS was fast or failed)
     else if (!prevStreamingCompleteRef.current && streamingResponseComplete && !isStreamingPlaying) {
-      console.log('🎤 [StreamingVoice] Response complete, audio already done - cleaning up');
-      cleanupAfterAudio();
+      console.log('🎤 [StreamingVoice] Response complete, audio already done - resuming mic');
+      // Small delay to ensure any pending audio state has settled
+      setTimeout(restartMicWithRetry, 500);
     }
 
     prevStreamingPlayingRef.current = isStreamingPlaying;
@@ -1973,21 +1993,14 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
   const handleVoiceInterrupt = useCallback(() => {
     console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA');
 
-    // 1️⃣ Stop MAIA's voice stream and playback IMMEDIATELY
+    // Stop MAIA's voice stream and playback
     stopStreamingVoice();
 
-    // 2️⃣ Reset ALL state flags that block mic/listening
+    // Reset state flags immediately
     isAudioPlayingRef.current = false;
     isRespondingRef.current = false;
-    isMicrophonePausedRef.current = false;
     setIsResponding(false);
     setIsAudioPlaying(false);
-    setIsMicrophonePaused(false); // CRITICAL: This feeds into isSpeaking prop
-    setIsMuted(false);
-
-    // 3️⃣ Flip UI to Listening immediately - user wants to talk NOW
-    setIsListening(true);
-    setIsActivating(false);
 
     // Brief visual feedback
     toast('✋ Interrupted', { duration: 1000 });
@@ -3922,8 +3935,7 @@ I'm not sure what I'm feeling yet.`;
         const shouldStreamAudio = !showChatInterface && voiceEnabled && maiaReady;
         let audioQueue: InstanceType<typeof StreamingAudioQueue> | null = null;
         // ECHO SUPPRESSION: Define cooldown for streaming audio path
-        // Uses centralized iOS timing constant from ios-audio-constants.ts
-        const streamingCooldownMs = getStreamingCooldown();
+        const streamingCooldownMs = 0; // Instant - demo mode with headphones
 
         if (shouldStreamAudio) {
           console.log('🎵 [STREAM] Initializing streaming audio queue...');
@@ -3961,14 +3973,77 @@ I'm not sure what I'm feeling yet.`;
                 console.log('🔓 [STREAM] Dispatched maya-voice-end');
               }
 
-              // Resume mic after cooldown - ContinuousConversation handles restart via MaiaSpeakingState
+              // Resume mic after cooldown with auto-restart
               console.log(`⏳ [STREAM] Cooldown ${streamingCooldownMs}ms (mic paused)...`);
               setTimeout(() => {
                 setIsMicrophonePaused(false);
-                setIsMuted(false);
-                console.log('🎤 [STREAM] Microphone unpaused - ContinuousConversation will restart via MaiaSpeakingState');
-                // NOTE: Mic restart is handled by ContinuousConversation.tsx via MaiaSpeakingState.scheduleMicRestart()
-                // This prevents race conditions and "Ongoing speech recognition" errors on iOS
+                console.log('🎤 [STREAM] Microphone unpaused - ready for next input');
+
+                // 🔥 FIX: Force React to flush state updates before attempting mic restart
+                // Using requestAnimationFrame ensures we're after the React render cycle
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    // 🔥 FIX: Use retry loop to ensure React state has propagated before mic restart
+                    const attemptMicRestart = (attempt: number) => {
+                      if (attempt > 8) {
+                        console.log('⚠️ [STREAM] Mic restart failed after 8 attempts - forcing state reset');
+                        // 🔥 RECOVERY: Force reset all blocking states and try one more time
+                        setIsProcessing(false);
+                        setIsResponding(false);
+                        setIsAudioPlaying(false);
+                        setIsMicrophonePaused(false);
+                        isProcessingRef.current = false;
+                        isRespondingRef.current = false;
+                        isAudioPlayingRef.current = false;
+                        isMicrophonePausedRef.current = false;
+                        // Final attempt after forced reset
+                        setTimeout(() => {
+                          if (voiceMicRef.current?.startListening) {
+                            console.log('🎤 [STREAM] Final attempt after state reset...');
+                            setIsMuted(false);
+                            voiceMicRef.current.startListening();
+                          }
+                        }, 500);
+                        return;
+                      }
+
+                      if (voiceMicRef.current?.startListening) {
+                        // Check ALL blocking conditions including mic pause state
+                        const canRestart = !isProcessingRef.current &&
+                                           !isRespondingRef.current &&
+                                           !isAudioPlayingRef.current &&
+                                           !isMicrophonePausedRef.current;
+
+                        console.log(`🔍 [STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
+
+                        if (canRestart) {
+                          setIsMuted(false);
+                          console.log(`🎤 [STREAM] Attempting mic restart (attempt ${attempt})...`);
+                          voiceMicRef.current.startListening();
+                          // Verify mic actually started after a brief delay
+                          setTimeout(() => {
+                            if (voiceMicRef.current?.isListening) {
+                              console.log('✅ [STREAM] Microphone auto-resumed successfully');
+                            } else {
+                              console.log(`⚠️ [STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                              if (attempt < 8) {
+                                setTimeout(() => attemptMicRestart(attempt + 1), 400);
+                              }
+                            }
+                          }, 150);
+                        } else {
+                          console.log(`⏸️ [STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
+                          setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                        }
+                      } else {
+                        console.log('⏸️ [STREAM] No voice mic available - not in voice mode');
+                      }
+                    };
+
+                    // Start first attempt immediately after React render cycle
+                    attemptMicRestart(1);
+                  });
+                });
               }, streamingCooldownMs);
             },
           });
@@ -4442,17 +4517,79 @@ I'm not sure what I'm feeling yet.`;
           // isMicrophonePaused was already set to true when MAIA started speaking
 
           // CRITICAL: Resume listening AFTER cooldown to prevent echo/feedback loop
-          // ContinuousConversation handles restart via MaiaSpeakingState
           console.log(`⏳ [NON-STREAM] Starting ${cooldownMs}ms cooldown (mic paused)...`);
           setTimeout(() => {
-            console.log('✅ [NON-STREAM] Cooldown complete - releasing mic');
+            console.log('✅ [NON-STREAM] Cooldown complete - NOW releasing mic');
 
-            // Unpause mic - ContinuousConversation will restart via MaiaSpeakingState
+            // NOW unpause mic - this allows ContinuousConversation to restart
             setIsMicrophonePaused(false);
-            setIsMuted(false);
-            console.log('🎤 [NON-STREAM] Microphone unpaused - ContinuousConversation will restart via MaiaSpeakingState');
-            // NOTE: Mic restart is handled by ContinuousConversation.tsx via MaiaSpeakingState.scheduleMicRestart()
-            // This prevents race conditions and "Ongoing speech recognition" errors on iOS
+            setIsMuted(false); // Ensure mic is unmuted
+            console.log('🎤 [NON-STREAM] Microphone unpaused - ready for next input');
+
+            // 🔥 FIX: Force React to flush state updates before attempting mic restart
+            // Using requestAnimationFrame ensures we're after the React render cycle
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // 🔥 FIX: React state updates are ASYNC! Use retry loop to ensure state has propagated.
+                const attemptMicRestart = (attempt: number) => {
+                  if (attempt > 8) {
+                    console.log('⚠️ [NON-STREAM] Mic restart failed after 8 attempts - forcing state reset');
+                    // 🔥 RECOVERY: Force reset all blocking states and try one more time
+                    setIsProcessing(false);
+                    setIsResponding(false);
+                    setIsAudioPlaying(false);
+                    setIsMicrophonePaused(false);
+                    isProcessingRef.current = false;
+                    isRespondingRef.current = false;
+                    isAudioPlayingRef.current = false;
+                    isMicrophonePausedRef.current = false;
+                    // Final attempt after forced reset
+                    setTimeout(() => {
+                      if (voiceMicRef.current?.startListening) {
+                        console.log('🎤 [NON-STREAM] Final attempt after state reset...');
+                        setIsMuted(false);
+                        voiceMicRef.current.startListening();
+                      }
+                    }, 500);
+                    return;
+                  }
+
+                  if (voiceMicRef.current?.startListening) {
+                    // Check ALL blocking conditions including mic pause and audio states
+                    const canRestart = !isProcessingRef.current &&
+                                       !isRespondingRef.current &&
+                                       !isAudioPlayingRef.current &&
+                                       !isMicrophonePausedRef.current;
+
+                    console.log(`🔍 [NON-STREAM] Mic restart check (attempt ${attempt}): proc=${isProcessingRef.current}, resp=${isRespondingRef.current}, audio=${isAudioPlayingRef.current}, micPause=${isMicrophonePausedRef.current}`);
+
+                    if (canRestart) {
+                      console.log(`🎤 [NON-STREAM] Attempting mic restart (attempt ${attempt})...`);
+                      voiceMicRef.current.startListening();
+                      // Verify mic actually started after a brief delay
+                      setTimeout(() => {
+                        if (voiceMicRef.current?.isListening) {
+                          console.log('✅ [NON-STREAM] Microphone auto-resumed successfully');
+                        } else {
+                          console.log(`⚠️ [NON-STREAM] Mic didn't start on attempt ${attempt}, retrying...`);
+                          if (attempt < 8) {
+                            setTimeout(() => attemptMicRestart(attempt + 1), 400);
+                          }
+                        }
+                      }, 150);
+                    } else {
+                      console.log(`⏸️ [NON-STREAM] Attempt ${attempt} blocked, retrying in 300ms...`);
+                      setTimeout(() => attemptMicRestart(attempt + 1), 300);
+                    }
+                  } else {
+                    console.log('⏸️ [NON-STREAM] No voice mic available - not in voice mode');
+                  }
+                };
+
+                // Start first attempt immediately after React render cycle
+                attemptMicRestart(1);
+              });
+            });
           }, cooldownMs); // Wait for echo suppression cooldown
         }
       } else {
@@ -5183,18 +5320,9 @@ I'm not sure what I'm feeling yet.`;
       setMessages(prev => appendMessageCapped(prev, errorMessage));
       onMessageAddedRef.current?.(errorMessage);
 
-      // 🔥 CRITICAL: Reset ALL states on error - including audio/mic states
-      // Without this, voice mode stays stuck after 502/network errors
+      // Reset states on error
       setIsProcessing(false);
       setIsResponding(false);
-      setIsAudioPlaying(false);
-      setIsMicrophonePaused(false);
-      setIsMuted(false);
-      // Also clear refs so mic can resume
-      isRespondingRef.current = false;
-      isAudioPlayingRef.current = false;
-      isMicrophonePausedRef.current = false;
-      console.log('🔇 [ERROR RECOVERY] Reset voice state after voice flow error');
     }
   }, [handleTextMessage, isProcessing, isResponding, isAudioPlaying, messages, echoSuppressUntil, maiaReady, isMuted, sessionId, userId, oracleAgentId, onMessageAdded, maiaSpeak, stopStreamingVoice, startScribeSession, pauseScribeSession, stopScribeSession, markScribeMoment, confirmScribeConsent, setTranscriptEnabled, appendTranscriptEntry, scribeSession]);
 
@@ -5938,7 +6066,7 @@ I'm not sure what I'm feeling yet.`;
                     hasStartListening: !!voiceMicRef.current?.startListening,
                     isInterrupt,
                   });
-                  // Removed toast - flows directly to listening without interruption
+                  toast('🎤 Activating voice...', { duration: 2000 });
                   setIsMuted(false);
                   setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
                   // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
@@ -6534,7 +6662,23 @@ I'm not sure what I'm feeling yet.`;
                        '💫 Speaking...'}
                     </motion.div>
                   )}
-                  {/* Activating state removed - smoother flow, no visual pause after MAIA speaks */}
+                  {/* Activating state - waiting for mic confirmation */}
+                  {isActivating && !isListening && !isResponding && !isAudioPlaying && !isProcessing && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{
+                        opacity: [0.6, 0.9, 0.6],
+                        y: 0
+                      }}
+                      transition={{
+                        opacity: { duration: 1.0, repeat: Infinity, ease: "easeInOut" }
+                      }}
+                      exit={{ opacity: 0, y: 10 }}
+                      className="text-amber-300/90 text-sm font-medium drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]"
+                    >
+                      🎤 Activating...
+                    </motion.div>
+                  )}
                   {/* Listening state - mic is CONFIRMED live (orange dot should be visible) */}
                   {isListening && !isResponding && !isAudioPlaying && !isProcessing && (
                     <div className="flex flex-col items-center gap-2">
@@ -6572,8 +6716,8 @@ I'm not sure what I'm feeling yet.`;
                       )}
                     </div>
                   )}
-                  {/* Tap to speak hint - shows only when voice is inactive (muted) */}
-                  {isMuted && !isResponding && !isAudioPlaying && !isProcessing && (
+                  {/* Tap to speak hint - shows only when voice is inactive (muted) and not activating */}
+                  {isMuted && !isActivating && !isResponding && !isAudioPlaying && !isProcessing && (
                     <motion.div
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: [0.5, 0.7, 0.5], y: 0 }}
