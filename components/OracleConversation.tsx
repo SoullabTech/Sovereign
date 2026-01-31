@@ -412,8 +412,18 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 }) => {
   // 🔖 BUILD STAMP - visible proof of which code is running
   useEffect(() => {
-    console.log('🔖 MAIA BUILD STAMP: 2026-01-31_pwa_voice_v2');
+    console.log('🔖 MAIA BUILD STAMP: 2026-01-31_pwa_voice_v3');
     console.log('🎙️ PWA Voice State Machine: ENABLED');
+    console.log('🔍 isSafariPWA():', isSafariPWA());
+    // TEMPORARY: Show alert to prove new code is running
+    if (typeof window !== 'undefined') {
+      const stamp = document.createElement('div');
+      stamp.id = 'build-stamp-v3';
+      stamp.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#10b981;color:white;padding:4px;text-align:center;font-size:12px;z-index:99999;font-family:monospace;';
+      stamp.textContent = `BUILD v3 | PWA: ${isSafariPWA()} | ${new Date().toLocaleTimeString()}`;
+      document.body.appendChild(stamp);
+      setTimeout(() => stamp.remove(), 10000); // Remove after 10 seconds
+    }
   }, []);
 
   // Listening mode for different conversation styles - MUST be defined early
@@ -1937,7 +1947,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       // If no audio chunks were received, TTS completely failed - don't wait for audio that won't come
       if (audioChunks === 0) {
         console.warn('⚠️ [StreamingVoice] TTS FAILED - no audio received. Resetting speaking state immediately.');
-        // Reset all speaking-related states so mic isn't blocked forever
+        // Reset ALL processing/speaking states so mic isn't blocked forever
+        setIsProcessing(false);
+        isProcessingRef.current = false;
         setIsResponding(false);
         setIsAudioPlaying(false);
         setIsMicrophonePaused(false);
@@ -4119,6 +4131,10 @@ I'm not sure what I'm feeling yet.`;
             },
             onComplete: () => {
               console.log('✅ [STREAM] All audio chunks played - starting cooldown');
+              // 🔥 CRITICAL FIX: Reset isProcessing HERE, not just in retry loop
+              // Without this, the next transcript is ignored with "Already processing"
+              setIsProcessing(false);
+              isProcessingRef.current = false;
               setIsResponding(false);
               // ✅ Set isAudioPlaying FALSE now - audio ended, visualizer shows user color
               setIsAudioPlaying(false);
