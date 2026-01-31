@@ -68,49 +68,63 @@ function isPoisonedLocalId(id: string | null | undefined): boolean {
 }
 
 // Force sign-out if session is outdated or corrupted
-function checkAndMigrateSession(): boolean {
-  if (typeof window === 'undefined') return false;
+// Returns: 'migrate' (go to /signin), 'fresh' (go to /begin), or null (continue to /maia)
+function checkAndMigrateSession(): 'migrate' | 'fresh' | null {
+  if (typeof window === 'undefined') return null;
 
   const storedVersion = localStorage.getItem('maia_session_version');
   const currentName = localStorage.getItem('explorerName');
   const explorerId = localStorage.getItem('explorerId');
+  const betaUser = localStorage.getItem('beta_user');
+  const signupCompleted = localStorage.getItem('signup_completed');
 
   // Also check for poisoned local_* IDs from failed onboarding
   let betaUserId: string | null = null;
   try {
-    const betaUser = localStorage.getItem('beta_user');
     if (betaUser) {
       const parsed = JSON.parse(betaUser);
       betaUserId = parsed.id;
     }
   } catch { /* ignore */ }
 
-  // Force sign-out if: version mismatch OR name looks like a UUID OR has local_* ID
-  const hasLocalId = isPoisonedLocalId(explorerId) || isPoisonedLocalId(betaUserId);
-  const versionMismatch = storedVersion !== String(SESSION_VERSION);
-  const nameIsUUID = isLikelyUUID(currentName || '');
-  const needsMigration = versionMismatch || nameIsUUID || hasLocalId;
-
   // DEBUG: Log all values for iOS debugging
   console.log('🔍 [MAIA] checkAndMigrateSession:', {
     storedVersion,
     expectedVersion: String(SESSION_VERSION),
-    versionMismatch,
     currentName,
-    nameIsUUID,
     explorerId: explorerId?.slice(0, 8) + '...',
     betaUserId: betaUserId?.slice(0, 8) + '...',
-    hasLocalId,
-    needsMigration,
+    betaUser: betaUser ? 'present' : 'null',
+    signupCompleted,
   });
 
-  if (hasLocalId) {
-    console.warn('🚨 [MAIA] Detected poisoned local_* ID - forcing re-auth');
+  // FRESH INSTALL DETECTION: If there's NO session data at all, this is a fresh install.
+  // The user needs to go through onboarding at /begin, NOT /signin.
+  const hasAnySessionData = betaUser || explorerId || signupCompleted;
+  if (!hasAnySessionData) {
+    console.log('🆕 [MAIA] Fresh install detected - no session data, redirecting to /begin');
+    return 'fresh';
   }
+
+  // Check for poisoned local_* IDs
+  const hasLocalId = isPoisonedLocalId(explorerId) || isPoisonedLocalId(betaUserId);
+  if (hasLocalId) {
+    console.warn('🚨 [MAIA] Detected poisoned local_* ID - clearing and redirecting to /begin');
+    localStorage.removeItem('beta_user');
+    localStorage.removeItem('explorerId');
+    localStorage.removeItem('explorerName');
+    localStorage.removeItem('signup_completed');
+    return 'fresh';
+  }
+
+  // Check for version mismatch (only if there IS session data)
+  const versionMismatch = storedVersion !== String(SESSION_VERSION);
+  const nameIsUUID = isLikelyUUID(currentName || '');
+  const needsMigration = versionMismatch || nameIsUUID;
 
   if (needsMigration) {
     console.log('🔄 [MAIA] Session migration required - signing out user');
-    console.log('🔄 [MAIA] Reasons: versionMismatch=' + versionMismatch + ', nameIsUUID=' + nameIsUUID + ', hasLocalId=' + hasLocalId);
+    console.log('🔄 [MAIA] Reasons: versionMismatch=' + versionMismatch + ', nameIsUUID=' + nameIsUUID);
     // Clear session data but preserve permanent markers
     localStorage.removeItem('beta_user');
     localStorage.removeItem('explorerId');
@@ -118,10 +132,10 @@ function checkAndMigrateSession(): boolean {
     localStorage.removeItem('betaOnboardingComplete');
     // Set new version
     localStorage.setItem('maia_session_version', String(SESSION_VERSION));
-    return true; // Needs redirect to sign-in
+    return 'migrate'; // Needs redirect to sign-in (existing user, bad session)
   }
 
-  return false;
+  return null; // Session is valid, continue to /maia
 }
 
 // Helper to get a valid display name, filtering out UUIDs and generic names
@@ -374,8 +388,14 @@ function MAIAPageContent() {
       setIsMounted(true);
 
       // Check for session migration (forces re-auth if needed)
-      if (checkAndMigrateSession()) {
-        console.log('🔄 [MAIA] Redirecting to sign-in for fresh session...');
+      const sessionCheck = checkAndMigrateSession();
+      if (sessionCheck === 'fresh') {
+        console.log('🆕 [MAIA] Fresh install - redirecting to /begin for onboarding');
+        router.replace('/begin');
+        return;
+      }
+      if (sessionCheck === 'migrate') {
+        console.log('🔄 [MAIA] Session migration - redirecting to sign-in');
         router.replace('/signin');
         return;
       }
