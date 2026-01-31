@@ -125,6 +125,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const onInterruptRef = useRef(onInterrupt); // Ref to avoid stale closure
   onInterruptRef.current = onInterrupt;
 
+  // 🎤 PWA DUPLEX: Suppress transcript processing while MAIA speaks (but keep mic hot for barge-in)
+  const inputSuppressedRef = useRef(false);
+
   // Function refs to avoid temporal dead zone in useImperativeHandle
   const startListeningFnRef = useRef<(options?: { forceOverride?: boolean }) => void>();
   const stopListeningFnRef = useRef<(options?: { userExitMode?: boolean }) => void>();
@@ -232,9 +235,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognition.onresult = (event: any) => {
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
 
-      // 🛡️ GUARD: If MAIA is speaking, IGNORE this result entirely
-      // This prevents MAIA's voice from being detected as user speech
-      // (Interrupt feature removed to prevent voice feedback loop)
+      // 🛡️ GUARD: If transcript is suppressed (MAIA speaking on web), ignore for processing
+      // but allow the audio level loop to continue for barge-in detection
+      if (inputSuppressedRef.current) {
+        console.log('🔇 [onresult] SUPPRESSED - MAIA is speaking, transcript ignored (barge-in still active)');
+        return; // Don't process transcripts, but analyser keeps running
+      }
+
+      // 🛡️ GUARD: If MAIA is speaking (native path), also ignore
       if (isSpeakingRef.current) {
         console.log('🚫 [onresult] IGNORED - MAIA is speaking, this is likely echo/feedback');
         return; // Don't process anything while MAIA speaks
@@ -510,13 +518,35 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
-  // 🔇 CRITICAL: Stop recognition AND clear all timers when MAIA starts speaking
+  // 🔇 CRITICAL: Handle MAIA speaking state
+  // PWA/WEB: Soft suppress - keep mic hot for barge-in, suppress transcript processing
+  // iOS NATIVE: Must stop recognition due to audio session constraints
   useEffect(() => {
     if (isSpeaking) {
-      console.log('🔇 [Voice Feedback Prevention] MAIA started speaking - FULL STOP');
+      // 🛑 Reset interrupt detection for this new MAIA turn
+      hasTriggeredInterruptRef.current = false;
+      interruptSpeechStartRef.current = 0;
 
-      // Stop native speech recognition on iOS/Android
+      // Clear any accumulated transcript (it could be MAIA echo starting)
+      if (accumulatedTranscript.current) {
+        console.log('🧹 Discarding accumulated transcript (MAIA started):',
+          accumulatedTranscript.current.substring(0, 50));
+        accumulatedTranscript.current = '';
+      }
+
+      // Clear timers to prevent delayed processing
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      if (recognitionTimeoutRef.current) {
+        clearTimeout(recognitionTimeoutRef.current);
+        recognitionTimeoutRef.current = null;
+      }
+
+      // 📱 iOS NATIVE: Must stop recognition (audio session conflict)
       if (useNativeSpeechRef.current) {
+        console.log('🔇 [Native iOS] MAIA speaking - stopping recognition (audio session)');
         (async () => {
           try {
             await NativeSpeechRecognition.stop();
@@ -525,44 +555,23 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             // May already be stopped
           }
         })();
+        setIsRecording(false);
+        isRecordingRef.current = false;
+      } else {
+        // 🌐 PWA/WEB: Soft suppress - keep mic HOT for barge-in detection
+        console.log('🎤 [PWA DUPLEX] MAIA speaking - mic stays HOT, transcripts suppressed');
+        inputSuppressedRef.current = true;
+        // NOTE: Do NOT stop recognition or mic - analyser needs it for barge-in
+        // The onresult handler will check inputSuppressedRef and ignore transcripts
       }
 
-      // Stop web recognition
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (err) {
-          console.warn('⚠️ Error stopping recognition:', err);
-        }
-      }
-
-      // Clear ALL timers to prevent any delayed processing
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-        console.log('🧹 Cleared silence timer');
-      }
-      if (recognitionTimeoutRef.current) {
-        clearTimeout(recognitionTimeoutRef.current);
-        recognitionTimeoutRef.current = null;
-        console.log('🧹 Cleared recognition timeout');
-      }
-
-      // Clear any accumulated transcript (it's MAIA's voice, not user's)
-      if (accumulatedTranscript.current) {
-        console.log('🧹 Discarding accumulated transcript (was MAIA echo):',
-          accumulatedTranscript.current.substring(0, 50));
-        accumulatedTranscript.current = '';
-      }
-
-      // Reset all state
-      setIsRecording(false);
-      isRecordingRef.current = false;
       isProcessingRef.current = false;
-
-      // 🛑 Reset interrupt detection for this new MAIA turn
-      hasTriggeredInterruptRef.current = false;
-      interruptSpeechStartRef.current = 0;
+    } else {
+      // MAIA stopped speaking - clear suppression
+      if (inputSuppressedRef.current) {
+        console.log('🎤 [PWA DUPLEX] MAIA stopped - clearing suppression, transcripts active');
+        inputSuppressedRef.current = false;
+      }
     }
   }, [isSpeaking]);
 
@@ -851,13 +860,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         }
       }
 
-      // 🔥 Use ref instead of state to avoid stale closure issues
-      if (isListeningRef.current) {
+      // 🔥 PWA DUPLEX: Keep analyser running even while MAIA speaks (for barge-in detection)
+      // Use refs to avoid stale closure issues
+      const shouldKeepRunning = isListeningRef.current || isSpeakingRef.current;
+      if (shouldKeepRunning) {
         requestAnimationFrame(checkAudioLevel);
       } else {
         // Loop stopped - mark as not running
         audioLoopRunningRef.current = false;
-        console.log('🔊 [AudioLoop] Stopped (isListening=false)');
+        console.log('🔊 [AudioLoop] Stopped (isListening=false AND isSpeaking=false)');
       }
     };
 

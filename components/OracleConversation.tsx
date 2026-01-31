@@ -1941,9 +1941,19 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
       setIsMicrophonePaused(false);
       setStreamingResponseComplete(false);
 
+      // 🎤 OPTIMISTIC LISTENING: Show "Listening" immediately when MAIA stops
+      // This masks the iOS audio handoff delay - user sees responsive UI
+      // Real mic state will be confirmed by handleRecordingStateChange
+      if (!showChatInterface && streamingVoiceMode) {
+        setIsListening(true);
+        setIsActivating(false); // Never show "Activating..." in voice mode
+        console.log('✨ [Optimistic] Showing Listening immediately');
+      }
+
       const attemptMicRestart = (attempt: number) => {
         if (attempt > 5) {
           console.log('⏸️ [StreamingVoice] Gave up on mic restart after 5 attempts');
+          setIsListening(false); // Clear optimistic state on failure
           return;
         }
 
@@ -1951,17 +1961,16 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
         if (voiceMicRef.current?.startListening && !showChatInterface && streamingVoiceMode) {
           setIsMuted(false);
-          setIsActivating(true); // Show "Activating..." - NOT "Listening" yet!
-          // NOTE: isListening will be set by handleRecordingStateChange when mic is actually live
+          // Optimistic listening already set above - don't show "Activating..."
           voiceMicRef.current.startListening();
 
           setTimeout(() => {
             if (voiceMicRef.current?.isListening) {
               console.log('✅ [StreamingVoice] Microphone auto-resumed successfully');
-              // handleRecordingStateChange will set isListening and clear isActivating
+              // Optimistic listening already shown - handleRecordingStateChange confirms it
             } else {
               console.log(`⚠️ [StreamingVoice] Mic didn't start, retrying...`);
-              setIsActivating(false); // Clear activating on failure
+              // Keep optimistic listening, retry will handle it
               setTimeout(() => attemptMicRestart(attempt + 1), 300);
             }
           }, 150);
@@ -1990,21 +1999,90 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
   // 🛑 BARGE-IN INTERRUPT HANDLER - Called when user speaks while MAIA is speaking
   // NOTE: Must be defined AFTER useStreamingVoice hook which provides stopStreamingVoice
+  // CRITICAL: Must reset ALL state flags that contribute to isSpeaking condition
   const handleVoiceInterrupt = useCallback(() => {
-    console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA');
+    console.log('🛑 [INTERRUPT] User barge-in detected - stopping MAIA immediately');
 
-    // Stop MAIA's voice stream and playback
+    // Stop MAIA's voice stream and playback (hard cut)
     stopStreamingVoice();
 
-    // Reset state flags immediately
+    // 🔥 CRITICAL: Reset ALL state flags that could keep "speaking" true
+    // isSpeaking = {isAudioPlaying || isMicrophonePaused} - BOTH must be false
     isAudioPlayingRef.current = false;
     isRespondingRef.current = false;
+    isMicrophonePausedRef.current = false;
+
     setIsResponding(false);
     setIsAudioPlaying(false);
+    setIsMicrophonePaused(false);
+
+    // Flip to listening immediately (user is speaking)
+    setIsListening(true);
+    setIsActivating(false);
 
     // Brief visual feedback
     toast('✋ Interrupted', { duration: 1000 });
   }, [stopStreamingVoice]);
+
+  // 🛡️ VOICE WATCHDOG - Automatic recovery from stuck states
+  // If we're in "speaking" state (isAudioPlaying || isMicrophonePaused) for too long
+  // without any audio progress, force reset to listening. Prevents "stuck speaking" forever.
+  const voiceWatchdogRef = useRef<NodeJS.Timeout | null>(null);
+  const lastAudioProgressRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    // Only run watchdog in voice mode
+    if (!streamingVoiceMode || showChatInterface) {
+      if (voiceWatchdogRef.current) {
+        clearInterval(voiceWatchdogRef.current);
+        voiceWatchdogRef.current = null;
+      }
+      return;
+    }
+
+    // Update last audio progress when audio is playing
+    if (isAudioPlaying) {
+      lastAudioProgressRef.current = Date.now();
+    }
+
+    // Check every 3 seconds if we're stuck
+    const WATCHDOG_TIMEOUT_MS = 15000; // 15 seconds max stuck in speaking
+    const WATCHDOG_CHECK_MS = 3000; // Check every 3 seconds
+
+    if (!voiceWatchdogRef.current) {
+      voiceWatchdogRef.current = setInterval(() => {
+        const isSpeakingStuck = isAudioPlayingRef.current || isMicrophonePausedRef.current;
+        const timeSinceProgress = Date.now() - lastAudioProgressRef.current;
+
+        if (isSpeakingStuck && timeSinceProgress > WATCHDOG_TIMEOUT_MS) {
+          console.warn('🐕 [WATCHDOG] Voice state stuck for', Math.round(timeSinceProgress/1000), 's - forcing reset');
+
+          // Force reset all voice state
+          isAudioPlayingRef.current = false;
+          isRespondingRef.current = false;
+          isMicrophonePausedRef.current = false;
+
+          setIsAudioPlaying(false);
+          setIsResponding(false);
+          setIsMicrophonePaused(false);
+          setIsListening(true);
+          setIsActivating(false);
+
+          // Reset the progress timer
+          lastAudioProgressRef.current = Date.now();
+
+          toast('⚠️ Voice recovered', { duration: 2000 });
+        }
+      }, WATCHDOG_CHECK_MS);
+    }
+
+    return () => {
+      if (voiceWatchdogRef.current) {
+        clearInterval(voiceWatchdogRef.current);
+        voiceWatchdogRef.current = null;
+      }
+    };
+  }, [streamingVoiceMode, showChatInterface, isAudioPlaying]);
 
   // Sacred Lab Drawer and Voice Menu states now declared earlier (lines 159-160)
   // Listen for header lab drawer events
