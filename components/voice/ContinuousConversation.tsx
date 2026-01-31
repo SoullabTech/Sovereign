@@ -8,6 +8,15 @@ import { Capacitor } from '@capacitor/core';
 import { SpeechRecognition as NativeSpeechRecognition } from '@capacitor-community/speech-recognition';
 import { VoiceController } from '@/lib/voice/AudioSessionManager';
 import { getFeatureFlag } from '@/lib/features/flags';
+import {
+  IOS_AUDIO_SESSION_HANDOFF_MS,
+  IOS_SR_RETRY_DELAY_MS,
+  IOS_MAX_RESTART_ATTEMPTS,
+  isIOSCapacitor,
+} from '@/lib/voice/ios-audio-constants';
+import {
+  maiaSpeakingState,
+} from '@/lib/voice/MaiaSpeakingState';
 // import { Analytics } from "../../lib/analytics/supabaseAnalytics"; // Disabled for Vercel build
 
 export interface ContinuousConversationProps {
@@ -232,12 +241,12 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     recognition.onresult = (event: any) => {
       console.log('🎤 [onresult] FIRED - event:', event.results.length, 'results');
 
-      // 🛡️ GUARD: If MAIA is speaking, IGNORE this result entirely
+      // 🛡️ GUARD: If transcription is suppressed (MAIA speaking), IGNORE this result
       // This prevents MAIA's voice from being detected as user speech
-      // (Interrupt feature removed to prevent voice feedback loop)
-      if (isSpeakingRef.current) {
-        console.log('🚫 [onresult] IGNORED - MAIA is speaking, this is likely echo/feedback');
-        return; // Don't process anything while MAIA speaks
+      // Barge-in still works via audio level detection (separate from transcript processing)
+      if (inputSuppressedRef.current || isSpeakingRef.current) {
+        console.log('🚫 [onresult] IGNORED - transcription suppressed (MAIA speaking)');
+        return; // Don't process transcripts while MAIA speaks - barge-in uses audio levels instead
       }
 
       let interimTranscript = '';
@@ -510,43 +519,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     isRecordingRef.current = isRecording;
   }, [isRecording]);
 
-  // 🔇 CRITICAL: Stop recognition AND clear all timers when MAIA starts speaking
+  // ═══════════════════════════════════════════════════════════════════════════
+  // 🎤 SOFT SUPPRESS: Keep mic alive while MAIA speaks for barge-in detection
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // OLD BEHAVIOR ("FULL STOP"): Kill mic when MAIA speaks → no barge-in, dead zone
+  // NEW BEHAVIOR ("SOFT SUPPRESS"):
+  //   - iOS Native: Must stop due to audio session conflicts (can't avoid this)
+  //   - Web: Keep mic running, suppress transcription, allow barge-in detection
+  //
+  // This gives us conversational overlap on web platforms.
+  // ═══════════════════════════════════════════════════════════════════════════
+  const inputSuppressedRef = useRef(false);
+
   useEffect(() => {
     if (isSpeaking) {
-      console.log('🔇 [Voice Feedback Prevention] MAIA started speaking - FULL STOP');
-
-      // Stop native speech recognition on iOS/Android
-      if (useNativeSpeechRef.current) {
-        (async () => {
-          try {
-            await NativeSpeechRecognition.stop();
-            console.log('🛑 [Native] Stopped for MAIA speech');
-          } catch (e) {
-            // May already be stopped
-          }
-        })();
-      }
-
-      // Stop web recognition
-      if (recognitionRef.current) {
-        try {
-          recognitionRef.current.stop();
-        } catch (err) {
-          console.warn('⚠️ Error stopping recognition:', err);
-        }
-      }
-
-      // Clear ALL timers to prevent any delayed processing
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-        console.log('🧹 Cleared silence timer');
-      }
-      if (recognitionTimeoutRef.current) {
-        clearTimeout(recognitionTimeoutRef.current);
-        recognitionTimeoutRef.current = null;
-        console.log('🧹 Cleared recognition timeout');
-      }
+      console.log('🔇 [Soft Suppress] MAIA started speaking');
 
       // Clear any accumulated transcript (it's MAIA's voice, not user's)
       if (accumulatedTranscript.current) {
@@ -555,40 +543,78 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         accumulatedTranscript.current = '';
       }
 
-      // Reset all state
-      setIsRecording(false);
-      isRecordingRef.current = false;
+      // Clear ALL timers to prevent any delayed processing
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      if (recognitionTimeoutRef.current) {
+        clearTimeout(recognitionTimeoutRef.current);
+        recognitionTimeoutRef.current = null;
+      }
+
       isProcessingRef.current = false;
 
       // 🛑 Reset interrupt detection for this new MAIA turn
       hasTriggeredInterruptRef.current = false;
       interruptSpeechStartRef.current = 0;
+
+      // ═══════════════════════════════════════════════════════════════════════
+      // PLATFORM-SPECIFIC HANDLING
+      // ═══════════════════════════════════════════════════════════════════════
+      if (useNativeSpeechRef.current) {
+        // 🍎 iOS NATIVE: Must stop recognition due to audio session conflicts
+        // This is unavoidable - iOS can't do playback + recording simultaneously
+        console.log('🛑 [iOS Native] Stopping recognition (audio session conflict)');
+        (async () => {
+          try {
+            await NativeSpeechRecognition.stop();
+          } catch (e) {
+            // May already be stopped
+          }
+        })();
+        setIsRecording(false);
+        isRecordingRef.current = false;
+      } else {
+        // ═══════════════════════════════════════════════════════════════════════
+        // 🌐 PWA/WEB: TRUE DUPLEX MODE - Keep everything running for barge-in
+        // ═══════════════════════════════════════════════════════════════════════
+        // This is what makes the PWA feel "world class":
+        // - Recognition stays running (mic hot)
+        // - Analyser loop stays running (barge-in detection)
+        // - Only transcript PROCESSING is suppressed (prevents echo)
+        // - User can interrupt at any time, MAIA stops instantly
+        // ═══════════════════════════════════════════════════════════════════════
+        console.log('🎤 [PWA DUPLEX] Mic stays HOT for barge-in (transcripts suppressed)');
+        inputSuppressedRef.current = true;
+      }
+    } else {
+      // MAIA stopped speaking - re-enable transcript processing
+      console.log('🔇 [Soft Suppress] MAIA stopped speaking - transcription enabled');
+      inputSuppressedRef.current = false;
     }
   }, [isSpeaking]);
 
   // 🎤 Auto-restart native speech recognition when MAIA finishes speaking
-  // This ensures the mic comes back on automatically for continuous conversation
+  // Uses MaiaSpeakingState.scheduleMicRestart() for centralized coordination
+  // This prevents "Ongoing speech recognition" errors from concurrent restart attempts
   useEffect(() => {
     // 🔥 FIX: Use wantsContinuousConversationRef instead of isListeningRef
     // isListeningRef gets set to false when we stop for MAIA to respond
     // wantsContinuousConversationRef persists until user explicitly exits voice mode
     if (!isSpeaking && wantsContinuousConversationRef.current && useNativeSpeechRef.current) {
-      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 800ms...');
+      console.log('🔄 [Native] MAIA stopped speaking - scheduling mic restart via MaiaSpeakingState');
       isProcessingRef.current = false;
       // 🔥 FIX: Reset restart counter when MAIA stops speaking - new conversational turn!
-      // This gives the user a fresh set of restart attempts to respond
       consecutiveRestartCount.current = 0;
 
-      const restartTimer = setTimeout(async () => {
+      // 🔒 Use centralized restart coordination - handles timing AND lock
+      maiaSpeakingState.scheduleMicRestart(async () => {
         // Double-check conditions before restart
         // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
         if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
           try {
-            // NOTE: Do NOT call VoiceController.prepareForListening() here!
-            // The speech recognition plugin reconfigures audio session from .playback
-            // to .playAndRecord/.voiceChat internally when start() is called.
-            // Calling our AudioSessionManager causes a mode conflict (.measurement vs .voiceChat).
-            console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
+            console.log('🎙️ [Native] Auto-restarting after MAIA speech (via scheduleMicRestart)...');
             await NativeSpeechRecognition.start({
               language: 'en-US',
               maxResults: 3,
@@ -597,15 +623,19 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             });
             console.log('✅ [Native] Auto-restart after speech successful');
             // Note: setIsRecording will be updated by listeningState listener
+            maiaSpeakingState.releaseRestartLock();
           } catch (e: any) {
             console.warn('⚠️ [Native] Auto-restart failed:', e?.message || e);
+            maiaSpeakingState.releaseRestartLock();
           }
         } else {
           console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
+          maiaSpeakingState.releaseRestartLock();
         }
-      }, 800); // 800ms delay for iOS audio session to release (reduced for responsiveness)
+      });
 
-      return () => clearTimeout(restartTimer);
+      // Cleanup: cancel pending restart if component unmounts or isSpeaking changes
+      return () => maiaSpeakingState.cancelPendingRestart();
     }
   }, [isSpeaking]);
 
@@ -808,7 +838,10 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               console.log(`🛑 [INTERRUPT] Barge-in confirmed after ${speechDuration}ms - interrupting MAIA`);
               hasTriggeredInterruptRef.current = true;
               interruptSpeechStartRef.current = 0;
-              // Call the interrupt handler
+              // 🔓 CRITICAL: Clear suppression IMMEDIATELY so user speech is accepted
+              // Don't wait for state update from callback - clear it now
+              inputSuppressedRef.current = false;
+              // Call the interrupt handler (stops TTS, flips UI)
               onInterruptRef.current?.();
             }
           }
@@ -851,13 +884,18 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         }
       }
 
-      // 🔥 Use ref instead of state to avoid stale closure issues
-      if (isListeningRef.current) {
+      // 🔥 CRITICAL: Keep loop running for barge-in detection even when MAIA is speaking!
+      // Loop should continue if:
+      // - User is listening (normal case)
+      // - OR MAIA is speaking and we want barge-in detection (soft suppress case)
+      // Only stop when user explicitly exits voice mode (wantsContinuousConversation=false)
+      const shouldKeepRunning = isListeningRef.current || isSpeakingRef.current;
+      if (shouldKeepRunning) {
         requestAnimationFrame(checkAudioLevel);
       } else {
         // Loop stopped - mark as not running
         audioLoopRunningRef.current = false;
-        console.log('🔊 [AudioLoop] Stopped (isListening=false)');
+        console.log('🔊 [AudioLoop] Stopped (not listening and MAIA not speaking)');
       }
     };
 
@@ -1074,6 +1112,15 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           console.log('🛑 [Native] Pre-emptively stopped any existing recognition');
         } catch {
           // Ignore errors - recognition may not have been running
+        }
+
+        // 🔥 iOS CRASH FIX: Wait for audio session to fully release after playback
+        // The native SpeechRecognition plugin crashes if started too soon after audio playback
+        // because iOS needs time to transition the audio session from playback to record mode.
+        // This delay is critical - without it, the plugin crashes in requestRecordPermission callback.
+        if (platform === 'ios') {
+          console.log(`📱 [iOS] Waiting ${IOS_AUDIO_SESSION_HANDOFF_MS}ms for audio session transition...`);
+          await new Promise(resolve => setTimeout(resolve, IOS_AUDIO_SESSION_HANDOFF_MS));
         }
 
         // 🎛️ CRITICAL: Ensure permissions before showing "Listening..."
@@ -1309,21 +1356,28 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // 🔥 FIX: Increment restart counter and check limit to prevent blinking loop
             consecutiveRestartCount.current++;
-            const MAX_NATIVE_RESTARTS = 5; // Allow 5 auto-restarts (~40 seconds) before stopping
 
-            if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
+            if (consecutiveRestartCount.current > IOS_MAX_RESTART_ATTEMPTS) {
               console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
               setIsListening(false);
               isListeningRef.current = false;
               onRecordingStateChange?.(false);
               consecutiveRestartCount.current = 0;
+              isRestartingRef.current = false;
+              return;
+            }
+
+            // 🔒 RESTART LOCK: Prevent concurrent restart attempts
+            if (isRestartingRef.current) {
+              console.log('🔒 [Native] Restart already in flight, skipping');
               return;
             }
 
             // Auto-restart if still in listening mode
-            // 800ms delay for iOS audio session to release (reduced from 1.5s for responsiveness)
+            // Uses centralized iOS timing constant to prevent AUIOClient_StartIO crash
             if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-              console.log(`🔄 [Native] Will auto-restart in 800ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
+              console.log(`🔄 [Native] Will auto-restart in ${IOS_SR_RETRY_DELAY_MS}ms... (attempt ${consecutiveRestartCount.current}/${IOS_MAX_RESTART_ATTEMPTS})`);
+              isRestartingRef.current = true;
               setTimeout(async () => {
                 // Double-check conditions before restart
                 if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
@@ -1349,7 +1403,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                   console.log('🚫 [Native] Conditions changed, not restarting');
                   consecutiveRestartCount.current = 0; // Reset on intentional stop
                 }
-              }, 800); // 800ms - iOS audio session release time (reduced for responsiveness)
+                isRestartingRef.current = false;
+              }, IOS_SR_RETRY_DELAY_MS); // Use centralized constant
             }
           }
         });
