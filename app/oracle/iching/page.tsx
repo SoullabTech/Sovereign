@@ -24,6 +24,12 @@ import {
   RefreshCw,
   Loader2
 } from 'lucide-react';
+import {
+  RitualShell,
+  RitualBackButton,
+  getOracleTone,
+  getRevealMotion,
+} from '@/components/oracle/ritual/OracleRitualParts';
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
 
@@ -67,6 +73,10 @@ export default function IChingOraclePage() {
   const [hexagramLines, setHexagramLines] = useState<HexagramLine[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isCasting, setIsCasting] = useState(false);
+
+  // Oracle tone + reveal motion presets
+  const tone = getOracleTone('iching');
+  const revealMotion = getRevealMotion('iching');
 
   // Yarrow stalk casting simulation - builds hexagram line by line
   const castYarrowStalks = async () => {
@@ -145,31 +155,23 @@ export default function IChingOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#06060A] relative overflow-hidden">
-      {/* Atmospheric backdrop - indigo accent for I Ching */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(99,102,241,0.14),transparent_60%),radial-gradient(900px_700px_at_70%_30%,rgba(139,92,246,0.10),transparent_55%),radial-gradient(1100px_800px_at_50%_85%,rgba(79,70,229,0.08),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.45),rgba(0,0,0,0.85))]" />
-        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-      </div>
-
-      {/* Floating particles - subtle white */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+    <RitualShell max="5xl" variant="iching">
+      {/* Subtle floating particles - crystalline motes */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {[...Array(20)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
+            className="absolute w-1 h-1 bg-indigo-200/15 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -40, 0],
-              opacity: [0.1, 0.4, 0.1],
-              scale: [1, 1.5, 1],
+              y: [0, -30, 0],
+              opacity: [0.1, 0.3, 0.1],
             }}
             transition={{
-              duration: 4 + Math.random() * 6,
+              duration: 5 + Math.random() * 5,
               repeat: Infinity,
               delay: Math.random() * 3,
               ease: 'easeInOut',
@@ -181,7 +183,6 @@ export default function IChingOraclePage() {
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-12">
         <div className="w-full max-w-5xl">
-
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -279,7 +280,10 @@ export default function IChingOraclePage() {
                   <h2 className="text-3xl font-semibold text-white mb-4 tracking-tight">
                     Casting the Hexagram
                   </h2>
-                  <p className="text-white/70">
+                  <p className="text-white/60 text-lg">
+                    {tone.waitingLine}
+                  </p>
+                  <p className="text-white/50 text-sm mt-2">
                     Building line {currentLineIndex + 1} of 6...
                   </p>
                 </div>
@@ -336,26 +340,29 @@ export default function IChingOraclePage() {
 
             {/* Reveal & Interpretation Phase */}
             {(phase === 'reveal' || phase === 'interpretation') && reading && (
-              <motion.div
-                key="reveal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="max-w-4xl mx-auto"
-              >
-                {/* Hexagram Display */}
-                <div className="mb-12">
-                  <div className="text-center mb-8">
-                    <h2 className="text-4xl font-semibold text-white mb-2 tracking-tight">
-                      Hexagram {reading.hexagram.number}
-                    </h2>
-                    <h3 className="text-2xl text-white/80 mb-1">
-                      {reading.hexagram.name}
-                    </h3>
-                    <p className="text-white/60 text-lg">
-                      {reading.hexagram.keyword}
-                    </p>
-                  </div>
+              <div className="max-w-4xl mx-auto">
+                {/* Header - steady, no animation */}
+                <div className="text-center mb-8">
+                  <p className="text-white/60 text-lg mb-4">{tone.revealLine}</p>
+                  <h2 className="text-4xl font-semibold text-white mb-2 tracking-tight">
+                    Hexagram {reading.hexagram.number}
+                  </h2>
+                  <h3 className="text-2xl text-white/80 mb-1">
+                    {reading.hexagram.name}
+                  </h3>
+                  <p className="text-white/60 text-lg">
+                    {reading.hexagram.keyword}
+                  </p>
+                </div>
 
+                {/* Hexagram Display - crisp resolve animation */}
+                <motion.div
+                  key="iching-hexagram-reveal"
+                  initial={revealMotion.initial}
+                  animate={revealMotion.animate}
+                  transition={revealMotion.transition}
+                  className="mb-12"
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
                     {/* Primary Hexagram */}
                     <div className="bg-white/5 border border-white/10 rounded-xl p-8 backdrop-blur-xl shadow-xl">
@@ -432,7 +439,7 @@ export default function IChingOraclePage() {
                       </div>
                     )}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Interpretation */}
                 {phase === 'interpretation' && (
@@ -511,19 +518,24 @@ export default function IChingOraclePage() {
                         Back to Oracle
                       </button>
                     </div>
+
+                    {/* Closing incantation - after action buttons */}
+                    <p className="mt-10 text-white/35 text-sm text-center italic">
+                      {tone.integrationLine}
+                    </p>
                   </motion.div>
                 )}
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
       </div>
 
       {/* Subtle sigil watermark */}
-      <div className="fixed bottom-8 right-8 pointer-events-none select-none text-8xl font-semibold text-white/10">
+      <div className="fixed bottom-8 right-8 pointer-events-none select-none text-8xl font-semibold text-white/[0.06] z-0">
         ☰
       </div>
-    </div>
+    </RitualShell>
   );
 }
 

@@ -25,6 +25,11 @@ import {
   Loader2,
   Flame
 } from 'lucide-react';
+import {
+  RitualShell,
+  getOracleTone,
+  getRevealMotion,
+} from '@/components/oracle/ritual/OracleRitualParts';
 
 type ReadingPhase = 'question' | 'spread-select' | 'casting' | 'reveal' | 'interpretation';
 
@@ -97,6 +102,10 @@ export default function RunesOraclePage() {
   const [revealedRunes, setRevealedRunes] = useState<DrawnRune[]>([]);
   const [currentRuneIndex, setCurrentRuneIndex] = useState(0);
   const [isCasting, setIsCasting] = useState(false);
+
+  // Oracle tone + reveal motion presets
+  const tone = getOracleTone('runes');
+  const revealMotion = getRevealMotion('runes');
 
   // Rune casting simulation - draws runes one at a time
   const castRunes = async (spread: RuneSpreadOption) => {
@@ -182,14 +191,7 @@ export default function RunesOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#06060A] relative overflow-hidden">
-      {/* Atmospheric gradients with emerald/teal accent */}
-      <div className="pointer-events-none absolute inset-0">
-        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(16,185,129,0.12),transparent_60%),radial-gradient(900px_700px_at_70%_30%,rgba(20,184,166,0.10),transparent_55%),radial-gradient(1100px_800px_at_50%_85%,rgba(45,212,191,0.08),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.45),rgba(0,0,0,0.85))]" />
-        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-      </div>
-
+    <RitualShell max="5xl" variant="runes">
       {/* Northern lights effect - more subtle */}
       <div className="fixed inset-0 pointer-events-none opacity-15">
         <motion.div
@@ -377,14 +379,14 @@ export default function RunesOraclePage() {
                 className="max-w-3xl mx-auto"
               >
                 <div className="text-center mb-12">
-                  <h2 className="text-3xl font-bold text-white mb-4">
+                  <h2 className="text-3xl font-semibold text-white mb-4 tracking-tight">
                     Drawing the Runes
                   </h2>
-                  <p className="text-white/70">
-                    Drawing rune {currentRuneIndex + 1} of {selectedSpread.runeCount}...
+                  <p className="text-white/60 text-lg">
+                    {tone.waitingLine}
                   </p>
                   <p className="text-white/50 text-sm mt-2">
-                    {selectedSpread.positions[currentRuneIndex]}
+                    Rune {currentRuneIndex + 1} of {selectedSpread.runeCount} — {selectedSpread.positions[currentRuneIndex]}
                   </p>
                 </div>
 
@@ -438,23 +440,23 @@ export default function RunesOraclePage() {
 
             {/* Reveal & Interpretation Phase */}
             {(phase === 'reveal' || phase === 'interpretation') && reading && selectedSpread && (
-              <motion.div
-                key="reveal"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="max-w-4xl mx-auto"
-              >
-                {/* Runes Display */}
-                <div className="mb-12">
-                  <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-white mb-2">
-                      {selectedSpread.name} Reading
-                    </h2>
-                    <p className="text-white/70">
-                      The runes have spoken
-                    </p>
-                  </div>
+              <div className="max-w-4xl mx-auto">
+                {/* Header - steady, no animation */}
+                <div className="text-center mb-8">
+                  <p className="text-white/60 text-lg mb-4">{tone.revealLine}</p>
+                  <h2 className="text-3xl font-semibold text-white mb-2 tracking-tight">
+                    {selectedSpread.name} Reading
+                  </h2>
+                </div>
 
+                {/* Runes Display - stone-set animation */}
+                <motion.div
+                  key="runes-reveal"
+                  initial={revealMotion.initial}
+                  animate={revealMotion.animate}
+                  transition={revealMotion.transition}
+                  className="mb-12"
+                >
                   {/* Drawn Runes Grid */}
                   <div className="flex flex-wrap justify-center gap-6 mb-8">
                     {reading.drawnRunes.map((rune, index) => (
@@ -487,7 +489,7 @@ export default function RunesOraclePage() {
                       </motion.div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
 
                 {/* Interpretation */}
                 {phase === 'interpretation' && (
@@ -594,13 +596,18 @@ export default function RunesOraclePage() {
                         Back to Oracle
                       </button>
                     </div>
+
+                    {/* Closing incantation - after action buttons */}
+                    <p className="mt-10 text-white/35 text-sm text-center italic">
+                      {tone.integrationLine}
+                    </p>
                   </motion.div>
                 )}
-              </motion.div>
+              </div>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </div>
+    </RitualShell>
   );
 }

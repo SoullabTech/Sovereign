@@ -105,7 +105,6 @@ export default function OracleConsultationPage() {
     router.push(route);
   };
 
-export default function OraclePage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#06060A] text-white">
       {/* atmospheric backdrop */}

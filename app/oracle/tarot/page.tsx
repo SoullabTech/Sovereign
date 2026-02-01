@@ -1,13 +1,21 @@
 'use client';
 
 /**
- * Tarot Oracle Experience
+ * Tarot Oracle Experience - Ritual Immersion
  *
- * The Mirror of the Soul - Interactive tarot reading with card animations
- * Aesthetic: Ancient temple meets mystical card reading
+ * The Archetypal Mirror - Interactive tarot reading with ritual flow
+ * Aesthetic: Amber/rose warmth (matching hub card)
+ *
+ * Flow:
+ * 1. Threshold (arrival) - "Let the image arrive before meaning"
+ * 2. Life area selection + Lens toggle
+ * 3. Spiral questions
+ * 4. Spread selection as ritual layout
+ * 5. Card reveal - Symbol first, meaning second
+ * 6. Integration - Journal prompt + Spiral Reflection
  */
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,16 +23,30 @@ import {
   Sparkles,
   Moon,
   Star,
-  Heart,
-  Wand2,
-  Swords,
-  Coins,
   RefreshCw,
-  BookOpen
+  BookOpen,
+  Eye,
+  Heart,
+  Zap,
+  Hexagon,
+  Feather
 } from 'lucide-react';
+import {
+  RitualShell,
+  RitualBackButton,
+  RitualCard,
+  LifeAreaChips,
+  SpiralQuestionChips,
+  IntegrationGrid,
+  SpiralReflection,
+  getOracleTone,
+  getRevealMotion,
+  type LifeArea,
+} from '@/components/oracle/ritual/OracleRitualParts';
 
 type SpreadType = 'three-card' | 'celtic-cross' | 'single-card';
-type ReadingPhase = 'question' | 'spread-selection' | 'drawing' | 'reveal' | 'interpretation';
+type TarotStage = 'threshold' | 'question' | 'spread' | 'drawing' | 'reveal' | 'reading';
+type TarotLens = 'practical' | 'shadow' | 'relationship';
 
 interface TarotCard {
   name: string;
@@ -43,68 +65,73 @@ interface TarotReading {
   advice: string;
 }
 
+const LENS_OPTIONS: { key: TarotLens; label: string }[] = [
+  { key: 'practical', label: 'Practical guidance' },
+  { key: 'shadow', label: 'Shadow mirror' },
+  { key: 'relationship', label: 'Relationship lens' },
+];
+
 const SPREAD_OPTIONS = [
   {
     id: 'single-card',
     name: 'Single Card',
-    description: 'Quick guidance for today',
+    description: 'One clear answer',
+    why: 'When you need direct, simple guidance',
     positions: 1,
     icon: Star,
-    recommended: 'Daily insight'
   },
   {
     id: 'three-card',
     name: 'Three-Card Spread',
     description: 'Past, Present, Future',
+    why: 'When you want to see the arc of a situation',
     positions: 3,
     icon: Sparkles,
-    recommended: 'Most popular'
   },
   {
     id: 'celtic-cross',
     name: 'Celtic Cross',
-    description: 'Comprehensive 10-card reading',
+    description: 'Full 10-card reading',
+    why: 'When you need a comprehensive view',
     positions: 10,
     icon: Moon,
-    recommended: 'Deep dive'
   }
 ];
 
 export default function TarotOraclePage() {
   const router = useRouter();
-  const [phase, setPhase] = useState<ReadingPhase>('question');
+
+  // Tarot-specific tone and reveal presets
+  const tone = getOracleTone('tarot');
+  const revealMotion = getRevealMotion('tarot');
+
+  const [stage, setStage] = useState<TarotStage>('threshold');
+  const [lifeArea, setLifeArea] = useState<LifeArea | null>(null);
+  const [lens, setLens] = useState<TarotLens>('practical');
   const [question, setQuestion] = useState('');
   const [selectedSpread, setSelectedSpread] = useState<SpreadType | null>(null);
   const [reading, setReading] = useState<TarotReading | null>(null);
   const [revealedCards, setRevealedCards] = useState<number[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  const handleQuestionSubmit = () => {
-    if (question.trim()) {
-      setPhase('spread-selection');
-    }
-  };
-
   const handleSpreadSelect = (spreadId: SpreadType) => {
     setSelectedSpread(spreadId);
-    setPhase('drawing');
-    // Start drawing animation after a brief moment
-    setTimeout(() => {
-      drawCards(spreadId);
-    }, 1000);
+    setStage('drawing');
+    setTimeout(() => drawCards(spreadId), 1000);
   };
 
   const drawCards = async (spreadType: SpreadType) => {
     setIsDrawing(true);
 
     try {
-      // Call the tarot API endpoint
       const response = await fetch('/api/oracle/tarot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query: question,
-          spreadType: spreadType
+          spreadType,
+          lifeArea,
+          lens
         })
       });
 
@@ -112,8 +139,7 @@ export default function TarotOraclePage() {
 
       if (data.reading) {
         setReading(data.reading);
-        setPhase('reveal');
-        // Reveal cards one by one
+        setStage('reveal');
         revealCardsSequentially(data.reading.cards.length);
       }
     } catch (error) {
@@ -129,56 +155,78 @@ export default function TarotOraclePage() {
       setTimeout(() => {
         revealed.push(i);
         setRevealedCards([...revealed]);
-
-        // Move to interpretation phase after last card
-        if (i === cardCount - 1) {
-          setTimeout(() => {
-            setPhase('interpretation');
-          }, 1500);
-        }
       }, i * 800);
     }
   };
 
   const handleNewReading = () => {
-    setPhase('question');
+    setStage('threshold');
+    setLifeArea(null);
+    setLens('practical');
     setQuestion('');
     setSelectedSpread(null);
     setReading(null);
     setRevealedCards([]);
   };
 
-  return (
-    <div className="min-h-screen bg-[#06060A] relative overflow-hidden">
-      {/* Atmospheric backdrop */}
-      <div className="fixed inset-0 pointer-events-none">
-        {/* Multi-colored radial gradients */}
-        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(255,180,120,0.12),transparent_60%),radial-gradient(900px_700px_at_70%_30%,rgba(255,120,150,0.10),transparent_55%),radial-gradient(1100px_800px_at_50%_85%,rgba(180,140,255,0.08),transparent_60%)]" />
-        {/* Dark overlay gradient */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.45),rgba(0,0,0,0.85))]" />
-        {/* Starfield dot pattern */}
-        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
-      </div>
+  // THRESHOLD PHASE - Using shared components
+  if (stage === 'threshold') {
+    return (
+      <RitualShell max="5xl" variant="tarot">
+        <RitualBackButton to="/oracle" label="Back to Oracle" />
+        <RitualCard
+          title="Tarot Oracle"
+          subtitle={tone.thresholdLine}
+          icon={<span className="text-2xl">✶</span>}
+        >
+          <div className="mt-6">
+            <div className="text-sm text-white/60 mb-3">Choose a life area</div>
+            <LifeAreaChips value={lifeArea} onChange={setLifeArea} accentColor="amber" className="flex flex-wrap gap-2" />
+          </div>
 
-      {/* Subtle atmospheric particles */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => (
+          <div className="mt-8">
+            <button
+              disabled={!lifeArea}
+              onClick={() => setStage('question')}
+              className={`w-full rounded-xl px-4 py-4 text-sm font-medium border transition flex items-center justify-center gap-2
+                ${lifeArea
+                  ? 'border-white/10 bg-white/10 hover:bg-white/15 text-white'
+                  : 'border-white/10 bg-white/5 text-white/40 cursor-not-allowed'}`}
+            >
+              <Eye className="w-5 h-5" />
+              Enter the Chamber
+            </button>
+          </div>
+        </RitualCard>
+
+        {/* Subtle sigil watermark */}
+        <div className="fixed bottom-8 right-8 pointer-events-none select-none text-7xl font-light text-white/[0.06]">
+          ✶
+        </div>
+      </RitualShell>
+    );
+  }
+
+  return (
+    <RitualShell max="5xl" variant="tarot">
+      {/* Soft ambient particles - tarot shimmer */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {[...Array(15)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-white/20 rounded-full"
+            className="absolute w-0.5 h-0.5 bg-amber-200/25 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -30, 0],
-              opacity: [0.1, 0.4, 0.1],
-              scale: [1, 1.3, 1],
+              y: [0, -20, 0],
+              opacity: [0.1, 0.25, 0.1],
             }}
             transition={{
-              duration: 5 + Math.random() * 7,
+              duration: 7 + Math.random() * 4,
               repeat: Infinity,
-              delay: Math.random() * 4,
+              delay: Math.random() * 3,
               ease: 'easeInOut',
             }}
           />
@@ -188,7 +236,6 @@ export default function TarotOraclePage() {
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-12">
         <div className="w-full max-w-5xl">
-
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -197,23 +244,23 @@ export default function TarotOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm backdrop-blur hover:bg-white/10"
+              className="flex items-center gap-2 text-white/60 hover:text-white transition-colors rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm backdrop-blur hover:bg-white/10"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-amber-400/80" />
-              <h1 className="text-2xl font-light text-white tracking-wide">Tarot Oracle</h1>
+              <span className="text-2xl text-amber-400/80">✶</span>
+              <h1 className="text-xl font-light text-white/90 tracking-wide">Tarot</h1>
             </div>
 
-            <div className="w-24" /> {/* Spacer for centering */}
+            <div className="w-24" />
           </motion.div>
 
-          {/* Question Phase */}
           <AnimatePresence mode="wait">
-            {phase === 'question' && (
+            {/* QUESTION PHASE */}
+            {stage === 'question' && (
               <motion.div
                 key="question"
                 initial={{ opacity: 0, y: 20 }}
@@ -222,64 +269,77 @@ export default function TarotOraclePage() {
                 className="max-w-2xl mx-auto"
               >
                 <div className="text-center mb-8">
-                  <motion.div
-                    animate={{
-                      rotate: [0, 360],
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 20,
-                      repeat: Infinity,
-                      ease: 'linear',
-                    }}
-                    className="inline-block mb-6"
-                  >
-                    <Star className="w-16 h-16 text-amber-400/60" />
-                  </motion.div>
-
-                  <h2 className="text-4xl font-semibold text-white mb-4 tracking-tight">
-                    Ask Your Question
+                  <h2 className="text-2xl font-light text-white/90 mb-2">
+                    Ask your question
                   </h2>
-                  <p className="text-white/70 text-lg">
-                    The cards are listening. Speak from your heart.
+                  <p className="text-white/50 text-sm">
+                    Hold the question gently. Let the image speak first.
                   </p>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8">
+                  {/* Lens Toggle */}
+                  <div className="mb-6">
+                    <div className="text-sm text-white/60 mb-2">Lens</div>
+                    <div className="inline-flex rounded-full border border-white/10 bg-white/5 p-1 backdrop-blur">
+                      {LENS_OPTIONS.map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setLens(key)}
+                          className={`px-4 py-2 text-sm rounded-full transition
+                            ${lens === key
+                              ? 'bg-amber-500/20 text-white'
+                              : 'text-white/60 hover:text-white hover:bg-white/10'}`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Spiral Questions - Using shared component */}
+                  <SpiralQuestionChips
+                    question={question}
+                    setQuestion={setQuestion}
+                    lifeArea={lifeArea}
+                    accentColor="amber"
+                  />
+
+                  <div className="text-white/40 text-xs text-center mb-4 mt-6">— or —</div>
+
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
-                    placeholder="What guidance do you seek from the cards?"
-                    className="w-full h-32 px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all resize-none"
-                    autoFocus
+                    placeholder="Write your own question..."
+                    className="w-full h-24 px-4 py-3 bg-black/30 border border-white/10 rounded-lg text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-400/40 focus:border-amber-400/40 transition-all resize-none text-sm"
                   />
 
                   <button
-                    onClick={handleQuestionSubmit}
+                    onClick={() => setStage('spread')}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-white/10 hover:bg-white/15 disabled:bg-white/5 disabled:cursor-not-allowed border border-white/10 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-white/10 hover:bg-white/15 disabled:bg-white/5 disabled:cursor-not-allowed border border-white/10 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
-                    Continue to Card Selection
+                    Choose a Spread
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {/* Spread Selection Phase */}
-            {phase === 'spread-selection' && (
+            {/* SPREAD SELECTION PHASE */}
+            {stage === 'spread' && (
               <motion.div
-                key="spread-selection"
+                key="spread"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-4xl font-semibold text-white mb-4 tracking-tight">
-                    Choose Your Spread
+                  <h2 className="text-2xl font-light text-white/90 mb-2">
+                    Choose your ritual layout
                   </h2>
-                  <p className="text-white/70 text-lg max-w-2xl mx-auto">
-                    Each spread offers a different perspective on your question
+                  <p className="text-white/50 text-sm">
+                    Each spread offers a different perspective
                   </p>
                 </div>
 
@@ -293,34 +353,25 @@ export default function TarotOraclePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleSpreadSelect(spread.id as SpreadType)}
-                        className="group p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/[0.07] hover:border-amber-400/30 transition-all duration-300"
-                        whileHover={{ y: -4, scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                        className="group p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/[0.07] hover:border-amber-400/30 transition-all duration-300 text-left"
                       >
-                        <div className="flex flex-col items-center text-center relative">
-                          {/* Subtle sigil in background */}
-                          <div className="absolute right-0 top-0 text-4xl font-semibold text-white/10 pointer-events-none select-none">
-                            ✶
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center flex-shrink-0">
+                            <Icon className="w-6 h-6 text-amber-400/70" />
                           </div>
-
-                          <div className="w-16 h-16 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center mb-4 transition-colors">
-                            <Icon className="w-8 h-8 text-white/80" />
-                          </div>
-
-                          <h3 className="text-xl font-semibold text-white mb-2 tracking-tight">
-                            {spread.name}
-                          </h3>
-
-                          <span className="inline-block px-3 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/80 text-xs rounded-full mb-3">
-                            {spread.recommended}
-                          </span>
-
-                          <p className="text-white/70 text-sm mb-3">
-                            {spread.description}
-                          </p>
-
-                          <div className="text-white/50 text-xs">
-                            {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
+                          <div>
+                            <h3 className="text-lg font-medium text-white mb-1">
+                              {spread.name}
+                            </h3>
+                            <p className="text-white/60 text-sm mb-2">
+                              {spread.description}
+                            </p>
+                            <p className="text-white/40 text-xs">
+                              {spread.why}
+                            </p>
+                            <div className="mt-3 text-amber-400/60 text-xs">
+                              {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
+                            </div>
                           </div>
                         </div>
                       </motion.button>
@@ -330,183 +381,198 @@ export default function TarotOraclePage() {
               </motion.div>
             )}
 
-            {/* Drawing Phase */}
-            {phase === 'drawing' && (
+            {/* DRAWING PHASE */}
+            {stage === 'drawing' && (
               <motion.div
                 key="drawing"
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 className="flex flex-col items-center justify-center min-h-[60vh]"
               >
                 <motion.div
-                  animate={{
-                    rotate: 360,
-                    scale: [1, 1.2, 1],
-                  }}
-                  transition={{
-                    rotate: { duration: 3, repeat: Infinity, ease: 'linear' },
-                    scale: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-                  }}
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
                   className="mb-8"
                 >
-                  <Sparkles className="w-20 h-20 text-amber-400/60" />
+                  <Sparkles className="w-16 h-16 text-amber-400/50" />
                 </motion.div>
 
-                <h2 className="text-3xl font-semibold text-white mb-4 tracking-tight">
-                  Drawing the Cards...
+                <h2 className="text-2xl font-light text-white/90 mb-2">
+                  {tone.waitingLine}
                 </h2>
-                <p className="text-white/70 text-lg">
+                <p className="text-white/50 text-sm">
                   The oracle speaks through sacred symbols
                 </p>
               </motion.div>
             )}
 
-            {/* Reveal & Interpretation Phase */}
-            {(phase === 'reveal' || phase === 'interpretation') && reading && (
+            {/* REVEAL PHASE - Symbol First */}
+            {stage === 'reveal' && reading && (
+              <div className="max-w-3xl mx-auto">
+                {/* Header stays fully steady - no animation */}
+                <div className="text-center mb-10">
+                  <h2 className="text-2xl font-light text-white/90 mb-2">
+                    {tone.revealLine}
+                  </h2>
+                </div>
+
+                {/* Cards reveal with curtain-pull animation */}
+                <motion.div
+                  key="tarot-reveal"
+                  initial={revealMotion.initial}
+                  animate={revealMotion.animate}
+                  transition={revealMotion.transition}
+                  className={`grid gap-6 mb-10 ${
+                    reading.cards.length === 1 ? 'grid-cols-1 max-w-xs mx-auto' :
+                    reading.cards.length === 3 ? 'grid-cols-3' :
+                    'grid-cols-5'
+                  }`}
+                >
+                  {reading.cards.map((card, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, rotateY: 180 }}
+                      animate={{
+                        opacity: revealedCards.includes(index) ? 1 : 0,
+                        rotateY: revealedCards.includes(index) ? 0 : 180,
+                      }}
+                      transition={{ duration: 0.6, delay: index * 0.15 }}
+                      className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 text-center"
+                    >
+                      <div className="text-4xl text-amber-400/50 mb-3">✶</div>
+                      <div className="text-white/50 text-xs uppercase tracking-wider mb-1">
+                        {card.position}
+                      </div>
+                      <h3 className="text-white font-medium">
+                        {card.name}
+                        {card.reversed && <span className="text-rose-400 ml-1">(R)</span>}
+                      </h3>
+                    </motion.div>
+                  ))}
+                </motion.div>
+
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  onClick={() => setStage('reading')}
+                  className="w-full rounded-xl px-4 py-4 text-sm font-medium border border-white/10 bg-white/10 hover:bg-white/15 transition"
+                >
+                  Proceed to Meaning
+                </motion.button>
+              </div>
+            )}
+
+            {/* READING PHASE - Full Interpretation */}
+            {stage === 'reading' && reading && (
               <motion.div
-                key="reveal"
+                key="reading"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
               >
-                {/* Cards Display */}
-                <div className="mb-12">
-                  <h2 className="text-3xl font-semibold text-white text-center mb-8 tracking-tight">
+                {/* Cards with Full Details */}
+                <div className="mb-8">
+                  <h2 className="text-2xl font-light text-white/90 text-center mb-6">
                     {reading.spreadName}
                   </h2>
 
                   <div className={`grid gap-6 ${
-                    reading.cards.length === 1 ? 'grid-cols-1 max-w-sm mx-auto' :
+                    reading.cards.length === 1 ? 'grid-cols-1 max-w-md mx-auto' :
                     reading.cards.length === 3 ? 'grid-cols-1 md:grid-cols-3' :
                     'grid-cols-2 md:grid-cols-5'
                   }`}>
                     {reading.cards.map((card, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, rotateY: 180 }}
-                        animate={{
-                          opacity: revealedCards.includes(index) ? 1 : 0,
-                          rotateY: revealedCards.includes(index) ? 0 : 180,
-                        }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                        className="perspective-1000"
-                      >
-                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl relative overflow-hidden">
-                          {/* Subtle sigil in background */}
-                          <div className="absolute right-3 top-3 text-6xl font-semibold text-white/10 pointer-events-none select-none">
-                            ✶
+                      <div key={index} className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6">
+                        <div className="text-center mb-4">
+                          <div className="text-white/50 text-xs uppercase tracking-wider mb-1">
+                            {card.position}
                           </div>
-
-                          <div className="text-center mb-4 relative">
-                            <div className="text-white/50 text-xs uppercase tracking-wider mb-2">
-                              {card.position}
-                            </div>
-                            <h3 className="text-lg font-semibold text-white">
-                              {card.name}
-                              {card.reversed && <span className="text-rose-400 ml-2">(R)</span>}
-                            </h3>
-                          </div>
-
-                          <div className="flex-1 flex items-center justify-center mb-4">
-                            <Star className="w-16 h-16 text-amber-400/30" />
-                          </div>
-
-                          <div className="space-y-2">
-                            <div className="flex flex-wrap gap-1">
-                              {card.keywords.slice(0, 3).map((keyword, i) => (
-                                <span
-                                  key={i}
-                                  className="px-2 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/70 text-xs rounded"
-                                >
-                                  {keyword}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
+                          <h3 className="text-lg font-medium text-white">
+                            {card.name}
+                            {card.reversed && <span className="text-rose-400 ml-2">(R)</span>}
+                          </h3>
                         </div>
-                      </motion.div>
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {card.keywords.slice(0, 3).map((kw, i) => (
+                            <span key={i} className="px-2 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/70 text-xs rounded">
+                              {kw}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-white/60 text-sm">{card.interpretation}</p>
+                      </div>
                     ))}
                   </div>
                 </div>
 
-                {/* Interpretation */}
-                {phase === 'interpretation' && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
+                {/* Oracle's Wisdom */}
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 mb-6">
+                  <div className="flex items-center gap-3 mb-6">
+                    <BookOpen className="w-5 h-5 text-amber-400/80" />
+                    <h3 className="text-xl font-light text-white/90">Oracle's Wisdom</h3>
+                  </div>
+
+                  <div className="space-y-6 text-white/70 leading-relaxed">
+                    <div>
+                      <h4 className="text-white/80 text-sm font-medium mb-2">Overall Message</h4>
+                      <p>{reading.overallMessage}</p>
+                    </div>
+                    <div>
+                      <h4 className="text-white/80 text-sm font-medium mb-2">Guidance</h4>
+                      <p>{reading.advice}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Integration Section - Using shared component */}
+                <IntegrationGrid
+                  aTitle="One step (24 hours)"
+                  aBody="Choose one small action that matches the card's posture. Keep it simple."
+                  bTitle="Journal this"
+                  bBody="What part of me does this card describe that I usually hide?"
+                  cTitle="One thing to stop"
+                  cBody="Stop rehearsing the old story. Notice where you tighten — and soften once."
+                />
+
+                {/* Spiral Reflection - Using shared component */}
+                <SpiralReflection
+                  element={lens === 'shadow' ? 'Water' : lens === 'relationship' ? 'Air' : 'Earth'}
+                  state={lens === 'shadow' ? 'integration' : 'opening'}
+                  practice="One honest sentence + one embodied action."
+                />
+
+                {/* Actions - the choice moment */}
+                <div className="flex gap-4 mt-8">
+                  <button
+                    onClick={handleNewReading}
+                    className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium rounded-xl transition-all flex items-center justify-center gap-2"
                   >
-                    <div className="flex items-center gap-3 mb-6">
-                      <BookOpen className="w-6 h-6 text-amber-400/80" />
-                      <h3 className="text-2xl font-semibold text-white tracking-tight">Oracle's Wisdom</h3>
-                    </div>
+                    <RefreshCw className="w-4 h-4" />
+                    New Reading
+                  </button>
+                  <button
+                    onClick={() => router.push('/oracle')}
+                    className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white/70 hover:text-white font-medium rounded-xl transition-all"
+                  >
+                    Back to Oracle
+                  </button>
+                </div>
 
-                    <div className="space-y-6">
-                      <div>
-                        <h4 className="text-white/90 font-medium mb-2">Overall Message:</h4>
-                        <p className="text-white/70 leading-relaxed">
-                          {reading.overallMessage}
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 className="text-white/90 font-medium mb-2">Guidance:</h4>
-                        <p className="text-white/70 leading-relaxed">
-                          {reading.advice}
-                        </p>
-                      </div>
-
-                      {/* Individual Card Interpretations */}
-                      <div className="border-t border-white/10 pt-6 mt-6">
-                        <h4 className="text-white/90 font-medium mb-4">Card Details:</h4>
-                        <div className="space-y-4">
-                          {reading.cards.map((card, index) => (
-                            <div key={index} className="bg-black/20 border border-white/10 rounded-lg p-4">
-                              <h5 className="text-white font-medium mb-2">
-                                {card.name} - {card.position}
-                              </h5>
-                              <p className="text-white/70 text-sm">
-                                {card.interpretation}
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Ritual cue section */}
-                      <div className="border border-white/10 bg-black/20 rounded-xl px-4 py-3">
-                        <div className="text-xs font-medium text-white/80">Ritual cue</div>
-                        <div className="mt-1 text-sm text-white/70">
-                          Hold the question gently. Let the image speak first.
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-4 mt-8">
-                      <button
-                        onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
-                      >
-                        <RefreshCw className="w-5 h-5" />
-                        New Reading
-                      </button>
-                      <button
-                        onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 font-medium rounded-lg transition-all duration-300"
-                      >
-                        Back to Oracle
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+                {/* Closing incantation - after choice */}
+                <p className="mt-10 text-white/35 text-sm text-center italic">
+                  {tone.integrationLine}
+                </p>
               </motion.div>
             )}
           </AnimatePresence>
-
         </div>
       </div>
-    </div>
+
+      {/* Subtle sigil watermark */}
+      <div className="fixed bottom-8 right-8 pointer-events-none select-none text-7xl font-light text-white/[0.06] z-0">
+        ✶
+      </div>
+    </RitualShell>
   );
 }

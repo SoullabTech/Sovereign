@@ -80,14 +80,17 @@ if (!IS_PROD && process.env.MAIA_MEMORY_SIM_HEADERS === '1') {
 }
 
 // Audit fingerprint secret - must be set in production for secure correlation
+// Note: Check is deferred to runtime (in POST handler) to allow build to complete
 const AUDIT_FINGERPRINT_SECRET =
   process.env.MAIA_AUDIT_FINGERPRINT_SECRET ||
   (IS_PROD ? '' : 'dev-only-secret'); // Dev fallback OK, prod requires real secret
 
-// Fail-closed: production MUST have fingerprint secret configured
-if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
-  console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
-  throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+// Runtime validation helper - called at request time, not module load
+function validateProductionConfig() {
+  if (IS_PROD && !process.env.MAIA_AUDIT_FINGERPRINT_SECRET) {
+    console.error('🚨 FATAL: MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+    throw new Error('MAIA_AUDIT_FINGERPRINT_SECRET is required in production');
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -461,6 +464,9 @@ async function queryCanonBeads(message: string): Promise<string | null> {
 }
 
 export async function POST(req: NextRequest) {
+  // Validate production config at request time (not module load)
+  validateProductionConfig();
+
   const reqId = generateReqId();
   const startTime = Date.now();
 

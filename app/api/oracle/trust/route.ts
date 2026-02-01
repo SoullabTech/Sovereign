@@ -1,107 +1,45 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { personalOracleAgent } from '../../backend/src/agents/PersonalOracleAgent';
-import { logger } from '../../backend/src/utils/logger';
-
 /**
- * GET /api/oracle/trust
- * Get user's trust metrics and stage evolution
+ * Oracle Trust API Route - Thin adapter
+ * All logic lives in lib/oracle/handlers
  */
-export async function GET(request: NextRequest) {
+import { NextResponse, type NextRequest } from 'next/server';
+
+export const dynamic = 'force-dynamic';
+
+export async function GET(req: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    
-    if (!userId) {
-      return NextResponse.json(
-        { error: 'userId parameter is required' },
-        { status: 400 }
-      );
-    }
+    // Lazy import handler to avoid module-load issues
+    const { getOracleTrustHandler } = await import(
+      '@/lib/oracle/handlers/oracleHandlers'
+    );
 
-    // Get oracle state including trust metrics
-    const stateResponse = await personalOracleAgent.getOracleState(userId);
-    
-    if (!stateResponse.success) {
-      return NextResponse.json(
-        { error: 'Failed to retrieve oracle state' },
-        { status: 500 }
-      );
-    }
-
-    const oracleState = stateResponse.data;
-
-    // Extract trust-related information
-    const trustData = {
-      currentStage: oracleState.currentStage,
-      stageProgress: oracleState.stageProgress,
-      trustMetrics: oracleState.relationshipMetrics,
-      stageConfiguration: oracleState.stageConfiguration,
-      safetyStatus: oracleState.safetyStatus,
-      transitionHistory: oracleState.transitionHistory || []
-    };
-
-    return NextResponse.json({
-      success: true,
-      data: trustData
-    });
-
-  } catch (error) {
-    logger.error('Failed to get trust metrics', {
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-
+    const result = await getOracleTrustHandler(req);
+    return NextResponse.json(result, { status: 200 });
+  } catch (err: any) {
+    console.error('[Oracle Trust GET]', err);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { ok: false, error: err?.message ?? 'Unknown error' },
+      { status: err?.message?.includes('required') ? 400 : 500 }
     );
   }
 }
 
-/**
- * POST /api/oracle/trust/feedback
- * Process user feedback to evolve trust and personality
- */
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { userId, feedback } = body;
+    const body = await req.json();
 
-    if (!userId || !feedback) {
-      return NextResponse.json(
-        { error: 'userId and feedback are required' },
-        { status: 400 }
-      );
-    }
+    // Lazy import handler
+    const { recordOracleTrustFeedbackHandler } = await import(
+      '@/lib/oracle/handlers/oracleHandlers'
+    );
 
-    // Validate feedback type
-    const validFeedback = ['more_direct', 'more_gentle', 'perfect'];
-    if (!validFeedback.includes(feedback)) {
-      return NextResponse.json(
-        { error: 'Invalid feedback type. Must be: more_direct, more_gentle, or perfect' },
-        { status: 400 }
-      );
-    }
-
-    // Process feedback
-    await personalOracleAgent.processOracleFeedback(userId, feedback);
-
-    // Get updated state
-    const stateResponse = await personalOracleAgent.getOracleState(userId);
-
-    return NextResponse.json({
-      success: true,
-      message: 'Feedback processed successfully',
-      data: stateResponse.data
-    });
-
-  } catch (error) {
-    logger.error('Failed to process trust feedback', {
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
-
+    const result = await recordOracleTrustFeedbackHandler(body);
+    return NextResponse.json(result, { status: 200 });
+  } catch (err: any) {
+    console.error('[Oracle Trust POST]', err);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { ok: false, error: err?.message ?? 'Unknown error' },
+      { status: 400 }
     );
   }
 }
