@@ -9,29 +9,17 @@
 export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { requireMemberId } from '@/lib/auth/session';
 import { divinationService } from '@/lib/services/divinationService';
 import type { DivinationType } from '@/lib/services/divinationService';
 
-// Get user ID from various sources
-async function getUserId(request: NextRequest): Promise<string | null> {
-  // Check x-member-id header (Capacitor)
-  const memberId = request.headers.get('x-member-id');
-  if (memberId) return memberId;
-
-  // Check cookies
-  const cookieStore = await cookies();
-  const userCookie = cookieStore.get('user_id');
-  if (userCookie?.value) return userCookie.value;
-
-  return null;
-}
-
 export async function GET(request: NextRequest) {
   try {
-    const userId = await getUserId(request);
-
-    if (!userId) {
+    // Use centralized auth that handles cookies + session token header
+    let userId: string;
+    try {
+      userId = await requireMemberId();
+    } catch (e) {
       return NextResponse.json(
         { success: false, error: 'Not authenticated' },
         { status: 401 }
