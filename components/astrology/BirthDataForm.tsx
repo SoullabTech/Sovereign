@@ -11,6 +11,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Circle, MapPin, Clock, Calendar } from 'lucide-react';
 import { MiniHoloflower } from '../holoflower/MiniHoloflower';
+import { apiFetch } from '@/lib/http/apiBase';
 
 // Inline styles for placeholder text
 const placeholderStyles = `
@@ -59,7 +60,8 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
     setIsSearching(true);
     try {
       // Use our backend geocoding API (handles multiple providers with fallbacks)
-      const response = await fetch(
+      // IMPORTANT: Use apiFetch for iOS/Capacitor compatibility
+      const response = await apiFetch(
         `/api/astrology/geocode?q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
@@ -108,7 +110,8 @@ export function BirthDataForm({ onSubmit, loading = false, isDayMode = false }: 
       setIsSearching(true);
       try {
         // Re-fetch just this location to get timezone
-        const response = await fetch(
+        // IMPORTANT: Use apiFetch for iOS/Capacitor compatibility
+        const response = await apiFetch(
           `/api/astrology/geocode?q=${encodeURIComponent(location.display_name)}`
         );
         const data = await response.json();
