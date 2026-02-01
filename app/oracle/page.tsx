@@ -38,7 +38,7 @@ const safeSet = (key: string, value: string) => {
   }
 };
 
-export default function OracleConsultationPage() {
+export default function OraclePage() {
   const router = useRouter();
   const [tier, setTier] = useState<MemberTier>('free');
   const [readingsThisWeek, setReadingsThisWeek] = useState(0);
@@ -105,7 +105,6 @@ export default function OracleConsultationPage() {
     router.push(route);
   };
 
-export default function OraclePage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#06060A] text-white">
       {/* atmospheric backdrop */}
