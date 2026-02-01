@@ -109,6 +109,8 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const consecutiveRestartCount = useRef<number>(0);
   const lastRestartTime = useRef<number>(0);
   const recognitionStartTime = useRef<number>(0);
+  const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
+  const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
 
   // 🎯 ADAPTIVE SILENCE DETECTION - Monitor audio levels for natural speech pauses
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
@@ -1305,6 +1307,11 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           if (isNowRecording) {
             console.log('✅ [Native] Mic is LIVE - orange dot should be visible');
             addDebug('✅ MIC IS LIVE - orange dot visible!');
+            // 🔥 FIX: Mic is actually live — reset the "consecutive restart" counter
+            // This is the source of truth for "mic working" not "user spoke"
+            lastNativeStartAtRef.current = Date.now();
+            consecutiveRestartCount.current = 0;
+            console.log('🔄 [Native] Restart counter reset to 0 (mic is live)');
           }
 
           if (state.status === 'stopped') {
@@ -1325,9 +1332,22 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
             // 🔥 FIX: Only handle restart logic if user wants continuous conversation
             if (wantsToListen) {
-              // 🔥 FIX: Increment restart counter and check limit to prevent blinking loop
-              consecutiveRestartCount.current++;
-              const MAX_NATIVE_RESTARTS = 5; // Allow 5 auto-restarts (~40 seconds) before stopping
+              // 🔥 FIX: Check if this is an "idle stop" within grace period
+              // iOS speech recognition stops quickly when no speech detected - don't count as failure
+              const now = Date.now();
+              const msSinceStart = now - (lastNativeStartAtRef.current || 0);
+              const isIdleStop = msSinceStart < nativeStartGraceMs;
+
+              if (isIdleStop) {
+                // iOS "idle stop" right after start — treat as normal cycling, not a failure
+                console.log(`🔄 [Native] Idle stop within ${msSinceStart}ms grace period - not counting as failure`);
+              } else {
+                // Real failure - mic couldn't stay alive
+                consecutiveRestartCount.current++;
+                console.log(`⚠️ [Native] Restart counter incremented to ${consecutiveRestartCount.current}`);
+              }
+
+              const MAX_NATIVE_RESTARTS = 10; // Allow 10 REAL failures before stopping
 
               if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
                 console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
@@ -1360,8 +1380,9 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                       // Restore listening state
                       setIsListening(true);
                       isListeningRef.current = true;
-                      // Reset counter on successful restart with speech
-                      // (will be reset to 0 when user actually speaks - see partialResults handler)
+                      // 🔥 FIX: Don't reset counter here - iOS speech recognition times out
+                      // after ~8 seconds of silence regardless. The counter prevents infinite
+                      // loops but 15 attempts gives ~2 minutes for user to speak.
                     } catch (e: any) {
                       console.warn('⚠️ [Native] Restart failed:', e?.message || e);
                       // Don't retry - let the next listeningState: stopped handle it
