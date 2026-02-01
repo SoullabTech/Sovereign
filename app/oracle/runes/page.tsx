@@ -23,7 +23,8 @@ import {
   BookOpen,
   RefreshCw,
   Loader2,
-  Flame
+  Flame,
+  MessageSquare
 } from 'lucide-react';
 
 type ReadingPhase = 'question' | 'spread-select' | 'casting' | 'reveal' | 'interpretation';
@@ -598,6 +599,38 @@ export default function RunesOraclePage() {
                         </p>
                       </div>
                     )}
+
+                    {/* Consult with MAIA */}
+                    <div className="bg-gradient-to-br from-violet-900/30 via-purple-800/20 to-indigo-900/30 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <MessageSquare className="w-6 h-6 text-violet-400" />
+                        <h4 className="text-xl font-semibold text-violet-200">Explore with MAIA</h4>
+                      </div>
+                      <p className="text-violet-300/70 text-sm mb-4">
+                        Bring this reading into conversation with MAIA to explore its meaning for your specific situation and integrate its wisdom.
+                      </p>
+                      <button
+                        onClick={() => {
+                          const runesSummary = reading.drawnRunes.map(r =>
+                            `${r.symbol} ${r.name}${r.isReversed ? ' (Merkstave/Reversed)' : ''} in ${r.position}: ${r.meaning}`
+                          ).join('\n');
+                          const context = encodeURIComponent(
+                            `I just received a Rune reading for my question: "${question}"\n\n` +
+                            `Spread: ${selectedSpread.name}\n\n` +
+                            `Runes drawn:\n${runesSummary}\n\n` +
+                            `Insight: ${reading.insight}\n\n` +
+                            `Soul Guidance: ${reading.soulGuidance}\n\n` +
+                            (reading.wyrdMessage ? `Message from Wyrd: ${reading.wyrdMessage}\n\n` : '') +
+                            `Help me understand how this applies to my situation and what the runes are revealing.`
+                          );
+                          router.push(`/maia?context=${context}`);
+                        }}
+                        className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <MessageSquare className="w-5 h-5" />
+                        Consult with MAIA
+                      </button>
+                    </div>
 
                     {/* Actions */}
                     <div className="flex gap-4">

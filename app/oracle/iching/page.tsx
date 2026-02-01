@@ -22,7 +22,8 @@ import {
   Hexagon,
   BookOpen,
   RefreshCw,
-  Loader2
+  Loader2,
+  MessageSquare
 } from 'lucide-react';
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
@@ -484,6 +485,35 @@ export default function IChingOraclePage() {
                         </p>
                       </div>
                     )}
+
+                    {/* Consult with MAIA */}
+                    <div className="bg-gradient-to-br from-violet-900/30 via-purple-800/20 to-indigo-900/30 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6">
+                      <div className="flex items-center gap-3 mb-4">
+                        <MessageSquare className="w-6 h-6 text-violet-400" />
+                        <h4 className="text-xl font-semibold text-violet-200">Explore with MAIA</h4>
+                      </div>
+                      <p className="text-violet-300/70 text-sm mb-4">
+                        Bring this reading into conversation with MAIA to explore its meaning for your specific situation and integrate its wisdom.
+                      </p>
+                      <button
+                        onClick={() => {
+                          const context = encodeURIComponent(
+                            `I just received an I Ching reading for my question: "${question}"\n\n` +
+                            `Hexagram ${reading.hexagram.number}: ${reading.hexagram.name} (${reading.hexagram.keyword})\n` +
+                            `Upper trigram: ${reading.hexagram.trigrams.upper}, Lower trigram: ${reading.hexagram.trigrams.lower}\n\n` +
+                            `Interpretation: ${reading.hexagram.interpretation}\n\n` +
+                            `Guidance: ${reading.guidance}\n\n` +
+                            (reading.hexagram.transformed ? `This transforms into Hexagram ${reading.hexagram.transformed.number}: ${reading.hexagram.transformed.name}\n\n` : '') +
+                            `Help me understand how this applies to my situation and what it means for me.`
+                          );
+                          router.push(`/maia?context=${context}`);
+                        }}
+                        className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                      >
+                        <MessageSquare className="w-5 h-5" />
+                        Consult with MAIA
+                      </button>
+                    </div>
 
                     {/* Actions */}
                     <div className="flex gap-4">
