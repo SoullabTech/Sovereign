@@ -216,7 +216,7 @@
     "langfuse": "^3.38.6",
     "lucide-react": "^0.451.0",
     "luxon": "^3.7.2",
-    "next": "15.5.9",
+    "next": "^15.5.11",
     "next-themes": "^0.3.0",
     "node-cron": "^4.2.1",
     "openai": "^4.67.3",
