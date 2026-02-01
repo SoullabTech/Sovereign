@@ -396,7 +396,7 @@ export const SacredLabDrawer: React.FC<SacredLabDrawerProps> = ({
         {
           icon: Sparkles,
           label: 'Cosmic Blueprint',
-          action: () => onNavigate('/birth-chart'),
+          action: () => onNavigate('/astrology'),
           description: 'Your birth chart & astrology'
         },
         {
