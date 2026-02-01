@@ -1,385 +1,274 @@
+/* frontend: app/oracle/page.tsx */
 'use client';
 
-/**
- * Oracle Consultation - The Sanctum of Divination
- *
- * A sacred space where MAIA channels wisdom through ancient divination methods:
- * - I Ching: The Book of Changes - 64 hexagrams of cosmic wisdom
- * - Tarot: The Mirror of the Soul - 78 cards of archetypal guidance
- * - Runes: The Elder Futhark - 24 symbols of ancestral knowledge
- *
- * Aesthetic: Soullab hybrid dark theme - atmospheric with refined typography
- */
-
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
-import { betaSession } from '@/lib/auth/betaSession';
-import { hasContinuityAccess, type MemberTier } from '@/lib/auth/tierAccess';
-import PersonalThresholdInvitation from '@/components/tier/PersonalThresholdInvitation';
-import TierDebugPill from '@/components/dev/TierDebugPill';
+import { motion } from 'framer-motion';
+import {
+  ArrowLeft,
+  Sparkles,
+  Moon,
+  Star,
+  Compass,
+  ChevronRight,
+  Shield,
+} from 'lucide-react';
 
-type DivinationMethod = 'iching' | 'tarot' | 'runes' | null;
+type MemberTier = 'free' | 'personal' | 'stewardship' | 'pro';
+type DivinationKey = 'iching' | 'tarot' | 'runes';
 
-interface OracleMethod {
-  id: DivinationMethod;
-  title: string;
-  subtitle: string;
-  description: string;
-  accentColor: string;
-  iconBg: string;
+function cx(...classes: Array<string | false | null | undefined>) {
+  return classes.filter(Boolean).join(' ');
 }
 
-const ORACLE_METHODS: OracleMethod[] = [
-  {
-    id: 'iching',
-    title: 'I Ching',
-    subtitle: 'The Book of Changes',
-    description: 'Cast the ancient hexagrams to understand cosmic currents. 64 pathways of wisdom await your question.',
-    accentColor: 'text-amber-400',
-    iconBg: 'bg-amber-500/20 border-amber-500/30'
-  },
-  {
-    id: 'tarot',
-    title: 'Tarot',
-    subtitle: 'The Mirror of the Soul',
-    description: 'Journey through archetypal wisdom of 78 sacred cards. Each spread reveals hidden patterns shaping your path.',
-    accentColor: 'text-violet-400',
-    iconBg: 'bg-violet-500/20 border-violet-500/30'
-  },
-  {
-    id: 'runes',
-    title: 'Runes',
-    subtitle: 'The Elder Futhark',
-    description: 'Draw from 24 ancient Norse symbols. The runes speak of fate, will, and the hidden currents of wyrd.',
-    accentColor: 'text-teal-400',
-    iconBg: 'bg-teal-500/20 border-teal-500/30'
+// Safe localStorage helpers
+const safeGet = (key: string) => {
+  try {
+    return typeof window !== 'undefined' ? window.localStorage.getItem(key) : null;
+  } catch {
+    return null;
   }
-];
+};
 
-// Helper to get/set weekly reading count in localStorage
-const READING_COUNT_KEY = 'oracle_readings_this_week';
-const READING_WEEK_KEY = 'oracle_week_start';
-
-function getWeekStart(): string {
-  const now = new Date();
-  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // local midnight
-  const dayOfWeek = d.getDay(); // 0=Sun
-  d.setDate(d.getDate() - dayOfWeek); // Sunday start
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const dd = String(d.getDate()).padStart(2, '0');
-  return `${yyyy}-${mm}-${dd}`;
-}
-
-function getReadingCount(): number {
-  if (typeof window === 'undefined') return 0;
-  const weekStart = localStorage.getItem(READING_WEEK_KEY);
-  const currentWeekStart = getWeekStart();
-
-  // Reset count if new week
-  if (weekStart !== currentWeekStart) {
-    localStorage.setItem(READING_WEEK_KEY, currentWeekStart);
-    localStorage.setItem(READING_COUNT_KEY, '0');
-    return 0;
+const safeSet = (key: string, value: string) => {
+  try {
+    if (typeof window !== 'undefined') window.localStorage.setItem(key, value);
+  } catch {
+    // noop
   }
-
-  return parseInt(localStorage.getItem(READING_COUNT_KEY) || '0', 10);
-}
-
-function incrementReadingCount(): void {
-  if (typeof window === 'undefined') return;
-  const currentWeekStart = getWeekStart();
-  localStorage.setItem(READING_WEEK_KEY, currentWeekStart);
-  const count = getReadingCount();
-  localStorage.setItem(READING_COUNT_KEY, String(count + 1));
-}
-
-// Dismissal persistence (per week)
-const DISMISS_KEY = 'oracle_threshold_dismissed_week';
-
-function getThresholdDismissed(): boolean {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(DISMISS_KEY) === getWeekStart();
-}
-
-function setThresholdDismissed(): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(DISMISS_KEY, getWeekStart());
-}
-
-// Custom SVG icons for each oracle type
-const HexagramIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <line x1="6" y1="4" x2="18" y2="4" />
-    <line x1="6" y1="8" x2="18" y2="8" />
-    <line x1="6" y1="12" x2="11" y2="12" />
-    <line x1="13" y1="12" x2="18" y2="12" />
-    <line x1="6" y1="16" x2="18" y2="16" />
-    <line x1="6" y1="20" x2="11" y2="20" />
-    <line x1="13" y1="20" x2="18" y2="20" />
-  </svg>
-);
-
-const TarotIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <rect x="4" y="2" width="16" height="20" rx="2" />
-    <circle cx="12" cy="12" r="4" />
-    <path d="M12 8 L12 6" />
-    <path d="M12 18 L12 16" />
-    <path d="M8 12 L6 12" />
-    <path d="M18 12 L16 12" />
-  </svg>
-);
-
-const RuneIcon = () => (
-  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
-    <path d="M12 3 L12 21" />
-    <path d="M12 3 L18 9" />
-    <path d="M12 12 L18 18" />
-  </svg>
-);
-
-const ORACLE_ICONS = {
-  iching: HexagramIcon,
-  tarot: TarotIcon,
-  runes: RuneIcon
 };
 
 export default function OracleConsultationPage() {
   const router = useRouter();
-  const [selectedMethod, setSelectedMethod] = useState<DivinationMethod>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-
-  // Tier and reading tracking
   const [tier, setTier] = useState<MemberTier>('free');
   const [readingsThisWeek, setReadingsThisWeek] = useState(0);
-  const [thresholdDismissed, setDismissedState] = useState(false);
 
-  // Load user, reading count, and dismissal state
   useEffect(() => {
-    const user = betaSession.getCurrentUser();
-    if (user?.tier) {
-      setTier(user.tier);
-    }
-
-    // Load persisted dismissal state
-    setDismissedState(getThresholdDismissed());
-
-    // Dev override: ?readings=5 to force threshold display
-    if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const forceReadings = params.get('readings');
-      if (forceReadings) {
-        setReadingsThisWeek(parseInt(forceReadings, 10));
-        return;
-      }
-    }
-
-    setReadingsThisWeek(getReadingCount());
+    const storedTier = safeGet('member_tier') as MemberTier | null;
+    const storedCount = safeGet('oracle_readings_this_week');
+    if (storedTier) setTier(storedTier);
+    if (storedCount) setReadingsThisWeek(Number(storedCount) || 0);
   }, []);
 
-  const handleDismissThreshold = () => {
-    setThresholdDismissed();
-    setDismissedState(true);
+  const methods = useMemo(
+    () =>
+      [
+        {
+          key: 'iching',
+          title: 'I Ching',
+          subtitle: 'Change, timing, and the turning of the spiral',
+          description:
+            'A reflective mirror for life's transitions — revealing the shape of the moment and the next wise move.',
+          icon: Compass,
+          sigil: '☰',
+          accent: 'from-indigo-500/20 via-cyan-500/10 to-transparent',
+          route: '/oracle/iching',
+          ritual: 'Ask what wants to evolve, not what you want to control.',
+        },
+        {
+          key: 'tarot',
+          title: 'Tarot',
+          subtitle: 'Archetypes, psyche, and soul-patterns',
+          description:
+            'Seventy-eight doors into the psyche — clarifying desire, shadow, and the deeper story underneath the story.',
+          icon: Star,
+          sigil: '✶',
+          accent: 'from-amber-500/20 via-rose-500/10 to-transparent',
+          route: '/oracle/tarot',
+          ritual: 'Hold the question gently. Let the image speak first.',
+        },
+        {
+          key: 'runes',
+          title: 'Runes',
+          subtitle: 'Ancestral symbols and embodied truth',
+          description:
+            'A concise, earthy oracle — great for grounding decisions and naming the hidden contract of a situation.',
+          icon: Moon,
+          sigil: 'ᚠ',
+          accent: 'from-emerald-500/20 via-teal-500/10 to-transparent',
+          route: '/oracle/runes',
+          ritual: 'Choose simplicity. Let the symbol land in the body.',
+        },
+      ] as const,
+    []
+  );
+
+  const canAccess = (k: DivinationKey) => {
+    // All users can access all oracles
+    return true;
   };
 
-  const hasAccess = hasContinuityAccess({ tier });
-  const showThreshold = !hasAccess && readingsThisWeek >= 3 && !thresholdDismissed;
-
-  const handleMethodSelect = (method: DivinationMethod) => {
-    // Track the reading
-    incrementReadingCount();
-    setReadingsThisWeek(prev => prev + 1);
-
-    setIsTransitioning(true);
-    setSelectedMethod(method);
-
-    setTimeout(() => {
-      router.push(`/oracle/${method}`);
-    }, 800);
+  const handleEnter = (route: string, key: DivinationKey) => {
+    const next = readingsThisWeek + 1;
+    setReadingsThisWeek(next);
+    safeSet('oracle_readings_this_week', String(next));
+    router.push(route);
   };
 
 export default function OraclePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 relative overflow-hidden">
-      {/* Subtle atmospheric particles */}
-      <div className="fixed inset-0 pointer-events-none">
-        {[...Array(30)].map((_, i) => {
-          const seededX = (i * 17.3) % 100;
-          const seededY = (i * 23.7) % 100;
-          const seededDuration = 4 + ((i * 7.1) % 4);
-          const seededDelay = (i * 11.3) % 2;
-          return (
-            <motion.div
-              key={i}
-              className="absolute w-1 h-1 bg-amber-400/20 rounded-full"
-              style={{
-                left: `${seededX}%`,
-                top: `${seededY}%`,
-              }}
-              animate={{
-                y: [0, -30, 0],
-                opacity: [0.1, 0.3, 0.1],
-              }}
-              transition={{
-                duration: seededDuration,
-                repeat: Infinity,
-                delay: seededDelay,
-                ease: 'easeInOut',
-              }}
-            />
-          );
-        })}
+    <div className="relative min-h-screen overflow-hidden bg-[#06060A] text-white">
+      {/* atmospheric backdrop */}
+      <div className="pointer-events-none absolute inset-0">
+        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(120,120,255,0.14),transparent_60%),radial-gradient(900px_700px_at_70%_30%,rgba(255,180,120,0.10),transparent_55%),radial-gradient(1100px_800px_at_50%_85%,rgba(120,255,200,0.08),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.45),rgba(0,0,0,0.85))]" />
+        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
       </div>
 
-      {/* Soft gradient glow from bottom */}
-      <div className="fixed bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-amber-950/20 via-transparent to-transparent pointer-events-none" />
-
-      {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col px-4 py-8 md:py-12">
-        <div className="w-full max-w-4xl mx-auto">
-
-          {/* Back button */}
-          <motion.button
-            initial={{ opacity: 0, x: -10 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4 }}
+      <div className="relative mx-auto w-full max-w-6xl px-5 pb-20 pt-10">
+        {/* top bar */}
+        <div className="flex items-center justify-between">
+          <button
             onClick={() => router.push('/maia')}
-            className="flex items-center gap-2 text-stone-400 hover:text-stone-200 transition-colors text-[13px] tracking-wide mb-12"
+            className="group inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80 backdrop-blur transition hover:bg-white/10 hover:text-white"
           >
-            <ArrowLeft className="h-4 w-4" />
-            <span>Return to MAIA</span>
-          </motion.button>
+            <ArrowLeft className="h-4 w-4 opacity-80 transition group-hover:opacity-100" />
+            Return to MAIA
+          </button>
 
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-12"
-          >
-            {/* Concentric circles icon */}
-            <div className="inline-flex items-center justify-center w-16 h-16 mb-6">
-              <svg viewBox="0 0 64 64" className="w-full h-full text-amber-400/60" fill="none" stroke="currentColor" strokeWidth="1">
-                <circle cx="32" cy="32" r="28" />
-                <circle cx="32" cy="32" r="18" />
-                <circle cx="32" cy="32" r="8" />
-              </svg>
-            </div>
+          <div className="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70 backdrop-blur md:flex">
+            <Shield className="h-4 w-4" />
+            {tier.toUpperCase()} • {readingsThisWeek} this week
+          </div>
+        </div>
 
-            <h1 className="text-3xl md:text-4xl font-light tracking-wide text-stone-100 mb-4">
+        {/* header */}
+        <div className="mt-10 grid gap-10 md:grid-cols-[1.2fr_0.8fr] md:items-end">
+          <div>
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, ease: 'easeOut' }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs text-white/70 backdrop-blur"
+            >
+              <Sparkles className="h-4 w-4" />
               Oracle Consultation
-            </h1>
+            </motion.div>
 
-            <p className="text-stone-400 text-[14px] tracking-wide leading-relaxed max-w-xl mx-auto">
-              Enter the Sanctum of Divination. Choose your oracle, ask your question, and receive wisdom from the ages.
-            </p>
+            <motion.h1
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.05, ease: 'easeOut' }}
+              className="mt-5 text-3xl font-semibold tracking-tight text-white md:text-5xl"
+            >
+              Reflect your spiral.
+              <span className="block text-white/70">
+                Elements, states, and phases — made visible.
+              </span>
+            </motion.h1>
 
-            {/* Divider */}
-            <div className="w-12 h-px bg-amber-500/30 mx-auto mt-8" />
-          </motion.div>
-
-          {/* Dev-only tier debug */}
-          <div className="mb-6 text-center">
-            <TierDebugPill
-              tier={tier}
-              hasAccess={hasAccess}
-              extra={{ readings: `${readingsThisWeek}/3`, showThreshold }}
-              hint="?readings=5 to force threshold"
-              scheme="dark"
-            />
+            <motion.p
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1, ease: 'easeOut' }}
+              className="mt-5 max-w-2xl text-base leading-relaxed text-white/70"
+            >
+              Each oracle is a different lens for the same living truth: you are in motion.
+              Use these portals as meditation — to clarify what's emerging, what's completing,
+              and what wants your attention next.
+            </motion.p>
           </div>
 
-          {/* Threshold invitation for Free users who've consulted 3+ times this week */}
-          {showThreshold && (
-            <div className="mb-8">
-              <PersonalThresholdInvitation
-                context="oracle_frequency"
-                isDayMode={false}
-                onLearnMore={() => router.push('/membership')}
-                onDismiss={handleDismissThreshold}
-                variant="card"
-              />
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.12, ease: 'easeOut' }}
+            className="rounded-2xl border border-white/10 bg-white/5 p-5 backdrop-blur"
+          >
+            <div className="text-sm font-medium text-white/90">A simple way to enter</div>
+            <div className="mt-2 text-sm text-white/70">
+              Name the life area (relationship, work, health, purpose). Then ask:
             </div>
-          )}
+            <div className="mt-4 space-y-2 text-sm text-white/75">
+              <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                "What is the nature of this moment?"
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                "What wants to evolve next?"
+              </div>
+              <div className="rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                "What is the wise posture to take?"
+              </div>
+            </div>
+          </motion.div>
+        </div>
 
-          {/* Oracle Method Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            {ORACLE_METHODS.map((method, index) => {
-              const IconComponent = ORACLE_ICONS[method.id as keyof typeof ORACLE_ICONS];
+        {/* method grid */}
+        <div className="mt-10 grid gap-5 md:grid-cols-3">
+          {methods.map((m, idx) => {
+            const Icon = m.icon;
+            const allowed = canAccess(m.key);
 
-              return (
-                <motion.button
-                  key={method.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  onClick={() => handleMethodSelect(method.id)}
-                  disabled={isTransitioning}
-                  className="group relative p-6 rounded-xl bg-stone-900/60 border border-stone-700/50
-                             hover:bg-stone-800/60 hover:border-stone-600/50
-                             backdrop-blur-sm transition-all duration-300
-                             disabled:opacity-50 disabled:cursor-not-allowed text-left"
-                >
-                  {/* Icon */}
-                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl border ${method.iconBg} mb-5 transition-colors group-hover:scale-105`}>
-                    <div className={method.accentColor}>
-                      <IconComponent />
-                    </div>
+            return (
+              <motion.div
+                key={m.key}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.08 + idx * 0.06, ease: 'easeOut' }}
+                className={cx(
+                  'relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur',
+                  'hover:bg-white/[0.07] transition'
+                )}
+              >
+                {/* subtle accent wash */}
+                <div className={cx('pointer-events-none absolute inset-0 bg-gradient-to-br', m.accent)} />
+
+                {/* subtle sigil (NOT huge, NOT opaque) */}
+                <div className="pointer-events-none absolute right-4 top-4 select-none text-5xl font-semibold text-white/10">
+                  {m.sigil}
+                </div>
+
+                <div className="relative flex items-start justify-between gap-3">
+                  <div className="inline-flex h-11 w-11 items-center justify-center rounded-xl border border-white/10 bg-black/20">
+                    <Icon className="h-5 w-5 text-white/80" />
+                  </div>
+                  {!allowed && (
+                    <span className="rounded-full border border-white/10 bg-black/30 px-3 py-1 text-xs text-white/70">
+                      Locked
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative mt-4">
+                  <div className="text-xl font-semibold tracking-tight text-white">{m.title}</div>
+                  <div className="mt-1 text-sm text-white/70">{m.subtitle}</div>
+                  <p className="mt-4 text-sm leading-relaxed text-white/70">{m.description}</p>
+
+                  <div className="mt-5 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+                    <div className="text-xs font-medium text-white/80">Ritual cue</div>
+                    <div className="mt-1 text-sm text-white/70">{m.ritual}</div>
                   </div>
 
-                  {/* Title */}
-                  <h3 className={`text-xl font-medium tracking-wide mb-1 ${method.accentColor}`}>
-                    {method.title}
-                  </h3>
-
-                  {/* Subtitle */}
-                  <p className="text-[11px] text-stone-500 mb-4 font-medium tracking-[0.15em] uppercase">
-                    {method.subtitle}
-                  </p>
-
-                  {/* Description */}
-                  <p className="text-stone-400 text-[13px] tracking-wide leading-relaxed">
-                    {method.description}
-                  </p>
-
-                  {/* Hover indicator */}
-                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg viewBox="0 0 24 24" className={`w-5 h-5 ${method.accentColor}`} fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
+                  <div className="mt-6">
+                    <button
+                      disabled={!allowed}
+                      onClick={() => allowed && handleEnter(m.route, m.key)}
+                      className={cx(
+                        'group inline-flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition',
+                        allowed
+                          ? 'bg-white/10 hover:bg-white/15 border border-white/10'
+                          : 'bg-white/5 border border-white/10 text-white/40 cursor-not-allowed'
+                      )}
+                    >
+                      <span>Enter</span>
+                      <ChevronRight className="h-4 w-4 opacity-70 transition group-hover:translate-x-0.5 group-hover:opacity-90" />
+                    </button>
                   </div>
-                </motion.button>
-              );
-            })}
-          </div>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
 
+        {/* footer note */}
+        <div className="mt-10 rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/70 backdrop-blur">
+          <div className="text-white/85 font-medium">A Soullab note</div>
+          <p className="mt-2 leading-relaxed">
+            These are not "fortune" tools — they're coherence tools. Let the reading become a mirror:
+            notice what you feel, what you resist, what you already knew, and what you're now willing to admit.
+          </p>
         </div>
       </div>
-
-      {/* Transition overlay */}
-      <AnimatePresence>
-        {isTransitioning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-stone-950/95 backdrop-blur-sm flex items-center justify-center"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.3 }}
-              className="text-center"
-            >
-              <div className="w-12 h-12 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin mx-auto mb-4" />
-              <p className="text-lg text-stone-300 font-light tracking-wide">Entering the Oracle...</p>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
