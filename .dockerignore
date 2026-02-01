@@ -88,6 +88,7 @@ ios/
 
 # Large media files (served via volume mount)
 public/audiobook/
+audiobook-output/
 
 # Other large directories
 videos/
