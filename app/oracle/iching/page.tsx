@@ -27,6 +27,7 @@ import {
   Save,
   Check
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
 
@@ -72,6 +73,7 @@ export default function IChingOraclePage() {
   const [isCasting, setIsCasting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Yarrow stalk casting simulation - builds hexagram line by line
   const castYarrowStalks = async () => {
@@ -148,14 +150,16 @@ export default function IChingOraclePage() {
     setHexagramLines([]);
     setCurrentLineIndex(0);
     setIsSaved(false);
+    setSaveError(null);
   };
 
   const handleSaveReading = async () => {
     if (!reading || isSaving || isSaved) return;
 
     setIsSaving(true);
+    setSaveError(null);
     try {
-      const response = await fetch('/api/divination/save', {
+      const response = await apiFetch('/api/divination/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -184,9 +188,13 @@ export default function IChingOraclePage() {
       const data = await response.json();
       if (data.success) {
         setIsSaved(true);
+      } else {
+        setSaveError(data.error || 'Failed to save reading');
+        console.error('Save failed:', data.error);
       }
     } catch (error) {
       console.error('Failed to save reading:', error);
+      setSaveError('Network error - please try again');
     } finally {
       setIsSaving(false);
     }
@@ -562,6 +570,13 @@ export default function IChingOraclePage() {
                       </button>
                     </div>
 
+                    {/* Save Error Display */}
+                    {saveError && (
+                      <div className="mb-4 p-4 bg-red-900/30 border border-red-600/30 rounded-lg">
+                        <p className="text-red-300 text-sm">{saveError}</p>
+                      </div>
+                    )}
+
                     {/* Actions */}
                     <div className="flex gap-4">
                       <button
@@ -570,6 +585,8 @@ export default function IChingOraclePage() {
                         className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
                           isSaved
                             ? 'bg-green-600/80 text-white cursor-default'
+                            : saveError
+                            ? 'bg-red-700 hover:bg-red-600 text-white'
                             : 'bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-600 hover:to-orange-600 text-white'
                         }`}
                       >
@@ -580,7 +597,7 @@ export default function IChingOraclePage() {
                         ) : (
                           <Save className="w-5 h-5" />
                         )}
-                        {isSaved ? 'Saved to Reflections' : 'Save Reading'}
+                        {isSaved ? 'Saved to Reflections' : saveError ? 'Retry Save' : 'Save Reading'}
                       </button>
                       <button
                         onClick={handleNewReading}
