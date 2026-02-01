@@ -20,7 +20,8 @@ import {
   Star,
   Compass,
   Hexagon,
-  ArrowLeft
+  ArrowLeft,
+  BookOpen
 } from 'lucide-react';
 import { betaSession } from '@/lib/auth/betaSession';
 import { hasContinuityAccess, type MemberTier } from '@/lib/auth/tierAccess';
@@ -352,12 +353,12 @@ export default function OracleConsultationPage() {
             })}
           </div>
 
-          {/* Back to MAIA */}
+          {/* Navigation Links */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.8 }}
-            className="text-center mt-12"
+            className="flex items-center justify-center gap-8 mt-12"
           >
             <button
               onClick={() => router.push('/maia')}
@@ -365,6 +366,16 @@ export default function OracleConsultationPage() {
             >
               <ArrowLeft className="w-4 h-4" />
               Return to MAIA
+            </button>
+
+            <div className="w-px h-4 bg-amber-600/30" />
+
+            <button
+              onClick={() => router.push('/oracle/reflections')}
+              className="inline-flex items-center gap-2 text-amber-400/50 hover:text-amber-300 transition-colors text-sm"
+            >
+              <BookOpen className="w-4 h-4" />
+              View Saved Readings
             </button>
           </motion.div>
 

@@ -21,7 +21,10 @@ import {
   Coins,
   RefreshCw,
   BookOpen,
-  MessageSquare
+  MessageSquare,
+  Save,
+  Check,
+  Loader2
 } from 'lucide-react';
 
 type SpreadType = 'three-card' | 'celtic-cross' | 'single-card';
@@ -79,6 +82,8 @@ export default function TarotOraclePage() {
   const [reading, setReading] = useState<TarotReading | null>(null);
   const [revealedCards, setRevealedCards] = useState<number[]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const handleQuestionSubmit = () => {
     if (question.trim()) {
@@ -147,6 +152,52 @@ export default function TarotOraclePage() {
     setSelectedSpread(null);
     setReading(null);
     setRevealedCards([]);
+    setIsSaved(false);
+  };
+
+  const handleSaveReading = async () => {
+    if (!reading || isSaving || isSaved) return;
+
+    setIsSaving(true);
+    try {
+      // Map spread type to API format
+      const spreadTypeMap: Record<string, string> = {
+        'single-card': 'single',
+        'three-card': 'three_card',
+        'celtic-cross': 'celtic_cross'
+      };
+
+      const response = await fetch('/api/divination/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'tarot',
+          reading: {
+            question: question,
+            spread_type: spreadTypeMap[selectedSpread || 'three-card'] || 'three_card',
+            cards_json: reading.cards.map((card, index) => ({
+              position: card.position,
+              card: card.name,
+              reversed: card.reversed,
+              suit: card.suit,
+              arcana: card.name.includes('The ') ? 'major' : 'minor'
+            })),
+            interpretation_text: reading.overallMessage,
+            guidance_text: reading.advice,
+            archetypal_themes: reading.cards.flatMap(c => c.keywords.slice(0, 2))
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Failed to save reading:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -492,6 +543,24 @@ export default function TarotOraclePage() {
 
                     {/* Actions */}
                     <div className="flex gap-4 mt-6">
+                      <button
+                        onClick={handleSaveReading}
+                        disabled={isSaving || isSaved}
+                        className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                          isSaved
+                            ? 'bg-green-600/80 text-white cursor-default'
+                            : 'bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-600 hover:to-orange-600 text-white'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isSaved ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                        {isSaved ? 'Saved to Reflections' : 'Save Reading'}
+                      </button>
                       <button
                         onClick={handleNewReading}
                         className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"

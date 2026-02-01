@@ -23,7 +23,9 @@ import {
   BookOpen,
   RefreshCw,
   Loader2,
-  MessageSquare
+  MessageSquare,
+  Save,
+  Check
 } from 'lucide-react';
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
@@ -68,6 +70,8 @@ export default function IChingOraclePage() {
   const [hexagramLines, setHexagramLines] = useState<HexagramLine[]>([]);
   const [currentLineIndex, setCurrentLineIndex] = useState(0);
   const [isCasting, setIsCasting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Yarrow stalk casting simulation - builds hexagram line by line
   const castYarrowStalks = async () => {
@@ -143,6 +147,49 @@ export default function IChingOraclePage() {
     setReading(null);
     setHexagramLines([]);
     setCurrentLineIndex(0);
+    setIsSaved(false);
+  };
+
+  const handleSaveReading = async () => {
+    if (!reading || isSaving || isSaved) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/divination/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'iching',
+          reading: {
+            question: question,
+            cast_method: 'yarrow',
+            primary_hex: reading.hexagram.number,
+            primary_hex_name: reading.hexagram.name,
+            line_values: hexagramLines.map(l => l.value),
+            changing_lines: reading.hexagram.changingLines || [],
+            relating_hex: reading.hexagram.transformed?.number,
+            relating_hex_name: reading.hexagram.transformed?.name,
+            lower_trigram: reading.hexagram.trigrams.lower,
+            upper_trigram: reading.hexagram.trigrams.upper,
+            interpretation_text: reading.hexagram.interpretation,
+            guidance_text: reading.guidance,
+            sacred_timing: reading.sacredTiming,
+            ritual_suggestion: reading.ritual,
+            theme_keywords: [reading.hexagram.keyword],
+            archetypal_themes: reading.archetypalTheme ? [reading.archetypalTheme] : []
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Failed to save reading:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -517,6 +564,24 @@ export default function IChingOraclePage() {
 
                     {/* Actions */}
                     <div className="flex gap-4">
+                      <button
+                        onClick={handleSaveReading}
+                        disabled={isSaving || isSaved}
+                        className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                          isSaved
+                            ? 'bg-green-600/80 text-white cursor-default'
+                            : 'bg-gradient-to-r from-amber-700 to-orange-700 hover:from-amber-600 hover:to-orange-600 text-white'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isSaved ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                        {isSaved ? 'Saved to Reflections' : 'Save Reading'}
+                      </button>
                       <button
                         onClick={handleNewReading}
                         className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
