@@ -1307,9 +1307,14 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
             addDebug('✅ MIC IS LIVE - orange dot visible!');
           }
 
-          if (state.status === 'stopped' && isListeningRef.current) {
-            // Process accumulated transcript
-            if (accumulatedTranscript.current.trim()) {
+          if (state.status === 'stopped') {
+            // 🔥 FIX: Check EITHER isListeningRef OR wantsContinuousConversationRef
+            // isListeningRef is false when MAIA is speaking, but we still want to restart after
+            // wantsContinuousConversationRef persists the user's intent to continue conversation
+            const wantsToListen = isListeningRef.current || wantsContinuousConversationRef.current;
+
+            // Process accumulated transcript (only if we were actively listening)
+            if (isListeningRef.current && accumulatedTranscript.current.trim()) {
               const finalTranscript = accumulatedTranscript.current.trim();
               console.log('✅ [Native] Final transcript:', finalTranscript);
               accumulatedTranscript.current = '';
@@ -1318,49 +1323,56 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               onTranscript(finalTranscript);
             }
 
-            // 🔥 FIX: Increment restart counter and check limit to prevent blinking loop
-            consecutiveRestartCount.current++;
-            const MAX_NATIVE_RESTARTS = 5; // Allow 5 auto-restarts (~40 seconds) before stopping
+            // 🔥 FIX: Only handle restart logic if user wants continuous conversation
+            if (wantsToListen) {
+              // 🔥 FIX: Increment restart counter and check limit to prevent blinking loop
+              consecutiveRestartCount.current++;
+              const MAX_NATIVE_RESTARTS = 5; // Allow 5 auto-restarts (~40 seconds) before stopping
 
-            if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
-              console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
-              setIsListening(false);
-              isListeningRef.current = false;
-              onRecordingStateChange?.(false);
-              consecutiveRestartCount.current = 0;
-              return;
-            }
+              if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
+                console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
+                setIsListening(false);
+                isListeningRef.current = false;
+                wantsContinuousConversationRef.current = false;
+                onRecordingStateChange?.(false);
+                consecutiveRestartCount.current = 0;
+                return;
+              }
 
-            // Auto-restart if still in listening mode
-            // 800ms delay for iOS audio session to release (reduced from 1.5s for responsiveness)
-            if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-              console.log(`🔄 [Native] Will auto-restart in 800ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
-              setTimeout(async () => {
-                // Double-check conditions before restart
-                if (isListeningRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-                  try {
-                    // NOTE: Do NOT call VoiceController.prepareForListening() here!
-                    // The speech recognition plugin manages its own audio session.
-                    console.log('🎙️ [Native] Restarting speech recognition...');
-                    await NativeSpeechRecognition.start({
-                      language: 'en-US',
-                      maxResults: 3,
-                      partialResults: true,
-                      popup: false
-                    });
-                    console.log('✅ [Native] Restart successful');
-                    // Reset counter on successful restart with speech
-                    // (will be reset to 0 when user actually speaks - see partialResults handler)
-                  } catch (e: any) {
-                    console.warn('⚠️ [Native] Restart failed:', e?.message || e);
-                    // Don't retry - let the next listeningState: stopped handle it
-                    // This prevents nested restart attempts
+              // Auto-restart if user wants continuous conversation and MAIA isn't speaking
+              // 800ms delay for iOS audio session to release (reduced from 1.5s for responsiveness)
+              if (!isSpeakingRef.current && !isProcessingRef.current) {
+                console.log(`🔄 [Native] Will auto-restart in 800ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
+                setTimeout(async () => {
+                  // Double-check conditions before restart - use wantsContinuousConversationRef
+                  if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+                    try {
+                      // NOTE: Do NOT call VoiceController.prepareForListening() here!
+                      // The speech recognition plugin manages its own audio session.
+                      console.log('🎙️ [Native] Restarting speech recognition...');
+                      await NativeSpeechRecognition.start({
+                        language: 'en-US',
+                        maxResults: 3,
+                        partialResults: true,
+                        popup: false
+                      });
+                      console.log('✅ [Native] Restart successful');
+                      // Restore listening state
+                      setIsListening(true);
+                      isListeningRef.current = true;
+                      // Reset counter on successful restart with speech
+                      // (will be reset to 0 when user actually speaks - see partialResults handler)
+                    } catch (e: any) {
+                      console.warn('⚠️ [Native] Restart failed:', e?.message || e);
+                      // Don't retry - let the next listeningState: stopped handle it
+                      // This prevents nested restart attempts
+                    }
+                  } else {
+                    console.log('🚫 [Native] Conditions changed, not restarting');
+                    consecutiveRestartCount.current = 0; // Reset on intentional stop
                   }
-                } else {
-                  console.log('🚫 [Native] Conditions changed, not restarting');
-                  consecutiveRestartCount.current = 0; // Reset on intentional stop
-                }
-              }, 800); // 800ms - iOS audio session release time (reduced for responsiveness)
+                }, 800); // 800ms - iOS audio session release time (reduced for responsiveness)
+              }
             }
           }
         });
