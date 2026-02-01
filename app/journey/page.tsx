@@ -2066,7 +2066,8 @@ export default function AstrologyPage() {
               className="px-6 py-3 rounded-lg font-serif tracking-wide transition-all"
               style={{
                 background: 'linear-gradient(135deg, #D4AF37 0%, #FFB84D 100%)',
-                color: '#2C1810',
+                color: '#FFF5E0',
+                fontWeight: 600,
                 boxShadow: '0 4px 20px rgba(212, 175, 55, 0.4)',
               }}
             >
