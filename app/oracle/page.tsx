@@ -58,7 +58,7 @@ export default function OracleConsultationPage() {
           title: 'I Ching',
           subtitle: 'Change, timing, and the turning of the spiral',
           description:
-            'A reflective mirror for life's transitions — revealing the shape of the moment and the next wise move.',
+            "A reflective mirror for life's transitions — revealing the shape of the moment and the next wise move.",
           icon: Compass,
           sigil: '☰',
           accent: 'from-indigo-500/20 via-cyan-500/10 to-transparent',
