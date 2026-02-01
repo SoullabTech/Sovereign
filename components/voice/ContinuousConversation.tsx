@@ -1347,7 +1347,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
                 console.log(`⚠️ [Native] Restart counter incremented to ${consecutiveRestartCount.current}`);
               }
 
-              const MAX_NATIVE_RESTARTS = 10; // Allow 10 REAL failures before stopping
+              const MAX_NATIVE_RESTARTS = 15; // Allow 15 REAL failures before stopping
 
               if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
                 console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
