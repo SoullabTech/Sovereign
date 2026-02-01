@@ -24,7 +24,9 @@ import {
   RefreshCw,
   Loader2,
   Flame,
-  MessageSquare
+  MessageSquare,
+  Save,
+  Check
 } from 'lucide-react';
 
 type ReadingPhase = 'question' | 'spread-select' | 'casting' | 'reveal' | 'interpretation';
@@ -98,6 +100,8 @@ export default function RunesOraclePage() {
   const [revealedRunes, setRevealedRunes] = useState<DrawnRune[]>([]);
   const [currentRuneIndex, setCurrentRuneIndex] = useState(0);
   const [isCasting, setIsCasting] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Rune casting simulation - draws runes one at a time
   const castRunes = async (spread: RuneSpreadOption) => {
@@ -180,6 +184,56 @@ export default function RunesOraclePage() {
     setReading(null);
     setRevealedRunes([]);
     setCurrentRuneIndex(0);
+    setIsSaved(false);
+  };
+
+  const handleSaveReading = async () => {
+    if (!reading || !selectedSpread || isSaving || isSaved) return;
+
+    setIsSaving(true);
+    try {
+      // Map spread type to API format
+      const castTypeMap: Record<string, string> = {
+        'single': 'single',
+        'norns': 'three_norns',
+        'elements': 'nine_worlds',
+        'week': 'custom'
+      };
+
+      const response = await fetch('/api/divination/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'runes',
+          reading: {
+            question: question,
+            cast_type: castTypeMap[selectedSpread.id] || 'custom',
+            runes_json: reading.drawnRunes.map(rune => ({
+              position: rune.position,
+              rune: rune.name,
+              reversed: rune.isReversed,
+              element: rune.element,
+              meaning: rune.meaning
+            })),
+            wyrd_message: reading.wyrdMessage,
+            interpretation_text: reading.insight,
+            guidance_text: reading.soulGuidance,
+            sacred_timing: null,
+            ritual_suggestion: reading.ritual,
+            archetypal_themes: reading.drawnRunes.map(r => r.aett)
+          }
+        })
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setIsSaved(true);
+      }
+    } catch (error) {
+      console.error('Failed to save reading:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -634,6 +688,24 @@ export default function RunesOraclePage() {
 
                     {/* Actions */}
                     <div className="flex gap-4">
+                      <button
+                        onClick={handleSaveReading}
+                        disabled={isSaving || isSaved}
+                        className={`flex-1 px-6 py-3 font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2 ${
+                          isSaved
+                            ? 'bg-green-600/80 text-white cursor-default'
+                            : 'bg-gradient-to-r from-slate-700 to-stone-700 hover:from-slate-600 hover:to-stone-600 text-white'
+                        }`}
+                      >
+                        {isSaving ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : isSaved ? (
+                          <Check className="w-5 h-5" />
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                        {isSaved ? 'Saved to Reflections' : 'Save Reading'}
+                      </button>
                       <button
                         onClick={handleNewReading}
                         className="flex-1 px-6 py-3 bg-gradient-to-r from-slate-600 to-stone-600 hover:from-slate-500 hover:to-stone-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
