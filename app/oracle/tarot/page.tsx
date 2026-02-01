@@ -117,10 +117,30 @@ export default function TarotOraclePage() {
       const data = await response.json();
 
       if (data.reading) {
-        setReading(data.reading);
+        // Transform API response to match frontend interface
+        const transformedReading: TarotReading = {
+          cards: data.reading.drawnCards.map((dc: {
+            card: { name: string; keywords: string[]; suit?: string };
+            position: { name: string };
+            isReversed: boolean;
+            interpretation: string;
+          }) => ({
+            name: dc.card.name,
+            position: dc.position.name,
+            reversed: dc.isReversed,
+            meaning: dc.interpretation,
+            interpretation: dc.interpretation,
+            keywords: dc.card.keywords || [],
+            suit: dc.card.suit
+          })),
+          spreadName: data.reading.spread.name,
+          overallMessage: data.reading.insight || '',
+          advice: data.reading.soulGuidance || ''
+        };
+        setReading(transformedReading);
         setPhase('reveal');
         // Reveal cards one by one
-        revealCardsSequentially(data.reading.cards.length);
+        revealCardsSequentially(transformedReading.cards.length);
       }
     } catch (error) {
       console.error('Failed to draw cards:', error);
