@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // 🔐 Derive userId server-side (falls back to client in dev mode)
-    const { userId, setCookie } = resolveCaptureUserId(request, bodyUserId);
+    const { userId, setCookie } = await resolveCaptureUserId(request, bodyUserId);
 
     // Validation
     if (!tag || !VALID_TAGS.includes(tag)) {

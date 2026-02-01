@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { userId: bodyUserId, sessionId, orgId = 'soullab' } = body;
 
     // 🔐 Derive userId server-side (falls back to client in dev mode)
-    const { userId, setCookie } = resolveCaptureUserId(request, bodyUserId);
+    const { userId, setCookie } = await resolveCaptureUserId(request, bodyUserId);
 
     let targetSessionId = sessionId;
 

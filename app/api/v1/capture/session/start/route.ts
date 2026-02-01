@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
     const { userId: bodyUserId, orgId = 'soullab', autoStarted = false } = body;
 
     // 🔐 Derive userId server-side (falls back to client in dev mode)
-    const { userId, setCookie } = resolveCaptureUserId(request, bodyUserId);
+    const { userId, setCookie } = await resolveCaptureUserId(request, bodyUserId);
 
     // Check if user already has an active session
     const existing = await getActiveSession(userId, orgId);

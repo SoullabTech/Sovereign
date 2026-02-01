@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiFetch } from '@/lib/http/apiBase';
 import {
   X,
   Radio,
@@ -101,7 +101,7 @@ export function CaptureSheet({
     if (!sessionId) return;
 
     try {
-      const res = await fetch(`/api/v1/capture/status?userId=${encodeURIComponent(userId)}`);
+      const res = await apiFetch(`/api/v1/capture/status?userId=${encodeURIComponent(userId)}`);
       const data = await res.json();
       if (data.success && data.notes) {
         setNotes(data.notes);
@@ -116,9 +116,8 @@ export function CaptureSheet({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(apiUrl('/api/v1/capture/note'), {
+      const res = await apiFetch('/api/v1/capture/note', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
           sessionId,
@@ -146,9 +145,8 @@ export function CaptureSheet({
 
     setCopying(format);
     try {
-      const res = await fetch(apiUrl('/api/v1/capture/export'), {
+      const res = await apiFetch('/api/v1/capture/export', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId,
           sessionId,

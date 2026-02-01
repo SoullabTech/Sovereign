@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const orgId = searchParams.get('orgId') || 'soullab';
 
     // 🔐 Derive userId server-side (falls back to query param in dev mode)
-    const { userId, setCookie } = resolveCaptureUserIdFromQuery(request);
+    const { userId, setCookie } = await resolveCaptureUserIdFromQuery(request);
 
     // Get active session
     const activeSession = await getActiveSession(userId, orgId);

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Radio, Square } from 'lucide-react';
 import { CaptureSheet } from './CaptureSheet';
-import { apiUrl } from '@/lib/http/apiBase';
+import { apiFetch } from '@/lib/http/apiBase';
 
 interface CaptureToggleProps {
   userId: string;
@@ -44,7 +44,7 @@ export function CaptureToggle({ userId }: CaptureToggleProps) {
 
   const checkStatus = async () => {
     try {
-      const res = await fetch(`/api/v1/capture/status?userId=${encodeURIComponent(userId)}`);
+      const res = await apiFetch(`/api/v1/capture/status?userId=${encodeURIComponent(userId)}`);
       const data = await res.json();
       if (data.success) {
         setCaptureActive(data.active);
@@ -63,9 +63,8 @@ export function CaptureToggle({ userId }: CaptureToggleProps) {
     try {
       if (captureActive && sessionId) {
         // Stop session
-        const res = await fetch(apiUrl('/api/v1/capture/session/stop'), {
+        const res = await apiFetch('/api/v1/capture/session/stop', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId, sessionId })
         });
         const data = await res.json();
@@ -75,9 +74,8 @@ export function CaptureToggle({ userId }: CaptureToggleProps) {
         }
       } else {
         // Start session
-        const res = await fetch(apiUrl('/api/v1/capture/session/start'), {
+        const res = await apiFetch('/api/v1/capture/session/start', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId })
         });
         const data = await res.json();
