@@ -8,20 +8,13 @@
  * - Tarot: The Mirror of the Soul - 78 cards of archetypal guidance
  * - Runes: The Elder Futhark - 24 symbols of ancestral knowledge
  *
- * Aesthetic: DUNE mysticism meets cosmic oracle chamber
+ * Aesthetic: Soullab hybrid dark theme - atmospheric with refined typography
  */
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import {
-  Sparkles,
-  Moon,
-  Star,
-  Compass,
-  Hexagon,
-  ArrowLeft
-} from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { betaSession } from '@/lib/auth/betaSession';
 import { hasContinuityAccess, type MemberTier } from '@/lib/auth/tierAccess';
 import PersonalThresholdInvitation from '@/components/tier/PersonalThresholdInvitation';
@@ -34,42 +27,34 @@ interface OracleMethod {
   title: string;
   subtitle: string;
   description: string;
-  icon: any;
-  gradient: string;
-  borderGlow: string;
-  symbolPath: string;
+  accentColor: string;
+  iconBg: string;
 }
 
 const ORACLE_METHODS: OracleMethod[] = [
   {
     id: 'iching',
-    title: 'I Ching Oracle',
+    title: 'I Ching',
     subtitle: 'The Book of Changes',
     description: 'Cast the ancient hexagrams to understand cosmic currents. 64 pathways of wisdom await your question.',
-    icon: Hexagon,
-    gradient: 'from-orange-800/30 via-amber-700/20 to-orange-700/30',
-    borderGlow: 'shadow-orange-600/40 border-orange-600/50',
-    symbolPath: 'M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z'
+    accentColor: 'text-amber-400',
+    iconBg: 'bg-amber-500/20 border-amber-500/30'
   },
   {
     id: 'tarot',
-    title: 'Tarot Oracle',
+    title: 'Tarot',
     subtitle: 'The Mirror of the Soul',
     description: 'Journey through archetypal wisdom of 78 sacred cards. Each spread reveals hidden patterns shaping your path.',
-    icon: Star,
-    gradient: 'from-amber-800/30 via-yellow-800/20 to-amber-700/30',
-    borderGlow: 'shadow-amber-600/40 border-amber-600/50',
-    symbolPath: 'M12 2 L15 8 L22 9 L17 14 L18 21 L12 18 L6 21 L7 14 L2 9 L9 8 Z'
+    accentColor: 'text-violet-400',
+    iconBg: 'bg-violet-500/20 border-violet-500/30'
   },
   {
     id: 'runes',
-    title: 'Rune Oracle',
+    title: 'Runes',
     subtitle: 'The Elder Futhark',
     description: 'Draw from 24 ancient Norse symbols. The runes speak of fate, will, and the hidden currents of wyrd.',
-    icon: Moon,
-    gradient: 'from-slate-800/30 via-stone-700/20 to-slate-700/30',
-    borderGlow: 'shadow-slate-600/40 border-slate-500/50',
-    symbolPath: 'M12 4 L14 8 L12 12 L10 8 Z M12 12 L14 16 L12 20 L10 16 Z M8 8 L12 12 L16 8'
+    accentColor: 'text-teal-400',
+    iconBg: 'bg-teal-500/20 border-teal-500/30'
   }
 ];
 
@@ -123,6 +108,44 @@ function setThresholdDismissed(): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(DISMISS_KEY, getWeekStart());
 }
+
+// Custom SVG icons for each oracle type
+const HexagramIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <line x1="6" y1="4" x2="18" y2="4" />
+    <line x1="6" y1="8" x2="18" y2="8" />
+    <line x1="6" y1="12" x2="11" y2="12" />
+    <line x1="13" y1="12" x2="18" y2="12" />
+    <line x1="6" y1="16" x2="18" y2="16" />
+    <line x1="6" y1="20" x2="11" y2="20" />
+    <line x1="13" y1="20" x2="18" y2="20" />
+  </svg>
+);
+
+const TarotIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <rect x="4" y="2" width="16" height="20" rx="2" />
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 8 L12 6" />
+    <path d="M12 18 L12 16" />
+    <path d="M8 12 L6 12" />
+    <path d="M18 12 L16 12" />
+  </svg>
+);
+
+const RuneIcon = () => (
+  <svg viewBox="0 0 24 24" className="w-8 h-8" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M12 3 L12 21" />
+    <path d="M12 3 L18 9" />
+    <path d="M12 12 L18 18" />
+  </svg>
+);
+
+const ORACLE_ICONS = {
+  iching: HexagramIcon,
+  tarot: TarotIcon,
+  runes: RuneIcon
+};
 
 export default function OracleConsultationPage() {
   const router = useRouter();
@@ -179,98 +202,86 @@ export default function OracleConsultationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-950 via-amber-900 to-orange-950 relative overflow-hidden">
-      {/* Atmospheric Particles */}
+    <div className="min-h-screen bg-gradient-to-b from-stone-950 via-stone-900 to-stone-950 relative overflow-hidden">
+      {/* Subtle atmospheric particles */}
       <div className="fixed inset-0 pointer-events-none">
-        {[...Array(50)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-[#D4B896]/30 rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -40, 0],
-              x: [0, Math.random() * 20 - 10, 0],
-              opacity: [0.2, 0.6, 0.2],
-              scale: [1, 1.5, 1],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 6,
-              repeat: Infinity,
-              delay: Math.random() * 3,
-              ease: 'easeInOut',
-            }}
-          />
-        ))}
+        {[...Array(30)].map((_, i) => {
+          const seededX = (i * 17.3) % 100;
+          const seededY = (i * 23.7) % 100;
+          const seededDuration = 4 + ((i * 7.1) % 4);
+          const seededDelay = (i * 11.3) % 2;
+          return (
+            <motion.div
+              key={i}
+              className="absolute w-1 h-1 bg-amber-400/20 rounded-full"
+              style={{
+                left: `${seededX}%`,
+                top: `${seededY}%`,
+              }}
+              animate={{
+                y: [0, -30, 0],
+                opacity: [0.1, 0.3, 0.1],
+              }}
+              transition={{
+                duration: seededDuration,
+                repeat: Infinity,
+                delay: seededDelay,
+                ease: 'easeInOut',
+              }}
+            />
+          );
+        })}
       </div>
 
-      {/* Atmospheric Glow */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/40 via-amber-950/10 to-transparent pointer-events-none" />
-
-      {/* Sacred geometry overlay */}
-      <div className="fixed inset-0 opacity-[0.02] pointer-events-none">
-        <svg className="w-full h-full" viewBox="0 0 1000 1000">
-          <circle cx="500" cy="500" r="450" fill="none" stroke="#D4B896" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="350" fill="none" stroke="#D4B896" strokeWidth="0.5" strokeDasharray="8 8" />
-          <circle cx="500" cy="500" r="250" fill="none" stroke="#D4B896" strokeWidth="0.5" strokeDasharray="8 8" />
-          <path d="M 500 50 L 866 250 L 866 750 L 500 950 L 134 750 L 134 250 Z" fill="none" stroke="#D4B896" strokeWidth="0.5" />
-        </svg>
-      </div>
+      {/* Soft gradient glow from bottom */}
+      <div className="fixed bottom-0 left-0 right-0 h-64 bg-gradient-to-t from-amber-950/20 via-transparent to-transparent pointer-events-none" />
 
       {/* Main Content */}
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-5xl">
+      <div className="relative z-10 min-h-screen flex flex-col px-4 py-8 md:py-12">
+        <div className="w-full max-w-4xl mx-auto">
+
+          {/* Back button */}
+          <motion.button
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4 }}
+            onClick={() => router.push('/maia')}
+            className="flex items-center gap-2 text-stone-400 hover:text-stone-200 transition-colors text-[13px] tracking-wide mb-12"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Return to MAIA</span>
+          </motion.button>
 
           {/* Header */}
           <motion.div
-            initial={{ opacity: 0, y: -30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            transition={{ duration: 0.6 }}
+            className="text-center mb-12"
           >
-            <motion.div
-              className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full"
-              style={{
-                background: 'radial-gradient(circle, rgba(212, 184, 150, 0.15) 0%, rgba(61, 40, 23, 0.1) 100%)',
-                boxShadow: '0 0 40px rgba(212, 184, 150, 0.2), inset 0 0 20px rgba(212, 184, 150, 0.05)',
-              }}
-              animate={{
-                boxShadow: [
-                  '0 0 40px rgba(212, 184, 150, 0.2), inset 0 0 20px rgba(212, 184, 150, 0.05)',
-                  '0 0 60px rgba(212, 184, 150, 0.3), inset 0 0 30px rgba(212, 184, 150, 0.1)',
-                  '0 0 40px rgba(212, 184, 150, 0.2), inset 0 0 20px rgba(212, 184, 150, 0.05)',
-                ],
-              }}
-              transition={{
-                duration: 4,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-            >
-              <Compass className="w-10 h-10 text-[#D4B896]" />
-            </motion.div>
+            {/* Concentric circles icon */}
+            <div className="inline-flex items-center justify-center w-16 h-16 mb-6">
+              <svg viewBox="0 0 64 64" className="w-full h-full text-amber-400/60" fill="none" stroke="currentColor" strokeWidth="1">
+                <circle cx="32" cy="32" r="28" />
+                <circle cx="32" cy="32" r="18" />
+                <circle cx="32" cy="32" r="8" />
+              </svg>
+            </div>
 
-            <h1 className="text-5xl md:text-6xl font-light tracking-wide mb-4 bg-gradient-to-r from-amber-200 via-[#D4B896] to-amber-300 bg-clip-text text-transparent"
-                style={{ textShadow: '0 0 40px rgba(212, 184, 150, 0.3)' }}>
+            <h1 className="text-3xl md:text-4xl font-light tracking-wide text-stone-100 mb-4">
               Oracle Consultation
             </h1>
 
-            <p className="text-lg text-amber-200/60 max-w-3xl mx-auto font-light tracking-wider leading-relaxed">
+            <p className="text-stone-400 text-[14px] tracking-wide leading-relaxed max-w-xl mx-auto">
               Enter the Sanctum of Divination. Choose your oracle, ask your question, and receive wisdom from the ages.
             </p>
 
-            {/* Dividing ornament */}
-            <div className="flex items-center justify-center gap-3 mt-8">
-              <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent" />
-              <Sparkles className="w-4 h-4 text-amber-500/50" />
-              <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/40 to-transparent" />
-            </div>
+            {/* Divider */}
+            <div className="w-12 h-px bg-amber-500/30 mx-auto mt-8" />
           </motion.div>
 
           {/* Dev-only tier debug */}
-          <div className="mb-4 text-center">
+          <div className="mb-6 text-center">
             <TierDebugPill
               tier={tier}
               hasAccess={hasAccess}
@@ -296,77 +307,53 @@ export default function OracleConsultationPage() {
           {/* Oracle Method Selection */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
             {ORACLE_METHODS.map((method, index) => {
-              const Icon = method.icon;
+              const IconComponent = ORACLE_ICONS[method.id as keyof typeof ORACLE_ICONS];
 
               return (
                 <motion.button
                   key={method.id}
-                  initial={{ opacity: 0, y: 40 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.15 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
                   onClick={() => handleMethodSelect(method.id)}
                   disabled={isTransitioning}
-                  className={`group relative p-8 rounded-2xl border bg-gradient-to-br ${method.gradient}
-                             backdrop-blur-xl transition-all duration-500 hover:scale-[1.02]
-                             ${method.borderGlow} hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed`}
-                  whileHover={{ y: -4 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="group relative p-6 rounded-xl bg-stone-900/60 border border-stone-700/50
+                             hover:bg-stone-800/60 hover:border-stone-600/50
+                             backdrop-blur-sm transition-all duration-300
+                             disabled:opacity-50 disabled:cursor-not-allowed text-left"
                 >
-                  {/* Glow effect on hover */}
-                  <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                       style={{
-                         background: 'radial-gradient(circle at center, rgba(251, 191, 36, 0.15) 0%, transparent 70%)',
-                       }} />
-
-                  {/* Method Icon */}
-                  <div className="relative mb-6">
-                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-900/20 group-hover:bg-amber-800/30 transition-all duration-500"
-                         style={{
-                           boxShadow: '0 0 20px rgba(251, 191, 36, 0.3)',
-                         }}>
-                      <Icon className="w-8 h-8 text-amber-200/90" />
+                  {/* Icon */}
+                  <div className={`inline-flex items-center justify-center w-14 h-14 rounded-xl border ${method.iconBg} mb-5 transition-colors group-hover:scale-105`}>
+                    <div className={method.accentColor}>
+                      <IconComponent />
                     </div>
                   </div>
 
-                  {/* Method Details */}
-                  <div className="relative">
-                    <h3 className="text-xl font-medium tracking-wide text-amber-100 mb-2 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-amber-100 group-hover:via-amber-200 group-hover:to-amber-100 group-hover:bg-clip-text transition-all duration-500">
-                      {method.title}
-                    </h3>
+                  {/* Title */}
+                  <h3 className={`text-xl font-medium tracking-wide mb-1 ${method.accentColor}`}>
+                    {method.title}
+                  </h3>
 
-                    <p className="text-[11px] text-amber-300/60 mb-4 font-light tracking-[0.2em] uppercase">
-                      {method.subtitle}
-                    </p>
+                  {/* Subtitle */}
+                  <p className="text-[11px] text-stone-500 mb-4 font-medium tracking-[0.15em] uppercase">
+                    {method.subtitle}
+                  </p>
 
-                    <p className="text-amber-200/50 leading-relaxed text-[13px] tracking-wide">
-                      {method.description}
-                    </p>
+                  {/* Description */}
+                  <p className="text-stone-400 text-[13px] tracking-wide leading-relaxed">
+                    {method.description}
+                  </p>
+
+                  {/* Hover indicator */}
+                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg viewBox="0 0 24 24" className={`w-5 h-5 ${method.accentColor}`} fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
                   </div>
-
-                  {/* Mystical symbol watermark */}
-                  <svg className="absolute bottom-4 right-4 w-20 h-20 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity duration-500" viewBox="0 0 24 24">
-                    <path d={method.symbolPath} fill="currentColor" className="text-white" />
-                  </svg>
                 </motion.button>
               );
             })}
           </div>
-
-          {/* Back to MAIA */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.8 }}
-            className="text-center mt-12"
-          >
-            <button
-              onClick={() => router.push('/maia')}
-              className="inline-flex items-center gap-2 text-amber-400/50 hover:text-amber-300 transition-colors text-sm"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Return to MAIA
-            </button>
-          </motion.div>
 
         </div>
       </div>
@@ -378,16 +365,16 @@ export default function OracleConsultationPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-gradient-to-br from-amber-950/95 via-amber-900/95 to-orange-950/95 backdrop-blur-sm flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-stone-950/95 backdrop-blur-sm flex items-center justify-center"
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
               className="text-center"
             >
-              <Sparkles className="w-16 h-16 text-amber-400 mx-auto mb-4 animate-spin" style={{ animationDuration: '3s' }} />
-              <p className="text-2xl text-amber-200">Entering the Oracle...</p>
+              <div className="w-12 h-12 border-2 border-amber-400/30 border-t-amber-400 rounded-full animate-spin mx-auto mb-4" />
+              <p className="text-lg text-stone-300 font-light tracking-wide">Entering the Oracle...</p>
             </motion.div>
           </motion.div>
         )}
