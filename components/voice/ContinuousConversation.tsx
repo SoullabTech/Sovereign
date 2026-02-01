@@ -112,6 +112,16 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
   const lastNativeStartAtRef = useRef<number>(0); // 🔥 FIX: Track when native SR started for grace period
   const nativeStartGraceMs = 1200; // Don't count "stopped" within this window as a failed attempt
 
+  // 🔥 SERIALIZED NATIVE SR: Prevent start/stop race conditions that cause micro-stops
+  const nativeSessionIdRef = useRef<number>(0);      // increments every SR start
+  const isNativeStartingRef = useRef<boolean>(false);
+  const isNativeStoppingRef = useRef<boolean>(false);
+  const lastNativeStopAtRef = useRef<number>(0);
+  const nativeRestartTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const MIN_RUN_MS = 800;       // if SR stops faster than this, treat as "bad start"
+  const COOLDOWN_MS = 1200;     // wait this long after a stop before starting again
+
   // 🎯 ADAPTIVE SILENCE DETECTION - Monitor audio levels for natural speech pauses
   const isSpeakingNowRef = useRef(false); // Track if user is actively speaking based on audio levels
   const silenceStartTimeRef = useRef<number>(0); // When silence began
@@ -129,6 +139,81 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
 
   // 🎤 PWA DUPLEX: Suppress transcript processing while MAIA speaks (but keep mic hot for barge-in)
   const inputSuppressedRef = useRef(false);
+
+  // 🔥 SERIALIZED NATIVE SR START - Prevents race conditions causing micro-stops
+  // This is the ONLY function that should call NativeSpeechRecognition.start()
+  const startNativeSR = async (options?: {
+    skipCooldown?: boolean;  // For initial user-triggered start (bypass cooldown)
+    popup?: boolean;         // iOS popup UI fallback
+  }): Promise<boolean> => {
+    const now = Date.now();
+    const { skipCooldown = false, popup = false } = options || {};
+
+    // ✅ CRITICAL: Clear any pending restart timers before starting (prevents stacking)
+    if (nativeRestartTimeoutRef.current) {
+      clearTimeout(nativeRestartTimeoutRef.current);
+      nativeRestartTimeoutRef.current = null;
+    }
+
+    // Log gate state for debugging
+    console.log('🎛️ [Native] startNativeSR gate', {
+      session: nativeSessionIdRef.current + 1,
+      isStarting: isNativeStartingRef.current,
+      isStopping: isNativeStoppingRef.current,
+      msSinceStop: now - lastNativeStopAtRef.current,
+      skipCooldown,
+      popup,
+      nativeStatus: nativeStatusRef.current,
+      wantsContinuous: wantsContinuousConversationRef.current,
+    });
+
+    if (isNativeStartingRef.current) {
+      console.log('🚫 [Native] start blocked: already starting');
+      return false;
+    }
+    if (isNativeStoppingRef.current) {
+      console.log('🚫 [Native] start blocked: currently stopping');
+      return false;
+    }
+
+    // ✅ If already started, don't thrash - just return success
+    if (nativeStatusRef.current === 'started') {
+      console.log('✅ [Native] start noop: already started');
+      return true;
+    }
+
+    if (!skipCooldown && now - lastNativeStopAtRef.current < COOLDOWN_MS) {
+      console.log(`🚫 [Native] start blocked: cooldown (${now - lastNativeStopAtRef.current}ms < ${COOLDOWN_MS}ms)`);
+      return false;
+    }
+
+    isNativeStartingRef.current = true;
+    const sessionId = ++nativeSessionIdRef.current;
+    lastNativeStartAtRef.current = now; // Record start time for grace period calculation
+
+    try {
+      console.log(`🎙️ [Native] START (session ${sessionId}, popup=${popup})`);
+      await NativeSpeechRecognition.start({
+        language: 'en-US',
+        maxResults: 3,
+        partialResults: true,
+        popup
+      });
+
+      // IMPORTANT: Only mark "started" if this is still the latest session
+      if (nativeSessionIdRef.current !== sessionId) {
+        console.log(`🧯 [Native] stale start completed (session ${sessionId})`);
+        return false;
+      }
+      console.log(`✅ [Native] START succeeded (session ${sessionId})`);
+      return true;
+    } catch (e: any) {
+      console.warn(`⚠️ [Native] START failed (session ${sessionId}):`, e?.message || e);
+      return false;
+    } finally {
+      isNativeStartingRef.current = false;
+    }
+  };
 
   // Function refs to avoid temporal dead zone in useImperativeHandle
   const startListeningFnRef = useRef<(options?: { forceOverride?: boolean }) => void>();
@@ -584,7 +669,7 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
     // isListeningRef gets set to false when we stop for MAIA to respond
     // wantsContinuousConversationRef persists until user explicitly exits voice mode
     if (!isSpeaking && wantsContinuousConversationRef.current && useNativeSpeechRef.current) {
-      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 800ms...');
+      console.log('🔄 [Native] MAIA stopped speaking, will auto-restart mic in 1200ms...');
       isProcessingRef.current = false;
       // 🔥 FIX: Reset restart counter when MAIA stops speaking - new conversational turn!
       // This gives the user a fresh set of restart attempts to respond
@@ -594,27 +679,17 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // Double-check conditions before restart
         // 🔑 CRITICAL: Only restart if native isn't already started (prevents thrash)
         if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current && nativeStatusRef.current !== 'started') {
-          try {
-            // NOTE: Do NOT call VoiceController.prepareForListening() here!
-            // The speech recognition plugin reconfigures audio session from .playback
-            // to .playAndRecord/.voiceChat internally when start() is called.
-            // Calling our AudioSessionManager causes a mode conflict (.measurement vs .voiceChat).
-            console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
-            await NativeSpeechRecognition.start({
-              language: 'en-US',
-              maxResults: 3,
-              partialResults: true,
-              popup: false
-            });
+          // 🔥 SERIALIZED: Use the guarded start function
+          console.log('🎙️ [Native] Auto-restarting after MAIA speech...');
+          const success = await startNativeSR();
+          if (success) {
             console.log('✅ [Native] Auto-restart after speech successful');
             // Note: setIsRecording will be updated by listeningState listener
-          } catch (e: any) {
-            console.warn('⚠️ [Native] Auto-restart failed:', e?.message || e);
           }
         } else {
           console.log('🚫 [Native] Conditions changed or already started, skipping auto-restart');
         }
-      }, 800); // 800ms delay for iOS audio session to release (reduced for responsiveness)
+      }, COOLDOWN_MS); // Use cooldown constant for consistency
 
       return () => clearTimeout(restartTimer);
     }
@@ -1315,6 +1390,24 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
           }
 
           if (state.status === 'stopped') {
+            // 🔥 SERIALIZED: Record stop time for cooldown enforcement
+            const now = Date.now();
+            lastNativeStopAtRef.current = now;
+
+            const msSinceStart = now - (lastNativeStartAtRef.current || 0);
+            const isMicroStop = msSinceStart > 0 && msSinceStart < MIN_RUN_MS;
+
+            // Detailed run-time log for debugging micro-stops
+            console.log('⏱️ [Native] run length', {
+              msSinceStart,
+              lastNativeStartAt: lastNativeStartAtRef.current,
+              now,
+              isMicroStop,
+              nativeStatus: nativeStatusRef.current,
+              session: nativeSessionIdRef.current,
+            });
+            console.log(`🛑 [Native] stopped after ${msSinceStart}ms (microStop=${isMicroStop})`);
+
             // 🔥 FIX: Check EITHER isListeningRef OR wantsContinuousConversationRef
             // isListeningRef is false when MAIA is speaking, but we still want to restart after
             // wantsContinuousConversationRef persists the user's intent to continue conversation
@@ -1330,70 +1423,68 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
               onTranscript(finalTranscript);
             }
 
-            // 🔥 FIX: Only handle restart logic if user wants continuous conversation
-            if (wantsToListen) {
-              // 🔥 FIX: Check if this is an "idle stop" within grace period
-              // iOS speech recognition stops quickly when no speech detected - don't count as failure
-              const now = Date.now();
-              const msSinceStart = now - (lastNativeStartAtRef.current || 0);
-              const isIdleStop = msSinceStart < nativeStartGraceMs;
+            // If user has exited or we're speaking, do nothing
+            if (!wantsToListen) {
+              console.log('🚫 [Native] Conditions changed, not restarting');
+              consecutiveRestartCount.current = 0;
+              return;
+            }
 
-              if (isIdleStop) {
-                // iOS "idle stop" right after start — treat as normal cycling, not a failure
-                console.log(`🔄 [Native] Idle stop within ${msSinceStart}ms grace period - not counting as failure`);
-              } else {
-                // Real failure - mic couldn't stay alive
-                consecutiveRestartCount.current++;
-                console.log(`⚠️ [Native] Restart counter incremented to ${consecutiveRestartCount.current}`);
+            // 🔥 SERIALIZED: Prevent restart while start/stop overlap in progress
+            if (isNativeStartingRef.current || isNativeStoppingRef.current) {
+              console.log('🚫 [Native] restart blocked: start/stop in progress');
+              return;
+            }
+
+            // 🔥 Detect micro-stops vs idle stops vs real failures
+            const isIdleStop = msSinceStart < nativeStartGraceMs;
+
+            // Only count failure if not within grace period AND not micro-stop
+            if (!isIdleStop && !isMicroStop) {
+              consecutiveRestartCount.current++;
+              console.log(`⚠️ [Native] Restart counter incremented to ${consecutiveRestartCount.current}`);
+            } else {
+              console.log(`🔄 [Native] Not counting stop (idleStop=${isIdleStop}, microStop=${isMicroStop})`);
+            }
+
+            const MAX_NATIVE_RESTARTS = 15;
+
+            if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
+              console.log(`🛑 [Native] Too many real failures (${consecutiveRestartCount.current}) - require user tap`);
+              setIsListening(false);
+              isListeningRef.current = false;
+              wantsContinuousConversationRef.current = false;
+              onRecordingStateChange?.(false);
+              consecutiveRestartCount.current = 0;
+              return;
+            }
+
+            // 🔥 SERIALIZED: If micro-stop, use longer delay to let iOS settle
+            const delay = isMicroStop ? 2000 : COOLDOWN_MS;
+
+            // Auto-restart if user wants continuous conversation and MAIA isn't speaking
+            if (!isSpeakingRef.current && !isProcessingRef.current) {
+              console.log(`🔄 [Native] Will auto-restart in ${delay}ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
+
+              // Clear any existing restart timeout to prevent stacking
+              if (nativeRestartTimeoutRef.current) {
+                clearTimeout(nativeRestartTimeoutRef.current);
               }
 
-              const MAX_NATIVE_RESTARTS = 15; // Allow 15 REAL failures before stopping
-
-              if (consecutiveRestartCount.current > MAX_NATIVE_RESTARTS) {
-                console.log(`🛑 [Native] Stopping after ${consecutiveRestartCount.current} restart attempts - user must tap mic`);
-                setIsListening(false);
-                isListeningRef.current = false;
-                wantsContinuousConversationRef.current = false;
-                onRecordingStateChange?.(false);
-                consecutiveRestartCount.current = 0;
-                return;
-              }
-
-              // Auto-restart if user wants continuous conversation and MAIA isn't speaking
-              // 800ms delay for iOS audio session to release (reduced from 1.5s for responsiveness)
-              if (!isSpeakingRef.current && !isProcessingRef.current) {
-                console.log(`🔄 [Native] Will auto-restart in 800ms... (attempt ${consecutiveRestartCount.current}/${MAX_NATIVE_RESTARTS})`);
-                setTimeout(async () => {
-                  // Double-check conditions before restart - use wantsContinuousConversationRef
-                  if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
-                    try {
-                      // NOTE: Do NOT call VoiceController.prepareForListening() here!
-                      // The speech recognition plugin manages its own audio session.
-                      console.log('🎙️ [Native] Restarting speech recognition...');
-                      await NativeSpeechRecognition.start({
-                        language: 'en-US',
-                        maxResults: 3,
-                        partialResults: true,
-                        popup: false
-                      });
-                      console.log('✅ [Native] Restart successful');
-                      // Restore listening state
-                      setIsListening(true);
-                      isListeningRef.current = true;
-                      // 🔥 FIX: Don't reset counter here - iOS speech recognition times out
-                      // after ~8 seconds of silence regardless. The counter prevents infinite
-                      // loops but 15 attempts gives ~2 minutes for user to speak.
-                    } catch (e: any) {
-                      console.warn('⚠️ [Native] Restart failed:', e?.message || e);
-                      // Don't retry - let the next listeningState: stopped handle it
-                      // This prevents nested restart attempts
-                    }
-                  } else {
-                    console.log('🚫 [Native] Conditions changed, not restarting');
-                    consecutiveRestartCount.current = 0; // Reset on intentional stop
+              nativeRestartTimeoutRef.current = setTimeout(async () => {
+                // Double-check conditions before restart - use wantsContinuousConversationRef
+                if (wantsContinuousConversationRef.current && !isSpeakingRef.current && !isProcessingRef.current) {
+                  const success = await startNativeSR();
+                  if (success) {
+                    // Restore listening state
+                    setIsListening(true);
+                    isListeningRef.current = true;
                   }
-                }, 800); // 800ms - iOS audio session release time (reduced for responsiveness)
-              }
+                } else {
+                  console.log('🚫 [Native] Conditions changed, not restarting');
+                  consecutiveRestartCount.current = 0;
+                }
+              }, delay);
             }
           }
         });
@@ -1404,50 +1495,35 @@ export const ContinuousConversation = forwardRef<ContinuousConversationRef, Cont
         // causes a conflict (we use .measurement mode) that makes recognition stop immediately.
         // The plugin handles audio session setup internally - just call start() directly.
 
-        // Start native speech recognition
-        console.log('🎙️ [ContinuousConversation] About to call NativeSpeechRecognition.start()...');
-        addDebug('🎙️ Calling SR.start(popup:false)...');
-        try {
-          const startOptions = {
-            language: 'en-US',
-            maxResults: 3,
-            prompt: 'Speak to MAIA',
-            partialResults: true,
-            popup: false  // Set to true if iOS requires the popup UI
-          };
-          addDebug(`📝 Options: ${JSON.stringify(startOptions)}`);
-          await NativeSpeechRecognition.start(startOptions);
-          console.log('✅ [ContinuousConversation] NativeSpeechRecognition.start() succeeded!');
+        // 🔥 SERIALIZED: Start native speech recognition through the guarded function
+        // This is the ONLY path to start native SR - all paths funnel through startNativeSR()
+        console.log('🎙️ [ContinuousConversation] Starting native SR (user initiated)...');
+        addDebug('🎙️ Calling startNativeSR(skipCooldown:true, popup:false)...');
+
+        // First try without popup (skipCooldown for initial user-triggered start)
+        let success = await startNativeSR({ skipCooldown: true, popup: false });
+
+        if (!success) {
+          // Try with popup as fallback (iOS may require it)
+          console.log('🔄 [ContinuousConversation] First attempt failed, retrying with popup: true...');
+          addDebug('🔄 Retrying with popup:true...');
+
+          // Small delay before retry to let any cleanup complete
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          success = await startNativeSR({ skipCooldown: true, popup: true });
+
+          if (!success) {
+            console.error('❌ [ContinuousConversation] Both start attempts failed');
+            addDebug('❌ Both start attempts failed');
+            throw new Error('Native SR start failed after retry');
+          }
+
+          console.log('✅ [ContinuousConversation] Retry with popup: true succeeded!');
+          addDebug('✅ Retry succeeded!');
+        } else {
           addDebug('✅ SR.start() SUCCESS! Mic should be active');
           addDebug('🎤 Speak now - watching for partialResults...');
-        } catch (startError: any) {
-          const errName = startError?.name || 'UnknownError';
-          const errMsg = startError?.message || String(startError);
-          const errCode = startError?.code || 'no-code';
-          console.error('❌ [ContinuousConversation] NativeSpeechRecognition.start() FAILED:', startError);
-          console.error('❌ [ContinuousConversation] Error details:', JSON.stringify(startError, null, 2));
-          addDebug(`❌ start() FAILED: ${errName}`);
-          addDebug(`   msg: ${errMsg}`);
-          addDebug(`   code: ${errCode}`);
-
-          // Try with popup: true as fallback (iOS may require it)
-          console.log('🔄 [ContinuousConversation] Retrying with popup: true...');
-          addDebug('🔄 Retrying popup:true...');
-          try {
-            await NativeSpeechRecognition.start({
-              language: 'en-US',
-              maxResults: 3,
-              prompt: 'Speak to MAIA',
-              partialResults: true,
-              popup: true  // Try with popup enabled
-            });
-            console.log('✅ [ContinuousConversation] Retry with popup: true succeeded!');
-            addDebug('✅ Retry succeeded!');
-          } catch (retryError: any) {
-            console.error('❌ [ContinuousConversation] Retry also FAILED:', retryError);
-            addDebug(`❌ Retry failed: ${retryError?.message || retryError}`);
-            throw retryError;
-          }
         }
 
         console.log('🎙️ [ContinuousConversation] Native recognition started');

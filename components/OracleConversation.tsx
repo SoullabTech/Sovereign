@@ -1252,8 +1252,8 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
 
       const ctx = audioContextRef.current;
 
-      // Resume if suspended
-      if (ctx.state === 'suspended') {
+      // Resume if suspended or interrupted (iOS can be in either state)
+      if (ctx.state === 'suspended' || ctx.state === 'interrupted') {
         ctx.resume();
       }
 
@@ -1516,9 +1516,9 @@ export const OracleConversation: React.FC<OracleConversationProps> = ({
         console.log('📱 [iOS Safari] Blob type:', audioBlob.type, 'size:', audioBlob.size);
 
         try {
-          // Ensure AudioContext is running
-          if (audioContextRef.current.state === 'suspended') {
-            console.log('📱 [iOS Safari] Resuming AudioContext...');
+          // Ensure AudioContext is running (check both suspended and interrupted)
+          if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+            console.log(`📱 [iOS Safari] AudioContext ${audioContextRef.current.state}, resuming...`);
             await audioContextRef.current.resume();
             console.log('📱 [iOS Safari] AudioContext state:', audioContextRef.current.state);
           }
@@ -3116,11 +3116,14 @@ I'm not sure what I'm feeling yet.`;
   // Note: Voice amplitude is now driven by real-time audio analysis in startAudioAnalysis()
 
   // iOS PWA: Resume AudioContext on visibility change and user interaction
+  // CRITICAL: Must check for BOTH 'suspended' AND 'interrupted' states!
+  // iOS puts AudioContext in 'interrupted' state when audio session is taken by another source
   useEffect(() => {
     const handleVisibilityChange = async () => {
       if (document.visibilityState === 'visible' && audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
-          console.log('📱 App returned to foreground, resuming AudioContext...');
+        const state = audioContextRef.current.state;
+        if (state === 'suspended' || state === 'interrupted') {
+          console.log(`📱 App returned to foreground, AudioContext ${state}, resuming...`);
           try {
             await audioContextRef.current.resume();
             console.log('✅ AudioContext resumed on visibility change');
@@ -3132,12 +3135,15 @@ I'm not sure what I'm feeling yet.`;
     };
 
     const handleUserInteraction = async () => {
-      if (audioContextRef.current && audioContextRef.current.state === 'suspended') {
-        try {
-          await audioContextRef.current.resume();
-          console.log('✅ AudioContext resumed on user interaction');
-        } catch (error) {
-          console.warn('Could not resume AudioContext:', error);
+      if (audioContextRef.current) {
+        const state = audioContextRef.current.state;
+        if (state === 'suspended' || state === 'interrupted') {
+          try {
+            await audioContextRef.current.resume();
+            console.log(`✅ AudioContext resumed on user interaction (was ${state})`);
+          } catch (error) {
+            console.warn('Could not resume AudioContext:', error);
+          }
         }
       }
     };
@@ -3176,9 +3182,10 @@ I'm not sure what I'm feeling yet.`;
         console.log('📱 AudioContext created:', audioContextRef.current.state);
       }
 
-      // Resume if suspended (critical for iOS)
+      // Resume if suspended OR interrupted (critical for iOS - interrupted state blocks speech recognition!)
       if (audioContextRef.current) {
-        if (audioContextRef.current.state === 'suspended') {
+        if (audioContextRef.current.state === 'suspended' || audioContextRef.current.state === 'interrupted') {
+          console.log(`🎵 Audio context ${audioContextRef.current.state}, resuming...`);
           await audioContextRef.current.resume();
           console.log('🎵 Audio context resumed, state:', audioContextRef.current.state);
         } else {
