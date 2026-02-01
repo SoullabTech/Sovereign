@@ -12,7 +12,7 @@
         path /api/*/stream*
     }
     handle @streaming {
-        reverse_proxy maia:3000 {
+        reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -21,7 +21,7 @@
         }
     }
 
-    reverse_proxy maia:3000 {
+    reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -122,7 +122,7 @@ soullab.life {
         path /api/*/stream*
     }
     handle @streaming {
-        reverse_proxy maia:3000 {
+        reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -138,7 +138,7 @@ soullab.life {
         path /api/*
     }
     handle @api {
-        reverse_proxy maia:3000 {
+        reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -169,7 +169,7 @@ soullab.life {
     }
 
     # Regular reverse proxy for non-API requests
-    reverse_proxy maia:3000 {
+    reverse_proxy maia-sovereign:3000 {
         # Health checks
         health_uri /api/consciousness/health
         health_interval 30s
@@ -247,7 +247,7 @@ chart.soullab.life {
     rewrite / /chart
 
     # Reverse proxy to MAIA container
-    reverse_proxy maia:3000 {
+    reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -281,7 +281,7 @@ elementalalchemy.soullab.life {
     rewrite / /labtools/elemental-alchemy
 
     # Reverse proxy to MAIA container
-    reverse_proxy maia:3000 {
+    reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
@@ -314,7 +314,7 @@ loralee.soullab.life {
     # Handle root path - rewrite to portal without trailing slash
     handle / {
         rewrite * /portal/loralee
-        reverse_proxy maia:3000 {
+        reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -324,7 +324,7 @@ loralee.soullab.life {
 
     # Handle /portal/* paths directly (already correct path)
     handle /portal/* {
-        reverse_proxy maia:3000 {
+        reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -340,7 +340,7 @@ loralee.soullab.life {
     }
     handle @pages {
         rewrite * /portal/loralee{uri}
-        reverse_proxy maia:3000 {
+        reverse_proxy maia-sovereign:3000 {
             header_up Host {host}
             header_up X-Real-IP {remote_host}
             header_up X-Forwarded-For {remote_host}
@@ -349,7 +349,7 @@ loralee.soullab.life {
     }
 
     # Fallback for static assets and API routes - pass through unchanged
-    reverse_proxy maia:3000 {
+    reverse_proxy maia-sovereign:3000 {
         header_up Host {host}
         header_up X-Real-IP {remote_host}
         header_up X-Forwarded-For {remote_host}
