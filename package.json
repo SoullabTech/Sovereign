@@ -140,19 +140,19 @@
     "@aws-sdk/client-s3": "^3.658.1",
     "@aws-sdk/lib-storage": "^3.658.1",
     "@capacitor-community/apple-sign-in": "^7.1.0",
-    "@capacitor-community/bluetooth-le": "^7.3.0",
+    "@capacitor-community/bluetooth-le": "^8.0.2",
     "@capacitor-community/speech-recognition": "^7.0.1",
-    "@capacitor/android": "^7.4.5",
-    "@capacitor/app": "^7.1.1",
-    "@capacitor/clipboard": "^7.0.3",
-    "@capacitor/core": "^7.4.5",
-    "@capacitor/filesystem": "^7.1.6",
-    "@capacitor/haptics": "^7.0.3",
-    "@capacitor/ios": "^7.4.5",
-    "@capacitor/local-notifications": "^7.0.4",
-    "@capacitor/share": "^7.0.3",
-    "@capacitor/splash-screen": "^7.0.4",
-    "@capacitor/status-bar": "^7.0.4",
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/clipboard": "^8.0.0",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/filesystem": "^8.1.0",
+    "@capacitor/haptics": "^8.0.0",
+    "@capacitor/ios": "^8.0.2",
+    "@capacitor/local-notifications": "^8.0.0",
+    "@capacitor/share": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
     "@headlessui/react": "^2.1.9",
@@ -245,7 +245,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.5",
+    "@capacitor/cli": "^8.0.2",
     "@mermaid-js/mermaid-cli": "^11.12.0",
     "@storybook/addon-essentials": "^8.3.5",
     "@storybook/addon-interactions": "^8.3.5",
@@ -287,6 +287,7 @@
   },
   "packageManager": "npm@10.8.2",
   "overrides": {
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "fast-xml-parser": "^5.3.4"
   }
 }
