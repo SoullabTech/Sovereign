@@ -34,8 +34,10 @@ function validateOrigin(request: NextRequest): boolean {
   const origin = request.headers.get('origin');
   const referer = request.headers.get('referer');
 
-  // In development, allow localhost
+  // Allow production domain and localhost for development
   const allowedOrigins = [
+    'https://soullab.life',
+    'https://www.soullab.life',
     process.env.NEXT_PUBLIC_APP_URL,
     'http://localhost:3000',
     'https://localhost:3000',
@@ -58,8 +60,11 @@ function validateOrigin(request: NextRequest): boolean {
 export async function POST(request: NextRequest) {
   try {
     // CSRF protection: validate request origin
+    const origin = request.headers.get('origin');
+    const referer = request.headers.get('referer');
+
     if (!validateOrigin(request)) {
-      console.warn('[MEMBERS] Change password blocked: invalid origin');
+      console.warn(`[MEMBERS] Change password blocked: invalid origin. Origin: ${origin}, Referer: ${referer}`);
       return NextResponse.json(
         { error: 'Invalid request origin' },
         { status: 403 }

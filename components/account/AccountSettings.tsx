@@ -771,6 +771,58 @@ export function AccountSettings() {
     }
   }, [userId, profile, deleteConfirm]);
 
+  // Handler for changing password
+  const handleChangePassword = async () => {
+    // Validate inputs with helpful messages
+    if (!currentPassword) {
+      setPasswordError('Please enter your current password');
+      return;
+    }
+    if (!newPassword) {
+      setPasswordError('Please enter a new password');
+      return;
+    }
+    if (newPassword.length < 8) {
+      setPasswordError('New password must be at least 8 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    setPasswordChanging(true);
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    try {
+      const res = await fetch('/api/members/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword, newPassword }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setPasswordError(data.error || 'Failed to change password');
+        return;
+      }
+
+      setPasswordSuccess(true);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err) {
+      setPasswordError('Network error. Please try again.');
+    } finally {
+      setPasswordChanging(false);
+    }
+  };
+
   // ─────────────────────────────────────────────────────────────────────────
   // Render Helpers
   // ─────────────────────────────────────────────────────────────────────────
@@ -922,58 +974,6 @@ export function AccountSettings() {
       </div>
     </div>
   );
-
-  // Handler for changing password
-  const handleChangePassword = async () => {
-    // Validate inputs with helpful messages
-    if (!currentPassword) {
-      setPasswordError('Please enter your current password');
-      return;
-    }
-    if (!newPassword) {
-      setPasswordError('Please enter a new password');
-      return;
-    }
-    if (newPassword.length < 8) {
-      setPasswordError('New password must be at least 8 characters');
-      return;
-    }
-    if (newPassword !== confirmPassword) {
-      setPasswordError('New passwords do not match');
-      return;
-    }
-
-    setPasswordChanging(true);
-    setPasswordError(null);
-    setPasswordSuccess(false);
-
-    try {
-      const res = await fetch('/api/members/change-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ currentPassword, newPassword }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setPasswordError(data.error || 'Failed to change password');
-        return;
-      }
-
-      setPasswordSuccess(true);
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setPasswordSuccess(false), 3000);
-    } catch (err) {
-      setPasswordError('Network error. Please try again.');
-    } finally {
-      setPasswordChanging(false);
-    }
-  };
 
   // Helper to check if name is sensitive
   const isSensitiveName = (name: string) => {
