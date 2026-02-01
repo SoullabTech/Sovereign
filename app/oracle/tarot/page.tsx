@@ -149,34 +149,41 @@ export default function TarotOraclePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-amber-950 via-amber-900 to-orange-950 relative overflow-hidden">
-      {/* Atmospheric Particles */}
+    <div className="min-h-screen bg-[#06060A] relative overflow-hidden">
+      {/* Atmospheric backdrop */}
       <div className="fixed inset-0 pointer-events-none">
-        {[...Array(40)].map((_, i) => (
+        {/* Multi-colored radial gradients */}
+        <div className="absolute inset-0 bg-[radial-gradient(1200px_800px_at_30%_20%,rgba(255,180,120,0.12),transparent_60%),radial-gradient(900px_700px_at_70%_30%,rgba(255,120,150,0.10),transparent_55%),radial-gradient(1100px_800px_at_50%_85%,rgba(180,140,255,0.08),transparent_60%)]" />
+        {/* Dark overlay gradient */}
+        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(0,0,0,0.45),rgba(0,0,0,0.85))]" />
+        {/* Starfield dot pattern */}
+        <div className="absolute inset-0 opacity-[0.18] [background-image:radial-gradient(rgba(255,255,255,0.22)_1px,transparent_1px)] [background-size:22px_22px]" />
+      </div>
+
+      {/* Subtle atmospheric particles */}
+      <div className="fixed inset-0 pointer-events-none">
+        {[...Array(30)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute w-1 h-1 bg-[#D4B896]/30 rounded-full"
+            className="absolute w-1 h-1 bg-white/20 rounded-full"
             style={{
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
             }}
             animate={{
-              y: [0, -40, 0],
-              opacity: [0.2, 0.6, 0.2],
-              scale: [1, 1.5, 1],
+              y: [0, -30, 0],
+              opacity: [0.1, 0.4, 0.1],
+              scale: [1, 1.3, 1],
             }}
             transition={{
-              duration: 4 + Math.random() * 6,
+              duration: 5 + Math.random() * 7,
               repeat: Infinity,
-              delay: Math.random() * 3,
+              delay: Math.random() * 4,
               ease: 'easeInOut',
             }}
           />
         ))}
       </div>
-
-      {/* Warm glow from below */}
-      <div className="fixed bottom-0 left-0 right-0 h-96 bg-gradient-to-t from-[#3d2817]/40 via-amber-950/10 to-transparent pointer-events-none" />
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex flex-col items-center px-4 py-12">
@@ -190,15 +197,15 @@ export default function TarotOraclePage() {
           >
             <button
               onClick={() => router.push('/oracle')}
-              className="flex items-center gap-2 text-amber-400/70 hover:text-amber-300 transition-colors"
+              className="flex items-center gap-2 text-white/70 hover:text-white transition-colors rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm backdrop-blur hover:bg-white/10"
             >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm">Back to Oracle</span>
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Oracle</span>
             </button>
 
             <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-amber-400" />
-              <h1 className="text-2xl font-light text-amber-200 tracking-wide">Tarot Oracle</h1>
+              <Star className="w-6 h-6 text-amber-400/80" />
+              <h1 className="text-2xl font-light text-white tracking-wide">Tarot Oracle</h1>
             </div>
 
             <div className="w-24" /> {/* Spacer for centering */}
@@ -227,30 +234,30 @@ export default function TarotOraclePage() {
                     }}
                     className="inline-block mb-6"
                   >
-                    <Star className="w-16 h-16 text-amber-400/80" />
+                    <Star className="w-16 h-16 text-amber-400/60" />
                   </motion.div>
 
-                  <h2 className="text-4xl font-bold text-amber-100 mb-4">
+                  <h2 className="text-4xl font-semibold text-white mb-4 tracking-tight">
                     Ask Your Question
                   </h2>
-                  <p className="text-amber-300/60 text-lg">
+                  <p className="text-white/70 text-lg">
                     The cards are listening. Speak from your heart.
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-900/30 via-amber-800/20 to-orange-900/30 backdrop-blur-xl border border-amber-600/30 rounded-2xl p-8 shadow-2xl">
+                <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
                   <textarea
                     value={question}
                     onChange={(e) => setQuestion(e.target.value)}
                     placeholder="What guidance do you seek from the cards?"
-                    className="w-full h-32 px-4 py-3 bg-amber-950/50 border border-amber-700/40 rounded-lg text-amber-100 placeholder-amber-500/40 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500 transition-all resize-none"
+                    className="w-full h-32 px-4 py-3 bg-black/20 border border-white/10 rounded-lg text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400/50 focus:border-amber-400/50 transition-all resize-none"
                     autoFocus
                   />
 
                   <button
                     onClick={handleQuestionSubmit}
                     disabled={!question.trim()}
-                    className="w-full mt-6 px-6 py-4 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 disabled:from-amber-900/30 disabled:to-orange-900/30 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                    className="w-full mt-6 px-6 py-4 bg-white/10 hover:bg-white/15 disabled:bg-white/5 disabled:cursor-not-allowed border border-white/10 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
                   >
                     <Sparkles className="w-5 h-5" />
                     Continue to Card Selection
@@ -268,10 +275,10 @@ export default function TarotOraclePage() {
                 exit={{ opacity: 0, y: -20 }}
               >
                 <div className="text-center mb-8">
-                  <h2 className="text-4xl font-bold text-amber-100 mb-4">
+                  <h2 className="text-4xl font-semibold text-white mb-4 tracking-tight">
                     Choose Your Spread
                   </h2>
-                  <p className="text-amber-300/60 text-lg max-w-2xl mx-auto">
+                  <p className="text-white/70 text-lg max-w-2xl mx-auto">
                     Each spread offers a different perspective on your question
                   </p>
                 </div>
@@ -286,28 +293,33 @@ export default function TarotOraclePage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                         onClick={() => handleSpreadSelect(spread.id as SpreadType)}
-                        className="group p-6 bg-gradient-to-br from-amber-900/30 via-amber-800/20 to-orange-900/30 backdrop-blur-xl border border-amber-600/30 rounded-2xl hover:border-amber-500/50 hover:shadow-2xl hover:shadow-amber-600/20 transition-all duration-300"
+                        className="group p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl hover:bg-white/[0.07] hover:border-amber-400/30 transition-all duration-300"
                         whileHover={{ y: -4, scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex flex-col items-center text-center">
-                          <div className="w-16 h-16 rounded-full bg-amber-800/30 group-hover:bg-amber-700/40 flex items-center justify-center mb-4 transition-colors">
-                            <Icon className="w-8 h-8 text-amber-300" />
+                        <div className="flex flex-col items-center text-center relative">
+                          {/* Subtle sigil in background */}
+                          <div className="absolute right-0 top-0 text-4xl font-semibold text-white/10 pointer-events-none select-none">
+                            ✶
                           </div>
 
-                          <h3 className="text-xl font-bold text-amber-100 mb-2">
+                          <div className="w-16 h-16 rounded-xl bg-black/20 border border-white/10 flex items-center justify-center mb-4 transition-colors">
+                            <Icon className="w-8 h-8 text-white/80" />
+                          </div>
+
+                          <h3 className="text-xl font-semibold text-white mb-2 tracking-tight">
                             {spread.name}
                           </h3>
 
-                          <span className="inline-block px-3 py-1 bg-amber-600/20 text-amber-300/80 text-xs rounded-full mb-3">
+                          <span className="inline-block px-3 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/80 text-xs rounded-full mb-3">
                             {spread.recommended}
                           </span>
 
-                          <p className="text-amber-300/60 text-sm mb-3">
+                          <p className="text-white/70 text-sm mb-3">
                             {spread.description}
                           </p>
 
-                          <div className="text-amber-400/50 text-xs">
+                          <div className="text-white/50 text-xs">
                             {spread.positions} {spread.positions === 1 ? 'card' : 'cards'}
                           </div>
                         </div>
@@ -338,13 +350,13 @@ export default function TarotOraclePage() {
                   }}
                   className="mb-8"
                 >
-                  <Sparkles className="w-20 h-20 text-amber-400" />
+                  <Sparkles className="w-20 h-20 text-amber-400/60" />
                 </motion.div>
 
-                <h2 className="text-3xl font-bold text-amber-100 mb-4">
+                <h2 className="text-3xl font-semibold text-white mb-4 tracking-tight">
                   Drawing the Cards...
                 </h2>
-                <p className="text-amber-300/60 text-lg">
+                <p className="text-white/70 text-lg">
                   The oracle speaks through sacred symbols
                 </p>
               </motion.div>
@@ -359,7 +371,7 @@ export default function TarotOraclePage() {
               >
                 {/* Cards Display */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-amber-100 text-center mb-8">
+                  <h2 className="text-3xl font-semibold text-white text-center mb-8 tracking-tight">
                     {reading.spreadName}
                   </h2>
 
@@ -379,14 +391,19 @@ export default function TarotOraclePage() {
                         transition={{ duration: 0.6, delay: 0.2 }}
                         className="perspective-1000"
                       >
-                        <div className="bg-gradient-to-br from-amber-900/40 via-amber-800/30 to-orange-900/40 backdrop-blur-xl border border-amber-600/40 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl">
-                          <div className="text-center mb-4">
-                            <div className="text-amber-500/60 text-xs uppercase tracking-wider mb-2">
+                        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-xl p-6 min-h-[300px] flex flex-col shadow-xl relative overflow-hidden">
+                          {/* Subtle sigil in background */}
+                          <div className="absolute right-3 top-3 text-6xl font-semibold text-white/10 pointer-events-none select-none">
+                            ✶
+                          </div>
+
+                          <div className="text-center mb-4 relative">
+                            <div className="text-white/50 text-xs uppercase tracking-wider mb-2">
                               {card.position}
                             </div>
-                            <h3 className="text-lg font-bold text-amber-100">
+                            <h3 className="text-lg font-semibold text-white">
                               {card.name}
-                              {card.reversed && <span className="text-red-400 ml-2">(R)</span>}
+                              {card.reversed && <span className="text-rose-400 ml-2">(R)</span>}
                             </h3>
                           </div>
 
@@ -399,7 +416,7 @@ export default function TarotOraclePage() {
                               {card.keywords.slice(0, 3).map((keyword, i) => (
                                 <span
                                   key={i}
-                                  className="px-2 py-1 bg-amber-700/20 text-amber-300/70 text-xs rounded"
+                                  className="px-2 py-1 bg-amber-500/10 border border-amber-400/20 text-amber-300/70 text-xs rounded"
                                 >
                                   {keyword}
                                 </span>
@@ -418,42 +435,50 @@ export default function TarotOraclePage() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5 }}
-                    className="bg-gradient-to-br from-amber-900/30 via-amber-800/20 to-orange-900/30 backdrop-blur-xl border border-amber-600/30 rounded-2xl p-8 shadow-2xl"
+                    className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl"
                   >
                     <div className="flex items-center gap-3 mb-6">
-                      <BookOpen className="w-6 h-6 text-amber-400" />
-                      <h3 className="text-2xl font-bold text-amber-100">Oracle's Wisdom</h3>
+                      <BookOpen className="w-6 h-6 text-amber-400/80" />
+                      <h3 className="text-2xl font-semibold text-white tracking-tight">Oracle's Wisdom</h3>
                     </div>
 
                     <div className="space-y-6">
                       <div>
-                        <h4 className="text-amber-300/80 font-semibold mb-2">Overall Message:</h4>
-                        <p className="text-amber-200/70 leading-relaxed">
+                        <h4 className="text-white/90 font-medium mb-2">Overall Message:</h4>
+                        <p className="text-white/70 leading-relaxed">
                           {reading.overallMessage}
                         </p>
                       </div>
 
                       <div>
-                        <h4 className="text-amber-300/80 font-semibold mb-2">Guidance:</h4>
-                        <p className="text-amber-200/70 leading-relaxed">
+                        <h4 className="text-white/90 font-medium mb-2">Guidance:</h4>
+                        <p className="text-white/70 leading-relaxed">
                           {reading.advice}
                         </p>
                       </div>
 
                       {/* Individual Card Interpretations */}
-                      <div className="border-t border-amber-700/30 pt-6 mt-6">
-                        <h4 className="text-amber-300/80 font-semibold mb-4">Card Details:</h4>
+                      <div className="border-t border-white/10 pt-6 mt-6">
+                        <h4 className="text-white/90 font-medium mb-4">Card Details:</h4>
                         <div className="space-y-4">
                           {reading.cards.map((card, index) => (
-                            <div key={index} className="bg-amber-950/30 rounded-lg p-4">
-                              <h5 className="text-amber-200 font-semibold mb-2">
+                            <div key={index} className="bg-black/20 border border-white/10 rounded-lg p-4">
+                              <h5 className="text-white font-medium mb-2">
                                 {card.name} - {card.position}
                               </h5>
-                              <p className="text-amber-300/60 text-sm">
+                              <p className="text-white/70 text-sm">
                                 {card.interpretation}
                               </p>
                             </div>
                           ))}
+                        </div>
+                      </div>
+
+                      {/* Ritual cue section */}
+                      <div className="border border-white/10 bg-black/20 rounded-xl px-4 py-3">
+                        <div className="text-xs font-medium text-white/80">Ritual cue</div>
+                        <div className="mt-1 text-sm text-white/70">
+                          Hold the question gently. Let the image speak first.
                         </div>
                       </div>
                     </div>
@@ -462,14 +487,14 @@ export default function TarotOraclePage() {
                     <div className="flex gap-4 mt-8">
                       <button
                         onClick={handleNewReading}
-                        className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                        className="flex-1 px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/10 text-white font-medium rounded-lg transition-all duration-300 flex items-center justify-center gap-2"
                       >
                         <RefreshCw className="w-5 h-5" />
                         New Reading
                       </button>
                       <button
                         onClick={() => router.push('/oracle')}
-                        className="px-6 py-3 bg-amber-900/40 hover:bg-amber-800/50 text-amber-200 font-semibold rounded-lg transition-all duration-300"
+                        className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 text-white/90 font-medium rounded-lg transition-all duration-300"
                       >
                         Back to Oracle
                       </button>
