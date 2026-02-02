@@ -10,6 +10,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import {
   ArrowLeft,
   Sparkles,
@@ -270,7 +271,13 @@ export default function TarotOraclePage() {
             </button>
 
             <div className="flex items-center gap-2">
-              <Star className="w-6 h-6 text-teal-800" />
+              <Image
+                src="/holoflower-amber.png"
+                alt="Holoflower"
+                width={24}
+                height={24}
+                className="opacity-80"
+              />
               <h1 className="text-2xl font-light text-teal-900 tracking-wide">Tarot Oracle</h1>
             </div>
 
@@ -300,7 +307,13 @@ export default function TarotOraclePage() {
                     }}
                     className="inline-block mb-6"
                   >
-                    <Star className="w-16 h-16 text-teal-800/80" />
+                    <Image
+                      src="/holoflower-amber.png"
+                      alt="Holoflower"
+                      width={64}
+                      height={64}
+                      className="opacity-80"
+                    />
                   </motion.div>
 
                   <h2 className="text-4xl font-bold text-teal-900 mb-4">
@@ -464,7 +477,13 @@ export default function TarotOraclePage() {
                           </div>
 
                           <div className="flex-1 flex items-center justify-center mb-4">
-                            <Star className="w-16 h-16 text-teal-600/30" />
+                            <Image
+                              src="/holoflower-amber.png"
+                              alt="Holoflower"
+                              width={64}
+                              height={64}
+                              className="opacity-50"
+                            />
                           </div>
 
                           <div className="space-y-2">

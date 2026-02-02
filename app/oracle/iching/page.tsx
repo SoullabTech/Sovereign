@@ -19,7 +19,6 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft,
   Sparkles,
-  Hexagon,
   BookOpen,
   RefreshCw,
   Loader2,
@@ -32,6 +31,49 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
 import { EmbeddedMAIAChat } from '@/components/oracle/EmbeddedMAIAChat';
+
+/**
+ * Bagua Symbol - Traditional 8-sided I Ching symbol
+ * The Bagua (八卦) octagon represents the 8 trigrams of the I Ching
+ */
+function BaguaSymbol({ size = 24, className = '' }: { size?: number; className?: string }) {
+  const center = size / 2;
+  const outerRadius = size * 0.45;
+  const innerRadius = size * 0.28;
+  const strokeWidth = size * 0.06;
+
+  // Generate octagon points
+  const getOctagonPoints = (radius: number) => {
+    const points = [];
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4 - Math.PI / 8; // Start rotated for flat top
+      points.push({
+        x: center + radius * Math.cos(angle),
+        y: center + radius * Math.sin(angle),
+      });
+    }
+    return points.map((p) => `${p.x},${p.y}`).join(' ');
+  };
+
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox={`0 0 ${size} ${size}`}
+      className={className}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+    >
+      {/* Outer octagon */}
+      <polygon points={getOctagonPoints(outerRadius)} />
+      {/* Inner octagon */}
+      <polygon points={getOctagonPoints(innerRadius)} />
+      {/* Center point */}
+      <circle cx={center} cy={center} r={size * 0.06} fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
 
@@ -273,7 +315,7 @@ export default function IChingOraclePage() {
             </button>
 
             <div className="flex items-center gap-2">
-              <Hexagon className="w-6 h-6 text-teal-800" />
+              <BaguaSymbol size={24} className="text-teal-800" />
               <h1 className="text-2xl font-light text-teal-900 tracking-wide">I Ching Oracle</h1>
             </div>
 
@@ -303,7 +345,7 @@ export default function IChingOraclePage() {
                     }}
                     className="inline-block mb-6"
                   >
-                    <Hexagon className="w-16 h-16 text-teal-800/80" />
+                    <BaguaSymbol size={64} className="text-teal-800/80" />
                   </motion.div>
 
                   <h2 className="text-4xl font-bold text-teal-900 mb-4">
@@ -482,7 +524,7 @@ export default function IChingOraclePage() {
                         </h4>
 
                         <div className="text-center space-y-3">
-                          <Hexagon className="w-16 h-16 text-teal-700/70 mx-auto" />
+                          <BaguaSymbol size={64} className="text-teal-700/70 mx-auto" />
                           <h5 className="text-2xl font-bold text-teal-900">
                             {reading.hexagram.transformed.number}
                           </h5>
