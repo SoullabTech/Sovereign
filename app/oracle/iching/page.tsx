@@ -31,6 +31,7 @@ import {
   Zap
 } from 'lucide-react';
 import { apiFetch } from '@/lib/http/apiBase';
+import { EmbeddedMAIAChat } from '@/components/oracle/EmbeddedMAIAChat';
 
 type ReadingPhase = 'question' | 'casting' | 'reveal' | 'interpretation';
 
@@ -674,40 +675,23 @@ export default function IChingOraclePage() {
                       </div>
                     )}
 
-                    {/* Consult with MAIA */}
-                    <div className="bg-gradient-to-br from-violet-900/30 via-purple-800/20 to-indigo-900/30 backdrop-blur-xl border border-violet-500/30 rounded-xl p-6">
-                      <div className="flex items-center gap-3 mb-4">
-                        <MessageSquare className="w-6 h-6 text-violet-400" />
-                        <h4 className="text-xl font-semibold text-violet-200">Explore with MAIA</h4>
-                      </div>
-                      <p className="text-violet-300/70 text-sm mb-4">
-                        Bring this reading into conversation with MAIA to explore its meaning for your specific situation and integrate its wisdom.
-                      </p>
-                      <button
-                        onClick={() => {
-                          // Build changing lines context
-                          const changingLinesContext = reading.hexagram.changingLineMeanings?.length
-                            ? `\nChanging Lines:\n${reading.hexagram.changingLineMeanings.map(cl => `Line ${cl.line}: ${cl.meaning}`).join('\n')}\n`
-                            : '';
-
-                          const context = encodeURIComponent(
-                            `I just received an I Ching reading for my question: "${question}"\n\n` +
-                            `Hexagram ${reading.hexagram.number}: ${reading.hexagram.name} (${reading.hexagram.keyword})\n` +
-                            `Upper trigram: ${reading.hexagram.trigrams.upper}, Lower trigram: ${reading.hexagram.trigrams.lower}\n\n` +
-                            `Interpretation: ${reading.hexagram.interpretation}\n\n` +
-                            `Guidance: ${reading.guidance}\n` +
-                            changingLinesContext +
-                            (reading.hexagram.transformed ? `\nThis transforms into Hexagram ${reading.hexagram.transformed.number}: ${reading.hexagram.transformed.name}\n\n` : '\n\n') +
-                            `Help me understand how this applies to my situation, especially the meaning of the changing lines.`
-                          );
-                          router.push(`/maia?context=${context}`);
-                        }}
-                        className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
-                      >
-                        <MessageSquare className="w-5 h-5" />
-                        Consult with MAIA
-                      </button>
-                    </div>
+                    {/* Embedded MAIA Chat */}
+                    <EmbeddedMAIAChat
+                      oracleType="I Ching"
+                      question={question}
+                      readingContext={
+                        `Hexagram ${reading.hexagram.number}: ${reading.hexagram.name} (${reading.hexagram.keyword})\n` +
+                        `Upper trigram: ${reading.hexagram.trigrams.upper}, Lower trigram: ${reading.hexagram.trigrams.lower}\n\n` +
+                        `Interpretation: ${reading.hexagram.interpretation}\n\n` +
+                        `Guidance: ${reading.guidance}\n` +
+                        (reading.hexagram.changingLineMeanings?.length
+                          ? `\nChanging Lines:\n${reading.hexagram.changingLineMeanings.map(cl => `Line ${cl.line}: ${cl.meaning}`).join('\n')}\n`
+                          : '') +
+                        (reading.hexagram.transformed
+                          ? `\nThis transforms into Hexagram ${reading.hexagram.transformed.number}: ${reading.hexagram.transformed.name}`
+                          : '')
+                      }
+                    />
 
                     {/* Save Error Display */}
                     {saveError && (
