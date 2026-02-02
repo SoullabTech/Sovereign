@@ -108,7 +108,7 @@ export default function IChingOraclePage() {
 
   const fetchReading = async (lines: HexagramLine[]) => {
     try {
-      const response = await fetch('/api/oracle/iching', {
+      const response = await apiFetch('/api/oracle/iching', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

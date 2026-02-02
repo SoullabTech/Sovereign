@@ -26,6 +26,7 @@ import {
   Check,
   Loader2
 } from 'lucide-react';
+import { apiFetch } from '@/lib/http/apiBase';
 
 type SpreadType = 'three-card' | 'celtic-cross' | 'single-card';
 type ReadingPhase = 'question' | 'spread-selection' | 'drawing' | 'reveal' | 'interpretation';
@@ -105,7 +106,7 @@ export default function TarotOraclePage() {
 
     try {
       // Call the tarot API endpoint
-      const response = await fetch('/api/oracle/tarot', {
+      const response = await apiFetch('/api/oracle/tarot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -187,7 +188,7 @@ export default function TarotOraclePage() {
         'celtic-cross': 'celtic_cross'
       };
 
-      const response = await fetch('/api/divination/save', {
+      const response = await apiFetch('/api/divination/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
