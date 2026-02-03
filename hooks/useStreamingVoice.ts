@@ -103,6 +103,7 @@ interface AudioQueueItem {
 }
 
 const VOICE_SESSION_KEY = 'maia_voice_session_id';
+const CONVERSATION_ID_KEY = 'maia_conversation_id';
 
 /**
  * Sanitize text for display/speech - removes JSON metadata fragments
@@ -146,6 +147,29 @@ function generateSessionId(): string {
     return `voice-${crypto.randomUUID()}`;
   }
   return `voice-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
+}
+
+/**
+ * Get or create a persistent conversation ID.
+ * Uses localStorage for cross-session persistence (survives app restarts).
+ * This is used for memory continuity - MAIA remembers based on this ID.
+ */
+function getOrCreateConversationId(): string {
+  try {
+    const existing = localStorage.getItem(CONVERSATION_ID_KEY);
+    if (existing) return existing;
+  } catch {
+    // localStorage unavailable
+  }
+
+  // Generate new and persist
+  const created = `conv-${crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`}`;
+  try {
+    localStorage.setItem(CONVERSATION_ID_KEY, created);
+  } catch {
+    // localStorage unavailable
+  }
+  return created;
 }
 
 /**
@@ -507,7 +531,9 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
 
     try {
       // Use apiFetch for iOS/Safari compatibility (adds x-session-token header)
-      console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation');
+      // 🔧 FIX: Include stable conversationId for memory continuity
+      const conversationId = getOrCreateConversationId();
+      console.log('[StreamingVoice] Starting request to /api/voice/stream-conversation, conversationId:', conversationId.slice(0, 12) + '...');
       const response = await apiFetch('/api/voice/stream-conversation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -520,6 +546,7 @@ export function useStreamingVoice(options: StreamingVoiceOptions = {}) {
           element,
           conversationHistory,
           sessionId: sessionIdRef.current, // Stable session ID for relational stack
+          conversationId, // 🧠 Stable conversation ID for memory continuity
           prosodyRange,  // MAIA's prosody policy range (0=Neutral, 1=Subtle, 2=Expressive, 3=Ceremonial)
           assistantName, // Member's preferred name for MAIA
           archetype,     // MAIA's presence/archetype mode

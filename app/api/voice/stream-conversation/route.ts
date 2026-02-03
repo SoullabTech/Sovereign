@@ -22,6 +22,7 @@
  */
 
 import { NextRequest } from 'next/server';
+import { getMemberIdFromRequest } from '@/lib/auth/getMemberFromRequest';
 import { getClaudeService } from '@/lib/services/ClaudeService';
 import { synthesizeSpeech } from '@/lib/tts/openaiTts';
 import {
@@ -365,7 +366,7 @@ export async function POST(req: NextRequest) {
   const body: StreamRequest = await req.json();
   const {
     message,
-    userId,
+    userId: bodyUserId,
     sessionId,
     element,
     voice,
@@ -376,6 +377,18 @@ export async function POST(req: NextRequest) {
     sanctuary = false,
     prosodyRange = 1,  // Default: Subtle (most users want warmth without theatrics)
   } = body;
+
+  // 🔐 AUTH-DERIVED USER ID: Prefer cookie/header-based auth over body
+  // This fixes iOS memory loss after app resume (body state can be lost, cookies persist)
+  const memberIdFromAuth = await getMemberIdFromRequest(req);
+  const userId = memberIdFromAuth ||
+    (typeof bodyUserId === 'string' && bodyUserId.length > 0 ? bodyUserId : null);
+
+  console.log('[StreamConversation] userId resolved:', {
+    memberIdFromAuth: memberIdFromAuth ? 'present' : 'null',
+    bodyUserId: typeof bodyUserId === 'string' ? 'present' : 'null',
+    finalUserId: userId ? userId.slice(0, 8) + '...' : 'null',
+  });
 
   // Initialize timing instrumentation
   const timer = createVoiceTimer();

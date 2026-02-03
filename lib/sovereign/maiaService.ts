@@ -54,6 +54,7 @@ import {
 } from '../memory/RelationshipMemoryService';
 import { TurnsStore } from '../memory/stores/TurnsStore';
 import { ConversationMemoryUsesStore } from '../memory/stores/ConversationMemoryUsesStore';
+import { memoryOrchestrator, type SessionRecallContext } from '../memory/MemoryOrchestrator';
 import { assessAINResponseShape, AIN_NO_MENU_REWRITE_PROMPT } from '../ai/quality/ainResponseShape';
 import { logAINShapeTelemetry } from '../db/ainShapeTelemetry';
 import { query } from '../db/postgres';
@@ -648,8 +649,26 @@ async function fastPathResponse(
 
   // 🧠 MEMORY BUNDLE: Use compressed context from multi-bucket retrieval if available
   // 🔒 SANCTUARY: Ignore memoryBundle (it contains cross-session recalled context)
-  const memoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
+  let memoryContext = isSanctuary ? undefined : (meta as any).memoryContext as string | undefined;
   const hasMemoryBundle = isSanctuary ? false : !!(meta as any).memoryBundle;
+
+  // 🔧 MEMORY FALLBACK: If no memory bundle was provided, fetch directly from MemoryOrchestrator
+  // This ensures memory continuity even if the route layer didn't build a bundle
+  if (!memoryContext && !isSanctuary && effectiveUserId) {
+    try {
+      console.log(`🧠 [FAST/MemoryFallback] No memoryContext from route - fetching from MemoryOrchestrator for user=${effectiveUserId.slice(0, 8)}...`);
+      const recall = await memoryOrchestrator.getSessionRecallContext(effectiveUserId);
+      if (recall && (recall.relationshipContext || recall.recentTurns?.length || recall.recentBreakthroughs?.length)) {
+        memoryContext = memoryOrchestrator.formatRecallForPrompt(recall);
+        console.log(`🧠 [FAST/MemoryFallback] Retrieved recall: relationship=${!!recall.relationshipContext}, turns=${recall.recentTurns?.length ?? 0}, breakthroughs=${recall.recentBreakthroughs?.length ?? 0}`);
+        console.log(`🧠 [FAST/MemoryFallback] Formatted context: ${memoryContext.length} chars`);
+      } else {
+        console.log(`🧠 [FAST/MemoryFallback] No recall data found for this user`);
+      }
+    } catch (recallErr) {
+      console.warn(`⚠️ [FAST/MemoryFallback] Failed to fetch recall (non-fatal):`, recallErr);
+    }
+  }
 
   // 📚 AIN KNOWLEDGE: Mode-aware wisdom from embedded source texts
   const ainKnowledgeContext = (meta as any).ainKnowledgeContext as string | undefined;
@@ -673,6 +692,9 @@ async function fastPathResponse(
   // Build context prompt with memory bundle OR recent context
   // 🔒 SANCTUARY: memoryContext is already nullified above, so this will fall through to recentContext or plain input
 
+  // 🔍 MEMORY DEBUG: Log what memory context we have
+  console.log(`🧠 [FAST/MemoryDebug] memoryContext.length=${memoryContext?.length ?? 0}, recentContext.length=${recentContext?.length ?? 0}, hasMemoryBundle=${hasMemoryBundle}`);
+
   // 📚 Format AIN knowledge for injection (if available)
   const ainKnowledgeBlock = ainKnowledgeContext && ainKnowledgeContext.length > 0
     ? `\n\n📚 RELEVANT WISDOM (from your training sources - draw upon naturally, don't cite directly):
@@ -683,11 +705,14 @@ ${ainKnowledgeContext}\n`
   if (memoryContext && memoryContext.length > 0) {
     // Use memory bundle (preferred - includes relationship snapshot + ranked memories)
     contextPrompt = `${memoryContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    console.log(`🧠 [FAST/MemoryDebug] Using MEMORY BUNDLE for context (${memoryContext.length} chars)`);
   } else if (recentContext.length > 0) {
     // Fallback to simple recent context
     contextPrompt = `Recent conversation:\n${recentContext}${ainKnowledgeBlock}${memoryRecallInstruction}${sensitiveInstruction}\n\nUser: ${input}`;
+    console.log(`🧠 [FAST/MemoryDebug] Using RECENT CONTEXT fallback (${recentContext.length} chars)`);
   } else {
     contextPrompt = `${ainKnowledgeBlock}${sensitiveInstruction ? sensitiveInstruction + '\n\n' : ''}User: ${input}`;
+    console.log(`⚠️ [FAST/MemoryDebug] NO MEMORY CONTEXT - using bare input only`);
   }
 
   // Import MAIA runtime prompt with full relational and lineage intelligence
