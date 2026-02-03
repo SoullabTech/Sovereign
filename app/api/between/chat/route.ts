@@ -1617,10 +1617,12 @@ This user is in guest mode (no authenticated identity).
     // 🚨 SELF-ALERTING: Log warnings with route context (deferred from before orchestrator)
     const routeMode = orchestratorResult.route?.mode ?? 'unknown';
 
-    // Route-aware filtering: only warn W_REL_EMPTY if route should have relationship context
+    // Tier-aware + route-aware filtering for W_REL_EMPTY
+    // Only warn when: continuity tier + relationship-expecting route + meaningful memory + empty addendum
+    const continuityExpected = memberTier !== 'free';
     const routeShouldHaveRelationship = ['care', 'mentor', 'deep'].includes(routeMode);
     const filteredWarnings = contextWarnings.filter(w => {
-      if (w === 'W_REL_EMPTY' && !routeShouldHaveRelationship) return false;
+      if (w === 'W_REL_EMPTY' && (!continuityExpected || !routeShouldHaveRelationship)) return false;
       return true;
     });
 
@@ -1630,13 +1632,18 @@ This user is in guest mode (no authenticated identity).
         reqId,
         userId: effectiveUserId ? effectiveUserId.slice(0, 8) : 'anon',
         recognized: !isAnon,
-        // Full route object (typed)
+        tier: memberTier,
+        // Full route object (typed, all fields)
         route: orchestratorResult.route ? {
           mode: orchestratorResult.route.mode,
           type: orchestratorResult.route.type,
           safeMode: orchestratorResult.route.safeMode,
+          operational: orchestratorResult.route.operational,
+          endpoint: orchestratorResult.route.endpoint,
         } : null,
         // "Why this should exist" signals
+        continuityExpected,
+        routeShouldHaveRelationship,
         birthDataPresent: !!birthData?.date,
         hasRelationshipMemory: hasMeaningfulRelationshipMemory(relationshipMemory),
         hasSurfacedCapture: !!selfletContext?.surfacedMessageId,
