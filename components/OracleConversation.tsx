@@ -6440,8 +6440,8 @@ I'm not sure what I'm feeling yet.`;
                 alt="Holoflower"
                 className="object-contain absolute"
                 style={{
-                  width: `${holoflowerSize * 0.55}px`,
-                  height: `${holoflowerSize * 0.55}px`,
+                  width: `${holoflowerSize * 0.45}px`,
+                  height: `${holoflowerSize * 0.45}px`,
                 }}
               />
             </div>
